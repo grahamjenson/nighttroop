@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -20,20 +21,26 @@ type ControlDB struct {
 	S3Config *S3Config
 	tenants  map[string]*TenantDB
 	rwlock   sync.RWMutex
+
+	ctx    context.Context
+	cancel func()
+	wg     sync.WaitGroup
 }
 
-func InitControlDB(s3Config *S3Config) (*ControlDB, error) {
+func NewControlDB(s3Config *S3Config) (*ControlDB, error) {
 	// Create a new control db
 	controlDB := &ControlDB{
 		SQLDB: &SQLDB{
-			Path: "data/db/control.sqlite",
+			Path:       "data/db/control.sqlite",
+			BackupPath: "data/backup/control.sqlite",
 		},
-		BackupInterval: 5 * time.Second,
-		SyncInterval:   5 * time.Second,
+		BackupInterval: 2 * time.Second,
+		SyncInterval:   2 * time.Second,
 		S3Config:       s3Config,
 		tenants:        make(map[string]*TenantDB),
 		rwlock:         sync.RWMutex{},
 	}
+	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
 	return controlDB, nil
 }
@@ -62,7 +69,7 @@ func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
 	}
 
 	// Create a new tenant db
-	tenantDB, err := InitTenantDB(tenantID)
+	tenantDB, err := NewTenantDB(tenantID)
 	if err != nil {
 		return "", fmt.Errorf("cannot create tenant db: %w", err)
 	}
@@ -98,4 +105,112 @@ func NextTenantID() string {
 		result[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(result)
+}
+
+func (db ControlDB) Restore() error {
+	return nil
+}
+
+func (db *ControlDB) StartBackupLoop() {
+	// TODO sync and backup are backwards
+	// start a go loop that checks for changes in the sqlite dbs and then copies them to the backup db path
+	if db.SyncInterval > 0 {
+		db.wg.Add(1)
+		go func() { defer db.wg.Done(); db.syncMonitor() }()
+	}
+
+	// start a loop that goes over changed dbs and back them up to db
+	if db.BackupInterval > 0 {
+		db.wg.Add(1)
+		go func() { defer db.wg.Done(); db.backupMonitor() }()
+	}
+
+}
+
+func (db *ControlDB) syncMonitor() {
+	syncTicker := time.NewTicker(db.SyncInterval)
+	defer syncTicker.Stop()
+
+	for {
+		// Wait for ticker or context close.
+		select {
+		case <-db.ctx.Done():
+			return
+		case <-syncTicker.C:
+		}
+		fmt.Println("Sync loop")
+		// Sync the database to the shadow WAL.
+		if err := db.sync(); err != nil && !errors.Is(err, context.Canceled) {
+			fmt.Println("sync error", "error", err)
+		}
+	}
+}
+
+func (db *ControlDB) backupMonitor() {
+	backupTicker := time.NewTicker(db.BackupInterval)
+	defer backupTicker.Stop()
+
+	for {
+		// Wait for ticker or context close.
+		select {
+		case <-db.ctx.Done():
+			return
+		case <-backupTicker.C:
+		}
+
+		fmt.Println("Backup loop")
+		// Sync the database to the shadow WAL.
+		if err := db.backup(); err != nil && !errors.Is(err, context.Canceled) {
+			fmt.Println("backup error", "error", err)
+		}
+	}
+}
+
+func (db *ControlDB) sync() error {
+	var err error
+	err = db.UpdateModified()
+	if err != nil {
+		return fmt.Errorf("cannot update last modified: %w", err)
+	}
+	for _, tenant := range db.tenants {
+		err = tenant.UpdateModified()
+		if err != nil {
+			return fmt.Errorf("cannot update last modified: %w", err)
+		}
+	}
+
+	if db.Modified {
+		err = db.SqliteBackup()
+		if err != nil {
+			return fmt.Errorf("cannot backup control db: %w", err)
+		}
+	}
+
+	for _, tenant := range db.tenants {
+		if tenant.Modified {
+			err = tenant.SqliteBackup()
+			if err != nil {
+				return fmt.Errorf("cannot backup tenant db: %w", err)
+			}
+		}
+	}
+
+	// Copy the control db to the backup location
+	return nil
+}
+
+func (db *ControlDB) backup() error {
+	return nil
+}
+
+func (db *ControlDB) StopBackupLoop() {
+	// This will send a cancel signal to context
+	db.cancel()
+	// This will wait
+	db.wg.Wait()
+}
+
+func (db *ControlDB) ForceBackup() {
+	// Go through every tenant and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
+	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
 }

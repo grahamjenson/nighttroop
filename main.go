@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -45,9 +46,16 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM)
 	defer stop()
 
-	controlDB, err := db.InitControlDB(db.CreateS3Config("s3://mybucket.localhost:9000", "minioadmin", "minioadmin"))
+	controlDB, err := db.NewControlDB(db.NewS3Config("s3://mybucket.localhost:9000", "minioadmin", "minioadmin"))
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
+	}
+
+	// Restore the control database from remote if it exists
+	// Tenant DBs can be lazily resotred later
+	err = controlDB.Restore()
+	if err != nil {
+		return fmt.Errorf("cannot restore control db: %w", err)
 	}
 
 	// Open Databse, hook up litesrtream, and migrate
@@ -94,11 +102,32 @@ func run() error {
 		http.NotFound(w, r)
 	})
 
-	go http.ListenAndServe(":8080", r)
+	controlDB.StartBackupLoop()
+
+	server := &http.Server{Addr: ":8080", Handler: r}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP server ListenAndServe: %v", err)
+		}
+	}()
 
 	// Wait for signal.
 	<-ctx.Done()
+
 	log.Print("myapp received signal, shutting down")
+
+	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("HTTP server Shutdown: %v", err)
+	}
+
+	// Stop the backup loops
+	controlDB.StopBackupLoop()
+	// Force a final backup before exiting
+	controlDB.ForceBackup()
+	// Close the database connections
+	controlDB.Close()
 
 	return nil
 }

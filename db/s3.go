@@ -41,7 +41,7 @@ func SetupFileStructure() error {
 ////
 
 // ParseHost extracts data from a hostname depending on the service provider.
-func CreateS3Config(s3URL string, accessKey string, secretKey string) *S3Config {
+func NewS3Config(s3URL string, accessKey string, secretKey string) *S3Config {
 	// Extract port if one is specified.
 	host, port, err := net.SplitHostPort(s3URL)
 	if err != nil {

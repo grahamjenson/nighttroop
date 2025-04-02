@@ -5,9 +5,13 @@ type TenantDB struct {
 	subdomain string
 }
 
-func InitTenantDB(subdomain string) (*TenantDB, error) {
+func NewTenantDB(subdomain string) (*TenantDB, error) {
+	topPath := "/tenant/" + subdomain + ".sqlite"
 	tenantDB := &TenantDB{
-		SQLDB: &SQLDB{Path: "data/db/tenant/" + subdomain + ".sqlite"},
+		SQLDB: &SQLDB{
+			Path:       "data/db" + topPath,
+			BackupPath: "data/backup" + topPath,
+		},
 	}
 
 	return tenantDB, nil
