@@ -1,0 +1,12 @@
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+--
+--
+CREATE TABLE IF NOT EXISTS "api_keys" (
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    token VARCHAR(255) NOT NULL
+);
+--
+--
+CREATE TABLE IF NOT EXISTS "scores" (score INT NOT NULL);

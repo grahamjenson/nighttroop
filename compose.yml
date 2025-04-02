@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    environment:
+      - "MINIO_ACCESS_KEY=minioadmin"
+      - "MINIO_SECRET_KEY=minioadmin"
+    volumes:
+      - minio-data:/data
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "sleep 2; /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin; /usr/bin/mc rb --force myminio/mybucket; /usr/bin/mc mb myminio/mybucket; exit 0; "
+
+volumes:
+  minio-data:
