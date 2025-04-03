@@ -1,7 +1,3 @@
-PRAGMA journal_mode = WAL;
-PRAGMA busy_timeout = 5000;
---
---
 CREATE TABLE IF NOT EXISTS "tenants" (
     id SERIAL PRIMARY KEY,
     subdomain VARCHAR(255) UNIQUE NOT NULL,

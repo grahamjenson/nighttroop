@@ -76,6 +76,53 @@ We can get rid of 1/2 of the go routines by not monitoring for when a change occ
 
 Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
 
-10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per ). Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking they need backing up takes 40ms.
+10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per). Each user also may use cache set by `cache_size` which might add 2Mb more memory usage per user. So lets assume 4Mb per user memory usage. Maybe using the ATTACH feature in SQLite would use less RAM, but I am not sure of other implications related to backup and such. 
+
+Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking they need backing up takes 40ms.
 
 Backing up 10k dbs to s3 synchronously takes about 20 seconds for a local minio server.
+
+TODO test Restore, downloading 10k empty databases and then opening them all up
+
+
+
+# DR
+
+The server process is asked to die, via SIGTERM: 
+
+The server process dies unexpectidly and needs to be restarted. This should be fine, because the WAL operations will keep the existing databases safe.
+
+The server dies unexpectidly and we need to move to a new machine: 
+
+
+If the server dies naturally with a SIGTERM then their should be enough time to backup and restart on a 
+
+
+# Left to figure out
+
+Migrations
+1. I would put the version of the DB of the user in the control database, then when accessed check against a constant value to make sure it is up to date. 
+
+Blast Radius
+1. A single bad acting tenant could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
+
+Deleting old users in s3
+
+# Pricing estimates
+for 10k users
+
+S3, Cloudflare R2, Tigris
+
+100K users would make this 
+
+# Alternatives
+Turso https://turso.tech/blog/give-each-of-your-users-their-own-sqlite-database-b74445f4
+LiteStream
+
+https://sqlsync.dev/posts/stop-syncing-everything/
+
+
+
+# Lets Talk the real use case
+
+I want what is essentially a free IOT server where a single user wears multiple devices and sensors are reporting data frequently. Missing a few readings wont matter, what matters is getting the most immediate readings quickly. I want to make this server so cheap that I can fund it myself 

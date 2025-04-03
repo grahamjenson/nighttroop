@@ -13,6 +13,7 @@ import (
 type SQLDB struct {
 	Path              string
 	BackupPath        string
+	CacheSize         int
 	sqldb             *sql.DB
 	lastModifiedAt    int64
 	lastModifiedAtWAL int64
@@ -22,8 +23,12 @@ type SQLDB struct {
 
 func (db *SQLDB) Open(migrate string) error {
 	var err error
-
-	db.sqldb, err = sql.Open("sqlite3", db.Path)
+	if db.CacheSize == 0 {
+		db.CacheSize = 2000
+	}
+	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000", db.Path, -db.CacheSize)
+	fmt.Println("Open", dsn)
+	db.sqldb, err = sql.Open("sqlite3", dsn)
 	if err != nil {
 		return err
 	}
