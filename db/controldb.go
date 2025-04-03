@@ -152,7 +152,7 @@ func (db *ControlDB) StartBackupLoop() {
 }
 
 func (db *ControlDB) backupMonitor() {
-	syncTicker := time.NewTicker(db.SyncInterval)
+	syncTicker := time.NewTicker(db.BackupInterval)
 	defer syncTicker.Stop()
 
 	for {
@@ -171,7 +171,7 @@ func (db *ControlDB) backupMonitor() {
 }
 
 func (db *ControlDB) syncMonitor() {
-	backupTicker := time.NewTicker(db.BackupInterval)
+	backupTicker := time.NewTicker(db.SyncInterval)
 	defer backupTicker.Stop()
 
 	for {
@@ -204,6 +204,7 @@ func (db *ControlDB) backup() error {
 		if err != nil {
 			return fmt.Errorf("cannot backup control db: %w", err)
 		}
+		db.shouldBeSynced = true
 	}
 
 	for _, tenant := range tenants {
@@ -216,6 +217,7 @@ func (db *ControlDB) backup() error {
 			if err != nil {
 				return fmt.Errorf("cannot backup tenant db: %w", err)
 			}
+			tenant.shouldBeSynced = true
 		}
 	}
 
@@ -227,6 +229,32 @@ func (db *ControlDB) backup() error {
 func (db *ControlDB) sync() error {
 	defer trackTime(time.Now(), "sync")
 	// Upload the control db to the s3 bucket
+	tosync := []*SQLDB{}
+	paths := []string{}
+	if db.shouldBeSynced {
+		tosync = append(tosync, db.SQLDB)
+		paths = append(paths, db.BackupPath)
+	}
+
+	tenants := db.GetTenantDBsSnapshot()
+	for _, t := range tenants {
+		if t.shouldBeSynced {
+			tosync = append(tosync, t.SQLDB)
+			paths = append(paths, t.BackupPath)
+		}
+	}
+
+	fmt.Println("Syncing", len(tosync), "files to S3")
+
+	err := db.S3Client.SyncAllFiles(paths)
+	if err != nil {
+		return fmt.Errorf("cannot sync files to s3: %w", err)
+	}
+
+	for _, ss := range tosync {
+		ss.shouldBeSynced = false
+	}
+
 	return nil
 }
 

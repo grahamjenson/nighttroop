@@ -77,3 +77,5 @@ We can get rid of 1/2 of the go routines by not monitoring for when a change occ
 Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
 
 10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per ). Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking they need backing up takes 40ms.
+
+Backing up 10k dbs to s3 synchronously takes about 20 seconds for a local minio server.

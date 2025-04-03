@@ -17,6 +17,7 @@ type SQLDB struct {
 	lastModifiedAt    int64
 	lastModifiedAtWAL int64
 	Modified          bool
+	shouldBeSynced    bool
 }
 
 func (db *SQLDB) Open(migrate string) error {

@@ -1,9 +1,12 @@
 package db
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net"
 	"net/url"
+	"sync"
 
 	"os"
 	"regexp"
@@ -96,6 +99,44 @@ func (c *S3Client) config() *aws.Config {
 	}
 
 	return config
+}
+
+func (c *S3Client) SyncAllFiles(paths []string) error {
+	ctx := context.TODO()
+	var wg sync.WaitGroup
+
+	for _, path := range paths {
+		wg.Add(1)
+		c.uploadToS3(ctx, path, path, &wg) // Concurrent upload
+	}
+
+	//wg.Wait() // Wait for all uploads to finish
+	return nil
+}
+
+func (c *S3Client) uploadToS3(ctx context.Context, filePath, key string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("Failed to open file %s: %v\n", filePath, err)
+		return fmt.Errorf("failed to open file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	_, err = c.uploader.UploadWithContext(ctx, &s3manager.UploadInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(key),
+		Body:   file,
+	})
+
+	if err != nil {
+		log.Printf("Failed to upload %s: %v\n", filePath, err)
+		return fmt.Errorf("failed to upload %s: %w", filePath, err)
+	}
+
+	fmt.Printf("Uploaded %s successfully\n", filePath)
+	return nil
 }
 
 ///
