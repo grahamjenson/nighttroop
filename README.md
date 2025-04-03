@@ -2,7 +2,9 @@
 
 ** WARNING: THIS IS PROBABLY A BAD IDEA **
 
-I wanted to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The biggest tradeoff will be zero downtime deploys, but hopefuly we can reduce the down time to a minamil amount.
+I wanted to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
+
+The biggest tradeoff will be zero downtime deploys, but hopefuly we can reduce the down time to a minamil amount.
 
 The requirements for the app are:
 
@@ -72,4 +74,6 @@ We can get rid of 1/2 of the go routines by not monitoring for when a change occ
 
 # sqlite backup through golang interface
 
-Here we will maintain a list of dirty dbs and then run a background loop every N minutes backing them up. The benefit of this 
+Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
+
+10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per ). Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking they need backing up takes 40ms.

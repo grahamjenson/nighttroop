@@ -43,10 +43,10 @@ func run() error {
 	}
 
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	controlDB, err := db.NewControlDB(db.NewS3Config("s3://mybucket.localhost:9000", "minioadmin", "minioadmin"))
+	controlDB, err := db.NewControlDB("s3://mybucket.localhost:9000/")
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}
@@ -115,7 +115,7 @@ func run() error {
 	// Wait for signal.
 	<-ctx.Done()
 
-	log.Print("myapp received signal, shutting down")
+	fmt.Println("\nreceived signal, shutting down")
 
 	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := server.Shutdown(shutdownCtx); err != nil {
@@ -124,10 +124,13 @@ func run() error {
 
 	// Stop the backup loops
 	controlDB.StopBackupLoop()
+
 	// Force a final backup before exiting
-	controlDB.ForceBackup()
+	controlDB.ForceBackupSync()
+
 	// Close the database connections
 	controlDB.Close()
 
+	fmt.Println("shut down")
 	return nil
 }

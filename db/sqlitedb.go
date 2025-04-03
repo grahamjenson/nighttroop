@@ -92,10 +92,6 @@ func (db *SQLDB) SqliteBackup() error {
 		return fmt.Errorf("cannot open backup db: %w", err)
 	}
 	defer backupDB.Close()
-	err = backupDB.Ping()
-	if err != nil {
-		fmt.Println("Failed to connect to the destination database:", err)
-	}
 
 	backupCon, err := backupDB.Conn(context.TODO())
 	if err != nil {

@@ -18,29 +18,37 @@ type ControlDB struct {
 	BackupInterval time.Duration
 	SyncInterval   time.Duration
 
-	S3Config *S3Config
-	tenants  map[string]*TenantDB
-	rwlock   sync.RWMutex
+	tenants map[string]*TenantDB
+	rwlock  sync.RWMutex
 
 	ctx    context.Context
 	cancel func()
 	wg     sync.WaitGroup
+
+	S3Client *S3Client
 }
 
-func NewControlDB(s3Config *S3Config) (*ControlDB, error) {
+func NewControlDB(s3URL string) (*ControlDB, error) {
+	var err error
+
 	// Create a new control db
 	controlDB := &ControlDB{
 		SQLDB: &SQLDB{
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
 		},
-		BackupInterval: 5 * time.Second,
-		SyncInterval:   5 * time.Second,
-		S3Config:       s3Config,
-		tenants:        make(map[string]*TenantDB),
-		rwlock:         sync.RWMutex{},
+		BackupInterval: 10 * time.Second,
+		SyncInterval:   30 * time.Second,
+
+		tenants: make(map[string]*TenantDB),
+		rwlock:  sync.RWMutex{},
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
+
+	controlDB.S3Client, err = NewS3Client(s3URL)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create s3 client: %w", err)
+	}
 
 	return controlDB, nil
 }
@@ -62,8 +70,7 @@ func (db *ControlDB) GetTenant(subdomain string) (*string, error) {
 
 func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
 	tenantID := NextTenantID()
-	res, err := db.Exec(mtsql.ControlTenantInsert, tenantID)
-	fmt.Println("CreateTenant res", res, err)
+	_, err := db.Exec(mtsql.ControlTenantInsert, tenantID)
 	if err != nil {
 		return "", fmt.Errorf("cannot create tenant: %w", err)
 	}
@@ -128,22 +135,23 @@ func (db ControlDB) Restore() error {
 }
 
 func (db *ControlDB) StartBackupLoop() {
-	// TODO sync and backup are backwards
-	// start a go loop that checks for changes in the sqlite dbs and then copies them to the backup db path
+	// Backup loops over all dbs and backup to the backup folder
+	if db.BackupInterval > 0 {
+		db.wg.Add(1)
+		go func() { defer db.wg.Done(); db.backupMonitor() }()
+	}
+
+	// Sync loops over all
 	if db.SyncInterval > 0 {
 		db.wg.Add(1)
 		go func() { defer db.wg.Done(); db.syncMonitor() }()
 	}
 
 	// start a loop that goes over changed dbs and back them up to db
-	if db.BackupInterval > 0 {
-		db.wg.Add(1)
-		go func() { defer db.wg.Done(); db.backupMonitor() }()
-	}
 
 }
 
-func (db *ControlDB) syncMonitor() {
+func (db *ControlDB) backupMonitor() {
 	syncTicker := time.NewTicker(db.SyncInterval)
 	defer syncTicker.Stop()
 
@@ -154,15 +162,15 @@ func (db *ControlDB) syncMonitor() {
 			return
 		case <-syncTicker.C:
 		}
-		fmt.Println("Sync loop")
+		fmt.Println("Backup loop")
 		// Sync the database to the shadow WAL.
-		if err := db.sync(); err != nil && !errors.Is(err, context.Canceled) {
-			fmt.Println("sync error", "error", err)
+		if err := db.backup(); err != nil && !errors.Is(err, context.Canceled) {
+			fmt.Println("Backup error", "error", err)
 		}
 	}
 }
 
-func (db *ControlDB) backupMonitor() {
+func (db *ControlDB) syncMonitor() {
 	backupTicker := time.NewTicker(db.BackupInterval)
 	defer backupTicker.Stop()
 
@@ -174,16 +182,16 @@ func (db *ControlDB) backupMonitor() {
 		case <-backupTicker.C:
 		}
 
-		fmt.Println("Backup loop")
+		fmt.Println("Sync loop")
 		// Sync the database to the shadow WAL.
-		if err := db.backup(); err != nil && !errors.Is(err, context.Canceled) {
-			fmt.Println("backup error", "error", err)
+		if err := db.sync(); err != nil && !errors.Is(err, context.Canceled) {
+			fmt.Println("Sync error", "error", err)
 		}
 	}
 }
 
-func (db *ControlDB) sync() error {
-	defer trackTime(time.Now(), "Sync")
+func (db *ControlDB) backup() error {
+	defer trackTime(time.Now(), "backup")
 	var err error
 	err = db.UpdateModified()
 	tenants := db.GetTenantDBsSnapshot()
@@ -215,8 +223,10 @@ func (db *ControlDB) sync() error {
 	return nil
 }
 
-func (db *ControlDB) backup() error {
-	defer trackTime(time.Now(), "backup")
+// This function will loop over all files in the /data/backup directory and upload to the s3 bucket
+func (db *ControlDB) sync() error {
+	defer trackTime(time.Now(), "sync")
+	// Upload the control db to the s3 bucket
 	return nil
 }
 
@@ -227,7 +237,20 @@ func (db *ControlDB) StopBackupLoop() {
 	db.wg.Wait()
 }
 
-func (db *ControlDB) ForceBackup() {
+func (db *ControlDB) ForceBackupSync() error {
 	// Go through every tenant and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
 	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
+	err := db.backup()
+	if err != nil {
+		fmt.Println("Error forcing backup:", err)
+		return fmt.Errorf("cannot force backup: %w", err)
+	}
+
+	err = db.sync()
+	if err != nil {
+		fmt.Println("Error forcing sync:", err)
+		return fmt.Errorf("cannot force sync: %w", err)
+	}
+
+	return nil
 }
