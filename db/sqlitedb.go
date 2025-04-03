@@ -11,11 +11,12 @@ import (
 )
 
 type SQLDB struct {
-	Path           string
-	BackupPath     string
-	sqldb          *sql.DB
-	lastModifiedAt int64
-	Modified       bool
+	Path              string
+	BackupPath        string
+	sqldb             *sql.DB
+	lastModifiedAt    int64
+	lastModifiedAtWAL int64
+	Modified          bool
 }
 
 func (db *SQLDB) Open(migrate string) error {
@@ -48,21 +49,37 @@ func (db *SQLDB) Exec(query string, args ...any) (sql.Result, error) {
 
 // Returns the
 func (db *SQLDB) UpdateModified() error {
-	fmt.Println("UpdateModified", db.Path)
-	fileInfo, err := os.Stat(db.Path)
+
+	///
+	// IF WAL HAS CHANGED FORCE UPDATE
+	///
+
+	walInfo, err := os.Stat(db.Path + "-wal")
+	if err != nil {
+		return err // Return error if file does not exist or cannot be accessed
+	}
+	walModifiedAt := walInfo.ModTime().Unix()
+	if walModifiedAt != db.lastModifiedAtWAL {
+		db.lastModifiedAtWAL = walModifiedAt
+		// Try our best to force a checkpoint of the DB
+		db.Exec("PRAGMA wal_checkpoint(FULL);")
+	}
+
+	//// Now onto checking the DB
+	sqliteDBInfo, err := os.Stat(db.Path)
 	if err != nil {
 		return err // Return error if file does not exist or cannot be accessed
 	}
 
 	// Get the modification time and convert it to Unix timestamp
-	lastModifiedAt := fileInfo.ModTime().Unix()
+	lastModifiedAt := sqliteDBInfo.ModTime().Unix()
+
+	//The lastModified time should be the greatest time of WAL and the db
 
 	if lastModifiedAt != db.lastModifiedAt {
 		db.lastModifiedAt = lastModifiedAt
 		db.Modified = true
-		fmt.Println("UpdateModified MODIFIED", db.Path)
 	} else {
-		fmt.Println("UpdateModified NOT MODIFIED", db.Path)
 		db.Modified = false
 	}
 	return nil
@@ -93,37 +110,34 @@ func (db *SQLDB) SqliteBackup() error {
 	defer srcConn.Close()
 
 	err = backupCon.Raw(func(backupConRaw any) error {
-		fmt.Println("SqliteBackup dest RAW", db.Path)
+
 		backupConSQLite, ok := backupConRaw.(*sqlite3.SQLiteConn)
 		if !ok {
+			fmt.Println("SqliteBackup err backupConSQLite", db.Path, err)
 			return fmt.Errorf("failed to get SQLiteConn backupConSQLite")
 		}
 		srcConn.Raw(func(srcConnRaw any) error {
-			fmt.Println("SqliteBackup src RAW 1", db.Path)
+
 			srcConnSQLite, ok := srcConnRaw.(*sqlite3.SQLiteConn)
 			if !ok {
+				fmt.Println("SqliteBackup err srcConnSQLite", db.Path, err)
 				return fmt.Errorf("failed to get SQLiteConn srcConnSQLite")
 			}
-			fmt.Println("SqliteBackup src RAW 2", db.Path)
+
 			backup, err := backupConSQLite.Backup("main", srcConnSQLite, "main")
 			if err != nil {
-				fmt.Println("SqliteBackup src RAW 2", db.Path, err)
+				fmt.Println("SqliteBackup err Backup", db.Path, err)
 				return fmt.Errorf("cannot create backup no create: %w", err)
 			}
-			fmt.Println("SqliteBackup src RAW 3", db.Path)
+
 			defer backup.Finish()
-			done, err := backup.Step(-1)
-			fmt.Println("SqliteBackup src RAW 4", db.Path)
+			_, err = backup.Step(-1)
+
 			if err != nil {
+				fmt.Println("SqliteBackup err 3", db.Path, err)
 				return fmt.Errorf("cannot create backup no step 1: %w", err)
 			}
-			fmt.Println("SqliteBackup STEP 1", done)
-			time.Sleep(2 * time.Second)
-			done, err = backup.Step(-1)
-			if err != nil {
-				return fmt.Errorf("cannot create backup no step 2: %w", err)
-			}
-			fmt.Println("SqliteBackup STEP 2", done)
+
 			return nil
 		})
 		return nil
@@ -132,6 +146,11 @@ func (db *SQLDB) SqliteBackup() error {
 		fmt.Println("SqliteBackup Error on Raw", db.Path, err)
 		return fmt.Errorf("cannot backup db: %w", err)
 	}
-	fmt.Println("SqliteBackup DONE", db.Path)
+
 	return nil
+}
+
+func trackTime(start time.Time, name string) {
+	elapsed := time.Since(start)
+	fmt.Printf("%s took %v\n", name, elapsed)
 }

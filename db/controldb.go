@@ -34,8 +34,8 @@ func NewControlDB(s3Config *S3Config) (*ControlDB, error) {
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
 		},
-		BackupInterval: 2 * time.Second,
-		SyncInterval:   2 * time.Second,
+		BackupInterval: 5 * time.Second,
+		SyncInterval:   5 * time.Second,
 		S3Config:       s3Config,
 		tenants:        make(map[string]*TenantDB),
 		rwlock:         sync.RWMutex{},
@@ -84,7 +84,21 @@ func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
 	return tenantID, nil
 }
 
+func (db *ControlDB) GetTenantDBsSnapshot() []*TenantDB {
+	db.rwlock.RLock()
+	defer db.rwlock.RUnlock()
+
+	// Create a snapshot of the tenant databases
+	tenantDBs := make([]*TenantDB, 0, len(db.tenants))
+	for _, tenant := range db.tenants {
+		tenantDBs = append(tenantDBs, tenant)
+	}
+	return tenantDBs
+}
+
 func (db *ControlDB) Close() error {
+	// Keep it locked so no new tenants can be created
+	db.rwlock.Lock()
 	for _, tenant := range db.tenants {
 		err := tenant.Close()
 		if err != nil {
@@ -92,6 +106,8 @@ func (db *ControlDB) Close() error {
 			// We just ignore and keep on closing stuff
 		}
 	}
+	db.rwlock.Unlock()
+
 	return db.sqldb.Close()
 }
 
@@ -167,16 +183,12 @@ func (db *ControlDB) backupMonitor() {
 }
 
 func (db *ControlDB) sync() error {
+	defer trackTime(time.Now(), "Sync")
 	var err error
 	err = db.UpdateModified()
+	tenants := db.GetTenantDBsSnapshot()
 	if err != nil {
 		return fmt.Errorf("cannot update last modified: %w", err)
-	}
-	for _, tenant := range db.tenants {
-		err = tenant.UpdateModified()
-		if err != nil {
-			return fmt.Errorf("cannot update last modified: %w", err)
-		}
 	}
 
 	if db.Modified {
@@ -186,7 +198,11 @@ func (db *ControlDB) sync() error {
 		}
 	}
 
-	for _, tenant := range db.tenants {
+	for _, tenant := range tenants {
+		err = tenant.UpdateModified()
+		if err != nil {
+			return fmt.Errorf("cannot update last modified: %w", err)
+		}
 		if tenant.Modified {
 			err = tenant.SqliteBackup()
 			if err != nil {
@@ -200,6 +216,7 @@ func (db *ControlDB) sync() error {
 }
 
 func (db *ControlDB) backup() error {
+	defer trackTime(time.Now(), "backup")
 	return nil
 }
 
