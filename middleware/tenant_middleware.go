@@ -23,7 +23,7 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 			host := r.Host
 			subdomain := strings.Split(host, ".")[0] // Get the first part of the host
 			ctx = context.WithValue(ctx, SubdomainKey, subdomain)
-			
+
 			if subdomain != "control" {
 				tenant, err := controlDB.GetTenant(subdomain)
 				// We ignore errors and this is a best effort middleware
@@ -32,7 +32,6 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 					ctx = context.WithValue(ctx, TenantDBKey, tenant)
 				}
 			}
-		
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
