@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"os"
 	"sync"
 	"time"
 
@@ -38,8 +37,8 @@ func NewControlDB(s3URL string) (*ControlDB, error) {
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
 		},
-		BackupInterval: 10 * time.Second,
-		SyncInterval:   30 * time.Second,
+		BackupInterval: 60 * time.Second,
+		SyncInterval:   300 * time.Second,
 
 		tenants: make(map[string]*TenantDB),
 		rwlock:  sync.RWMutex{},
@@ -55,7 +54,10 @@ func NewControlDB(s3URL string) (*ControlDB, error) {
 }
 
 func (db *ControlDB) TryRestoreDBFile() error {
-
+	// If it already exists dont download
+	if db.DBFileExists() {
+		return nil
+	}
 	err := db.S3Client.DownloadFile(db.BackupPath, db.Path)
 	// TODO: check to see the error is not a 404
 	if err != nil {
@@ -67,19 +69,12 @@ func (db *ControlDB) TryRestoreDBFile() error {
 
 func (db *ControlDB) TryRestoreTenantDBFile(tenant *TenantDB) error {
 	// Check if the tenant db file exists
-	_, err := os.Stat(tenant.Path)
-	if err == nil {
-		// File exists, no need to download
-		fmt.Println("Tenant db file exists, no need to download")
+	if tenant.DBFileExists() {
 		return nil
-	} else if !os.IsNotExist(err) {
-		// The error should be not exists
-		// Some other error occurred
-		return fmt.Errorf("cannot stat tenant db: %w", err)
 	}
 
 	fmt.Println("Attempting to download tenant db file")
-	err = db.S3Client.DownloadFile(tenant.BackupPath, tenant.Path)
+	err := db.S3Client.DownloadFile(tenant.BackupPath, tenant.Path)
 	// TODO: check to see the error is not a 404
 	if err != nil {
 		return fmt.Errorf("cannot download tenant db: %w", err)

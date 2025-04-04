@@ -23,15 +23,16 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 			host := r.Host
 			subdomain := strings.Split(host, ".")[0] // Get the first part of the host
 			ctx = context.WithValue(ctx, SubdomainKey, subdomain)
-
-			tenant, err := controlDB.GetTenant(subdomain)
-			// We ignore errors and this is a best effort middleware
-			// Each route needs to check the tenant if needed
-			if err == nil && tenant != nil {
-				ctx = context.WithValue(ctx, TenantDBKey, tenant)
+			
+			if subdomain != "control" {
+				tenant, err := controlDB.GetTenant(subdomain)
+				// We ignore errors and this is a best effort middleware
+				// Each route needs to check the tenant if needed
+				if err == nil && tenant != nil {
+					ctx = context.WithValue(ctx, TenantDBKey, tenant)
+				}
 			}
-
-			// Validate the API ID and KEY in the tenant db
+		
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}

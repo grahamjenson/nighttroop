@@ -16,7 +16,9 @@ The requirements for the app are:
 1. A control plane shows tenants, their database sizes, ordered by last active time.
 1. Tenants are deleted if they do not interact in 30 minutes.
 
-Unlike Users Tenants don't interact with one another so sharding is a bit easier. There are no shared resources required, they are all very seperate.
+Unlike Users, Tenants don't interact with one another so sharding is a bit easier. There are no shared resources required, they are all very seperate.
+
+The goal will be making such an app have 10k tenants, where we will not be charing for the app, so we are very price sensitive to aspects of the deploy.
 
 # Deploy
 
@@ -110,12 +112,34 @@ Back Office stuff
 
 Deleting old users in s3.
 
+reducing cost of s3 usage
+
 # Pricing estimates
-for 10k users
+Pricing for 10k users
+
+Lets say we cap the user DB size at 5Mb, and truncate all past data. It will matter how fast data comes in as well, as each sync operation will cost. 
+
+Control DB size will be negligble, each tenent DB would be 10MB
 
 S3, Cloudflare R2, Tigris
 
-100K users would make this 
+NAME      COST PER GB/month   COST PER WRITE 1MM  COST PER READ 1MM    EGRESS     INGRES
+Tigris    $0.02                 $5                       $0.5            FREE      FREE
+R2        $0.015                $4.50                    $0.36           FREE      FREE
+S3        $0.023                $5                       $0.4            0.09/GB   FREE      
+
+Lets say 100% of users will add data every 5 mins and we sync every 5 mins then we will be 
+uploading 50GB every 5 mins, with 10k writes, so 3MM writes per day, or 90MM writes per month, so like $450 per month.
+
+Total data will be 50GB, so about $1 per month.
+
+Reads will only happen per deploy, which, lets say averages once per day, so like 300k per month, so like $0.1
+
+As you can see, the size of the database is not really the issue (other than egress costs from the server and resources used to upload and process.) The killer on the cost is the amount of writes, which the only lever is how often to backup. Every 5 mins may be acceptable in some cases, but in others maybe not. 
+
+The solution may be compressing all or groups of tenants with lz4, before uploading, e.g. compressing based on first letter in tenant id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching tenants to speed up deploys), and CPU and HDD resources.
+
+
 
 # Alternatives
 Turso https://turso.tech/blog/give-each-of-your-users-their-own-sqlite-database-b74445f4

@@ -57,6 +57,21 @@ func (db *SQLDB) Query(query string, args ...any) (*sql.Rows, error) {
 	return db.sqldb.Query(query, args...)
 }
 
+func (db *SQLDB) DBFileExists() bool {
+	_, err := os.Stat(db.Path)
+	if err == nil {
+		// File exists, no need to download
+		fmt.Println("db file exists", db.Path)
+		return true
+	} else if !os.IsNotExist(err) {
+		// The error should be not exists
+		// Some other error occurred
+		fmt.Println("db file check Error", db.Path)
+		return false
+	}
+	return false
+}
+
 // Returns the
 func (db *SQLDB) UpdateModified() error {
 
