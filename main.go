@@ -51,13 +51,11 @@ func run() error {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}
 
-	// Restore the control database from remote if it exists
-	// Tenant DBs can be lazily resotred later
-	err = controlDB.Restore()
+	err = controlDB.TryRestoreDBFile()
 	if err != nil {
-		return fmt.Errorf("cannot restore control db: %w", err)
-	}
+		fmt.Println("Failed to restore Control DB: %w", err)
 
+	}
 	// Open Databse, hook up litesrtream, and migrate
 	err = controlDB.Open(mtsql.ControlCreate)
 	if err != nil {
@@ -98,8 +96,14 @@ func run() error {
 	})
 
 	r.Get("/score", func(w http.ResponseWriter, r *http.Request) {
+		tenantDB := mtmiddleware.GetTenant(r.Context())
+		if tenantDB == nil {
+			http.Error(w, "Tenant not found", http.StatusNotFound)
+			return
+		}
+
 		// Start a transaction.
-		http.NotFound(w, r)
+		w.Write([]byte(fmt.Sprintf("Tenant found: %s\n", tenantDB.Subdomain)))
 	})
 
 	controlDB.StartBackupLoop()

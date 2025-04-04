@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/url"
@@ -136,6 +137,30 @@ func (c *S3Client) uploadToS3(ctx context.Context, filePath, key string, wg *syn
 	}
 
 	fmt.Printf("Uploaded %s successfully\n", filePath)
+	return nil
+}
+
+func (c *S3Client) DownloadFile(s3path string, outpath string) error {
+	// This function downloads a path to a tenant
+	ctx := context.TODO()
+	out, err := c.s3.GetObjectWithContext(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(s3path),
+	})
+	if err != nil {
+		return fmt.Errorf("cannot get object from s3: %w", err)
+	}
+	defer out.Body.Close()
+	file, err := os.Create(outpath)
+	if err != nil {
+		return fmt.Errorf("cannot create file: %w", err)
+	}
+	defer file.Close()
+	_, err = io.Copy(file, out.Body)
+	if err != nil {
+		return fmt.Errorf("cannot copy file: %w", err)
+	}
+	fmt.Printf("Restored %s successfully\n", s3path)
 	return nil
 }
 

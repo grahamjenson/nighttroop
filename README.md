@@ -106,7 +106,9 @@ Migrations
 Blast Radius
 1. A single bad acting tenant could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
 
-Deleting old users in s3
+Back Office stuff
+
+Deleting old users in s3.
 
 # Pricing estimates
 for 10k users

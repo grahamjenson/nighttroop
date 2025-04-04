@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 
@@ -53,6 +54,40 @@ func NewControlDB(s3URL string) (*ControlDB, error) {
 	return controlDB, nil
 }
 
+func (db *ControlDB) TryRestoreDBFile() error {
+
+	err := db.S3Client.DownloadFile(db.BackupPath, db.Path)
+	// TODO: check to see the error is not a 404
+	if err != nil {
+		return fmt.Errorf("cannot download control db: %w", err)
+	}
+
+	return nil
+}
+
+func (db *ControlDB) TryRestoreTenantDBFile(tenant *TenantDB) error {
+	// Check if the tenant db file exists
+	_, err := os.Stat(tenant.Path)
+	if err == nil {
+		// File exists, no need to download
+		fmt.Println("Tenant db file exists, no need to download")
+		return nil
+	} else if !os.IsNotExist(err) {
+		// The error should be not exists
+		// Some other error occurred
+		return fmt.Errorf("cannot stat tenant db: %w", err)
+	}
+
+	fmt.Println("Attempting to download tenant db file")
+	err = db.S3Client.DownloadFile(tenant.BackupPath, tenant.Path)
+	// TODO: check to see the error is not a 404
+	if err != nil {
+		return fmt.Errorf("cannot download tenant db: %w", err)
+	}
+
+	return nil
+}
+
 func (db *ControlDB) GetNTenantsDBs() int {
 	l := 0
 	db.rwlock.RLock()
@@ -61,11 +96,85 @@ func (db *ControlDB) GetNTenantsDBs() int {
 	return l
 }
 
-func (db *ControlDB) GetTenant(subdomain string) (*string, error) {
-	// TODO: return the tenant db
-	// Get tenant from db
-	// If we have not seen this tenant in the last 10 mins update last_seen
-	return nil, nil
+func (db *ControlDB) GetTenant(subdomain string) (*TenantDB, error) {
+	fmt.Println("GetTenant", subdomain)
+	// See if the tenant is already there
+	db.rwlock.RLock()
+	tenant, ok := db.tenants[subdomain]
+	db.rwlock.RUnlock()
+	if ok {
+		fmt.Println("Found tenant in map")
+		return tenant, nil
+	}
+
+	// Check if tenant exists in the db
+	fmt.Println("Tenant not found in map, checking DB")
+	lastSeenAt, err := db.TenantInDB(subdomain)
+	if err != nil {
+		fmt.Println("Error getting tenant from DB", err)
+		return nil, fmt.Errorf("cannot get tenant from DB: %w", err)
+	}
+	if lastSeenAt == nil {
+		fmt.Println("Tenant not found in DB")
+		return nil, fmt.Errorf("tenant not found in DB")
+	}
+
+	tenantDB := NewTenantDB(subdomain)
+
+	fmt.Println("Trying to restore tenant from backup")
+	err = db.TryRestoreTenantDBFile(tenantDB)
+	if err != nil {
+		return nil, fmt.Errorf("cannot restore tenant db: %w", err)
+	}
+	fmt.Println("Tenant db Restored and Opening")
+	err = tenantDB.Open(mtsql.TenantCreate)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open tenant db: %w", err)
+	}
+	fmt.Println("Tenant db opened adding to map")
+
+	// Add the tenant to the map
+	db.rwlock.Lock()
+	db.tenants[subdomain] = tenantDB
+	db.rwlock.Unlock()
+
+	// Update the last seen at
+	fmt.Println("Updating last seen at")
+	_, err = db.Exec("UPDATE tenants SET last_seen_at = ? WHERE subdomain = ?", time.Now().Format(time.RFC3339), subdomain)
+	if err != nil {
+		fmt.Println("Error updating last seen at", err)
+		return nil, fmt.Errorf("cannot update last seen at: %w", err)
+	}
+	fmt.Println("Last seen at updated")
+	return tenantDB, nil
+}
+
+func (db *ControlDB) TenantInDB(subdomain string) (*string, error) {
+	// Check if tenant exists in the db
+	rows, err := db.Query("SELECT last_seen_at FROM tenants WHERE subdomain = ? LIMIT 1", subdomain)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get tenant: %w", err)
+	}
+	if rows == nil {
+		return nil, fmt.Errorf("tenant not found")
+	}
+
+	defer rows.Close()
+	rows.Next()
+
+	var last_seen_at string
+	err = rows.Scan(&last_seen_at)
+	if err != nil {
+		return nil, fmt.Errorf("cannot scan tenant: %w", err)
+	}
+	fmt.Println("Found Tenant: ", last_seen_at)
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return &last_seen_at, nil
 }
 
 func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
@@ -76,10 +185,7 @@ func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
 	}
 
 	// Create a new tenant db
-	tenantDB, err := NewTenantDB(tenantID)
-	if err != nil {
-		return "", fmt.Errorf("cannot create tenant db: %w", err)
-	}
+	tenantDB := NewTenantDB(tenantID)
 
 	err = tenantDB.Open(mtsql.TenantCreate)
 	if err != nil {
@@ -128,10 +234,6 @@ func NextTenantID() string {
 		result[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(result)
-}
-
-func (db ControlDB) Restore() error {
-	return nil
 }
 
 func (db *ControlDB) StartBackupLoop() {

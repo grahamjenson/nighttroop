@@ -2,10 +2,10 @@ package db
 
 type TenantDB struct {
 	*SQLDB
-	subdomain string
+	Subdomain string
 }
 
-func NewTenantDB(subdomain string) (*TenantDB, error) {
+func NewTenantDB(subdomain string) *TenantDB {
 	topPath := "/tenant/" + subdomain + ".sqlite"
 	tenantDB := &TenantDB{
 		SQLDB: &SQLDB{
@@ -13,10 +13,10 @@ func NewTenantDB(subdomain string) (*TenantDB, error) {
 			BackupPath: "data/backup" + topPath,
 			CacheSize:  2000,
 		},
-		subdomain: subdomain,
+		Subdomain: subdomain,
 	}
 
-	return tenantDB, nil
+	return tenantDB
 }
 
 func (db *TenantDB) ValidateToken(token string) error {

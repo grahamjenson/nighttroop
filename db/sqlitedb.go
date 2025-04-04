@@ -53,6 +53,10 @@ func (db *SQLDB) Exec(query string, args ...any) (sql.Result, error) {
 	return db.sqldb.Exec(query, args...)
 }
 
+func (db *SQLDB) Query(query string, args ...any) (*sql.Rows, error) {
+	return db.sqldb.Query(query, args...)
+}
+
 // Returns the
 func (db *SQLDB) UpdateModified() error {
 

@@ -27,7 +27,7 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 			tenant, err := controlDB.GetTenant(subdomain)
 			// We ignore errors and this is a best effort middleware
 			// Each route needs to check the tenant if needed
-			if err != nil && tenant != nil {
+			if err == nil && tenant != nil {
 				ctx = context.WithValue(ctx, TenantDBKey, tenant)
 			}
 
@@ -40,14 +40,14 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 }
 
 // GetTenant retrieves the tenant ID from the context.
-func GetTenant(ctx context.Context) string {
+func GetTenant(ctx context.Context) *mtdb.TenantDB {
 	if ctx == nil {
-		return ""
+		return nil
 	}
-	if reqID, ok := ctx.Value(TenantDBKey).(string); ok {
+	if reqID, ok := ctx.Value(TenantDBKey).(*mtdb.TenantDB); ok {
 		return reqID
 	}
-	return ""
+	return nil
 }
 
 func GetSubdomain(ctx context.Context) string {
