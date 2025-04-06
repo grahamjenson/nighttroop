@@ -18,12 +18,14 @@ type ControlDB struct {
 	BackupInterval time.Duration
 	SyncInterval   time.Duration
 
-	tenants map[string]*TenantDB
-	rwlock  sync.RWMutex
+	tenants       map[string]*TenantDB
+	tenantsRWLock sync.RWMutex
 
 	ctx    context.Context
 	cancel func()
 	wg     sync.WaitGroup
+
+	backupSyncLock sync.Mutex
 
 	S3Client *S3Client
 }
@@ -37,11 +39,11 @@ func NewControlDB(s3URL string) (*ControlDB, error) {
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
 		},
-		BackupInterval: 60 * time.Second,
-		SyncInterval:   300 * time.Second,
+		BackupInterval: 10 * time.Second,
+		SyncInterval:   30 * time.Second,
 
-		tenants: make(map[string]*TenantDB),
-		rwlock:  sync.RWMutex{},
+		tenants:       make(map[string]*TenantDB),
+		tenantsRWLock: sync.RWMutex{},
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
@@ -85,18 +87,18 @@ func (db *ControlDB) TryRestoreTenantDBFile(tenant *TenantDB) error {
 
 func (db *ControlDB) GetNTenantsDBs() int {
 	l := 0
-	db.rwlock.RLock()
+	db.tenantsRWLock.RLock()
 	l = len(db.tenants)
-	db.rwlock.RUnlock()
+	db.tenantsRWLock.RUnlock()
 	return l
 }
 
 func (db *ControlDB) GetTenant(subdomain string) (*TenantDB, error) {
 	fmt.Println("GetTenant", subdomain)
 	// See if the tenant is already there
-	db.rwlock.RLock()
+	db.tenantsRWLock.RLock()
 	tenant, ok := db.tenants[subdomain]
-	db.rwlock.RUnlock()
+	db.tenantsRWLock.RUnlock()
 	if ok {
 		fmt.Println("Found tenant in map")
 		return tenant, nil
@@ -129,9 +131,9 @@ func (db *ControlDB) GetTenant(subdomain string) (*TenantDB, error) {
 	fmt.Println("Tenant db opened adding to map")
 
 	// Add the tenant to the map
-	db.rwlock.Lock()
+	db.tenantsRWLock.Lock()
 	db.tenants[subdomain] = tenantDB
-	db.rwlock.Unlock()
+	db.tenantsRWLock.Unlock()
 
 	// Update the last seen at
 	fmt.Println("Updating last seen at")
@@ -186,15 +188,15 @@ func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("cannot create tenant db: %w", err)
 	}
-	db.rwlock.Lock()
+	db.tenantsRWLock.Lock()
 	db.tenants[tenantID] = tenantDB
-	db.rwlock.Unlock()
+	db.tenantsRWLock.Unlock()
 	return tenantID, nil
 }
 
 func (db *ControlDB) GetTenantDBsSnapshot() []*TenantDB {
-	db.rwlock.RLock()
-	defer db.rwlock.RUnlock()
+	db.tenantsRWLock.RLock()
+	defer db.tenantsRWLock.RUnlock()
 
 	// Create a snapshot of the tenant databases
 	tenantDBs := make([]*TenantDB, 0, len(db.tenants))
@@ -206,7 +208,7 @@ func (db *ControlDB) GetTenantDBsSnapshot() []*TenantDB {
 
 func (db *ControlDB) Close() error {
 	// Keep it locked so no new tenants can be created
-	db.rwlock.Lock()
+	db.tenantsRWLock.Lock()
 	for _, tenant := range db.tenants {
 		err := tenant.Close()
 		if err != nil {
@@ -214,7 +216,7 @@ func (db *ControlDB) Close() error {
 			// We just ignore and keep on closing stuff
 		}
 	}
-	db.rwlock.Unlock()
+	db.tenantsRWLock.Unlock()
 
 	return db.sqldb.Close()
 }
@@ -235,13 +237,20 @@ func (db *ControlDB) StartBackupLoop() {
 	// Backup loops over all dbs and backup to the backup folder
 	if db.BackupInterval > 0 {
 		db.wg.Add(1)
-		go func() { defer db.wg.Done(); db.backupMonitor() }()
+		go func() {
+			defer db.wg.Done()
+			db.backupMonitor()
+		}()
 	}
 
 	// Sync loops over all
 	if db.SyncInterval > 0 {
 		db.wg.Add(1)
-		go func() { defer db.wg.Done(); db.syncMonitor() }()
+
+		go func() {
+			defer db.wg.Done()
+			db.syncMonitor()
+		}()
 	}
 
 	// start a loop that goes over changed dbs and back them up to db
@@ -259,6 +268,7 @@ func (db *ControlDB) backupMonitor() {
 			return
 		case <-syncTicker.C:
 		}
+
 		fmt.Println("Backup loop")
 		// Sync the database to the shadow WAL.
 		if err := db.backup(); err != nil && !errors.Is(err, context.Canceled) {
@@ -278,7 +288,6 @@ func (db *ControlDB) syncMonitor() {
 			return
 		case <-backupTicker.C:
 		}
-
 		fmt.Println("Sync loop")
 		// Sync the database to the shadow WAL.
 		if err := db.sync(); err != nil && !errors.Is(err, context.Canceled) {
@@ -289,6 +298,11 @@ func (db *ControlDB) syncMonitor() {
 
 func (db *ControlDB) backup() error {
 	defer trackTime(time.Now(), "backup")
+	fmt.Println("Trying to backup Grabed lock")
+	db.backupSyncLock.Lock()
+	fmt.Println("backup Grabed lock")
+	defer db.backupSyncLock.Unlock()
+
 	var err error
 	err = db.UpdateModified()
 	tenants := db.GetTenantDBsSnapshot()
@@ -322,34 +336,26 @@ func (db *ControlDB) backup() error {
 	return nil
 }
 
-// This function will loop over all files in the /data/backup directory and upload to the s3 bucket
 func (db *ControlDB) sync() error {
 	defer trackTime(time.Now(), "sync")
+	fmt.Println("Trying to Sync Grabed lock")
+	db.backupSyncLock.Lock()
+	fmt.Println("Sync Grabed lock")
+	defer db.backupSyncLock.Unlock()
 	// Upload the control db to the s3 bucket
-	tosync := []*SQLDB{}
+
 	paths := []string{}
-	if db.shouldBeSynced {
-		tosync = append(tosync, db.SQLDB)
-		paths = append(paths, db.BackupPath)
-	}
+
+	paths = append(paths, db.BackupPath)
 
 	tenants := db.GetTenantDBsSnapshot()
 	for _, t := range tenants {
-		if t.shouldBeSynced {
-			tosync = append(tosync, t.SQLDB)
-			paths = append(paths, t.BackupPath)
-		}
+		paths = append(paths, t.BackupPath)
 	}
 
-	fmt.Println("Syncing", len(tosync), "files to S3")
-
-	err := db.S3Client.SyncAllFiles(paths)
+	err := db.S3Client.SyncAllFilesToSingleLZ4(paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync files to s3: %w", err)
-	}
-
-	for _, ss := range tosync {
-		ss.shouldBeSynced = false
 	}
 
 	return nil

@@ -2,6 +2,8 @@
 
 ** WARNING: THIS IS PROBABLY A BAD IDEA **
 
+Not every product has to be high availability, and no every piece of data needs to be treated like a precious gem and replicated around the planet for safety.
+
 I wanted to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
 
 The biggest tradeoff will be zero downtime deploys, but hopefuly we can reduce the down time to a minamil amount.
@@ -18,7 +20,10 @@ The requirements for the app are:
 
 Unlike Users, Tenants don't interact with one another so sharding is a bit easier. There are no shared resources required, they are all very seperate.
 
-The goal will be making such an app have 10k tenants, where we will not be charing for the app, so we are very price sensitive to aspects of the deploy.
+This higher level requirements are the application should be able to have 10k tenants where:
+1. each tenant uploads on average a piece of data every 5 minutes (33 reqs/s)
+1. each tenant only costs $1 total per year to host
+1. best effort to save tenants data, backed up at least every 5 minutes.
 
 # Deploy
 
