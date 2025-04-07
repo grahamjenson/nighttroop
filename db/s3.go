@@ -122,7 +122,7 @@ func (c *S3Client) SyncAllFiles(paths []string) error {
 
 func (c *S3Client) SyncAllFilesToSingleLZ4(paths []string) error {
 	defer trackTime(time.Now(), "SyncAllFilesToSingleLZ4")
-	fmt.Println("Syncing all files to single LZ4")
+	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
 	ctx := context.TODO()
 
 	fmt.Println("Creating pipes")

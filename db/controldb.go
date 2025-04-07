@@ -69,6 +69,26 @@ func (db *ControlDB) TryRestoreDBFile() error {
 	return nil
 }
 
+func (db *ControlDB) CheckTenantDBs() error {
+	res, err := db.Query("SELECT subdomain FROM tenants ORDER subdomain DESC")
+	if err != nil {
+		return fmt.Errorf("cannot query tenants: %w", err)
+	}
+	for res.Next() {
+		var subdomain string
+		err = res.Scan(&subdomain)
+		if err != nil {
+			return fmt.Errorf("cannot scan tenant: %w", err)
+		}
+		_, err := db.GetTenant(subdomain, false)
+		if err != nil {
+			fmt.Println("Tenant not found in map, checking DB")
+			// Check if tenant exists in the db
+		}
+	}
+	return nil
+}
+
 func (db *ControlDB) TryRestoreTenantDBFile(tenant *TenantDB) error {
 	// Check if the tenant db file exists
 	if tenant.DBFileExists() {
@@ -93,7 +113,7 @@ func (db *ControlDB) GetNTenantsDBs() int {
 	return l
 }
 
-func (db *ControlDB) GetTenant(subdomain string) (*TenantDB, error) {
+func (db *ControlDB) GetTenant(subdomain string, updateLastSeen bool) (*TenantDB, error) {
 	fmt.Println("GetTenant", subdomain)
 	// See if the tenant is already there
 	db.tenantsRWLock.RLock()
@@ -136,13 +156,15 @@ func (db *ControlDB) GetTenant(subdomain string) (*TenantDB, error) {
 	db.tenantsRWLock.Unlock()
 
 	// Update the last seen at
-	fmt.Println("Updating last seen at")
-	_, err = db.Exec("UPDATE tenants SET last_seen_at = ? WHERE subdomain = ?", time.Now().Format(time.RFC3339), subdomain)
-	if err != nil {
-		fmt.Println("Error updating last seen at", err)
-		return nil, fmt.Errorf("cannot update last seen at: %w", err)
+	if updateLastSeen {
+		fmt.Println("Updating last seen at")
+		_, err = db.Exec("UPDATE tenants SET last_seen_at = ? WHERE subdomain = ?", time.Now().Format(time.RFC3339), subdomain)
+		if err != nil {
+			fmt.Println("Error updating last seen at", err)
+			return nil, fmt.Errorf("cannot update last seen at: %w", err)
+		}
+		fmt.Println("Last seen at updated")
 	}
-	fmt.Println("Last seen at updated")
 	return tenantDB, nil
 }
 

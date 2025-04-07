@@ -25,7 +25,7 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 			ctx = context.WithValue(ctx, SubdomainKey, subdomain)
 
 			if subdomain != "control" {
-				tenant, err := controlDB.GetTenant(subdomain)
+				tenant, err := controlDB.GetTenant(subdomain, true)
 				// We ignore errors and this is a best effort middleware
 				// Each route needs to check the tenant if needed
 				if err == nil && tenant != nil {

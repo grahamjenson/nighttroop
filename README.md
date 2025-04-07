@@ -21,7 +21,7 @@ The requirements for the app are:
 Unlike Users, Tenants don't interact with one another so sharding is a bit easier. There are no shared resources required, they are all very seperate.
 
 This higher level requirements are the application should be able to have 10k tenants where:
-1. each tenant uploads on average a piece of data every 5 minutes (33 reqs/s)
+1. each tenant uploads on average a piece of data every 5 minutes. So support 33 reqs/s min.
 1. each tenant only costs $1 total per year to host
 1. best effort to save tenants data, backed up at least every 5 minutes.
 
@@ -46,6 +46,7 @@ DBs for each user will be lazily downloaded (if needed) when they next call. Thi
 
 This deploy flow should work for both releasing a new version on the same machine AND releasing a new version on a brand new machine. The only difference will be that DB download wont be needed if a new machine is not used.
 
+The deploy time to a clean server (worst case) is then 
 
 # Testing locally
 
@@ -89,8 +90,11 @@ Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking the
 
 Backing up 10k dbs to s3 synchronously takes about 20 seconds for a local minio server.
 
-TODO test Restore, downloading 10k empty databases and then opening them all up
+Test Restore, downloading 10k empty databases and then opening them all up
 
+A tenant with 54,000 data points (a datum every 5 minutes for 6 months) creates a 1.5MB Sqlite DB. Lz4 seems to reduce this size by about 1/3 so 500KB. Lets double that to 3Mb as a cap for the users db size, getting compressed to 1MB, or with 10K users that is 30GB on disk and 10GB upload total.
+
+On my local mackbook that took about 1-2mins to lz4 then upload.
 
 
 # DR
@@ -142,7 +146,9 @@ Reads will only happen per deploy, which, lets say averages once per day, so lik
 
 As you can see, the size of the database is not really the issue (other than egress costs from the server and resources used to upload and process.) The killer on the cost is the amount of writes, which the only lever is how often to backup. Every 5 mins may be acceptable in some cases, but in others maybe not. 
 
-The solution may be compressing all or groups of tenants with lz4, before uploading, e.g. compressing based on first letter in tenant id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching tenants to speed up deploys), and CPU and HDD resources.
+The solution may be compressing all or groups of tenants with lz4, before uploading, e.g. compressing based on first letter in tenant id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching tenants to speed up deploys), and CPU and HDD resources. But it would speed up the sync process in total given it would be making less network calls.
+
+
 
 
 

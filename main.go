@@ -63,6 +63,10 @@ func run() error {
 	}
 	defer controlDB.Close()
 
+	err = controlDB.CheckTenantDBs()
+	if err != nil {
+		return fmt.Errorf("cannot check tenant dbs: %w", err)
+	}
 	// Run web server.
 	fmt.Printf("listening on 8080\n")
 	r := chi.NewRouter()
