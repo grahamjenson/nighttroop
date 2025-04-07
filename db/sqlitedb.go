@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/mattn/go-sqlite3"
@@ -26,6 +27,17 @@ func (db *SQLDB) Open(migrate string) error {
 	if db.CacheSize == 0 {
 		db.CacheSize = 2000
 	}
+
+	err = mkParentDirs(db.Path)
+	if err != nil {
+		return fmt.Errorf("cannot create parent directories: %w", err)
+	}
+
+	err = mkParentDirs(db.BackupPath)
+	if err != nil {
+		return fmt.Errorf("cannot create parent directories: %w", err)
+	}
+
 	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000", db.Path, -db.CacheSize)
 	fmt.Println("Open", dsn)
 	db.sqldb, err = sql.Open("sqlite3", dsn)
@@ -111,7 +123,8 @@ func (db *SQLDB) UpdateModified() error {
 }
 
 func (db *SQLDB) SqliteBackup() error {
-	fmt.Println("SqliteBackup", db.Path)
+	fmt.Println("SqliteBackup", db.Path, db.BackupPath)
+
 	backupDB, err := sql.Open("sqlite3", db.BackupPath)
 	if err != nil {
 		return fmt.Errorf("cannot open backup db: %w", err)
@@ -174,4 +187,12 @@ func (db *SQLDB) SqliteBackup() error {
 func trackTime(start time.Time, name string) {
 	elapsed := time.Since(start)
 	fmt.Printf("%s took %v\n", name, elapsed)
+}
+
+func mkParentDirs(path string) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("cannot create directory %s: %w", dir, err)
+	}
+	return nil
 }

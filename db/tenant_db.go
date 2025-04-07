@@ -1,17 +1,20 @@
 package db
 
+import "fmt"
+
 type TenantDB struct {
 	*SQLDB
 	Subdomain string
 }
 
 func NewTenantDB(subdomain string) *TenantDB {
-	topPath := "/tenant/" + subdomain + ".sqlite"
+	firstChar := string(subdomain[0])
+	topPath := fmt.Sprintf("/tenant/%s/%s.sqlite", firstChar, subdomain)
 	tenantDB := &TenantDB{
 		SQLDB: &SQLDB{
 			Path:       "data/db" + topPath,
 			BackupPath: "data/backup" + topPath,
-			CacheSize:  2000,
+			CacheSize:  200,
 		},
 		Subdomain: subdomain,
 	}

@@ -37,11 +37,6 @@ func run() error {
 		return fmt.Errorf("cannot create templates: %w", err)
 	}
 
-	err = db.SetupFileStructure()
-	if err != nil {
-		return fmt.Errorf("cannot setup file structure: %w", err)
-	}
-
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()

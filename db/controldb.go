@@ -70,7 +70,7 @@ func (db *ControlDB) TryRestoreDBFile() error {
 }
 
 func (db *ControlDB) CheckTenantDBs() error {
-	res, err := db.Query("SELECT subdomain FROM tenants ORDER subdomain DESC")
+	res, err := db.Query("SELECT subdomain FROM tenants ORDER BY subdomain DESC")
 	if err != nil {
 		return fmt.Errorf("cannot query tenants: %w", err)
 	}

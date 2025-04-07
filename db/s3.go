@@ -220,23 +220,6 @@ func (c *S3Client) DownloadFile(s3path string, outpath string) error {
 // Files
 ///
 
-func SetupFileStructure() error {
-	var err error
-
-	err = os.MkdirAll("data/db/tenant", 0755)
-	if err != nil {
-		return fmt.Errorf("cannot create tenant data directory: %w", err)
-	}
-
-	// where the backups sit
-	err = os.MkdirAll("data/backup/tenant", 0755)
-	if err != nil {
-		return fmt.Errorf("cannot create tenant data directory: %w", err)
-	}
-
-	return nil
-}
-
 func parseS3URL(s3URL string) (bucket, region, endpoint string) {
 	var host, port string
 	// Extract port if one is specified.
