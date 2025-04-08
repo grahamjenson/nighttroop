@@ -20,6 +20,7 @@ type TenantPool struct {
 	rwLock  sync.RWMutex
 
 	S3Path string
+	Path   string
 	char   byte
 }
 
@@ -28,6 +29,7 @@ func NewTenantPool(char byte) *TenantPool {
 		char:    char,
 		tenants: make(map[string]*TenantDB),
 		S3Path:  "tenantpool/" + string(char) + ".tar.lz4",
+		Path:    "data/db/tenant/" + string(char),
 	}
 }
 
@@ -65,17 +67,18 @@ func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []
 	restored := tp.GetNTenantsDBs()
 	if restored > 0 {
 		if restored != len(subdomains) {
-			fmt.Println("Not all tenants were restored for Tennant Pool %c", tp.char)
+			fmt.Printf("Not all tenants were restored for Tennant Pool %v %v %v\n", string(tp.char), restored, len(subdomains))
+			return fmt.Errorf("not all tenants were restored")
 		}
-		// We assume if any were on disk they were all on disk
-		// This is a bad assumption but we will fix it later
+		// If they should all be on disk if any are
 		return nil
 	}
 
 	// Now we need to see if we want to restore from S3
-	fmt.Println("Trying to restore tenant from backup")
+	fmt.Println("Trying to restore tenant from backup for pool", string(tp.char))
 
-	found, err := s3Client.DownloadAndExtractLZ4(tp.S3Path, "data/")
+	found, err := s3Client.DownloadAndExtractLZ4(tp.S3Path, tp.Path)
+	fmt.Println("Finished s3 download backup for pool", string(tp.char))
 	if !found && err == nil {
 		fmt.Println("No tenant backup found")
 		return nil
@@ -83,10 +86,6 @@ func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []
 	if err != nil {
 		// TODO dont fail here if just not found
 		return fmt.Errorf("cannot download tenant db: %w", err)
-	}
-
-	if err != nil {
-		return fmt.Errorf("cannot restore tenant db: %w", err)
 	}
 
 	for _, subdomain := range subdomains {
@@ -98,7 +97,8 @@ func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []
 	}
 
 	if tp.GetNTenantsDBs() != len(subdomains) {
-		fmt.Println("Not all tenants were restored for Tennant Pool %c", tp.char)
+		fmt.Printf("Not all tenants were restored from S3 Tennant Pool %v %v %v %v\n", string(tp.char), tp.GetNTenantsDBs(), len(subdomains), subdomains)
+		return fmt.Errorf("not all tenants were restored from S3")
 	}
 
 	return nil
@@ -194,6 +194,10 @@ func (tp *TenantPool) backup(s3Client *S3Client) error {
 		paths = append(paths, tenant.BackupPath)
 
 	}
+	if len(paths) == 0 {
+		fmt.Println("No tenants to backup")
+		return nil
+	}
 	err = s3Client.SyncAllFilesToSingleLZ4(tp.S3Path, paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync tenant db: %w", err)
@@ -234,7 +238,26 @@ func (db *TenantDB) ValidateToken(token string) error {
 }
 
 func (db *TenantDB) GetScoresSum() (int, error) {
-	return 0, nil
+	rows, err := db.Query("SELECT SUM(score) AS score FROM scores")
+	if err != nil {
+		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+	}
+	if err = rows.Err(); err != nil {
+		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+	}
+	defer rows.Close()
+
+	scoreRow := rows.Next()
+	if !scoreRow {
+		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+	}
+	var score int
+	err = rows.Scan(&score)
+	if err != nil {
+		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+	}
+
+	return score, nil
 }
 
 // //

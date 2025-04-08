@@ -162,7 +162,7 @@ func (db *ControlDB) GetTenant(subdomain string, updateLastSeen bool) (*TenantDB
 	}
 
 	if tenant == nil {
-		fmt.Println("Tenant found in map")
+		fmt.Println("Tenant not found in map")
 		return tenant, nil
 	}
 

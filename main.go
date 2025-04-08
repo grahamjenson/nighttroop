@@ -128,9 +128,13 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 			http.Error(w, "Tenant not found", http.StatusNotFound)
 			return
 		}
-
+		score, err := tenantDB.GetScoresSum()
+		if err != nil {
+			fmt.Println("Error getting scores sum", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		// Start a transaction.
-		w.Write([]byte(fmt.Sprintf("Tenant found: %s\n", tenantDB.Subdomain)))
+		w.Write([]byte(fmt.Sprintf("Tenant found: %s %v\n", tenantDB.Subdomain, score)))
 	})
 
 	server := &http.Server{Addr: ":8080", Handler: r}

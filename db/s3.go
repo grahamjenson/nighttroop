@@ -97,7 +97,7 @@ func (c *S3Client) SyncAllFiles(paths []string) error {
 }
 
 func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
-	defer trackTime(time.Now(), "SyncAllFilesToSingleLZ4")
+	defer trackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
 	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
 	ctx := context.TODO()
 
@@ -323,7 +323,9 @@ func extractTarLZ4(reader io.Reader, outputDir string) error {
 	tarReader := tar.NewReader(lz4Reader)
 
 	for {
+
 		header, err := tarReader.Next()
+
 		if err == io.EOF {
 			break // End of archive
 		}
@@ -352,7 +354,7 @@ func extractTarLZ4(reader io.Reader, outputDir string) error {
 				outFile.Close()
 				return fmt.Errorf("writing file: %w", err)
 			}
-
+			fmt.Println("Extraction of ", targetPath, " complete")
 			outFile.Close()
 
 			// Restore original file permissions
