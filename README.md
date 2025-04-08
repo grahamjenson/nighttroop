@@ -74,15 +74,18 @@ Option 2: Leaving it open we will need to check memory consumption of each db. C
 
 # LiteStream
 
-10,000 Active Tenants Litestream dbs is 7000MB RAM, because each litestream connection had 2 long running go routines (AFAIK), one that loops to sync the data up defined with `MonitorInterval`, and one that holds open a select statement to stop the SQLite DB from checkpointing without the db knowing. `SyncInterval`
+10,000 empty tenant databases, Litestream is 7GB RAM, because each litestream connection had 2 long running go routines (AFAIK), one that loops to sync the data up defined with `MonitorInterval`, and one that holds open a select statement to stop the SQLite DB from checkpointing without the db knowing. `SyncInterval`. If these databases had any data in them the ram usage would be much larger.
+
 CPU is really the thing that gets hit here. If the `MonitorInterval` is the default at 1 second, the CPU gets destroyed by 10,000 dbs all deciding to Sync. Increasing this to 5 minutes decreases that problem, but even when nothing needs to be synced during these 
+
+Then there is the cost, Litestream is constantly writing to S3, which will be very expencive. For a single DB it might be a few dollars a month, but that multiplied by 10k is wallet emptyng.
 
 We can get rid of 1/2 of the go routines by not monitoring for when a change occurs, and just remember to call Sync somehow if something writes to the db (e.g. maintain a dirty DB list).
 
 
 # sqlite backup through golang interface
 
-Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
+Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up, also running another slower loop that takes the backups and sends them to S3. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
 
 10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per). Each user also may use cache set by `cache_size` which might add 2Mb more memory usage per user. So lets assume 4Mb per user memory usage. Maybe using the ATTACH feature in SQLite would use less RAM, but I am not sure of other implications related to backup and such. 
 
@@ -94,8 +97,11 @@ Test Restore, downloading 10k empty databases and then opening them all up
 
 A tenant with 54,000 data points (a datum every 5 minutes for 6 months) creates a 1.5MB Sqlite DB. Lz4 seems to reduce this size by about 1/3 so 500KB. Lets double that to 3Mb as a cap for the users db size, getting compressed to 1MB, or with 10K users that is 30GB on disk and 10GB upload total.
 
-On my local mackbook that took about 1-2mins to lz4 then upload.
+On my local mackbook that took about 1-2mins to lz4 then upload. So, Doing all 10k tenants as a single file isnt flexible enough and doing as individual files isnt cost effective. I think grouping the tenants by starting char, then having a sync and restore 
 
+Rather than having a Backup Go routing and a Sync Goroutine, I think having a Go routine per tenant group would where it would backup then sync.
+
+Once you move to pools of tenants, lazy restore from S3 becomes much harder, so to simplify I will restore all tenant pools before starting http. This will mean that deploy and startup time will probably be delayed by the amount of time to download all tenant pools, but that should be easy to make concurrent. Each pool is 1/36 * 10,000 * 1Mb , so about 300MB.
 
 # DR
 

@@ -1,2 +1,2 @@
-INSERT INTO tenants (subdomain)
-VALUES (?);
+INSERT INTO tenants (subdomain, pool)
+VALUES (?, ?);

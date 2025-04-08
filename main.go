@@ -49,20 +49,48 @@ func run() error {
 	err = controlDB.TryRestoreDBFile()
 	if err != nil {
 		fmt.Println("Failed to restore Control DB: %w", err)
-
+		// TODO dont fail here if the DB file doesnt exist in S3
+		return fmt.Errorf("cannot restore control db: %w", err)
 	}
+	
 	// Open Databse, hook up litesrtream, and migrate
 	err = controlDB.Open(mtsql.ControlCreate)
 	if err != nil {
 		return err
 	}
-	defer controlDB.Close()
 
-	err = controlDB.CheckTenantDBs()
+	err = controlDB.RestoreAndOpenAllTenants()
 	if err != nil {
-		return fmt.Errorf("cannot check tenant dbs: %w", err)
+		return fmt.Errorf("cannot restore tenants: %w", err)
 	}
+
 	// Run web server.
+	server := setupHTTP(ctx, controlDB)
+
+	controlDB.StartBackupLoops()
+
+	// Wait for signal.
+	<-ctx.Done()
+
+	fmt.Println("\nreceived signal, shutting down")
+
+	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("HTTP server Shutdown: %v", err)
+	}
+
+	// Stop the backup loops
+	controlDB.StopBackupLoop()
+
+	// Force a final backup before exiting
+	controlDB.ForceBackupSync()
+
+	controlDB.Close()
+	fmt.Println("shut down")
+	return nil
+}
+
+func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	fmt.Printf("listening on 8080\n")
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -105,8 +133,6 @@ func run() error {
 		w.Write([]byte(fmt.Sprintf("Tenant found: %s\n", tenantDB.Subdomain)))
 	})
 
-	controlDB.StartBackupLoop()
-
 	server := &http.Server{Addr: ":8080", Handler: r}
 
 	go func() {
@@ -115,25 +141,5 @@ func run() error {
 		}
 	}()
 
-	// Wait for signal.
-	<-ctx.Done()
-
-	fmt.Println("\nreceived signal, shutting down")
-
-	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("HTTP server Shutdown: %v", err)
-	}
-
-	// Stop the backup loops
-	controlDB.StopBackupLoop()
-
-	// Force a final backup before exiting
-	controlDB.ForceBackupSync()
-
-	// Close the database connections
-	controlDB.Close()
-
-	fmt.Println("shut down")
-	return nil
+	return server
 }

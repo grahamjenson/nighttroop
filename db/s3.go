@@ -3,23 +3,25 @@ package db
 import (
 	"archive/tar"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/url"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"os"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	s3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+
 	"github.com/pierrec/lz4/v4"
 )
 
@@ -28,8 +30,8 @@ import (
 
 // //
 type S3Client struct {
-	s3       *s3.S3 // s3 service
-	uploader *s3manager.Uploader
+	s3       *s3.Client // s3 service
+	uploader *manager.Uploader
 
 	// AWS authentication keys.
 	AccessKeyID     string
@@ -73,54 +75,41 @@ func NewS3Client(s3URL string) (*S3Client, error) {
 	// }
 
 	// Create new AWS session.
-	config := c.config()
-
-	sess, err := session.NewSession(config)
+	cfg, err := c.config()
 	if err != nil {
-		return nil, fmt.Errorf("cannot create aws session: %w", err)
+		return nil, fmt.Errorf("cannot create config: %w", err)
 	}
-	c.s3 = s3.New(sess)
-	c.uploader = s3manager.NewUploader(sess)
+
+	c.s3 = s3.NewFromConfig(*cfg)
+	c.uploader = manager.NewUploader(c.s3)
 
 	fmt.Println("Created New S3 Client", *c)
 	return c, nil
 }
 
-func (c *S3Client) config() *aws.Config {
-	config := &aws.Config{}
-
-	if c.AccessKeyID != "" || c.SecretAccessKey != "" {
-		config.Credentials = credentials.NewStaticCredentials(c.AccessKeyID, c.SecretAccessKey, "")
+func (c *S3Client) config() (*aws.Config, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(c.Region),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(c.AccessKeyID, c.SecretAccessKey, "")),
+		config.WithBaseEndpoint(c.Endpoint),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("cannot load default config: %w", err)
 	}
-	if c.Endpoint != "" {
-		config.Endpoint = aws.String(c.Endpoint)
-	}
-	if c.ForcePathStyle {
-		config.S3ForcePathStyle = aws.Bool(c.ForcePathStyle)
-	}
-
-	if c.Region != "" {
-		config.Region = aws.String(c.Region)
-	}
-
-	return config
+	return &cfg, nil
 }
 
 func (c *S3Client) SyncAllFiles(paths []string) error {
 	ctx := context.TODO()
-	var wg sync.WaitGroup
 
 	for _, path := range paths {
-		wg.Add(1)
 		c.uploadToS3(ctx, path, path)
-		wg.Done() // Concurrent upload
 	}
 
-	//wg.Wait() // Wait for all uploads to finish
 	return nil
 }
 
-func (c *S3Client) SyncAllFilesToSingleLZ4(paths []string) error {
+func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
 	defer trackTime(time.Now(), "SyncAllFilesToSingleLZ4")
 	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
 	ctx := context.TODO()
@@ -142,7 +131,7 @@ func (c *S3Client) SyncAllFilesToSingleLZ4(paths []string) error {
 	}()
 
 	fmt.Println("Streaming to S3")
-	err := c.uploadStreamToS3(ctx, "backup.tar.lz4", pr)
+	err := c.uploadStreamToS3(ctx, key, pr)
 	if err != nil {
 		fmt.Println("Ennot upload stream to s", err)
 		return fmt.Errorf("cannot upload stream to s3: %w", err)
@@ -150,6 +139,30 @@ func (c *S3Client) SyncAllFilesToSingleLZ4(paths []string) error {
 
 	//wg.Wait() // Wait for all uploads to finish
 	return nil
+}
+
+func (c *S3Client) DownloadAndExtractLZ4(key string, outpath string) (bool, error) {
+	// This function downloads a path to a tenant
+	ctx := context.TODO()
+	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		var noSuchKeyError *types.NoSuchKey
+		if errors.As(err, &noSuchKeyError) {
+			return false, nil
+		}
+		return false, fmt.Errorf("cannot get object from s3: %w", err)
+	}
+	defer out.Body.Close()
+
+	err = extractTarLZ4(out.Body, outpath)
+	if err != nil {
+		return true, fmt.Errorf("cannot extract tar LZ4: %w", err)
+	}
+
+	return true, nil
 }
 
 func (c *S3Client) uploadToS3(ctx context.Context, filePath, key string) error {
@@ -161,7 +174,7 @@ func (c *S3Client) uploadToS3(ctx context.Context, filePath, key string) error {
 	}
 	defer file.Close()
 
-	_, err = c.uploader.UploadWithContext(ctx, &s3manager.UploadInput{
+	_, err = c.uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
 		Body:   file,
@@ -177,7 +190,7 @@ func (c *S3Client) uploadToS3(ctx context.Context, filePath, key string) error {
 }
 
 func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.Reader) error {
-	_, err := c.uploader.UploadWithContext(ctx, &s3manager.UploadInput{
+	_, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
 		Body:   stream,
@@ -192,28 +205,34 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 	return nil
 }
 
-func (c *S3Client) DownloadFile(s3path string, outpath string) error {
+func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
 	// This function downloads a path to a tenant
 	ctx := context.TODO()
-	out, err := c.s3.GetObjectWithContext(ctx, &s3.GetObjectInput{
+	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(s3path),
 	})
 	if err != nil {
-		return fmt.Errorf("cannot get object from s3: %w", err)
+		var noSuchKeyError *types.NoSuchKey
+		if errors.As(err, &noSuchKeyError) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("cannot get object from s3: %w", err)
 	}
 	defer out.Body.Close()
+
 	file, err := os.Create(outpath)
 	if err != nil {
-		return fmt.Errorf("cannot create file: %w", err)
+		return true, fmt.Errorf("cannot create file: %w", err)
 	}
 	defer file.Close()
 	_, err = io.Copy(file, out.Body)
 	if err != nil {
-		return fmt.Errorf("cannot copy file: %w", err)
+		return true, fmt.Errorf("cannot copy file: %w", err)
 	}
 	fmt.Printf("Restored %s successfully\n", s3path)
-	return nil
+	return true, nil
 }
 
 ///
@@ -307,4 +326,57 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 
 	_, err = io.Copy(tw, file)
 	return err
+}
+
+func extractTarLZ4(reader io.Reader, outputDir string) error {
+	// Wrap with LZ4 reader
+	lz4Reader := lz4.NewReader(reader)
+
+	// Create tar reader from decompressed stream
+	tarReader := tar.NewReader(lz4Reader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break // End of archive
+		}
+		if err != nil {
+			return fmt.Errorf("reading tar entry: %w", err)
+		}
+
+		targetPath := filepath.Join(outputDir, header.Name)
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {
+				return fmt.Errorf("creating dir %s: %w", targetPath, err)
+			}
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+				return fmt.Errorf("creating parent dir: %w", err)
+			}
+
+			outFile, err := os.Create(targetPath)
+			if err != nil {
+				return fmt.Errorf("creating file: %w", err)
+			}
+
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				outFile.Close()
+				return fmt.Errorf("writing file: %w", err)
+			}
+
+			outFile.Close()
+
+			// Restore original file permissions
+			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
+				return fmt.Errorf("chmod: %w", err)
+			}
+		default:
+			fmt.Printf("Skipping unsupported type: %v\n", header.Typeflag)
+		}
+	}
+
+	fmt.Println("✅ Extraction complete")
+	return nil
 }
