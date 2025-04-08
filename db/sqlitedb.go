@@ -21,7 +21,7 @@ type SQLDB struct {
 	Modified          bool
 }
 
-func (db *SQLDB) Open(migrate string) error {
+func (db *SQLDB) Open(migrate *string) error {
 	var err error
 	if db.CacheSize == 0 {
 		db.CacheSize = 2000
@@ -46,10 +46,11 @@ func (db *SQLDB) Open(migrate string) error {
 
 	// MIGRATE
 	// Create table for storing page views.
-	if _, err := db.Exec(migrate); err != nil {
-		return fmt.Errorf("cannot create table: %w", err)
+	if migrate != nil {
+		if _, err := db.Exec(*migrate); err != nil {
+			return fmt.Errorf("cannot create table: %w", err)
+		}
 	}
-
 	return nil
 }
 

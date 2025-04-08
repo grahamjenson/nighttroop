@@ -57,11 +57,12 @@ func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []
 	var err error
 	// Check to see if tenants are already on disk
 	for _, subdomain := range subdomains {
-		tenantDB := NewTenantDB(subdomain)
-		if tenantDB.DBFileExists() {
-			// At this point in time we are ignoring errors
-			tp.OpenTenant(subdomain)
+		_, err := tp.OpenTenant(subdomain)
+		if err != nil {
+			fmt.Printf("Error opening tenant db %v %v %v\n", string(tp.char), subdomain, err)
+			return fmt.Errorf("cannot open tenant db: %w", err)
 		}
+		// We ignore if the DB was not found to be created
 	}
 
 	restored := tp.GetNTenantsDBs()
@@ -89,16 +90,17 @@ func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []
 	}
 
 	for _, subdomain := range subdomains {
-		tenantDB := NewTenantDB(subdomain)
-		if tenantDB.DBFileExists() {
-			// At this point in time we are ignoring errors
-			tp.OpenTenant(subdomain)
-		}
-	}
 
-	if tp.GetNTenantsDBs() != len(subdomains) {
-		fmt.Printf("Not all tenants were restored from S3 Tennant Pool %v %v %v %v\n", string(tp.char), tp.GetNTenantsDBs(), len(subdomains), subdomains)
-		return fmt.Errorf("not all tenants were restored from S3")
+		// At this point in time we are ignoring errors
+		tenant, err := tp.OpenTenant(subdomain)
+		if err != nil {
+			fmt.Printf("Error opening tenant db %v %v %v\n", string(tp.char), subdomain, err)
+			return fmt.Errorf("cannot open tenant db: %w", err)
+		}
+		if tenant == nil {
+			fmt.Printf("Tenant db %v %v not found\n", string(tp.char), subdomain)
+			return fmt.Errorf("cannot open tenant db: %w", err)
+		}
 	}
 
 	return nil
@@ -106,13 +108,14 @@ func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []
 }
 
 func (tp *TenantPool) CreateTenant(subdomain string) (*TenantDB, error) {
+	var err error
 	tenantDB := NewTenantDB(subdomain)
 	if tenantDB.DBFileExists() {
 		return nil, fmt.Errorf("tenant db file already exists")
 	}
 
 	// Create the DB file
-	err := tenantDB.Open(mtsql.TenantCreate)
+	err = tenantDB.Open(&mtsql.TenantCreate)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create tenant db: %w", err)
 	}
@@ -129,7 +132,7 @@ func (tp *TenantPool) OpenTenant(subdomain string) (*TenantDB, error) {
 	tenantDB := NewTenantDB(subdomain)
 	if tenantDB.DBFileExists() {
 		// If the DB file is there, write the tenant
-		err := tenantDB.Open(mtsql.TenantCreate)
+		err := tenantDB.Open(nil)
 		if err != nil {
 			return nil, fmt.Errorf("cannot open tenant db: %w", err)
 		}
@@ -139,7 +142,7 @@ func (tp *TenantPool) OpenTenant(subdomain string) (*TenantDB, error) {
 		tp.rwLock.Unlock()
 		return tenantDB, nil
 	}
-	return nil, fmt.Errorf("tenant db file does not exist")
+	return nil, nil
 }
 
 func (tp *TenantPool) Close() error {
@@ -188,7 +191,7 @@ func (tp *TenantPool) backup(s3Client *S3Client) error {
 	for _, tenant := range tp.tenants {
 		err = tenant.SqliteBackup()
 		if err != nil {
-			return fmt.Errorf("cannot backup control db: %w", err)
+			return fmt.Errorf("cannot backup tenant db: %w %v", err, tenant.Subdomain)
 		}
 
 		paths = append(paths, tenant.BackupPath)
@@ -200,7 +203,7 @@ func (tp *TenantPool) backup(s3Client *S3Client) error {
 	}
 	err = s3Client.SyncAllFilesToSingleLZ4(tp.S3Path, paths)
 	if err != nil {
-		return fmt.Errorf("cannot sync tenant db: %w", err)
+		return fmt.Errorf("cannot sync tenant pool: %w %v", err, string(tp.char))
 	}
 
 	// Copy the control db to the backup location
@@ -264,7 +267,7 @@ func (db *TenantDB) GetScoresSum() (int, error) {
 // UTILS
 // //
 
-const tenantCharSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const tenantCharSet = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 

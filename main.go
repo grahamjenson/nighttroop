@@ -54,7 +54,7 @@ func run() error {
 	}
 
 	// Open Databse, hook up litesrtream, and migrate
-	err = controlDB.Open(mtsql.ControlCreate)
+	err = controlDB.Open(&mtsql.ControlCreate)
 	if err != nil {
 		return err
 	}

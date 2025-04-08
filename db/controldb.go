@@ -37,8 +37,8 @@ func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
 		},
-		ControlBackupInterval: 30 * time.Second,
-		PoolBackupInterval:    60 * time.Second,
+		ControlBackupInterval: 10 * time.Second,
+		PoolBackupInterval:    300 * time.Second,
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
@@ -78,12 +78,14 @@ func (db *ControlDB) TryRestoreDBFile() error {
 }
 
 func (db *ControlDB) RestoreAndOpenAllTenants() error {
+	defer trackTime(time.Now(), "RestoreAndOpenAllTenants")
 	g, _ := errgroup.WithContext(context.Background())
 
 	for _, pool := range db.tenantPools {
 
 		g.Go(func() error {
 			tenantSubdomains, err := db.GetTenantPoolTennantsFromDB(pool.char)
+			fmt.Println("TenantSubdomains", pool.char, tenantSubdomains)
 			if err != nil {
 				return fmt.Errorf("cannot get tenant pool tenants: %w", err)
 			}
@@ -96,10 +98,10 @@ func (db *ControlDB) RestoreAndOpenAllTenants() error {
 	}
 
 	if err := g.Wait(); err != nil {
-		fmt.Printf("One of the tasks failed: %v\n", err)
+		fmt.Printf("One of the RestoreAndOpenAllTenants  tasks failed: %v\n", err)
 		return fmt.Errorf("cannot restore and open all tenants: %w", err)
 	} else {
-		fmt.Println("All tasks succeeded!")
+		fmt.Println("All RestoreAndOpenAllTenants tasks succeeded!")
 	}
 
 	return nil
@@ -299,12 +301,9 @@ func (db *ControlDB) backupLoop() {
 
 func (db *ControlDB) backup() error {
 	defer trackTime(time.Now(), "backup")
-	fmt.Println("Trying to backup Grabed lock")
-
-	fmt.Println("backup Grabed lock")
 
 	var err error
-	err = db.UpdateModified()
+	db.UpdateModified()
 
 	if db.Modified {
 		err = db.SqliteBackup()
@@ -330,6 +329,7 @@ func (db *ControlDB) StopBackupLoop() {
 }
 
 func (db *ControlDB) ForceBackupSync() error {
+	defer trackTime(time.Now(), "ForceBackupSync")
 	// Go through every tenant and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
 	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
 	err := db.backup()
@@ -338,12 +338,20 @@ func (db *ControlDB) ForceBackupSync() error {
 		return fmt.Errorf("cannot force backup: %w", err)
 	}
 
-	for _, pool := range db.tenantPools {
-		err = pool.backup(db.S3Client)
-		if err != nil {
-			fmt.Println("Error forcing backup:", err)
+	g, _ := errgroup.WithContext(context.Background())
 
-		}
+	for _, pool := range db.tenantPools {
+
+		g.Go(func() error {
+			return pool.backup(db.S3Client)
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		fmt.Printf("One of the ForceBackupSync tasks failed: %v\n", err)
+		return fmt.Errorf("cannot sync all tenants: %w", err)
+	} else {
+		fmt.Println("All ForceBackupSync tasks succeeded!")
 	}
 
 	return nil
