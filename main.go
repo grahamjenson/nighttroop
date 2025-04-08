@@ -41,7 +41,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	controlDB, err := db.NewControlDB("s3://mybucket.localhost:9000/")
+	controlDB, err := db.NewControlDB("http://localhost:9000/", "mybucket")
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}
@@ -52,7 +52,7 @@ func run() error {
 		// TODO dont fail here if the DB file doesnt exist in S3
 		return fmt.Errorf("cannot restore control db: %w", err)
 	}
-	
+
 	// Open Databse, hook up litesrtream, and migrate
 	err = controlDB.Open(mtsql.ControlCreate)
 	if err != nil {

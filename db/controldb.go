@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -27,7 +28,7 @@ type ControlDB struct {
 	S3Client *S3Client
 }
 
-func NewControlDB(s3URL string) (*ControlDB, error) {
+func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 	var err error
 
 	// Create a new control db
@@ -41,7 +42,7 @@ func NewControlDB(s3URL string) (*ControlDB, error) {
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
-	controlDB.S3Client, err = NewS3Client(s3URL)
+	controlDB.S3Client, err = NewS3Client(endpoint, bucket)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create s3 client: %w", err)
 	}
@@ -61,6 +62,8 @@ func (db *ControlDB) TryRestoreDBFile() error {
 	if db.DBFileExists() {
 		return nil
 	}
+	os.MkdirAll("data/backup", os.ModePerm)
+	os.MkdirAll("data/db", os.ModePerm)
 	found, err := db.S3Client.DownloadFile(db.BackupPath, db.Path)
 	if !found && err == nil {
 		fmt.Println("No control db backup found")

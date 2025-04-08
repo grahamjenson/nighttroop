@@ -16,7 +16,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -51,15 +50,17 @@ const MaxKeys = 1000
 // DefaultRegion is the region used if one is not specified.
 const DefaultRegion = "us-east-1"
 
-func NewS3Client(s3URL string) (*S3Client, error) {
+func NewS3Client(endpoint, bucket string) (*S3Client, error) {
 	c := &S3Client{
 		AccessKeyID:     "minioadmin",
 		SecretAccessKey: "minioadmin",
 		ForcePathStyle:  true,
+		Bucket:          bucket,
+		Endpoint:        endpoint,
+		Region:          DefaultRegion,
 	}
 
-	c.Bucket, c.Region, c.Endpoint = parseS3URL(s3URL)
-
+	fmt.Println("Parsed S3 URL", c.Bucket, c.Region, c.Endpoint)
 	// // Look up region if not specified and no endpoint is used.
 	// // Endpoints are typically used for non-S3 object stores and do not
 	// // necessarily require a region.
@@ -74,29 +75,15 @@ func NewS3Client(s3URL string) (*S3Client, error) {
 	// 	}
 	// }
 
-	// Create new AWS session.
-	cfg, err := c.config()
-	if err != nil {
-		return nil, fmt.Errorf("cannot create config: %w", err)
-	}
-
-	c.s3 = s3.NewFromConfig(*cfg)
+	c.s3 = s3.NewFromConfig(aws.Config{Region: c.Region}, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(c.Endpoint)
+		o.Credentials = credentials.NewStaticCredentialsProvider(c.AccessKeyID, c.SecretAccessKey, "")
+		o.UsePathStyle = c.ForcePathStyle
+	})
 	c.uploader = manager.NewUploader(c.s3)
 
 	fmt.Println("Created New S3 Client", *c)
 	return c, nil
-}
-
-func (c *S3Client) config() (*aws.Config, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(c.Region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(c.AccessKeyID, c.SecretAccessKey, "")),
-		config.WithBaseEndpoint(c.Endpoint),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("cannot load default config: %w", err)
-	}
-	return &cfg, nil
 }
 
 func (c *S3Client) SyncAllFiles(paths []string) error {
