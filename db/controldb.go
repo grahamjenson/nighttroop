@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"os"
+	"runtime"
+	"sort"
 	"sync"
 	"time"
 
@@ -80,8 +83,10 @@ func (db *ControlDB) TryRestoreDBFile() error {
 func (db *ControlDB) RestoreAndOpenAllTenants() error {
 	defer trackTime(time.Now(), "RestoreAndOpenAllTenants")
 	g, _ := errgroup.WithContext(context.Background())
-
-	for _, pool := range db.tenantPools {
+	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
+	g.SetLimit(limit)
+	fmt.Println("RestoreAndOpenAllTenants running", len(db.tenantPools), limit)
+	for _, pool := range db.allPools() {
 
 		g.Go(func() error {
 			tenantSubdomains, err := db.GetTenantPoolTennantsFromDB(pool.char)
@@ -250,7 +255,7 @@ func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
 
 func (db *ControlDB) Close() error {
 	// Keep it locked so no new tenants can be created
-	for _, pool := range db.tenantPools {
+	for _, pool := range db.allPools() {
 		pool.Close()
 	}
 
@@ -267,13 +272,52 @@ func (db *ControlDB) StartBackupLoops() {
 		}()
 	}
 
-	// For Each TenantGroup we start a backup loop
-	for _, pool := range db.tenantPools {
+	if db.PoolBackupInterval > 0 {
 		db.wg.Add(1)
-		go func(pool *TenantPool) {
+		// The goal here is over the PoolBackupInterval we will backup all pools
+		// But we will stagger them so that we do not swamp the CPU or network
+		staggeredInterval := db.PoolBackupInterval / time.Duration(len(db.tenantPools))
+		go func() {
 			defer db.wg.Done()
-			pool.BackupLoop(db.PoolBackupInterval, db.ctx, db.S3Client)
-		}(pool)
+			db.tpBackupLoop(staggeredInterval)
+		}()
+	}
+
+}
+
+func (db *ControlDB) allPools() []*TenantPool {
+	var allPools []*TenantPool
+	for _, pool := range db.tenantPools {
+		allPools = append(allPools, pool)
+	}
+
+	sort.Slice(allPools, func(i, j int) bool {
+		return allPools[i].char < allPools[j].char
+	})
+	return allPools
+}
+
+func (db *ControlDB) tpBackupLoop(interval time.Duration) {
+	syncTicker := time.NewTicker(interval)
+	defer syncTicker.Stop()
+
+	allPools := db.allPools()
+
+	index := 0
+	for {
+		// Wait for ticker or context close.
+		select {
+		case <-db.ctx.Done():
+			return
+		case <-syncTicker.C:
+		}
+		tp := allPools[index]
+		fmt.Println("Backup Tenant loop")
+		// Backup DB to S3
+		if err := tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
+			fmt.Println("Backup error", "error", err)
+		}
+		index = (index + 1) % len(allPools)
 	}
 }
 
@@ -340,7 +384,11 @@ func (db *ControlDB) ForceBackupSync() error {
 
 	g, _ := errgroup.WithContext(context.Background())
 
-	for _, pool := range db.tenantPools {
+	// Limit the number of concurrent goroutines to the number of CPU cores - 1
+	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
+	g.SetLimit(limit)
+	fmt.Println("ForceBackupSync running", len(db.tenantPools), limit)
+	for _, pool := range db.allPools() {
 
 		g.Go(func() error {
 			return pool.backup(db.S3Client)

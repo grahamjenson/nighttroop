@@ -103,7 +103,14 @@ Rather than having a Backup Go routing and a Sync Goroutine, I think having a Go
 
 Once you move to pools of tenants, lazy restore from S3 becomes much harder, so to simplify I will restore all tenant pools before starting http. This will mean that deploy and startup time will probably be delayed by the amount of time to download all tenant pools, but that should be easy to make concurrent. Each pool is 1/36 * 10,000 * 1Mb , so about 300MB.
 
-The time it takes to backup and upload up 10,000 dbs is about 3 minutes, but doing so concurrently takes all CPUs at which time it cannot server HTTP requests. Staggering pool backups will help with this, but incure a time penalty. The time it takes to download and restore 10k tenants took 4m
+The time it takes to backup and upload up 10,000 dbs is about 3 minutes, but doing so concurrently takes all CPUs at which time it cannot server HTTP requests. Staggering pool backups will help with this, but incure a time penalty. The time it takes to download and restore 10k tenants is significantly less.
+
+Time without staggering is 3mins for all 36 pools, but when staggered it is 3s per 36 pools. we are saving nearly half the time by spreading out the uploads.
+
+Restoring all Dbs from s3 takes 25s. Backing Up all Dbs when killing the service takes at worst 1.5mins.
+That means that basically a deploy downtime is around 2 minutes if booting to a clean machine.
+
+
 
 # DR
 

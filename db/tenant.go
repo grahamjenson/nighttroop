@@ -226,7 +226,7 @@ func NewTenantDB(subdomain string) *TenantDB {
 		SQLDB: &SQLDB{
 			Path:       "data/db" + topPath,
 			BackupPath: "data/backup" + topPath,
-			CacheSize:  400,
+			CacheSize:  500,
 		},
 		Subdomain: subdomain,
 		char:      char,

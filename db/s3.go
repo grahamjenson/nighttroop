@@ -7,13 +7,10 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
-	"net/url"
 	"path/filepath"
 	"time"
 
 	"os"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -221,51 +218,6 @@ func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
 	fmt.Printf("Restored %s successfully\n", s3path)
 	return true, nil
 }
-
-///
-// Files
-///
-
-func parseS3URL(s3URL string) (bucket, region, endpoint string) {
-	var host, port string
-	// Extract port if one is specified.
-	parsedURL, err := url.Parse(s3URL)
-	if err != nil {
-		host = s3URL
-	} else {
-		host = parsedURL.Hostname()
-		port = parsedURL.Port()
-		endpoint = parsedURL.Host
-	}
-
-	fmt.Printf("HFIHAIOFASOI %s -- %s -- %s -- \n", host, port, err)
-
-	// Extract fields from provider-specific host formats.
-	scheme := "https"
-	if a := localhostRegex.FindStringSubmatch(host); a != nil {
-		fmt.Println("HFIHAIOFASOI")
-		bucket, region = a[1], "us-east-1"
-		scheme, endpoint = "http", "localhost"
-	} else {
-		bucket = host
-	}
-
-	// Add port back to endpoint, if available.
-	if endpoint != "" && port != "" {
-		endpoint = net.JoinHostPort(endpoint, port)
-	}
-
-	// Prepend scheme to endpoint.
-	if endpoint != "" {
-		endpoint = scheme + "://" + endpoint
-	}
-
-	return bucket, region, endpoint
-}
-
-var (
-	localhostRegex = regexp.MustCompile(`^(?:(.+)\.)?localhost$`)
-)
 
 ///// SLOP
 
