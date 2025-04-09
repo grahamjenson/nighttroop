@@ -2,6 +2,7 @@ package mtmiddleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -26,15 +27,16 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 
 			if subdomain != "control" {
 				tenant, err := controlDB.GetTenant(subdomain, true)
+				fmt.Println("TenantMW", tenant, err)
 				// We ignore errors and this is a best effort middleware
 				// Each route needs to check the tenant if needed
 				if err == nil && tenant != nil {
 					ctx = context.WithValue(ctx, TenantDBKey, tenant)
 				}
 			}
-
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
+
 		return http.HandlerFunc(fn)
 	}
 }

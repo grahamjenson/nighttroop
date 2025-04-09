@@ -124,9 +124,13 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 
 	r.Get("/score", func(w http.ResponseWriter, r *http.Request) {
 		tenantDB := mtmiddleware.GetTenant(r.Context())
+
 		if tenantDB == nil {
+			fmt.Println("Tenant NOT found")
 			http.Error(w, "Tenant not found", http.StatusNotFound)
 			return
+		} else {
+			fmt.Println("Tenant found", tenantDB.Subdomain)
 		}
 		score, err := tenantDB.GetScoresSum()
 		if err != nil {

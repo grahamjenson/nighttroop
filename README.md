@@ -2,9 +2,16 @@
 
 ** WARNING: THIS IS PROBABLY A BAD IDEA **
 
-Not every product has to be high availability, and no every piece of data needs to be treated like a precious gem and replicated around the planet for safety.
+Not every project has to be a high-availabile, redudently self-healing, auto-scaled blue-green immutable cloud. And not every piece of data needs is a precious gem that needs to be replicated, live streamed, archived and versinoed, with shards blocks and objects in a data lake. [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
 
-I wanted to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
+I have a project in mind that I need to run as cheaply, has probably 10k users world wide, the features barely change and is never going to be a unicorn. I am not going to charge for it, I am not even going to collect user details to use it, free accounts for everyone, forever. To accomplish this I will need to run it for less than $1 per user per year. 
+
+The project is basically an IOT platform that collects data from users devices, so the most recent data is the most important with past data becoming less relevant. It is a Nightscout compatible server, for those that know what that is, but that is unimportant to this post.
+
+Complexity is the enemy of this project, I don't want to be a slave to running it. I don't even want multiple services, the entire thing is going to be a single binary, relying on the minimal amount of external services possible.
+
+I think the obvious answer to this is 
+to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
 
 The biggest tradeoff will be zero downtime deploys, but hopefuly we can reduce the down time to a minamil amount.
 
@@ -109,6 +116,8 @@ Time without staggering is 3mins for all 36 pools, but when staggered it is 3s p
 
 Restoring all Dbs from s3 takes 25s. Backing Up all Dbs when killing the service takes at worst 1.5mins.
 That means that basically a deploy downtime is around 2 minutes if booting to a clean machine.
+
+Improved performance by only uploading pools where something has changed. 
 
 
 

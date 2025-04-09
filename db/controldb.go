@@ -158,6 +158,7 @@ func (db *ControlDB) GetTenant(subdomain string, updateLastSeen bool) (*TenantDB
 	tenant := tp.GetTenant(subdomain)
 	tenantInDB, err := db.TenantInDB(subdomain, updateLastSeen)
 
+	fmt.Println("TenantInDB", tenantInDB, err)
 	if err != nil {
 		fmt.Println("Error getting tenant from DB", err)
 		return nil, fmt.Errorf("cannot get tenant from DB: %w", err)
@@ -188,6 +189,11 @@ func (db *ControlDB) TenantInDB(subdomain string, updateLastSeen bool) (bool, er
 	}
 
 	defer rows.Close()
+	err = rows.Err()
+	if err != nil {
+		return false, fmt.Errorf("rows error: %w", err)
+	}
+
 	rows.Next()
 
 	var last_seen_at string
@@ -196,11 +202,6 @@ func (db *ControlDB) TenantInDB(subdomain string, updateLastSeen bool) (bool, er
 		return false, fmt.Errorf("cannot scan tenant: %w", err)
 	}
 	fmt.Println("Found Tenant: ", last_seen_at)
-
-	err = rows.Err()
-	if err != nil {
-		return false, fmt.Errorf("rows error: %w", err)
-	}
 
 	if updateLastSeen {
 		err = db.TryUpdateLastSeenAt(subdomain, last_seen_at)
@@ -224,7 +225,6 @@ func (db *ControlDB) TryUpdateLastSeenAt(subdomain string, last_seen_at string) 
 
 	// Only update if the last seen at is older than 10 minutes
 	if last_seen_at_time.Add(10 * time.Minute).After(time.Now()) {
-		fmt.Println("Last seen at is still valid")
 		return nil
 	}
 
