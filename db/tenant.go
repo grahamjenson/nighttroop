@@ -1,10 +1,9 @@
 package db
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 	"sync"
 	"time"
 
@@ -39,6 +38,19 @@ func (tp *TenantPool) GetNTenantsDBs() int {
 	l = len(tp.tenants)
 	tp.rwLock.RUnlock()
 	return l
+}
+
+func (tp *TenantPool) allTenants() []*TenantDB {
+	tenants := make([]*TenantDB, 0)
+	tp.rwLock.RLock()
+	for _, tenant := range tp.tenants {
+		tenants = append(tenants, tenant)
+	}
+	tp.rwLock.RUnlock()
+	sort.Slice(tenants, func(i, j int) bool {
+		return tenants[i].Subdomain < tenants[j].Subdomain
+	})
+	return tenants
 }
 
 func (tp *TenantPool) GetTenant(subdomain string) *TenantDB {
@@ -159,48 +171,45 @@ func (tp *TenantPool) Close() error {
 	return nil
 }
 
-func (tp *TenantPool) BackupLoop(interval time.Duration, ctx context.Context, s3Client *S3Client) {
-	syncTicker := time.NewTicker(interval)
-	defer syncTicker.Stop()
-
-	for {
-		// Wait for ticker or context close.
-		select {
-		case <-ctx.Done():
-			return
-		case <-syncTicker.C:
-		}
-
-		fmt.Println("Backup Tenant loop")
-		// Backup DB to S3
-		if err := tp.backup(s3Client); err != nil && !errors.Is(err, context.Canceled) {
-			fmt.Println("Backup error", "error", err)
-		}
-
-	}
-}
-
 func (tp *TenantPool) backup(s3Client *S3Client) error {
-	defer trackTime(time.Now(), "backup tenant pool")
+	defer trackTime(time.Now(), "backup tenant pool "+string(tp.char))
 
-	tp.rwLock.RLock()
-	defer tp.rwLock.RUnlock()
+	tenants := tp.allTenants()
+	if len(tenants) == 0 {
+		fmt.Println("No tenants to backup")
+		return nil
+	}
 
 	var err error
 	paths := []string{}
-	for _, tenant := range tp.tenants {
-		err = tenant.SqliteBackup()
-		if err != nil {
-			return fmt.Errorf("cannot backup tenant db: %w %v", err, tenant.Subdomain)
+
+	anyModified := false
+	for _, tenant := range tenants {
+		tenant.UpdateModified()
+		if tenant.Modified {
+			anyModified = true
+		}
+		if tenant.Modified || !tenant.DBBackupFileExists() {
+			err = tenant.SqliteBackup()
+			if err != nil {
+				return fmt.Errorf("cannot backup tenant db: %w %v", err, tenant.Subdomain)
+			}
 		}
 
+		// Have to add it anyway because we need all paths
 		paths = append(paths, tenant.BackupPath)
-
 	}
+
 	if len(paths) == 0 {
 		fmt.Println("No tenants to backup")
 		return nil
 	}
+
+	if !anyModified {
+		fmt.Println("No tenants modified")
+		return nil
+	}
+
 	err = s3Client.SyncAllFilesToSingleLZ4(tp.S3Path, paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync tenant pool: %w %v", err, string(tp.char))
@@ -227,6 +236,7 @@ func NewTenantDB(subdomain string) *TenantDB {
 			Path:       "data/db" + topPath,
 			BackupPath: "data/backup" + topPath,
 			CacheSize:  500,
+			Modified:   false,
 		},
 		Subdomain: subdomain,
 		char:      char,

@@ -44,6 +44,17 @@ func (db *SQLDB) Open(migrate *string) error {
 		return err
 	}
 
+	info, err := os.Stat(db.Path)
+	if err == nil {
+		db.lastModifiedAt = info.ModTime().Unix()
+		db.lastModifiedAtWAL = info.ModTime().Unix()
+	} else {
+		// This will ensure that it will be backed up
+		db.lastModifiedAt = 0
+		db.lastModifiedAtWAL = 0
+		db.Modified = true
+	}
+
 	// MIGRATE
 	// Create table for storing page views.
 	if migrate != nil {
@@ -70,18 +81,11 @@ func (db *SQLDB) Query(query string, args ...any) (*sql.Rows, error) {
 }
 
 func (db *SQLDB) DBFileExists() bool {
-	_, err := os.Stat(db.Path)
-	if err == nil {
-		// File exists, no need to download
-		fmt.Println("db file exists", db.Path)
-		return true
-	} else if !os.IsNotExist(err) {
-		// The error should be not exists
-		// Some other error occurred
-		fmt.Println("db file check Error", db.Path)
-		return false
-	}
-	return false
+	return fileExists(db.Path)
+}
+
+func (db *SQLDB) DBBackupFileExists() bool {
+	return fileExists(db.BackupPath)
 }
 
 // Returns the
@@ -119,6 +123,7 @@ func (db *SQLDB) UpdateModified() error {
 	} else {
 		db.Modified = false
 	}
+
 	return nil
 }
 
@@ -195,4 +200,14 @@ func mkParentDirs(path string) error {
 		return fmt.Errorf("cannot create directory %s: %w", dir, err)
 	}
 	return nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	} else if !os.IsNotExist(err) {
+		return false
+	}
+	return false
 }

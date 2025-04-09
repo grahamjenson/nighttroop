@@ -39,9 +39,10 @@ func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 		SQLDB: &SQLDB{
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
+			Modified:   false,
 		},
 		ControlBackupInterval: 10 * time.Second,
-		PoolBackupInterval:    300 * time.Second,
+		PoolBackupInterval:    60 * time.Second,
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
@@ -333,18 +334,17 @@ func (db *ControlDB) backupLoop() {
 		case <-syncTicker.C:
 		}
 
-		fmt.Println("Backup loop")
 		// Backup DB to S3
 		if err := db.backup(); err != nil && !errors.Is(err, context.Canceled) {
 			fmt.Println("Backup error", "error", err)
 		}
 
 	}
-	fmt.Println("Backup loop Stopped")
+
 }
 
 func (db *ControlDB) backup() error {
-	defer trackTime(time.Now(), "backup")
+	defer trackTime(time.Now(), "control backup")
 
 	var err error
 	db.UpdateModified()

@@ -258,6 +258,7 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 	}
 
 	header.Name = filepath.Base(filePath)
+	header.ModTime = info.ModTime()
 
 	if err := tw.WriteHeader(header); err != nil {
 		return fmt.Errorf("write header: %w", err)
@@ -312,6 +313,9 @@ func extractTarLZ4(reader io.Reader, outputDir string) error {
 			// Restore original file permissions
 			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
 				return fmt.Errorf("chmod: %w", err)
+			}
+			if err := os.Chtimes(targetPath, header.ModTime, header.ModTime); err != nil {
+				return fmt.Errorf("chtimes: %w", err)
 			}
 		default:
 			fmt.Printf("Skipping unsupported type: %v\n", header.Typeflag)
