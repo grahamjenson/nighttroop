@@ -2,16 +2,17 @@
 
 ** WARNING: THIS IS PROBABLY A BAD IDEA **
 
-Not every project has to be a high-availabile, redudently self-healing, auto-scaled blue-green immutable cloud. And not every piece of data needs is a precious gem that needs to be replicated, live streamed, archived and versinoed, with shards blocks and objects in a data lake. [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
+Not every project has to be a high-availabile, redudently self-healing, auto-scaled blue-green immutable cloud. And not every piece of data needs is a precious gem that needs to be replicated, live streamed, archived and versinoed, in sharded blocks spat into a data lake. [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
 
-I have a project in mind that I need to run as cheaply, has probably 10k users world wide, the features barely change and is never going to be a unicorn. I am not going to charge for it, I am not even going to collect user details to use it, free accounts for everyone, forever. To accomplish this I will need to run it for less than $1 per user per year. 
+I have a project in mind that probably has 10k users world wide, the features barely change and I am never going to charge for use or collect any user details. For my plan to work I will need to run it for less than $0.10 per user per year, $1k total per year, because I don't want to go broke because of it.
 
-The project is basically an IOT platform that collects data from users devices, so the most recent data is the most important with past data becoming less relevant. It is a Nightscout compatible server, for those that know what that is, but that is unimportant to this post.
+The project is basically an IOT platform that collects data from users devices. The most recent data is the most important, past data more than a few months is almost useless. The data is uploaded with a few datapoints every five minutes, so not high rate. It doesnt really matter what the project is, but for those curious it is a Nightscout compatible server.
 
-Complexity is the enemy of this project, I don't want to be a slave to running it. I don't even want multiple services, the entire thing is going to be a single binary, relying on the minimal amount of external services possible.
+Complexity is the enemy, the more services the higher the costs. I don't want to a seperate DB, even the cheapest dedicated DB can blow the budget once you start talking replicas and performance. I want as much in my own control as possible. 
 
-I think the obvious answer to this is 
-to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
+One solution to these requirements is to build a golang service using sqlite. I would have liked to use Zig or something, but debugging on that is still a bit tricky.
+
+Uesrs in this project to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
 
 The biggest tradeoff will be zero downtime deploys, but hopefuly we can reduce the down time to a minamil amount.
 
