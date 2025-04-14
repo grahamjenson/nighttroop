@@ -9,7 +9,7 @@ I have a project in mind that:
 1. probably has 10k users world wide
 1. the features barely change
 1. I am never going to charge for it
-1. I am not even going to collect user details
+1. I don't even going to collect user details
 
 I need it to cost less than $0.10 per-user per-year, and scale down to near $0 (so 100 users only cost $10 per year). I also want to make it as easy as possible, because I dont want to spend all my time managing 100 small services.
 
@@ -21,7 +21,7 @@ It doesn't really matter what the project is, but for those curious it is a Nigh
 
 # The Plan
 
-I think the best way to keep within the budget with low complexity is to make it a single golang binary using sqlite for storage. SQLite is super fast and simple and since the DB is a file it is lightning fast and with no network latency. Since users are not interacting, storing each user in their own DB makes a lot of sense. The problem is that since the DB is a file, deploying and disaster recovery (DR) becomes more complicated.
+I think the best way to keep within the budget with low complexity is to make it a single golang binary using sqlite for storage. SQLite is compiled into the binary and since the DB is a file it is lightning fast. Storing each user in their own DB also makes a lot of sense, simplifying the model. The DB is a file stored next to the server,  the DB is a file, deploying and disaster recovery (DR) becomes more complicated.
 
 Deploying is more complicated because with SQLite, you cant have multiple machines or multiple processes running at the same time. This means that each deploy there will some downtime while the previous app shuts down and the new app starts. Deploying to the same machine will be quick, but if deploying to a new machine you would have to download all databases before starting.
 
@@ -200,3 +200,22 @@ https://sqlsync.dev/posts/stop-syncing-everything/
 # Lets Talk the real use case
 
 I want what is essentially a free IOT server where a single user wears multiple devices and sensors are reporting data frequently. Missing a few readings wont matter, what matters is getting the most immediate readings quickly. I want to make this server so cheap that I can fund it myself 
+
+
+# Noisy Neighbors/Rate Limiting
+
+There are a bunch of ways in which a noisy neighbor can ruin this service. The benefit of running the entire thing in a single process means that at least we wont need any common horizontal rate limiting tools based on redis or shared locks.
+
+Request rate:
+"golang.org/x/time/rate" is a really easy way to stop a user from calling too many times, allowing for a common rate and a burst rate with `rate.NewLimiter(limit, burst_limit)`. This should stop resource consumption
+
+Tenant limit
+A single server has a hard limit of how many tenants it can handle, 10k. So a hard limit on creating more tenants should be done.
+
+DB Size
+A hard limit on row numbers for each table, triggered when the db goes over a certain size.
+
+Tenant Age:
+Unused tenants use up space in the system, take time in deploys and backups. Tenants not used for 30 minutes should be archived to S3, and soft deleted from the control DB, and zipped up and referenced. This means that there is a path to rehydration, if someone wants to get their data back.
+
+
