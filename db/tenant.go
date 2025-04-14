@@ -172,13 +172,11 @@ func (tp *TenantPool) Close() error {
 }
 
 func (tp *TenantPool) backup(s3Client *S3Client) error {
-	defer trackTime(time.Now(), "backup tenant pool "+string(tp.char))
-
 	tenants := tp.allTenants()
 	if len(tenants) == 0 {
-		fmt.Println("No tenants to backup")
 		return nil
 	}
+	defer trackTime(time.Now(), "backup tenant pool "+string(tp.char))
 
 	var err error
 	paths := []string{}

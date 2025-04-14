@@ -2,20 +2,32 @@
 
 ** WARNING: THIS IS PROBABLY A BAD IDEA **
 
-Not every project has to be a high-availabile, redudently self-healing, auto-scaled blue-green immutable cloud. And not every piece of data needs is a precious gem that needs to be replicated, live streamed, archived and versinoed, in sharded blocks spat into a data lake. [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
+Not every project has to be a high-available, redundantly self-healing, auto-scaled blue-green immutable cloud. Not every piece of data needs is a precious gem that needs to be replicated, streamed, archived and versioned, into a sharded data lake. [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
 
-I have a project in mind that probably has 10k users world wide, the features barely change and I am never going to charge for use or collect any user details. For my plan to work I will need to run it for less than $0.10 per user per year, $1k total per year, because I don't want to go broke because of it.
+I have a project in mind that: 
 
-The project is basically an IOT platform that collects data from users devices. The most recent data is the most important, past data more than a few months is almost useless. The data is uploaded with a few datapoints every five minutes, so not high rate. It doesnt really matter what the project is, but for those curious it is a Nightscout compatible server.
+1. probably has 10k users world wide
+1. the features barely change
+1. I am never going to charge for it
+1. I am not even going to collect user details
 
-Complexity is the enemy, the more services the higher the costs. I don't want to a seperate DB, even the cheapest dedicated DB can blow the budget once you start talking replicas and performance. I want as much in my own control as possible. 
+I need it to cost less than $0.10 per-user per-year, and scale down to near $0 (so 100 users only cost $10 per year). I also want to make it as easy as possible, because I dont want to spend all my time managing 100 small services.
 
-One solution to these requirements is to build a golang service using sqlite. I would have liked to use Zig or something, but debugging on that is still a bit tricky.
+The project is basically an IOT platform that collects data from users devices. The most recent data is important, past data, even a few months old, is almost useless. Every 5 minutes a data point is collected, with some additional data throughout the day. Each user may have multiple devices polling for new data, so a much higher read throughput of (e.g.) 1 read per minute.
 
-Uesrs in this project to try make a minimal multi-tenant application using SQLite, the problem is deploying and backing. SQLite is super fast and simple but since the DB is on disk when deploying the whole... I want to experiment how we can deploy a SQLite multitenant app without sacrificing simplicity or speed. The simplicity of having an entire application in a single executable, no additional DBs or caches, or backup processes to worry about, and speed in that all reads will be local so no network latency required.
+For 10K users a write every 5 minutes is 30+ requests per second, and a read a minute is 160+ requests per second. Lets say 200 requests per second is needed to be supported.
 
-The biggest tradeoff will be zero downtime deploys, but hopefuly we can reduce the down time to a minamil amount.
+It doesn't really matter what the project is, but for those curious it is a Nightscout compatible server.
 
+# The Plan
+
+I think the best way to keep within the budget with low complexity is to make it a single golang binary using sqlite for storage. SQLite is super fast and simple and since the DB is a file it is lightning fast and with no network latency. Since users are not interacting, storing each user in their own DB makes a lot of sense. The problem is that since the DB is a file, deploying and disaster recovery (DR) becomes more complicated.
+
+Deploying is more complicated because with SQLite, you cant have multiple machines or multiple processes running at the same time. This means that each deploy there will some downtime while the previous app shuts down and the new app starts. Deploying to the same machine will be quick, but if deploying to a new machine you would have to download all databases before starting.
+
+Disaster recovery becomes an issue as well since all data is mastered on a single disk. Making sure that if there is an issue there is some kind of backup, especially of the user data that matters.
+
+To test these ideas I am going to make a small test app.
 The requirements for the app are:
 
 1. Anyone can create a tenant and immediatly get credentials and a unique subdomain

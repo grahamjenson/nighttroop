@@ -313,7 +313,6 @@ func (db *ControlDB) tpBackupLoop(interval time.Duration) {
 		case <-syncTicker.C:
 		}
 		tp := allPools[index]
-		fmt.Println("Backup Tenant loop")
 		// Backup DB to S3
 		if err := tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
 			fmt.Println("Backup error", "error", err)
@@ -344,12 +343,12 @@ func (db *ControlDB) backupLoop() {
 }
 
 func (db *ControlDB) backup() error {
-	defer trackTime(time.Now(), "control backup")
 
 	var err error
 	db.UpdateModified()
 
 	if db.Modified {
+		defer trackTime(time.Now(), "control backup")
 		err = db.SqliteBackup()
 		if err != nil {
 			return fmt.Errorf("cannot backup control db: %w", err)

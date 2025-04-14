@@ -8,18 +8,23 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"golang.org/x/time/rate"
 
 	_ "github.com/mattn/go-sqlite3"
 	"sqlitemt.t1d.nz/db"
-	"sqlitemt.t1d.nz/html"
 	mtmiddleware "sqlitemt.t1d.nz/middleware"
 	mtsql "sqlitemt.t1d.nz/sql"
+	"sqlitemt.t1d.nz/templates"
 )
+
+var tenantCreateLimiter = rate.NewLimiter(1, 2)
+var tenantCreateMu sync.Mutex
 
 func main() {
 	if err := run(); err != nil {
@@ -32,7 +37,7 @@ func run() error {
 	var err error
 
 	// SETUP
-	err = html.CreateTemplates()
+	err = templates.CreateTemplates()
 	if err != nil {
 		return fmt.Errorf("cannot create templates: %w", err)
 	}
@@ -97,10 +102,30 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	r.Use(mtmiddleware.GetUserDBMiddbleware(controlDB))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		html.IndexHTMLTemplate.Execute(w, nil)
+		err := templates.IndexHTMLTemplate.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	})
 
 	r.Post("/tenant", func(w http.ResponseWriter, r *http.Request) {
+
+		tenantCreateMu.Lock()
+		allowed := tenantCreateLimiter.Allow()
+		tenantCreateMu.Unlock()
+		if !allowed {
+			http.Error(w, "Too many requests", http.StatusTooManyRequests)
+			return
+		}
+
+		// Check to see if there is 10k tenants and return error if there is
+		if controlDB.GetNTenantsDBs() > 10000 {
+			http.Error(w, "Full: Too many tenants", http.StatusTooManyRequests)
+			return
+		}
+
+		// TODO replace middleware with Function, since this is not mostly used
 		subdomain := mtmiddleware.GetSubdomain(r.Context())
 		if subdomain != "control" {
 			// Must use control subdomain
@@ -118,6 +143,22 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 		// buf := make([]byte, 1<<16) // 64 KB buffer
 		// n := runtime.Stack(buf, true)
 		// fmt.Printf("%s", buf[:n])
+
+		// TODO: Handle JSON and HTMX return
+		accept := r.Header.Get("Accept")
+		fmt.Println("accept", accept)
+		if accept == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fmt.Sprintf("{\"tenantID\": \"%s\"}", tenantID)))
+			return
+		}
+		if accept == "text/htmx" {
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			templates.IndexHTMLTemplate.ExecuteTemplate(w, "tenant.html", db.TenantDB{Subdomain: tenantID})
+			return
+		}
 
 		w.Write([]byte(fmt.Sprintf("Tenant created: %s\n", tenantID)))
 	})
