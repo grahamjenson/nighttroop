@@ -1,8 +1,6 @@
 # SQLite Multi-tennant experiment
 
-** WARNING: THIS IS PROBABLY A BAD IDEA **
-
-Not every project has to be a high-available, redundantly self-healing, auto-scaled blue-green immutable cloud. Not every piece of data needs is a precious gem that needs to be replicated, streamed, archived and versioned, into a sharded data lake. [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
+Not every project has to be a always available and not every piece of data is a precious gem [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
 
 I have a project in mind that: 
 
@@ -11,13 +9,13 @@ I have a project in mind that:
 1. I am never going to charge for it
 1. I don't even going to collect user details
 
-I need it to cost less than $0.10 per-user per-year, and scale down to near $0 (so 100 users only cost $10 per year). I also want to make it as easy as possible, because I dont want to spend all my time managing 100 small services.
+I want to try get it to cost $0.01 per-user per-year, so 10,000 users will only cost me $100 per year. I also want to make it as easy as possible to run, I don't want to be become another job. Also, I am not going to include any "freemium" services in this calculation, we should have all learnt when Heroku removed its free tier.
 
-The project is basically an IOT platform that collects data from users devices. The most recent data is important, past data, even a few months old, is almost useless. Every 5 minutes a data point is collected, with some additional data throughout the day. Each user may have multiple devices polling for new data, so a much higher read throughput of (e.g.) 1 read per minute.
+The project is an IOT platform that collects data from users devices. The most recent data is important, todays data is useful, last weeks data might have some insight, last months data is probably useless. A users uploads a data-point every 5 minutes a data point, and less regularly uploads some additional data. A user will probably have many devices reading and displayig this information, so read throughput will be much heavier.
 
-For 10K users a write every 5 minutes is 30+ requests per second, and a read a minute is 160+ requests per second. Lets say 200 requests per second is needed to be supported.
+For 10K users a write every 5 minutes is 30+ requests per second, and 1 read per minute is 160+ requests per second. So the system needs to handle 200 requests per second.
 
-It doesn't really matter what the project is, but for those curious it is a Nightscout compatible server.
+For those curious it is a Nightscout compatible server, but that isn't really important here.
 
 # The Plan
 
