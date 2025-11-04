@@ -14,6 +14,11 @@ var baseHTML string
 //go:embed tenant.html
 var tenantHTML string
 
+type TenantHTML struct {
+	Subdomain string
+	APIKey    string
+}
+
 var IndexHTMLTemplate *template.Template
 
 func CreateTemplates() error {

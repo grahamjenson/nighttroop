@@ -12,17 +12,16 @@ import (
 )
 
 type SQLDB struct {
-	Path              string
-	BackupPath        string
-	CacheSize         int
-	sqldb             *sql.DB
-	lastModifiedAt    int64
-	lastModifiedAtWAL int64
-	Modified          bool
+	Path           string
+	BackupPath     string
+	CacheSize      int
+	sqldb          *sql.DB
+	lastModifiedAt int64
 }
 
 func (db *SQLDB) Open(migrate *string) error {
 	var err error
+
 	if db.CacheSize == 0 {
 		db.CacheSize = 2000
 	}
@@ -47,12 +46,9 @@ func (db *SQLDB) Open(migrate *string) error {
 	info, err := os.Stat(db.Path)
 	if err == nil {
 		db.lastModifiedAt = info.ModTime().Unix()
-		db.lastModifiedAtWAL = info.ModTime().Unix()
 	} else {
 		// This will ensure that it will be backed up
 		db.lastModifiedAt = 0
-		db.lastModifiedAtWAL = 0
-		db.Modified = true
 	}
 
 	// MIGRATE
@@ -61,7 +57,10 @@ func (db *SQLDB) Open(migrate *string) error {
 		if _, err := db.Exec(*migrate); err != nil {
 			return fmt.Errorf("cannot create table: %w", err)
 		}
+		db.Exec("PRAGMA wal_checkpoint(FULL);")
 	}
+	// Force the database to write all migrations to disk.
+
 	return nil
 }
 
@@ -89,27 +88,18 @@ func (db *SQLDB) DBBackupFileExists() bool {
 }
 
 // Returns the
-func (db *SQLDB) UpdateModified() error {
+func (db *SQLDB) UpdateModified() (bool, error) {
 
 	///
-	// IF WAL HAS CHANGED FORCE UPDATE
+	// FORCE UPDATE WAL UPDATE
 	///
 
-	walInfo, err := os.Stat(db.Path + "-wal")
-	if err != nil {
-		return err // Return error if file does not exist or cannot be accessed
-	}
-	walModifiedAt := walInfo.ModTime().Unix()
-	if walModifiedAt != db.lastModifiedAtWAL {
-		db.lastModifiedAtWAL = walModifiedAt
-		// Try our best to force a checkpoint of the DB
-		db.Exec("PRAGMA wal_checkpoint(FULL);")
-	}
+	db.Exec("PRAGMA wal_checkpoint(FULL);")
 
 	//// Now onto checking the DB
 	sqliteDBInfo, err := os.Stat(db.Path)
 	if err != nil {
-		return err // Return error if file does not exist or cannot be accessed
+		return false, err // Return error if file does not exist or cannot be accessed
 	}
 
 	// Get the modification time and convert it to Unix timestamp
@@ -117,17 +107,24 @@ func (db *SQLDB) UpdateModified() error {
 
 	//The lastModified time should be the greatest time of WAL and the db
 
+	modified := false
 	if lastModifiedAt != db.lastModifiedAt {
 		db.lastModifiedAt = lastModifiedAt
-		db.Modified = true
-	} else {
-		db.Modified = false
+		modified = true
 	}
 
-	return nil
+	if modified || !db.DBBackupFileExists() {
+		err = db.SqliteBackup()
+		if err != nil {
+			return modified, fmt.Errorf("cannot backup tenant db: %w %v", err, db.Path)
+		}
+	}
+
+	return modified, nil
 }
 
 func (db *SQLDB) SqliteBackup() error {
+	defer trackTime(time.Now(), "SqliteBackup "+db.Path)
 	fmt.Println("SqliteBackup", db.Path, db.BackupPath)
 
 	backupDB, err := sql.Open("sqlite3", db.BackupPath)

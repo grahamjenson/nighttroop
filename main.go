@@ -23,7 +23,7 @@ import (
 	"sqlitemt.t1d.nz/templates"
 )
 
-var tenantCreateLimiter = rate.NewLimiter(1000, 2000)
+var tenantCreateLimiter = rate.NewLimiter(10, 100)
 var tenantCreateMu sync.Mutex
 
 func main() {
@@ -133,7 +133,7 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 			return
 		}
 
-		tenantID, err := controlDB.CreateTenant(ctx)
+		tenantID, apiKey, err := controlDB.CreateTenant(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -150,17 +150,17 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 		if accept == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"tenantID\": \"%s\"}", tenantID)))
+			w.Write([]byte(fmt.Sprintf("{\"tenantID\": \"%s\", \"apiKey\": \"%s\"}", tenantID, apiKey)))
 			return
 		}
 		if accept == "text/htmx" {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			templates.IndexHTMLTemplate.ExecuteTemplate(w, "tenant.html", db.TenantDB{Subdomain: tenantID})
+			templates.IndexHTMLTemplate.ExecuteTemplate(w, "tenant.html", templates.TenantHTML{Subdomain: tenantID, APIKey: apiKey})
 			return
 		}
 
-		w.Write([]byte(fmt.Sprintf("Tenant created: %s\n", tenantID)))
+		w.Write([]byte(fmt.Sprintf("Tenant created: %s, apiKey %s \n", tenantID, apiKey)))
 	})
 
 	r.Get("/score", func(w http.ResponseWriter, r *http.Request) {

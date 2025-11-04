@@ -64,7 +64,8 @@ Lets see how much Fly.io would cost for this, lets get 6 cores just to be safe.
 https://fly.io/calculator?m=0_0_0_0_0&f=s&b=syd.100&a=no_none&r=shared_0_1_syd&t=10_100_5&u=0_1_100&g=6_shared_730_1_2000_syd_0_70
 
 That is about $32 per month. So already blowing our budget there with $384 per year.
-For that price you could get a much larger machine at Hetzner, or if you buy a $100 Raspberry pi + NVME drive drive that might work as well.
+For that price you could get a much larger Intel i7 2x512GB SSDs at Hetzner.
+Self hosting on a $100 Raspberry pi + $100 NVME hat + drive, but you would also have to pay for internet, power...
 
 ## Backup Pricing for S3-ish services
 
@@ -82,12 +83,13 @@ The writes will be where the money is spent. If we backup every users DB individ
 
 The solution is bundling the user DBs together before uploading, e.g. each user is in a pool for each letter (a-z), that is 26 letters that brings the write cost down to $1 per month.
 
-## Unknown costs
-There are always unknown costs or unforseen limitations when running an application. That is before you add that all the benchmarks are pretty optimistic, and even one or two features implemented badly could slow the whole system down.
-
 # Implementation
 
 ## Deploy and Backup
+
+1. Check all users DBs exist
+2. If any don't, download that users pool
+3. 
 
 ##
 

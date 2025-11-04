@@ -12,6 +12,9 @@ var ControlCreate string
 //go:embed control_tenant_insert.sql
 var ControlTenantInsert string
 
+//go:embed control_tenant_delete.sql
+var ControlTenantDelete string
+
 ///
 //  User
 ///
@@ -27,3 +30,6 @@ var TenantRead string
 
 //go:embed tenant_scores_sum.sql
 var TenantSum string
+
+//go:embed tenant_create_api_key.sql
+var TenantCreateAPIKey string

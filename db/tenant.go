@@ -1,225 +1,18 @@
 package db
 
 import (
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
-	"math/rand"
-	"sort"
-	"sync"
-	"time"
-
-	mtsql "sqlitemt.t1d.nz/sql"
 )
-
-////
-// Tenant Pool
-////
-
-type TenantPool struct {
-	tenants map[string]*TenantDB
-	rwLock  sync.RWMutex
-
-	S3Path string
-	Path   string
-	char   byte
-}
-
-func NewTenantPool(char byte) *TenantPool {
-	return &TenantPool{
-		char:    char,
-		tenants: make(map[string]*TenantDB),
-		S3Path:  "tenantpool/" + string(char) + ".tar.lz4",
-		Path:    "data/db/tenant/" + string(char),
-	}
-}
-
-func (tp *TenantPool) GetNTenantsDBs() int {
-	l := 0
-	tp.rwLock.RLock()
-	l = len(tp.tenants)
-	tp.rwLock.RUnlock()
-	return l
-}
-
-func (tp *TenantPool) allTenants() []*TenantDB {
-	tenants := make([]*TenantDB, 0)
-	tp.rwLock.RLock()
-	for _, tenant := range tp.tenants {
-		tenants = append(tenants, tenant)
-	}
-	tp.rwLock.RUnlock()
-	sort.Slice(tenants, func(i, j int) bool {
-		return tenants[i].Subdomain < tenants[j].Subdomain
-	})
-	return tenants
-}
-
-func (tp *TenantPool) GetTenant(subdomain string) *TenantDB {
-	tp.rwLock.RLock()
-	tenant := tp.tenants[subdomain]
-	tp.rwLock.RUnlock()
-
-	return tenant
-}
-
-func (tp *TenantPool) RestoreAndOpenAllTenants(s3Client *S3Client, subdomains []string) error {
-	if len(subdomains) == 0 {
-		return nil
-	}
-
-	var err error
-	// Check to see if tenants are already on disk
-	for _, subdomain := range subdomains {
-		_, err := tp.OpenTenant(subdomain)
-		if err != nil {
-			fmt.Printf("Error opening tenant db %v %v %v\n", string(tp.char), subdomain, err)
-			return fmt.Errorf("cannot open tenant db: %w", err)
-		}
-		// We ignore if the DB was not found to be created
-	}
-
-	restored := tp.GetNTenantsDBs()
-	if restored > 0 {
-		if restored != len(subdomains) {
-			fmt.Printf("Not all tenants were restored for Tennant Pool %v %v %v\n", string(tp.char), restored, len(subdomains))
-			return fmt.Errorf("not all tenants were restored")
-		}
-		// If they should all be on disk if any are
-		return nil
-	}
-
-	// Now we need to see if we want to restore from S3
-	fmt.Println("Trying to restore tenant from backup for pool", string(tp.char))
-
-	found, err := s3Client.DownloadAndExtractLZ4(tp.S3Path, tp.Path)
-	fmt.Println("Finished s3 download backup for pool", string(tp.char))
-	if !found && err == nil {
-		fmt.Println("No tenant backup found")
-		return nil
-	}
-	if err != nil {
-		// TODO dont fail here if just not found
-		return fmt.Errorf("cannot download tenant db: %w", err)
-	}
-
-	for _, subdomain := range subdomains {
-
-		// At this point in time we are ignoring errors
-		tenant, err := tp.OpenTenant(subdomain)
-		if err != nil {
-			fmt.Printf("Error opening tenant db %v %v %v\n", string(tp.char), subdomain, err)
-			return fmt.Errorf("cannot open tenant db: %w", err)
-		}
-		if tenant == nil {
-			fmt.Printf("Tenant db %v %v not found\n", string(tp.char), subdomain)
-			return fmt.Errorf("cannot open tenant db: %w", err)
-		}
-	}
-
-	return nil
-
-}
-
-func (tp *TenantPool) CreateTenant(subdomain string) (*TenantDB, error) {
-	var err error
-	tenantDB := NewTenantDB(subdomain)
-	if tenantDB.DBFileExists() {
-		return nil, fmt.Errorf("tenant db file already exists")
-	}
-
-	// Create the DB file
-	err = tenantDB.Open(&mtsql.TenantCreate)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create tenant db: %w", err)
-	}
-
-	// Add the tenant to the pool
-	tp.rwLock.Lock()
-	tp.tenants[subdomain] = tenantDB
-	tp.rwLock.Unlock()
-
-	return tenantDB, nil
-}
-
-func (tp *TenantPool) OpenTenant(subdomain string) (*TenantDB, error) {
-	tenantDB := NewTenantDB(subdomain)
-	if tenantDB.DBFileExists() {
-		// If the DB file is there, write the tenant
-		err := tenantDB.Open(nil)
-		if err != nil {
-			return nil, fmt.Errorf("cannot open tenant db: %w", err)
-		}
-		// Tenant db opened and ready to use
-		tp.rwLock.Lock()
-		tp.tenants[subdomain] = tenantDB
-		tp.rwLock.Unlock()
-		return tenantDB, nil
-	}
-	return nil, nil
-}
-
-func (tp *TenantPool) Close() error {
-	tp.rwLock.Lock()
-	defer tp.rwLock.Unlock()
-
-	for _, tenant := range tp.tenants {
-		err := tenant.Close()
-		if err != nil {
-			fmt.Println("cannot close tenant db", err)
-		}
-	}
-
-	return nil
-}
-
-func (tp *TenantPool) backup(s3Client *S3Client) error {
-	tenants := tp.allTenants()
-	if len(tenants) == 0 {
-		return nil
-	}
-	defer trackTime(time.Now(), "backup tenant pool "+string(tp.char))
-
-	var err error
-	paths := []string{}
-
-	anyModified := false
-	for _, tenant := range tenants {
-		tenant.UpdateModified()
-		if tenant.Modified {
-			anyModified = true
-		}
-		if tenant.Modified || !tenant.DBBackupFileExists() {
-			err = tenant.SqliteBackup()
-			if err != nil {
-				return fmt.Errorf("cannot backup tenant db: %w %v", err, tenant.Subdomain)
-			}
-		}
-
-		// Have to add it anyway because we need all paths
-		paths = append(paths, tenant.BackupPath)
-	}
-
-	if len(paths) == 0 {
-		fmt.Println("No tenants to backup")
-		return nil
-	}
-
-	if !anyModified {
-		fmt.Println("No tenants modified")
-		return nil
-	}
-
-	err = s3Client.SyncAllFilesToSingleLZ4(tp.S3Path, paths)
-	if err != nil {
-		return fmt.Errorf("cannot sync tenant pool: %w %v", err, string(tp.char))
-	}
-
-	// Copy the control db to the backup location
-	return nil
-}
 
 // //
 // TenentDB
 // //
+
 type TenantDB struct {
 	*SQLDB
 	Subdomain string
@@ -233,8 +26,7 @@ func NewTenantDB(subdomain string) *TenantDB {
 		SQLDB: &SQLDB{
 			Path:       "data/db" + topPath,
 			BackupPath: "data/backup" + topPath,
-			CacheSize:  100,
-			Modified:   false,
+			CacheSize:  500,
 		},
 		Subdomain: subdomain,
 		char:      char,
@@ -243,29 +35,98 @@ func NewTenantDB(subdomain string) *TenantDB {
 	return tenantDB
 }
 
-func (db *TenantDB) ValidateToken(token string) error {
-	// If we have not seen this token in the last 10 mins update last_seen
+func (db *TenantDB) ArchivePath() string {
+	return fmt.Sprintf("archive/%s/%s.tar.lz4", string(db.char), db.Subdomain)
+}
+
+var hmacSecretKey = []byte("your-secure-secret-key")
+
+func (db *TenantDB) CreateAPIToken() (string, error) {
+	// Create a new API token for the tenant
+	apiKey, err := GenerateSecureAPIKey(12)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate API key: %w", err)
+	}
+
+	// Create an HMAC hash of the API key
+	h := hmac.New(sha256.New, hmacSecretKey)
+	h.Write([]byte(apiKey))
+	hashedKey := hex.EncodeToString(h.Sum(nil))
+
+	// Store the hashed key in the database
+	_, err = db.Exec("INSERT INTO api_tokens (token) VALUES (?)", hashedKey)
+	if err != nil {
+		return "", fmt.Errorf("cannot store API token: %w", err)
+	}
+
+	// Return the plain API key to the user (hashed key is stored in the DB)
+	return apiKey, nil
+}
+
+func (db *TenantDB) ValidateAPIToken(token string) error {
+	var err error
+	// Create an HMAC hash of the provided token
+	h := hmac.New(sha256.New, hmacSecretKey)
+	h.Write([]byte(token))
+	hashedToken := hex.EncodeToString(h.Sum(nil))
+
+	// Check if the hashed token exists in the database
+	rows, err := db.Query("SELECT COUNT(*) FROM api_tokens WHERE token = ?", hashedToken)
+	if err != nil {
+		return fmt.Errorf("cannot validate API token: %w", err)
+	}
+
+	if rows == nil {
+		return fmt.Errorf("no rows returned in validate API token")
+	}
+
+	defer rows.Close()
+	err = rows.Err()
+	if err != nil {
+		return fmt.Errorf("rows error in validate API token: %w", err)
+	}
+
+	rows.Next()
+
+	var count int
+	err = rows.Scan(&count)
+
+	if err != nil {
+		return fmt.Errorf("cannot validate API token: %w", err)
+	}
+
+	if count == 0 {
+		return errors.New("invalid API token")
+	}
+
+	// Update last_seen timestamp for the token
+	_, err = db.Exec("UPDATE api_tokens SET last_seen = CURRENT_TIMESTAMP WHERE token = ?", hashedToken)
+	if err != nil {
+		return fmt.Errorf("cannot update last_seen for API token: %w", err)
+	}
+
 	return nil
 }
 
 func (db *TenantDB) GetScoresSum() (int, error) {
 	rows, err := db.Query("SELECT SUM(score) AS score FROM scores")
 	if err != nil {
-		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+		return 0, fmt.Errorf("1 cannot get scores sum: %w", err)
 	}
 	if err = rows.Err(); err != nil {
-		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+		return 0, fmt.Errorf("2 cannot get scores sum: %w", err)
 	}
 	defer rows.Close()
 
 	scoreRow := rows.Next()
 	if !scoreRow {
-		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+		return 0, fmt.Errorf("3 cannot get scores sum: %w", err)
 	}
+
 	var score int
 	err = rows.Scan(&score)
 	if err != nil {
-		return 0, fmt.Errorf("cannot get scores sum: %w", err)
+		return 0, fmt.Errorf("4 cannot get scores sum: %w", err)
 	}
 
 	return score, nil
@@ -277,12 +138,31 @@ func (db *TenantDB) GetScoresSum() (int, error) {
 
 const tenantCharSet = "abcdefghijklmnopqrstuvwxyz0123456789"
 
-var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
-
 func NextTenantID() string {
 	result := make([]byte, 12)
-	for i := range result {
-		result[i] = tenantCharSet[seededRand.Intn(len(tenantCharSet))]
+	rand.Read(result)
+	for i, b := range result {
+		result[i] = tenantCharSet[b%byte(len(tenantCharSet))]
 	}
 	return string(result)
+}
+
+const apiKeyCharSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func GenerateSecureAPIKey(length int) (string, error) {
+	// Create a byte slice to hold the random bytes
+	bytes := make([]byte, length)
+
+	// Generate random bytes
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate random bytes: %w", err)
+	}
+
+	// Map random bytes to characters in the character set
+	for i, b := range bytes {
+		bytes[i] = apiKeyCharSet[b%byte(len(apiKeyCharSet))]
+	}
+
+	return string(bytes), nil
 }

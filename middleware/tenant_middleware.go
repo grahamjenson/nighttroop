@@ -25,16 +25,35 @@ func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 			subdomain := strings.Split(host, ".")[0] // Get the first part of the host
 			ctx = context.WithValue(ctx, SubdomainKey, subdomain)
 
-			if subdomain != "control" {
-				tenant, err := controlDB.GetTenant(subdomain, true)
-				fmt.Println("TenantMW", tenant, err)
-				// We ignore errors and this is a best effort middleware
-				// Each route needs to check the tenant if needed
-				if err == nil && tenant != nil {
-					ctx = context.WithValue(ctx, TenantDBKey, tenant)
-				}
+			apiToken := r.URL.Query().Get("token")
+
+			if subdomain == "control" {
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
 			}
+
+			// Search for tenants
+			tenant, err := controlDB.GetTenant(subdomain, true)
+			// We ignore errors and this is a best effort middleware
+			// Each route needs to check the tenant if needed
+			if err != nil || tenant == nil {
+				// If the tenant is not found, we can return a 404
+				fmt.Println("Tenant Middleware Error", err)
+				http.NotFound(w, r)
+				return
+			}
+
+			err = tenant.ValidateAPIToken(apiToken)
+			if err != nil {
+				fmt.Println("Tenant token error", err)
+				// write an not auth http error
+				http.Error(w, "Not Authorized", http.StatusUnauthorized)
+				return
+			}
+
+			ctx = context.WithValue(ctx, TenantDBKey, tenant)
 			next.ServeHTTP(w, r.WithContext(ctx))
+
 		}
 
 		return http.HandlerFunc(fn)

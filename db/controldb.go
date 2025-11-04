@@ -21,6 +21,7 @@ type ControlDB struct {
 	// previously modified
 	ControlBackupInterval time.Duration
 	PoolBackupInterval    time.Duration
+	MaxTenantAge          time.Duration
 
 	tenantPools map[byte]*TenantPool
 
@@ -39,10 +40,10 @@ func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 		SQLDB: &SQLDB{
 			Path:       "data/db/control.sqlite",
 			BackupPath: "data/backup/control.sqlite",
-			Modified:   false,
 		},
 		ControlBackupInterval: 10 * time.Second,
 		PoolBackupInterval:    60 * time.Second,
+		MaxTenantAge:          30 * time.Minute,
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
@@ -90,8 +91,8 @@ func (db *ControlDB) RestoreAndOpenAllTenants() error {
 	for _, pool := range db.allPools() {
 
 		g.Go(func() error {
-			tenantSubdomains, err := db.GetTenantPoolTennantsFromDB(pool.char)
-			fmt.Println("TenantSubdomains", pool.char, tenantSubdomains)
+			tenantSubdomains, err := db.GetTenantPoolTenantsFromDB(pool.char)
+			fmt.Println("TenantSubdomains", string(pool.char), tenantSubdomains)
 			if err != nil {
 				return fmt.Errorf("cannot get tenant pool tenants: %w", err)
 			}
@@ -113,9 +114,9 @@ func (db *ControlDB) RestoreAndOpenAllTenants() error {
 	return nil
 }
 
-func (db *ControlDB) GetTenantPoolTennantsFromDB(char byte) ([]string, error) {
+func (db *ControlDB) GetTenantPoolTenantsFromDB(char byte) ([]string, error) {
 	tenants := []string{}
-	res, err := db.Query("SELECT subdomain FROM tenants WHERE pool = ? ORDER BY subdomain DESC", int(char))
+	res, err := db.Query("SELECT subdomain FROM tenants WHERE pool = ? AND deleted_at IS NULL ORDER BY subdomain DESC", int(char))
 	if err != nil {
 		return tenants, fmt.Errorf("cannot query tenants: %w", err)
 	}
@@ -171,8 +172,8 @@ func (db *ControlDB) GetTenant(subdomain string, updateLastSeen bool) (*TenantDB
 	}
 
 	if tenant == nil {
-		fmt.Println("Tenant not found in map")
-		return tenant, nil
+		fmt.Println("Tenant not found in pool, opening tenant")
+		return nil, fmt.Errorf("tenant Not Found: %w", err)
 	}
 
 	return tenant, nil
@@ -180,7 +181,7 @@ func (db *ControlDB) GetTenant(subdomain string, updateLastSeen bool) (*TenantDB
 
 func (db *ControlDB) TenantInDB(subdomain string, updateLastSeen bool) (bool, error) {
 	// Check if tenant exists in the db
-	rows, err := db.Query("SELECT last_seen_at FROM tenants WHERE subdomain = ? LIMIT 1", subdomain)
+	rows, err := db.Query("SELECT last_seen_at FROM tenants WHERE subdomain = ? AND deleted_at IS NULL LIMIT 1", subdomain)
 	if err != nil {
 		return false, fmt.Errorf("cannot get tenant: %w", err)
 	}
@@ -239,19 +240,19 @@ func (db *ControlDB) TryUpdateLastSeenAt(subdomain string, last_seen_at string) 
 	return nil
 }
 
-func (db *ControlDB) CreateTenant(ctx context.Context) (string, error) {
+func (db *ControlDB) CreateTenant(ctx context.Context) (string, string, error) {
 	tenantID := NextTenantID()
 	_, err := db.Exec(mtsql.ControlTenantInsert, tenantID, int(tenantID[0]))
 	if err != nil {
-		return "", fmt.Errorf("cannot create tenant: %w", err)
+		return "", "", fmt.Errorf("cannot create tenant: %w", err)
 	}
 
 	tp := db.tenantPools[tenantID[0]]
-	_, err = tp.CreateTenant(tenantID)
+	_, apiKey, err := tp.CreateTenant(tenantID)
 	if err != nil {
-		return "", fmt.Errorf("cannot create tenant: %w", err)
+		return "", "", fmt.Errorf("cannot create tenant: %w", err)
 	}
-	return tenantID, nil
+	return tenantID, apiKey, nil
 }
 
 func (db *ControlDB) Close() error {
@@ -313,12 +314,47 @@ func (db *ControlDB) tpBackupLoop(interval time.Duration) {
 		case <-syncTicker.C:
 		}
 		tp := allPools[index]
-		// Backup DB to S3
-		if err := tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
-			fmt.Println("Backup error", "error", err)
+
+		// Force all tenants to sync WAL to disk and update their mod times
+		// this also backs up the tenant to the backup path if modified
+		modified, err := tp.updateModified()
+		if err != nil {
+			fmt.Println("Error updating tenant modified", "error", err)
+		}
+
+		// TODO soft delete tenants from the DB (for rehydrations later)
+		removedTenants, err := tp.archive(db.S3Client, db.MaxTenantAge)
+		if err != nil {
+			fmt.Println("Error archiving tenant pool", "error", err)
+		} else {
+			err := db.DeleteAllTenants(removedTenants)
+			if err != nil {
+				fmt.Println("Error deleting tenants from DB", "error", err)
+			}
+
+		}
+
+		if modified {
+			// If any tenant was modified we need to backup the pool
+			if err = tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
+				fmt.Println("Backup error", "error", err)
+			}
 		}
 		index = (index + 1) % len(allPools)
 	}
+}
+
+func (db *ControlDB) DeleteAllTenants(tenants []*TenantDB) error {
+	if len(tenants) == 0 {
+		return nil
+	}
+	for _, tenant := range tenants {
+		_, err := db.Exec(mtsql.ControlTenantDelete, tenant.Subdomain)
+		if err != nil {
+			fmt.Println("cannot delete tenant: %w", err)
+		}
+	}
+	return nil
 }
 
 func (db *ControlDB) backupLoop() {
@@ -345,15 +381,13 @@ func (db *ControlDB) backupLoop() {
 func (db *ControlDB) backup() error {
 
 	var err error
-	db.UpdateModified()
+	modified, err := db.UpdateModified()
+	if err != nil {
+		fmt.Println("Error updating control db modified", err)
+		return fmt.Errorf("cannot update control db modified: %w", err)
+	}
 
-	if db.Modified {
-		defer trackTime(time.Now(), "control backup")
-		err = db.SqliteBackup()
-		if err != nil {
-			return fmt.Errorf("cannot backup control db: %w", err)
-		}
-
+	if modified {
 		err = db.S3Client.SyncAllFiles([]string{db.BackupPath})
 		if err != nil {
 			return fmt.Errorf("cannot sync control db: %w", err)
@@ -373,6 +407,8 @@ func (db *ControlDB) StopBackupLoop() {
 
 func (db *ControlDB) ForceBackupSync() error {
 	defer trackTime(time.Now(), "ForceBackupSync")
+
+	db.UpdateModified()
 	// Go through every tenant and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
 	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
 	err := db.backup()
@@ -390,6 +426,11 @@ func (db *ControlDB) ForceBackupSync() error {
 	for _, pool := range db.allPools() {
 
 		g.Go(func() error {
+			_, err := pool.updateModified()
+			if err != nil {
+				fmt.Println("Error updating tenant modified", "error", err)
+			}
+
 			return pool.backup(db.S3Client)
 		})
 	}

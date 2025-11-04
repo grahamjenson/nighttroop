@@ -98,12 +98,11 @@ func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
 	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
 	ctx := context.TODO()
 
-	fmt.Println("Creating pipes")
+	// Creating the pipes
 	pr, pw := io.Pipe()
 	defer pr.Close()
 
-	fmt.Println("Creating tar LZ4")
-
+	// Create a goroutine to write to the pipe the zip
 	go func() {
 		defer pw.Close()
 		err := createTarLZ4(paths, pw)
@@ -185,7 +184,6 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 		return fmt.Errorf("failed to upload Stream: %w", err)
 	}
 
-	fmt.Printf("Uploaded Stream to S3 successfully\n")
 	return nil
 }
 
@@ -235,8 +233,6 @@ func createTarLZ4(files []string, writer io.Writer) error {
 			return fmt.Errorf("adding %s to tar: %w", file, err)
 		}
 	}
-
-	fmt.Printf("✅ Created archive")
 	return nil
 }
 
