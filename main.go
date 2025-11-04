@@ -23,7 +23,7 @@ import (
 	"sqlitemt.t1d.nz/templates"
 )
 
-var tenantCreateLimiter = rate.NewLimiter(1, 2)
+var tenantCreateLimiter = rate.NewLimiter(1000, 2000)
 var tenantCreateMu sync.Mutex
 
 func main() {
