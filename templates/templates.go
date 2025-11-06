@@ -3,30 +3,27 @@ package templates
 import (
 	_ "embed"
 	"html/template"
-)
 
-//go:embed index.html
-var indexHTML string
+	"sqlitemt.t1d.nz/templates/control"
+	"sqlitemt.t1d.nz/templates/tenant"
+)
 
 //go:embed base.html
 var baseHTML string
 
-//go:embed tenant.html
-var tenantHTML string
-
-type TenantHTML struct {
-	Subdomain string
-	APIKey    string
-}
-
-var IndexHTMLTemplate *template.Template
+var ControlHTMLTemplate *template.Template
+var TenantHTMLTemplate *template.Template
 
 func CreateTemplates() error {
 	var err error
-	IndexHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + indexHTML + tenantHTML)
+	ControlHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + control.ContentHTMX + control.TenantHTMX)
 	if err != nil {
 		return err
 	}
 
+	TenantHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + tenant.ContentHTMX + tenant.GuessHTMX)
+	if err != nil {
+		return err
+	}
 	return nil
 }

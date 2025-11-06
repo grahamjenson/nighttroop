@@ -1,4 +1,4 @@
-package mtmiddleware
+package router
 
 import (
 	"context"
@@ -14,9 +14,8 @@ type ctxSubdomainKey int
 
 // RequestIDKey is the key that holds the unique request ID in a request context.
 const TenantDBKey ctxTenantDBKey = 0
-const SubdomainKey ctxSubdomainKey = 1
 
-func GetUserDBMiddbleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {
+func GetTennantMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -69,14 +68,4 @@ func GetTenant(ctx context.Context) *mtdb.TenantDB {
 		return reqID
 	}
 	return nil
-}
-
-func GetSubdomain(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
-	if reqID, ok := ctx.Value(SubdomainKey).(string); ok {
-		return reqID
-	}
-	return ""
 }

@@ -220,3 +220,20 @@ Tenant Age:
 Unused tenants use up space in the system, take time in deploys and backups. Tenants not used for 30 minutes should be archived to S3, and soft deleted from the control DB, and zipped up and referenced. This means that there is a path to rehydration, if someone wants to get their data back.
 
 
+
+# Simulation 
+
+The goal is to make an app for diabetes camps that can add all the kids and see their numbers and show alarms/highlight issues.
+
+
+Write the nightscout basic endpoints.
+Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
+Have a property per user of `to-be-synced`. 
+Each request set the `to-be-synced` to be `true`;
+
+Write an infinite go routine per user every 30 seconds checks `to-be-synced` and will fetch data if `true`.
+
+
+Write an app, let it take a name and a picture, add a user. Then call the service create a user
+
+
