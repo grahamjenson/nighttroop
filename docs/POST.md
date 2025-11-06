@@ -1,71 +1,83 @@
-# $0.01 Per-User Per-Year
+# $0.01 Per-User Per-Year: NightTroop
 
-Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a nightscout server for my son, his phone uploads his BGL to Nightscout which I download and display on my watch and phone, my wife has on her phone, his teachers have on their phones and we also have a sugarpixel display under the TV and an ipad next to my computer.
+Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son, his phone uploads his BGL to Nightscout that I display on my watch and phone, my wife has on her phone, and his school has on a "follow" phone.
 
-Self-hosting Nightscout is difficult and requires a ton of technical knowledge (even if you RTFM), so third parties have popped up and charge as much as $12 per month to host Nightscout for you. However, hosting many instances of Nightscout is a PITA because:
+Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when diagnosed with diabetes. Third parties have popped up to host Nightscout for you and charge as much as $12 per month. As a recovering SysAdmin I wanted to host my own Nightscout and maybe host other peoples as well, but Nightscout is a PITA because:
 
-1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of the same server. So management and control is an issue.
-1. Each instance requires its own Node process and MongoDB database, so is very resource intensive.
-1. Configuration of Nightscout is all over the place, environment variables, dot files, file flags, DB... This makes setup and configuration complex and a custom configuration layer necessary and difficult to build, and changing configs requires restarting the server.
-1. Nightscout uses socket.io for real-time communication with its default `/socket.io` namespace, so each server needs its own domain. This makes certs and routing difficult.
+1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of the same server. So it is like managing and maintaining a host of servers so scale is an issue.
+1. Each instance requires its own Node process and MongoDB database, so is very resource intensive to scale.
+1. Configuration of Nightscout is all over the place, environment variables, dot files, file flags, DB... This makes setup and configuration complex and a custom configuration layer necessary and difficult to build, and changing configs often requires restarting the server.
+1. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, and so TLS cert, DNS, special proxying and routing...
 
-I figure that a lot of these issues can only be solved with a ground up, API compatible (including socket.io) rewrite of Nightscout to be multi-user.
-What makes this a unique project is that:
+A lot of these issues can only be solved with a ground up, API compatible (including socket.io) rewrite of Nightscout to be multi-user.
+So I am going to try make "NightTroop" (a group of scouts is a troop), and see if I can get something working.
 
-1. it probably has 10k users world wide, so no need to worry about hockey-stick hyper-scaling.
+What makes NightTroop a unique project is that:
+
+1. it probably has 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies.
 1. I don't want to make money from it, so I don't want to spend money on it.
-1. I don't want to collect Personally Identifiable Information (PII) from the users, it is hosting health data so I don't want any of that hassle
+1. I don't want to collect Personally Identifiable Information (PII) from the users. Since it is hosting health data, I don't want any concern of misuse.
  
-I want the project to be sustainable, both in low complexity to setup and in hosting costs.
-I figure that if each user cost $0.01 per-year, 10,000 users will only cost me $100 a year. 
-Lets see how close I can get.
+For NightTroop to be sustainable it has to be low complexity and low cost, so the goal is for each user cost $0.01 per-year; 10,000 users is a $100 per year. 
+Lets see how close it can get.
 
-# The Plan: Golang + SQLite + Split user DBs + Onboarding + Rate limiting
+# The Plan
 
-I need a boring, maintainable, easy to setup, low complexity, cheap to run server -- so a single golang binary with SQLite built in.
-SQLite means no external DB server (low complexity, low cost) and comes with the benefit of being lightning fast.
+## Golang + SQLite + Split user DBs
+
+NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- so a single golang binary with SQLite built in fits that description.
+Using SQLite means no external DB server (low complexity, low cost) and comes with the benefit of being lightning fast.
 
 The biggest tradeoff using SQLite is the difficulty of deployment and disaster recovery because there is no built in replication or high availability.
-This means that either a planned or unplanned move of physical machines will require an file snapshot of SQLite DBs stored externally somewhere like S3.
-Having one giant database to snapshot, and upload periodically seems fragile and difficult compared to having each user have their own DB with sharded uploads.
-There are streaming options like LiteStream, but I think a periodic upload should be fine for this project.
+To make a trustworthy service there will need to be external storage of SQLite DBs.
+Given recent data is so much more important than past data, periodic (say every 5 minutes) snapshots should be fine. 
+Snapshotting then uploading one giant SQLite DB would block IO then network.
+Sharding data over many USER DB's solves blocking and a few other problems, e.g. managing 10k 2MB DBs should be easier than managing 1 giant 20GB database.
+
+## Onboarding + Rate Limiting
 
 Not storing PII of a user makes onboarding super simple, it should be as simple as clicking a button and getting access.
-The problem with the anonominity is that it becomes extra work to make sure users are behaving and not over consuming resources by:
+The problem with the anonominity is that it becomes extra work to make sure users are behaving and not over consuming resources.
+The solution is to:
 
-1. Limiting user creation rate and total, e.g. one user per minute created and stop creating users at 10k.
-1. Rate limiting all user API and background tasks
+1. Limiting user creation and limit total users, e.g. one user per minute created and stop creating users at 10k.
+1. Rate limiting all user API and background tasks.
 1. Limiting the size of user databases by truncating old information.
-1. Archiving and deleting inactive users.
+1. Archiving and deleting inactive users (easier with sharded user DBs).
 
-All of these are the extra work needed to keep the costs down.
+All of these are the extra work needed to keep the costs down, but should make resource usage more predictable.
 
 # Back of the envelope pricing for 10K users
 
-With the above implementation we have some variables to start estimating potential costs:
+With the above plan we can start estimating some costs, which break down into:
 
-1. Frequency of Backups for User databases
-2. Size of User databases
-3. Requests per second
+1. Compute cost from estimated requests per second, RAM usage, and volume storage required.
+1. Backup cost from the frequency of snapshots, and size of user DB.
+1. Other costs: domain + certs + egress + bandwidth
 
-A SQLite DB with 50,000 data points (one for every minute in a month) creates a 1.5MB Sqlite DB, zipped it is 1/3rd the size at 500KB.
-So if we kept 2 months of data for 10k users, that is 30GB on disk and 10GB zipped for backup. 
-Given we will need seperate backup files for all DBS, that is a total of 70GB storage.
+Lets also put some real numbers to assumptions so that we can estimate these values:
 
-If we model the 10K users after how I use Nightscout with one device writing and multiple devices polling for new data, lets say 10 requests per minute.
-For 10k users thats about 1500 requests per second that this server should handle. I have benchmarked a single core fly.io machine doing 250 requests per second.
+1. A user writes a value once per minute
+2. A user (like me) has multiple devices polling for information, so reads are 10 requests per minute.
+3. Most recent information (2 days) is the most important, and we can truncate old (2 months) data
 
-To keep things simple, the server keeps open the 10K SQLite DB connections, the biggest resource used is the memory used for the cache set with `cache_size`.
-So if each user has a 100KB cache limit, which is plenty since the majority of requests will only be for recent data, then that is 1GB of memory. So maybe need 2GB of RAM.
+I am going to use fly.io as an estimate for cloud costs, because I am familiar with that and understand the costs.
 
-Lets see how much Fly.io would cost for this, lets get 6 cores just to be safe.
-6 cores, 2Gb of RAM, 70GB storage, 
+## Compute 
 
-https://fly.io/calculator?m=0_0_0_0_0&f=s&b=syd.100&a=no_none&r=shared_0_1_syd&t=10_100_5&u=0_1_100&g=6_shared_730_1_2000_syd_0_70
+I created a SQLite DB with 100,000 data points, one for every minute(ish) for 2 months and it was 3MB, so a DB for 10k users would be a total of 30GB DBs on disk.
 
-That is about $32 per month. So already blowing our budget there with $384 per year.
-For that price you could get a much larger Intel i7 2x512GB SSDs at Hetzner.
-Self hosting on a $100 Raspberry pi + $100 NVME hat + drive, but you would also have to pay for internet, power...
+Requests per second for 10k would be around 2000 requests per second. I have benchmarked a single core fly.io machine doing 250 requests per second (https://maori.geek.nz/golang-sqlite-on-fly-io-with-litefs-a-quick-benchmark-9aa7aeee9561), so lets say we need 8 cores.
+
+The main RAM usage of the server is the SQLite in-memory cache for each users DB connection, set with `cache_size` parameter. 
+A users most of the time will only access the last 2 days data, which is about 100KB (on disk).
+With `cache_size` set to 100KB and with 10K that is a minimum of 1GB of RAM required, lets make that 2GB for all other uses.
+
+Lets see how much Fly.io would cost for 8 cores, 2Gb RAM, 30GB volume: $22.42 per month, $270 per year
+
+https://fly.io/calculator?f=s&b=ams.100&a=no_none&m=0_0_0_0_0&r=shared_0_1_syd&t=10_100_5&u=0_1_100&g=8_shared_730_1_2000_ams_0_30
+
+This is about the cost of a pretty big machine at Hetzner, or the price of a RaspberryPi with NVME. Either way, we have already blown out our budget.
 
 ## Backup Pricing for S3-ish services
 
@@ -83,6 +95,9 @@ The writes will be where the money is spent. If we backup every users DB individ
 
 The solution is bundling the user DBs together before uploading, e.g. each user is in a pool for each letter (a-z), that is 26 letters that brings the write cost down to $1 per month.
 
+## Other
+
+
 # Implementation
 
 ## Deploy and Backup
@@ -91,7 +106,8 @@ The solution is bundling the user DBs together before uploading, e.g. each user 
 2. If any don't, download that users pool
 3. 
 
-##
+# Conclusion
+$0.01 per User per year as a goal was never going to be realistic. There are so many costs associated with a service like this like error tracking, logging, not to mention my time developing.
 
 
 
