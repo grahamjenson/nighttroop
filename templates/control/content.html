@@ -1,9 +1,9 @@
 {{ define "content" }}
-<h1 class="mb-4">Tenant Management</h1>
+<h1 class="mb-4">User Management</h1>
 
 <form class="mb-4 d-flex gap-2" hx-post="/tenant" hx-target="#tenant-view" hx-swap="innerHTML"
     hx-headers='{"Accept": "text/htmx"}'>
-    <button class="btn btn-primary" type="submit">Create Tenant</button>
+    <button class="btn btn-primary" type="submit">Create User</button>
 </form>
 
 <div id="tenant-view">

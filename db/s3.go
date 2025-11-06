@@ -125,7 +125,7 @@ func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
 }
 
 func (c *S3Client) DownloadAndExtractLZ4(key string, outpath string) (bool, error) {
-	// This function downloads a path to a tenant
+	// This function downloads a path to a user
 	ctx := context.TODO()
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),
@@ -188,7 +188,7 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 }
 
 func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
-	// This function downloads a path to a tenant
+	// This function downloads a path to a user
 	ctx := context.TODO()
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),

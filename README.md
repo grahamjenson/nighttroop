@@ -1,73 +1,16 @@
-# SQLite Multi-tennant experiment
+# NightTroop
 
-Not every project has to be a always available and not every piece of data is a precious gem [https://gerrymcgovern.com/data-centers-contain-90-crap-data/]
+NightTroop is a server that hosts many NightScout servers at the same time.
+It is a ground up rewrite of the NightScout server to make it easier and more scalable to host many users.
 
-I have a project in mind that: 
+# On Boarding
+Go to nighttroop.t1d.nz and click the button to create your user.
 
-1. probably has 10k users world wide
-1. the features barely change
-1. I don't want to ever charge for it
-1. I don't even want any user details
+# Deploying to a service
+It comes ready to deploy to fly.io as a service. 
+You should be able to run this for as cheap as a few hundred dollars a year and support 10k users.
 
-To make this work I need each user to cost almost nothing, like $0.01 per-user per-year. That would make 10k users cost me $100 per year. I am also thinking about my time as a cost, so I want it to be as simple to run as possible as well. That means no complicated infrastructure (serverless), no awesome new shiny things (Zig), no cute little hacks which will fail in weird ways. 
-Also no "Freemium" services, we should have all learnt our lessons when Heroku removed its free tier. And no cheating "I decided to re-purpose this 20k server I had just lying around".
-
-The project itself is an IOT platform that collects data from users devices. The most recent data is important; todays data is useful, last weeks data might have some insight, last months data is probably useless. The users interaction is well understood; A users uploads a data-point every 5 minutes, and less regularly uploads additional data. A user will probably have many devices reading this information, so read throughput will be much heavier.
-
-So, for 10K users writing once every 5 minutes is 30+ requests per second, and 1 read per minute is 160+ requests per second. So the system needs to handle 200 requests per second. That doesn't sound so bad.
-
-For those curious it is a Nightscout compatible server, but that isn't really important here.
-
-# The Plan
-
-Low budget, low complexity, "simple" service sounds like a GoLang SQLite server to me. Since SQLite is embedded into server and uses a file as a DB it makes it pretty easy to manage. Storing each user in their own DB also makes a lot of sense, that just makes things easier to manage/debug. 
-
-The difficulty The DB is a file stored next to the server,  the DB is a file, deploying and disaster recovery (DR) becomes more complicated.
-
-Deploying is more complicated because with SQLite, you cant have multiple machines or multiple processes running at the same time. This means that each deploy there will some downtime while the previous app shuts down and the new app starts. Deploying to the same machine will be quick, but if deploying to a new machine you would have to download all databases before starting.
-
-Disaster recovery becomes an issue as well since all data is mastered on a single disk. Making sure that if there is an issue there is some kind of backup, especially of the user data that matters.
-
-To test these ideas I am going to make a small test app.
-The requirements for the app are:
-
-1. Anyone can create a tenant and immediatly get credentials and a unique subdomain
-1. The credentials can be used:
-    - to write an int to a scores table
-    - fetch latest scores
-    - fetch sum of all scores
-1. A control plane shows tenants, their database sizes, ordered by last active time.
-1. Tenants are deleted if they do not interact in 30 minutes.
-
-Unlike Users, Tenants don't interact with one another so sharding is a bit easier. There are no shared resources required, they are all very seperate.
-
-This higher level requirements are the application should be able to have 10k tenants where:
-1. each tenant uploads on average a piece of data every 5 minutes. So support 33 reqs/s min.
-1. each tenant only costs $1 total per year to host
-1. best effort to save tenants data, backed up at least every 5 minutes.
-
-# Deploy
-
-There will be downtime because if you replicate writes from the same db from multiple applications it will corrupt the db.
-
-Deploy flow for same machine:
-1. NEW: Start
-1. NEW: Try grab Deploy Lock and is blocked.
-
-1. OLD: Stop Serving HTTP
-1. OLD: Wait for litesteam to finish all DB replications
-1. OLD: Release Deploy Lock
-1. OLD: KILL
-
-1. NEW: Deploy Lock grabbed
-1. NEW: Download main database
-1. NEW: Start HTTP
-
-DBs for each user will be lazily downloaded (if needed) when they next call. This will hopefully stop thundering herd.
-
-This deploy flow should work for both releasing a new version on the same machine AND releasing a new version on a brand new machine. The only difference will be that DB download wont be needed if a new machine is not used.
-
-The deploy time to a clean server (worst case) is then 
+If you dont want to host you can get a user from another host like nighttroop.t1d.nz.
 
 # Testing locally
 
@@ -95,7 +38,7 @@ Option 2: Leaving it open we will need to check memory consumption of each db. C
 
 # LiteStream
 
-10,000 empty tenant databases, Litestream is 7GB RAM, because each litestream connection had 2 long running go routines (AFAIK), one that loops to sync the data up defined with `MonitorInterval`, and one that holds open a select statement to stop the SQLite DB from checkpointing without the db knowing. `SyncInterval`. If these databases had any data in them the ram usage would be much larger.
+10,000 empty user databases, Litestream is 7GB RAM, because each litestream connection had 2 long running go routines (AFAIK), one that loops to sync the data up defined with `MonitorInterval`, and one that holds open a select statement to stop the SQLite DB from checkpointing without the db knowing. `SyncInterval`. If these databases had any data in them the ram usage would be much larger.
 
 CPU is really the thing that gets hit here. If the `MonitorInterval` is the default at 1 second, the CPU gets destroyed by 10,000 dbs all deciding to Sync. Increasing this to 5 minutes decreases that problem, but even when nothing needs to be synced during these 
 
@@ -108,7 +51,7 @@ We can get rid of 1/2 of the go routines by not monitoring for when a change occ
 
 Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up, also running another slower loop that takes the backups and sends them to S3. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
 
-10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per). Each user also may use cache set by `cache_size` which might add 2Mb more memory usage per user. So lets assume 4Mb per user memory usage. Maybe using the ATTACH feature in SQLite would use less RAM, but I am not sure of other implications related to backup and such. 
+10,000 users kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per). Each user also may use cache set by `cache_size` which might add 2Mb more memory usage per user. So lets assume 4Mb per user memory usage. Maybe using the ATTACH feature in SQLite would use less RAM, but I am not sure of other implications related to backup and such. 
 
 Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking they need backing up takes 40ms.
 
@@ -116,15 +59,15 @@ Backing up 10k dbs to s3 synchronously takes about 20 seconds for a local minio 
 
 Test Restore, downloading 10k empty databases and then opening them all up
 
-A tenant with 54,000 data points (a datum every 5 minutes for 6 months) creates a 1.5MB Sqlite DB. Lz4 seems to reduce this size by about 1/3 so 500KB. Lets double that to 3Mb as a cap for the users db size, getting compressed to 1MB, or with 10K users that is 30GB on disk and 10GB upload total.
+A user with 54,000 data points (a datum every 5 minutes for 6 months) creates a 1.5MB Sqlite DB. Lz4 seems to reduce this size by about 1/3 so 500KB. Lets double that to 3Mb as a cap for the users db size, getting compressed to 1MB, or with 10K users that is 30GB on disk and 10GB upload total.
 
-On my local mackbook that took about 1-2mins to lz4 then upload. So, Doing all 10k tenants as a single file isnt flexible enough and doing as individual files isnt cost effective. I think grouping the tenants by starting char, then having a sync and restore 
+On my local mackbook that took about 1-2mins to lz4 then upload. So, Doing all 10k users as a single file isnt flexible enough and doing as individual files isnt cost effective. I think grouping the users by starting char, then having a sync and restore 
 
-Rather than having a Backup Go routing and a Sync Goroutine, I think having a Go routine per tenant group would where it would backup then sync.
+Rather than having a Backup Go routing and a Sync Goroutine, I think having a Go routine per user group would where it would backup then sync.
 
-Once you move to pools of tenants, lazy restore from S3 becomes much harder, so to simplify I will restore all tenant pools before starting http. This will mean that deploy and startup time will probably be delayed by the amount of time to download all tenant pools, but that should be easy to make concurrent. Each pool is 1/36 * 10,000 * 1Mb , so about 300MB.
+Once you move to pools of users, lazy restore from S3 becomes much harder, so to simplify I will restore all user pools before starting http. This will mean that deploy and startup time will probably be delayed by the amount of time to download all user pools, but that should be easy to make concurrent. Each pool is 1/36 * 10,000 * 1Mb , so about 300MB.
 
-The time it takes to backup and upload up 10,000 dbs is about 3 minutes, but doing so concurrently takes all CPUs at which time it cannot server HTTP requests. Staggering pool backups will help with this, but incure a time penalty. The time it takes to download and restore 10k tenants is significantly less.
+The time it takes to backup and upload up 10,000 dbs is about 3 minutes, but doing so concurrently takes all CPUs at which time it cannot server HTTP requests. Staggering pool backups will help with this, but incure a time penalty. The time it takes to download and restore 10k users is significantly less.
 
 Time without staggering is 3mins for all 36 pools, but when staggered it is 3s per 36 pools. we are saving nearly half the time by spreading out the uploads.
 
@@ -153,7 +96,7 @@ Migrations
 1. I would put the version of the DB of the user in the control database, then when accessed check against a constant value to make sure it is up to date. 
 
 Blast Radius
-1. A single bad acting tenant could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
+1. A single bad acting user could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
 
 Back Office stuff
 
@@ -166,7 +109,7 @@ Pricing for 10k users
 
 Lets say we cap the user DB size at 5Mb, and truncate all past data. It will matter how fast data comes in as well, as each sync operation will cost. 
 
-Control DB size will be negligble, each tenent DB would be 10MB
+Control DB size will be negligble, each user DB would be 10MB
 
 S3, Cloudflare R2, Tigris
 
@@ -184,7 +127,7 @@ Reads will only happen per deploy, which, lets say averages once per day, so lik
 
 As you can see, the size of the database is not really the issue (other than egress costs from the server and resources used to upload and process.) The killer on the cost is the amount of writes, which the only lever is how often to backup. Every 5 mins may be acceptable in some cases, but in others maybe not. 
 
-The solution may be compressing all or groups of tenants with lz4, before uploading, e.g. compressing based on first letter in tenant id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching tenants to speed up deploys), and CPU and HDD resources. But it would speed up the sync process in total given it would be making less network calls.
+The solution may be compressing all or groups of users with lz4, before uploading, e.g. compressing based on first letter in user id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching users to speed up deploys), and CPU and HDD resources. But it would speed up the sync process in total given it would be making less network calls.
 
 
 
@@ -210,18 +153,20 @@ There are a bunch of ways in which a noisy neighbor can ruin this service. The b
 Request rate:
 "golang.org/x/time/rate" is a really easy way to stop a user from calling too many times, allowing for a common rate and a burst rate with `rate.NewLimiter(limit, burst_limit)`. This should stop resource consumption
 
-Tenant limit
-A single server has a hard limit of how many tenants it can handle, 10k. So a hard limit on creating more tenants should be done.
+User limit
+A single server has a hard limit of how many users it can handle, 10k. So a hard limit on creating more users should be done.
 
 DB Size
 A hard limit on row numbers for each table, triggered when the db goes over a certain size.
 
-Tenant Age:
-Unused tenants use up space in the system, take time in deploys and backups. Tenants not used for 30 minutes should be archived to S3, and soft deleted from the control DB, and zipped up and referenced. This means that there is a path to rehydration, if someone wants to get their data back.
+User Age:
+Unused users use up space in the system, take time in deploys and backups. Users not used for 30 minutes should be archived to S3, and soft deleted from the control DB, and zipped up and referenced. This means that there is a path to rehydration, if someone wants to get their data back.
 
 
 
-# Simulation 
+# Goals:
+1. 
+
 
 The goal is to make an app for diabetes camps that can add all the kids and see their numbers and show alarms/highlight issues.
 

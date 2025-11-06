@@ -13,16 +13,16 @@ import (
 // TenentDB
 // //
 
-type TenantDB struct {
+type UserDB struct {
 	*SQLDB
 	Subdomain string
 	char      byte
 }
 
-func NewTenantDB(subdomain string) *TenantDB {
+func NewUserDB(subdomain string) *UserDB {
 	char := subdomain[0]
-	topPath := fmt.Sprintf("/tenant/%s/%s.sqlite", string(char), subdomain)
-	tenantDB := &TenantDB{
+	topPath := fmt.Sprintf("/user/%s/%s.sqlite", string(char), subdomain)
+	userDB := &UserDB{
 		SQLDB: &SQLDB{
 			Path:       "data/db" + topPath,
 			BackupPath: "data/backup" + topPath,
@@ -32,17 +32,17 @@ func NewTenantDB(subdomain string) *TenantDB {
 		char:      char,
 	}
 
-	return tenantDB
+	return userDB
 }
 
-func (db *TenantDB) ArchivePath() string {
+func (db *UserDB) ArchivePath() string {
 	return fmt.Sprintf("archive/%s/%s.tar.lz4", string(db.char), db.Subdomain)
 }
 
 var hmacSecretKey = []byte("your-secure-secret-key")
 
-func (db *TenantDB) CreateAPIToken() (string, error) {
-	// Create a new API token for the tenant
+func (db *UserDB) CreateAPIToken() (string, error) {
+	// Create a new API token for the user
 	apiKey, err := GenerateSecureAPIKey(12)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate API key: %w", err)
@@ -63,7 +63,7 @@ func (db *TenantDB) CreateAPIToken() (string, error) {
 	return apiKey, nil
 }
 
-func (db *TenantDB) ValidateAPIToken(token string) error {
+func (db *UserDB) ValidateAPIToken(token string) error {
 	var err error
 	// Create an HMAC hash of the provided token
 	h := hmac.New(sha256.New, hmacSecretKey)
@@ -108,7 +108,7 @@ func (db *TenantDB) ValidateAPIToken(token string) error {
 	return nil
 }
 
-func (db *TenantDB) GetScoresSum() (int, error) {
+func (db *UserDB) GetScoresSum() (int, error) {
 	rows, err := db.Query("SELECT SUM(score) AS score FROM scores")
 	if err != nil {
 		return 0, fmt.Errorf("1 cannot get scores sum: %w", err)
@@ -136,13 +136,13 @@ func (db *TenantDB) GetScoresSum() (int, error) {
 // UTILS
 // //
 
-const tenantCharSet = "abcdefghijklmnopqrstuvwxyz0123456789"
+const userCharSet = "abcdefghijklmnopqrstuvwxyz"
 
-func NextTenantID() string {
+func NextUserID() string {
 	result := make([]byte, 12)
 	rand.Read(result)
 	for i, b := range result {
-		result[i] = tenantCharSet[b%byte(len(tenantCharSet))]
+		result[i] = userCharSet[b%byte(len(userCharSet))]
 	}
 	return string(result)
 }

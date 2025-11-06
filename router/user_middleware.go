@@ -6,16 +6,16 @@ import (
 	"net/http"
 	"strings"
 
-	mtdb "sqlitemt.t1d.nz/db"
+	mtdb "nighttroop.t1d.nz/db"
 )
 
-type ctxTenantDBKey int
+type ctxUserDBKey int
 type ctxSubdomainKey int
 
 // RequestIDKey is the key that holds the unique request ID in a request context.
-const TenantDBKey ctxTenantDBKey = 0
+const UserDBKey ctxUserDBKey = 0
 
-func GetTennantMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {
+func GetUserMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -31,26 +31,26 @@ func GetTennantMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 				return
 			}
 
-			// Search for tenants
-			tenant, err := controlDB.GetTenant(subdomain, true)
+			// Search for users
+			user, err := controlDB.GetUser(subdomain, true)
 			// We ignore errors and this is a best effort middleware
-			// Each route needs to check the tenant if needed
-			if err != nil || tenant == nil {
-				// If the tenant is not found, we can return a 404
-				fmt.Println("Tenant Middleware Error", err)
+			// Each route needs to check the user if needed
+			if err != nil || user == nil {
+				// If the user is not found, we can return a 404
+				fmt.Println("User Middleware Error", err)
 				http.NotFound(w, r)
 				return
 			}
 
-			err = tenant.ValidateAPIToken(apiToken)
+			err = user.ValidateAPIToken(apiToken)
 			if err != nil {
-				fmt.Println("Tenant token error", err)
+				fmt.Println("User token error", err)
 				// write an not auth http error
 				http.Error(w, "Not Authorized", http.StatusUnauthorized)
 				return
 			}
 
-			ctx = context.WithValue(ctx, TenantDBKey, tenant)
+			ctx = context.WithValue(ctx, UserDBKey, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 
 		}
@@ -59,12 +59,12 @@ func GetTennantMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Han
 	}
 }
 
-// GetTenant retrieves the tenant ID from the context.
-func GetTenant(ctx context.Context) *mtdb.TenantDB {
+// GetUser retrieves the user ID from the context.
+func GetUser(ctx context.Context) *mtdb.UserDB {
 	if ctx == nil {
 		return nil
 	}
-	if reqID, ok := ctx.Value(TenantDBKey).(*mtdb.TenantDB); ok {
+	if reqID, ok := ctx.Value(UserDBKey).(*mtdb.UserDB); ok {
 		return reqID
 	}
 	return nil

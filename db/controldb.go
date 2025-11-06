@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	mtsql "sqlitemt.t1d.nz/sql"
+	mtsql "nighttroop.t1d.nz/sql"
 )
 
 type ControlDB struct {
@@ -21,9 +21,9 @@ type ControlDB struct {
 	// previously modified
 	ControlBackupInterval time.Duration
 	PoolBackupInterval    time.Duration
-	MaxTenantAge          time.Duration
+	MaxUserAge            time.Duration
 
-	tenantPools map[byte]*TenantPool
+	userPools map[byte]*UserPool
 
 	ctx    context.Context
 	cancel func()
@@ -43,7 +43,7 @@ func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 		},
 		ControlBackupInterval: 10 * time.Second,
 		PoolBackupInterval:    60 * time.Second,
-		MaxTenantAge:          30 * time.Minute,
+		MaxUserAge:            30 * time.Minute,
 	}
 	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
@@ -52,11 +52,11 @@ func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 		return nil, fmt.Errorf("cannot create s3 client: %w", err)
 	}
 
-	// Create a pool for each starting character of a tenant subdomain
+	// Create a pool for each starting character of a user subdomain
 	// This map will never be added or removed from so no need for a lock
-	controlDB.tenantPools = map[byte]*TenantPool{}
-	for _, c := range tenantCharSet {
-		controlDB.tenantPools[byte(c)] = NewTenantPool(byte(c))
+	controlDB.userPools = map[byte]*UserPool{}
+	for _, c := range userCharSet {
+		controlDB.userPools[byte(c)] = NewUserPool(byte(c))
 	}
 
 	return controlDB, nil
@@ -82,43 +82,43 @@ func (db *ControlDB) TryRestoreDBFile() error {
 	return nil
 }
 
-func (db *ControlDB) RestoreAndOpenAllTenants() error {
-	defer trackTime(time.Now(), "RestoreAndOpenAllTenants")
+func (db *ControlDB) RestoreAndOpenAllUsers() error {
+	defer trackTime(time.Now(), "RestoreAndOpenAllUsers")
 	g, _ := errgroup.WithContext(context.Background())
 	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
 	g.SetLimit(limit)
-	fmt.Println("RestoreAndOpenAllTenants running", len(db.tenantPools), limit)
+	fmt.Println("RestoreAndOpenAllUsers running", len(db.userPools), limit)
 	for _, pool := range db.allPools() {
 
 		g.Go(func() error {
-			tenantSubdomains, err := db.GetTenantPoolTenantsFromDB(pool.char)
-			fmt.Println("TenantSubdomains", string(pool.char), tenantSubdomains)
+			userSubdomains, err := db.GetUserPoolUsersFromDB(pool.char)
+			fmt.Println("UserSubdomains", string(pool.char), userSubdomains)
 			if err != nil {
-				return fmt.Errorf("cannot get tenant pool tenants: %w", err)
+				return fmt.Errorf("cannot get user pool users: %w", err)
 			}
-			err = pool.RestoreAndOpenAllTenants(db.S3Client, tenantSubdomains)
+			err = pool.RestoreAndOpenAllUsers(db.S3Client, userSubdomains)
 			if err != nil {
-				return fmt.Errorf("cannot restore tenant pool: %w", err)
+				return fmt.Errorf("cannot restore user pool: %w", err)
 			}
 			return nil
 		})
 	}
 
 	if err := g.Wait(); err != nil {
-		fmt.Printf("One of the RestoreAndOpenAllTenants  tasks failed: %v\n", err)
-		return fmt.Errorf("cannot restore and open all tenants: %w", err)
+		fmt.Printf("One of the RestoreAndOpenAllUsers  tasks failed: %v\n", err)
+		return fmt.Errorf("cannot restore and open all users: %w", err)
 	} else {
-		fmt.Println("All RestoreAndOpenAllTenants tasks succeeded!")
+		fmt.Println("All RestoreAndOpenAllUsers tasks succeeded!")
 	}
 
 	return nil
 }
 
-func (db *ControlDB) GetTenantPoolTenantsFromDB(char byte) ([]string, error) {
-	tenants := []string{}
-	res, err := db.Query("SELECT subdomain FROM tenants WHERE pool = ? AND deleted_at IS NULL ORDER BY subdomain DESC", int(char))
+func (db *ControlDB) GetUserPoolUsersFromDB(char byte) ([]string, error) {
+	users := []string{}
+	res, err := db.Query("SELECT subdomain FROM users WHERE pool = ? AND deleted_at IS NULL ORDER BY subdomain DESC", int(char))
 	if err != nil {
-		return tenants, fmt.Errorf("cannot query tenants: %w", err)
+		return users, fmt.Errorf("cannot query users: %w", err)
 	}
 
 	defer res.Close()
@@ -127,66 +127,66 @@ func (db *ControlDB) GetTenantPoolTenantsFromDB(char byte) ([]string, error) {
 		var subdomain string
 		err = res.Scan(&subdomain)
 		if err != nil {
-			return tenants, fmt.Errorf("cannot scan tenant: %w", err)
+			return users, fmt.Errorf("cannot scan user: %w", err)
 		}
-		tenants = append(tenants, subdomain)
+		users = append(users, subdomain)
 	}
 	err = res.Err()
 	if err != nil {
-		return tenants, fmt.Errorf("rows error: %w", err)
+		return users, fmt.Errorf("rows error: %w", err)
 	}
 
-	return tenants, nil
+	return users, nil
 }
 
-func (db *ControlDB) GetNTenantsDBs() int {
+func (db *ControlDB) GetNUsersDBs() int {
 	total := 0
-	for _, pool := range db.tenantPools {
-		total += pool.GetNTenantsDBs()
+	for _, pool := range db.userPools {
+		total += pool.GetNUsersDBs()
 	}
 	return total
 }
 
-func (db *ControlDB) GetTenant(subdomain string, updateLastSeen bool) (*TenantDB, error) {
+func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, error) {
 	if subdomain == "" {
 		return nil, fmt.Errorf("subdomain cannot be empty")
 	}
 
-	fmt.Println("GetTenant", subdomain)
+	fmt.Println("GetUser", subdomain)
 
-	// See if the tenant is already there
-	tp := db.tenantPools[subdomain[0]]
-	tenant := tp.GetTenant(subdomain)
-	tenantInDB, err := db.TenantInDB(subdomain, updateLastSeen)
+	// See if the user is already there
+	tp := db.userPools[subdomain[0]]
+	user := tp.GetUser(subdomain)
+	userInDB, err := db.UserInDB(subdomain, updateLastSeen)
 
-	fmt.Println("TenantInDB", tenantInDB, err)
+	fmt.Println("UserInDB", userInDB, err)
 	if err != nil {
-		fmt.Println("Error getting tenant from DB", err)
-		return nil, fmt.Errorf("cannot get tenant from DB: %w", err)
+		fmt.Println("Error getting user from DB", err)
+		return nil, fmt.Errorf("cannot get user from DB: %w", err)
 	}
 
-	// Absolute Tenant not in the ControlDB we dont return
-	if !tenantInDB {
-		fmt.Println("Tenant not found in DB")
-		return nil, fmt.Errorf("tenant not found in DB")
+	// Absolute User not in the ControlDB we dont return
+	if !userInDB {
+		fmt.Println("User not found in DB")
+		return nil, fmt.Errorf("user not found in DB")
 	}
 
-	if tenant == nil {
-		fmt.Println("Tenant not found in pool, opening tenant")
-		return nil, fmt.Errorf("tenant Not Found: %w", err)
+	if user == nil {
+		fmt.Println("User not found in pool, opening user")
+		return nil, fmt.Errorf("user Not Found: %w", err)
 	}
 
-	return tenant, nil
+	return user, nil
 }
 
-func (db *ControlDB) TenantInDB(subdomain string, updateLastSeen bool) (bool, error) {
-	// Check if tenant exists in the db
-	rows, err := db.Query("SELECT last_seen_at FROM tenants WHERE subdomain = ? AND deleted_at IS NULL LIMIT 1", subdomain)
+func (db *ControlDB) UserInDB(subdomain string, updateLastSeen bool) (bool, error) {
+	// Check if user exists in the db
+	rows, err := db.Query("SELECT last_seen_at FROM users WHERE subdomain = ? AND deleted_at IS NULL LIMIT 1", subdomain)
 	if err != nil {
-		return false, fmt.Errorf("cannot get tenant: %w", err)
+		return false, fmt.Errorf("cannot get user: %w", err)
 	}
 	if rows == nil {
-		return false, fmt.Errorf("tenant not found")
+		return false, fmt.Errorf("user not found")
 	}
 
 	defer rows.Close()
@@ -200,9 +200,9 @@ func (db *ControlDB) TenantInDB(subdomain string, updateLastSeen bool) (bool, er
 	var last_seen_at string
 	err = rows.Scan(&last_seen_at)
 	if err != nil {
-		return false, fmt.Errorf("cannot scan tenant: %w", err)
+		return false, fmt.Errorf("cannot scan user: %w", err)
 	}
-	fmt.Println("Found Tenant: ", last_seen_at)
+	fmt.Println("Found User: ", last_seen_at)
 
 	if updateLastSeen {
 		err = db.TryUpdateLastSeenAt(subdomain, last_seen_at)
@@ -231,7 +231,7 @@ func (db *ControlDB) TryUpdateLastSeenAt(subdomain string, last_seen_at string) 
 
 	// Try update lsat seen at, I am not going to throw here if not updated
 	fmt.Println("Trying to updating last seen at")
-	_, err = db.Exec("UPDATE tenants SET last_seen_at = ? WHERE subdomain = ?", time.Now().Format(time.RFC3339), subdomain)
+	_, err = db.Exec("UPDATE users SET last_seen_at = ? WHERE subdomain = ?", time.Now().Format(time.RFC3339), subdomain)
 	if err != nil {
 		fmt.Println("Error updating last seen at", err)
 		return fmt.Errorf("cannot update last seen at: %w", err)
@@ -240,23 +240,23 @@ func (db *ControlDB) TryUpdateLastSeenAt(subdomain string, last_seen_at string) 
 	return nil
 }
 
-func (db *ControlDB) CreateTenant(ctx context.Context) (string, string, error) {
-	tenantID := NextTenantID()
-	_, err := db.Exec(mtsql.ControlTenantInsert, tenantID, int(tenantID[0]))
+func (db *ControlDB) CreateUser(ctx context.Context) (string, string, error) {
+	userID := NextUserID()
+	_, err := db.Exec(mtsql.ControlUserInsert, userID, int(userID[0]))
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create tenant: %w", err)
+		return "", "", fmt.Errorf("cannot create user: %w", err)
 	}
 
-	tp := db.tenantPools[tenantID[0]]
-	_, apiKey, err := tp.CreateTenant(tenantID)
+	tp := db.userPools[userID[0]]
+	_, apiKey, err := tp.CreateUser(userID)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create tenant: %w", err)
+		return "", "", fmt.Errorf("cannot create user: %w", err)
 	}
-	return tenantID, apiKey, nil
+	return userID, apiKey, nil
 }
 
 func (db *ControlDB) Close() error {
-	// Keep it locked so no new tenants can be created
+	// Keep it locked so no new users can be created
 	for _, pool := range db.allPools() {
 		pool.Close()
 	}
@@ -278,7 +278,7 @@ func (db *ControlDB) StartBackupLoops() {
 		db.wg.Add(1)
 		// The goal here is over the PoolBackupInterval we will backup all pools
 		// But we will stagger them so that we do not swamp the CPU or network
-		staggeredInterval := db.PoolBackupInterval / time.Duration(len(db.tenantPools))
+		staggeredInterval := db.PoolBackupInterval / time.Duration(len(db.userPools))
 		go func() {
 			defer db.wg.Done()
 			db.tpBackupLoop(staggeredInterval)
@@ -287,9 +287,9 @@ func (db *ControlDB) StartBackupLoops() {
 
 }
 
-func (db *ControlDB) allPools() []*TenantPool {
-	var allPools []*TenantPool
-	for _, pool := range db.tenantPools {
+func (db *ControlDB) allPools() []*UserPool {
+	var allPools []*UserPool
+	for _, pool := range db.userPools {
 		allPools = append(allPools, pool)
 	}
 
@@ -315,27 +315,27 @@ func (db *ControlDB) tpBackupLoop(interval time.Duration) {
 		}
 		tp := allPools[index]
 
-		// Force all tenants to sync WAL to disk and update their mod times
-		// this also backs up the tenant to the backup path if modified
+		// Force all users to sync WAL to disk and update their mod times
+		// this also backs up the user to the backup path if modified
 		modified, err := tp.updateModified()
 		if err != nil {
-			fmt.Println("Error updating tenant modified", "error", err)
+			fmt.Println("Error updating user modified", "error", err)
 		}
 
-		// TODO soft delete tenants from the DB (for rehydrations later)
-		removedTenants, err := tp.archive(db.S3Client, db.MaxTenantAge)
+		// TODO soft delete users from the DB (for rehydrations later)
+		removedUsers, err := tp.archive(db.S3Client, db.MaxUserAge)
 		if err != nil {
-			fmt.Println("Error archiving tenant pool", "error", err)
+			fmt.Println("Error archiving user pool", "error", err)
 		} else {
-			err := db.DeleteAllTenants(removedTenants)
+			err := db.DeleteAllUsers(removedUsers)
 			if err != nil {
-				fmt.Println("Error deleting tenants from DB", "error", err)
+				fmt.Println("Error deleting users from DB", "error", err)
 			}
 
 		}
 
 		if modified {
-			// If any tenant was modified we need to backup the pool
+			// If any user was modified we need to backup the pool
 			if err = tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
 				fmt.Println("Backup error", "error", err)
 			}
@@ -344,14 +344,14 @@ func (db *ControlDB) tpBackupLoop(interval time.Duration) {
 	}
 }
 
-func (db *ControlDB) DeleteAllTenants(tenants []*TenantDB) error {
-	if len(tenants) == 0 {
+func (db *ControlDB) DeleteAllUsers(users []*UserDB) error {
+	if len(users) == 0 {
 		return nil
 	}
-	for _, tenant := range tenants {
-		_, err := db.Exec(mtsql.ControlTenantDelete, tenant.Subdomain)
+	for _, user := range users {
+		_, err := db.Exec(mtsql.ControlUserDelete, user.Subdomain)
 		if err != nil {
-			fmt.Println("cannot delete tenant: %w", err)
+			fmt.Println("cannot delete user: %w", err)
 		}
 	}
 	return nil
@@ -409,7 +409,7 @@ func (db *ControlDB) ForceBackupSync() error {
 	defer trackTime(time.Now(), "ForceBackupSync")
 
 	db.UpdateModified()
-	// Go through every tenant and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
+	// Go through every user and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
 	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
 	err := db.backup()
 	if err != nil {
@@ -422,13 +422,13 @@ func (db *ControlDB) ForceBackupSync() error {
 	// Limit the number of concurrent goroutines to the number of CPU cores - 1
 	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
 	g.SetLimit(limit)
-	fmt.Println("ForceBackupSync running", len(db.tenantPools), limit)
+	fmt.Println("ForceBackupSync running", len(db.userPools), limit)
 	for _, pool := range db.allPools() {
 
 		g.Go(func() error {
 			_, err := pool.updateModified()
 			if err != nil {
-				fmt.Println("Error updating tenant modified", "error", err)
+				fmt.Println("Error updating user modified", "error", err)
 			}
 
 			return pool.backup(db.S3Client)
@@ -437,7 +437,7 @@ func (db *ControlDB) ForceBackupSync() error {
 
 	if err := g.Wait(); err != nil {
 		fmt.Printf("One of the ForceBackupSync tasks failed: %v\n", err)
-		return fmt.Errorf("cannot sync all tenants: %w", err)
+		return fmt.Errorf("cannot sync all users: %w", err)
 	} else {
 		fmt.Println("All ForceBackupSync tasks succeeded!")
 	}

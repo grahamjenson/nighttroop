@@ -1,4 +1,4 @@
-package tenant
+package user
 
 import (
 	_ "embed"

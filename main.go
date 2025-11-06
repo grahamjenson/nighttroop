@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,17 +15,18 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 	"golang.org/x/time/rate"
 
 	_ "github.com/mattn/go-sqlite3"
-	"sqlitemt.t1d.nz/db"
-	mtmiddleware "sqlitemt.t1d.nz/middleware"
-	mtsql "sqlitemt.t1d.nz/sql"
-	"sqlitemt.t1d.nz/templates"
+	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/router"
+	"nighttroop.t1d.nz/sql"
+	"nighttroop.t1d.nz/templates"
 )
 
-var tenantCreateLimiter = rate.NewLimiter(10, 100)
-var tenantCreateMu sync.Mutex
+var userCreateLimiter = rate.NewLimiter(10, 100)
+var userCreateMu sync.Mutex
 
 func main() {
 	if err := run(); err != nil {
@@ -33,20 +35,34 @@ func main() {
 	}
 }
 
+type ServerConfig struct {
+	s3Bucket string
+	s3URL    string
+}
+
 func run() error {
 	var err error
 
-	// SETUP
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// BOOTSTRAP
 	err = templates.CreateTemplates()
 	if err != nil {
 		return fmt.Errorf("cannot create templates: %w", err)
+	}
+	var serverConfig = ServerConfig{
+		s3Bucket: os.Getenv("S3_BUCKET"),
+		s3URL:    os.Getenv("S3_URL"),
 	}
 
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	controlDB, err := db.NewControlDB("http://localhost:9000/", "mybucket")
+	controlDB, err := db.NewControlDB(serverConfig.s3URL, serverConfig.s3Bucket)
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}
@@ -59,14 +75,14 @@ func run() error {
 	}
 
 	// Open Databse, hook up litesrtream, and migrate
-	err = controlDB.Open(&mtsql.ControlCreate)
+	err = controlDB.Open(&sql.ControlCreate)
 	if err != nil {
 		return err
 	}
 
-	err = controlDB.RestoreAndOpenAllTenants()
+	err = controlDB.RestoreAndOpenAllUsers()
 	if err != nil {
-		return fmt.Errorf("cannot restore tenants: %w", err)
+		return fmt.Errorf("cannot restore users: %w", err)
 	}
 
 	// Run web server.
@@ -99,87 +115,67 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	fmt.Printf("listening on 8080\n")
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(mtmiddleware.GetUserDBMiddbleware(controlDB))
+	r.Use(router.GetUserMiddleware(controlDB))
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		err := templates.IndexHTMLTemplate.Execute(w, nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+	r.Post("/guess", func(w http.ResponseWriter, r *http.Request) {
+		userDB := router.GetUser(r.Context())
+		if userDB == nil {
+			fmt.Println("User NOT found")
+			http.Error(w, "User not found", http.StatusNotFound)
 			return
 		}
-	})
-
-	r.Post("/tenant", func(w http.ResponseWriter, r *http.Request) {
-
-		tenantCreateMu.Lock()
-		allowed := tenantCreateLimiter.Allow()
-		tenantCreateMu.Unlock()
-		if !allowed {
-			http.Error(w, "Too many requests", http.StatusTooManyRequests)
+		choice := r.FormValue("choice")
+		if choice != "even" && choice != "odd" {
+			http.Error(w, "Invalid choice", http.StatusBadRequest)
 			return
 		}
 
-		// Check to see if there is 10k tenants and return error if there is
-		if controlDB.GetNTenantsDBs() > 10000 {
-			http.Error(w, "Full: Too many tenants", http.StatusTooManyRequests)
-			return
+		correctGuess := false
+		// Simple Game of Guessing if the number is even or odd
+		randomBool := rand.NextBool()
+		if randomBool == true && choice == "even" {
+			// Correct guess
+			correctGuess = true
+		}
+		if randomBool == false && choice == "odd" {
+			correctGuess = true
 		}
 
-		// TODO replace middleware with Function, since this is not mostly used
-		subdomain := mtmiddleware.GetSubdomain(r.Context())
-		if subdomain != "control" {
-			// Must use control subdomain
-			http.NotFound(w, r)
-			return
-		}
-
-		tenantID, apiKey, err := controlDB.CreateTenant(ctx)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		fmt.Printf("Number of Tenants %d, Number of Routines %d\n", controlDB.GetNTenantsDBs(), runtime.NumGoroutine())
-
-		// buf := make([]byte, 1<<16) // 64 KB buffer
-		// n := runtime.Stack(buf, true)
-		// fmt.Printf("%s", buf[:n])
-
-		// TODO: Handle JSON and HTMX return
 		accept := r.Header.Get("Accept")
-		fmt.Println("accept", accept)
+
 		if accept == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"tenantID\": \"%s\", \"apiKey\": \"%s\"}", tenantID, apiKey)))
+			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userID, apiKey)))
 			return
 		}
+
 		if accept == "text/htmx" {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			templates.IndexHTMLTemplate.ExecuteTemplate(w, "tenant.html", templates.TenantHTML{Subdomain: tenantID, APIKey: apiKey})
+			templates.IndexHTMLTemplate.ExecuteTemplate(w, "htmx_guess.html", templates.GuessHTML{Choise: choice, Correct: correctGuess})
 			return
 		}
 
-		w.Write([]byte(fmt.Sprintf("Tenant created: %s, apiKey %s \n", tenantID, apiKey)))
+		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userID, apiKey)))
+
 	})
 
 	r.Get("/score", func(w http.ResponseWriter, r *http.Request) {
-		tenantDB := mtmiddleware.GetTenant(r.Context())
+		userDB := router.GetUser(r.Context())
 
-		if tenantDB == nil {
-			fmt.Println("Tenant NOT found")
-			http.Error(w, "Tenant not found", http.StatusNotFound)
+		if userDB == nil {
+			fmt.Println("User NOT found")
+			http.Error(w, "User not found", http.StatusNotFound)
 			return
-		} else {
-			fmt.Println("Tenant found", tenantDB.Subdomain)
 		}
-		score, err := tenantDB.GetScoresSum()
+		score, err := userDB.GetScoresSum()
 		if err != nil {
 			fmt.Println("Error getting scores sum", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		// Start a transaction.
-		w.Write([]byte(fmt.Sprintf("Tenant found: %s %v\n", tenantDB.Subdomain, score)))
+		w.Write([]byte(fmt.Sprintf("User found: %s %v\n", userDB.Subdomain, score)))
 	})
 
 	server := &http.Server{Addr: ":8080", Handler: r}
@@ -191,4 +187,80 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	}()
 
 	return server
+}
+
+func controlRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(AdminOnly)
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		err := templates.ControlHTMLTemplate.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	r.Post("/user", func(w http.ResponseWriter, r *http.Request) {
+		userCreateMu.Lock()
+		allowed := userCreateLimiter.Allow()
+		userCreateMu.Unlock()
+		if !allowed {
+			http.Error(w, "Too many requests", http.StatusTooManyRequests)
+			return
+		}
+
+		// Check to see if there is 10k users and return error if there is
+		if controlDB.GetNUsersDBs() > 10000 {
+			http.Error(w, "Full: Too many users", http.StatusTooManyRequests)
+			return
+		}
+
+		// TODO replace middleware with Function, since this is not mostly used
+		subdomain := router.GetSubdomain(r.Context())
+		if subdomain != "control" {
+			// Must use control subdomain
+			http.NotFound(w, r)
+			return
+		}
+
+		userID, apiKey, err := controlDB.CreateUser(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Printf("Number of Users %d, Number of Routines %d\n", controlDB.GetNUsersDBs(), runtime.NumGoroutine())
+
+		// buf := make([]byte, 1<<16) // 64 KB buffer
+		// n := runtime.Stack(buf, true)
+		// fmt.Printf("%s", buf[:n])
+
+		// TODO: Handle JSON and HTMX return
+		accept := r.Header.Get("Accept")
+
+		if accept == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userID, apiKey)))
+			return
+		}
+		if accept == "text/htmx" {
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			templates.IndexHTMLTemplate.ExecuteTemplate(w, "htmx_user.html", templates.UserHTML{Subdomain: userID, APIKey: apiKey})
+			return
+		}
+
+		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userID, apiKey)))
+	})
+
+	return r
+}
+
+func userRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(router.GetUserDBMiddbleware(controlDB))
+	r.Get("/", userIndex)
+
+	return r
 }

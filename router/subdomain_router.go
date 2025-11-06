@@ -11,7 +11,7 @@ const SubdomainKey ctxSubdomainKey = 1
 // SubdomainRouter routes based on subdomain and path
 type SubdomainRouter struct {
 	controlRouter http.Handler
-	tenantRouter  http.Handler
+	userRouter    http.Handler
 }
 
 func (s *SubdomainRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func (s *SubdomainRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.controlRouter.ServeHTTP(w, r.WithContext(ctx))
 		return
 	}
-	s.tenantRouter.ServeHTTP(w, r.WithContext(ctx))
+	s.userRouter.ServeHTTP(w, r.WithContext(ctx))
 }
 
 func GetSubdomain(ctx context.Context) string {

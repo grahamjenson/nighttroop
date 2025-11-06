@@ -1,4 +1,4 @@
-module sqlitemt.t1d.nz
+module nighttroop.t1d.nz
 
 go 1.24.1
 
@@ -30,4 +30,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.18 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 )

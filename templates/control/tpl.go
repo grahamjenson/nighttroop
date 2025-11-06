@@ -8,9 +8,9 @@ import (
 var ContentHTMX string
 
 //go:embed htmx_tenant.html
-var TenantHTMX string
+var UserHTMX string
 
-type TenantHTMXParam struct {
+type UserHTMXParam struct {
 	Subdomain string
 	APIKey    string
 }

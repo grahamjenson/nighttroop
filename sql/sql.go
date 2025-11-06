@@ -9,27 +9,18 @@ import _ "embed"
 //go:embed control_create.sql
 var ControlCreate string
 
-//go:embed control_tenant_insert.sql
-var ControlTenantInsert string
+//go:embed control_user_insert.sql
+var ControlUserInsert string
 
-//go:embed control_tenant_delete.sql
-var ControlTenantDelete string
+//go:embed control_user_delete.sql
+var ControlUserDelete string
 
 ///
 //  User
 ///
 
-//go:embed tenant_create.sql
-var TenantCreate string
+//go:embed user_create.sql
+var UserCreate string
 
-//go:embed tenant_scores_insert.sql
-var TenantScoresInsert string
-
-//go:embed tenant_scores_read.sql
-var TenantRead string
-
-//go:embed tenant_scores_sum.sql
-var TenantSum string
-
-//go:embed tenant_create_api_key.sql
-var TenantCreateAPIKey string
+//go:embed user_create_api_key.sql
+var UserCreateAPIKey string

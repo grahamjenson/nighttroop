@@ -116,7 +116,7 @@ func (db *SQLDB) UpdateModified() (bool, error) {
 	if modified || !db.DBBackupFileExists() {
 		err = db.SqliteBackup()
 		if err != nil {
-			return modified, fmt.Errorf("cannot backup tenant db: %w %v", err, db.Path)
+			return modified, fmt.Errorf("cannot backup user db: %w %v", err, db.Path)
 		}
 	}
 

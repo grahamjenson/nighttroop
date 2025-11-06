@@ -4,24 +4,24 @@ import (
 	_ "embed"
 	"html/template"
 
-	"sqlitemt.t1d.nz/templates/control"
-	"sqlitemt.t1d.nz/templates/tenant"
+	"nighttroop.t1d.nz/templates/control"
+	"nighttroop.t1d.nz/templates/user"
 )
 
 //go:embed base.html
 var baseHTML string
 
 var ControlHTMLTemplate *template.Template
-var TenantHTMLTemplate *template.Template
+var UserHTMLTemplate *template.Template
 
 func CreateTemplates() error {
 	var err error
-	ControlHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + control.ContentHTMX + control.TenantHTMX)
+	ControlHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + control.ContentHTMX + control.UserHTMX)
 	if err != nil {
 		return err
 	}
 
-	TenantHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + tenant.ContentHTMX + tenant.GuessHTMX)
+	UserHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + user.ContentHTMX + user.GuessHTMX)
 	if err != nil {
 		return err
 	}

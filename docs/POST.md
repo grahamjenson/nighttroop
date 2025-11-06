@@ -41,7 +41,8 @@ The problem with the anonominity is that it becomes extra work to make sure user
 The solution is to:
 
 1. Limiting user creation and limit total users, e.g. one user per minute created and stop creating users at 10k.
-1. Rate limiting all user API and background tasks.
+1. Rate limiting API usage and any users background tasks.
+1. Limiting returned data length, e.g. returning a months worth of data every query.
 1. Limiting the size of user databases by truncating old information.
 1. Archiving and deleting inactive users (easier with sharded user DBs).
 
@@ -97,6 +98,8 @@ The solution is bundling the user DBs together before uploading, e.g. each user 
 
 ## Other
 
+A Domain will cost $15 per year and a wildcard cert is $1 per month on fly.io. 
+Nighttroop show be relativly low bandwidth since it wont be serving any media.
 
 # Implementation
 
@@ -162,7 +165,7 @@ then login at http://localhost:9001 with minioadmin and then create bucket
 
 Here we will maintain a list of dirty dbs and then run a background loop every N seconds backing them up, also running another slower loop that takes the backups and sends them to S3. It is not quite streaming replication, in that there map be larger gaps that we might lose information, but we wont have to hold onto so many resources as we will be backing up in bulk.
 
-10,000 tenants kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per). Each user also may use cache set by `cache_size` which might add 2Mb more memory usage per user. So lets assume 4Mb per user memory usage.
+10,000 users kept in a map, with each maintaining an open SQLiteDB connection we are using 2200Mb of memory (which is pretty linear, so 2MB per). Each user also may use cache set by `cache_size` which might add 2Mb more memory usage per user. So lets assume 4Mb per user memory usage.
 
 Backing up the empty 10,000 dbs takes 10 seconds synchronously, and checking they need backing up takes 40ms.
 
@@ -170,13 +173,13 @@ Backing up 10k dbs to s3 synchronously takes about 20 seconds for a local minio 
 
 Test Restore, downloading 10k empty databases and then opening them all up
 
-A tenant with 54,000 data points (a datum every 5 minutes for 6 months) creates a 1.5MB Sqlite DB. Lz4 seems to reduce this size by about 1/3 so 500KB. Lets double that to 3Mb as a cap for the users db size, getting compressed to 1MB, or with 10K users that is 30GB on disk and 10GB upload total.
+A user with 54,000 data points (a datum every 5 minutes for 6 months) creates a 1.5MB Sqlite DB. Lz4 seems to reduce this size by about 1/3 so 500KB. Lets double that to 3Mb as a cap for the users db size, getting compressed to 1MB, or with 10K users that is 30GB on disk and 10GB upload total.
 
-On my local mackbook that took about 1-2mins to lz4 then upload. So, Doing all 10k tenants as a single file isnt flexible enough and doing as individual files isnt cost effective. I think grouping the tenants by starting char, then having a sync and restore 
+On my local mackbook that took about 1-2mins to lz4 then upload. So, Doing all 10k users as a single file isnt flexible enough and doing as individual files isnt cost effective. I think grouping the users by starting char, then having a sync and restore 
 
-Once you move to pools of tenants, lazy restore from S3 becomes much harder, so to simplify I will restore all tenant pools before starting http. This will mean that deploy and startup time will probably be delayed by the amount of time to download all tenant pools, but that should be easy to make concurrent. Each pool is 1/36 * 10,000 * 1Mb , so about 300MB.
+Once you move to pools of users, lazy restore from S3 becomes much harder, so to simplify I will restore all user pools before starting http. This will mean that deploy and startup time will probably be delayed by the amount of time to download all user pools, but that should be easy to make concurrent. Each pool is 1/36 * 10,000 * 1Mb , so about 300MB.
 
-The time it takes to backup and upload up 10,000 dbs is about 3 minutes, but doing so concurrently takes all CPUs at which time it cannot server HTTP requests. Staggering pool backups will help with this, but incure a time penalty. The time it takes to download and restore 10k tenants is significantly less.
+The time it takes to backup and upload up 10,000 dbs is about 3 minutes, but doing so concurrently takes all CPUs at which time it cannot server HTTP requests. Staggering pool backups will help with this, but incure a time penalty. The time it takes to download and restore 10k users is significantly less.
 
 Time without staggering is 3mins for all 36 pools, but when staggered it is 3s per 36 pools. we are saving nearly half the time by spreading out the uploads.
 
@@ -205,7 +208,7 @@ Migrations
 1. I would put the version of the DB of the user in the control database, then when accessed check against a constant value to make sure it is up to date. 
 
 Blast Radius
-1. A single bad acting tenant could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
+1. A single bad acting user could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
 
 Back Office stuff
 
@@ -218,7 +221,7 @@ Pricing for 10k users
 
 Lets say we cap the user DB size at 5Mb, and truncate all past data. It will matter how fast data comes in as well, as each sync operation will cost. 
 
-Control DB size will be negligble, each tenent DB would be 10MB
+Control DB size will be negligble, each user DB would be 10MB
 
 S3, Cloudflare R2, Tigris
 
@@ -236,7 +239,7 @@ Reads will only happen per deploy, which, lets say averages once per day, so lik
 
 As you can see, the size of the database is not really the issue (other than egress costs from the server and resources used to upload and process.) The killer on the cost is the amount of writes, which the only lever is how often to backup. Every 5 mins may be acceptable in some cases, but in others maybe not. 
 
-The solution may be compressing all or groups of tenants with lz4, before uploading, e.g. compressing based on first letter in tenant id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching tenants to speed up deploys), and CPU and HDD resources. But it would speed up the sync process in total given it would be making less network calls.
+The solution may be compressing all or groups of users with lz4, before uploading, e.g. compressing based on first letter in user id would reduce the upload cost to $12 per month, but would cost more in complexity (especially with lazily fetching users to speed up deploys), and CPU and HDD resources. But it would speed up the sync process in total given it would be making less network calls.
 
 
 
@@ -251,7 +254,7 @@ https://sqlsync.dev/posts/stop-syncing-everything/
 
 # LiteStream
 
-10,000 empty tenant databases, Litestream is 7GB RAM, because each litestream connection had 2 long running go routines (AFAIK), one that loops to sync the data up defined with `MonitorInterval`, and one that holds open a select statement to stop the SQLite DB from checkpointing without the db knowing. `SyncInterval`. If these databases had any data in them the ram usage would be much larger.
+10,000 empty user databases, Litestream is 7GB RAM, because each litestream connection had 2 long running go routines (AFAIK), one that loops to sync the data up defined with `MonitorInterval`, and one that holds open a select statement to stop the SQLite DB from checkpointing without the db knowing. `SyncInterval`. If these databases had any data in them the ram usage would be much larger.
 
 CPU is really the thing that gets hit here. If the `MonitorInterval` is the default at 1 second, the CPU gets destroyed by 10,000 dbs all deciding to Sync. Increasing this to 5 minutes decreases that problem, but even when nothing needs to be synced during these 
 
@@ -270,13 +273,13 @@ There are a bunch of ways in which a noisy neighbor can ruin this service. The b
 Request rate:
 "golang.org/x/time/rate" is a really easy way to stop a user from calling too many times, allowing for a common rate and a burst rate with `rate.NewLimiter(limit, burst_limit)`. This should stop resource consumption
 
-Tenant limit
-A single server has a hard limit of how many tenants it can handle, 10k. So a hard limit on creating more tenants should be done.
+User limit
+A single server has a hard limit of how many users it can handle, 10k. So a hard limit on creating more users should be done.
 
 DB Size
 A hard limit on row numbers for each table, triggered when the db goes over a certain size.
 
-Tenant Age:
-Unused tenants use up space in the system, take time in deploys and backups. Tenants not used for 30 minutes should be archived to S3, and soft deleted from the control DB, and zipped up and referenced. This means that there is a path to rehydration, if someone wants to get their data back.
+User Age:
+Unused users use up space in the system, take time in deploys and backups. Users not used for 30 minutes should be archived to S3, and soft deleted from the control DB, and zipped up and referenced. This means that there is a path to rehydration, if someone wants to get their data back.
 
 
