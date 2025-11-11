@@ -3,46 +3,45 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/db"
 )
 
 const SubdomainKey ctxSubdomainKey = 1
 
-func GetMainRouter(db *db.ControlDB) chi.Router {
-	r := chi.NewRouter()
+func GetMainHandler(cdb *db.ControlDB) http.Handler {
 
-	controlRouter := NewControlRouter(db)
-	userRouter := NewUserRouter(db)
-	public := NewPublicRouter(db)
+	controlRouter := NewControlRouter(cdb)
+	userRouter := NewUserRouter(cdb)
+	public := NewPublicRouter(cdb)
 
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			host := r.Host
-			subdomain := strings.Split(host, ".")[0] // Get the first part of the host
-			ctx = context.WithValue(ctx, SubdomainKey, subdomain)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 
-			// If subdomain is control plane, route to control router
-			if subdomain == "control" || subdomain == "admin" {
-				controlRouter.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-			// If subdomain is public or www, route to public router
-			if subdomain == "www" || subdomain == "public" || subdomain == "" {
-				public.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-			// Otherwise route to user router
-			// TODO: route to user, if subdomain matches a users potential id (length, chars etc)
+		host := r.Host
+		subdomain := strings.Split(host, ".")[0] // Get the first part of the host
+		ctx = context.WithValue(ctx, SubdomainKey, subdomain)
+
+		switch {
+		case subdomain == "control" || subdomain == "admin":
+			fmt.Println("Routing to control router")
+			controlRouter.ServeHTTP(w, r.WithContext(ctx))
+		case subdomain == "www" || subdomain == "public" || subdomain == "":
+			fmt.Println("Routing to public router")
+			public.ServeHTTP(w, r.WithContext(ctx))
+		case db.ValidateUserID(subdomain):
+			fmt.Println("Routing to user router for user:", subdomain)
 			userRouter.ServeHTTP(w, r.WithContext(ctx))
-		})
+		default:
+			fmt.Printf("Main router 404 for subdomain: %s\n", subdomain)
+			http.NotFound(w, r)
+		}
+
 	})
 
-	return r
 }
 
 func GetSubdomain(ctx context.Context) string {

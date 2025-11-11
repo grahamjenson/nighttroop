@@ -18,7 +18,13 @@ If you dont want to host you can get a user from another host like nighttroop.t1
 docker run -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"
 ```
 
-then login at http://localhost:9001 with minioadmin and then create bucket
+Then
+
+```
+go run main.go --dev
+```
+
+
 
 # Notes
 

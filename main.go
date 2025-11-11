@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -120,6 +118,7 @@ func setUpDBs(serverConfig ServerConfig) (*db.ControlDB, error) {
 func run() error {
 	var err error
 
+	// Make all envars and config in one struct
 	serverConfig := getServerConfig()
 
 	// BOOTSTRAP
@@ -139,10 +138,8 @@ func run() error {
 	// Run web server.
 	server := setupHTTP(ctx, controlDB)
 
-	// Start backup Jobs
-	controlDB.StartBackupLoops()
 	// Setup other background jobs
-	setupBackgroundJobs()
+	setupBackgroundJobs(controlDB)
 
 	// Wait for signal.
 	<-ctx.Done()
@@ -154,10 +151,7 @@ func run() error {
 		log.Fatalf("HTTP server Shutdown: %v", err)
 	}
 
-	stopBackgroundJobs()
-
-	// Stop the backup loops
-	controlDB.StopBackupLoop()
+	stopBackgroundJobs(controlDB)
 
 	// Force a final backup before exiting
 	controlDB.ForceBackupSync()
@@ -169,11 +163,8 @@ func run() error {
 
 func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	fmt.Printf("listening on 8080\n")
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(router.GetUserMiddleware(controlDB))
 
-	server := &http.Server{Addr: ":8080", Handler: r}
+	server := &http.Server{Addr: ":8080", Handler: router.GetMainHandler(controlDB)}
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -184,10 +175,15 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	return server
 }
 
-func setupBackgroundJobs() {
+func setupBackgroundJobs(controlDB *db.ControlDB) {
+	// Start backup Jobs
+	controlDB.StartBackupLoops()
 	//loop that infinitely goes over a series of background jobs and runs them
 }
 
-func stopBackgroundJobs() error {
+func stopBackgroundJobs(controlDB *db.ControlDB) error {
+	// Stop the backup loops
+	controlDB.StopBackupLoop()
+
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"regexp"
 )
 
 // //
@@ -138,14 +139,24 @@ func (db *UserDB) GetScoresSum() (int, error) {
 // //
 
 const userCharSet = "abcdefghijklmnopqrstuvwxyz"
+const userIDLength = 8
 
 func NextUserID() string {
-	result := make([]byte, 12)
+	result := make([]byte, userIDLength)
 	rand.Read(result)
 	for i, b := range result {
 		result[i] = userCharSet[b%byte(len(userCharSet))]
 	}
 	return string(result)
+}
+
+func ValidateUserID(userID string) bool {
+	if len(userID) != userIDLength {
+		return false
+	}
+	// validate with regex that all chars are lowercase a-z
+	re := regexp.MustCompile("^[a-z]+$")
+	return re.MatchString(userID)
 }
 
 const apiKeyCharSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
