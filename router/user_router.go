@@ -1,5 +1,7 @@
 package router
 
+// User router enables user specific router, and can route to NS router if endpoint hits that layer.
+
 import (
 	"context"
 	"fmt"
@@ -7,6 +9,9 @@ import (
 	"strings"
 
 	mtdb "nighttroop.t1d.nz/db"
+
+	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/db"
 )
 
 type ctxUserDBKey int
@@ -14,6 +19,51 @@ type ctxSubdomainKey int
 
 // RequestIDKey is the key that holds the unique request ID in a request context.
 const UserDBKey ctxUserDBKey = 0
+
+func NewUserRouter(controlDB *db.ControlDB) chi.Router {
+	r := chi.NewRouter()
+	r.Use(GetUserMiddleware(controlDB))
+
+	addNSRoutes(r)
+	addSocketIORoute(r)
+
+	r.Post("/ping", func(w http.ResponseWriter, r *http.Request) {
+		userDB := GetUser(r.Context())
+
+		if userDB == nil {
+			fmt.Println("User NOT found")
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		accept := r.Header.Get("Accept")
+
+		if accept == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fmt.Sprintf("{\"ping\": \"pong\"}")))
+			return
+		}
+
+		if accept == "text/htmx" {
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Pong"))
+			return
+		}
+
+	})
+	return r
+}
+
+func addNSRoutes(r chi.Router) {
+	// Add NS routes here
+
+}
+
+func addSocketIORoute(r chi.Router) {
+	// Add SocketIO route here
+}
 
 func GetUserMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {
 

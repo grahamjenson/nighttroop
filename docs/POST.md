@@ -98,10 +98,26 @@ The solution is bundling the user DBs together before uploading, e.g. each user 
 
 ## Other
 
-A Domain will cost $15 per year and a wildcard cert is $1 per month on fly.io. 
-Nighttroop show be relativly low bandwidth since it wont be serving any media.
+There are a bunch of other smaller costs:
+1. A Domain will cost $15 per year
+1. a wildcard cert is $1 per month on fly.io
+1. unknown amounts for data transfer, which will hopefully be cents per month since it is not serving media.
+
+It will be pretty difficult to calculate these, though with spending limits, it should be easy to manage.
+
+## Total Cost
+Given the $270 for compute, $3-ish for backups.
 
 # Implementation
+
+## Syncing
+I want to be able to sync data from existing services, that way this service can be trialed and tested without worrying about it being stable. 
+Then when comfortable it is working a user can migrate over to directly write to the service.
+The wo services I need to pull from are:
+1. Nightscout sites
+1. Dexcom share 
+
+
 
 ## Deploy and Backup
 

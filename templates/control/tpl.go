@@ -7,7 +7,7 @@ import (
 //go:embed content.html
 var ContentHTMX string
 
-//go:embed htmx_tenant.html
+//go:embed htmx_user.html
 var UserHTMX string
 
 type UserHTMXParam struct {

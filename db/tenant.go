@@ -39,6 +39,7 @@ func (db *UserDB) ArchivePath() string {
 	return fmt.Sprintf("archive/%s/%s.tar.lz4", string(db.char), db.Subdomain)
 }
 
+// TODO HMAC value to encrypt tokens
 var hmacSecretKey = []byte("your-secure-secret-key")
 
 func (db *UserDB) CreateAPIToken() (string, error) {

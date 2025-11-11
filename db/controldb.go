@@ -240,7 +240,7 @@ func (db *ControlDB) TryUpdateLastSeenAt(subdomain string, last_seen_at string) 
 	return nil
 }
 
-func (db *ControlDB) CreateUser(ctx context.Context) (string, string, error) {
+func (db *ControlDB) CreateUser() (string, string, error) {
 	userID := NextUserID()
 	_, err := db.Exec(mtsql.ControlUserInsert, userID, int(userID[0]))
 	if err != nil {

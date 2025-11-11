@@ -2,21 +2,19 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
-	"runtime"
-	"sync"
+
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
-	"golang.org/x/time/rate"
 
 	_ "github.com/mattn/go-sqlite3"
 	"nighttroop.t1d.nz/db"
@@ -24,9 +22,6 @@ import (
 	"nighttroop.t1d.nz/sql"
 	"nighttroop.t1d.nz/templates"
 )
-
-var userCreateLimiter = rate.NewLimiter(10, 100)
-var userCreateMu sync.Mutex
 
 func main() {
 	if err := run(); err != nil {
@@ -36,59 +31,118 @@ func main() {
 }
 
 type ServerConfig struct {
+	isDev bool
+
 	s3Bucket string
 	s3URL    string
+
+	// User Rate Limits
+	UserReadRateLimit  int
+	UserReadRateBurst  int
+	UserWriteRateLimit int
+	UserWriteRateBurst int
+
+	// User Limits
+	MaxUsers            int
+	MaxUserDBSizeMB     int
+	UserCreateRateLimit int
+	UserCreateRateBurst int
 }
 
-func run() error {
-	var err error
+func getServerConfig() ServerConfig {
+	sc := ServerConfig{
+		isDev: false,
+	}
+	flag.BoolVar(&sc.isDev, "dev", false, "Run in development mode")
+	flag.Parse()
 
-	err = godotenv.Load()
+	envFiles := []string{}
+	if sc.isDev {
+		envFiles = append(envFiles, ".env.dev")
+	}
+	err := godotenv.Load(envFiles...)
+
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		// Non Fatal error
+		fmt.Fprintln(os.Stderr, "Error loading .env file")
 	}
 
-	// BOOTSTRAP
-	err = templates.CreateTemplates()
+	s3Bucket, s3BucketPresent := os.LookupEnv("S3_BUCKET")
+	if !s3BucketPresent || s3Bucket == "" {
+		log.Fatal("S3_BUCKET environment variable not set")
+	}
+	sc.s3Bucket = s3Bucket
+
+	s3URL, s3URLPresent := os.LookupEnv("S3_URL")
+	if !s3URLPresent || s3URL == "" {
+		log.Fatal("S3_URL environment variable not set")
+	}
+	sc.s3URL = s3URL
+
+	return sc
+}
+
+func loadAndProcessStaticContent() error {
+	// Load static content
+	err := templates.CreateTemplates()
 	if err != nil {
-		return fmt.Errorf("cannot create templates: %w", err)
+		return fmt.Errorf("cannot load templates: %w", err)
 	}
-	var serverConfig = ServerConfig{
-		s3Bucket: os.Getenv("S3_BUCKET"),
-		s3URL:    os.Getenv("S3_URL"),
-	}
+	return nil
+}
 
-	// Create a context that will be cancelled when the program receives a SIGTERM signal.
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
-	defer stop()
-
+func setUpDBs(serverConfig ServerConfig) (*db.ControlDB, error) {
 	controlDB, err := db.NewControlDB(serverConfig.s3URL, serverConfig.s3Bucket)
 	if err != nil {
-		return fmt.Errorf("cannot create control db: %w", err)
+		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
 
 	err = controlDB.TryRestoreDBFile()
 	if err != nil {
 		fmt.Println("Failed to restore Control DB: %w", err)
 		// TODO dont fail here if the DB file doesnt exist in S3
-		return fmt.Errorf("cannot restore control db: %w", err)
+		return nil, fmt.Errorf("cannot restore control db: %w", err)
 	}
 
 	// Open Databse, hook up litesrtream, and migrate
 	err = controlDB.Open(&sql.ControlCreate)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = controlDB.RestoreAndOpenAllUsers()
 	if err != nil {
-		return fmt.Errorf("cannot restore users: %w", err)
+		return nil, fmt.Errorf("cannot restore users: %w", err)
+	}
+	return controlDB, nil
+}
+
+func run() error {
+	var err error
+
+	serverConfig := getServerConfig()
+
+	// BOOTSTRAP
+	err = loadAndProcessStaticContent()
+	if err != nil {
+		return fmt.Errorf("cannot create templates: %w", err)
 	}
 
+	// Create a context that will be cancelled when the program receives a SIGTERM signal.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+
+	controlDB, err := setUpDBs(serverConfig)
+	if err != nil {
+		return fmt.Errorf("cannot set up dbs: %w", err)
+	}
 	// Run web server.
 	server := setupHTTP(ctx, controlDB)
 
+	// Start backup Jobs
 	controlDB.StartBackupLoops()
+	// Setup other background jobs
+	setupBackgroundJobs()
 
 	// Wait for signal.
 	<-ctx.Done()
@@ -99,6 +153,8 @@ func run() error {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("HTTP server Shutdown: %v", err)
 	}
+
+	stopBackgroundJobs()
 
 	// Stop the backup loops
 	controlDB.StopBackupLoop()
@@ -117,67 +173,6 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	r.Use(middleware.Logger)
 	r.Use(router.GetUserMiddleware(controlDB))
 
-	r.Post("/guess", func(w http.ResponseWriter, r *http.Request) {
-		userDB := router.GetUser(r.Context())
-		if userDB == nil {
-			fmt.Println("User NOT found")
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
-		}
-		choice := r.FormValue("choice")
-		if choice != "even" && choice != "odd" {
-			http.Error(w, "Invalid choice", http.StatusBadRequest)
-			return
-		}
-
-		correctGuess := false
-		// Simple Game of Guessing if the number is even or odd
-		randomBool := rand.NextBool()
-		if randomBool == true && choice == "even" {
-			// Correct guess
-			correctGuess = true
-		}
-		if randomBool == false && choice == "odd" {
-			correctGuess = true
-		}
-
-		accept := r.Header.Get("Accept")
-
-		if accept == "application/json" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userID, apiKey)))
-			return
-		}
-
-		if accept == "text/htmx" {
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			templates.IndexHTMLTemplate.ExecuteTemplate(w, "htmx_guess.html", templates.GuessHTML{Choise: choice, Correct: correctGuess})
-			return
-		}
-
-		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userID, apiKey)))
-
-	})
-
-	r.Get("/score", func(w http.ResponseWriter, r *http.Request) {
-		userDB := router.GetUser(r.Context())
-
-		if userDB == nil {
-			fmt.Println("User NOT found")
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
-		}
-		score, err := userDB.GetScoresSum()
-		if err != nil {
-			fmt.Println("Error getting scores sum", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		// Start a transaction.
-		w.Write([]byte(fmt.Sprintf("User found: %s %v\n", userDB.Subdomain, score)))
-	})
-
 	server := &http.Server{Addr: ":8080", Handler: r}
 
 	go func() {
@@ -189,78 +184,10 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	return server
 }
 
-func controlRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Use(AdminOnly)
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		err := templates.ControlHTMLTemplate.Execute(w, nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
-
-	r.Post("/user", func(w http.ResponseWriter, r *http.Request) {
-		userCreateMu.Lock()
-		allowed := userCreateLimiter.Allow()
-		userCreateMu.Unlock()
-		if !allowed {
-			http.Error(w, "Too many requests", http.StatusTooManyRequests)
-			return
-		}
-
-		// Check to see if there is 10k users and return error if there is
-		if controlDB.GetNUsersDBs() > 10000 {
-			http.Error(w, "Full: Too many users", http.StatusTooManyRequests)
-			return
-		}
-
-		// TODO replace middleware with Function, since this is not mostly used
-		subdomain := router.GetSubdomain(r.Context())
-		if subdomain != "control" {
-			// Must use control subdomain
-			http.NotFound(w, r)
-			return
-		}
-
-		userID, apiKey, err := controlDB.CreateUser(ctx)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		fmt.Printf("Number of Users %d, Number of Routines %d\n", controlDB.GetNUsersDBs(), runtime.NumGoroutine())
-
-		// buf := make([]byte, 1<<16) // 64 KB buffer
-		// n := runtime.Stack(buf, true)
-		// fmt.Printf("%s", buf[:n])
-
-		// TODO: Handle JSON and HTMX return
-		accept := r.Header.Get("Accept")
-
-		if accept == "application/json" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userID, apiKey)))
-			return
-		}
-		if accept == "text/htmx" {
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			templates.IndexHTMLTemplate.ExecuteTemplate(w, "htmx_user.html", templates.UserHTML{Subdomain: userID, APIKey: apiKey})
-			return
-		}
-
-		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userID, apiKey)))
-	})
-
-	return r
+func setupBackgroundJobs() {
+	//loop that infinitely goes over a series of background jobs and runs them
 }
 
-func userRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Use(router.GetUserDBMiddbleware(controlDB))
-	r.Get("/", userIndex)
-
-	return r
+func stopBackgroundJobs() error {
+	return nil
 }

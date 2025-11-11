@@ -13,6 +13,7 @@ var baseHTML string
 
 var ControlHTMLTemplate *template.Template
 var UserHTMLTemplate *template.Template
+var UserCreateTemplate *template.Template
 
 func CreateTemplates() error {
 	var err error
@@ -21,7 +22,7 @@ func CreateTemplates() error {
 		return err
 	}
 
-	UserHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + user.ContentHTMX + user.GuessHTMX)
+	UserHTMLTemplate, err = template.New("indexHTML").Parse(baseHTML + user.ContentHTMX)
 	if err != nil {
 		return err
 	}
