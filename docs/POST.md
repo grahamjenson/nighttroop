@@ -4,10 +4,10 @@ Nightscout is a self-hosted, open-source observability server used to collect re
 
 Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when diagnosed with diabetes. Third parties have popped up to host Nightscout for you and charge as much as $12 per month. As a recovering SysAdmin I wanted to host my own Nightscout and maybe host other peoples as well, but Nightscout is a PITA because:
 
-1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of the same server. So it is like managing and maintaining a host of servers so scale is an issue.
+1. Nightscout can only host one persons data per server instance, you have to run multiple instances of the same server! It is managing and maintaining a host of little angry servers you have to feed and take care of.
 1. Each instance requires its own Node process and MongoDB database, so is very resource intensive to scale.
-1. Configuration of Nightscout is all over the place, environment variables, dot files, file flags, DB... This makes setup and configuration complex and a custom configuration layer necessary and difficult to build, and changing configs often requires restarting the server.
-1. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, and so TLS cert, DNS, special proxying and routing...
+1. Configuration of Nightscout is all over the place, environment variables, dot files, file flags, DB config... This makes setup and configuration complex so most re-hosters spend most of their development effort on a custom configuration layer necessary and difficult to build. Also changing configs often requires restarting the server, which is great for a system where uptime is important.
+1. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, and so TLS cert, DNS, special proxying and routing all become more difficult. 
 
 A lot of these issues can only be solved with a ground up, API compatible (including socket.io) rewrite of Nightscout to be multi-user.
 So I am going to try make "NightTroop" (a group of scouts is a troop), and see if I can get something working.
@@ -23,12 +23,12 @@ Lets see how close it can get.
 
 # The Plan
 
-## Golang + SQLite + Split user DBs
+## SQLite + Split user DBs
 
-NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- so a single golang binary with SQLite built in fits that description.
-Using SQLite means no external DB server (low complexity, low cost) and comes with the benefit of being lightning fast.
+NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with few or no external dependencies cant get much more boring or easy.
+The most difficult external dependency to get rid of is the database; SQLite is a small DB that can be built into the binary of the application, it is also very fast.
 
-The biggest tradeoff using SQLite is the difficulty of deployment and disaster recovery because there is no built in replication or high availability.
+Using SQLite does make deployment and disaster recovery harder because there is no built in replication or high availability.
 To make a trustworthy service there will need to be external storage of SQLite DBs.
 Given recent data is so much more important than past data, periodic (say every 5 minutes) snapshots should be fine. 
 Snapshotting then uploading one giant SQLite DB would block IO then network.
@@ -64,21 +64,32 @@ Lets also put some real numbers to assumptions so that we can estimate these val
 
 I am going to use fly.io as an estimate for cloud costs, because I am familiar with that and understand the costs.
 
-## Compute 
+## Compute + RAM + Storage
 
-I created a SQLite DB with 100,000 data points, one for every minute(ish) for 2 months and it was 3MB, so a DB for 10k users would be a total of 30GB DBs on disk.
+To test the amount of storage I will need I created a SQLite DB with 100,000 data points, one for every minute(ish) for 2 months and it was 3MB. So for 10k users would be a total of 30GB DBs on disk.
 
-Requests per second for 10k would be around 2000 requests per second. I have benchmarked a single core fly.io machine doing 250 requests per second (https://maori.geek.nz/golang-sqlite-on-fly-io-with-litefs-a-quick-benchmark-9aa7aeee9561), so lets say we need 8 cores.
+The main RAM usage of the server will be the SQLite in-memory cache, set with `cache_size` parameter. 
+The most recent data is the most important, about 6 hours worth, which is about 10KB (on disk).
+With `cache_size` set to 10KB and with 10K that is a minimum of 100Mb of RAM required, lets make that 200Mb to be safe.
 
-The main RAM usage of the server is the SQLite in-memory cache for each users DB connection, set with `cache_size` parameter. 
-A users most of the time will only access the last 2 days data, which is about 100KB (on disk).
-With `cache_size` set to 100KB and with 10K that is a minimum of 1GB of RAM required, lets make that 2GB for all other uses.
+The final problem is cores which I think is hard tied to the requests per second needed. 
+The needed rps for 10k users is around 2000 per second, I think the main decisions related to that will be language and framework.
+I wanted to see some numbers so I uploaded a golang and a zig app to fly.io server and hit it with a lot of traffic to see how it handled it.
+
+I made a Fly.io machine with increasing RAM and cores until I could get 2000rps, then we can use the calculator to see how much each language would cost.
+GoLang = 
+Zig + httpz = 
+
+
+I also compared these results to the frameworks running on a Raspberry Pi 5 with an NVME HDD:
+Golang = 
+Zig + httpz = 
+
+How many Raspberry Pis would I need to host this?
 
 Lets see how much Fly.io would cost for 8 cores, 2Gb RAM, 30GB volume: $22.42 per month, $270 per year
-
 https://fly.io/calculator?f=s&b=ams.100&a=no_none&m=0_0_0_0_0&r=shared_0_1_syd&t=10_100_5&u=0_1_100&g=8_shared_730_1_2000_ams_0_30
 
-This is about the cost of a pretty big machine at Hetzner, or the price of a RaspberryPi with NVME. Either way, we have already blown out our budget.
 
 ## Backup Pricing for S3-ish services
 
@@ -106,8 +117,21 @@ There are a bunch of other smaller costs:
 It will be pretty difficult to calculate these, though with spending limits, it should be easy to manage.
 
 ## Total Cost
-Given the $270 for compute, $3-ish for backups.
+Given the $? for compute, $3-ish for backups.
 
+
+# Conclusion
+$0.01 per User per year as a goal was never going to be realistic. There are so many costs associated with a service like this like error tracking, logging, not to mention my time developing. But the core was pretty close to it.
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------
 # Implementation
 
 ## Syncing
@@ -125,25 +149,8 @@ The wo services I need to pull from are:
 2. If any don't, download that users pool
 3. 
 
-# Conclusion
-$0.01 per User per year as a goal was never going to be realistic. There are so many costs associated with a service like this like error tracking, logging, not to mention my time developing.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---------------------------------------------------------------
 
 # Deploy
 

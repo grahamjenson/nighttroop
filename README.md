@@ -4,7 +4,11 @@ NightTroop is a server that hosts many NightScout servers at the same time.
 It is a ground up rewrite of the NightScout server to make it easier and more scalable to host many users.
 
 # On Boarding
+
 Go to nighttroop.t1d.nz and click the button to create your user.
+You can sync data from Dexcom and/or Nightscout instance (exactly one of each per user), 
+so you can fill out your dexcom username/password + 
+
 
 # Deploying to a service
 It comes ready to deploy to fly.io as a service. 
