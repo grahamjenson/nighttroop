@@ -1,18 +1,16 @@
 # $0.01 Per-User Per-Year: NightTroop
 
-Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son, his phone uploads his BGL to Nightscout that I display on my watch, my phone, my wifes phone, his school phone, and a display in the living room.
+Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL to, and my wife, our school and me can see on devices like phones, watches and smart devices. We also are able to upload information to Nightscout that controls his insulin pump, like carbs he has eaten, or target BGLs for exercise or eating. It is an integral part of how we manage T1D. 
 
-Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when diagnosed with diabetes. Third parties have popped up to host Nightscout for you and charge as much as $12 per month. As a recovering SysAdmin I wanted to host my own Nightscout and maybe host other peoples as well, but doing that is a PITA because:
+Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when diagnosed with diabetes. Third parties have popped up to host Nightscout for you and charge as much as $12 per month. To save a buck and help people I wanted to host some Nightscout instances for us, but hosting Nightscout is such a PITA:
 
-1. Nightscout can only host one persons data per server instance, you have to run multiple instances of the same server!
+1. As Nightscout can only host one persons data per server instance, you have to run multiple instances of the same server!
 1. Each instance requires its own Node process and MongoDB database, so is very resource intensive to scale.
 1. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB config... Setup and configuration is so complex that hosts spend most of their development effort on a configuration layer for users. 
 1. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing all more difficult. 
 
-IMHO these issues can only be solved with a ground up, API compatible (including socket.io) rewrite of Nightscout to be multi-user.
-So I am making "NightTroop" (because a group of scouts is a troop), and see if I can get something working.
-
-What makes NightTroop a unique/fun project is that:
+I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user called "NightTroop" (because a group of scouts is a troop).
+What makes NightTroop different from typical projects/products is that:
 
 1. it would be a wild success if it had 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies.
 1. I don't want to take money for it, so I don't want to spend money on it.
@@ -26,10 +24,10 @@ Lets see how close it can get.
 ## SQLite + Split user DBs
 
 NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with few or no external dependencies cant get much more boring or easy.
-The most difficult external dependency to get rid of is the database. SQLite is a small DB that can be built into the binary of the application, it is also very fast.
+Using SQLite lets us get rid of the database external dependency, it is also very fast.
 
 Using SQLite does make deployment and disaster recovery harder because there is no built in replication or high availability.
-To make a trustworthy service there will need to be external storage of SQLite DBs.
+To make a Nighttroop trustworthy we will need to be external storage of SQLite DBs.
 Given recent data is so much more important than past data, periodic (say every 5 minutes) snapshots should be fine. 
 Snapshotting then uploading one giant SQLite DB would block IO then network.
 Sharding data over many USER DB's solves blocking and a few other problems, e.g. managing 10k 2MB DBs should be easier than managing 1 giant 20GB database.
@@ -96,6 +94,19 @@ Requests/sec:   9134.38
 Transfer/sec:     17.80MB
 
 That is pretty linear.
+
+I also wanted to quickly do a comparison against a lower level language, Zig, implementation just to make sure i am not leaving a lot on the table,
+
+With a single core and 256MB of memory:
+wrk -d10s -c 1000 https://zig-hidden-wave-136.fly.dev/read
+  2 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   137.41ms   94.22ms   1.42s    89.06%
+    Req/Sec     3.49k     1.30k    5.62k    67.01%
+  68575 requests in 10.04s, 180.77MB read
+  Non-2xx or 3xx responses: 361
+Requests/sec:   6832.73
+Transfer/sec:     18.01MB
 
 Just to sanity check those numbers I compared the results to Raspberry Pi 5 with an NVME HDD running on the local network.
 
