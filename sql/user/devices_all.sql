@@ -1,0 +1,1 @@
+SELECT name, created_at, last_seen_at FROM devices;

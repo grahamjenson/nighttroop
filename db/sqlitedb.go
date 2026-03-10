@@ -58,9 +58,10 @@ func (db *SQLDB) Open(migrate *string) error {
 			return fmt.Errorf("cannot create table: %w", err)
 		}
 		db.Exec("PRAGMA wal_checkpoint(FULL);")
+
 	}
 	// Force the database to write all migrations to disk.
-
+	p, err := db.sqldb.Prepare("Select 1")
 	return nil
 }
 

@@ -1,0 +1,1 @@
+SELECT username, password, created_at FROM admins a WHERE a.username = ?;

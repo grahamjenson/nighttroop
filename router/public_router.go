@@ -31,7 +31,13 @@ func NewPublicRouter(controlDB *db.ControlDB) chi.Router {
 		}
 	})
 
-	r.Post("/user", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/user", createUser(controlDB))
+	r.Get("/user", createUser(controlDB))
+	return r
+}
+
+func createUser(controlDB *db.ControlDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		userCreateMu.Lock()
 		allowed := userCreateLimiter.Allow()
 		userCreateMu.Unlock()
@@ -74,7 +80,5 @@ func NewPublicRouter(controlDB *db.ControlDB) chi.Router {
 		}
 
 		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userID, apiKey)))
-	})
-
-	return r
+	}
 }
