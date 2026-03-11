@@ -21,7 +21,7 @@ type AdminsCreateModel struct {
 }
 
 type AdminsCreateSQL struct {
-	stmt  *sql.Stmt
+	stmt *sql.Stmt
 }
 
 func NewAdminsCreate(sqldb *sql.DB) (*AdminsCreateSQL, error) {
@@ -33,8 +33,8 @@ func NewAdminsCreate(sqldb *sql.DB) (*AdminsCreateSQL, error) {
 	return &AdminsCreateSQL{stmt: stmt}, nil
 }
 
-func (s *AdminsCreateSQL) Query(ctx context.Context , params AdminsCreateParams) ([]AdminsCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx , params.username, params.password)
+func (s *AdminsCreateSQL) Query(ctx context.Context, params AdminsCreateParams) ([]AdminsCreateModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, params.username, params.password)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *AdminsCreateSQL) Exec(ctx context.Context, params AdminsCreateParams) (
 	return s.stmt.ExecContext(ctx, params.username, params.password)
 }
 
-func (s *AdminsCreateSQL) QueryRow(ctx context.Context , params AdminsCreateParams) AdminsCreateModel {
+func (s *AdminsCreateSQL) QueryRow(ctx context.Context, params AdminsCreateParams) AdminsCreateModel {
 	var model AdminsCreateModel
 	s.stmt.QueryRowContext(ctx, params.username, params.password).Scan(&model.username, &model.password)
 	return model

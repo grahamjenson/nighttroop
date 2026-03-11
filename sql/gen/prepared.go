@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"os"
+	"os/exec"
 	"strings"
 	"text/template"
 	"unicode"
@@ -156,10 +157,14 @@ func main() {
 		AdditionalPackages: additionalPackages,
 	}
 
+	outputPath := pkg + "/z_" + outfilename + "_gen.go"
 	t := template.Must(template.New("sql").Parse(tmpl))
-	f, _ := os.Create(pkg + "/z_" + outfilename + "_gen.go")
+	f, _ := os.Create(outputPath)
 	defer f.Close()
 	t.Execute(f, cfg)
+
+	// Format the generated code
+	exec.Command("go", "fmt", outputPath).Run()
 }
 
 func SnakeToCapitalCamelCase(s string) string {

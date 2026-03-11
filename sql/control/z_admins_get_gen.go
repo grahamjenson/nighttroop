@@ -16,13 +16,13 @@ type AdminsGetParams struct {
 }
 
 type AdminsGetModel struct {
-	username string
-	password string
-	 created_at time.Time
+	username   string
+	password   string
+	created_at time.Time
 }
 
 type AdminsGetSQL struct {
-	stmt  *sql.Stmt
+	stmt *sql.Stmt
 }
 
 func NewAdminsGet(sqldb *sql.DB) (*AdminsGetSQL, error) {
@@ -34,8 +34,8 @@ func NewAdminsGet(sqldb *sql.DB) (*AdminsGetSQL, error) {
 	return &AdminsGetSQL{stmt: stmt}, nil
 }
 
-func (s *AdminsGetSQL) Query(ctx context.Context , params AdminsGetParams) ([]AdminsGetModel, error) {
-	rows, err := s.stmt.QueryContext(ctx , params.username)
+func (s *AdminsGetSQL) Query(ctx context.Context, params AdminsGetParams) ([]AdminsGetModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, params.username)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (s *AdminsGetSQL) Exec(ctx context.Context, params AdminsGetParams) (sql.Re
 	return s.stmt.ExecContext(ctx, params.username)
 }
 
-func (s *AdminsGetSQL) QueryRow(ctx context.Context , params AdminsGetParams) AdminsGetModel {
+func (s *AdminsGetSQL) QueryRow(ctx context.Context, params AdminsGetParams) AdminsGetModel {
 	var model AdminsGetModel
 	s.stmt.QueryRowContext(ctx, params.username).Scan(&model.username, &model.password, &model.created_at)
 	return model

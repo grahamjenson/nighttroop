@@ -11,7 +11,6 @@ import (
 var AdminsCountRaw string
 
 type AdminsCountParams struct {
-	
 }
 
 type AdminsCountModel struct {
@@ -19,7 +18,7 @@ type AdminsCountModel struct {
 }
 
 type AdminsCountSQL struct {
-	stmt  *sql.Stmt
+	stmt *sql.Stmt
 }
 
 func NewAdminsCount(sqldb *sql.DB) (*AdminsCountSQL, error) {
@@ -31,8 +30,8 @@ func NewAdminsCount(sqldb *sql.DB) (*AdminsCountSQL, error) {
 	return &AdminsCountSQL{stmt: stmt}, nil
 }
 
-func (s *AdminsCountSQL) Query(ctx context.Context ) ([]AdminsCountModel, error) {
-	rows, err := s.stmt.QueryContext(ctx )
+func (s *AdminsCountSQL) Query(ctx context.Context) ([]AdminsCountModel, error) {
+	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +50,10 @@ func (s *AdminsCountSQL) Query(ctx context.Context ) ([]AdminsCountModel, error)
 }
 
 func (s *AdminsCountSQL) Exec(ctx context.Context, params AdminsCountParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, )
+	return s.stmt.ExecContext(ctx)
 }
 
-func (s *AdminsCountSQL) QueryRow(ctx context.Context ) AdminsCountModel {
+func (s *AdminsCountSQL) QueryRow(ctx context.Context) AdminsCountModel {
 	var model AdminsCountModel
 	s.stmt.QueryRowContext(ctx).Scan(&model.count)
 	return model

@@ -11,17 +11,17 @@ import (
 var DevicesGetRaw string
 
 type DevicesGetParams struct {
-	name string
+	name  string
 	token string
 }
 
 type DevicesGetModel struct {
-	name string
+	name  string
 	token string
 }
 
 type DevicesGetSQL struct {
-	stmt  *sql.Stmt
+	stmt *sql.Stmt
 }
 
 func NewDevicesGet(sqldb *sql.DB) (*DevicesGetSQL, error) {
@@ -33,8 +33,8 @@ func NewDevicesGet(sqldb *sql.DB) (*DevicesGetSQL, error) {
 	return &DevicesGetSQL{stmt: stmt}, nil
 }
 
-func (s *DevicesGetSQL) Query(ctx context.Context , params DevicesGetParams) ([]DevicesGetModel, error) {
-	rows, err := s.stmt.QueryContext(ctx , params.name, params.token)
+func (s *DevicesGetSQL) Query(ctx context.Context, params DevicesGetParams) ([]DevicesGetModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, params.name, params.token)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *DevicesGetSQL) Exec(ctx context.Context, params DevicesGetParams) (sql.
 	return s.stmt.ExecContext(ctx, params.name, params.token)
 }
 
-func (s *DevicesGetSQL) QueryRow(ctx context.Context , params DevicesGetParams) DevicesGetModel {
+func (s *DevicesGetSQL) QueryRow(ctx context.Context, params DevicesGetParams) DevicesGetModel {
 	var model DevicesGetModel
 	s.stmt.QueryRowContext(ctx, params.name, params.token).Scan(&model.name, &model.token)
 	return model

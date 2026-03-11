@@ -12,17 +12,16 @@ import (
 var DevicesAllRaw string
 
 type DevicesAllParams struct {
-	
 }
 
 type DevicesAllModel struct {
-	name string
-	token string
-	 last_seen_at time.Time
+	name         string
+	token        string
+	last_seen_at time.Time
 }
 
 type DevicesAllSQL struct {
-	stmt  *sql.Stmt
+	stmt *sql.Stmt
 }
 
 func NewDevicesAll(sqldb *sql.DB) (*DevicesAllSQL, error) {
@@ -34,8 +33,8 @@ func NewDevicesAll(sqldb *sql.DB) (*DevicesAllSQL, error) {
 	return &DevicesAllSQL{stmt: stmt}, nil
 }
 
-func (s *DevicesAllSQL) Query(ctx context.Context ) ([]DevicesAllModel, error) {
-	rows, err := s.stmt.QueryContext(ctx )
+func (s *DevicesAllSQL) Query(ctx context.Context) ([]DevicesAllModel, error) {
+	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +53,10 @@ func (s *DevicesAllSQL) Query(ctx context.Context ) ([]DevicesAllModel, error) {
 }
 
 func (s *DevicesAllSQL) Exec(ctx context.Context, params DevicesAllParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, )
+	return s.stmt.ExecContext(ctx)
 }
 
-func (s *DevicesAllSQL) QueryRow(ctx context.Context ) DevicesAllModel {
+func (s *DevicesAllSQL) QueryRow(ctx context.Context) DevicesAllModel {
 	var model DevicesAllModel
 	s.stmt.QueryRowContext(ctx).Scan(&model.name, &model.token, &model.last_seen_at)
 	return model
