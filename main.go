@@ -12,10 +12,12 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"nighttroop.t1d.nz/backup"
+	"nighttroop.t1d.nz/config"
 	"nighttroop.t1d.nz/db"
 	"nighttroop.t1d.nz/router"
-	"nighttroop.t1d.nz/sql"
-	"nighttroop.t1d.nz/templates"
+	"nighttroop.t1d.nz/sync"
+	"nighttroop.t1d.nz/utils"
 )
 
 func main() {
@@ -29,80 +31,80 @@ func run() error {
 	var err error
 
 	// Make all envars and config in one struct
-	serverConfig, err := NewServerConfig()
+	serverConfig, err := config.NewServerConfig()
 	if err != nil {
 		return fmt.Errorf("cannot create server config: %w", err)
-	}
-
-	// BOOTSTRAP
-	err = loadAndProcessStaticContent()
-	if err != nil {
-		return fmt.Errorf("cannot create templates: %w", err)
 	}
 
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
+	//
+	// Try and restore database files from S3 (we should )
+	//
+	s3Client, err := utils.NewS3Client(serverConfig.S3URL, serverConfig.S3Bucket)
+	if err != nil {
+		return fmt.Errorf("cannot create s3 client: %w", err)
+	}
+
+	// This will download all files from S3 if they exist
+	err = backup.TryRestoreAllFiles(s3Client)
+	if err != nil {
+		return fmt.Errorf("Failed to restore backups: %w", err)
+	}
+
+	//
+	// Setup Control DB
+	//
 	controlDB, err := setUpDBs(serverConfig)
 	if err != nil {
 		return fmt.Errorf("cannot set up dbs: %w", err)
 	}
+
+	//
+	// Background jobs
+	//
+	backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
+	backupJobs.Start()
+
+	syncJobs := sync.SetupSyncJobs(serverConfig, controlDB)
+	syncJobs.Start()
+	//
+	// HTTP
 	// Run web server.
 	server := setupHTTP(ctx, controlDB)
-
-	// Setup other background jobs
-	setupBackgroundJobs(controlDB)
 
 	// Wait for signal.
 	<-ctx.Done()
 
-	fmt.Println("\nreceived signal, shutting down")
+	fmt.Println("\nReceived signal, shutting down")
 
 	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("HTTP server Shutdown: %v", err)
 	}
 
-	stopBackgroundJobs(controlDB)
+	// Stop the loops
+	syncJobs.Stop()
+	backupJobs.Stop()
 
-	// Force a final backup before exiting
-	controlDB.ForceBackupSync()
+	// Force a final backup of all dbs
+	backupJobs.BackupToS3() // Force a final backup before exiting
 
+	// Close control and User dbs
 	controlDB.Close()
 	fmt.Println("shut down")
 	return nil
 }
 
-func loadAndProcessStaticContent() error {
-	// Load static content
-	err := templates.CreateTemplates()
-	if err != nil {
-		return fmt.Errorf("cannot load templates: %w", err)
-	}
-	return nil
-}
-
-func setUpDBs(serverConfig ServerConfig) (*db.ControlDB, error) {
-	controlDB, err := db.NewControlDB(serverConfig.s3URL, serverConfig.s3Bucket)
+func setUpDBs(serverConfig config.ServerConfig) (*db.ControlDB, error) {
+	controlDB, err := db.NewControlDB()
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
 
-	err = controlDB.TryRestoreDBFile()
-	if err != nil {
-		fmt.Println("Failed to restore Control DB: %w", err)
-		// TODO dont fail here if the DB file doesnt exist in S3
-		return nil, fmt.Errorf("cannot restore control db: %w", err)
-	}
-
-	// Open Databse
-	err = controlDB.Open(&sql.ControlCreate)
-	if err != nil {
-		return nil, err
-	}
-
-	err = controlDB.RestoreAndOpenAllUsers()
+	err = controlDB.FillUsers()
 	if err != nil {
 		return nil, fmt.Errorf("cannot restore users: %w", err)
 	}
@@ -121,17 +123,4 @@ func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
 	}()
 
 	return server
-}
-
-func setupBackgroundJobs(controlDB *db.ControlDB) {
-	// Start backup Jobs
-	controlDB.StartBackupLoops()
-	//loop that infinitely goes over a series of background jobs and runs them
-}
-
-func stopBackgroundJobs(controlDB *db.ControlDB) error {
-	// Stop the backup loops
-	controlDB.StopBackupLoop()
-
-	return nil
 }

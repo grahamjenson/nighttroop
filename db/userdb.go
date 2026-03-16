@@ -1,13 +1,16 @@
 package db
 
 import (
+	"context"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"regexp"
+
+	migrations "nighttroop.t1d.nz/sql/migrations"
+	usersql "nighttroop.t1d.nz/sql/user"
+	"nighttroop.t1d.nz/utils"
 )
 
 // //
@@ -18,9 +21,12 @@ type UserDB struct {
 	*SQLDB
 	Subdomain string
 	char      byte
+
+	// Prepared statements
+	DevicesGet *usersql.DevicesGetSQL
 }
 
-func NewUserDB(subdomain string) *UserDB {
+func NewUserDB(ctx context.Context, subdomain string) *UserDB {
 	char := subdomain[0]
 	topPath := fmt.Sprintf("/user/%s/%s.sqlite", string(char), subdomain)
 	userDB := &UserDB{
@@ -32,6 +38,8 @@ func NewUserDB(subdomain string) *UserDB {
 		Subdomain: subdomain,
 		char:      char,
 	}
+
+	migrations.MigrateUser(ctx, userDB.sqldb)
 
 	return userDB
 }
@@ -45,7 +53,7 @@ var hmacSecretKey = []byte("your-secure-secret-key")
 
 func (db *UserDB) CreateAPIToken() (string, error) {
 	// Create a new API token for the user
-	apiKey, err := GenerateSecureAPIKey(12)
+	apiKey, err := utils.GenerateSecureAPIKey(12)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate API key: %w", err)
 	}
@@ -108,73 +116,4 @@ func (db *UserDB) ValidateAPIToken(token string) error {
 	}
 
 	return nil
-}
-
-func (db *UserDB) GetScoresSum() (int, error) {
-	rows, err := db.Query("SELECT SUM(score) AS score FROM scores")
-	if err != nil {
-		return 0, fmt.Errorf("1 cannot get scores sum: %w", err)
-	}
-	if err = rows.Err(); err != nil {
-		return 0, fmt.Errorf("2 cannot get scores sum: %w", err)
-	}
-	defer rows.Close()
-
-	scoreRow := rows.Next()
-	if !scoreRow {
-		return 0, fmt.Errorf("3 cannot get scores sum: %w", err)
-	}
-
-	var score int
-	err = rows.Scan(&score)
-	if err != nil {
-		return 0, fmt.Errorf("4 cannot get scores sum: %w", err)
-	}
-
-	return score, nil
-}
-
-// //
-// UTILS
-// //
-
-const userCharSet = "abcdefghijklmnopqrstuvwxyz"
-const userIDLength = 8
-
-func NextUserID() string {
-	result := make([]byte, userIDLength)
-	rand.Read(result)
-	for i, b := range result {
-		result[i] = userCharSet[b%byte(len(userCharSet))]
-	}
-	return string(result)
-}
-
-func ValidateUserID(userID string) bool {
-	if len(userID) != userIDLength {
-		return false
-	}
-	// validate with regex that all chars are lowercase a-z
-	re := regexp.MustCompile("^[a-z]+$")
-	return re.MatchString(userID)
-}
-
-const apiKeyCharSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-func GenerateSecureAPIKey(length int) (string, error) {
-	// Create a byte slice to hold the random bytes
-	bytes := make([]byte, length)
-
-	// Generate random bytes
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate random bytes: %w", err)
-	}
-
-	// Map random bytes to characters in the character set
-	for i, b := range bytes {
-		bytes[i] = apiKeyCharSet[b%byte(len(apiKeyCharSet))]
-	}
-
-	return string(bytes), nil
 }

@@ -1,0 +1,1 @@
+SELECT subdomain FROM users WHERE batch = ? AND deleted_at IS NULL ORDER BY subdomain DESC

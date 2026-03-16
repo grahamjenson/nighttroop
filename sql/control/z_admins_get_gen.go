@@ -11,31 +11,27 @@ import (
 //go:embed admins_get.sql
 var AdminsGetRaw string
 
-type AdminsGetParams struct {
-	username string
-}
-
 type AdminsGetModel struct {
 	username   string
 	password   string
 	created_at time.Time
 }
 
-type AdminsGetSQL struct {
+type AdminsGetStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewAdminsGet(sqldb *sql.DB) (*AdminsGetSQL, error) {
+func NewAdminsGet(sqldb *sql.DB) (*AdminsGetStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(AdminsGetRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &AdminsGetSQL{stmt: stmt}, nil
+	return &AdminsGetStmt{stmt: stmt}, nil
 }
 
-func (s *AdminsGetSQL) Query(ctx context.Context, params AdminsGetParams) ([]AdminsGetModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.username)
+func (s *AdminsGetStmt) Query(ctx context.Context, username string) ([]AdminsGetModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, username)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +49,15 @@ func (s *AdminsGetSQL) Query(ctx context.Context, params AdminsGetParams) ([]Adm
 	return results, nil
 }
 
-func (s *AdminsGetSQL) Exec(ctx context.Context, params AdminsGetParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.username)
+func (s *AdminsGetStmt) Exec(ctx context.Context, username string) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, username)
 }
 
-func (s *AdminsGetSQL) QueryRow(ctx context.Context, params AdminsGetParams) AdminsGetModel {
+func (s *AdminsGetStmt) QueryRow(ctx context.Context, username string) (AdminsGetModel, error) {
 	var model AdminsGetModel
-	s.stmt.QueryRowContext(ctx, params.username).Scan(&model.username, &model.password, &model.created_at)
-	return model
+	err := s.stmt.QueryRowContext(ctx, username).Scan(&model.username, &model.password, &model.created_at)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

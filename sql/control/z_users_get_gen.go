@@ -11,31 +11,26 @@ import (
 //go:embed users_get.sql
 var UsersGetRaw string
 
-type UsersGetParams struct {
-	name string
-}
-
 type UsersGetModel struct {
-	name         string
-	token        string
-	last_seen_at time.Time
+	Subdomain  string
+	LastSeenAt time.Time
 }
 
-type UsersGetSQL struct {
+type UsersGetStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersGet(sqldb *sql.DB) (*UsersGetSQL, error) {
+func NewUsersGet(sqldb *sql.DB) (*UsersGetStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(UsersGetRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &UsersGetSQL{stmt: stmt}, nil
+	return &UsersGetStmt{stmt: stmt}, nil
 }
 
-func (s *UsersGetSQL) Query(ctx context.Context, params UsersGetParams) ([]UsersGetModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.name)
+func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Subdomain)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +40,7 @@ func (s *UsersGetSQL) Query(ctx context.Context, params UsersGetParams) ([]Users
 	for rows.Next() {
 		var model UsersGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token, &model.last_seen_at); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
 			return nil, err
 		}
 		results = append(results, model)
@@ -53,12 +48,15 @@ func (s *UsersGetSQL) Query(ctx context.Context, params UsersGetParams) ([]Users
 	return results, nil
 }
 
-func (s *UsersGetSQL) Exec(ctx context.Context, params UsersGetParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.name)
+func (s *UsersGetStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, Subdomain)
 }
 
-func (s *UsersGetSQL) QueryRow(ctx context.Context, params UsersGetParams) UsersGetModel {
+func (s *UsersGetStmt) QueryRow(ctx context.Context, Subdomain string) (UsersGetModel, error) {
 	var model UsersGetModel
-	s.stmt.QueryRowContext(ctx, params.name).Scan(&model.name, &model.token, &model.last_seen_at)
-	return model
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.LastSeenAt)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

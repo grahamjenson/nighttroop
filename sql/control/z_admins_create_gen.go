@@ -10,31 +10,26 @@ import (
 //go:embed admins_create.sql
 var AdminsCreateRaw string
 
-type AdminsCreateParams struct {
-	username string
-	password string
-}
-
 type AdminsCreateModel struct {
 	username string
 	password string
 }
 
-type AdminsCreateSQL struct {
+type AdminsCreateStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewAdminsCreate(sqldb *sql.DB) (*AdminsCreateSQL, error) {
+func NewAdminsCreate(sqldb *sql.DB) (*AdminsCreateStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(AdminsCreateRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &AdminsCreateSQL{stmt: stmt}, nil
+	return &AdminsCreateStmt{stmt: stmt}, nil
 }
 
-func (s *AdminsCreateSQL) Query(ctx context.Context, params AdminsCreateParams) ([]AdminsCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.username, params.password)
+func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password string) ([]AdminsCreateModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -52,12 +47,15 @@ func (s *AdminsCreateSQL) Query(ctx context.Context, params AdminsCreateParams) 
 	return results, nil
 }
 
-func (s *AdminsCreateSQL) Exec(ctx context.Context, params AdminsCreateParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.username, params.password)
+func (s *AdminsCreateStmt) Exec(ctx context.Context, username string, password string) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, username, password)
 }
 
-func (s *AdminsCreateSQL) QueryRow(ctx context.Context, params AdminsCreateParams) AdminsCreateModel {
+func (s *AdminsCreateStmt) QueryRow(ctx context.Context, username string, password string) (AdminsCreateModel, error) {
 	var model AdminsCreateModel
-	s.stmt.QueryRowContext(ctx, params.username, params.password).Scan(&model.username, &model.password)
-	return model
+	err := s.stmt.QueryRowContext(ctx, username, password).Scan(&model.username, &model.password)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

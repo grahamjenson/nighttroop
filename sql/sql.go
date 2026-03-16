@@ -7,7 +7,7 @@ package sql
 // devices
 //go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "name string,token string" -out "name string,token string"
 //go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "name string,token string" -out "name string,token string"
-//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "name string,token string, last_seen_at time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "name string,token string, LastSeenAt time.Time"
 
 //
 // Control
@@ -19,12 +19,13 @@ package sql
 //go:generate go run ./gen/prepared.go  -file control/admins_get.sql -in "username string" -out "username string,password string, created_at time.Time"
 
 // users
-//go:generate go run ./gen/prepared.go  -file control/users_all.sql  -out "name string,token string, last_seen_at time.Time"
-//go:generate go run ./gen/prepared.go  -file control/users_create.sql  -in "name string" -out "name string,token string, last_seen_at time.Time"
-//go:generate go run ./gen/prepared.go  -file control/users_delete.sql  -in "name string" -out ""
-//go:generate go run ./gen/prepared.go  -file control/users_find_unused_users.sql  -out "name string,token string, last_seen_at time.Time"
-//go:generate go run ./gen/prepared.go  -file control/users_get.sql  -in "name string" -out "name string,token string, last_seen_at time.Time"
-//go:generate go run ./gen/prepared.go  -file control/users_update_last_seen.sql  -in "name string" -out ""
+//go:generate go run ./gen/prepared.go  -file control/users_all.sql  -out "Subdomain string, LastSeenAt time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_get_batch.sql  -in "batch string" -out "Subdomain string, LastSeenAt time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_create.sql  -in "Subdomain string" -out "Subdomain string, LastSeenAt time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_delete.sql  -in "Subdomain string" -out ""
+//go:generate go run ./gen/prepared.go  -file control/users_find_unused_users.sql  -out "Subdomain string, LastSeenAt time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_get.sql  -in "Subdomain string" -out "Subdomain string, LastSeenAt time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_update_last_seen.sql  -in "Subdomain string, LastSeenAt time.Time" -out ""
 
 //
 // MIGRATIONS

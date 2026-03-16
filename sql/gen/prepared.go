@@ -15,7 +15,7 @@ type Config struct {
 	Name               string
 	Package            string
 	SQLFile            string
-	Inputs             []string
+	Inputs             string
 	Outputs            []string
 	InputParams        string
 	OutputModel        string
@@ -37,32 +37,26 @@ import (
 //go:embed {{.SQLFile}}
 var {{.Name}}Raw string
 
-type {{.Name}}Params struct {
-{{- range .Inputs}}
-	{{.}}
-{{- end}}
-}
-
 type {{.Name}}Model struct {
 {{- range .Outputs}}
 	{{.}}
 {{- end}}
 }
 
-type {{.Name}}SQL struct {
+type {{.Name}}Stmt struct {
 	stmt  *sql.Stmt
 }
 
-func New{{.Name}}(sqldb *sql.DB) (*{{.Name}}SQL, error) {
+func New{{.Name}}(sqldb *sql.DB) (*{{.Name}}Stmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare({{.Name}}Raw)
 	if err != nil {
 		return nil, err
 	}
-	return &{{.Name}}SQL{stmt: stmt}, nil
+	return &{{.Name}}Stmt{stmt: stmt}, nil
 }
 
-func (s *{{.Name}}SQL) Query(ctx context.Context {{if .InputParams}}, params {{.Name}}Params{{end}}) ([]{{.Name}}Model, error) {
+func (s *{{.Name}}Stmt) Query(ctx context.Context {{if .InputParams}}, {{.Inputs}} {{end}}) ([]{{.Name}}Model, error) {
 	rows, err := s.stmt.QueryContext(ctx {{if .InputParams}}, {{.InputParams}}{{end}})
 	if err != nil {
 		return nil, err
@@ -81,14 +75,17 @@ func (s *{{.Name}}SQL) Query(ctx context.Context {{if .InputParams}}, params {{.
 	return results, nil
 }
 
-func (s *{{.Name}}SQL) Exec(ctx context.Context, params {{.Name}}Params) (sql.Result, error) {
+func (s *{{.Name}}Stmt) Exec(ctx context.Context {{if .InputParams}}, {{.Inputs}}{{end}}) (sql.Result, error) {
 	return s.stmt.ExecContext(ctx, {{.InputParams}})
 }
 
-func (s *{{.Name}}SQL) QueryRow(ctx context.Context {{if .InputParams}}, params {{.Name}}Params{{end}}) {{.Name}}Model {
+func (s *{{.Name}}Stmt) QueryRow(ctx context.Context {{if .InputParams}}, {{.Inputs}}{{end}}) ({{.Name}}Model, error) {
 	var model {{.Name}}Model
-	s.stmt.QueryRowContext(ctx{{if .InputParams}}, {{.InputParams}}{{end}}).Scan({{.OutputModel}})
-	return model
+	err := s.stmt.QueryRowContext(ctx{{if .InputParams}}, {{.InputParams}}{{end}}).Scan({{.OutputModel}})
+	if (err != nil) {
+		return model, err
+	} 
+	return model, nil
 }
 `
 
@@ -128,7 +125,7 @@ func main() {
 		if param != "" {
 			parts := strings.Fields(param)
 			if len(parts) == 2 {
-				inputParms = append(inputParms, "params."+parts[0])
+				inputParms = append(inputParms, parts[0])
 			} else {
 				panic("Invalid input parameter format: " + param)
 			}
@@ -150,7 +147,7 @@ func main() {
 		Name:               name,
 		Package:            pkg,
 		SQLFile:            sqlfile,
-		Inputs:             strings.Split(*inputs, ","),
+		Inputs:             *inputs,
 		Outputs:            strings.Split(*outputs, ","),
 		InputParams:        strings.Join(inputParms, ", "),
 		OutputModel:        strings.Join(outputModel, ", "),

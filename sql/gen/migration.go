@@ -67,6 +67,7 @@ type Config struct {
 }
 
 func main() {
+	// TODO: store run migrations so they dont run again and again
 	var migrations MigrationFiles
 	name := flag.String("name", "", "Variable prefix")
 	flag.Var(&migrations, "file", "SQL files for migration in order")

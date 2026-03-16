@@ -11,29 +11,25 @@ import (
 //go:embed users_find_unused_users.sql
 var UsersFindUnusedUsersRaw string
 
-type UsersFindUnusedUsersParams struct {
-}
-
 type UsersFindUnusedUsersModel struct {
-	name         string
-	token        string
-	last_seen_at time.Time
+	Subdomain  string
+	LastSeenAt time.Time
 }
 
-type UsersFindUnusedUsersSQL struct {
+type UsersFindUnusedUsersStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersFindUnusedUsers(sqldb *sql.DB) (*UsersFindUnusedUsersSQL, error) {
+func NewUsersFindUnusedUsers(sqldb *sql.DB) (*UsersFindUnusedUsersStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(UsersFindUnusedUsersRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &UsersFindUnusedUsersSQL{stmt: stmt}, nil
+	return &UsersFindUnusedUsersStmt{stmt: stmt}, nil
 }
 
-func (s *UsersFindUnusedUsersSQL) Query(ctx context.Context) ([]UsersFindUnusedUsersModel, error) {
+func (s *UsersFindUnusedUsersStmt) Query(ctx context.Context) ([]UsersFindUnusedUsersModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -44,7 +40,7 @@ func (s *UsersFindUnusedUsersSQL) Query(ctx context.Context) ([]UsersFindUnusedU
 	for rows.Next() {
 		var model UsersFindUnusedUsersModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token, &model.last_seen_at); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
 			return nil, err
 		}
 		results = append(results, model)
@@ -52,12 +48,15 @@ func (s *UsersFindUnusedUsersSQL) Query(ctx context.Context) ([]UsersFindUnusedU
 	return results, nil
 }
 
-func (s *UsersFindUnusedUsersSQL) Exec(ctx context.Context, params UsersFindUnusedUsersParams) (sql.Result, error) {
+func (s *UsersFindUnusedUsersStmt) Exec(ctx context.Context) (sql.Result, error) {
 	return s.stmt.ExecContext(ctx)
 }
 
-func (s *UsersFindUnusedUsersSQL) QueryRow(ctx context.Context) UsersFindUnusedUsersModel {
+func (s *UsersFindUnusedUsersStmt) QueryRow(ctx context.Context) (UsersFindUnusedUsersModel, error) {
 	var model UsersFindUnusedUsersModel
-	s.stmt.QueryRowContext(ctx).Scan(&model.name, &model.token, &model.last_seen_at)
-	return model
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.LastSeenAt)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

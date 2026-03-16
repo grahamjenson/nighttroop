@@ -10,27 +10,24 @@ import (
 //go:embed admins_count.sql
 var AdminsCountRaw string
 
-type AdminsCountParams struct {
-}
-
 type AdminsCountModel struct {
 	count int
 }
 
-type AdminsCountSQL struct {
+type AdminsCountStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewAdminsCount(sqldb *sql.DB) (*AdminsCountSQL, error) {
+func NewAdminsCount(sqldb *sql.DB) (*AdminsCountStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(AdminsCountRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &AdminsCountSQL{stmt: stmt}, nil
+	return &AdminsCountStmt{stmt: stmt}, nil
 }
 
-func (s *AdminsCountSQL) Query(ctx context.Context) ([]AdminsCountModel, error) {
+func (s *AdminsCountStmt) Query(ctx context.Context) ([]AdminsCountModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -49,12 +46,15 @@ func (s *AdminsCountSQL) Query(ctx context.Context) ([]AdminsCountModel, error) 
 	return results, nil
 }
 
-func (s *AdminsCountSQL) Exec(ctx context.Context, params AdminsCountParams) (sql.Result, error) {
+func (s *AdminsCountStmt) Exec(ctx context.Context) (sql.Result, error) {
 	return s.stmt.ExecContext(ctx)
 }
 
-func (s *AdminsCountSQL) QueryRow(ctx context.Context) AdminsCountModel {
+func (s *AdminsCountStmt) QueryRow(ctx context.Context) (AdminsCountModel, error) {
 	var model AdminsCountModel
-	s.stmt.QueryRowContext(ctx).Scan(&model.count)
-	return model
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.count)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

@@ -1,4 +1,4 @@
-package db
+package utils
 
 import (
 	"archive/tar"
@@ -80,6 +80,16 @@ func NewS3Client(endpoint, bucket string) (*S3Client, error) {
 	c.uploader = manager.NewUploader(c.s3)
 
 	fmt.Println("Created New S3 Client", *c)
+
+	// Test s3 client is working wither permissions otherwise fail
+	_, err := c.s3.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket:  aws.String(c.Bucket),
+		MaxKeys: aws.Int32(1000),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("cannot access s3 bucket: %w", err)
+	}
+
 	return c, nil
 }
 
@@ -94,7 +104,7 @@ func (c *S3Client) SyncAllFiles(paths []string) error {
 }
 
 func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
-	defer trackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
+	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
 	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
 	ctx := context.TODO()
 

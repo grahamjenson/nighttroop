@@ -11,29 +11,25 @@ import (
 //go:embed users_all.sql
 var UsersAllRaw string
 
-type UsersAllParams struct {
-}
-
 type UsersAllModel struct {
-	name         string
-	token        string
-	last_seen_at time.Time
+	Subdomain  string
+	LastSeenAt time.Time
 }
 
-type UsersAllSQL struct {
+type UsersAllStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersAll(sqldb *sql.DB) (*UsersAllSQL, error) {
+func NewUsersAll(sqldb *sql.DB) (*UsersAllStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(UsersAllRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &UsersAllSQL{stmt: stmt}, nil
+	return &UsersAllStmt{stmt: stmt}, nil
 }
 
-func (s *UsersAllSQL) Query(ctx context.Context) ([]UsersAllModel, error) {
+func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -44,7 +40,7 @@ func (s *UsersAllSQL) Query(ctx context.Context) ([]UsersAllModel, error) {
 	for rows.Next() {
 		var model UsersAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token, &model.last_seen_at); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
 			return nil, err
 		}
 		results = append(results, model)
@@ -52,12 +48,15 @@ func (s *UsersAllSQL) Query(ctx context.Context) ([]UsersAllModel, error) {
 	return results, nil
 }
 
-func (s *UsersAllSQL) Exec(ctx context.Context, params UsersAllParams) (sql.Result, error) {
+func (s *UsersAllStmt) Exec(ctx context.Context) (sql.Result, error) {
 	return s.stmt.ExecContext(ctx)
 }
 
-func (s *UsersAllSQL) QueryRow(ctx context.Context) UsersAllModel {
+func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
 	var model UsersAllModel
-	s.stmt.QueryRowContext(ctx).Scan(&model.name, &model.token, &model.last_seen_at)
-	return model
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.LastSeenAt)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

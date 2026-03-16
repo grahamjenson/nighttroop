@@ -11,29 +11,26 @@ import (
 //go:embed devices_all.sql
 var DevicesAllRaw string
 
-type DevicesAllParams struct {
-}
-
 type DevicesAllModel struct {
-	name         string
-	token        string
-	last_seen_at time.Time
+	name       string
+	token      string
+	LastSeenAt time.Time
 }
 
-type DevicesAllSQL struct {
+type DevicesAllStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewDevicesAll(sqldb *sql.DB) (*DevicesAllSQL, error) {
+func NewDevicesAll(sqldb *sql.DB) (*DevicesAllStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(DevicesAllRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &DevicesAllSQL{stmt: stmt}, nil
+	return &DevicesAllStmt{stmt: stmt}, nil
 }
 
-func (s *DevicesAllSQL) Query(ctx context.Context) ([]DevicesAllModel, error) {
+func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -44,7 +41,7 @@ func (s *DevicesAllSQL) Query(ctx context.Context) ([]DevicesAllModel, error) {
 	for rows.Next() {
 		var model DevicesAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token, &model.last_seen_at); err != nil {
+		if err := rows.Scan(&model.name, &model.token, &model.LastSeenAt); err != nil {
 			return nil, err
 		}
 		results = append(results, model)
@@ -52,12 +49,15 @@ func (s *DevicesAllSQL) Query(ctx context.Context) ([]DevicesAllModel, error) {
 	return results, nil
 }
 
-func (s *DevicesAllSQL) Exec(ctx context.Context, params DevicesAllParams) (sql.Result, error) {
+func (s *DevicesAllStmt) Exec(ctx context.Context) (sql.Result, error) {
 	return s.stmt.ExecContext(ctx)
 }
 
-func (s *DevicesAllSQL) QueryRow(ctx context.Context) DevicesAllModel {
+func (s *DevicesAllStmt) QueryRow(ctx context.Context) (DevicesAllModel, error) {
 	var model DevicesAllModel
-	s.stmt.QueryRowContext(ctx).Scan(&model.name, &model.token, &model.last_seen_at)
-	return model
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.name, &model.token, &model.LastSeenAt)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

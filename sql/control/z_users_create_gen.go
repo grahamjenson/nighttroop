@@ -11,31 +11,26 @@ import (
 //go:embed users_create.sql
 var UsersCreateRaw string
 
-type UsersCreateParams struct {
-	name string
-}
-
 type UsersCreateModel struct {
-	name         string
-	token        string
-	last_seen_at time.Time
+	Subdomain  string
+	LastSeenAt time.Time
 }
 
-type UsersCreateSQL struct {
+type UsersCreateStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersCreate(sqldb *sql.DB) (*UsersCreateSQL, error) {
+func NewUsersCreate(sqldb *sql.DB) (*UsersCreateStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(UsersCreateRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &UsersCreateSQL{stmt: stmt}, nil
+	return &UsersCreateStmt{stmt: stmt}, nil
 }
 
-func (s *UsersCreateSQL) Query(ctx context.Context, params UsersCreateParams) ([]UsersCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.name)
+func (s *UsersCreateStmt) Query(ctx context.Context, Subdomain string) ([]UsersCreateModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Subdomain)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +40,7 @@ func (s *UsersCreateSQL) Query(ctx context.Context, params UsersCreateParams) ([
 	for rows.Next() {
 		var model UsersCreateModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token, &model.last_seen_at); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
 			return nil, err
 		}
 		results = append(results, model)
@@ -53,12 +48,15 @@ func (s *UsersCreateSQL) Query(ctx context.Context, params UsersCreateParams) ([
 	return results, nil
 }
 
-func (s *UsersCreateSQL) Exec(ctx context.Context, params UsersCreateParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.name)
+func (s *UsersCreateStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, Subdomain)
 }
 
-func (s *UsersCreateSQL) QueryRow(ctx context.Context, params UsersCreateParams) UsersCreateModel {
+func (s *UsersCreateStmt) QueryRow(ctx context.Context, Subdomain string) (UsersCreateModel, error) {
 	var model UsersCreateModel
-	s.stmt.QueryRowContext(ctx, params.name).Scan(&model.name, &model.token, &model.last_seen_at)
-	return model
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.LastSeenAt)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

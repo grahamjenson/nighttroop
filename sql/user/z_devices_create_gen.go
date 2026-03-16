@@ -10,31 +10,26 @@ import (
 //go:embed devices_create.sql
 var DevicesCreateRaw string
 
-type DevicesCreateParams struct {
-	name  string
-	token string
-}
-
 type DevicesCreateModel struct {
 	name  string
 	token string
 }
 
-type DevicesCreateSQL struct {
+type DevicesCreateStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewDevicesCreate(sqldb *sql.DB) (*DevicesCreateSQL, error) {
+func NewDevicesCreate(sqldb *sql.DB) (*DevicesCreateStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(DevicesCreateRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &DevicesCreateSQL{stmt: stmt}, nil
+	return &DevicesCreateStmt{stmt: stmt}, nil
 }
 
-func (s *DevicesCreateSQL) Query(ctx context.Context, params DevicesCreateParams) ([]DevicesCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.name, params.token)
+func (s *DevicesCreateStmt) Query(ctx context.Context, name string, token string) ([]DevicesCreateModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, name, token)
 	if err != nil {
 		return nil, err
 	}
@@ -52,12 +47,15 @@ func (s *DevicesCreateSQL) Query(ctx context.Context, params DevicesCreateParams
 	return results, nil
 }
 
-func (s *DevicesCreateSQL) Exec(ctx context.Context, params DevicesCreateParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.name, params.token)
+func (s *DevicesCreateStmt) Exec(ctx context.Context, name string, token string) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, name, token)
 }
 
-func (s *DevicesCreateSQL) QueryRow(ctx context.Context, params DevicesCreateParams) DevicesCreateModel {
+func (s *DevicesCreateStmt) QueryRow(ctx context.Context, name string, token string) (DevicesCreateModel, error) {
 	var model DevicesCreateModel
-	s.stmt.QueryRowContext(ctx, params.name, params.token).Scan(&model.name, &model.token)
-	return model
+	err := s.stmt.QueryRowContext(ctx, name, token).Scan(&model.name, &model.token)
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

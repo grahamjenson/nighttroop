@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/utils"
 )
 
 const SubdomainKey ctxSubdomainKey = 1
@@ -32,7 +33,7 @@ func GetMainHandler(cdb *db.ControlDB) http.Handler {
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
 			fmt.Println("Routing to public router")
 			public.ServeHTTP(w, r.WithContext(ctx))
-		case db.ValidateUserID(subdomain):
+		case utils.ValidateUserID(subdomain):
 			fmt.Println("Routing to user router for user:", subdomain)
 			userRouter.ServeHTTP(w, r.WithContext(ctx))
 		default:

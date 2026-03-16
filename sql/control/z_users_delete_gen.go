@@ -10,28 +10,24 @@ import (
 //go:embed users_delete.sql
 var UsersDeleteRaw string
 
-type UsersDeleteParams struct {
-	name string
-}
-
 type UsersDeleteModel struct {
 }
 
-type UsersDeleteSQL struct {
+type UsersDeleteStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersDelete(sqldb *sql.DB) (*UsersDeleteSQL, error) {
+func NewUsersDelete(sqldb *sql.DB) (*UsersDeleteStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(UsersDeleteRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &UsersDeleteSQL{stmt: stmt}, nil
+	return &UsersDeleteStmt{stmt: stmt}, nil
 }
 
-func (s *UsersDeleteSQL) Query(ctx context.Context, params UsersDeleteParams) ([]UsersDeleteModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.name)
+func (s *UsersDeleteStmt) Query(ctx context.Context, Subdomain string) ([]UsersDeleteModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Subdomain)
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +45,15 @@ func (s *UsersDeleteSQL) Query(ctx context.Context, params UsersDeleteParams) ([
 	return results, nil
 }
 
-func (s *UsersDeleteSQL) Exec(ctx context.Context, params UsersDeleteParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.name)
+func (s *UsersDeleteStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, Subdomain)
 }
 
-func (s *UsersDeleteSQL) QueryRow(ctx context.Context, params UsersDeleteParams) UsersDeleteModel {
+func (s *UsersDeleteStmt) QueryRow(ctx context.Context, Subdomain string) (UsersDeleteModel, error) {
 	var model UsersDeleteModel
-	s.stmt.QueryRowContext(ctx, params.name).Scan()
-	return model
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan()
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }

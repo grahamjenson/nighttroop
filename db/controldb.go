@@ -2,242 +2,109 @@ package db
 
 import (
 	"context"
-	"errors"
+	"database/sql"
 	"fmt"
-	"math"
-	"os"
-	"runtime"
 	"sort"
 	"sync"
 	"time"
 
-	"golang.org/x/sync/errgroup"
 	mtsql "nighttroop.t1d.nz/sql"
+	"nighttroop.t1d.nz/sql/control"
+	controlsql "nighttroop.t1d.nz/sql/control"
+	"nighttroop.t1d.nz/sql/migrations"
+	"nighttroop.t1d.nz/utils"
 )
 
 type ControlDB struct {
-	*SQLDB
+	sqldb *sql.DB
 
 	// previously modified
-	ControlBackupInterval time.Duration
-	PoolBackupInterval    time.Duration
-	MaxUserAge            time.Duration
+	users map[string]*UserDB
 
-	userPools map[byte]*UserPool
+	usersRWLock sync.RWMutex
 
-	ctx    context.Context
-	cancel func()
-	wg     sync.WaitGroup
-
-	S3Client *S3Client
+	// prepared statements
+	UsersCreate         *controlsql.UsersCreateStmt
+	UsersGet            *controlsql.UsersGetStmt
+	UsersGetBatch       *controlsql.UsersGetBatchStmt
+	UsersUpdateLastSeen *controlsql.UsersUpdateLastSeenStmt
 }
 
 func NewControlDB(endpoint, bucket string) (*ControlDB, error) {
 	var err error
 
+	sqldb, err := OpenSqliteDB(utils.CONTROL_DB_PATH, 2000)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open control db: %w", err)
+	}
 	// Create a new control db
 	controlDB := &ControlDB{
-		SQLDB: &SQLDB{
-			Path:       "data/db/control.sqlite",
-			BackupPath: "data/backup/control.sqlite",
-		},
-		ControlBackupInterval: 10 * time.Second,
-		PoolBackupInterval:    60 * time.Second,
-		MaxUserAge:            30 * time.Minute,
+		sqldb: sqldb,
+		users: make(map[string]*UserDB),
 	}
-	controlDB.ctx, controlDB.cancel = context.WithCancel(context.Background())
 
-	controlDB.S3Client, err = NewS3Client(endpoint, bucket)
+	// Migrate the DB, run any unrun migrations
+	err = migrations.MigrateControl(context.TODO(), sqldb)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create s3 client: %w", err)
+		return nil, fmt.Errorf("cannot migrate control db: %w", err)
 	}
 
-	// Create a pool for each starting character of a user subdomain
-	// This map will never be added or removed from so no need for a lock
-	controlDB.userPools = map[byte]*UserPool{}
-	for _, c := range userCharSet {
-		controlDB.userPools[byte(c)] = NewUserPool(byte(c))
+	// Create the prepared statements
+	controlDB.UsersCreate, err = control.NewUsersCreate(sqldb)
+	if err != nil {
+		return nil, fmt.Errorf("cannot prepare users create statement: %w", err)
+	}
+
+	controlDB.UsersGet, err = control.NewUsersGet(sqldb)
+	if err != nil {
+		return nil, fmt.Errorf("cannot prepare users get statement: %w", err)
+	}
+
+	controlDB.UsersGetBatch, err = control.NewUsersGetBatch(sqldb)
+	if err != nil {
+		return nil, fmt.Errorf("cannot prepare users get batch statement: %w", err)
+	}
+
+	controlDB.UsersUpdateLastSeen, err = control.NewUsersUpdateLastSeen(sqldb)
+	if err != nil {
+		return nil, fmt.Errorf("cannot prepare users update last seen statement: %w", err)
 	}
 
 	return controlDB, nil
 }
 
-func (db *ControlDB) TryRestoreDBFile() error {
-	// If it already exists dont download
-	if db.DBFileExists() {
-		return nil
-	}
-	os.MkdirAll("data/backup", os.ModePerm)
-	os.MkdirAll("data/db", os.ModePerm)
-	found, err := db.S3Client.DownloadFile(db.BackupPath, db.Path)
-	if !found && err == nil {
-		fmt.Println("No control db backup found")
-		return nil
-	}
-	// TODO: check to see the error is not a 404
-	if err != nil {
-		return fmt.Errorf("cannot download control db: %w", err)
-	}
-
-	return nil
-}
-
-func (db *ControlDB) RestoreAndOpenAllUsers() error {
-	defer trackTime(time.Now(), "RestoreAndOpenAllUsers")
-	g, _ := errgroup.WithContext(context.Background())
-	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
-	g.SetLimit(limit)
-	fmt.Println("RestoreAndOpenAllUsers running", len(db.userPools), limit)
-	for _, pool := range db.allPools() {
-
-		g.Go(func() error {
-			userSubdomains, err := db.GetUserPoolUsersFromDB(pool.char)
-			fmt.Println("UserSubdomains", string(pool.char), userSubdomains)
-			if err != nil {
-				return fmt.Errorf("cannot get user pool users: %w", err)
-			}
-			err = pool.RestoreAndOpenAllUsers(db.S3Client, userSubdomains)
-			if err != nil {
-				return fmt.Errorf("cannot restore user pool: %w", err)
-			}
-			return nil
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		fmt.Printf("One of the RestoreAndOpenAllUsers  tasks failed: %v\n", err)
-		return fmt.Errorf("cannot restore and open all users: %w", err)
-	} else {
-		fmt.Println("All RestoreAndOpenAllUsers tasks succeeded!")
-	}
-
-	return nil
-}
-
-func (db *ControlDB) GetUserPoolUsersFromDB(char byte) ([]string, error) {
+// This will fetch all the users in
+func (db *ControlDB) FillUsers(char byte) ([]string, error) {
 	users := []string{}
-	res, err := db.Query("SELECT subdomain FROM users WHERE pool = ? AND deleted_at IS NULL ORDER BY subdomain DESC", int(char))
+	res, err := db.UsersGetBatch.Query(context.TODO(), string(char))
+
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
 	}
 
-	defer res.Close()
-
-	for res.Next() {
-		var subdomain string
-		err = res.Scan(&subdomain)
-		if err != nil {
-			return users, fmt.Errorf("cannot scan user: %w", err)
-		}
-		users = append(users, subdomain)
-	}
-	err = res.Err()
-	if err != nil {
-		return users, fmt.Errorf("rows error: %w", err)
+	for _, model := range res {
+		users = append(users, model.Subdomain)
 	}
 
 	return users, nil
 }
 
-func (db *ControlDB) GetNUsersDBs() int {
-	total := 0
-	for _, pool := range db.userPools {
-		total += pool.GetNUsersDBs()
-	}
-	return total
-}
-
 func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, error) {
-	if subdomain == "" {
-		return nil, fmt.Errorf("subdomain cannot be empty")
-	}
-
-	fmt.Println("GetUser", subdomain)
-
-	// See if the user is already there
-	tp := db.userPools[subdomain[0]]
-	user := tp.GetUser(subdomain)
-	userInDB, err := db.UserInDB(subdomain, updateLastSeen)
-
-	fmt.Println("UserInDB", userInDB, err)
+	// Check if user exists in the db
+	model, err := db.UsersGet.QueryRow(context.TODO(), subdomain)
 	if err != nil {
-		fmt.Println("Error getting user from DB", err)
-		return nil, fmt.Errorf("cannot get user from DB: %w", err)
+		return nil, fmt.Errorf("cannot get user: %w", err)
 	}
-
-	// Absolute User not in the ControlDB we dont return
-	if !userInDB {
-		fmt.Println("User not found in DB")
-		return nil, fmt.Errorf("user not found in DB")
+	if model.Subdomain == "" {
+		return nil, fmt.Errorf("user not found")
 	}
-
-	if user == nil {
-		fmt.Println("User not found in pool, opening user")
-		return nil, fmt.Errorf("user Not Found: %w", err)
+	fmt.Println("Found User: ", model.Subdomain, model.LastSeenAt)
+	lastSeenMoreThan10MinutesAgo := model.LastSeenAt.Add(10 * time.Minute).After(time.Now())
+	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
+		db.UsersUpdateLastSeen.Exec(context.TODO(), subdomain, time.Now())
 	}
 
 	return user, nil
-}
-
-func (db *ControlDB) UserInDB(subdomain string, updateLastSeen bool) (bool, error) {
-	// Check if user exists in the db
-	rows, err := db.Query("SELECT last_seen_at FROM users WHERE subdomain = ? AND deleted_at IS NULL LIMIT 1", subdomain)
-	if err != nil {
-		return false, fmt.Errorf("cannot get user: %w", err)
-	}
-	if rows == nil {
-		return false, fmt.Errorf("user not found")
-	}
-
-	defer rows.Close()
-	err = rows.Err()
-	if err != nil {
-		return false, fmt.Errorf("rows error: %w", err)
-	}
-
-	rows.Next()
-
-	var last_seen_at string
-	err = rows.Scan(&last_seen_at)
-	if err != nil {
-		return false, fmt.Errorf("cannot scan user: %w", err)
-	}
-	fmt.Println("Found User: ", last_seen_at)
-
-	if updateLastSeen {
-		err = db.TryUpdateLastSeenAt(subdomain, last_seen_at)
-		// Not going to break because this errors
-		if err != nil {
-			fmt.Println("Error updating last seen at", err)
-		}
-	}
-
-	return true, nil
-}
-
-func (db *ControlDB) TryUpdateLastSeenAt(subdomain string, last_seen_at string) error {
-
-	last_seen_at_time, err := time.Parse(time.RFC3339, last_seen_at)
-	if err != nil {
-		fmt.Println("Error parsing last seen at", err)
-		return fmt.Errorf("cannot parse last seen at: %w", err)
-
-	}
-
-	// Only update if the last seen at is older than 10 minutes
-	if last_seen_at_time.Add(10 * time.Minute).After(time.Now()) {
-		return nil
-	}
-
-	// Try update lsat seen at, I am not going to throw here if not updated
-	fmt.Println("Trying to updating last seen at")
-	_, err = db.Exec("UPDATE users SET last_seen_at = ? WHERE subdomain = ?", time.Now().Format(time.RFC3339), subdomain)
-	if err != nil {
-		fmt.Println("Error updating last seen at", err)
-		return fmt.Errorf("cannot update last seen at: %w", err)
-	}
-	fmt.Println("Last seen at updated")
-	return nil
 }
 
 func (db *ControlDB) CreateUser() (string, string, error) {
@@ -248,7 +115,29 @@ func (db *ControlDB) CreateUser() (string, string, error) {
 	}
 
 	tp := db.userPools[userID[0]]
-	_, apiKey, err := tp.CreateUser(userID)
+	var err error
+	userDB := NewUserDB(subdomain)
+	if userDB.DBFileExists() {
+		return nil, "", fmt.Errorf("user db file already exists")
+	}
+
+	// Create the DB file
+	err = userDB.Open(&mtsql.UserCreate)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot create user db: %w", err)
+	}
+
+	apiKey, err := userDB.CreateAPIToken()
+	if err != nil {
+		userDB.Close()
+		return nil, "", fmt.Errorf("cannot create user db: %w", err)
+	}
+
+	// Add the user to the pool
+	up.rwLock.Lock()
+	up.user[subdomain] = userDB
+	up.rwLock.Unlock()
+
 	if err != nil {
 		return "", "", fmt.Errorf("cannot create user: %w", err)
 	}
@@ -264,29 +153,6 @@ func (db *ControlDB) Close() error {
 	return db.sqldb.Close()
 }
 
-func (db *ControlDB) StartBackupLoops() {
-	// CotrolDB backup and Sync Loop
-	if db.ControlBackupInterval > 0 {
-		db.wg.Add(1)
-		go func() {
-			defer db.wg.Done()
-			db.backupLoop()
-		}()
-	}
-
-	if db.PoolBackupInterval > 0 {
-		db.wg.Add(1)
-		// The goal here is over the PoolBackupInterval we will backup all pools
-		// But we will stagger them so that we do not swamp the CPU or network
-		staggeredInterval := db.PoolBackupInterval / time.Duration(len(db.userPools))
-		go func() {
-			defer db.wg.Done()
-			db.tpBackupLoop(staggeredInterval)
-		}()
-	}
-
-}
-
 func (db *ControlDB) allPools() []*UserPool {
 	var allPools []*UserPool
 	for _, pool := range db.userPools {
@@ -297,51 +163,6 @@ func (db *ControlDB) allPools() []*UserPool {
 		return allPools[i].char < allPools[j].char
 	})
 	return allPools
-}
-
-func (db *ControlDB) tpBackupLoop(interval time.Duration) {
-	syncTicker := time.NewTicker(interval)
-	defer syncTicker.Stop()
-
-	allPools := db.allPools()
-
-	index := 0
-	for {
-		// Wait for ticker or context close.
-		select {
-		case <-db.ctx.Done():
-			return
-		case <-syncTicker.C:
-		}
-		tp := allPools[index]
-
-		// Force all users to sync WAL to disk and update their mod times
-		// this also backs up the user to the backup path if modified
-		modified, err := tp.updateModified()
-		if err != nil {
-			fmt.Println("Error updating user modified", "error", err)
-		}
-
-		// TODO soft delete users from the DB (for rehydrations later)
-		removedUsers, err := tp.archive(db.S3Client, db.MaxUserAge)
-		if err != nil {
-			fmt.Println("Error archiving user pool", "error", err)
-		} else {
-			err := db.DeleteAllUsers(removedUsers)
-			if err != nil {
-				fmt.Println("Error deleting users from DB", "error", err)
-			}
-
-		}
-
-		if modified {
-			// If any user was modified we need to backup the pool
-			if err = tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
-				fmt.Println("Backup error", "error", err)
-			}
-		}
-		index = (index + 1) % len(allPools)
-	}
 }
 
 func (db *ControlDB) DeleteAllUsers(users []*UserDB) error {
@@ -357,90 +178,189 @@ func (db *ControlDB) DeleteAllUsers(users []*UserDB) error {
 	return nil
 }
 
-func (db *ControlDB) backupLoop() {
-	syncTicker := time.NewTicker(db.ControlBackupInterval)
-	defer syncTicker.Stop()
-
-	for {
-		// Wait for ticker or context close.
-		select {
-		case <-db.ctx.Done():
-			return
-		case <-syncTicker.C:
-		}
-
-		// Backup DB to S3
-		if err := db.backup(); err != nil && !errors.Is(err, context.Canceled) {
-			fmt.Println("Backup error", "error", err)
-		}
-
-	}
-
+// USERS POOL METHODS
+func (db *ControlDB) GetUserBatchPaths(pool byte) (string, string) {
+	S3Path := "userpool/" + string(pool) + ".tar.lz4"
+	Path := "data/db/user/" + string(pool)
+	return S3Path, Path
 }
 
-func (db *ControlDB) backup() error {
+func (db *ControlDB) GetNUsersDBs() int {
+	l := 0
+	db.usersRWLock.RLock()
+	l = len(db.users)
+	db.usersRWLock.RUnlock()
+	return l
+}
+
+func (db *ControlDB) allUsers() []*UserDB {
+	users := make([]*UserDB, 0)
+	db.usersRWLock.RLock()
+	for _, user := range db.users {
+		users = append(users, user)
+	}
+	db.usersRWLock.RUnlock()
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].Subdomain < users[j].Subdomain
+	})
+	return users
+}
+
+func (db *ControlDB) GetUser(subdomain string) *UserDB {
+	db.usersRWLock.RLock()
+	user := db.users[subdomain]
+	db.usersRWLock.RUnlock()
+
+	return user
+}
+
+func (up *UserPool) RestoreAndOpenAllUsers(s3Client *S3Client, subdomains []string) error {
+	if len(subdomains) == 0 {
+		return nil
+	}
 
 	var err error
-	modified, err := db.UpdateModified()
-	if err != nil {
-		fmt.Println("Error updating control db modified", err)
-		return fmt.Errorf("cannot update control db modified: %w", err)
+	// Check to see if user are already on disk
+	for _, subdomain := range subdomains {
+		_, err := up.OpenUser(subdomain)
+		if err != nil {
+			fmt.Printf("Error opening user db %v %v %v\n", string(up.char), subdomain, err)
+			return fmt.Errorf("cannot open user db: %w", err)
+		}
+		// We ignore if the DB was not found to be created
 	}
 
-	if modified {
-		err = db.S3Client.SyncAllFiles([]string{db.BackupPath})
+	restored := up.GetNUsersDBs()
+	if restored > 0 {
+		if restored != len(subdomains) {
+			fmt.Printf("Not all user were restored for Tennant Pool %v %v %v\n", string(up.char), restored, len(subdomains))
+			return fmt.Errorf("not all user were restored")
+		}
+		// If they should all be on disk if any are
+		return nil
+	}
+
+	// Now we need to see if we want to restore from S3
+	fmt.Println("Trying to restore user from backup for pool", string(up.char))
+
+	found, err := s3Client.DownloadAndExtractLZ4(up.S3Path, up.Path)
+	fmt.Println("Finished s3 download backup for pool", string(up.char))
+	if !found && err == nil {
+		fmt.Println("No user backup found")
+		return nil
+	}
+	if err != nil {
+		// TODO dont fail here if just not found
+		return fmt.Errorf("cannot download user db: %w", err)
+	}
+
+	for _, subdomain := range subdomains {
+
+		// At this point in time we are ignoring errors
+		user, err := up.OpenUser(subdomain)
 		if err != nil {
-			return fmt.Errorf("cannot sync control db: %w", err)
+			fmt.Printf("Error opening user db %v %v %v\n", string(up.char), subdomain, err)
+			return fmt.Errorf("cannot open user db: %w", err)
+		}
+		if user == nil {
+			fmt.Printf("User db %v %v not found\n", string(up.char), subdomain)
+			return fmt.Errorf("cannot open user db: %w", err)
 		}
 	}
 
-	// Copy the control db to the backup location
 	return nil
+
 }
 
-func (db *ControlDB) StopBackupLoop() {
-	// This will send a cancel signal to context
-	db.cancel()
-	// This will wait
-	db.wg.Wait()
+func (up *UserPool) OpenUser(subdomain string) (*UserDB, error) {
+	userDB := NewUserDB(subdomain)
+	if userDB.DBFileExists() {
+		// If the DB file is there, write the user
+		err := userDB.Open(nil)
+		if err != nil {
+			return nil, fmt.Errorf("cannot open user db: %w", err)
+		}
+		// User db opened and ready to use
+		up.rwLock.Lock()
+		up.user[subdomain] = userDB
+		up.rwLock.Unlock()
+		return userDB, nil
+	}
+	return nil, nil
 }
 
-func (db *ControlDB) ForceBackupSync() error {
-	defer trackTime(time.Now(), "ForceBackupSync")
+func (up *UserPool) Close() error {
+	up.rwLock.Lock()
+	defer up.rwLock.Unlock()
 
-	db.UpdateModified()
-	// Go through every user and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
-	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
-	err := db.backup()
-	if err != nil {
-		fmt.Println("Error forcing backup:", err)
-		return fmt.Errorf("cannot force backup: %w", err)
-	}
-
-	g, _ := errgroup.WithContext(context.Background())
-
-	// Limit the number of concurrent goroutines to the number of CPU cores - 1
-	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
-	g.SetLimit(limit)
-	fmt.Println("ForceBackupSync running", len(db.userPools), limit)
-	for _, pool := range db.allPools() {
-
-		g.Go(func() error {
-			_, err := pool.updateModified()
-			if err != nil {
-				fmt.Println("Error updating user modified", "error", err)
-			}
-
-			return pool.backup(db.S3Client)
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		fmt.Printf("One of the ForceBackupSync tasks failed: %v\n", err)
-		return fmt.Errorf("cannot sync all users: %w", err)
-	} else {
-		fmt.Println("All ForceBackupSync tasks succeeded!")
+	for _, user := range up.user {
+		err := user.Close()
+		if err != nil {
+			fmt.Println("cannot close user db", err)
+		}
 	}
 
 	return nil
 }
+
+func (up *UserPool) updateModified() (bool, error) {
+
+	user := up.allUsers()
+	if len(user) == 0 {
+		return false, nil
+	}
+
+	anyModified := false
+	for _, user := range user {
+		modified, err := user.UpdateModified()
+		if err != nil {
+			// TODO error group
+			fmt.Println("cannot update user modified db:", user.Subdomain, err)
+		}
+		if modified {
+			anyModified = true
+		}
+	}
+	return anyModified, nil
+}
+
+// This method looks though all the ages of the DBs and removes user that are older than the max age from the circulation
+// TODO It should then group these user up together, zip them and then upload them to S3 while logging their location for future hydration
+func (up *UserPool) archive(s3Client *S3Client, maxUserAge time.Duration) ([]*UserDB, error) {
+	removeList := []*UserDB{}
+
+	user := up.allUsers()
+	if len(user) == 0 {
+		return removeList, nil
+	}
+
+	for _, user := range user {
+		// Check if the user is older than the max age
+		lm := time.Unix(user.lastModifiedAt, 0)
+		if time.Since(lm) > maxUserAge {
+			// Archive the user
+			removeList = append(removeList, user)
+		}
+	}
+	up.rwLock.Lock()
+	defer up.rwLock.Unlock()
+	for _, user := range removeList {
+		fmt.Println("Removing user", user.Subdomain)
+		delete(up.user, user.Subdomain)
+		err := user.Close()
+		if err != nil {
+			fmt.Println("cannot close user db", err)
+		}
+
+		err = s3Client.SyncAllFilesToSingleLZ4(user.ArchivePath(), []string{user.Path})
+		if err != nil {
+			fmt.Println("cannot sync to s3 user archive", err)
+		}
+	}
+
+	return removeList, nil
+}
+
+//
+//
+//

@@ -5,33 +5,30 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"time"
 )
 
 //go:embed users_update_last_seen.sql
 var UsersUpdateLastSeenRaw string
 
-type UsersUpdateLastSeenParams struct {
-	name string
-}
-
 type UsersUpdateLastSeenModel struct {
 }
 
-type UsersUpdateLastSeenSQL struct {
+type UsersUpdateLastSeenStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersUpdateLastSeen(sqldb *sql.DB) (*UsersUpdateLastSeenSQL, error) {
+func NewUsersUpdateLastSeen(sqldb *sql.DB) (*UsersUpdateLastSeenStmt, error) {
 	var err error
 	stmt, err := sqldb.Prepare(UsersUpdateLastSeenRaw)
 	if err != nil {
 		return nil, err
 	}
-	return &UsersUpdateLastSeenSQL{stmt: stmt}, nil
+	return &UsersUpdateLastSeenStmt{stmt: stmt}, nil
 }
 
-func (s *UsersUpdateLastSeenSQL) Query(ctx context.Context, params UsersUpdateLastSeenParams) ([]UsersUpdateLastSeenModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, params.name)
+func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, LastSeenAt time.Time) ([]UsersUpdateLastSeenModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Subdomain, LastSeenAt)
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +46,15 @@ func (s *UsersUpdateLastSeenSQL) Query(ctx context.Context, params UsersUpdateLa
 	return results, nil
 }
 
-func (s *UsersUpdateLastSeenSQL) Exec(ctx context.Context, params UsersUpdateLastSeenParams) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, params.name)
+func (s *UsersUpdateLastSeenStmt) Exec(ctx context.Context, Subdomain string, LastSeenAt time.Time) (sql.Result, error) {
+	return s.stmt.ExecContext(ctx, Subdomain, LastSeenAt)
 }
 
-func (s *UsersUpdateLastSeenSQL) QueryRow(ctx context.Context, params UsersUpdateLastSeenParams) UsersUpdateLastSeenModel {
+func (s *UsersUpdateLastSeenStmt) QueryRow(ctx context.Context, Subdomain string, LastSeenAt time.Time) (UsersUpdateLastSeenModel, error) {
 	var model UsersUpdateLastSeenModel
-	s.stmt.QueryRowContext(ctx, params.name).Scan()
-	return model
+	err := s.stmt.QueryRowContext(ctx, Subdomain, LastSeenAt).Scan()
+	if err != nil {
+		return model, err
+	}
+	return model, nil
 }
