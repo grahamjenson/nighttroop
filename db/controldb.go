@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 type ControlDB struct {
-	sqldb *sql.DB
+	SQLiteDB *sql.DB
 
 	// previously modified
 	users map[string]*UserDB
@@ -27,6 +28,7 @@ type ControlDB struct {
 	UsersGetBatch       *controlsql.UsersGetBatchStmt
 	UsersAll            *controlsql.UsersAllStmt
 	UsersUpdateLastSeen *controlsql.UsersUpdateLastSeenStmt
+	UsersDelete         *controlsql.UsersDeleteStmt
 
 	// For Tests
 	TESTONLYUsersTruncateAll *controlsql.UsersTruncateAllStmt
@@ -41,8 +43,8 @@ func NewControlDB() (*ControlDB, error) {
 	}
 	// Create a new control db
 	controlDB := &ControlDB{
-		sqldb: sqldb,
-		users: make(map[string]*UserDB),
+		SQLiteDB: sqldb,
+		users:    make(map[string]*UserDB),
 	}
 
 	// Migrate the DB, run any unrun migrations
@@ -51,35 +53,32 @@ func NewControlDB() (*ControlDB, error) {
 		return nil, fmt.Errorf("cannot migrate control db: %w", err)
 	}
 
+	var errs []error
+
 	// Create the prepared statements
 	controlDB.UsersCreate, err = control.NewUsersCreate(sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare users create statement: %w", err)
-	}
+	errs = append(errs, fmt.Errorf("users create: %w", err))
+
+	controlDB.UsersDelete, err = control.NewUsersDelete(sqldb)
+	errs = append(errs, fmt.Errorf("users delete: %w", err))
 
 	controlDB.UsersGet, err = control.NewUsersGet(sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare users get statement: %w", err)
-	}
+	errs = append(errs, fmt.Errorf("users get: %w", err))
 
 	controlDB.UsersAll, err = control.NewUsersAll(sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare users get all statement: %w", err)
-	}
+	errs = append(errs, fmt.Errorf("users all: %w", err))
 
 	controlDB.UsersGetBatch, err = control.NewUsersGetBatch(sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare users get batch statement: %w", err)
-	}
+	errs = append(errs, fmt.Errorf("users get batch: %w", err))
 
 	controlDB.UsersUpdateLastSeen, err = control.NewUsersUpdateLastSeen(sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare users update last seen statement: %w", err)
-	}
+	errs = append(errs, fmt.Errorf("users update last seen: %w", err))
 
 	controlDB.TESTONLYUsersTruncateAll, err = control.NewUsersTruncateAll(sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare users truncate all statement: %w", err)
+	errs = append(errs, fmt.Errorf("users truncate all: %w", err))
+
+	if finalErr := errors.Join(errs...); finalErr != nil {
+		return nil, finalErr
 	}
 
 	// This will go over all non-deleted users and add them to the control db users
@@ -112,6 +111,80 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 	return users, nil
 }
 
+func (db *ControlDB) CreateUser() (*UserDB, error) {
+	subdomain := utils.NextUserID()
+
+	_, err := db.UsersCreate.Exec(context.TODO(), subdomain)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create user: %w", err)
+	}
+
+	userDB, err := NewUserDB(context.TODO(), subdomain, false)
+	if err != nil {
+		return nil, fmt.Errorf("user db file already exists")
+	}
+
+	// TODO create API token
+
+	// Add the user to the pool
+	db.usersRWLock.Lock()
+	db.users[subdomain] = userDB
+	db.usersRWLock.Unlock()
+
+	return userDB, nil
+}
+
+////
+// Delete USER methods
+////
+
+func (db *ControlDB) DeleteUser(subdomain string) error {
+	db.usersRWLock.Lock()
+	user, ok := db.users[subdomain]
+	if !ok {
+		db.usersRWLock.Unlock()
+		return fmt.Errorf("user not found")
+	}
+	delete(db.users, subdomain)
+	db.usersRWLock.Unlock()
+
+	user.Close()
+
+	_, err := db.UsersDelete.Exec(context.TODO(), subdomain)
+	if err != nil {
+		return fmt.Errorf("cannot delete user: %w", err)
+	}
+
+	return nil
+}
+
+////
+// END OF DELETE USER METHODS
+////
+
+// //
+// Get USER Methods
+// //
+
+func (db *ControlDB) GetNUsersDBs() int {
+	l := 0
+	db.usersRWLock.RLock()
+	l = len(db.users)
+	db.usersRWLock.RUnlock()
+	return l
+}
+
+func (db *ControlDB) AllUsers() []*UserDB {
+	db.usersRWLock.RLock()
+	defer db.usersRWLock.RUnlock()
+
+	users := []*UserDB{}
+	for _, user := range db.users {
+		users = append(users, user)
+	}
+	return users
+}
+
 func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, error) {
 	// Check if user exists in the db
 	model, err := db.UsersGet.QueryRow(context.TODO(), subdomain)
@@ -138,28 +211,31 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, er
 	return user, nil
 }
 
-func (db *ControlDB) CreateUser() (*UserDB, error) {
-	subdomain := utils.NextUserID()
+func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 
-	_, err := db.UsersCreate.Exec(context.TODO(), subdomain)
+	users := []*UserDB{}
+	res, err := db.UsersGetBatch.Query(context.TODO(), char)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create user: %w", err)
+		return users, fmt.Errorf("cannot query users: %w", err)
 	}
 
-	userDB, err := NewUserDB(context.TODO(), subdomain, false)
-	if err != nil {
-		return nil, fmt.Errorf("user db file already exists")
+	db.usersRWLock.RLock()
+	defer db.usersRWLock.RUnlock()
+
+	for _, model := range res {
+		user := db.users[model.Subdomain]
+		if user == nil {
+			return users, fmt.Errorf("user not found in memory")
+		}
+		users = append(users, user)
 	}
 
-	// TODO create API token
-
-	// Add the user to the pool
-	db.usersRWLock.Lock()
-	db.users[subdomain] = userDB
-	db.usersRWLock.Unlock()
-
-	return userDB, nil
+	return users, nil
 }
+
+////
+// End of Get USER Methods
+////
 
 func (db *ControlDB) Close() error {
 	// Keep it locked so no new users can be created
@@ -167,22 +243,19 @@ func (db *ControlDB) Close() error {
 		user.Close()
 	}
 
-	return db.sqldb.Close()
+	return db.SQLiteDB.Close()
 }
+
+////
+// Test methods
+////
 
 func (db *ControlDB) TestOnlyDeleteAllUsers(users []*UserDB) error {
 	if len(users) == 0 {
 		return nil
 	}
+	db.users = make(map[string]*UserDB)
 	_, err := db.TESTONLYUsersTruncateAll.Exec(context.TODO())
 
 	return err
-}
-
-func (db *ControlDB) GetNUsersDBs() int {
-	l := 0
-	db.usersRWLock.RLock()
-	l = len(db.users)
-	db.usersRWLock.RUnlock()
-	return l
 }

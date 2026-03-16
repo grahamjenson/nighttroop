@@ -43,7 +43,7 @@ func run() error {
 	//
 	// Try and restore database files from S3 (we should )
 	//
-	s3Client, err := utils.NewS3Client(serverConfig.S3URL, serverConfig.S3Bucket)
+	s3Client, err := utils.NewS3Client(serverConfig.S3URL, serverConfig.S3Bucket, serverConfig.Hostname)
 	if err != nil {
 		return fmt.Errorf("cannot create s3 client: %w", err)
 	}

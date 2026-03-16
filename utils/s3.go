@@ -39,6 +39,9 @@ type S3Client struct {
 	Path           string
 	Endpoint       string
 	ForcePathStyle bool
+
+	// Common Config Varaibles Used In Paths
+	Hostname string
 }
 
 // MaxKeys is the number of keys S3 can operate on per batch.
@@ -47,7 +50,7 @@ const MaxKeys = 1000
 // DefaultRegion is the region used if one is not specified.
 const DefaultRegion = "us-east-1"
 
-func NewS3Client(endpoint, bucket string) (*S3Client, error) {
+func NewS3Client(endpoint, bucket, hostname string) (*S3Client, error) {
 	c := &S3Client{
 		AccessKeyID:     "minioadmin",
 		SecretAccessKey: "minioadmin",
@@ -55,6 +58,7 @@ func NewS3Client(endpoint, bucket string) (*S3Client, error) {
 		Bucket:          bucket,
 		Endpoint:        endpoint,
 		Region:          DefaultRegion,
+		Hostname:        hostname,
 	}
 
 	fmt.Println("Parsed S3 URL", c.Bucket, c.Region, c.Endpoint)
@@ -93,72 +97,26 @@ func NewS3Client(endpoint, bucket string) (*S3Client, error) {
 	return c, nil
 }
 
-func (c *S3Client) SyncAllFiles(paths []string) error {
-	ctx := context.TODO()
-
-	for _, path := range paths {
-		c.uploadToS3(ctx, path, path)
-	}
-
-	return nil
+// //
+// PATHS
+// //
+func (c *S3Client) ControlS3Path() string {
+	return fmt.Sprintf("%s/backup/control.sqlite", c.Hostname)
 }
 
-func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
-	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
-	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
-	ctx := context.TODO()
-
-	// Creating the pipes
-	pr, pw := io.Pipe()
-	defer pr.Close()
-
-	// Create a goroutine to write to the pipe the zip
-	go func() {
-		defer pw.Close()
-		err := createTarLZ4(paths, pw)
-		if err != nil {
-			fmt.Println("Error creating tar LZ4", err)
-			// Important: propagate error to the reader side
-			pw.CloseWithError(err)
-		}
-	}()
-
-	fmt.Println("Streaming to S3")
-	err := c.uploadStreamToS3(ctx, key, pr)
-	if err != nil {
-		fmt.Println("Ennot upload stream to s", err)
-		return fmt.Errorf("cannot upload stream to s3: %w", err)
-	}
-
-	//wg.Wait() // Wait for all uploads to finish
-	return nil
+func (c *S3Client) UserBatchS3Path(char string) string {
+	return fmt.Sprintf("%s/backup/user/%s.lz4", c.Hostname, char)
 }
 
-func (c *S3Client) DownloadAndExtractLZ4(key string, outpath string) (bool, error) {
-	// This function downloads a path to a user
-	ctx := context.TODO()
-	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(key),
-	})
-	if err != nil {
-		var noSuchKeyError *types.NoSuchKey
-		if errors.As(err, &noSuchKeyError) {
-			return false, nil
-		}
-		return false, fmt.Errorf("cannot get object from s3: %w", err)
-	}
-	defer out.Body.Close()
+////
+// END OF PATHS
+////
 
-	err = extractTarLZ4(out.Body, outpath)
-	if err != nil {
-		return true, fmt.Errorf("cannot extract tar LZ4: %w", err)
-	}
+////
+// UPLOAD METHODS
+////
 
-	return true, nil
-}
-
-func (c *S3Client) uploadToS3(ctx context.Context, filePath, key string) error {
+func (c *S3Client) UploadToS3(ctx context.Context, filePath, key string) error {
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -197,6 +155,69 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 	return nil
 }
 
+func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
+	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
+	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
+	ctx := context.TODO()
+
+	// Creating the pipes
+	pr, pw := io.Pipe()
+	defer pr.Close()
+
+	// Create a goroutine to write to the pipe the zip
+	go func() {
+		defer pw.Close()
+		err := createTarLZ4(paths, pw)
+		if err != nil {
+			fmt.Println("Error creating tar LZ4", err)
+			// Important: propagate error to the reader side
+			pw.CloseWithError(err)
+		}
+	}()
+
+	fmt.Println("Streaming to S3")
+	err := c.uploadStreamToS3(ctx, key, pr)
+	if err != nil {
+		fmt.Println("Ennot upload stream to s", err)
+		return fmt.Errorf("cannot upload stream to s3: %w", err)
+	}
+
+	//wg.Wait() // Wait for all uploads to finish
+	return nil
+}
+
+////
+// END OF UPLOAD METHODS
+////
+
+////
+// DOWNLOAD METHODS
+////
+
+func (c *S3Client) DownloadAndExtractLZ4(key string, outpath string) (bool, error) {
+	// This function downloads a path to a user
+	ctx := context.TODO()
+	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		var noSuchKeyError *types.NoSuchKey
+		if errors.As(err, &noSuchKeyError) {
+			return false, nil
+		}
+		return false, fmt.Errorf("cannot get object from s3: %w", err)
+	}
+	defer out.Body.Close()
+
+	err = extractTarLZ4(out.Body, outpath)
+	if err != nil {
+		return true, fmt.Errorf("cannot extract tar LZ4: %w", err)
+	}
+
+	return true, nil
+}
+
 func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
 	// This function downloads a path to a user
 	ctx := context.TODO()
@@ -227,8 +248,13 @@ func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
 	return true, nil
 }
 
-///// SLOP
+////
+//
+////
 
+// //
+// SLOP TO BE REVIEWED
+// //
 func createTarLZ4(files []string, writer io.Writer) error {
 	// Wrap in LZ4 writer
 	lz4Writer := lz4.NewWriter(writer)

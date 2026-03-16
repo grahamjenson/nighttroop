@@ -18,7 +18,7 @@ import (
 // //
 
 type UserDB struct {
-	sqldb     *sql.DB
+	SQLiteDB  *sql.DB
 	Subdomain string
 
 	// Prepared statements
@@ -38,10 +38,10 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool) (*UserDB, 
 
 	// Create a new control db
 	userDB := &UserDB{
-		sqldb: sqldb,
+		SQLiteDB: sqldb,
 	}
 
-	err = migrations.MigrateUser(ctx, userDB.sqldb)
+	err = migrations.MigrateUser(ctx, sqldb)
 	if err != nil {
 		sqldb.Close()
 		return nil, fmt.Errorf("cannot migrate user db: %s %w", subdomain, err)
@@ -80,6 +80,6 @@ func (db *UserDB) ValidateAPIToken(token string) error {
 	return nil
 }
 
-func (db *UserDB) Close() error {
-	db.sqldb.Close()
+func (db *UserDB) Close() {
+	db.SQLiteDB.Close()
 }

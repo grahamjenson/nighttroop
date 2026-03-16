@@ -22,7 +22,7 @@ type BackupJobs struct {
 	ctx       context.Context
 
 	ControlBackupInterval time.Duration
-	PoolBackupInterval    time.Duration
+	BatchBackupInterval   time.Duration
 	MaxUserAge            time.Duration
 
 	cancel func()
@@ -38,7 +38,7 @@ func SetupBackupJobs(config config.ServerConfig, controlDB *db.ControlDB, s3Clie
 	jobs := &BackupJobs{
 		controlDB:             controlDB,
 		ControlBackupInterval: 10 * time.Second, // TODO replace with config
-		PoolBackupInterval:    60 * time.Second, // TODO replace with config
+		BatchBackupInterval:   60 * time.Second, // TODO replace with config
 		MaxUserAge:            30 * time.Minute, // TODO replace with config
 
 		S3Client: s3Client,
@@ -56,23 +56,28 @@ func (b *BackupJobs) Start() {
 		b.wg.Add(1)
 		go func() {
 			defer b.wg.Done()
-			b.backupLoop()
+			b.controlBackupLoop()
 		}()
 	}
 
-	if b.PoolBackupInterval > 0 {
+	if b.BatchBackupInterval > 0 {
 		b.wg.Add(1)
-		// The goal here is over the PoolBackupInterval we will backup all pools
+		// The goal here is over the BatchBackupInterval we will backup all pools
 		// But we will stagger them so that we do not swamp the CPU or network
-		staggeredInterval := b.PoolBackupInterval / time.Duration(len(b.userPools))
+		staggeredInterval := b.BatchBackupInterval / time.Duration(utils.USER_BATCH_LENGTH)
 		go func() {
 			defer b.wg.Done()
-			b.tpBackupLoop(staggeredInterval)
+			b.userBackupLoop(staggeredInterval)
 		}()
 	}
 
 }
-func (b *BackupJobs) backupLoop() {
+
+// //
+// Control Backup
+// //
+
+func (b *BackupJobs) controlBackupLoop() {
 	syncTicker := time.NewTicker(b.ControlBackupInterval)
 	defer syncTicker.Stop()
 
@@ -85,7 +90,7 @@ func (b *BackupJobs) backupLoop() {
 		}
 
 		// Backup DB to S3
-		if err := b.backup(); err != nil && !errors.Is(err, context.Canceled) {
+		if err := b.backupControl(); err != nil && !errors.Is(err, context.Canceled) {
 			fmt.Println("Backup error", "error", err)
 		}
 
@@ -93,11 +98,31 @@ func (b *BackupJobs) backupLoop() {
 
 }
 
-func (b *BackupJobs) tpBackupLoop(interval time.Duration) {
+func (b *BackupJobs) backupControl() error {
+	ctx := context.TODO()
+
+	// Backup the Database
+	err := utils.SqliteBackup(ctx, b.controlDB.SQLiteDB, utils.CONTROL_DB_PATH, utils.CONTROL_DB_BACKUP_PATH)
+	if err != nil {
+		return fmt.Errorf("cannot backup control db: %w", err)
+	}
+
+	// Copy the control db to S3 path
+	err = b.S3Client.UploadToS3(ctx, b.S3Client.ControlS3Path(), utils.CONTROL_DB_BACKUP_PATH)
+	if err != nil {
+		return fmt.Errorf("cannot sync control db: %w", err)
+	}
+
+	return nil
+}
+
+// ///
+// User Backup
+// ///
+
+func (b *BackupJobs) userBackupLoop(interval time.Duration) {
 	syncTicker := time.NewTicker(interval)
 	defer syncTicker.Stop()
-
-	allPools := db.allPools()
 
 	index := 0
 	for {
@@ -107,13 +132,14 @@ func (b *BackupJobs) tpBackupLoop(interval time.Duration) {
 			return
 		case <-syncTicker.C:
 		}
-		tp := allPools[index]
+		char := utils.USER_CHAR_SET[index]
 
-		// Force all users to sync WAL to disk and update their mod times
-		// this also backs up the user to the backup path if modified
-		modified, err := tp.updateModified()
+		// Backup the dbs, upload to S3
+		err := b.BackupUserBatch(string(char))
+
 		if err != nil {
-			fmt.Println("Error updating user modified", "error", err)
+			fmt.Println("Error backing up user batch", "error", err, "char", char)
+			continue
 		}
 
 		// TODO soft delete users from the DB (for rehydrations later)
@@ -134,24 +160,30 @@ func (b *BackupJobs) tpBackupLoop(interval time.Duration) {
 				fmt.Println("Backup error", "error", err)
 			}
 		}
-		index = (index + 1) % len(allPools)
+		index = (index + 1) % utils.USER_BATCH_LENGTH
 	}
 }
 
-func (b *BackupJobs) backup() error {
-
-	var err error
-	modified, err := b.UpdateModified()
+func (b *BackupJobs) BackupUserBatch(char string) error {
+	defer utils.TrackTime(time.Now(), "backup user pool "+char)
+	users, err := b.controlDB.GetUserBatch(char)
 	if err != nil {
-		fmt.Println("Error updating control db modified", err)
-		return fmt.Errorf("cannot update control db modified: %w", err)
+		return fmt.Errorf("cannot get user batch: %w", err)
+	}
+	if len(users) == 0 {
+		return nil
 	}
 
-	if modified {
-		err = b.S3Client.SyncAllFiles([]string{b.BackupPath})
-		if err != nil {
-			return fmt.Errorf("cannot sync control db: %w", err)
-		}
+	paths := []string{}
+
+	for _, user := range users {
+		// Have to add it anyway because we need all paths
+		paths = append(paths, user.BackupPath)
+	}
+
+	err = s3Client.SyncAllFilesToSingleLZ4(up.S3Path, paths)
+	if err != nil {
+		return fmt.Errorf("cannot sync user pool: %w %v", err, string(up.char))
 	}
 
 	// Copy the control db to the backup location
@@ -198,38 +230,9 @@ func (b *BackupJobs) BackupToS3() error {
 	return nil
 }
 
-func (up *UserPool) backup(s3Client *S3Client) error {
-	user := up.allUsers()
-	if len(user) == 0 {
-		return nil
-	}
-	defer utils.TrackTime(time.Now(), "backup user pool "+string(up.char))
-
-	var err error
-	paths := []string{}
-
-	for _, user := range user {
-		// Have to add it anyway because we need all paths
-		paths = append(paths, user.BackupPath)
-	}
-
-	if len(paths) == 0 {
-		fmt.Println("No user to backup")
-		return nil
-	}
-
-	err = s3Client.SyncAllFilesToSingleLZ4(up.S3Path, paths)
-	if err != nil {
-		return fmt.Errorf("cannot sync user pool: %w %v", err, string(up.char))
-	}
-
-	// Copy the control db to the backup location
-	return nil
-}
-
 // This method looks though all the ages of the DBs and removes user that are older than the max age from the circulation
 // TODO It should then group these user up together, zip them and then upload them to S3 while logging their location for future hydration
-func (up *UserPool) archive(s3Client *S3Client, maxUserAge time.Duration) ([]*UserDB, error) {
+func archiveUsers(s3Client *S3Client, maxUserAge time.Duration) ([]*UserDB, error) {
 	removeList := []*UserDB{}
 
 	user := up.allUsers()
