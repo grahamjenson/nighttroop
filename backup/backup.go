@@ -122,7 +122,7 @@ func (b *BackupJobs) backupControl() error {
 	}
 
 	// Copy the control db to S3 path
-	err = b.S3Client.UploadToS3(ctx, b.S3Client.ControlS3Path(), utils.CONTROL_DB_BACKUP_PATH)
+	err = b.S3Client.UploadToS3(ctx, utils.CONTROL_DB_BACKUP_PATH, b.S3Client.ControlS3Path())
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}
@@ -231,7 +231,7 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 		}
 
 		// Save as backup file and upload to final localtion
-		err = b.S3Client.UploadToS3(ctx, b.S3Client.UserArchiveS3Path(user.Subdomain), backupPath)
+		err = b.S3Client.UploadToS3(ctx, backupPath, b.S3Client.UserArchiveS3Path(user.Subdomain))
 		if err != nil {
 			return fmt.Errorf("cannot upload archived user db: %w", user.Subdomain, err)
 		}

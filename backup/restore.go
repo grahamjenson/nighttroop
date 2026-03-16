@@ -92,15 +92,16 @@ func TryDownloadExrtractUserDbsForBatch(s3Client *utils.S3Client, char string) e
 	s3Path := s3Client.UserBatchS3Path(char)
 
 	found, err := s3Client.DownloadAndExtractLZ4(s3Path, path)
-	fmt.Println("Finished s3 download backup for pool", char)
-	if !found && err == nil {
-		fmt.Println("No user backup found at ", s3Path)
-		return nil
-	}
 
 	if err != nil {
 		// TODO dont fail here if just not found
 		return fmt.Errorf("cannot download user db: %w", err)
 	}
+
+	if !found && err == nil {
+		fmt.Println("No user backup found at ", s3Path)
+		return nil
+	}
+
 	return nil
 }
