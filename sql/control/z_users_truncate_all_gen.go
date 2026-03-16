@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 )
 
 //go:embed users_truncate_all.sql
@@ -17,13 +18,15 @@ type UsersTruncateAllStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersTruncateAll(sqldb *sql.DB) (*UsersTruncateAllStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersTruncateAll(sqldb *sql.DB, errs *[]error) *UsersTruncateAllStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersTruncateAllRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersTruncateAll create error: %w", err))
+		return nil
 	}
-	return &UsersTruncateAllStmt{stmt: stmt}, nil
+	return &UsersTruncateAllStmt{stmt: stmt}
 }
 
 func (s *UsersTruncateAllStmt) Query(ctx context.Context) ([]UsersTruncateAllModel, error) {

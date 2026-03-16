@@ -57,29 +57,14 @@ func NewControlDB() (*ControlDB, error) {
 	var errs []error
 
 	// Create the prepared statements
-	controlDB.UsersCreate, err = control.NewUsersCreate(sqldb)
-	errs = append(errs, fmt.Errorf("users create: %w", err))
-
-	controlDB.UsersDelete, err = control.NewUsersDelete(sqldb)
-	errs = append(errs, fmt.Errorf("users delete: %w", err))
-
-	controlDB.UsersGet, err = control.NewUsersGet(sqldb)
-	errs = append(errs, fmt.Errorf("users get: %w", err))
-
-	controlDB.UsersAll, err = control.NewUsersAll(sqldb)
-	errs = append(errs, fmt.Errorf("users all: %w", err))
-
-	controlDB.UsersGetBatch, err = control.NewUsersGetBatch(sqldb)
-	errs = append(errs, fmt.Errorf("users get batch: %w", err))
-
-	controlDB.UsersUpdateLastSeen, err = control.NewUsersUpdateLastSeen(sqldb)
-	errs = append(errs, fmt.Errorf("users update last seen: %w", err))
-
-	controlDB.TESTONLYUsersTruncateAll, err = control.NewUsersTruncateAll(sqldb)
-	errs = append(errs, fmt.Errorf("users truncate all: %w", err))
-
-	controlDB.UsersGetInactive, err = control.NewUsersGetInactive(sqldb)
-	errs = append(errs, fmt.Errorf("users get inactive: %w", err))
+	controlDB.UsersCreate = control.NewUsersCreate(sqldb, &errs)
+	controlDB.UsersDelete = control.NewUsersDelete(sqldb, &errs)
+	controlDB.UsersGet = control.NewUsersGet(sqldb, &errs)
+	controlDB.UsersAll = control.NewUsersAll(sqldb, &errs)
+	controlDB.UsersGetBatch = control.NewUsersGetBatch(sqldb, &errs)
+	controlDB.UsersUpdateLastSeen = control.NewUsersUpdateLastSeen(sqldb, &errs)
+	controlDB.TESTONLYUsersTruncateAll = control.NewUsersTruncateAll(sqldb, &errs)
+	controlDB.UsersGetInactive = control.NewUsersGetInactive(sqldb, &errs)
 
 	if finalErr := errors.Join(errs...); finalErr != nil {
 		return nil, finalErr

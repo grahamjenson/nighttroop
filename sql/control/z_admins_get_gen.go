@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -21,13 +22,15 @@ type AdminsGetStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewAdminsGet(sqldb *sql.DB) (*AdminsGetStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewAdminsGet(sqldb *sql.DB, errs *[]error) *AdminsGetStmt {
 	var err error
 	stmt, err := sqldb.Prepare(AdminsGetRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("AdminsGet create error: %w", err))
+		return nil
 	}
-	return &AdminsGetStmt{stmt: stmt}, nil
+	return &AdminsGetStmt{stmt: stmt}
 }
 
 func (s *AdminsGetStmt) Query(ctx context.Context, username string) ([]AdminsGetModel, error) {

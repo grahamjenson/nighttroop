@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -18,13 +19,15 @@ type UsersUpdateLastSeenStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersUpdateLastSeen(sqldb *sql.DB) (*UsersUpdateLastSeenStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersUpdateLastSeen(sqldb *sql.DB, errs *[]error) *UsersUpdateLastSeenStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersUpdateLastSeenRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersUpdateLastSeen create error: %w", err))
+		return nil
 	}
-	return &UsersUpdateLastSeenStmt{stmt: stmt}, nil
+	return &UsersUpdateLastSeenStmt{stmt: stmt}
 }
 
 func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, LastSeenAt time.Time) ([]UsersUpdateLastSeenModel, error) {

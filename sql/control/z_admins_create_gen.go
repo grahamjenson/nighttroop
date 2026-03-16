@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 )
 
 //go:embed admins_create.sql
@@ -19,13 +20,15 @@ type AdminsCreateStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewAdminsCreate(sqldb *sql.DB) (*AdminsCreateStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewAdminsCreate(sqldb *sql.DB, errs *[]error) *AdminsCreateStmt {
 	var err error
 	stmt, err := sqldb.Prepare(AdminsCreateRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("AdminsCreate create error: %w", err))
+		return nil
 	}
-	return &AdminsCreateStmt{stmt: stmt}, nil
+	return &AdminsCreateStmt{stmt: stmt}
 }
 
 func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password string) ([]AdminsCreateModel, error) {

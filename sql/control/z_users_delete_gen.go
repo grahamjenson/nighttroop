@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 )
 
 //go:embed users_delete.sql
@@ -17,13 +18,15 @@ type UsersDeleteStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersDelete(sqldb *sql.DB) (*UsersDeleteStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersDelete(sqldb *sql.DB, errs *[]error) *UsersDeleteStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersDeleteRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersDelete create error: %w", err))
+		return nil
 	}
-	return &UsersDeleteStmt{stmt: stmt}, nil
+	return &UsersDeleteStmt{stmt: stmt}
 }
 
 func (s *UsersDeleteStmt) Query(ctx context.Context, Subdomain string) ([]UsersDeleteModel, error) {

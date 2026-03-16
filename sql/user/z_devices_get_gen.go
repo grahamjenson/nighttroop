@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 )
 
 //go:embed devices_get.sql
@@ -19,13 +20,15 @@ type DevicesGetStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewDevicesGet(sqldb *sql.DB) (*DevicesGetStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewDevicesGet(sqldb *sql.DB, errs *[]error) *DevicesGetStmt {
 	var err error
 	stmt, err := sqldb.Prepare(DevicesGetRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("DevicesGet create error: %w", err))
+		return nil
 	}
-	return &DevicesGetStmt{stmt: stmt}, nil
+	return &DevicesGetStmt{stmt: stmt}
 }
 
 func (s *DevicesGetStmt) Query(ctx context.Context, name string, token string) ([]DevicesGetModel, error) {

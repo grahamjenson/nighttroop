@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 )
 
 //go:embed admins_count.sql
@@ -18,13 +19,15 @@ type AdminsCountStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewAdminsCount(sqldb *sql.DB) (*AdminsCountStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewAdminsCount(sqldb *sql.DB, errs *[]error) *AdminsCountStmt {
 	var err error
 	stmt, err := sqldb.Prepare(AdminsCountRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("AdminsCount create error: %w", err))
+		return nil
 	}
-	return &AdminsCountStmt{stmt: stmt}, nil
+	return &AdminsCountStmt{stmt: stmt}
 }
 
 func (s *AdminsCountStmt) Query(ctx context.Context) ([]AdminsCountModel, error) {

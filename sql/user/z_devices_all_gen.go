@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -21,13 +22,15 @@ type DevicesAllStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewDevicesAll(sqldb *sql.DB) (*DevicesAllStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewDevicesAll(sqldb *sql.DB, errs *[]error) *DevicesAllStmt {
 	var err error
 	stmt, err := sqldb.Prepare(DevicesAllRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("DevicesAll create error: %w", err))
+		return nil
 	}
-	return &DevicesAllStmt{stmt: stmt}, nil
+	return &DevicesAllStmt{stmt: stmt}
 }
 
 func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {

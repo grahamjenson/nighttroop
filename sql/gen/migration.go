@@ -30,9 +30,18 @@ package migrations
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 func Migrate{{.Name}}(ctx context.Context, db *sql.DB) error {
+
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT NOT NULL PRIMARY KEY);")
+	if (err != nil) {
+		return fmt.Errorf("failed to create schema_migrations table: %w", err)
+	}
+	
+
+
 {{- range $index, $name := .MigrationNames}}
 	if err := Migration{{$name}}(ctx, db); err != nil {
 		return err
@@ -43,6 +52,18 @@ func Migrate{{.Name}}(ctx context.Context, db *sql.DB) error {
 
 {{range $index, $name := .MigrationNames}}
 func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
+
+	var versionSeen int;
+	err  := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "{{$name}}").Scan(&versionSeen)
+	if err != nil {
+		return err
+	}
+	if versionSeen > 0 {
+		fmt.Printf("Migration %s already applied, skipping\n", "{{$name}}")
+		return nil
+	}
+	fmt.Printf("Migration %s applying\n", "{{$name}}")
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -50,10 +71,15 @@ func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
 	defer tx.Rollback()
 
 {{- range $stmt := index $.MigrationStatements $index}}
+	fmt.Printf("Running migration: %s\n", ` + "`" + `{{$stmt}}` + "`" + `)
 	if _, err := tx.ExecContext(ctx, ` + "`" + `{{$stmt}}` + "`" + `); err != nil {
 		return err
 	}
 {{- end}}
+
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "{{$name}}"); err != nil {
+		return err
+	}
 
 	return tx.Commit()
 }

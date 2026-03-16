@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -20,13 +21,15 @@ type UsersAllStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersAll(sqldb *sql.DB) (*UsersAllStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersAll(sqldb *sql.DB, errs *[]error) *UsersAllStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersAllRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersAll create error: %w", err))
+		return nil
 	}
-	return &UsersAllStmt{stmt: stmt}, nil
+	return &UsersAllStmt{stmt: stmt}
 }
 
 func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {

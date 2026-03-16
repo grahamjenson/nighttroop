@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -20,13 +21,15 @@ type UsersGetBatchStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersGetBatch(sqldb *sql.DB) (*UsersGetBatchStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersGetBatch(sqldb *sql.DB, errs *[]error) *UsersGetBatchStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersGetBatchRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersGetBatch create error: %w", err))
+		return nil
 	}
-	return &UsersGetBatchStmt{stmt: stmt}, nil
+	return &UsersGetBatchStmt{stmt: stmt}
 }
 
 func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGetBatchModel, error) {

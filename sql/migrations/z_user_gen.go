@@ -4,9 +4,15 @@ package migrations
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 func MigrateUser(ctx context.Context, db *sql.DB) error {
+
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT NOT NULL PRIMARY KEY);")
+	if err != nil {
+		return fmt.Errorf("failed to create schema_migrations table: %w", err)
+	}
 	if err := MigrationUser0001(ctx, db); err != nil {
 		return err
 	}
@@ -14,11 +20,30 @@ func MigrateUser(ctx context.Context, db *sql.DB) error {
 }
 
 func MigrationUser0001(ctx context.Context, db *sql.DB) error {
+
+	var versionSeen int
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "User0001").Scan(&versionSeen)
+	if err != nil {
+		return err
+	}
+	if versionSeen > 0 {
+		fmt.Printf("Migration %s already applied, skipping\n", "User0001")
+		return nil
+	}
+	fmt.Printf("Migration %s applying\n", "User0001")
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE devices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    token TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE devices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
@@ -28,6 +53,16 @@ func MigrationUser0001(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE sgvs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- External ID if synced from another source
+    eid TEXT,
+    -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
+    value INTEGER,
+    timestamp INTEGER,
+    -- CONTRAINTS
+    UNIQUE(eid)
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- External ID if synced from another source
@@ -40,6 +75,15 @@ func MigrationUser0001(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE bolus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
+    value REAL,
+    TYPE TEXT,
+    timestamp INTEGER,
+    -- CONTRAINTS
+    UNIQUE(eid)
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -51,6 +95,11 @@ func MigrationUser0001(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE "carbs" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE "carbs" (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     amount REAL NOT NULL,
@@ -58,6 +107,15 @@ func MigrationUser0001(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE tempbasal (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
+    START INTEGER,
+    duration INTEGER,
+    value REAL,
+    -- CONTRAINTS
+    UNIQUE(eid)
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE tempbasal (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -69,6 +127,16 @@ func MigrationUser0001(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE temptargets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
+    START INTEGER,
+    duration INTEGER,
+    highTarget INTEGER,
+    lowTarget INTEGER,
+    -- CONTRAINTS
+    UNIQUE(eid)
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE temptargets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -81,6 +149,17 @@ func MigrationUser0001(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    TYPE TEXT,
+    details TEXT,
+    START INTEGER,
+    END INTEGER,
+-- VIRTUAL
+timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     TYPE TEXT,
@@ -94,6 +173,152 @@ endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE profile (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
+    storeid TEXT,
+    name TEXT,
+    -- Date stuff
+    START INTEGER,
+    timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
+    duration INTEGER,
+END INTEGER GENERATED ALWAYS AS (START + (duration * 1000)) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')
+) VIRTUAL,
+source TEXT,
+percent INTEGER,
+dia INTEGER,
+units TEXT,
+timezone TEXT,
+-- Carb ratios
+cr0 INTEGER,
+cr1 INTEGER,
+cr2 INTEGER,
+cr3 INTEGER,
+cr4 INTEGER,
+cr5 INTEGER,
+cr6 INTEGER,
+cr7 INTEGER,
+cr8 INTEGER,
+cr9 INTEGER,
+cr10 INTEGER,
+cr11 INTEGER,
+cr12 INTEGER,
+cr13 INTEGER,
+cr14 INTEGER,
+cr15 INTEGER,
+cr16 INTEGER,
+cr17 INTEGER,
+cr18 INTEGER,
+cr19 INTEGER,
+cr20 INTEGER,
+cr21 INTEGER,
+cr22 INTEGER,
+cr23 INTEGER,
+-- Insulin sensitivity factors
+isf0 INTEGER,
+isf1 INTEGER,
+isf2 INTEGER,
+isf3 INTEGER,
+isf4 INTEGER,
+isf5 INTEGER,
+isf6 INTEGER,
+isf7 INTEGER,
+isf8 INTEGER,
+isf9 INTEGER,
+isf10 INTEGER,
+isf11 INTEGER,
+isf12 INTEGER,
+isf13 INTEGER,
+isf14 INTEGER,
+isf15 INTEGER,
+isf16 INTEGER,
+isf17 INTEGER,
+isf18 INTEGER,
+isf19 INTEGER,
+isf20 INTEGER,
+isf21 INTEGER,
+isf22 INTEGER,
+isf23 INTEGER,
+-- basal rates
+basal0 REAL,
+basal1 REAL,
+basal2 REAL,
+basal3 REAL,
+basal4 REAL,
+basal5 REAL,
+basal6 REAL,
+basal7 REAL,
+basal8 REAL,
+basal9 REAL,
+basal10 REAL,
+basal11 REAL,
+basal12 REAL,
+basal13 REAL,
+basal14 REAL,
+basal15 REAL,
+basal16 REAL,
+basal17 REAL,
+basal18 REAL,
+basal19 REAL,
+basal20 REAL,
+basal21 REAL,
+basal22 REAL,
+basal23 REAL,
+-- low target blood glucose levels
+tlow0 INTEGER,
+tlow1 INTEGER,
+tlow2 INTEGER,
+tlow3 INTEGER,
+tlow4 INTEGER,
+tlow5 INTEGER,
+tlow6 INTEGER,
+tlow7 INTEGER,
+tlow8 INTEGER,
+tlow9 INTEGER,
+tlow10 INTEGER,
+tlow11 INTEGER,
+tlow12 INTEGER,
+tlow13 INTEGER,
+tlow14 INTEGER,
+tlow15 INTEGER,
+tlow16 INTEGER,
+tlow17 INTEGER,
+tlow18 INTEGER,
+tlow19 INTEGER,
+tlow20 INTEGER,
+tlow21 INTEGER,
+tlow22 INTEGER,
+tlow23 INTEGER,
+-- high target blood glucose levels
+thigh0 INTEGER,
+thigh1 INTEGER,
+thigh2 INTEGER,
+thigh3 INTEGER,
+thigh4 INTEGER,
+thigh5 INTEGER,
+thigh6 INTEGER,
+thigh7 INTEGER,
+thigh8 INTEGER,
+thigh9 INTEGER,
+thigh10 INTEGER,
+thigh11 INTEGER,
+thigh12 INTEGER,
+thigh13 INTEGER,
+thigh14 INTEGER,
+thigh15 INTEGER,
+thigh16 INTEGER,
+thigh17 INTEGER,
+thigh18 INTEGER,
+thigh19 INTEGER,
+thigh20 INTEGER,
+thigh21 INTEGER,
+thigh22 INTEGER,
+thigh23 INTEGER,
+-- CONTRAINTS
+UNIQUE(eid)
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -242,6 +467,18 @@ UNIQUE(eid)
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE devicestatus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp INTEGER NOT NULL,
+    device TEXT,
+    uploaderBattery INTEGER,
+    pumpBattery INTEGER,
+    pumpStatus TEXT,
+    pumpReservoir REAL,
+    loopStatus TEXT,
+    loopTimestamp INTEGER,
+    created_at INTEGER DEFAULT (unixepoch())
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE devicestatus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp INTEGER NOT NULL,
@@ -254,6 +491,10 @@ UNIQUE(eid)
     loopTimestamp INTEGER,
     created_at INTEGER DEFAULT (unixepoch())
 )`); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "User0001"); err != nil {
 		return err
 	}
 

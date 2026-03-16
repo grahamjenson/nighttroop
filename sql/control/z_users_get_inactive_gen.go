@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -20,13 +21,15 @@ type UsersGetInactiveStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersGetInactive(sqldb *sql.DB) (*UsersGetInactiveStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersGetInactive(sqldb *sql.DB, errs *[]error) *UsersGetInactiveStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersGetInactiveRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersGetInactive create error: %w", err))
+		return nil
 	}
-	return &UsersGetInactiveStmt{stmt: stmt}, nil
+	return &UsersGetInactiveStmt{stmt: stmt}
 }
 
 func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]UsersGetInactiveModel, error) {

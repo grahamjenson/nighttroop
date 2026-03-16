@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"time"
 )
 
@@ -20,13 +21,15 @@ type UsersGetStmt struct {
 	stmt *sql.Stmt
 }
 
-func NewUsersGet(sqldb *sql.DB) (*UsersGetStmt, error) {
+// Non standard error collection, but makes it much cleaner on creation since we call so many of these
+func NewUsersGet(sqldb *sql.DB, errs *[]error) *UsersGetStmt {
 	var err error
 	stmt, err := sqldb.Prepare(UsersGetRaw)
 	if err != nil {
-		return nil, err
+		*errs = append(*errs, fmt.Errorf("UsersGet create error: %w", err))
+		return nil
 	}
-	return &UsersGetStmt{stmt: stmt}, nil
+	return &UsersGetStmt{stmt: stmt}
 }
 
 func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetModel, error) {

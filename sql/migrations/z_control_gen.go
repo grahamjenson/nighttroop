@@ -4,9 +4,15 @@ package migrations
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 func MigrateControl(ctx context.Context, db *sql.DB) error {
+
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT NOT NULL PRIMARY KEY);")
+	if err != nil {
+		return fmt.Errorf("failed to create schema_migrations table: %w", err)
+	}
 	if err := MigrationControl0001(ctx, db); err != nil {
 		return err
 	}
@@ -17,11 +23,39 @@ func MigrateControl(ctx context.Context, db *sql.DB) error {
 }
 
 func MigrationControl0001(ctx context.Context, db *sql.DB) error {
+
+	var versionSeen int
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0001").Scan(&versionSeen)
+	if err != nil {
+		return err
+	}
+	if versionSeen > 0 {
+		fmt.Printf("Migration %s already applied, skipping\n", "Control0001")
+		return nil
+	}
+	fmt.Printf("Migration %s applying\n", "Control0001")
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	fmt.Printf("Running migration: %s\n", `-- unique ID
+-- subdomain is the unique identifier for the user and is used in the URL
+-- pool is the first charater of the subdomain
+-- backup key is provided to the user on creation, used as proof of ownership in case of lost information
+-- only soft delete users
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subdomain TEXT UNIQUE NOT NULL,
+    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL,
+    
+    backup_key_hash TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    deleted_at TIMESTAMP
+)`)
 	if _, err := tx.ExecContext(ctx, `-- unique ID
 -- subdomain is the unique identifier for the user and is used in the URL
 -- pool is the first charater of the subdomain
@@ -40,6 +74,12 @@ CREATE TABLE users (
 )`); err != nil {
 		return err
 	}
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -49,15 +89,42 @@ CREATE TABLE users (
 		return err
 	}
 
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001"); err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
 func MigrationControl0002(ctx context.Context, db *sql.DB) error {
+
+	var versionSeen int
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0002").Scan(&versionSeen)
+	if err != nil {
+		return err
+	}
+	if versionSeen > 0 {
+		fmt.Printf("Migration %s already applied, skipping\n", "Control0002")
+		return nil
+	}
+	fmt.Printf("Migration %s applying\n", "Control0002")
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	fmt.Printf("Running migration: %s\n", `CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    TYPE TEXT,
+    details TEXT,
+    start INTEGER,
+    end INTEGER,
+
+    timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
+    starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
+    endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+)`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     TYPE TEXT,
@@ -69,6 +136,10 @@ func MigrationControl0002(ctx context.Context, db *sql.DB) error {
     starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
     endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
 )`); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0002"); err != nil {
 		return err
 	}
 
