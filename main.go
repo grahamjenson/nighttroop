@@ -43,7 +43,7 @@ func run() error {
 	//
 	// Try and restore database files from S3 (we should )
 	//
-	s3Client, err := utils.NewS3Client(serverConfig.S3URL, serverConfig.S3Bucket, serverConfig.Hostname)
+	s3Client, err := utils.NewS3Client(serverConfig.S3URL, serverConfig.S3Bucket, serverConfig.HostName)
 	if err != nil {
 		return fmt.Errorf("cannot create s3 client: %w", err)
 	}
@@ -73,7 +73,7 @@ func run() error {
 	//
 	// HTTP
 	// Run web server.
-	server := setupHTTP(ctx, controlDB)
+	server := setupHTTP(controlDB)
 
 	// Wait for signal.
 	<-ctx.Done()
@@ -98,7 +98,7 @@ func run() error {
 	return nil
 }
 
-func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {
+func setupHTTP(controlDB *db.ControlDB) *http.Server {
 	fmt.Printf("listening on 8080\n")
 
 	server := &http.Server{Addr: ":8080", Handler: router.GetMainHandler(controlDB)}

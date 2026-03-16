@@ -3,15 +3,11 @@ package backup
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"math"
 
-	"runtime"
 	"sync"
 	"time"
 
-	"golang.org/x/sync/errgroup"
 	"nighttroop.t1d.nz/config"
 	"nighttroop.t1d.nz/db"
 	"nighttroop.t1d.nz/utils"
@@ -73,6 +69,23 @@ func (b *BackupJobs) Start() {
 
 }
 
+// This is the last method called to backup both control and user dbs
+func (b *BackupJobs) BackupToS3() {
+	err := b.backupControl()
+	if err != nil {
+		fmt.Println("Backup error", "error", err)
+	}
+
+	for _, char := range utils.USER_CHAR_SET {
+		err := b.BackupUserBatch(string(char))
+
+		if err != nil {
+			fmt.Println("Error backing up user batch", "error", err, "char", char)
+			continue
+		}
+	}
+}
+
 // //
 // Control Backup
 // //
@@ -90,7 +103,8 @@ func (b *BackupJobs) controlBackupLoop() {
 		}
 
 		// Backup DB to S3
-		if err := b.backupControl(); err != nil && !errors.Is(err, context.Canceled) {
+		err := b.backupControl()
+		if err != nil {
 			fmt.Println("Backup error", "error", err)
 		}
 
@@ -142,30 +156,24 @@ func (b *BackupJobs) userBackupLoop(interval time.Duration) {
 			continue
 		}
 
-		// TODO soft delete users from the DB (for rehydrations later)
-		removedUsers, err := b.controlDB.archive(db.S3Client, b.MaxUserAge)
-		if err != nil {
-			fmt.Println("Error archiving user pool", "error", err)
-		} else {
-			err := b.DeleteAllUsers(removedUsers)
-			if err != nil {
-				fmt.Println("Error deleting users from DB", "error", err)
-			}
-
-		}
-
-		if modified {
-			// If any user was modified we need to backup the pool
-			if err = tp.backup(db.S3Client); err != nil && !errors.Is(err, context.Canceled) {
-				fmt.Println("Backup error", "error", err)
-			}
-		}
 		index = (index + 1) % utils.USER_BATCH_LENGTH
+
+		// Go over all users once per cycle (at the end)
+		if index == 0 {
+			err := b.ArchiveInactiveUsers()
+			if err != nil {
+				fmt.Println("Error archiving", "error", err, "char", char)
+				continue
+			}
+		}
+
 	}
 }
 
 func (b *BackupJobs) BackupUserBatch(char string) error {
 	defer utils.TrackTime(time.Now(), "backup user pool "+char)
+	ctx := context.TODO()
+
 	users, err := b.controlDB.GetUserBatch(char)
 	if err != nil {
 		return fmt.Errorf("cannot get user batch: %w", err)
@@ -177,94 +185,70 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 	paths := []string{}
 
 	for _, user := range users {
+		path, backupPath := utils.UserDBPaths(user.Subdomain)
+
 		// Have to add it anyway because we need all paths
-		paths = append(paths, user.BackupPath)
+		err := utils.SqliteBackup(ctx, user.SQLiteDB, path, backupPath)
+		if err != nil {
+			return fmt.Errorf("cannot backup user db: %w", user.Subdomain, err)
+		}
+
+		paths = append(paths, backupPath)
 	}
 
-	err = s3Client.SyncAllFilesToSingleLZ4(up.S3Path, paths)
+	err = b.S3Client.SyncAllFilesToSingleLZ4(b.S3Client.UserBatchS3Path(char), paths)
 	if err != nil {
-		return fmt.Errorf("cannot sync user pool: %w %v", err, string(up.char))
+		return fmt.Errorf("cannot sync user pool: %w %v", err, string(char))
 	}
 
 	// Copy the control db to the backup location
 	return nil
 }
 
-func (b *BackupJobs) BackupToS3() error {
-	defer utils.TrackTime(time.Now(), "ForceBackupSync")
+// This method looks though all the ages of the DBs and removes user that are older than the max age from the circulation
+// TODO It should then group these user up together, zip them and then upload them to S3 while logging their location for future hydration
+func (b *BackupJobs) ArchiveInactiveUsers() error {
+	defer utils.TrackTime(time.Now(), "ArchiveInactiveUsers")
 
-	b.UpdateModified()
-	// Go through every user and force a WAL dump with `PRAGMA wal_checkpoint(FULL);`
-	// Then check to see if they have changed (not sure if the wal_checkpoint itself causes modified date to change)
-	err := b.backup()
+	ctx := context.TODO()
+	users, err := b.controlDB.GetInactiveUsers(b.MaxUserAge)
 	if err != nil {
-		fmt.Println("Error forcing backup:", err)
-		return fmt.Errorf("cannot force backup: %w", err)
+		return fmt.Errorf("Cant get inactive users %w", err)
+	}
+	if len(users) == 0 {
+		return nil
 	}
 
-	g, _ := errgroup.WithContext(context.Background())
+	removeList := []string{}
 
-	// Limit the number of concurrent goroutines to the number of CPU cores - 1
-	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
-	g.SetLimit(limit)
-	fmt.Println("ForceBackupSync running", len(b.userPools), limit)
-	for _, pool := range b.allPools() {
+	for _, user := range users {
+		path, backupPath := utils.UserDBPaths(user.Subdomain)
 
-		g.Go(func() error {
-			_, err := pool.updateModified()
-			if err != nil {
-				fmt.Println("Error updating user modified", "error", err)
-			}
+		// One more backup
+		err := utils.SqliteBackup(ctx, user.SQLiteDB, path, backupPath)
+		if err != nil {
+			return fmt.Errorf("cannot backup user db: %w", user.Subdomain, err)
+		}
 
-			return pool.backup(b.S3Client)
-		})
+		// Save as backup file and upload to final localtion
+		err = b.S3Client.UploadToS3(ctx, b.S3Client.UserArchiveS3Path(user.Subdomain), backupPath)
+		if err != nil {
+			return fmt.Errorf("cannot upload archived user db: %w", user.Subdomain, err)
+		}
+
+		removeList = append(removeList, user.Subdomain)
 	}
 
-	if err := g.Wait(); err != nil {
-		fmt.Printf("One of the ForceBackupSync tasks failed: %v\n", err)
-		return fmt.Errorf("cannot sync all users: %w", err)
-	} else {
-		fmt.Println("All ForceBackupSync tasks succeeded!")
+	for _, subdomain := range removeList {
+		err := b.controlDB.DeleteUser(subdomain)
+		if err != nil {
+			fmt.Printf("Failed to delete user %s: %v\n", subdomain, err)
+		} else {
+			fmt.Printf("Deleted user %s\n", subdomain)
+		}
 	}
 
 	return nil
-}
-
-// This method looks though all the ages of the DBs and removes user that are older than the max age from the circulation
-// TODO It should then group these user up together, zip them and then upload them to S3 while logging their location for future hydration
-func archiveUsers(s3Client *S3Client, maxUserAge time.Duration) ([]*UserDB, error) {
-	removeList := []*UserDB{}
-
-	user := up.allUsers()
-	if len(user) == 0 {
-		return removeList, nil
-	}
-
-	for _, user := range user {
-		// Check if the user is older than the max age
-		lm := time.Unix(user.lastModifiedAt, 0)
-		if time.Since(lm) > maxUserAge {
-			// Archive the user
-			removeList = append(removeList, user)
-		}
-	}
-	up.rwLock.Lock()
-	defer up.rwLock.Unlock()
-	for _, user := range removeList {
-		fmt.Println("Removing user", user.Subdomain)
-		delete(up.user, user.Subdomain)
-		err := user.Close()
-		if err != nil {
-			fmt.Println("cannot close user db", err)
-		}
-
-		err = s3Client.SyncAllFilesToSingleLZ4(user.ArchivePath(), []string{user.Path})
-		if err != nil {
-			fmt.Println("cannot sync to s3 user archive", err)
-		}
-	}
-
-	return removeList, nil
 }
 
 //

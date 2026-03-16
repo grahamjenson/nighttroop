@@ -41,7 +41,7 @@ type S3Client struct {
 	ForcePathStyle bool
 
 	// Common Config Varaibles Used In Paths
-	Hostname string
+	HostName string
 }
 
 // MaxKeys is the number of keys S3 can operate on per batch.
@@ -58,7 +58,7 @@ func NewS3Client(endpoint, bucket, hostname string) (*S3Client, error) {
 		Bucket:          bucket,
 		Endpoint:        endpoint,
 		Region:          DefaultRegion,
-		Hostname:        hostname,
+		HostName:        hostname,
 	}
 
 	fmt.Println("Parsed S3 URL", c.Bucket, c.Region, c.Endpoint)
@@ -101,11 +101,16 @@ func NewS3Client(endpoint, bucket, hostname string) (*S3Client, error) {
 // PATHS
 // //
 func (c *S3Client) ControlS3Path() string {
-	return fmt.Sprintf("%s/backup/control.sqlite", c.Hostname)
+	return fmt.Sprintf("%s/backup/control.sqlite", c.HostName)
 }
 
 func (c *S3Client) UserBatchS3Path(char string) string {
-	return fmt.Sprintf("%s/backup/user/%s.lz4", c.Hostname, char)
+	return fmt.Sprintf("%s/backup/user/%s.lz4", c.HostName, char)
+}
+
+func (c *S3Client) UserArchiveS3Path(subdomain string) string {
+	char := subdomain[0]
+	return fmt.Sprintf("%s/archive/user/%s/%s.sqlite", c.HostName, string(char), subdomain)
 }
 
 ////
@@ -249,11 +254,11 @@ func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
 }
 
 ////
-//
+// END OF DOWNLOAD METHODS
 ////
 
 // //
-// SLOP TO BE REVIEWED
+// TODO SLOP TO BE REVIEWED
 // //
 func createTarLZ4(files []string, writer io.Writer) error {
 	// Wrap in LZ4 writer

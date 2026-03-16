@@ -27,6 +27,7 @@ type ControlDB struct {
 	UsersGet            *controlsql.UsersGetStmt
 	UsersGetBatch       *controlsql.UsersGetBatchStmt
 	UsersAll            *controlsql.UsersAllStmt
+	UsersGetInactive    *controlsql.UsersGetInactiveStmt
 	UsersUpdateLastSeen *controlsql.UsersUpdateLastSeenStmt
 	UsersDelete         *controlsql.UsersDeleteStmt
 
@@ -76,6 +77,9 @@ func NewControlDB() (*ControlDB, error) {
 
 	controlDB.TESTONLYUsersTruncateAll, err = control.NewUsersTruncateAll(sqldb)
 	errs = append(errs, fmt.Errorf("users truncate all: %w", err))
+
+	controlDB.UsersGetInactive, err = control.NewUsersGetInactive(sqldb)
+	errs = append(errs, fmt.Errorf("users get inactive: %w", err))
 
 	if finalErr := errors.Join(errs...); finalErr != nil {
 		return nil, finalErr
@@ -134,6 +138,28 @@ func (db *ControlDB) CreateUser() (*UserDB, error) {
 	return userDB, nil
 }
 
+func (db *ControlDB) GetInactiveUsers(duration time.Duration) ([]*UserDB, error) {
+	res, err := db.UsersGetInactive.Query(context.TODO(), duration.Minutes())
+	if err != nil {
+		return nil, fmt.Errorf("cannot query inactive users: %w", err)
+	}
+
+	users := []*UserDB{}
+	db.usersRWLock.RLock()
+	defer db.usersRWLock.RUnlock()
+
+	for _, model := range res {
+		user := db.users[model.Subdomain]
+		if user == nil {
+			return users, fmt.Errorf("user not found in memory")
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+
+}
+
 ////
 // Delete USER methods
 ////
@@ -183,6 +209,23 @@ func (db *ControlDB) AllUsers() []*UserDB {
 		users = append(users, user)
 	}
 	return users
+}
+
+func (db *ControlDB) AllInactiveUsers(maxAge time.Duration) ([]*UserDB, error) {
+	db.usersRWLock.RLock()
+	defer db.usersRWLock.RUnlock()
+
+	inactiveUsers, err := db.UsersGetInactive.Query(context.TODO(), maxAge.Minutes())
+	if err != nil {
+		return nil, fmt.Errorf("InactiveUser Error %w", err)
+	}
+	users := []*UserDB{}
+	for _, iu := range inactiveUsers {
+		user := db.users[iu.Subdomain]
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, error) {
