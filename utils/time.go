@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func trackTime(start time.Time, name string) {
+func TrackTime(start time.Time, name string) {
 	elapsed := time.Since(start)
 	fmt.Printf("%s took %v\n", name, elapsed)
 }
