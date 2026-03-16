@@ -48,6 +48,12 @@ type ServerConfig struct {
 	UserCreateRateBurst int
 }
 
+// Priority is
+// 1. Args
+// 2. ENVAR
+// 3. .env.dev
+// 4. .env
+// 5. Default
 func NewServerConfig() (ServerConfig, error) {
 
 	dotenvdev, err := readDotEnvFile(".env.dev")
@@ -153,17 +159,19 @@ func configStringSelect(dotenvdev map[string]string, dotenv map[string]string, e
 		return val
 	}
 
-	if val, ok := dotenv[envVar]; ok {
-		return val
-	}
 	if val, ok := dotenvdev[envVar]; ok {
 		return val
 	}
+
+	if val, ok := dotenv[envVar]; ok {
+		return val
+	}
+
 	return defaultValue
 }
 
 func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue int) int {
-	// First
+
 	if val, ok := os.LookupEnv(envVar); ok {
 		intVal, err := strconv.Atoi(val)
 		if err == nil {
