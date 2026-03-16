@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"os"
@@ -61,20 +62,7 @@ func NewS3Client(endpoint, bucket, hostname string) (*S3Client, error) {
 		HostName:        hostname,
 	}
 
-	fmt.Println("Parsed S3 URL", c.Bucket, c.Region, c.Endpoint)
-	// // Look up region if not specified and no endpoint is used.
-	// // Endpoints are typically used for non-S3 object stores and do not
-	// // necessarily require a region.
-	// region := c.Region
-	// if region == "" {
-	// 	if c.Endpoint == "" {
-	// 		if region, err = c.findBucketRegion(ctx, c.Bucket); err != nil {
-	// 			return fmt.Errorf("cannot lookup bucket region: %w", err)
-	// 		}
-	// 	} else {
-	// 		region = DefaultRegion // default for non-S3 object stores
-	// 	}
-	// }
+	fmt.Println("S3Client Being Created", c.Bucket, c.Region, c.Endpoint)
 
 	c.s3 = s3.NewFromConfig(aws.Config{Region: c.Region}, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(c.Endpoint)
@@ -83,18 +71,51 @@ func NewS3Client(endpoint, bucket, hostname string) (*S3Client, error) {
 	})
 	c.uploader = manager.NewUploader(c.s3)
 
-	fmt.Println("Created New S3 Client", *c)
-
 	// Test s3 client is working wither permissions otherwise fail
-	_, err := c.s3.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-		Bucket:  aws.String(c.Bucket),
-		MaxKeys: aws.Int32(1000),
-	})
+	err := c.TestS3Client()
 	if err != nil {
-		return nil, fmt.Errorf("cannot access s3 bucket: %w", err)
+		return nil, err
 	}
 
 	return c, nil
+}
+
+func (c *S3Client) TestS3Client() error {
+	testKey := c.TestObjectPath()
+	randomGen := NextUserID()
+	testContent := fmt.Sprintf("This istest object %s", randomGen)
+
+	_, err := c.s3.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(testKey),
+		Body:   strings.NewReader(testContent),
+	})
+
+	if err != nil {
+		return fmt.Errorf("s3Client test upload failed: %w", err)
+	}
+
+	output, err := c.s3.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(testKey),
+	})
+
+	if err != nil {
+		return fmt.Errorf("s3Client test download failed: %w", err)
+	}
+
+	defer output.Body.Close()
+	bodyBytes, err := io.ReadAll(output.Body)
+	if err != nil {
+		return fmt.Errorf("s3Client test read failed: %w", err)
+	}
+
+	bodyString := string(bodyBytes)
+	if bodyString != testContent {
+		return fmt.Errorf("s3Client test content mismatch: expected %s, got %s", testContent, bodyString)
+	}
+
+	return nil
 }
 
 // //
@@ -111,6 +132,10 @@ func (c *S3Client) UserBatchS3Path(char string) string {
 func (c *S3Client) UserArchiveS3Path(subdomain string) string {
 	char := subdomain[0]
 	return fmt.Sprintf("%s/archive/user/%s/%s.sqlite", c.HostName, string(char), subdomain)
+}
+
+func (c *S3Client) TestObjectPath() string {
+	return fmt.Sprintf("%s/test.txt", c.HostName)
 }
 
 ////
