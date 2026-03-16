@@ -57,9 +57,9 @@ func run() error {
 	//
 	// Setup Control DB
 	//
-	controlDB, err := setUpDBs(serverConfig)
+	controlDB, err := db.NewControlDB()
 	if err != nil {
-		return fmt.Errorf("cannot set up dbs: %w", err)
+		return fmt.Errorf("cannot create control db: %w", err)
 	}
 
 	//
@@ -96,19 +96,6 @@ func run() error {
 	controlDB.Close()
 	fmt.Println("shut down")
 	return nil
-}
-
-func setUpDBs(serverConfig config.ServerConfig) (*db.ControlDB, error) {
-	controlDB, err := db.NewControlDB()
-	if err != nil {
-		return nil, fmt.Errorf("cannot create control db: %w", err)
-	}
-
-	err = controlDB.FillUsers()
-	if err != nil {
-		return nil, fmt.Errorf("cannot restore users: %w", err)
-	}
-	return controlDB, nil
 }
 
 func setupHTTP(ctx context.Context, controlDB *db.ControlDB) *http.Server {

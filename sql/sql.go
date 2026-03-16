@@ -26,6 +26,7 @@ package sql
 //go:generate go run ./gen/prepared.go  -file control/users_find_unused_users.sql  -out "Subdomain string, LastSeenAt time.Time"
 //go:generate go run ./gen/prepared.go  -file control/users_get.sql  -in "Subdomain string" -out "Subdomain string, LastSeenAt time.Time"
 //go:generate go run ./gen/prepared.go  -file control/users_update_last_seen.sql  -in "Subdomain string, LastSeenAt time.Time" -out ""
+//go:generate go run ./gen/prepared.go  -file control/users_truncate_all.sql  -in "" -out ""
 
 //
 // MIGRATIONS

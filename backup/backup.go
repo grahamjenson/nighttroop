@@ -117,7 +117,7 @@ func (b *BackupJobs) tpBackupLoop(interval time.Duration) {
 		}
 
 		// TODO soft delete users from the DB (for rehydrations later)
-		removedUsers, err := tp.archive(db.S3Client, b.MaxUserAge)
+		removedUsers, err := b.controlDB.archive(db.S3Client, b.MaxUserAge)
 		if err != nil {
 			fmt.Println("Error archiving user pool", "error", err)
 		} else {
@@ -226,6 +226,47 @@ func (up *UserPool) backup(s3Client *S3Client) error {
 	// Copy the control db to the backup location
 	return nil
 }
+
+// This method looks though all the ages of the DBs and removes user that are older than the max age from the circulation
+// TODO It should then group these user up together, zip them and then upload them to S3 while logging their location for future hydration
+func (up *UserPool) archive(s3Client *S3Client, maxUserAge time.Duration) ([]*UserDB, error) {
+	removeList := []*UserDB{}
+
+	user := up.allUsers()
+	if len(user) == 0 {
+		return removeList, nil
+	}
+
+	for _, user := range user {
+		// Check if the user is older than the max age
+		lm := time.Unix(user.lastModifiedAt, 0)
+		if time.Since(lm) > maxUserAge {
+			// Archive the user
+			removeList = append(removeList, user)
+		}
+	}
+	up.rwLock.Lock()
+	defer up.rwLock.Unlock()
+	for _, user := range removeList {
+		fmt.Println("Removing user", user.Subdomain)
+		delete(up.user, user.Subdomain)
+		err := user.Close()
+		if err != nil {
+			fmt.Println("cannot close user db", err)
+		}
+
+		err = s3Client.SyncAllFilesToSingleLZ4(user.ArchivePath(), []string{user.Path})
+		if err != nil {
+			fmt.Println("cannot sync to s3 user archive", err)
+		}
+	}
+
+	return removeList, nil
+}
+
+//
+//
+//
 
 func (b *BackupJobs) Stop() {
 

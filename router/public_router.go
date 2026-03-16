@@ -52,7 +52,8 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 			return
 		}
 
-		userID, apiKey, err := controlDB.CreateUser()
+		userDB, err := controlDB.CreateUser()
+		apiKey := "ahahaha"
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -69,16 +70,16 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 		if accept == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userID, apiKey)))
+			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userDB.Subdomain, apiKey)))
 			return
 		}
 		if accept == "text/htmx" {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			templates.UserCreateTemplate.ExecuteTemplate(w, "htmx_user.html", control.UserHTMXParam{Subdomain: userID, APIKey: apiKey})
+			templates.UserCreateTemplate.ExecuteTemplate(w, "htmx_user.html", control.UserHTMXParam{Subdomain: userDB.Subdomain, APIKey: apiKey})
 			return
 		}
 
-		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userID, apiKey)))
+		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userDB.Subdomain, apiKey)))
 	}
 }
