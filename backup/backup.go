@@ -175,6 +175,7 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 	ctx := context.TODO()
 
 	users, err := b.controlDB.GetUserBatch(char)
+
 	if err != nil {
 		return fmt.Errorf("cannot get user batch: %w", err)
 	}
@@ -182,9 +183,14 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 		return nil
 	}
 
+	fmt.Printf("Backing up user batch %s with %d users\n", char, len(users))
+
 	paths := []string{}
 
 	for _, user := range users {
+		if user.Subdomain == "" {
+			continue
+		}
 		path, backupPath := utils.UserDBPaths(user.Subdomain)
 
 		// Have to add it anyway because we need all paths
@@ -222,6 +228,9 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 	removeList := []string{}
 
 	for _, user := range users {
+		if user.Subdomain == "" {
+			continue
+		}
 		path, backupPath := utils.UserDBPaths(user.Subdomain)
 
 		// One more backup

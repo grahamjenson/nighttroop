@@ -127,28 +127,6 @@ func (db *ControlDB) CreateUser() (*UserDB, error) {
 	return userDB, nil
 }
 
-func (db *ControlDB) GetInactiveUsers(duration time.Duration) ([]*UserDB, error) {
-	res, err := db.UsersGetInactive.Query(context.TODO(), duration.Minutes())
-	if err != nil {
-		return nil, fmt.Errorf("cannot query inactive users: %w", err)
-	}
-
-	users := []*UserDB{}
-	db.usersRWLock.RLock()
-	defer db.usersRWLock.RUnlock()
-
-	for _, model := range res {
-		user := db.users[model.Subdomain]
-		if user == nil {
-			return users, fmt.Errorf("user not found in memory")
-		}
-		users = append(users, user)
-	}
-
-	return users, nil
-
-}
-
 ////
 // Delete USER methods
 ////
@@ -263,6 +241,28 @@ func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 	}
 
 	return users, nil
+}
+
+func (db *ControlDB) GetInactiveUsers(duration time.Duration) ([]*UserDB, error) {
+	res, err := db.UsersGetInactive.Query(context.TODO(), duration.Minutes())
+	if err != nil {
+		return nil, fmt.Errorf("cannot query inactive users: %w", err)
+	}
+
+	users := []*UserDB{}
+	db.usersRWLock.RLock()
+	defer db.usersRWLock.RUnlock()
+
+	for _, model := range res {
+		user := db.users[model.Subdomain]
+		if user == nil {
+			return users, fmt.Errorf("user not found in memory")
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+
 }
 
 ////

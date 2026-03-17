@@ -38,7 +38,8 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool) (*UserDB, 
 
 	// Create a new control db
 	userDB := &UserDB{
-		SQLiteDB: sqldb,
+		SQLiteDB:  sqldb,
+		Subdomain: subdomain,
 	}
 
 	err = migrations.MigrateUser(ctx, sqldb)

@@ -25,6 +25,9 @@ func ControlS3Path(hostname string) string {
 }
 
 func UserDBPaths(subdomain string) (string, string) {
+	if len(subdomain) == 0 {
+		return "", ""
+	}
 	batchPath, batchBackupPath := UserBatchPaths(string(subdomain[0]))
 
 	dbPath := fmt.Sprintf("%s/%s.sqlite", batchPath, subdomain)

@@ -187,6 +187,10 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 
 func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
 	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
+	if len(paths) == 0 {
+		fmt.Printf("No files to sync for %s\n", key)
+		return nil
+	}
 	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
 	ctx := context.TODO()
 
