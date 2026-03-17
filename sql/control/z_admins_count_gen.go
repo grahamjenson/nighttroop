@@ -33,7 +33,7 @@ func NewAdminsCount(sqldb *sql.DB, errs *[]error) *AdminsCountStmt {
 func (s *AdminsCountStmt) Query(ctx context.Context) ([]AdminsCountModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("AdminsCount query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -42,7 +42,7 @@ func (s *AdminsCountStmt) Query(ctx context.Context) ([]AdminsCountModel, error)
 		var model AdminsCountModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.count); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("AdminsCount scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -50,14 +50,18 @@ func (s *AdminsCountStmt) Query(ctx context.Context) ([]AdminsCountModel, error)
 }
 
 func (s *AdminsCountStmt) Exec(ctx context.Context) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx)
+	req, err := s.stmt.ExecContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("AdminsCount exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *AdminsCountStmt) QueryRow(ctx context.Context) (AdminsCountModel, error) {
 	var model AdminsCountModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.count)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("AdminsCount query row error: %w", err)
 	}
 	return model, nil
 }

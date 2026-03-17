@@ -35,7 +35,7 @@ func NewUsersGetInactive(sqldb *sql.DB, errs *[]error) *UsersGetInactiveStmt {
 func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]UsersGetInactiveModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, minutes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UsersGetInactive query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -44,7 +44,7 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]Us
 		var model UsersGetInactiveModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("UsersGetInactive scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -52,14 +52,18 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]Us
 }
 
 func (s *UsersGetInactiveStmt) Exec(ctx context.Context, minutes float64) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, minutes)
+	req, err := s.stmt.ExecContext(ctx, minutes)
+	if err != nil {
+		return nil, fmt.Errorf("UsersGetInactive exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, minutes float64) (UsersGetInactiveModel, error) {
 	var model UsersGetInactiveModel
 	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain, &model.LastSeenAt)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("UsersGetInactive query row error: %w", err)
 	}
 	return model, nil
 }

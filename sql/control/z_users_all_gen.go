@@ -14,7 +14,9 @@ var UsersAllRaw string
 
 type UsersAllModel struct {
 	Subdomain  string
-	LastSeenAt time.Time
+	CreatedAt  *time.Time
+	LastSeenAt *time.Time
+	DeletedAt  *time.Time
 }
 
 type UsersAllStmt struct {
@@ -35,7 +37,7 @@ func NewUsersAll(sqldb *sql.DB, errs *[]error) *UsersAllStmt {
 func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UsersAll query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -43,8 +45,8 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	for rows.Next() {
 		var model UsersAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
-			return nil, err
+		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt); err != nil {
+			return nil, fmt.Errorf("UsersAll scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -52,14 +54,18 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 }
 
 func (s *UsersAllStmt) Exec(ctx context.Context) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx)
+	req, err := s.stmt.ExecContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("UsersAll exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
 	var model UsersAllModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("UsersAll query row error: %w", err)
 	}
 	return model, nil
 }

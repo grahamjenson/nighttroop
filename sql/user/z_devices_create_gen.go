@@ -34,7 +34,7 @@ func NewDevicesCreate(sqldb *sql.DB, errs *[]error) *DevicesCreateStmt {
 func (s *DevicesCreateStmt) Query(ctx context.Context, name string, token string) ([]DevicesCreateModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, name, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DevicesCreate query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -43,7 +43,7 @@ func (s *DevicesCreateStmt) Query(ctx context.Context, name string, token string
 		var model DevicesCreateModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.name, &model.token); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("DevicesCreate scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -51,14 +51,18 @@ func (s *DevicesCreateStmt) Query(ctx context.Context, name string, token string
 }
 
 func (s *DevicesCreateStmt) Exec(ctx context.Context, name string, token string) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, name, token)
+	req, err := s.stmt.ExecContext(ctx, name, token)
+	if err != nil {
+		return nil, fmt.Errorf("DevicesCreate exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *DevicesCreateStmt) QueryRow(ctx context.Context, name string, token string) (DevicesCreateModel, error) {
 	var model DevicesCreateModel
 	err := s.stmt.QueryRowContext(ctx, name, token).Scan(&model.name, &model.token)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("DevicesCreate query row error: %w", err)
 	}
 	return model, nil
 }

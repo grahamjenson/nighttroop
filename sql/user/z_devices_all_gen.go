@@ -36,7 +36,7 @@ func NewDevicesAll(sqldb *sql.DB, errs *[]error) *DevicesAllStmt {
 func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DevicesAll query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -45,7 +45,7 @@ func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 		var model DevicesAllModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.name, &model.token, &model.LastSeenAt); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("DevicesAll scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -53,14 +53,18 @@ func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 }
 
 func (s *DevicesAllStmt) Exec(ctx context.Context) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx)
+	req, err := s.stmt.ExecContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("DevicesAll exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *DevicesAllStmt) QueryRow(ctx context.Context) (DevicesAllModel, error) {
 	var model DevicesAllModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.name, &model.token, &model.LastSeenAt)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("DevicesAll query row error: %w", err)
 	}
 	return model, nil
 }

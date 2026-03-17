@@ -34,7 +34,7 @@ func NewAdminsCreate(sqldb *sql.DB, errs *[]error) *AdminsCreateStmt {
 func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password string) ([]AdminsCreateModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, username, password)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("AdminsCreate query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -43,7 +43,7 @@ func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password 
 		var model AdminsCreateModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.username, &model.password); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("AdminsCreate scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -51,14 +51,18 @@ func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password 
 }
 
 func (s *AdminsCreateStmt) Exec(ctx context.Context, username string, password string) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, username, password)
+	req, err := s.stmt.ExecContext(ctx, username, password)
+	if err != nil {
+		return nil, fmt.Errorf("AdminsCreate exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *AdminsCreateStmt) QueryRow(ctx context.Context, username string, password string) (AdminsCreateModel, error) {
 	var model AdminsCreateModel
 	err := s.stmt.QueryRowContext(ctx, username, password).Scan(&model.username, &model.password)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("AdminsCreate query row error: %w", err)
 	}
 	return model, nil
 }

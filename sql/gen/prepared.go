@@ -64,7 +64,7 @@ func New{{.Name}}(sqldb *sql.DB, errs *[]error) *{{.Name}}Stmt {
 func (s *{{.Name}}Stmt) Query(ctx context.Context {{if .InputParams}}, {{.Inputs}} {{end}}) ([]{{.Name}}Model, error) {
 	rows, err := s.stmt.QueryContext(ctx {{if .InputParams}}, {{.InputParams}}{{end}})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("{{.Name}} query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -73,7 +73,7 @@ func (s *{{.Name}}Stmt) Query(ctx context.Context {{if .InputParams}}, {{.Inputs
 		var model {{.Name}}Model
 		// Scanning into exported fields
 		if err := rows.Scan({{.OutputModel}}); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("{{.Name}} scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -81,14 +81,18 @@ func (s *{{.Name}}Stmt) Query(ctx context.Context {{if .InputParams}}, {{.Inputs
 }
 
 func (s *{{.Name}}Stmt) Exec(ctx context.Context {{if .InputParams}}, {{.Inputs}}{{end}}) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, {{.InputParams}})
+	req, err := s.stmt.ExecContext(ctx, {{.InputParams}})
+	if err != nil {
+		return nil, fmt.Errorf("{{.Name}} exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *{{.Name}}Stmt) QueryRow(ctx context.Context {{if .InputParams}}, {{.Inputs}}{{end}}) ({{.Name}}Model, error) {
 	var model {{.Name}}Model
 	err := s.stmt.QueryRowContext(ctx{{if .InputParams}}, {{.InputParams}}{{end}}).Scan({{.OutputModel}})
 	if (err != nil) {
-		return model, err
+		return model, fmt.Errorf("{{.Name}} query row error: %w", err)
 	} 
 	return model, nil
 }

@@ -35,7 +35,7 @@ func NewUsersGetBatch(sqldb *sql.DB, errs *[]error) *UsersGetBatchStmt {
 func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGetBatchModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, batch)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UsersGetBatch query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -44,7 +44,7 @@ func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGet
 		var model UsersGetBatchModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("UsersGetBatch scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -52,14 +52,18 @@ func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGet
 }
 
 func (s *UsersGetBatchStmt) Exec(ctx context.Context, batch string) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, batch)
+	req, err := s.stmt.ExecContext(ctx, batch)
+	if err != nil {
+		return nil, fmt.Errorf("UsersGetBatch exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *UsersGetBatchStmt) QueryRow(ctx context.Context, batch string) (UsersGetBatchModel, error) {
 	var model UsersGetBatchModel
 	err := s.stmt.QueryRowContext(ctx, batch).Scan(&model.Subdomain, &model.LastSeenAt)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("UsersGetBatch query row error: %w", err)
 	}
 	return model, nil
 }

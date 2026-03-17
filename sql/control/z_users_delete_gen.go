@@ -32,7 +32,7 @@ func NewUsersDelete(sqldb *sql.DB, errs *[]error) *UsersDeleteStmt {
 func (s *UsersDeleteStmt) Query(ctx context.Context, Subdomain string) ([]UsersDeleteModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, Subdomain)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UsersDelete query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -41,7 +41,7 @@ func (s *UsersDeleteStmt) Query(ctx context.Context, Subdomain string) ([]UsersD
 		var model UsersDeleteModel
 		// Scanning into exported fields
 		if err := rows.Scan(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("UsersDelete scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -49,14 +49,18 @@ func (s *UsersDeleteStmt) Query(ctx context.Context, Subdomain string) ([]UsersD
 }
 
 func (s *UsersDeleteStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, Subdomain)
+	req, err := s.stmt.ExecContext(ctx, Subdomain)
+	if err != nil {
+		return nil, fmt.Errorf("UsersDelete exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *UsersDeleteStmt) QueryRow(ctx context.Context, Subdomain string) (UsersDeleteModel, error) {
 	var model UsersDeleteModel
 	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan()
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("UsersDelete query row error: %w", err)
 	}
 	return model, nil
 }

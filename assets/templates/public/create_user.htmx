@@ -15,9 +15,9 @@
 
     <div class="mb-3">
         <textarea id="resultBox" class="form-control" wrap="off" rows="6" readonly>
-URL: {{url}}
-Token: {{token}}
-Backup Key: {{backup_key}}
+URL: {{.url}}
+Token: {{.token}}
+Backup Key: {{.backup_key}}
                         </textarea>
     </div>
 
@@ -30,7 +30,7 @@ Backup Key: {{backup_key}}
     <div class="border-bottom my-3"></div>
 
     <div class="text-center">
-        <a href="{{url}}" target="_blank" class="btn btn-primary btn-lg fw-bold px-4 shadow-sm">
+        <a href="{{.url}}" target="_blank" class="btn btn-primary btn-lg fw-bold px-4 shadow-sm">
             Visit Your Generated Site →
         </a>
     </div>

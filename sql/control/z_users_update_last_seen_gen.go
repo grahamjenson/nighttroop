@@ -33,7 +33,7 @@ func NewUsersUpdateLastSeen(sqldb *sql.DB, errs *[]error) *UsersUpdateLastSeenSt
 func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, LastSeenAt time.Time) ([]UsersUpdateLastSeenModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, Subdomain, LastSeenAt)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UsersUpdateLastSeen query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -42,7 +42,7 @@ func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, L
 		var model UsersUpdateLastSeenModel
 		// Scanning into exported fields
 		if err := rows.Scan(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("UsersUpdateLastSeen scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -50,14 +50,18 @@ func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, L
 }
 
 func (s *UsersUpdateLastSeenStmt) Exec(ctx context.Context, Subdomain string, LastSeenAt time.Time) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, Subdomain, LastSeenAt)
+	req, err := s.stmt.ExecContext(ctx, Subdomain, LastSeenAt)
+	if err != nil {
+		return nil, fmt.Errorf("UsersUpdateLastSeen exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *UsersUpdateLastSeenStmt) QueryRow(ctx context.Context, Subdomain string, LastSeenAt time.Time) (UsersUpdateLastSeenModel, error) {
 	var model UsersUpdateLastSeenModel
 	err := s.stmt.QueryRowContext(ctx, Subdomain, LastSeenAt).Scan()
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("UsersUpdateLastSeen query row error: %w", err)
 	}
 	return model, nil
 }

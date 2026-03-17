@@ -36,7 +36,7 @@ func NewAdminsGet(sqldb *sql.DB, errs *[]error) *AdminsGetStmt {
 func (s *AdminsGetStmt) Query(ctx context.Context, username string) ([]AdminsGetModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, username)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("AdminsGet query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -45,7 +45,7 @@ func (s *AdminsGetStmt) Query(ctx context.Context, username string) ([]AdminsGet
 		var model AdminsGetModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.username, &model.password, &model.created_at); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("AdminsGet scan error: %w", err)
 		}
 		results = append(results, model)
 	}
@@ -53,14 +53,18 @@ func (s *AdminsGetStmt) Query(ctx context.Context, username string) ([]AdminsGet
 }
 
 func (s *AdminsGetStmt) Exec(ctx context.Context, username string) (sql.Result, error) {
-	return s.stmt.ExecContext(ctx, username)
+	req, err := s.stmt.ExecContext(ctx, username)
+	if err != nil {
+		return nil, fmt.Errorf("AdminsGet exec error: %w", err)
+	}
+	return req, nil
 }
 
 func (s *AdminsGetStmt) QueryRow(ctx context.Context, username string) (AdminsGetModel, error) {
 	var model AdminsGetModel
 	err := s.stmt.QueryRowContext(ctx, username).Scan(&model.username, &model.password, &model.created_at)
 	if err != nil {
-		return model, err
+		return model, fmt.Errorf("AdminsGet query row error: %w", err)
 	}
 	return model, nil
 }
