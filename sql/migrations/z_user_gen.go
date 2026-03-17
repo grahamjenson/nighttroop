@@ -13,24 +13,24 @@ func MigrateUser(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
 	}
-	if err := MigrationUser0001(ctx, db); err != nil {
+	if err := MigrationUser0001Sql(ctx, db); err != nil {
 		return err
 	}
 	return nil
 }
 
-func MigrationUser0001(ctx context.Context, db *sql.DB) error {
+func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 
 	var versionSeen int
-	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "User0001").Scan(&versionSeen)
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "User0001Sql").Scan(&versionSeen)
 	if err != nil {
 		return err
 	}
 	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "User0001")
+		fmt.Printf("Migration %s already applied, skipping\n", "User0001Sql")
 		return nil
 	}
-	fmt.Printf("Migration %s applying\n", "User0001")
+	fmt.Printf("Migration %s applying\n", "User0001Sql")
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -494,7 +494,7 @@ UNIQUE(eid)
 		return err
 	}
 
-	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "User0001"); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "User0001Sql"); err != nil {
 		return err
 	}
 

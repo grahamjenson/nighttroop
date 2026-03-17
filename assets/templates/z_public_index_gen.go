@@ -9,10 +9,10 @@ import (
 )
 
 //go:embed base.html
-var PublicIndexBase string
+var PublicIndexBaseHtml string
 
 //go:embed public/index.html
-var PublicIndexIndex string
+var PublicIndexIndexHtml string
 
 var PublicIndexTemplate *template.Template
 
@@ -21,7 +21,7 @@ func getPublicIndexTemplate() (*template.Template, error) {
 		return PublicIndexTemplate, nil
 	}
 
-	PublicIndexTemplate, err := template.New("PublicIndex").Parse(PublicIndexBase + PublicIndexIndex)
+	PublicIndexTemplate, err := template.New("PublicIndex").Parse(PublicIndexBaseHtml + PublicIndexIndexHtml)
 	if err != nil {
 		return nil, err
 	}

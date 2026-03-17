@@ -10,42 +10,52 @@ import (
 )
 
 //go:embed favicon.ico
-var StaticFavicon []byte
+var StaticFaviconIco []byte
 
 //go:embed htmx.js
-var StaticHtmx []byte
+var StaticHtmxJs []byte
+
+//go:embed bootstrap.js
+var StaticBootstrapJs []byte
 
 //go:embed bootstrap.css
-var StaticBootstrap []byte
+var StaticBootstrapCss []byte
 
 //go:embed logo.png
-var StaticLogo []byte
+var StaticLogoPng []byte
 
 func AddSatticRoutes(r chi.Router) error {
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/x-icon")
-		_, err := w.Write([]byte(StaticFavicon))
+		_, err := w.Write([]byte(StaticFaviconIco))
 		if err != nil {
 			fmt.Printf("Failed to write response for favicon.ico: %v\n", err)
 		}
 	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, err := w.Write([]byte(StaticHtmx))
+		_, err := w.Write([]byte(StaticHtmxJs))
 		if err != nil {
 			fmt.Printf("Failed to write response for htmx.js: %v\n", err)
 		}
 	})
+	r.Get("/bootstrap.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+		_, err := w.Write([]byte(StaticBootstrapJs))
+		if err != nil {
+			fmt.Printf("Failed to write response for bootstrap.js: %v\n", err)
+		}
+	})
 	r.Get("/bootstrap.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
-		_, err := w.Write([]byte(StaticBootstrap))
+		_, err := w.Write([]byte(StaticBootstrapCss))
 		if err != nil {
 			fmt.Printf("Failed to write response for bootstrap.css: %v\n", err)
 		}
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
-		_, err := w.Write([]byte(StaticLogo))
+		_, err := w.Write([]byte(StaticLogoPng))
 		if err != nil {
 			fmt.Printf("Failed to write response for logo.png: %v\n", err)
 		}

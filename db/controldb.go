@@ -102,8 +102,12 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 
 func (db *ControlDB) CreateUser() (*UserDB, error) {
 	subdomain := utils.NextUserID()
+	backupKeyHash, err := utils.GenerateSecureAPIKey(12)
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
+	}
 
-	_, err := db.UsersCreate.Exec(context.TODO(), subdomain)
+	_, err = db.UsersCreate.Exec(context.TODO(), subdomain, backupKeyHash)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create user: %w", err)
 	}

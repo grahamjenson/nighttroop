@@ -9,7 +9,7 @@ import (
 )
 
 //go:embed public/create_user.htmx
-var PublicCreateUserCreateUser string
+var PublicCreateUserCreateUserHtmx string
 
 var PublicCreateUserTemplate *template.Template
 
@@ -18,7 +18,7 @@ func getPublicCreateUserTemplate() (*template.Template, error) {
 		return PublicCreateUserTemplate, nil
 	}
 
-	PublicCreateUserTemplate, err := template.New("PublicCreateUser").Parse(PublicCreateUserCreateUser)
+	PublicCreateUserTemplate, err := template.New("PublicCreateUser").Parse(PublicCreateUserCreateUserHtmx)
 	if err != nil {
 		return nil, err
 	}

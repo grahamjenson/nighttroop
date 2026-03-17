@@ -33,14 +33,6 @@ func (i *FlagFileList) GetFileVars() []FlagStringFileName {
 	return names
 }
 
-func (i *FlagFileList) JoinVarsWithPlus() string {
-	var quoted []string
-	for _, file := range i.GetFileVars() {
-		quoted = append(quoted, file.VarName)
-	}
-	return strings.Join(quoted, " + ")
-}
-
 func SnakeToCapitalCamelCase(s string) string {
 	words := strings.Split(s, "_")
 	for i := range words {
@@ -58,15 +50,13 @@ func SnakeToCapitalCamelCase(s string) string {
 	return strings.Join(words, "")
 }
 
+// from gds.sql to gds_sql
 func FileToName(path string) string {
 	// 1. Get "gds.sql" from "asd/gds.sql"
 	base := filepath.Base(path)
 
-	// 2. Get ".sql" from "gds.sql"
-	ext := filepath.Ext(base)
-
-	// 3. Remove ".sql" from "gds.sql" to get "gds"
-	name := strings.TrimSuffix(base, ext)
+	// 2. Replace all dots with underscores in "gds.sql" to get "gds_sql"
+	name := strings.ReplaceAll(base, ".", "_")
 
 	return name
 }

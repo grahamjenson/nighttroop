@@ -10,4 +10,4 @@ import (
 
 // Static Assets
 
-//go:generate go run ./gen/static.go -file favicon.ico -file htmx.js -file bootstrap.css -file logo.png
+//go:generate go run ./gen/static.go -file favicon.ico -file htmx.js -file bootstrap.js -file bootstrap.css -file logo.png

@@ -13,27 +13,27 @@ func MigrateControl(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
 	}
-	if err := MigrationControl0001(ctx, db); err != nil {
+	if err := MigrationControl0001Sql(ctx, db); err != nil {
 		return err
 	}
-	if err := MigrationControl0002(ctx, db); err != nil {
+	if err := MigrationControl0002Sql(ctx, db); err != nil {
 		return err
 	}
 	return nil
 }
 
-func MigrationControl0001(ctx context.Context, db *sql.DB) error {
+func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 
 	var versionSeen int
-	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0001").Scan(&versionSeen)
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0001Sql").Scan(&versionSeen)
 	if err != nil {
 		return err
 	}
 	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "Control0001")
+		fmt.Printf("Migration %s already applied, skipping\n", "Control0001Sql")
 		return nil
 	}
-	fmt.Printf("Migration %s applying\n", "Control0001")
+	fmt.Printf("Migration %s applying\n", "Control0001Sql")
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -89,25 +89,25 @@ CREATE TABLE users (
 		return err
 	}
 
-	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001"); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001Sql"); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func MigrationControl0002(ctx context.Context, db *sql.DB) error {
+func MigrationControl0002Sql(ctx context.Context, db *sql.DB) error {
 
 	var versionSeen int
-	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0002").Scan(&versionSeen)
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0002Sql").Scan(&versionSeen)
 	if err != nil {
 		return err
 	}
 	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "Control0002")
+		fmt.Printf("Migration %s already applied, skipping\n", "Control0002Sql")
 		return nil
 	}
-	fmt.Printf("Migration %s applying\n", "Control0002")
+	fmt.Printf("Migration %s applying\n", "Control0002Sql")
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -139,7 +139,7 @@ func MigrationControl0002(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 
-	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0002"); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0002Sql"); err != nil {
 		return err
 	}
 

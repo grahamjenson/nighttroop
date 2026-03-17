@@ -21,7 +21,7 @@ package sql
 // users
 //go:generate go run ./gen/prepared.go  -file control/users_all.sql  -out "Subdomain string, LastSeenAt time.Time"
 //go:generate go run ./gen/prepared.go  -file control/users_get_batch.sql  -in "batch string" -out "Subdomain string, LastSeenAt time.Time"
-//go:generate go run ./gen/prepared.go  -file control/users_create.sql  -in "Subdomain string" -out "Subdomain string, LastSeenAt time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_create.sql  -in "Subdomain string, BackupKeyHash string" -out "Subdomain string, LastSeenAt time.Time"
 //go:generate go run ./gen/prepared.go  -file control/users_delete.sql  -in "Subdomain string" -out ""
 //go:generate go run ./gen/prepared.go  -file control/users_get_inactive.sql -in "minutes float64"  -out "Subdomain string, LastSeenAt time.Time"
 //go:generate go run ./gen/prepared.go  -file control/users_get.sql  -in "Subdomain string" -out "Subdomain string, LastSeenAt time.Time"
