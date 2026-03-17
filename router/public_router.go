@@ -74,13 +74,20 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userDB.Subdomain, apiKey)))
 			return
 		}
+
 		if accept == "text/htmx" {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			templates.PublicCreateUser(w, "url", "token", "backup_key")
+			err := templates.PublicCreateUser(w, "url", "token", "backup_key")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 
-		w.Write([]byte(fmt.Sprintf("User created: %s, apiKey %s \n", userDB.Subdomain, apiKey)))
+		err = templates.PublicCreateUser(w, "url", "token", "backup_key")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
