@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -16,7 +17,7 @@ import (
 type Config struct {
 	Name               string
 	Package            string
-	SQLFile            string
+	Content            string
 	Inputs             string
 	Outputs            []string
 	InputParams        string
@@ -37,8 +38,7 @@ import (
 {{- end}}
 )
 
-//go:embed {{.SQLFile}}
-var {{.Name}}Raw string
+var {{.Name}}Raw string = ` + "`\n" + `{{$.Content}}` + "\n`" + `
 
 type {{.Name}}Model struct {
 {{- range .Outputs}}
@@ -102,6 +102,7 @@ func main() {
 	file := flag.String("file", "", "SQL file to embed")
 	inputs := flag.String("in", "", "Comma-separated inputs (e.g. 'ID int,Name string')")
 	outputs := flag.String("out", "", "Comma-separated outputs")
+
 	flag.Parse()
 
 	if *file == "" {
@@ -111,6 +112,53 @@ func main() {
 
 	if fileInfo, err := os.Stat(*file); err != nil || fileInfo.IsDir() {
 		panic("Invalid file: " + *file)
+	}
+
+	content, err := os.ReadFile(*file)
+	if err != nil {
+		panic("Failed to read file: " + err.Error())
+	}
+
+	inputList := []string{}
+	for _, input := range strings.Split(*inputs, ",") {
+		input = strings.TrimSpace(input)
+		if input != "" {
+			inputList = append(inputList, input)
+		}
+	}
+
+	outputList := []string{}
+	for _, output := range strings.Split(*outputs, ",") {
+		output = strings.TrimSpace(output)
+		if output != "" {
+			outputList = append(outputList, output)
+		}
+	}
+
+	inputsCount := len(inputList)
+	outputsCount := len(outputList)
+
+	////
+	// Check SQL against parser for correctness
+	////
+	sqlstats := ParseSQL(string(content)) // Just to validate the SQL and panic if it's not valid
+	switch sqlstats.Type {
+	case "SELECT":
+		if sqlstats.Parameters != inputsCount {
+			panic(fmt.Sprintf("%s : Expected %d input parameters based on SQL, but got %d", *file, sqlstats.Parameters, inputsCount))
+		}
+		if sqlstats.Columns != outputsCount {
+			panic(fmt.Sprintf("%s : Expected %d output columns based on SQL, but got %d", *file, sqlstats.Columns, outputsCount))
+		}
+	case "INSERT", "DELETE", "UPDATE":
+		if sqlstats.Parameters != inputsCount {
+			panic(fmt.Sprintf("%s : Expected %d input parameters based on SQL, but got %d", *file, sqlstats.Parameters, inputsCount))
+		}
+		if outputsCount != 0 {
+			panic(fmt.Sprintf("%s : Expected 0 output columns for %s statement, but got %d", *file, sqlstats.Type, outputsCount))
+		}
+	default:
+		panic("Unsupported SQL statement type: " + sqlstats.Type)
 	}
 
 	additionalPackages := []string{}
@@ -124,40 +172,34 @@ func main() {
 	name := parts[len(parts)-1]
 	outfilename := strings.TrimSuffix(name, ".sql")
 	name = utils.SnakeToCapitalCamelCase(outfilename)
-	sqlfile := parts[len(parts)-1]
 
 	pkg := parts[0]
 	// inputParams is a string params.{name}, params.{name}, ...
 	inputParms := []string{}
-	for _, param := range strings.Split(*inputs, ",") {
-		param = strings.TrimSpace(param)
-		if param != "" {
-			parts := strings.Fields(param)
-			if len(parts) == 2 {
-				inputParms = append(inputParms, parts[0])
-			} else {
-				panic("Invalid input parameter format: " + param)
-			}
+	for _, param := range inputList {
+		parts := strings.Fields(param)
+		if len(parts) == 2 {
+			inputParms = append(inputParms, parts[0])
+		} else {
+			panic("Invalid input parameter format: " + param)
 		}
+
 	}
 
 	outputModel := []string{}
-	for _, param := range strings.Split(*outputs, ",") {
-		param = strings.TrimSpace(param)
-		if param != "" {
-			parts := strings.Fields(param)
-			if len(parts) == 2 {
-				outputModel = append(outputModel, "&model."+parts[0])
-			}
+	for _, param := range outputList {
+		parts := strings.Fields(param)
+		if len(parts) == 2 {
+			outputModel = append(outputModel, "&model."+parts[0])
 		}
 	}
 
 	cfg := Config{
 		Name:               name,
 		Package:            pkg,
-		SQLFile:            sqlfile,
+		Content:            string(content),
 		Inputs:             *inputs,
-		Outputs:            strings.Split(*outputs, ","),
+		Outputs:            outputList,
 		InputParams:        strings.Join(inputParms, ", "),
 		OutputModel:        strings.Join(outputModel, ", "),
 		AdditionalPackages: additionalPackages,
@@ -168,11 +210,98 @@ func main() {
 	f, _ := os.Create(outputPath)
 	defer f.Close()
 
-	err := t.Execute(f, cfg)
+	err = t.Execute(f, cfg)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to execute template: %v", err))
 	}
 
 	// Format the generated code
 	exec.Command("go", "fmt", outputPath).Run()
+}
+
+// //
+// Cheap SQL parser slop
+// //
+
+type SQLStats struct {
+	Type       string // SELECT, INSERT, or DELETE
+	Columns    int    // Number of columns affected/selected
+	Parameters int    // Number of '?' placeholders
+}
+
+func ParseSQL(sql string) SQLStats {
+	// 1. Filter out comment lines
+	var cleanLines []string
+	for _, line := range strings.Split(sql, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+			cleanLines = append(cleanLines, line)
+		}
+	}
+
+	// Reconstruct the SQL without comments
+	sql = strings.Join(cleanLines, "\n")
+	sql = strings.TrimSpace(sql)
+
+	if sql == "" {
+		return SQLStats{}
+	}
+
+	stats := SQLStats{
+		Parameters: strings.Count(sql, "?"),
+	}
+
+	// 2. Identify Statement Type (using the cleaned SQL)
+	fields := strings.Fields(sql)
+	if len(fields) == 0 {
+		return stats
+	}
+
+	firstWord := strings.ToUpper(fields[0])
+	stats.Type = firstWord
+
+	switch firstWord {
+	case "SELECT":
+		stats.Columns = countSelectColumns(sql)
+	case "INSERT":
+		stats.Columns = 0
+	case "DELETE":
+		stats.Columns = 0
+	case "UPDATE":
+		stats.Columns = 0
+	default:
+		stats.Columns = 0
+	}
+
+	return stats
+}
+
+// Counts columns in: SELECT col1, col2, func(a, b) FROM ...
+func countSelectColumns(sql string) int {
+	re := regexp.MustCompile(`(?i)SELECT\s+(?s)(.*?)\s+FROM`)
+	match := re.FindStringSubmatch(sql)
+	if len(match) < 2 {
+		return 0
+	}
+	return countCommas(match[1])
+}
+
+// Helper to count top-level commas (ignoring those inside parentheses)
+func countCommas(clause string) int {
+	clause = strings.TrimSpace(clause)
+	if clause == "" || clause == "*" {
+		return -1 // -1 represents "All" or "Unknown"
+	}
+
+	count, depth := 1, 0
+	for _, char := range clause {
+		if char == '(' {
+			depth++
+		} else if char == ')' {
+			depth--
+		} else if char == ',' && depth == 0 {
+			count++
+		}
+	}
+	return count
 }

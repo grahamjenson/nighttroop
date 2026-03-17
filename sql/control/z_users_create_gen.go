@@ -6,15 +6,14 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
-	"time"
 )
 
-//go:embed users_create.sql
-var UsersCreateRaw string
+var UsersCreateRaw string = `
+INSERT INTO users (subdomain, backup_key_hash)
+VALUES (?, ?);
+`
 
 type UsersCreateModel struct {
-	Subdomain  string
-	LastSeenAt time.Time
 }
 
 type UsersCreateStmt struct {
@@ -43,7 +42,7 @@ func (s *UsersCreateStmt) Query(ctx context.Context, Subdomain string, BackupKey
 	for rows.Next() {
 		var model UsersCreateModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("UsersCreate scan error: %w", err)
 		}
 		results = append(results, model)
@@ -61,7 +60,7 @@ func (s *UsersCreateStmt) Exec(ctx context.Context, Subdomain string, BackupKeyH
 
 func (s *UsersCreateStmt) QueryRow(ctx context.Context, Subdomain string, BackupKeyHash string) (UsersCreateModel, error) {
 	var model UsersCreateModel
-	err := s.stmt.QueryRowContext(ctx, Subdomain, BackupKeyHash).Scan(&model.Subdomain, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx, Subdomain, BackupKeyHash).Scan()
 	if err != nil {
 		return model, fmt.Errorf("UsersCreate query row error: %w", err)
 	}

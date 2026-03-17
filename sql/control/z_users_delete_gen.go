@@ -8,8 +8,12 @@ import (
 	"fmt"
 )
 
-//go:embed users_delete.sql
-var UsersDeleteRaw string
+var UsersDeleteRaw string = `
+-- Passed a list of names to delete we update the table deleted at
+UPDATE users
+SET deleted_at = CURRENT_TIMESTAMP
+WHERE subdomain = ?;
+`
 
 type UsersDeleteModel struct {
 }

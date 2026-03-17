@@ -9,12 +9,13 @@ import (
 	"time"
 )
 
-//go:embed users_get_batch.sql
-var UsersGetBatchRaw string
+var UsersGetBatchRaw string = `
+SELECT subdomain, last_seen_at FROM users WHERE batch = ? AND deleted_at IS NULL ORDER BY subdomain DESC
+`
 
 type UsersGetBatchModel struct {
 	Subdomain  string
-	LastSeenAt time.Time
+	LastSeenAt *time.Time
 }
 
 type UsersGetBatchStmt struct {

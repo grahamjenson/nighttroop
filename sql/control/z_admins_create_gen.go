@@ -8,12 +8,12 @@ import (
 	"fmt"
 )
 
-//go:embed admins_create.sql
-var AdminsCreateRaw string
+var AdminsCreateRaw string = `
+INSERT INTO admins (username, password)
+VALUES (?, ?);
+`
 
 type AdminsCreateModel struct {
-	username string
-	password string
 }
 
 type AdminsCreateStmt struct {
@@ -42,7 +42,7 @@ func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password 
 	for rows.Next() {
 		var model AdminsCreateModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.username, &model.password); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("AdminsCreate scan error: %w", err)
 		}
 		results = append(results, model)
@@ -60,7 +60,7 @@ func (s *AdminsCreateStmt) Exec(ctx context.Context, username string, password s
 
 func (s *AdminsCreateStmt) QueryRow(ctx context.Context, username string, password string) (AdminsCreateModel, error) {
 	var model AdminsCreateModel
-	err := s.stmt.QueryRowContext(ctx, username, password).Scan(&model.username, &model.password)
+	err := s.stmt.QueryRowContext(ctx, username, password).Scan()
 	if err != nil {
 		return model, fmt.Errorf("AdminsCreate query row error: %w", err)
 	}

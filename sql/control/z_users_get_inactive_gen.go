@@ -6,15 +6,18 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
-	"time"
 )
 
-//go:embed users_get_inactive.sql
-var UsersGetInactiveRaw string
+var UsersGetInactiveRaw string = `
+-- finds users where the last_seen_at is more than minutes ago and deleted_at is null
+SELECT subdomain
+FROM users 
+WHERE deleted_at IS NULL AND last_seen_at < datetime('now', ? || ' minutes');
+
+`
 
 type UsersGetInactiveModel struct {
-	Subdomain  string
-	LastSeenAt time.Time
+	Subdomain string
 }
 
 type UsersGetInactiveStmt struct {
@@ -43,7 +46,7 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]Us
 	for rows.Next() {
 		var model UsersGetInactiveModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(&model.Subdomain); err != nil {
 			return nil, fmt.Errorf("UsersGetInactive scan error: %w", err)
 		}
 		results = append(results, model)
@@ -61,7 +64,7 @@ func (s *UsersGetInactiveStmt) Exec(ctx context.Context, minutes float64) (sql.R
 
 func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, minutes float64) (UsersGetInactiveModel, error) {
 	var model UsersGetInactiveModel
-	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain)
 	if err != nil {
 		return model, fmt.Errorf("UsersGetInactive query row error: %w", err)
 	}

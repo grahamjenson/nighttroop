@@ -8,12 +8,12 @@ import (
 	"fmt"
 )
 
-//go:embed devices_create.sql
-var DevicesCreateRaw string
+var DevicesCreateRaw string = `
+INSERT INTO devices (name, token)
+VALUES (?, ?);
+`
 
 type DevicesCreateModel struct {
-	name  string
-	token string
 }
 
 type DevicesCreateStmt struct {
@@ -42,7 +42,7 @@ func (s *DevicesCreateStmt) Query(ctx context.Context, name string, token string
 	for rows.Next() {
 		var model DevicesCreateModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("DevicesCreate scan error: %w", err)
 		}
 		results = append(results, model)
@@ -60,7 +60,7 @@ func (s *DevicesCreateStmt) Exec(ctx context.Context, name string, token string)
 
 func (s *DevicesCreateStmt) QueryRow(ctx context.Context, name string, token string) (DevicesCreateModel, error) {
 	var model DevicesCreateModel
-	err := s.stmt.QueryRowContext(ctx, name, token).Scan(&model.name, &model.token)
+	err := s.stmt.QueryRowContext(ctx, name, token).Scan()
 	if err != nil {
 		return model, fmt.Errorf("DevicesCreate query row error: %w", err)
 	}

@@ -8,8 +8,9 @@ import (
 	"fmt"
 )
 
-//go:embed users_truncate_all.sql
-var UsersTruncateAllRaw string
+var UsersTruncateAllRaw string = `
+DELETE FROM users;
+`
 
 type UsersTruncateAllModel struct {
 }

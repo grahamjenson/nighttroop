@@ -8,8 +8,13 @@ import (
 	"fmt"
 )
 
-//go:embed devices_get.sql
-var DevicesGetRaw string
+var DevicesGetRaw string = `
+SELECT name,
+    token
+FROM devices
+where name = ? OR token = ?
+LIMIT 1;
+`
 
 type DevicesGetModel struct {
 	name  string

@@ -6,11 +6,14 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
-	"time"
 )
 
-//go:embed users_update_last_seen.sql
-var UsersUpdateLastSeenRaw string
+var UsersUpdateLastSeenRaw string = `
+-- update the last seen at timestamp for a user
+UPDATE users
+SET last_seen_at = CURRENT_TIMESTAMP
+WHERE subdomain = ?;
+`
 
 type UsersUpdateLastSeenModel struct {
 }
@@ -30,8 +33,8 @@ func NewUsersUpdateLastSeen(sqldb *sql.DB, errs *[]error) *UsersUpdateLastSeenSt
 	return &UsersUpdateLastSeenStmt{stmt: stmt}
 }
 
-func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, LastSeenAt time.Time) ([]UsersUpdateLastSeenModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Subdomain, LastSeenAt)
+func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string) ([]UsersUpdateLastSeenModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Subdomain)
 	if err != nil {
 		return nil, fmt.Errorf("UsersUpdateLastSeen query error: %w", err)
 	}
@@ -49,17 +52,17 @@ func (s *UsersUpdateLastSeenStmt) Query(ctx context.Context, Subdomain string, L
 	return results, nil
 }
 
-func (s *UsersUpdateLastSeenStmt) Exec(ctx context.Context, Subdomain string, LastSeenAt time.Time) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Subdomain, LastSeenAt)
+func (s *UsersUpdateLastSeenStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Subdomain)
 	if err != nil {
 		return nil, fmt.Errorf("UsersUpdateLastSeen exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *UsersUpdateLastSeenStmt) QueryRow(ctx context.Context, Subdomain string, LastSeenAt time.Time) (UsersUpdateLastSeenModel, error) {
+func (s *UsersUpdateLastSeenStmt) QueryRow(ctx context.Context, Subdomain string) (UsersUpdateLastSeenModel, error) {
 	var model UsersUpdateLastSeenModel
-	err := s.stmt.QueryRowContext(ctx, Subdomain, LastSeenAt).Scan()
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan()
 	if err != nil {
 		return model, fmt.Errorf("UsersUpdateLastSeen query row error: %w", err)
 	}

@@ -9,12 +9,17 @@ import (
 	"time"
 )
 
-//go:embed users_get.sql
-var UsersGetRaw string
+var UsersGetRaw string = `
+SELECT subdomain, created_at, last_seen_at
+FROM users
+WHERE subdomain = ? AND deleted_at IS NULL;
+
+`
 
 type UsersGetModel struct {
 	Subdomain  string
-	LastSeenAt time.Time
+	CreatedAt  *time.Time
+	LastSeenAt *time.Time
 }
 
 type UsersGetStmt struct {
@@ -43,7 +48,7 @@ func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetM
 	for rows.Next() {
 		var model UsersGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("UsersGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -61,7 +66,7 @@ func (s *UsersGetStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, 
 
 func (s *UsersGetStmt) QueryRow(ctx context.Context, Subdomain string) (UsersGetModel, error) {
 	var model UsersGetModel
-	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
 		return model, fmt.Errorf("UsersGet query row error: %w", err)
 	}

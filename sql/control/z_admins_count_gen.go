@@ -8,8 +8,9 @@ import (
 	"fmt"
 )
 
-//go:embed admins_count.sql
-var AdminsCountRaw string
+var AdminsCountRaw string = `
+SELECT COUNT(*) FROM admins;
+`
 
 type AdminsCountModel struct {
 	count int

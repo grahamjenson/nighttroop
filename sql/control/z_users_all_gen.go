@@ -9,8 +9,11 @@ import (
 	"time"
 )
 
-//go:embed users_all.sql
-var UsersAllRaw string
+var UsersAllRaw string = `
+SELECT subdomain, created_at, last_seen_at, deleted_at
+FROM users;
+
+`
 
 type UsersAllModel struct {
 	Subdomain  string

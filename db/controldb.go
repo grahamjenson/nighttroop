@@ -207,7 +207,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, er
 	fmt.Println("Found User: ", model.Subdomain, model.LastSeenAt)
 	lastSeenMoreThan10MinutesAgo := model.LastSeenAt.Add(10 * time.Minute).After(time.Now())
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
-		db.UsersUpdateLastSeen.Exec(context.TODO(), subdomain, time.Now())
+		db.UsersUpdateLastSeen.Exec(context.TODO(), subdomain)
 	}
 
 	db.usersRWLock.RLock()

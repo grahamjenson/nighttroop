@@ -9,13 +9,14 @@ import (
 	"time"
 )
 
-//go:embed devices_all.sql
-var DevicesAllRaw string
+var DevicesAllRaw string = `
+SELECT name, created_at, last_seen_at FROM devices;
+`
 
 type DevicesAllModel struct {
 	name       string
 	token      string
-	LastSeenAt time.Time
+	LastSeenAt *time.Time
 }
 
 type DevicesAllStmt struct {

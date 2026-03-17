@@ -9,13 +9,14 @@ import (
 	"time"
 )
 
-//go:embed admins_get.sql
-var AdminsGetRaw string
+var AdminsGetRaw string = `
+SELECT username, password, created_at FROM admins a WHERE a.username = ?;
+`
 
 type AdminsGetModel struct {
 	username   string
 	password   string
-	created_at time.Time
+	created_at *time.Time
 }
 
 type AdminsGetStmt struct {
