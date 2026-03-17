@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/time/rate"
+	"nighttroop.t1d.nz/assets/static"
+	"nighttroop.t1d.nz/assets/templates"
 	"nighttroop.t1d.nz/db"
-	"nighttroop.t1d.nz/templates"
-	"nighttroop.t1d.nz/templates/control"
 )
 
 var userCreateLimiter = rate.NewLimiter(10, 100)
@@ -20,19 +20,20 @@ var userCreateMu sync.Mutex
 func NewPublicRouter(controlDB *db.ControlDB) chi.Router {
 	r := chi.NewRouter()
 
+	static.AddSatticRoutes(r)
 	// Create New User Route
 	// Documentation Route
 	// Public Facing SEO route
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		err := templates.ControlHTMLTemplate.Execute(w, nil)
+		err := templates.PublicIndex(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	})
 
-	r.Post("/user", createUser(controlDB))
-	r.Get("/user", createUser(controlDB))
+	r.Post("/create_user", createUser(controlDB))
+	r.Get("/create_user", createUser(controlDB))
 	return r
 }
 
@@ -76,7 +77,7 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 		if accept == "text/htmx" {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			templates.UserCreateTemplate.ExecuteTemplate(w, "htmx_user.html", control.UserHTMXParam{Subdomain: userDB.Subdomain, APIKey: apiKey})
+			templates.PublicCreateUser(w, "url", "token", "backup_key")
 			return
 		}
 

@@ -4,11 +4,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 	"text/template"
-	"unicode"
+
+	"nighttroop.t1d.nz/utils"
 )
 
 type Config struct {
@@ -117,7 +119,7 @@ func main() {
 	parts := strings.Split(*file, "/")
 	name := parts[len(parts)-1]
 	outfilename := strings.TrimSuffix(name, ".sql")
-	name = SnakeToCapitalCamelCase(outfilename)
+	name = utils.SnakeToCapitalCamelCase(outfilename)
 	sqlfile := parts[len(parts)-1]
 
 	pkg := parts[0]
@@ -161,25 +163,12 @@ func main() {
 	t := template.Must(template.New("sql").Parse(tmpl))
 	f, _ := os.Create(outputPath)
 	defer f.Close()
-	t.Execute(f, cfg)
+
+	err := t.Execute(f, cfg)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to execute template: %v", err))
+	}
 
 	// Format the generated code
 	exec.Command("go", "fmt", outputPath).Run()
-}
-
-func SnakeToCapitalCamelCase(s string) string {
-	words := strings.Split(s, "_")
-	for i := range words {
-		if len(words[i]) > 0 {
-			runes := []rune(words[i])
-			// Capitalize the first letter
-			runes[0] = unicode.ToUpper(runes[0])
-			// Lowercase the rest of the letters (optional, depends on specific need)
-			for j := 1; j < len(runes); j++ {
-				runes[j] = unicode.ToLower(runes[j])
-			}
-			words[i] = string(runes)
-		}
-	}
-	return strings.Join(words, "")
 }

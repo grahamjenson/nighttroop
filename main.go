@@ -73,7 +73,7 @@ func run() error {
 	//
 	// HTTP
 	// Run web server.
-	server := setupHTTP(controlDB)
+	server := setupHTTP(controlDB, serverConfig)
 
 	// Wait for signal.
 	<-ctx.Done()
@@ -98,10 +98,10 @@ func run() error {
 	return nil
 }
 
-func setupHTTP(controlDB *db.ControlDB) *http.Server {
+func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.Server {
 	fmt.Printf("listening on 8080\n")
 
-	server := &http.Server{Addr: ":8080", Handler: router.GetMainHandler(controlDB)}
+	server := &http.Server{Addr: ":8080", Handler: router.GetMainHandler(controlDB, serverConfig)}
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
