@@ -2,10 +2,7 @@ package db
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
 
 	migrations "nighttroop.t1d.nz/sql/migrations"
@@ -49,36 +46,6 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool) (*UserDB, 
 	}
 
 	return userDB, nil
-}
-
-// TODO HMAC value to encrypt tokens
-var hmacSecretKey = []byte("your-secure-secret-key")
-
-func (db *UserDB) CreateAPIToken() (string, error) {
-	// Create a new API token for the user
-	apiKey, err := utils.GenerateSecureAPIKey(12)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate API key: %w", err)
-	}
-
-	// Create an HMAC hash of the API key
-	h := hmac.New(sha256.New, hmacSecretKey)
-	h.Write([]byte(apiKey))
-	hashedKey := hex.EncodeToString(h.Sum(nil))
-	fmt.Printf("%s\n", hashedKey)
-	// Store the hashed key in the database
-	// _, err = db.Exec("INSERT INTO api_tokens (token) VALUES (?)", hashedKey)
-	// if err != nil {
-	// 	return "", fmt.Errorf("cannot store API token: %w", err)
-	// }
-
-	// Return the plain API key to the user (hashed key is stored in the DB)
-	return apiKey, nil
-}
-
-func (db *UserDB) ValidateAPIToken(token string) error {
-
-	return nil
 }
 
 // WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWOLLOWED

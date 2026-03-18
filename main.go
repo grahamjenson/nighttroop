@@ -43,9 +43,12 @@ func run() error {
 	//
 	// Try and restore database files from S3 (we should )
 	//
-	s3Client, err := utils.NewS3Client(serverConfig)
+	s3Client := utils.NewS3Client(serverConfig)
+
+	// Run some tests to make sure the server is setup properly
+	err = ValidateServer(s3Client)
 	if err != nil {
-		return fmt.Errorf("cannot create s3 client: %w", err)
+		return fmt.Errorf("server validation failed: %w", err)
 	}
 
 	// This will download all files from S3 if they exist
@@ -110,4 +113,19 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 	}()
 
 	return server
+}
+
+func ValidateServer(c *utils.S3Client) error {
+	_, _, err := utils.SecureCredentials()
+	if err != nil {
+		return fmt.Errorf("error generating secure credentials: %w", err)
+	}
+
+	// Test s3 client is working wither permissions otherwise fail
+	err = c.TestS3Client()
+	if err != nil {
+		return fmt.Errorf("error testing S3 client: %w", err)
+	}
+
+	return nil
 }

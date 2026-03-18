@@ -52,7 +52,7 @@ const MaxKeys = 1000
 // DefaultRegion is the region used if one is not specified.
 const DefaultRegion = "us-east-1"
 
-func NewS3Client(config config.ServerConfig) (*S3Client, error) {
+func NewS3Client(config config.ServerConfig) *S3Client {
 	c := &S3Client{
 		AccessKeyID:     config.S3AccessKeyID,
 		SecretAccessKey: config.S3AccessSecretKey,
@@ -72,13 +72,7 @@ func NewS3Client(config config.ServerConfig) (*S3Client, error) {
 	})
 	c.uploader = manager.NewUploader(c.s3)
 
-	// Test s3 client is working wither permissions otherwise fail
-	err := c.TestS3Client()
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	return c
 }
 
 func (c *S3Client) TestS3Client() error {

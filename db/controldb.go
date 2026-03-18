@@ -102,10 +102,18 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 	return users, nil
 }
 
+type UserCreateMaterial struct {
+	Subdomain     string
+	BackupKeyHash string
+}
+
 func (db *ControlDB) CreateUser() (*UserDB, error) {
 	subdomain := utils.NextUserID()
-	// TODO make this work properly
-	backupKeyHash, err := utils.GenerateSecureAPIKey(12)
+	// Password is used as an API key for the user to access their data
+	// BackupKey
+	password, hash := utils.GenerateCredentials()
+	backupKey, backupKeyHash := utils.GenerateCredentials()
+
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}

@@ -2,8 +2,9 @@ package utils
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"fmt"
+	"math/big"
+	badrand "math/rand"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +20,7 @@ const CONTROL_DB_PATH = "data/db/control.sqlite"
 const CONTROL_DB_BACKUP_PATH = "data/backup/control.sqlite"
 
 const API_KEY_CHAR_SET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const API_KEY_CHAR_SET_LENGTH = len(API_KEY_CHAR_SET)
 
 const USER_DB_FOLDER = "data/db/user"
 const USER_DB_BACKUP_FOLDER = "data/backup/user"
@@ -50,12 +52,7 @@ func UserBatchPaths(char string) (string, string) {
 }
 
 func NextUserID() string {
-	result := make([]byte, USER_ID_LENGTH)
-	rand.Read(result)
-	for i, b := range result {
-		result[i] = USER_CHAR_SET[b%byte(len(USER_CHAR_SET))]
-	}
-	return string(result)
+	return SecureRandomString(USER_ID_LENGTH, USER_CHAR_SET)
 }
 
 func ValidateUserID(userID string) bool {
@@ -67,35 +64,35 @@ func ValidateUserID(userID string) bool {
 	return re.MatchString(userID)
 }
 
-func GenerateSecureAPIKey(length int) (string, error) {
-	// Create a byte slice to hold the random bytes
+func InsecureRandomString(length int, charset string) string {
 	bytes := make([]byte, length)
-
-	// Generate random bytes
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate random bytes: %w", err)
+	for i := 0; i < length; i++ {
+		num := badrand.Intn(len(charset))
+		bytes[i] = charset[num]
 	}
 
-	// Map random bytes to characters in the character set
-	for i, b := range bytes {
-		bytes[i] = API_KEY_CHAR_SET[b%byte(len(API_KEY_CHAR_SET))]
-	}
-
-	return string(bytes), nil
+	return string(bytes)
 }
 
-func GenerateCredentials(length int) (string, string, error) {
-	// 1. Generate random bytes
-	randomBytes := make([]byte, length)
-	if _, err := rand.Read(randomBytes); err != nil {
-		return "", "", err
+func SecureRandomString(length int, charset string) string {
+	bytes := make([]byte, length)
+	for i := 0; i < length; i++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			fmt.Println("Bad Secure Random Error: ", err)
+			return InsecureRandomString(length, charset)
+		}
+		bytes[i] = charset[num.Int64()]
 	}
 
-	// 2. Encode to a string (URL-safe base64 is a clean choice)
-	password := base64.URLEncoding.EncodeToString(randomBytes)[:length]
+	return string(bytes)
+}
 
-	// 3. Hash the password
+func SecureCredentials() (string, string, error) {
+	// 1. Generate a secure random string for the password
+	password := SecureRandomString(12, API_KEY_CHAR_SET)
+
+	// 2. Hash the password
 	// Bcrypt automatically generates a unique salt
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
