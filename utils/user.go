@@ -2,8 +2,11 @@ package utils
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"regexp"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // CONSTS
@@ -80,4 +83,29 @@ func GenerateSecureAPIKey(length int) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+func GenerateCredentials(length int) (string, string, error) {
+	// 1. Generate random bytes
+	randomBytes := make([]byte, length)
+	if _, err := rand.Read(randomBytes); err != nil {
+		return "", "", err
+	}
+
+	// 2. Encode to a string (URL-safe base64 is a clean choice)
+	password := base64.URLEncoding.EncodeToString(randomBytes)[:length]
+
+	// 3. Hash the password
+	// Bcrypt automatically generates a unique salt
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", "", err
+	}
+
+	return password, string(hashedBytes), nil
+}
+
+func VerifyPassword(plainPassword, storedHash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(plainPassword))
+	return err == nil
 }

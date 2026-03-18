@@ -41,7 +41,7 @@ func NewUserRouter(controlDB *db.ControlDB) chi.Router {
 		if accept == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"ping\": \"pong\"}")))
+			w.Write(fmt.Appendf(nil, "{\"ping\": \"pong\"}"))
 			return
 		}
 

@@ -59,8 +59,8 @@ func GetSubdomain(host_header, hostname string) (string, error) {
 	// remove port if present
 	host := host_header
 	// Remove the port if it is there
-	if i := strings.Index(host_header, ":"); i != -1 {
-		host = host_header[:i]
+	if before, _, ok := strings.Cut(host_header, ":"); ok {
+		host = before
 	}
 
 	endsWithHostName := strings.HasSuffix(host, hostname)

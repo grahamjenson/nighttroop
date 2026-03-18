@@ -49,11 +49,9 @@ func (b *BackupJobs) Start() {
 	// Start backup Jobs
 	// CotrolDB backup and Sync Loop
 	if b.ControlBackupInterval > 0 {
-		b.wg.Add(1)
-		go func() {
-			defer b.wg.Done()
+		b.wg.Go(func() {
 			b.controlBackupLoop()
-		}()
+		})
 	}
 
 	if b.BatchBackupInterval > 0 {

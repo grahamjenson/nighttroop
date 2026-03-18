@@ -1,6 +1,6 @@
 module nighttroop.t1d.nz
 
-go 1.24.1
+go 1.25.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
@@ -30,4 +30,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.18 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
 )

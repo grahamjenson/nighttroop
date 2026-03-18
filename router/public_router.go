@@ -71,7 +71,7 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 		if accept == "application/json" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userDB.Subdomain, apiKey)))
+			w.Write(fmt.Appendf(nil, "{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userDB.Subdomain, apiKey))
 			return
 		}
 
