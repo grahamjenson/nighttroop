@@ -12,7 +12,7 @@ import (
 )
 
 func TryRestoreAllFiles(s3Client *utils.S3Client) error {
-	defer utils.TrackTime(time.Now(), "TryRestoreAllFiles")
+	defer utils.TrackTime(time.Now(), "TryRestoreAllFiles", nil, nil)
 	fmt.Println("TryRestoreAllFiles")
 
 	err := TryDownloadExtractControlDbs(s3Client)
@@ -59,7 +59,7 @@ func TryDownloadExtractControlDbs(s3Client *utils.S3Client) error {
 }
 
 func TryDownloadExrtractUserDbs(s3Client *utils.S3Client) error {
-	defer utils.TrackTime(time.Now(), "TryDownloadExrtractUserDbs")
+	defer utils.TrackTime(time.Now(), "TryDownloadExrtractUserDbs", nil, nil)
 
 	g, _ := errgroup.WithContext(context.Background())
 	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
@@ -68,7 +68,7 @@ func TryDownloadExrtractUserDbs(s3Client *utils.S3Client) error {
 	fmt.Println("TryDownloadExrtractUserDbs running", utils.USER_BATCH_LENGTH, limit)
 	for _, char := range utils.USER_CHAR_SET {
 		g.Go(func() error {
-			err := TryDownloadExrtractUserDbsForBatch(s3Client, string(char))
+			_, err := TryDownloadExrtractUserDbsForBatch(s3Client, string(char))
 			if err != nil {
 				return fmt.Errorf("cannot restore user pool: %w", err)
 			}
@@ -86,7 +86,7 @@ func TryDownloadExrtractUserDbs(s3Client *utils.S3Client) error {
 	return nil
 }
 
-func TryDownloadExrtractUserDbsForBatch(s3Client *utils.S3Client, char string) error {
+func TryDownloadExrtractUserDbsForBatch(s3Client *utils.S3Client, char string) (bool, error) {
 
 	path, _ := utils.UserBatchPaths(char)
 	s3Path := s3Client.UserBatchS3Path(char)
@@ -95,13 +95,8 @@ func TryDownloadExrtractUserDbsForBatch(s3Client *utils.S3Client, char string) e
 
 	if err != nil {
 		// TODO dont fail here if just not found
-		return fmt.Errorf("cannot download user db: %w", err)
+		return false, fmt.Errorf("cannot download user db: %w", err)
 	}
 
-	if !found && err == nil {
-		fmt.Println("No user backup found at ", s3Path)
-		return nil
-	}
-
-	return nil
+	return found, nil
 }

@@ -59,10 +59,10 @@ func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	defer tx.Rollback()
-
+		
 		{{- range $stmt := index $.MigrationStatements $index}}
-			fmt.Printf("Running migration: %s\n", ` + "`" + `{{$stmt}}` + "`" + `)
-			if _, err := tx.ExecContext(ctx, ` + "`" + `{{$stmt}}` + "`" + `); err != nil {
+			fmt.Printf("Migrating: %s\n", ` + "`" + `{{$stmt.Header}}` + "`" + `)
+			if _, err := tx.ExecContext(ctx, ` + "`" + `{{$stmt.Statement}}` + "`" + `); err != nil {
 				return err
 			}
 		{{- end}}
@@ -76,10 +76,15 @@ func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
 {{end}}
 `
 
+type MigrationStatement struct {
+	Statement string
+	Header    string
+}
+
 type Config struct {
 	Name                string
 	Migrations          utils.FlagFileList
-	MigrationStatements [][]string
+	MigrationStatements [][]MigrationStatement
 }
 
 func (c Config) GetFileVars() []string {
@@ -107,10 +112,12 @@ func main() {
 		}
 	}
 
-	migrationStatements := [][]string{}
+	migrationStatements := [][]MigrationStatement{}
 	for _, file := range migrations {
 		content, _ := os.ReadFile(file)
-		migrationStatements = append(migrationStatements, parseSQLStatements(string(content)))
+		statements := SeperateSQLStatements(string(content))
+
+		migrationStatements = append(migrationStatements, statements)
 
 	}
 
@@ -134,16 +141,58 @@ func main() {
 	exec.Command("go", "fmt", outputPath).Run()
 }
 
-func parseSQLStatements(sql string) []string {
+func SeperateSQLStatements(sql string) []MigrationStatement {
 	// Regex splits by semicolon followed by optional whitespace and newline
 	re := regexp.MustCompile(`(?m);(\s*)$`)
 	raw := re.Split(sql, -1)
 
-	var cleaned []string
-	for _, s := range raw {
-		if t := strings.TrimSpace(s); t != "" {
-			cleaned = append(cleaned, t)
+	var cleaned []MigrationStatement
+	for _, individualStatement := range raw {
+
+		migrationStatemnet := createMigrationStatement(individualStatement)
+		if migrationStatemnet != nil {
+			cleaned = append(cleaned, *migrationStatemnet)
 		}
+
 	}
 	return cleaned
+}
+
+func createMigrationStatement(statement string) *MigrationStatement {
+	// If empty or only whitespace, skip
+	individualStatement := strings.TrimSpace(statement)
+	if individualStatement == "" {
+		return nil
+	}
+
+	// remove all comment lines from the statment beginning with -- and trim the statement
+	lines := strings.Split(individualStatement, "\n")
+	var nonCommentLines []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+			nonCommentLines = append(nonCommentLines, line)
+		}
+	}
+	if len(nonCommentLines) == 0 {
+		return nil
+	}
+
+	cleanedStatement := strings.Join(nonCommentLines, "\n")
+
+	header := firstN(nonCommentLines[0], 50)
+	return &MigrationStatement{Statement: cleanedStatement, Header: header}
+}
+
+func firstN(str string, n int) string {
+	// Convert string to a slice of runes
+	runes := []rune(str)
+
+	// Check if the requested length 'n' is greater than or equal to the actual number of runes
+	if n >= len(runes) {
+		return str // Return the original string if it's shorter or equal to n
+	}
+
+	// Otherwise, slice the rune slice and convert it back to a string
+	return string(runes[:n])
 }

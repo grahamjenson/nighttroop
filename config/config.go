@@ -24,10 +24,10 @@ type ServerConfig struct {
 	HostProtocol string // http or https, used for generating links.
 
 	// s3 config
-	S3Bucket    string
-	S3URL       string
-	S3AccessKey string
-	S3SecretKey string
+	S3Bucket          string
+	S3URL             string
+	S3AccessKeyID     string
+	S3AccessSecretKey string
 
 	// security
 	SecretsEncryptionKey string
@@ -42,10 +42,15 @@ type ServerConfig struct {
 	UserWriteRateBurst int
 
 	// User Limits
-	MaxUsers            int
-	MaxUserDBSizeMB     int
-	UserCreateRateLimit int
-	UserCreateRateBurst int
+	MaxUsers              int
+	MaxUserInactiveInMins int
+	MaxUserDBSizeMB       int
+	UserCreateRateLimit   int
+	UserCreateRateBurst   int
+
+	// Backup Config
+	ControlBackupIntervalInSeconds int
+	BatchBackupIntervalInSeconds   int
 }
 
 // Priority is
@@ -78,10 +83,10 @@ func NewServerConfig() (ServerConfig, error) {
 		HostProtocol: configStringSelect(dotenvdev, dotenv, "HOST_PROTOCOL", "http"),
 
 		// s3 config
-		S3Bucket:    configStringSelect(dotenvdev, dotenv, "S3_BUCKET", "mybucket"),
-		S3URL:       configStringSelect(dotenvdev, dotenv, "S3_URL", "http://localhost:9000"),
-		S3AccessKey: configStringSelect(dotenvdev, dotenv, "S3_ACCESS_KEY", "minioadmin"),
-		S3SecretKey: configStringSelect(dotenvdev, dotenv, "S3_SECRET_KEY", "minioadmin"),
+		S3Bucket:          configStringSelect(dotenvdev, dotenv, "S3_BUCKET", "mybucket"),
+		S3URL:             configStringSelect(dotenvdev, dotenv, "S3_URL", "http://localhost:9000"),
+		S3AccessKeyID:     configStringSelect(dotenvdev, dotenv, "S3_ACCESS_KEY", "minioadmin"),
+		S3AccessSecretKey: configStringSelect(dotenvdev, dotenv, "S3_SECRET_KEY", "minioadmin"),
 
 		// security
 		SecretsEncryptionKey: configStringSelect(dotenvdev, dotenv, "SECRETS_ENCRYPTION_KEY", "mysecretencryptionkey"),
@@ -96,10 +101,36 @@ func NewServerConfig() (ServerConfig, error) {
 		UserWriteRateBurst: configIntSelect(dotenvdev, dotenv, "USER_WRITE_RATE_BURST", 100),
 
 		// User Limits
-		MaxUsers:            configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
-		MaxUserDBSizeMB:     configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_MB", 100),
+		MaxUsers:              configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
+		MaxUserInactiveInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_INACTIVE_IN_MINS", 60*24*30), // 30 days
+		MaxUserDBSizeMB:       configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_MB", 100),
+
 		UserCreateRateLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_RATE_LIMIT", 10),
 		UserCreateRateBurst: configIntSelect(dotenvdev, dotenv, "USER_CREATE_RATE_BURST", 100),
+
+		// Backup Config
+		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 10),
+		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
+	}
+
+	if len(dotenvdev) > 0 {
+		fmt.Printf("Unknown .env.dev variables: ")
+		for k := range dotenvdev {
+			fmt.Printf("%s,", k)
+
+		}
+		fmt.Printf("\n")
+		return ServerConfig{}, fmt.Errorf("unknown .env.dev variables")
+	}
+
+	if len(dotenv) > 0 {
+		fmt.Printf("Unknown .env variables: ")
+		for k := range dotenv {
+			fmt.Printf("%s,", k)
+
+		}
+		fmt.Printf("\n")
+		return ServerConfig{}, fmt.Errorf("unknown .env variables")
 	}
 
 	// Override with flags
@@ -113,8 +144,8 @@ func NewServerConfig() (ServerConfig, error) {
 	// s3 config
 	flag.StringVar(&serverConfig.S3Bucket, "s3bucket", serverConfig.S3Bucket, "S3 bucket name")
 	flag.StringVar(&serverConfig.S3URL, "s3url", serverConfig.S3URL, "S3 URL")
-	flag.StringVar(&serverConfig.S3AccessKey, "s3accesskey", serverConfig.S3AccessKey, "S3 Access Key")
-	flag.StringVar(&serverConfig.S3SecretKey, "s3secretkey", serverConfig.S3SecretKey, "S3 Secret Key")
+	flag.StringVar(&serverConfig.S3AccessKeyID, "s3accesskey", serverConfig.S3AccessKeyID, "S3 Access Key ID")
+	flag.StringVar(&serverConfig.S3AccessSecretKey, "s3secretkey", serverConfig.S3AccessSecretKey, "S3 Access Secret Key")
 
 	// security
 	flag.StringVar(&serverConfig.SecretsEncryptionKey, "secretsencryptionkey", serverConfig.SecretsEncryptionKey, "Secrets Encryption Key")
@@ -131,8 +162,14 @@ func NewServerConfig() (ServerConfig, error) {
 	// User Limits
 	flag.IntVar(&serverConfig.MaxUsers, "maxusers", serverConfig.MaxUsers, "Maximum number of users")
 	flag.IntVar(&serverConfig.MaxUserDBSizeMB, "maxuserdbsizemb", serverConfig.MaxUserDBSizeMB, "Maximum user DB size in MB")
+	flag.IntVar(&serverConfig.MaxUserInactiveInMins, "maxuserinactiveinmins", serverConfig.MaxUserInactiveInMins, "Maximum user inactive time in minutes (after this they are archived)")
+
 	flag.IntVar(&serverConfig.UserCreateRateLimit, "usercreateratelimit", serverConfig.UserCreateRateLimit, "User Create Rate Limit (requests per second)")
 	flag.IntVar(&serverConfig.UserCreateRateBurst, "usercreaterateburst", serverConfig.UserCreateRateBurst, "User Create Rate Burst (maximum number of requests in a burst)")
+
+	// Backup Config
+	flag.IntVar(&serverConfig.ControlBackupIntervalInSeconds, "controlbackupinterval", serverConfig.ControlBackupIntervalInSeconds, "Control DB Backup Interval in seconds")
+	flag.IntVar(&serverConfig.BatchBackupIntervalInSeconds, "batchbackupinterval", serverConfig.BatchBackupIntervalInSeconds, "Batch Backup Interval in seconds")
 
 	flag.Parse()
 
@@ -150,55 +187,56 @@ func NewServerConfig() (ServerConfig, error) {
 		return ServerConfig{}, fmt.Errorf("invalid mode: %s", envmode)
 	}
 
+	printServerConfig(serverConfig)
 	return serverConfig, nil
 }
 
 func configStringSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue string) string {
-	// First
-	if val, ok := os.LookupEnv(envVar); ok {
-		return val
+	returnval := defaultValue
+
+	if val, ok := dotenv[envVar]; ok {
+		returnval = val
+		delete(dotenv, envVar) // delete so we can find unknown keys later
 	}
 
 	if val, ok := dotenvdev[envVar]; ok {
-		return val
+		returnval = val
+		delete(dotenvdev, envVar) // delete so we can find unknown keys later
 	}
 
-	if val, ok := dotenv[envVar]; ok {
-		return val
+	if val, ok := os.LookupEnv(envVar); ok {
+		returnval = val
 	}
 
-	return defaultValue
+	return returnval
 }
 
 func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue int) int {
 
-	if val, ok := os.LookupEnv(envVar); ok {
-		intVal, err := strconv.Atoi(val)
-		if err == nil {
-
-			return intVal
-		} else {
-			fmt.Printf("Error parsing ENV var for %s: %s\n", envVar, err)
-		}
-	}
+	returnval := fmt.Sprintf("%d", defaultValue)
 
 	if val, ok := dotenv[envVar]; ok {
-		intVal, err := strconv.Atoi(val)
-		if err == nil {
-			return intVal
-		} else {
-			fmt.Printf("Error parsing .env var for %s: %s\n", envVar, err)
-		}
+		returnval = val
+		delete(dotenv, envVar) // delete so we can find unknown keys later
 	}
+
 	if val, ok := dotenvdev[envVar]; ok {
-		intVal, err := strconv.Atoi(val)
-		if err == nil {
-			return intVal
-		} else {
-			fmt.Printf("Error parsing .env.dev var for %s: %s\n", envVar, err)
-		}
+		returnval = val
+		delete(dotenvdev, envVar) // delete so we can find unknown keys later
 	}
-	return defaultValue
+
+	if val, ok := os.LookupEnv(envVar); ok {
+		returnval = val
+	}
+
+	intVal, err := strconv.Atoi(returnval)
+	if err == nil {
+		return intVal
+	} else {
+		fmt.Printf("Error parsing %s for %s: %s\n", returnval, envVar, err)
+	}
+
+	return intVal
 }
 
 func readDotEnvFile(filename string) (map[string]string, error) {
@@ -229,4 +267,17 @@ func readDotEnvFile(filename string) (map[string]string, error) {
 		return nil, err
 	}
 	return envMap, nil
+}
+
+func printServerConfig(config ServerConfig) {
+	// This is a concise printing of all non-secure information at startup
+	fmt.Printf("Server Config:\n")
+	fmt.Printf("Mode: %s\n", map[ServerMode]string{Production: "Production", Development: "Development"}[config.Mode])
+	fmt.Printf("Host: %s://%s:%d\n", config.HostProtocol, config.HostName, config.HostPort)
+	fmt.Printf("S3: %s@%s/%s\n", config.S3AccessKeyID, config.S3URL, config.S3Bucket)
+	fmt.Printf("SQLite Path: %s\n", config.SqlitePath)
+	fmt.Printf("User Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.UserReadRateLimit, config.UserWriteRateLimit, config.UserReadRateBurst, config.UserWriteRateBurst)
+	fmt.Printf("Max Users/User DB Size/Age (mins): %d / %d / %d\n", config.MaxUsers, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
+	fmt.Printf("User Create Rate Limit: %d req/s burst %d\n", config.UserCreateRateLimit, config.UserCreateRateBurst)
+	fmt.Printf("Backup Interval (Control/Batch) in seconds: %d / %d\n", config.ControlBackupIntervalInSeconds, config.BatchBackupIntervalInSeconds)
 }

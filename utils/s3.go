@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"nighttroop.t1d.nz/config"
 
 	"github.com/pierrec/lz4/v4"
 )
@@ -51,15 +52,15 @@ const MaxKeys = 1000
 // DefaultRegion is the region used if one is not specified.
 const DefaultRegion = "us-east-1"
 
-func NewS3Client(endpoint, bucket, hostname string) (*S3Client, error) {
+func NewS3Client(config config.ServerConfig) (*S3Client, error) {
 	c := &S3Client{
-		AccessKeyID:     "minioadmin",
-		SecretAccessKey: "minioadmin",
+		AccessKeyID:     config.S3AccessKeyID,
+		SecretAccessKey: config.S3AccessSecretKey,
 		ForcePathStyle:  true,
-		Bucket:          bucket,
-		Endpoint:        endpoint,
+		Bucket:          config.S3Bucket,
+		Endpoint:        config.S3URL,
 		Region:          DefaultRegion,
-		HostName:        hostname,
+		HostName:        config.HostName,
 	}
 
 	fmt.Println("S3Client Being Created", c.Bucket, c.Region, c.Endpoint)
@@ -186,7 +187,7 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 }
 
 func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
-	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key)
+	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key, nil, nil)
 	if len(paths) == 0 {
 		fmt.Printf("No files to sync for %s\n", key)
 		return nil

@@ -20,6 +20,8 @@ package sql
 
 // users
 //go:generate go run ./gen/prepared.go  -file control/users_all.sql  -out "Subdomain string, CreatedAt *time.Time, LastSeenAt *time.Time, DeletedAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file control/users_not_deleted.sql  -out "Subdomain string, CreatedAt *time.Time, LastSeenAt *time.Time, DeletedAt *time.Time"
+
 //go:generate go run ./gen/prepared.go  -file control/users_get_batch.sql  -in "batch string" -out "Subdomain string, LastSeenAt *time.Time"
 //go:generate go run ./gen/prepared.go  -file control/users_create.sql  -in "Subdomain string, BackupKeyHash string"
 //go:generate go run ./gen/prepared.go  -file control/users_delete.sql  -in "Subdomain string"

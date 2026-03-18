@@ -3,6 +3,8 @@
 -- pool is the first charater of the subdomain
 -- backup key is provided to the user on creation, used as proof of ownership in case of lost information
 -- only soft delete users
+
+
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT UNIQUE NOT NULL,

@@ -19,7 +19,7 @@ type BackupJobs struct {
 
 	ControlBackupInterval time.Duration
 	BatchBackupInterval   time.Duration
-	MaxUserAge            time.Duration
+	MaxUserInactive       time.Duration
 
 	cancel func()
 	wg     sync.WaitGroup
@@ -33,9 +33,9 @@ func SetupBackupJobs(config config.ServerConfig, controlDB *db.ControlDB, s3Clie
 
 	jobs := &BackupJobs{
 		controlDB:             controlDB,
-		ControlBackupInterval: 10 * time.Second, // TODO replace with config
-		BatchBackupInterval:   60 * time.Second, // TODO replace with config
-		MaxUserAge:            30 * time.Minute, // TODO replace with config
+		ControlBackupInterval: time.Duration(config.ControlBackupIntervalInSeconds) * time.Second,
+		BatchBackupInterval:   time.Duration(config.BatchBackupIntervalInSeconds) * time.Second,
+		MaxUserInactive:       time.Duration(config.MaxUserInactiveInMins) * time.Minute,
 
 		S3Client: s3Client,
 	}
@@ -171,7 +171,8 @@ func (b *BackupJobs) userBackupLoop(interval time.Duration) {
 }
 
 func (b *BackupJobs) BackupUserBatch(char string) error {
-	defer utils.TrackTime(time.Now(), "backup user pool "+char)
+	trackTrim := false
+	defer utils.TrackTime(time.Now(), "backup user pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
 
 	users, err := b.controlDB.GetUserBatch(char)
@@ -202,61 +203,14 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 		paths = append(paths, backupPath)
 	}
 
+	trackTrim = len(paths) > 0
+
 	err = b.S3Client.SyncAllFilesToSingleLZ4(b.S3Client.UserBatchS3Path(char), paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync user pool: %w %v", err, string(char))
 	}
 
 	// Copy the control db to the backup location
-	return nil
-}
-
-// This method looks though all the ages of the DBs and removes user that are older than the max age from the circulation
-// TODO It should then group these user up together, zip them and then upload them to S3 while logging their location for future hydration
-func (b *BackupJobs) ArchiveInactiveUsers() error {
-	defer utils.TrackTime(time.Now(), "ArchiveInactiveUsers")
-
-	ctx := context.TODO()
-	users, err := b.controlDB.GetInactiveUsers(b.MaxUserAge)
-	if err != nil {
-		return fmt.Errorf("Cant get inactive users %w", err)
-	}
-	if len(users) == 0 {
-		return nil
-	}
-
-	removeList := []string{}
-
-	for _, user := range users {
-		if user.Subdomain == "" {
-			continue
-		}
-		path, backupPath := utils.UserDBPaths(user.Subdomain)
-
-		// One more backup
-		err := utils.SqliteBackup(ctx, user.SQLiteDB, path, backupPath)
-		if err != nil {
-			return fmt.Errorf("cannot backup user db: %w", user.Subdomain, err)
-		}
-
-		// Save as backup file and upload to final localtion
-		err = b.S3Client.UploadToS3(ctx, backupPath, b.S3Client.UserArchiveS3Path(user.Subdomain))
-		if err != nil {
-			return fmt.Errorf("cannot upload archived user db: %w", user.Subdomain, err)
-		}
-
-		removeList = append(removeList, user.Subdomain)
-	}
-
-	for _, subdomain := range removeList {
-		err := b.controlDB.DeleteUser(subdomain)
-		if err != nil {
-			fmt.Printf("Failed to delete user %s: %v\n", subdomain, err)
-		} else {
-			fmt.Printf("Deleted user %s\n", subdomain)
-		}
-	}
-
 	return nil
 }
 

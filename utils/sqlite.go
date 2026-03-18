@@ -10,8 +10,12 @@ import (
 )
 
 func SqliteBackup(ctx context.Context, db *sql.DB, path string, backupPath string) error {
-	defer TrackTime(time.Now(), "SqliteBackup "+path)
+	defer TrackTime(time.Now(), "SqliteBackup "+path, nil, nil)
 	fmt.Println("SqliteBackup", path, backupPath)
+	err := MkParentDirs(backupPath)
+	if err != nil {
+		return fmt.Errorf("cannot create parent directories: %w", err)
+	}
 
 	backupDB, err := sql.Open("sqlite3", backupPath)
 	if err != nil {

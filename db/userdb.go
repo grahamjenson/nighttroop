@@ -45,7 +45,7 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool) (*UserDB, 
 	err = migrations.MigrateUser(ctx, sqldb)
 	if err != nil {
 		sqldb.Close()
-		return nil, fmt.Errorf("cannot migrate user db: %s %w", subdomain, err)
+		return userDB, fmt.Errorf("Migration Error Occured user db: %s %w", subdomain, err)
 	}
 
 	return userDB, nil
@@ -79,6 +79,21 @@ func (db *UserDB) CreateAPIToken() (string, error) {
 func (db *UserDB) ValidateAPIToken(token string) error {
 
 	return nil
+}
+
+// WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWOLLOWED
+func (db *UserDB) TryCloseAndDelete() {
+	if db == nil {
+		return
+	}
+	if db.SQLiteDB != nil {
+		db.SQLiteDB.Close()
+	}
+	if db.Subdomain == "" {
+		return
+	}
+	path, _ := utils.UserDBPaths(db.Subdomain)
+	_ = utils.DeleteFile(path)
 }
 
 func (db *UserDB) Close() {

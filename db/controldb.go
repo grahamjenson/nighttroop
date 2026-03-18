@@ -27,6 +27,7 @@ type ControlDB struct {
 	UsersGet            *controlsql.UsersGetStmt
 	UsersGetBatch       *controlsql.UsersGetBatchStmt
 	UsersAll            *controlsql.UsersAllStmt
+	UsersNotDeleted     *controlsql.UsersNotDeletedStmt
 	UsersGetInactive    *controlsql.UsersGetInactiveStmt
 	UsersUpdateLastSeen *controlsql.UsersUpdateLastSeenStmt
 	UsersDelete         *controlsql.UsersDeleteStmt
@@ -64,6 +65,7 @@ func NewControlDB() (*ControlDB, error) {
 	controlDB.UsersGetBatch = control.NewUsersGetBatch(sqldb, &errs)
 	controlDB.UsersUpdateLastSeen = control.NewUsersUpdateLastSeen(sqldb, &errs)
 	controlDB.TESTONLYUsersTruncateAll = control.NewUsersTruncateAll(sqldb, &errs)
+	controlDB.UsersNotDeleted = control.NewUsersNotDeleted(sqldb, &errs)
 	controlDB.UsersGetInactive = control.NewUsersGetInactive(sqldb, &errs)
 
 	if finalErr := errors.Join(errs...); finalErr != nil {
@@ -81,7 +83,7 @@ func NewControlDB() (*ControlDB, error) {
 // This will fetch all the users in
 func (db *ControlDB) fillUsers() ([]string, error) {
 	users := []string{}
-	res, err := db.UsersAll.Query(context.TODO())
+	res, err := db.UsersNotDeleted.Query(context.TODO())
 
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
@@ -102,27 +104,35 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 
 func (db *ControlDB) CreateUser() (*UserDB, error) {
 	subdomain := utils.NextUserID()
+	// TODO make this work properly
 	backupKeyHash, err := utils.GenerateSecureAPIKey(12)
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
 
+	userDB, err := NewUserDB(context.TODO(), subdomain, false)
+	if err != nil {
+
+		userDB.TryCloseAndDelete()
+
+		return nil, fmt.Errorf("User DB Creation Error: %w", err)
+	}
+
+	// Lock and write user to the db and add to the in memory map
+	db.usersRWLock.Lock()
+	defer db.usersRWLock.Unlock()
+
 	_, err = db.UsersCreate.Exec(context.TODO(), subdomain, backupKeyHash)
 	if err != nil {
+		// Clean up the created DB file
+		// If anything happens later the archiving process can clean it up
+
+		userDB.TryCloseAndDelete()
+
 		return nil, fmt.Errorf("cannot create user: %w", err)
 	}
 
-	userDB, err := NewUserDB(context.TODO(), subdomain, false)
-	if err != nil {
-		return nil, fmt.Errorf("user db file already exists")
-	}
-
-	// TODO create API token
-
-	// Add the user to the pool
-	db.usersRWLock.Lock()
 	db.users[subdomain] = userDB
-	db.usersRWLock.Unlock()
 
 	return userDB, nil
 }

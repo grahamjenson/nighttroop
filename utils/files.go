@@ -23,3 +23,23 @@ func FileExists(path string) bool {
 	}
 	return false
 }
+
+func DeleteFile(path string) error {
+	if FileExists(path) {
+		err := os.Remove(path)
+		if err != nil {
+			return fmt.Errorf("cannot delete file %s: %w", path, err)
+		}
+	}
+	return nil
+}
+
+func DeleteFiles(paths []string) error {
+	for _, path := range paths {
+		err := DeleteFile(path)
+		if err != nil {
+			return fmt.Errorf("cannot delete file %s: %w", path, err)
+		}
+	}
+	return nil
+}

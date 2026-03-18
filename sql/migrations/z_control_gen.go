@@ -40,46 +40,19 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	defer tx.Rollback()
-	fmt.Printf("Running migration: %s\n", `-- unique ID
--- subdomain is the unique identifier for the user and is used in the URL
--- pool is the first charater of the subdomain
--- backup key is provided to the user on creation, used as proof of ownership in case of lost information
--- only soft delete users
-CREATE TABLE users (
+	fmt.Printf("Migrating: %s\n", `CREATE TABLE users (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT UNIQUE NOT NULL,
     batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL,
-    
     backup_key_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    deleted_at TIMESTAMP
-)`)
-	if _, err := tx.ExecContext(ctx, `-- unique ID
--- subdomain is the unique identifier for the user and is used in the URL
--- pool is the first charater of the subdomain
--- backup key is provided to the user on creation, used as proof of ownership in case of lost information
--- only soft delete users
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT UNIQUE NOT NULL,
-    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL,
-    
-    backup_key_hash TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     deleted_at TIMESTAMP
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Running migration: %s\n", `CREATE TABLE admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)`)
+	fmt.Printf("Migrating: %s\n", `CREATE TABLE admins (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -114,24 +87,13 @@ func MigrationControl0002Sql(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	defer tx.Rollback()
-	fmt.Printf("Running migration: %s\n", `CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
-    details TEXT,
-    start INTEGER,
-    end INTEGER,
-
-    timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-    starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-    endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
-)`)
+	fmt.Printf("Migrating: %s\n", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     TYPE TEXT,
     details TEXT,
     start INTEGER,
     end INTEGER,
-
     timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
     starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
     endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
