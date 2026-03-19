@@ -1,1 +1,1 @@
-SELECT username, password, created_at FROM admins a WHERE a.username = ?;
+SELECT name, password, role, totp_secret, last_seen_at, created_at FROM admins WHERE name = ?;

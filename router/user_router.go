@@ -24,9 +24,6 @@ func NewUserRouter(controlDB *db.ControlDB) chi.Router {
 	r := chi.NewRouter()
 	r.Use(GetUserMiddleware(controlDB))
 
-	addNSRoutes(r)
-	addSocketIORoute(r)
-
 	r.Post("/ping", func(w http.ResponseWriter, r *http.Request) {
 		userDB := GetUser(r.Context())
 
@@ -54,15 +51,6 @@ func NewUserRouter(controlDB *db.ControlDB) chi.Router {
 
 	})
 	return r
-}
-
-func addNSRoutes(r chi.Router) {
-	// Add NS routes here
-
-}
-
-func addSocketIORoute(r chi.Router) {
-	// Add SocketIO route here
 }
 
 func GetUserMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {

@@ -16,9 +16,6 @@ func MigrateControl(ctx context.Context, db *sql.DB) error {
 	if err := MigrationControl0001Sql(ctx, db); err != nil {
 		return err
 	}
-	if err := MigrationControl0002Sql(ctx, db); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -55,38 +52,15 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 	fmt.Printf("Migrating: %s\n", `CREATE TABLE admins (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    totp_secret TEXT NOT NULL,
+    role TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`); err != nil {
 		return err
 	}
-
-	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001Sql"); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func MigrationControl0002Sql(ctx context.Context, db *sql.DB) error {
-
-	var versionSeen int
-	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0002Sql").Scan(&versionSeen)
-	if err != nil {
-		return err
-	}
-	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "Control0002Sql")
-		return nil
-	}
-	fmt.Printf("Migration %s applying\n", "Control0002Sql")
-
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
 	fmt.Printf("Migrating: %s\n", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +75,7 @@ func MigrationControl0002Sql(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 
-	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0002Sql"); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001Sql"); err != nil {
 		return err
 	}
 

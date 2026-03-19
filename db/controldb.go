@@ -105,15 +105,19 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 type UserCreateMaterial struct {
 	Subdomain     string
 	BackupKeyHash string
+	Password      string
 }
 
 func (db *ControlDB) CreateUser() (*UserDB, error) {
 	subdomain := utils.NextUserID()
 	// Password is used as an API key for the user to access their data
 	// BackupKey
-	password, hash := utils.GenerateCredentials()
-	backupKey, backupKeyHash := utils.GenerateCredentials()
+	password, hash, err := utils.SecureCredentials()
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate secure credentials: %w", err)
+	}
 
+	backupKey, backupKeyHash, err := utils.SecureCredentials()
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
@@ -122,7 +126,6 @@ func (db *ControlDB) CreateUser() (*UserDB, error) {
 	if err != nil {
 
 		userDB.TryCloseAndDelete()
-
 		return nil, fmt.Errorf("User DB Creation Error: %w", err)
 	}
 

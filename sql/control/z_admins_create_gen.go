@@ -9,8 +9,8 @@ import (
 )
 
 var AdminsCreateRaw string = `
-INSERT INTO admins (username, password)
-VALUES (?, ?);
+INSERT INTO admins (name, password, role, totp_secret)
+VALUES (?, ?, ?, ?);
 `
 
 type AdminsCreateModel struct {
@@ -31,8 +31,8 @@ func NewAdminsCreate(sqldb *sql.DB, errs *[]error) *AdminsCreateStmt {
 	return &AdminsCreateStmt{stmt: stmt}
 }
 
-func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password string) ([]AdminsCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, username, password)
+func (s *AdminsCreateStmt) Query(ctx context.Context, name string, password string, role string, totp_secret string) ([]AdminsCreateModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, name, password, role, totp_secret)
 	if err != nil {
 		return nil, fmt.Errorf("AdminsCreate query error: %w", err)
 	}
@@ -50,17 +50,17 @@ func (s *AdminsCreateStmt) Query(ctx context.Context, username string, password 
 	return results, nil
 }
 
-func (s *AdminsCreateStmt) Exec(ctx context.Context, username string, password string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, username, password)
+func (s *AdminsCreateStmt) Exec(ctx context.Context, name string, password string, role string, totp_secret string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, name, password, role, totp_secret)
 	if err != nil {
 		return nil, fmt.Errorf("AdminsCreate exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *AdminsCreateStmt) QueryRow(ctx context.Context, username string, password string) (AdminsCreateModel, error) {
+func (s *AdminsCreateStmt) QueryRow(ctx context.Context, name string, password string, role string, totp_secret string) (AdminsCreateModel, error) {
 	var model AdminsCreateModel
-	err := s.stmt.QueryRowContext(ctx, username, password).Scan()
+	err := s.stmt.QueryRowContext(ctx, name, password, role, totp_secret).Scan()
 	if err != nil {
 		return model, fmt.Errorf("AdminsCreate query row error: %w", err)
 	}

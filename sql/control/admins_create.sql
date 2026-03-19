@@ -1,2 +1,2 @@
-INSERT INTO admins (username, password)
-VALUES (?, ?);
+INSERT INTO admins (name, password, role, totp_secret)
+VALUES (?, ?, ?, ?);

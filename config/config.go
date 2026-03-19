@@ -51,6 +51,11 @@ type ServerConfig struct {
 	// Backup Config
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
+
+	// These keys are used to encrypt secrets in the DB and S3 at rest
+	// This has the option to add additional keys
+	EncryptionKeys           map[string]string
+	DefaultEncryptionKeyName string
 }
 
 // Priority is

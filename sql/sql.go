@@ -14,9 +14,8 @@ package sql
 //
 
 // admins
-//go:generate go run ./gen/prepared.go  -file control/admins_count.sql  -out "count int"
-//go:generate go run ./gen/prepared.go  -file control/admins_create.sql -in "username string,password string"
-//go:generate go run ./gen/prepared.go  -file control/admins_get.sql -in "username string" -out "username string,password string, created_at *time.Time"
+//go:generate go run ./gen/prepared.go  -file control/admins_create.sql -in "name string,password string,role string,totp_secret string"
+//go:generate go run ./gen/prepared.go  -file control/admins_get.sql -in "name string" -out "name string,password string,role string,totp_secret string,last_seen_at *time.Time,created_at *time.Time"
 
 // users
 //go:generate go run ./gen/prepared.go  -file control/users_all.sql  -out "Subdomain string, CreatedAt *time.Time, LastSeenAt *time.Time, DeletedAt *time.Time"
@@ -35,7 +34,6 @@ package sql
 //
 
 // Control
-//go:generate go run ./gen/migration.go -name control -file migrations/control_0001.sql -file migrations/control_0002.sql
-
+//go:generate go run ./gen/migration.go -name control -file migrations/control_0001.sql
 // Users
 //go:generate go run ./gen/migration.go -name user -file migrations/user_0001.sql
