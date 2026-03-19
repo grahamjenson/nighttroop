@@ -61,11 +61,11 @@ func main() {
 	totpSecret := totpKey.Secret()
 
 	// 6 for key id and 12 for the key
-	encryptionKey := utils.SecureRandomString(16, utils.API_KEY_CHAR_SET)
+	encryptionKey := utils.SecureRandomString(32, utils.API_KEY_CHAR_SET)
 
 	fmt.Println("Hashed Password:", string(hashedBytes))
 	fmt.Println("Secret:", totpSecret)
-	fmt.Println("EncryptionKey")
+	fmt.Println("EncryptionKey: ", keyName+encryptionKey)
 	keys := map[string][]byte{keyName: []byte(encryptionKey)}
 	cypherText, _ := utils.EncryptWithRotation(keyName, keys, []byte(totpSecret))
 
