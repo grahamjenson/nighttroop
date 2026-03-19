@@ -37,7 +37,7 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 		}
 
 		// Save as backup file and upload to final localtion
-		err = b.S3Client.UploadToS3(ctx, backupPath, b.S3Client.UserArchiveS3Path(user.Subdomain))
+		err = b.S3Client.UploadFilesToS3(b.S3Client.UserArchiveS3Path(user.Subdomain), []string{backupPath})
 		if err != nil {
 			return fmt.Errorf("cannot upload archived user db: %w", user.Subdomain, err)
 		}

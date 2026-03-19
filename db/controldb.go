@@ -112,12 +112,12 @@ func (db *ControlDB) CreateUser() (*UserDB, error) {
 	subdomain := utils.NextUserID()
 	// Password is used as an API key for the user to access their data
 	// BackupKey
-	password, hash, err := utils.SecureCredentials()
-	if err != nil {
-		return nil, fmt.Errorf("cannot generate secure credentials: %w", err)
-	}
+	// password, hash, err := utils.SecureCredentials()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("cannot generate secure credentials: %w", err)
+	// }
 
-	backupKey, backupKeyHash, err := utils.SecureCredentials()
+	_, backupKeyHash, err := utils.SecureCredentials()
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
@@ -216,14 +216,14 @@ func (db *ControlDB) AllInactiveUsers(maxAge time.Duration) ([]*UserDB, error) {
 	return users, nil
 }
 
-func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, error) {
+func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *control.UsersGetModel, error) {
 	// Check if user exists in the db
 	model, err := db.UsersGet.QueryRow(context.TODO(), subdomain)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get user: %w", err)
+		return nil, nil, fmt.Errorf("cannot get user: %w", err)
 	}
 	if model.Subdomain == "" {
-		return nil, fmt.Errorf("user not found")
+		return nil, nil, fmt.Errorf("user not found")
 	}
 	fmt.Println("Found User: ", model.Subdomain, model.LastSeenAt)
 	lastSeenMoreThan10MinutesAgo := model.LastSeenAt.Add(10 * time.Minute).After(time.Now())
@@ -236,10 +236,10 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, er
 
 	user := db.users[subdomain]
 	if user == nil {
-		return nil, fmt.Errorf("user not found in memory")
+		return nil, nil, fmt.Errorf("user not found in memory")
 	}
 
-	return user, nil
+	return user, &model, nil
 }
 
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {

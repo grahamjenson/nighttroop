@@ -120,7 +120,7 @@ func (b *BackupJobs) backupControl() error {
 	}
 
 	// Copy the control db to S3 path
-	err = b.S3Client.UploadToS3(ctx, utils.CONTROL_DB_BACKUP_PATH, b.S3Client.ControlS3Path())
+	err = b.S3Client.UploadFilesToS3(b.S3Client.ControlS3Path(), []string{utils.CONTROL_DB_BACKUP_PATH})
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}
@@ -203,7 +203,7 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 
 	trackTrim = len(paths) > 0
 
-	err = b.S3Client.SyncAllFilesToSingleLZ4(b.S3Client.UserBatchS3Path(char), paths)
+	err = b.S3Client.UploadFilesToS3(b.S3Client.UserBatchS3Path(char), paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync user pool: %w %v", err, string(char))
 	}

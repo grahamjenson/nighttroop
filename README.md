@@ -30,6 +30,7 @@ go run main.go --dev
 
 
 
+
 # Goals:
 1. 
 
@@ -48,3 +49,34 @@ Write an infinite go routine per user every 30 seconds checks `to-be-synced` and
 Write an app, let it take a name and a picture, add a user. Then call the service create a user
 
 
+
+# Security 
+
+We generate two keysets, one for AES256GCM and one streaming version of that for files
+
+```
+export KEY_SETS=$(go run utils/keysets/create_keysets.go)
+```
+
+echo KEY
+```
+fly secrets set KEY_SETS=$KEY_SETS
+```
+
+Keep the KeySets ENVAR handy because on first deploy they will be used to encrypt the admin password and 2FA which are logged out.
+
+This is done with
+
+```
+go run utils/gen/
+```
+
+### Security Operations
+add a new key and roll the old key
+
+```
+go run utils/keysets/decrypt_admin_bundle.go "<base64 encoded admin info>"
+```
+
+This will add the new key and make it primary, so then all new values will be encrypted with that new primary value
+TODO as encrypted values are read, if they are on an old key they will be moved over.

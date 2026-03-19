@@ -21,6 +21,7 @@ import (
 	"nighttroop.t1d.nz/config"
 
 	"github.com/pierrec/lz4/v4"
+	"github.com/tink-crypto/tink-go/v2/keyset"
 )
 
 ////
@@ -44,6 +45,7 @@ type S3Client struct {
 
 	// Common Config Varaibles Used In Paths
 	HostName string
+	kh       *keyset.Handle
 }
 
 // MaxKeys is the number of keys S3 can operate on per batch.
@@ -86,6 +88,7 @@ func (c *S3Client) TestS3Client() error {
 		Body:   strings.NewReader(testContent),
 	})
 
+	// Testing the Raw S3Client
 	if err != nil {
 		return fmt.Errorf("s3Client test upload failed: %w", err)
 	}
@@ -110,6 +113,12 @@ func (c *S3Client) TestS3Client() error {
 		return fmt.Errorf("s3Client test content mismatch: expected %s, got %s", testContent, bodyString)
 	}
 
+	// Testing the upload and download stuff, which means key encryption and streaming
+	// TODO test encryption and decryption of files
+	// err = c.UploadFilesToS3(testKey, []string{})
+	// if err != nil {
+	// 	return fmt.Errorf("s3Client test empty upload failed: %w", err)
+	// }
 	return nil
 }
 
@@ -141,47 +150,8 @@ func (c *S3Client) TestObjectPath() string {
 // UPLOAD METHODS
 ////
 
-func (c *S3Client) UploadToS3(ctx context.Context, filePath, key string) error {
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Printf("Failed to open file %s: %v\n", filePath, err)
-		return fmt.Errorf("failed to open file %s: %w", filePath, err)
-	}
-	defer file.Close()
-
-	_, err = c.uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(key),
-		Body:   file,
-	})
-
-	if err != nil {
-		log.Printf("Failed to upload %s: %v\n", filePath, err)
-		return fmt.Errorf("failed to upload %s: %w", filePath, err)
-	}
-
-	fmt.Printf("Uploaded %s successfully\n", filePath)
-	return nil
-}
-
-func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.Reader) error {
-	_, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(key),
-		Body:   stream,
-	})
-
-	if err != nil {
-		log.Printf("Failed to upload Stream: %v\n", err)
-		return fmt.Errorf("failed to upload Stream: %w", err)
-	}
-
-	return nil
-}
-
-func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
-	defer TrackTime(time.Now(), "SyncAllFilesToSingleLZ4 "+key, nil, nil)
+func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
+	defer TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, nil)
 	if len(paths) == 0 {
 		fmt.Printf("No files to sync for %s\n", key)
 		return nil
@@ -215,6 +185,21 @@ func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
 	return nil
 }
 
+func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.Reader) error {
+	_, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(key),
+		Body:   stream,
+	})
+
+	if err != nil {
+		log.Printf("Failed to upload Stream: %v\n", err)
+		return fmt.Errorf("failed to upload Stream: %w", err)
+	}
+
+	return nil
+}
+
 ////
 // END OF UPLOAD METHODS
 ////
@@ -223,7 +208,7 @@ func (c *S3Client) SyncAllFilesToSingleLZ4(key string, paths []string) error {
 // DOWNLOAD METHODS
 ////
 
-func (c *S3Client) DownloadAndExtractLZ4(key string, outpath string) (bool, error) {
+func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error) {
 	// This function downloads a path to a user
 	ctx := context.TODO()
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
@@ -244,36 +229,6 @@ func (c *S3Client) DownloadAndExtractLZ4(key string, outpath string) (bool, erro
 		return true, fmt.Errorf("cannot extract tar LZ4: %w", err)
 	}
 
-	return true, nil
-}
-
-func (c *S3Client) DownloadFile(s3path string, outpath string) (bool, error) {
-	// This function downloads a path to a user
-	ctx := context.TODO()
-	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(s3path),
-	})
-	if err != nil {
-		var noSuchKeyError *types.NoSuchKey
-		if errors.As(err, &noSuchKeyError) {
-			return false, nil
-		}
-
-		return false, fmt.Errorf("cannot get object from s3: %w", err)
-	}
-	defer out.Body.Close()
-
-	file, err := os.Create(outpath)
-	if err != nil {
-		return true, fmt.Errorf("cannot create file: %w", err)
-	}
-	defer file.Close()
-	_, err = io.Copy(file, out.Body)
-	if err != nil {
-		return true, fmt.Errorf("cannot copy file: %w", err)
-	}
-	fmt.Printf("Restored %s successfully\n", s3path)
 	return true, nil
 }
 

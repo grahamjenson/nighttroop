@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/utils"
 )
 
 type ctxUserDBKey int
@@ -70,25 +71,25 @@ func GetUserMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handle
 			}
 
 			// Search for users
-			user, err := controlDB.GetUser(subdomain, true)
+			userDB, userModel, err := controlDB.GetUser(subdomain, true)
 			// We ignore errors and this is a best effort middleware
 			// Each route needs to check the user if needed
-			if err != nil || user == nil {
+			if err != nil || userDB == nil || userModel == nil {
 				// If the user is not found, we can return a 404
 				fmt.Println("User Middleware Error", err)
 				http.NotFound(w, r)
 				return
 			}
 
-			err = user.ValidateAPIToken(apiToken)
-			if err != nil {
+			verified := utils.VerifyPassword("", apiToken)
+			if !verified {
 				fmt.Println("User token error", err)
 				// write an not auth http error
 				http.Error(w, "Not Authorized", http.StatusUnauthorized)
 				return
 			}
 
-			ctx = context.WithValue(ctx, UserDBKey, user)
+			ctx = context.WithValue(ctx, UserDBKey, userDB)
 			next.ServeHTTP(w, r.WithContext(ctx))
 
 		}

@@ -1,3 +1,4 @@
 *.sqlite*
 /data
 .env
+master_key.bin
