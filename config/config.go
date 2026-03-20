@@ -350,7 +350,7 @@ func (config *ServerConfig) ConfigCreateEncryptionKeys(dotenvdev map[string]stri
 		return fmt.Errorf("failed to read file encryption key set: %w", err)
 	}
 
-	fmt.Println("Successfully read encryption key sets from config", "encKeySet", encKetSet, "fileEncKeySet", fileEncKeySet)
+	fmt.Println("Successfully read encryption key sets from config")
 
 	aeadTink, err := aead.New(encKetSet)
 	if err != nil {
@@ -395,12 +395,10 @@ func (config *ServerConfig) Decrypt(ciphertext string) (string, error) {
 	return string(plaintext), nil
 }
 
-func (config *ServerConfig) EncryptingWriter() (io.WriteCloser, error) {
-	var buf bytes.Buffer
-	return config.streamEnc.NewEncryptingWriter(&buf, nil)
+func (config *ServerConfig) EncryptingWriter(writer io.Writer) (io.WriteCloser, error) {
+	return config.streamEnc.NewEncryptingWriter(writer, nil)
 }
 
-func (config *ServerConfig) DecryptingReader() (io.Reader, error) {
-	var buf bytes.Buffer
-	return config.streamEnc.NewDecryptingReader(&buf, nil)
+func (config *ServerConfig) DecryptingReader(reader io.Reader) (io.Reader, error) {
+	return config.streamEnc.NewDecryptingReader(reader, nil)
 }

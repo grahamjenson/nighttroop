@@ -29,7 +29,9 @@ import (
 
 // //
 type S3Client struct {
-	s3       *s3.Client // s3 service
+	s3           *s3.Client // s3 service
+	ServerConfig *config.ServerConfig
+
 	uploader *manager.Uploader
 
 	// AWS authentication keys.
@@ -56,6 +58,7 @@ const DefaultRegion = "us-east-1"
 
 func NewS3Client(config config.ServerConfig) *S3Client {
 	c := &S3Client{
+		ServerConfig:    &config,
 		AccessKeyID:     config.S3AccessKeyID,
 		SecretAccessKey: config.S3AccessSecretKey,
 		ForcePathStyle:  true,
@@ -126,16 +129,16 @@ func (c *S3Client) TestS3Client() error {
 // PATHS
 // //
 func (c *S3Client) ControlS3Path() string {
-	return fmt.Sprintf("%s/backup/control.lz4", c.HostName)
+	return fmt.Sprintf("%s/backup/control.tar.lz4.enc", c.HostName)
 }
 
 func (c *S3Client) UserBatchS3Path(char string) string {
-	return fmt.Sprintf("%s/backup/user/%s.lz4", c.HostName, char)
+	return fmt.Sprintf("%s/backup/user/%s.tar.lz4.enc", c.HostName, char)
 }
 
 func (c *S3Client) UserArchiveS3Path(subdomain string) string {
 	char := subdomain[0]
-	return fmt.Sprintf("%s/archive/user/%s/%s.lz4", c.HostName, string(char), subdomain)
+	return fmt.Sprintf("%s/archive/user/%s/%s.tar.lz4.enc", c.HostName, string(char), subdomain)
 }
 
 func (c *S3Client) TestObjectPath() string {
@@ -166,7 +169,7 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 	// Create a goroutine to write to the pipe the zip
 	go func() {
 		defer pw.Close()
-		err := createTarLZ4(paths, pw)
+		err := c.createTarLZ4(paths, pw)
 		if err != nil {
 			fmt.Println("Error creating tar LZ4", err)
 			// Important: propagate error to the reader side
@@ -224,7 +227,7 @@ func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error)
 	}
 	defer out.Body.Close()
 
-	err = extractTarLZ4(out.Body, outpath)
+	err = c.ExtractTarLZ4(out.Body, outpath)
 	if err != nil {
 		return true, fmt.Errorf("cannot extract tar LZ4: %w", err)
 	}
@@ -239,20 +242,39 @@ func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error)
 // //
 // TODO SLOP TO BE REVIEWED
 // //
-func createTarLZ4(files []string, writer io.Writer) error {
+func (c *S3Client) createTarLZ4(files []string, writer io.Writer) error {
+	// Wrap all up in encryption
+	encWriter, err := c.ServerConfig.EncryptingWriter(writer)
+	if err != nil {
+		return fmt.Errorf("cannot create encrypting writer: %w", err)
+	}
+
 	// Wrap in LZ4 writer
-	lz4Writer := lz4.NewWriter(writer)
-	defer lz4Writer.Close()
+	lz4Writer := lz4.NewWriter(encWriter)
 
 	// Create tar writer
 	tarWriter := tar.NewWriter(lz4Writer)
-	defer tarWriter.Close()
 
 	for _, file := range files {
 		if err := addFileToTar(tarWriter, file); err != nil {
+			tarWriter.Close()
+			lz4Writer.Close()
+			encWriter.Close()
 			return fmt.Errorf("adding %s to tar: %w", file, err)
 		}
 	}
+
+	// Replace the defers with this at the end of createTarLZ4:
+	if err := tarWriter.Close(); err != nil {
+		return fmt.Errorf("closing tar writer: %w", err)
+	}
+	if err := lz4Writer.Close(); err != nil {
+		return fmt.Errorf("closing lz4 writer: %w", err)
+	}
+	if err := encWriter.Close(); err != nil {
+		return fmt.Errorf("closing enc writer: %w", err)
+	}
+
 	return nil
 }
 
@@ -284,9 +306,16 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 	return err
 }
 
-func extractTarLZ4(reader io.Reader, outputDir string) error {
+func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
+
+	// Wrap with decryption
+	decReader, err := c.ServerConfig.DecryptingReader(reader)
+	if err != nil {
+		return fmt.Errorf("cannot create decrypting reader: %w", err)
+	}
+
 	// Wrap with LZ4 reader
-	lz4Reader := lz4.NewReader(reader)
+	lz4Reader := lz4.NewReader(decReader)
 
 	// Create tar reader from decompressed stream
 	tarReader := tar.NewReader(lz4Reader)

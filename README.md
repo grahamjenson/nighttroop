@@ -1,3 +1,10 @@
+# TODO
+
+1. JWT implementation middleware for both control and user
+2. Nightscout reimplementation routes
+3. make sure tink is thread safe
+
+
 # NightTroop
 
 NightTroop is a server that hosts many NightScout servers at the same time.

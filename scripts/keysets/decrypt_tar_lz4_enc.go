@@ -1,35 +1,28 @@
 //go:build ignore
 
-// This function takes the encrypted base64
 package main
 
-//TODO
 import (
 	"fmt"
 	"log"
 	"os"
 
 	"nighttroop.t1d.nz/config"
+	"nighttroop.t1d.nz/utils"
 )
 
+// something like cat file.tar.lz4.enc | go run decrypt_tar_lz4_enc.go
 func main() {
 	// Create Empty Config and
 	configs := config.ServerConfig{}
+	s3Client := &utils.S3Client{ServerConfig: &configs}
+
 	// Create
 	err := configs.ConfigCreateEncryptionKeys(map[string]string{}, map[string]string{}) // This will create the keysets and store them in the config struct
 	if err != nil {
 		log.Fatal(fmt.Errorf("cannot create server config: %w", err))
 	}
 
-	val, ok := os.LookupEnv("ENCRYPTED_ADMIN_BUNDLE")
-	if !ok {
-		log.Fatal(fmt.Errorf("ENCRYPTED_ADMIN_BUNDLE not set in environment"))
-	}
-
-	plainText, err := configs.Decrypt(val)
-	if err != nil {
-		log.Fatal(fmt.Errorf("cannot decrypt admin bundle: %w", err))
-	}
-
-	fmt.Println("Decrypted admin bundle:", plainText)
+	// This takes in stdin and outputs decrypted and decompressed data to folders
+	s3Client.ExtractTarLZ4(os.Stdin, ".")
 }
