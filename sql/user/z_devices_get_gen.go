@@ -17,7 +17,7 @@ LIMIT 1;
 `
 
 type DevicesGetModel struct {
-	name  string
+	Name  string
 	token string
 }
 
@@ -36,8 +36,8 @@ func NewDevicesGet(sqldb *sql.DB, errs *[]error) *DevicesGetStmt {
 	return &DevicesGetStmt{stmt: stmt}
 }
 
-func (s *DevicesGetStmt) Query(ctx context.Context, name string, token string) ([]DevicesGetModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, name, token)
+func (s *DevicesGetStmt) Query(ctx context.Context, Name string, token string) ([]DevicesGetModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Name, token)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesGet query error: %w", err)
 	}
@@ -47,7 +47,7 @@ func (s *DevicesGetStmt) Query(ctx context.Context, name string, token string) (
 	for rows.Next() {
 		var model DevicesGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.name, &model.token); err != nil {
+		if err := rows.Scan(&model.Name, &model.token); err != nil {
 			return nil, fmt.Errorf("DevicesGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -55,17 +55,17 @@ func (s *DevicesGetStmt) Query(ctx context.Context, name string, token string) (
 	return results, nil
 }
 
-func (s *DevicesGetStmt) Exec(ctx context.Context, name string, token string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, name, token)
+func (s *DevicesGetStmt) Exec(ctx context.Context, Name string, token string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Name, token)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesGet exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *DevicesGetStmt) QueryRow(ctx context.Context, name string, token string) (DevicesGetModel, error) {
+func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string, token string) (DevicesGetModel, error) {
 	var model DevicesGetModel
-	err := s.stmt.QueryRowContext(ctx, name, token).Scan(&model.name, &model.token)
+	err := s.stmt.QueryRowContext(ctx, Name, token).Scan(&model.Name, &model.token)
 	if err != nil {
 		return model, fmt.Errorf("DevicesGet query row error: %w", err)
 	}

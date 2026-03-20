@@ -8,21 +8,33 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pquerna/otp/totp"
+	"nighttroop.t1d.nz/config"
 	"nighttroop.t1d.nz/sql/control"
 	controlsql "nighttroop.t1d.nz/sql/control"
 	"nighttroop.t1d.nz/sql/migrations"
 	"nighttroop.t1d.nz/utils"
 )
 
+const FIRST_ADMIN_NAME = "admin"
+
 type ControlDB struct {
-	SQLiteDB *sql.DB
+	SQLiteDB     *sql.DB
+	serverConfig config.ServerConfig
 
 	// previously modified
 	users map[string]*UserDB
 
 	usersRWLock sync.RWMutex
 
+	////
 	// prepared statements
+	////
+	// ADMINS
+	AdminsCreate *controlsql.AdminsCreateStmt
+	AdminsGet    *controlsql.AdminsGetStmt
+
+	// USERS
 	UsersCreate         *controlsql.UsersCreateStmt
 	UsersGet            *controlsql.UsersGetStmt
 	UsersGetBatch       *controlsql.UsersGetBatchStmt
@@ -36,7 +48,7 @@ type ControlDB struct {
 	TESTONLYUsersTruncateAll *controlsql.UsersTruncateAllStmt
 }
 
-func NewControlDB() (*ControlDB, error) {
+func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	var err error
 
 	sqldb, err := OpenSqliteDB(utils.CONTROL_DB_PATH, 2000)
@@ -45,8 +57,9 @@ func NewControlDB() (*ControlDB, error) {
 	}
 	// Create a new control db
 	controlDB := &ControlDB{
-		SQLiteDB: sqldb,
-		users:    make(map[string]*UserDB),
+		SQLiteDB:     sqldb,
+		users:        make(map[string]*UserDB),
+		serverConfig: serverConfig,
 	}
 
 	// Migrate the DB, run any unrun migrations
@@ -58,6 +71,9 @@ func NewControlDB() (*ControlDB, error) {
 	var errs []error
 
 	// Create the prepared statements
+	controlDB.AdminsCreate = control.NewAdminsCreate(sqldb, &errs)
+	controlDB.AdminsGet = control.NewAdminsGet(sqldb, &errs)
+
 	controlDB.UsersCreate = control.NewUsersCreate(sqldb, &errs)
 	controlDB.UsersDelete = control.NewUsersDelete(sqldb, &errs)
 	controlDB.UsersGet = control.NewUsersGet(sqldb, &errs)
@@ -70,6 +86,12 @@ func NewControlDB() (*ControlDB, error) {
 
 	if finalErr := errors.Join(errs...); finalErr != nil {
 		return nil, finalErr
+	}
+
+	// If no admin user exists create one with a random password and TOTP secret and print the ENCRYPTED credentials to the console
+	err = controlDB.createAdminIfNoneExists()
+	if err != nil {
+		return nil, fmt.Errorf("cannot create admin user: %w", err)
 	}
 
 	// This will go over all non-deleted users and add them to the control db users
@@ -101,6 +123,50 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 
 	return users, nil
 }
+
+func (db *ControlDB) createAdminIfNoneExists() error {
+	ctx := context.TODO()
+	admin, err := db.AdminsGet.QueryRow(ctx, FIRST_ADMIN_NAME)
+	if err != nil {
+		return fmt.Errorf("cannot query admin: %w", err)
+	}
+	if admin.Name == FIRST_ADMIN_NAME {
+		return nil
+	}
+
+	password, hashedPassword, err := utils.SecureCredentials()
+
+	totpKey, _ := totp.Generate(totp.GenerateOpts{
+		Issuer:      "NightTroop",
+		AccountName: fmt.Sprintf("admin@%s", db.serverConfig.HostName),
+	})
+
+	totpSecret := totpKey.Secret()
+	encTOTPSecret, err := db.serverConfig.Encrypt(totpSecret)
+	if err != nil {
+		return fmt.Errorf("cannot encrypt TOTP secret: %w", err)
+	}
+
+	_, err = db.AdminsCreate.Exec(ctx, FIRST_ADMIN_NAME, hashedPassword, "admin", encTOTPSecret)
+	if err != nil {
+		return fmt.Errorf("cannot create admin: %w", err)
+	}
+
+	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", FIRST_ADMIN_NAME, password, totpSecret)
+	encBundle, err := db.serverConfig.Encrypt(bundle)
+	if err != nil {
+		return fmt.Errorf("cannot encrypt admin bundle: %w", err)
+	}
+
+	fmt.Println("######## ADMIN SERVER BUNDLE ########")
+	fmt.Printf("Encrypted Admin Bundle: %s\n", encBundle)
+	fmt.Println("######## END OF ADMIN SERVER BUNDLE ########")
+	return nil
+}
+
+///
+// Query Methods
+///
 
 type UserCreateMaterial struct {
 	Subdomain     string

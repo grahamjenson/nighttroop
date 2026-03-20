@@ -5,17 +5,17 @@ package sql
 //
 
 // devices
-//go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "name string,token string" -out "name string,token string"
-//go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "name string,token string"
-//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "name string,token string, LastSeenAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "Name string,token string" -out "Name string,token string"
+//go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "Name string,token string"
+//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "Name string,token string, LastSeenAt *time.Time"
 
 //
 // Control
 //
 
 // admins
-//go:generate go run ./gen/prepared.go  -file control/admins_create.sql -in "name string,password string,role string,totp_secret string"
-//go:generate go run ./gen/prepared.go  -file control/admins_get.sql -in "name string" -out "name string,password string,role string,totp_secret string,last_seen_at *time.Time,created_at *time.Time"
+//go:generate go run ./gen/prepared.go  -file control/admins_create.sql -in "Name string,Password string,Role string,TotpSecret string"
+//go:generate go run ./gen/prepared.go  -file control/admins_get.sql -in "Name string" -out "Name string,Password string,Role string,TotpSecret string,LastSeenAt *time.Time,CreatedAt *time.Time"
 
 // users
 //go:generate go run ./gen/prepared.go  -file control/users_all.sql  -out "Subdomain string, CreatedAt *time.Time, LastSeenAt *time.Time, DeletedAt *time.Time"
