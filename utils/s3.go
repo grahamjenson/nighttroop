@@ -126,7 +126,7 @@ func (c *S3Client) TestS3Client() error {
 // PATHS
 // //
 func (c *S3Client) ControlS3Path() string {
-	return fmt.Sprintf("%s/backup/control.sqlite", c.HostName)
+	return fmt.Sprintf("%s/backup/control.lz4", c.HostName)
 }
 
 func (c *S3Client) UserBatchS3Path(char string) string {
@@ -135,7 +135,7 @@ func (c *S3Client) UserBatchS3Path(char string) string {
 
 func (c *S3Client) UserArchiveS3Path(subdomain string) string {
 	char := subdomain[0]
-	return fmt.Sprintf("%s/archive/user/%s/%s.sqlite", c.HostName, string(char), subdomain)
+	return fmt.Sprintf("%s/archive/user/%s/%s.lz4", c.HostName, string(char), subdomain)
 }
 
 func (c *S3Client) TestObjectPath() string {

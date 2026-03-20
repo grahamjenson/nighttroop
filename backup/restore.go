@@ -45,7 +45,7 @@ func TryDownloadExtractControlDbs(s3Client *utils.S3Client) error {
 		return fmt.Errorf("cannot create parent directories: %w", err)
 	}
 
-	found, err := s3Client.DownloadFilesFromS3(s3Client.ControlS3Path(), utils.CONTROL_DB_PATH)
+	found, err := s3Client.DownloadFilesFromS3(s3Client.ControlS3Path(), utils.DB_FOLDER)
 	if !found && err == nil {
 		fmt.Println("No control db backup found")
 		return nil

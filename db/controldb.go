@@ -126,14 +126,13 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 
 func (db *ControlDB) createAdminIfNoneExists() error {
 	ctx := context.TODO()
-	admin, err := db.AdminsGet.QueryRow(ctx, FIRST_ADMIN_NAME)
-	if err != nil {
+	model, err := db.AdminsGet.QueryRow(ctx, FIRST_ADMIN_NAME)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cannot query admin: %w", err)
 	}
-	if admin.Name == FIRST_ADMIN_NAME {
+	if model.Name == FIRST_ADMIN_NAME {
 		return nil
 	}
-
 	password, hashedPassword, err := utils.SecureCredentials()
 
 	totpKey, _ := totp.Generate(totp.GenerateOpts{
@@ -159,7 +158,7 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 	}
 
 	fmt.Println("######## ADMIN SERVER BUNDLE ########")
-	fmt.Printf("Encrypted Admin Bundle: %s\n", encBundle)
+	fmt.Printf("ENCRYPTED_ADMIN_BUNDLE=%s\n", encBundle)
 	fmt.Println("######## END OF ADMIN SERVER BUNDLE ########")
 	return nil
 }

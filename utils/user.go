@@ -11,15 +11,12 @@ const USER_CHAR_SET = "abcdefghijklmnopqrstuvwxyz"
 const USER_BATCH_LENGTH = 26
 const USER_ID_LENGTH = 8
 
+const DB_FOLDER = "data/db"
 const CONTROL_DB_PATH = "data/db/control.sqlite"
 const CONTROL_DB_BACKUP_PATH = "data/backup/control.sqlite"
 
 const USER_DB_FOLDER = "data/db/user"
 const USER_DB_BACKUP_FOLDER = "data/backup/user"
-
-func ControlS3Path(hostname string) string {
-	return fmt.Sprintf("%s/backup/control.sqlite", hostname)
-}
 
 func UserDBPaths(subdomain string) (string, string) {
 	if len(subdomain) == 0 {

@@ -58,17 +58,22 @@ We generate two keysets, one for AES256GCM and one streaming version of that for
 export KEY_SETS=$(go run utils/keysets/create_keysets.go)
 ```
 
-echo KEY
+Send these keysets to fly
 ```
 fly secrets set KEY_SETS=$KEY_SETS
 ```
 
-Keep the KeySets ENVAR handy because on first deploy they will be used to encrypt the admin password and 2FA which are logged out.
+NOTE: Fly.io secrets are not easily read, so keep the KEY_SETS ENVAR saved offline.
 
-This is done with
+
+One the first run of the server, it will create an admin user and print the encrypted password and totp data.
+```
+export ENCRYPTED_ADMIN_BUNDLE=<base64encodeddata>
+export KEY_SETS=<defined above>
+```
 
 ```
-go run utils/gen/
+go run utils/keysets/decrypt_admin_bundle.go
 ```
 
 ### Security Operations

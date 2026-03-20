@@ -130,7 +130,7 @@ func NewServerConfig() (ServerConfig, error) {
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
 	}
 
-	err = serverConfig.configCreateEncryptionKeys(dotenvdev, dotenv)
+	err = serverConfig.ConfigCreateEncryptionKeys(dotenvdev, dotenv)
 	if err != nil {
 		return ServerConfig{}, fmt.Errorf("cannot create encryption key sets: %w", err)
 	}
@@ -327,7 +327,7 @@ func printServerConfig(config ServerConfig) {
 // Encryption Methods
 // //
 
-func (config *ServerConfig) configCreateEncryptionKeys(dotenvdev map[string]string, dotenv map[string]string) error {
+func (config *ServerConfig) ConfigCreateEncryptionKeys(dotenvdev map[string]string, dotenv map[string]string) error {
 	keySetsRaw := configStringSelect(dotenvdev, dotenv, "KEY_SETS", "")
 	if keySetsRaw == "" {
 		return fmt.Errorf("no key sets provided") // No keys provided, we can generate them later
