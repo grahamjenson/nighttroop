@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"nighttroop.t1d.nz/config"
+	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/pierrec/lz4/v4"
 	"github.com/tink-crypto/tink-go/v2/keyset"

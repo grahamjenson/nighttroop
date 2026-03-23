@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/pquerna/otp/totp"
-	"nighttroop.t1d.nz/config"
-	"nighttroop.t1d.nz/sql/control"
-	controlsql "nighttroop.t1d.nz/sql/control"
-	"nighttroop.t1d.nz/sql/migrations"
+	"nighttroop.t1d.nz/data/sql/control"
+	controlsql "nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/migrations"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 const FIRST_ADMIN_NAME = "admin"

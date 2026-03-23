@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"nighttroop.t1d.nz/config"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 func main() {

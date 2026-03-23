@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"nighttroop.t1d.nz/config"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 // something like cat file.tar.lz4.enc | go run decrypt_tar_lz4_enc.go

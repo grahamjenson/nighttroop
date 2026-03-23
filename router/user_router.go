@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
-	mtdb "nighttroop.t1d.nz/db"
+	mtdb "nighttroop.t1d.nz/data/db"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
 )
 

@@ -5,8 +5,8 @@ import (
 	"context"
 	"sync"
 
-	"nighttroop.t1d.nz/config"
-	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 type SyncJobs struct {

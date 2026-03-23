@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	migrations "nighttroop.t1d.nz/sql/migrations"
-	usersql "nighttroop.t1d.nz/sql/user"
+	migrations "nighttroop.t1d.nz/data/sql/migrations"
+	usersql "nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils"
 )
 

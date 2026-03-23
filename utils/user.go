@@ -11,12 +11,12 @@ const USER_CHAR_SET = "abcdefghijklmnopqrstuvwxyz"
 const USER_BATCH_LENGTH = 26
 const USER_ID_LENGTH = 8
 
-const DB_FOLDER = "data/db"
-const CONTROL_DB_PATH = "data/db/control.sqlite"
-const CONTROL_DB_BACKUP_PATH = "data/backup/control.sqlite"
+const DB_FOLDER = ".dbs/db"
+const CONTROL_DB_PATH = ".dbs/db/control.sqlite"
+const CONTROL_DB_BACKUP_PATH = ".dbs/backup/control.sqlite"
 
-const USER_DB_FOLDER = "data/db/user"
-const USER_DB_BACKUP_FOLDER = "data/backup/user"
+const USER_DB_FOLDER = ".dbs/db/user"
+const USER_DB_BACKUP_FOLDER = ".dbs/backup/user"
 
 func UserDBPaths(subdomain string) (string, string) {
 	if len(subdomain) == 0 {

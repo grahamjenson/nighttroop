@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"nighttroop.t1d.nz/config"
-	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 type BackupJobs struct {

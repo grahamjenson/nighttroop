@@ -11,7 +11,7 @@ import (
 	"golang.org/x/time/rate"
 	"nighttroop.t1d.nz/assets/static"
 	"nighttroop.t1d.nz/assets/templates"
-	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/data/db"
 )
 
 var userCreateLimiter = rate.NewLimiter(10, 100)

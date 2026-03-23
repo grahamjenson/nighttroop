@@ -12,12 +12,12 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"nighttroop.t1d.nz/backup"
-	"nighttroop.t1d.nz/config"
-	"nighttroop.t1d.nz/db"
+	"nighttroop.t1d.nz/background/backup"
+	"nighttroop.t1d.nz/background/sync"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/router"
-	"nighttroop.t1d.nz/sync"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 func main() {
