@@ -63,10 +63,11 @@ type ServerConfig struct {
 	StreamEncryptionKeySet *keyset.Handle // for files
 	JWTKeySet              *keyset.Handle
 
-	aeadEnc       tink.AEAD
-	streamEnc     tink.StreamingAEAD
-	jwtMac        jwt.MAC
-	jwwtValidator *jwt.Validator
+	aeadEnc             tink.AEAD
+	streamEnc           tink.StreamingAEAD
+	jwtMac              jwt.MAC
+	jwtControlValidator *jwt.Validator
+	jwtUserValidator    *jwt.Validator
 }
 
 // Priority is

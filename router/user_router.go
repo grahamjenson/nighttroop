@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	mtdb "nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -21,7 +22,7 @@ type ctxSubdomainKey int
 // RequestIDKey is the key that holds the unique request ID in a request context.
 const UserDBKey ctxUserDBKey = 0
 
-func NewUserRouter(controlDB *db.ControlDB) chi.Router {
+func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	r.Use(GetUserMiddleware(controlDB))
 

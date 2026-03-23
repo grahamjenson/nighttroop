@@ -3,7 +3,9 @@
 1. JWT implementation middleware for both control and user
 2. Nightscout reimplementation routes
 3. make sure tink is thread safe
-4. 
+4. Write the nightscout basic endpoints.
+5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
+6. Have a property per user of `to-be-synced`. 
 
 # NightTroop
 
@@ -17,11 +19,7 @@ You can sync data from Dexcom and/or Nightscout instance (exactly one of each pe
 so you can fill out your dexcom username/password + 
 
 
-# Deploying to a service
-It comes ready to deploy to fly.io as a service. 
-You should be able to run this for as cheap as a few hundred dollars a year and support 10k users.
 
-If you dont want to host you can get a user from another host like nighttroop.t1d.nz.
 
 # Testing locally
 
@@ -45,9 +43,9 @@ go run main.go --dev
 The goal is to make an app for diabetes camps that can add all the kids and see their numbers and show alarms/highlight issues.
 
 
-Write the nightscout basic endpoints.
-Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
-Have a property per user of `to-be-synced`. 
+
+
+
 Each request set the `to-be-synced` to be `true`;
 
 Write an infinite go routine per user every 30 seconds checks `to-be-synced` and will fetch data if `true`.
@@ -55,11 +53,66 @@ Write an infinite go routine per user every 30 seconds checks `to-be-synced` and
 
 Write an app, let it take a name and a picture, add a user. Then call the service create a user
 
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
+This section below is for development of Nighttroop
+
+# Local Development
+
+# Running a Development server
+
+# Testing
+
+# Submitting changes
+
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+This section below is information for running your own nighttroop
+
+------------------------------------------------------------------------------------------------------------------------
+
+# Deployment: Fly.io
+
+Fly.io Is a platform. This comes with the needed info to deploy the project
+
+fly.toml.example is the example app description used to define the resources need
+Something like this:
+
+```
+fly apps create my-unique-app-name --org <your-organization-name>
+fly deploy -a my-unique-app-name
+```
+ 
+You can edit the fly.toml 
+
+Create the s3 bucket for the app with 
+
+```
+fly storage create
+```
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+# Observability TODO
+
+## Error Collection: Sentry
+Sentry is backed into the code just need to add a sentry envar to see that calls
+
+## Logs:  Fly.io Logs
+
+## Metrics: Fly.io Metrics
+
+
+------------------------------------------------------------------------------------------------------------------------
 
 # Security 
 
-We generate two keysets, one for AES256GCM and one streaming version of that for files
+We generate three keysets, a AES256GCM for secrets encryption, one for File encryption and one for JWT.
 
 ```
 export KEY_SETS=$(go run utils/keysets/create_keysets.go)
@@ -70,7 +123,8 @@ Send these keysets to fly
 fly secrets set KEY_SETS=$KEY_SETS
 ```
 
-NOTE: Fly.io secrets are not easily read, so keep the KEY_SETS ENVAR saved offline.
+NOTE: Fly.io secrets are not easily read, so keep the KEY_SETS ENVAR saved OFFLINE!
+// TODO generate QR code image to print
 
 
 One the first run of the server, it will create an admin user and print the encrypted password and totp data.
@@ -82,6 +136,8 @@ export KEY_SETS=<defined above>
 ```
 go run utils/keysets/decrypt_admin_bundle.go
 ```
+
+This will output the information to the admin account for the service.
 
 ### Security Operations
 add a new key and roll the old key

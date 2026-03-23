@@ -5,13 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"time"
 
 	"strings"
 
 	"github.com/tink-crypto/tink-go/v2/aead"
 	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
-	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/streamingaead"
 )
@@ -63,18 +61,6 @@ func (config *ServerConfig) ConfigCreateEncryptionKeys(dotenvdev map[string]stri
 		return fmt.Errorf("failed to create StreamingAEAD primitive: %w", err)
 	}
 
-	mac, err := jwt.NewMAC(jwtKeySet)
-	if err != nil {
-		return fmt.Errorf("failed to create JWT MAC primitive: %w", err)
-	}
-
-	validator, err := jwt.NewValidator(&jwt.ValidatorOpts{
-		ExpectIssuedInThePast: true,
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to create JWT validator: %w", err)
-	}
 	// Store KeySets
 	config.EncryptionKeySet = encKetSet
 	config.StreamEncryptionKeySet = fileEncKeySet // for files
@@ -83,8 +69,11 @@ func (config *ServerConfig) ConfigCreateEncryptionKeys(dotenvdev map[string]stri
 	// Store primitives
 	config.aeadEnc = aeadTink
 	config.streamEnc = streamEnc
-	config.jwtMac = mac
-	config.jwwtValidator = validator
+
+	err = config.createJWTPrimitives()
+	if err != nil {
+		return fmt.Errorf("failed to create JWT primitives: %w", err)
+	}
 
 	return nil
 
@@ -143,61 +132,4 @@ func (config *ServerConfig) EncryptingWriter(writer io.Writer) (io.WriteCloser, 
 
 func (config *ServerConfig) DecryptingReader(reader io.Reader) (io.Reader, error) {
 	return config.streamEnc.NewDecryptingReader(reader, nil)
-}
-
-func (config *ServerConfig) GenerateUserJWTToken(userID string, role UserRole) (string, error) {
-
-	now := time.Now()
-	expiresAt := now.Add(time.Hour * 24)
-
-	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
-		Subject:   &userID,
-		ExpiresAt: &expiresAt,
-		IssuedAt:  &now,
-		CustomClaims: map[string]any{
-			"role": role.String(),
-		},
-	})
-	if err != nil {
-		return "", err
-	}
-
-	// 3. Sign and return
-	return config.jwtMac.ComputeMACAndEncode(rawJWT)
-}
-
-func (config *ServerConfig) GenerateControlJWTToken(userID string, role ControlRole) (string, error) {
-
-	now := time.Now()
-	expiresAt := now.Add(time.Hour * 24)
-
-	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
-		Subject:   &userID,
-		ExpiresAt: &expiresAt,
-		IssuedAt:  &now,
-		CustomClaims: map[string]any{
-			"role": role.String(),
-		},
-	})
-	if err != nil {
-		return "", err
-	}
-
-	// 3. Sign and return
-	return config.jwtMac.ComputeMACAndEncode(rawJWT)
-}
-
-func (config *ServerConfig) VerifyJWTToken(handle *keyset.Handle, tokenStr string) (*jwt.VerifiedJWT, error) {
-	primitive, _ := jwt.NewMAC(handle)
-
-	// Define expected validator (e.g., audience, issuer)
-	validator, err := jwt.NewValidator(&jwt.ValidatorOpts{
-		ExpectIssuedInThePast: true,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Verify and parse in one step
-	return primitive.VerifyMACAndDecode(tokenStr, validator)
 }

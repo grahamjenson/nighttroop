@@ -12,12 +12,13 @@ import (
 	"nighttroop.t1d.nz/assets/static"
 	"nighttroop.t1d.nz/assets/templates"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 var userCreateLimiter = rate.NewLimiter(10, 100)
 var userCreateMu sync.Mutex
 
-func NewPublicRouter(controlDB *db.ControlDB) chi.Router {
+func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 
 	static.AddSatticRoutes(r)

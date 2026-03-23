@@ -14,11 +14,11 @@ import (
 
 const SubdomainKey ctxSubdomainKey = 1
 
-func GetMainHandler(cdb *db.ControlDB, config config.ServerConfig) http.Handler {
+func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Handler {
 
-	controlRouter := NewControlRouter(cdb)
-	userRouter := NewUserRouter(cdb)
-	public := NewPublicRouter(cdb)
+	controlRouter := NewControlRouter(controlDB, config)
+	userRouter := NewUserRouter(controlDB, config)
+	public := NewPublicRouter(controlDB, config)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
