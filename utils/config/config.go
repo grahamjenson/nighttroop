@@ -2,19 +2,15 @@ package config
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/base64"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/tink-crypto/tink-go/v2/aead"
-	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
+	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
-	"github.com/tink-crypto/tink-go/v2/streamingaead"
+
 	"github.com/tink-crypto/tink-go/v2/tink"
 )
 
@@ -65,9 +61,12 @@ type ServerConfig struct {
 	// This has the option to add additional keys
 	EncryptionKeySet       *keyset.Handle
 	StreamEncryptionKeySet *keyset.Handle // for files
+	JWTKeySet              *keyset.Handle
 
-	aeadEnc   tink.AEAD
-	streamEnc tink.StreamingAEAD
+	aeadEnc       tink.AEAD
+	streamEnc     tink.StreamingAEAD
+	jwtMac        jwt.MAC
+	jwwtValidator *jwt.Validator
 }
 
 // Priority is
@@ -261,25 +260,6 @@ func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envV
 	return intVal
 }
 
-func readKeySetFromBase64(rawKeySet string) (*keyset.Handle, error) {
-	// 1. Decode the Base64 string to binary
-	keySetBytes, err := base64.RawStdEncoding.DecodeString(rawKeySet)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode base64 keyset: %w", err)
-	}
-
-	reader := keyset.NewBinaryReader(bytes.NewBuffer(keySetBytes))
-
-	// 2. Read the keyset into a handle
-	// Use insecurecleartextkeyset because the keys are currently unencrypted strings.
-	handle, err := insecurecleartextkeyset.Read(reader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read keyset: %w", err)
-	}
-
-	return handle, nil
-}
-
 func readDotEnvFile(filename string) (map[string]string, error) {
 	envMap := make(map[string]string)
 
@@ -321,84 +301,4 @@ func printServerConfig(config ServerConfig) {
 	fmt.Printf("Max Users/User DB Size/Age (mins): %d / %d / %d\n", config.MaxUsers, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
 	fmt.Printf("User Create Rate Limit: %d req/s burst %d\n", config.UserCreateRateLimit, config.UserCreateRateBurst)
 	fmt.Printf("Backup Interval (Control/Batch) in seconds: %d / %d\n", config.ControlBackupIntervalInSeconds, config.BatchBackupIntervalInSeconds)
-}
-
-// //
-// Encryption Methods
-// //
-
-func (config *ServerConfig) ConfigCreateEncryptionKeys(dotenvdev map[string]string, dotenv map[string]string) error {
-	keySetsRaw := configStringSelect(dotenvdev, dotenv, "KEY_SETS", "")
-	if keySetsRaw == "" {
-		return fmt.Errorf("no key sets provided") // No keys provided, we can generate them later
-	}
-	rawKeySets := strings.Split(keySetsRaw, ",")
-	if len(rawKeySets) != 2 {
-		return fmt.Errorf("invalid number of key sets provided: %d", len(rawKeySets))
-	}
-
-	encKeyRaw := rawKeySets[0]
-	fileEncKeyRaw := rawKeySets[1]
-
-	encKetSet, err := readKeySetFromBase64(encKeyRaw)
-	if err != nil {
-		return fmt.Errorf("failed to read encryption key set: %w", err)
-	}
-
-	fileEncKeySet, err := readKeySetFromBase64(fileEncKeyRaw)
-	if err != nil {
-		return fmt.Errorf("failed to read file encryption key set: %w", err)
-	}
-
-	fmt.Println("Successfully read encryption key sets from config")
-
-	aeadTink, err := aead.New(encKetSet)
-	if err != nil {
-		return fmt.Errorf("failed to create AEAD primitive: %w", err)
-	}
-
-	streamEnc, err := streamingaead.New(fileEncKeySet)
-	if err != nil {
-		return fmt.Errorf("failed to create StreamingAEAD primitive: %w", err)
-	}
-
-	config.EncryptionKeySet = encKetSet
-	config.StreamEncryptionKeySet = fileEncKeySet // for files
-	config.aeadEnc = aeadTink
-	config.streamEnc = streamEnc
-
-	return nil
-
-}
-
-func (config *ServerConfig) Encrypt(plaintext string) (string, error) {
-
-	ciphertext, err := config.aeadEnc.Encrypt([]byte(plaintext), nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to encrypt: %w", err)
-	}
-
-	return base64.RawStdEncoding.EncodeToString(ciphertext), nil
-}
-
-func (config *ServerConfig) Decrypt(ciphertext string) (string, error) {
-	ciphertextBytes, err := base64.RawStdEncoding.DecodeString(ciphertext)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode base64 ciphertext: %w", err)
-	}
-
-	plaintext, err := config.aeadEnc.Decrypt(ciphertextBytes, nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to decrypt: %w", err)
-	}
-
-	return string(plaintext), nil
-}
-
-func (config *ServerConfig) EncryptingWriter(writer io.Writer) (io.WriteCloser, error) {
-	return config.streamEnc.NewEncryptingWriter(writer, nil)
-}
-
-func (config *ServerConfig) DecryptingReader(reader io.Reader) (io.Reader, error) {
-	return config.streamEnc.NewDecryptingReader(reader, nil)
 }

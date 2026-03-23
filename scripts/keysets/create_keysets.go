@@ -11,6 +11,7 @@ import (
 
 	"github.com/tink-crypto/tink-go/v2/aead"
 	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
+	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/tink-crypto/tink-go/v2/streamingaead"
 )
@@ -21,12 +22,18 @@ func main() {
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to create AES-GCM keyset: %w", err))
 	}
+
 	streamKS, err := createBase64StreamingAEADKeyset()
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to create streaming AEAD keyset: %w", err))
 	}
 
-	fmt.Printf("%s,%s", aesKS, streamKS)
+	jwtKS, err := createBase64JWTKeyset()
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to create JWT keyset: %w", err))
+	}
+
+	fmt.Printf("%s,%s,%s", aesKS, streamKS, jwtKS)
 }
 
 func createBase64StreamingAEADKeyset() (string, error) {
@@ -41,6 +48,16 @@ func createBase64StreamingAEADKeyset() (string, error) {
 func createBase64AESGCMKeyset() (string, error) {
 	// 1. Create the handle
 	nkh, err := keyset.NewHandle(aead.AES256GCMKeyTemplate())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return base64AKeySet(nkh)
+}
+
+func createBase64JWTKeyset() (string, error) {
+	// 1. Create the handle
+	nkh, err := keyset.NewHandle(jwt.HS256Template())
 	if err != nil {
 		log.Fatal(err)
 	}

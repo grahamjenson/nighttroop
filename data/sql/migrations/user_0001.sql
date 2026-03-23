@@ -1,7 +1,9 @@
+-- DEVICES TABLE is used to login and interact with the API.
 CREATE TABLE devices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     token TEXT NOT NULL,
+    role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
