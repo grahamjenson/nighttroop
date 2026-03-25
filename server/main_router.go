@@ -1,5 +1,5 @@
 // This is the leading middleware deciding what lower router to use based on subdomain
-package router
+package server
 
 import (
 	"context"

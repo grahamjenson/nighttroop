@@ -3,10 +3,13 @@ package utils
 import (
 	"crypto/rand"
 	"fmt"
+	"log"
 	"math/big"
 	badrand "math/rand"
 
+	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 const (
@@ -58,7 +61,23 @@ func SecureCredentials() (string, string, error) {
 	return password, string(hashedBytes), nil
 }
 
+// This is not used normally so we should be fine
+func HashPassword(password string) string {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal("Error hashing password: ", err)
+	}
+	return string(hashedBytes)
+}
+
 func VerifyPassword(plainPassword, storedHash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(plainPassword))
 	return err == nil
+}
+
+func TOTPValidate(token, secret string) bool {
+	if secret == config.DEV_ADMIN_TOTP_SECRET {
+		return token == "123123"
+	}
+	return totp.Validate(token, secret)
 }

@@ -15,7 +15,7 @@ import (
 	"nighttroop.t1d.nz/background/backup"
 	"nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/router"
+	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 )
@@ -76,7 +76,7 @@ func run() error {
 	//
 	// HTTP
 	// Run web server.
-	server := setupHTTP(controlDB, serverConfig)
+	httpServer := setupHTTP(controlDB, serverConfig)
 
 	// Wait for signal.
 	<-ctx.Done()
@@ -84,7 +84,7 @@ func run() error {
 	fmt.Println("\nReceived signal, shutting down")
 
 	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	if err := server.Shutdown(shutdownCtx); err != nil {
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("HTTP server Shutdown: %v", err)
 	}
 
@@ -104,15 +104,15 @@ func run() error {
 func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.Server {
 	fmt.Printf("listening on 8080\n")
 
-	server := &http.Server{Addr: ":8080", Handler: router.GetMainHandler(controlDB, serverConfig)}
+	httpServer := &http.Server{Addr: ":8080", Handler: server.GetMainHandler(controlDB, serverConfig)}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("HTTP server ListenAndServe: %v", err)
 		}
 	}()
 
-	return server
+	return httpServer
 }
 
 func ValidateServer(c *utils.S3Client) error {

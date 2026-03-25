@@ -26,6 +26,9 @@ import (
 {{- end}}
 )
 
+//go:embed {{.TemplateBase}}
+var {{.Name}}Base string
+
 {{- range .GetFileVars}}
 
 //go:embed {{.FileName}}
@@ -42,10 +45,18 @@ func get{{.Name}}Template() (*template.Template, error) {
 		return {{.Name}}Template, nil
 	}
 
-	{{.Name}}Template, err := template.New("{{.Name}}").Parse({{ .JoinFileVarsWithPlus }})
+	{{.Name}}Template, err := template.New("{{.Name}}").Parse({{ .Name }}Base )
 	if err != nil {
 		return nil, err
 	}
+	
+	{{- if .HasFiles}}
+	{{.Name}}Template, err = {{.Name}}Template.Parse({{ .JoinFileVarsWithPlus }})
+	if err != nil {
+		return nil, err
+	}
+	{{- end}}
+
 
 	return {{.Name}}Template, nil
 }
@@ -71,11 +82,13 @@ func {{.Name}}(w io.Writer{{ if .HasInputs }}, {{.Inputs}} {{ end }}) error {
 
 type Config struct {
 	Name               string
+	TemplateBase       string
 	TemplateFiles      utils.FlagFileList
 	HasInputs          bool
 	Inputs             string
 	InputParams        string
 	AdditionalPackages []string
+	HasFiles           bool
 }
 
 func (c Config) GetFileVars() []utils.FlagStringFileName {
@@ -102,6 +115,7 @@ func (c Config) JoinFileVarsWithPlus() string {
 func main() {
 	var templateFiles utils.FlagFileList
 	name := flag.String("name", "", "Variable prefix")
+	base := flag.String("base", "", "BaseTemplate")
 	flag.Var(&templateFiles, "file", "Template files to embed")
 
 	inputs := flag.String("in", "", "Comma-separated inputs (e.g. 'ID int,Name string')")
@@ -109,6 +123,10 @@ func main() {
 
 	if name == nil || *name == "" {
 		panic("Name is required")
+	}
+
+	if base == nil || *base == "" {
+		panic("Base template is required")
 	}
 
 	for _, file := range templateFiles {
@@ -149,7 +167,9 @@ func main() {
 
 	cfg := Config{
 		Name:               utils.SnakeToCapitalCamelCase(*name),
+		TemplateBase:       *base,
 		TemplateFiles:      templateFiles,
+		HasFiles:           len(templateFiles) != 0,
 		Inputs:             *inputs,
 		InputParams:        strings.Join(inputParms, ", "),
 		HasInputs:          len(inputList) != 0,

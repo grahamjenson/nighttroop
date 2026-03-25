@@ -21,6 +21,14 @@ const (
 	Development
 )
 
+const FIRST_ADMIN_NAME = "admin"
+
+// //
+// DEVELOPMENT HARDCODED STUFF
+// //
+const DEV_ADMIN_PASSWORD = "password"
+const DEV_ADMIN_TOTP_SECRET = "FakeTOTPSecretForDevOnly" // This is not a real secret, just for development. In production this should be generated and stored securely.
+
 type ServerConfig struct {
 	Mode ServerMode
 
@@ -130,6 +138,7 @@ func NewServerConfig() (ServerConfig, error) {
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
 	}
 
+	mode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
 	err = serverConfig.ConfigCreateEncryptionKeys(dotenvdev, dotenv)
 	if err != nil {
 		return ServerConfig{}, fmt.Errorf("cannot create encryption key sets: %w", err)
@@ -156,8 +165,8 @@ func NewServerConfig() (ServerConfig, error) {
 	}
 
 	// Override with flags
-	mode := ""
-	flag.StringVar(&mode, "mode", "", "developmen or production")
+	flagmode := ""
+	flag.StringVar(&flagmode, "mode", "", "developmen or production")
 	// host config
 	flag.StringVar(&serverConfig.HostName, "host", serverConfig.HostName, "Host name for the server")
 	flag.IntVar(&serverConfig.HostPort, "port", serverConfig.HostPort, "Host port for the server")
@@ -195,22 +204,40 @@ func NewServerConfig() (ServerConfig, error) {
 
 	flag.Parse()
 
-	// Deal with mode
-	envmode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
-	if mode != "" {
-		envmode = mode
+	// CLEAN UP A FEW THINGS
+	if flagmode != "" {
+		mode = flagmode
 	}
-	switch strings.ToLower(envmode) {
-	case "production":
-		serverConfig.Mode = Production
-	case "development":
-		serverConfig.Mode = Development
-	default:
-		return ServerConfig{}, fmt.Errorf("invalid mode: %s", envmode)
+	if err := serverConfig.ValidateClean(mode); err != nil {
+		return ServerConfig{}, err
 	}
 
 	printServerConfig(serverConfig)
 	return serverConfig, nil
+}
+
+func (config *ServerConfig) ValidateClean(mode string) error {
+	// Deal with mode
+
+	switch strings.ToLower(mode) {
+	case "production":
+		config.Mode = Production
+	case "development":
+		config.Mode = Development
+	default:
+		return fmt.Errorf("invalid mode: %s", mode)
+	}
+
+	config.HostProtocol = strings.ToLower(config.HostProtocol)
+	if config.HostProtocol != "http" && config.HostProtocol != "https" {
+		fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
+	}
+
+	if config.HostProtocol == "http" && config.Mode != Development {
+		return fmt.Errorf("http is only allowed in development mode")
+	}
+
+	return nil
 }
 
 func configStringSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue string) string {
@@ -302,4 +329,13 @@ func printServerConfig(config ServerConfig) {
 	fmt.Printf("Max Users/User DB Size/Age (mins): %d / %d / %d\n", config.MaxUsers, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
 	fmt.Printf("User Create Rate Limit: %d req/s burst %d\n", config.UserCreateRateLimit, config.UserCreateRateBurst)
 	fmt.Printf("Backup Interval (Control/Batch) in seconds: %d / %d\n", config.ControlBackupIntervalInSeconds, config.BatchBackupIntervalInSeconds)
+}
+
+func (config *ServerConfig) GetHostURL() string {
+	return fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort)
+}
+
+func (config *ServerConfig) IsHTTPS() bool {
+	// This should only be false in development
+	return config.HostProtocol == "https"
 }

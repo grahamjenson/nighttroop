@@ -50,7 +50,7 @@ func (config *ServerConfig) createJWTPrimitives() error {
 // CONTROL JWT
 ////
 
-func (config *ServerConfig) GenerateControlJWTToken(userName string) (string, error) {
+func (config *ServerConfig) GenerateControlJWTToken(userName string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -62,11 +62,15 @@ func (config *ServerConfig) GenerateControlJWTToken(userName string) (string, er
 		IssuedAt:  &now,
 	})
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
 
 	// 3. Sign and return
-	return config.jwtMac.ComputeMACAndEncode(rawJWT)
+	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return tokenString, expiresAt, nil
 }
 
 func (config *ServerConfig) VerifyControlJWTToken(tokenStr string) (string, error) {

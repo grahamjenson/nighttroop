@@ -1,4 +1,4 @@
-package router
+package server
 
 // User router enables user specific router, and can route to NS router if endpoint hits that layer.
 

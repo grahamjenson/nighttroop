@@ -42,6 +42,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     token TEXT NOT NULL,
+    role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`); err != nil {

@@ -1,5 +1,5 @@
 // Contains all unquthenticated public routes available to anyone, e.g. create user and onboarding and documnentation
-package router
+package server
 
 import (
 	"fmt"
@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/time/rate"
-	"nighttroop.t1d.nz/assets/static"
-	"nighttroop.t1d.nz/assets/templates"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/server/assets/templates"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -33,13 +33,13 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 		}
 	})
 
-	r.Post("/create_user", createUser(controlDB))
-	r.Get("/create_user", createUser(controlDB))
+	r.Post("/user", createUser(controlDB))
 	return r
 }
 
 func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		userCreateMu.Lock()
 		allowed := userCreateLimiter.Allow()
 		userCreateMu.Unlock()
@@ -62,21 +62,15 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 		}
 		fmt.Printf("Number of Users %d, Number of Routines %d\n", controlDB.GetNUsersDBs(), runtime.NumGoroutine())
 
-		// buf := make([]byte, 1<<16) // 64 KB buffer
-		// n := runtime.Stack(buf, true)
-		// fmt.Printf("%s", buf[:n])
+		acceptType := GetAcceptType(r)
 
-		// TODO: Handle JSON and HTMX return
-		accept := r.Header.Get("Accept")
-
-		if accept == "application/json" {
+		switch acceptType {
+		case AcceptTypeJSON:
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(fmt.Appendf(nil, "{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userDB.Subdomain, apiKey))
 			return
-		}
-
-		if accept == "text/htmx" {
+		case AcceptTypeHTMX:
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
 			err := templates.PublicCreateUser(w, "url", "token", "backup_key")
@@ -84,11 +78,12 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
-		}
-
-		err = templates.PublicCreateUser(w, "url", "token", "backup_key")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		default:
+			err = templates.PublicCreateUser(w, "url", "token", "backup_key")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
 		}
 	}
 }

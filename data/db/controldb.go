@@ -16,8 +16,6 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-const FIRST_ADMIN_NAME = "admin"
-
 type ControlDB struct {
 	SQLiteDB     *sql.DB
 	serverConfig config.ServerConfig
@@ -126,14 +124,19 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 
 func (db *ControlDB) createAdminIfNoneExists() error {
 	ctx := context.TODO()
-	model, err := db.AdminsGet.QueryRow(ctx, FIRST_ADMIN_NAME)
+	adminName := config.FIRST_ADMIN_NAME
+	model, err := db.AdminsGet.QueryRow(ctx, adminName)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cannot query admin: %w", err)
 	}
-	if model.Name == FIRST_ADMIN_NAME {
+	if model.Name == adminName {
 		return nil
 	}
+
 	password, hashedPassword, err := utils.SecureCredentials()
+	if err != nil {
+		return fmt.Errorf("cannot generate secure credentials: %w", err)
+	}
 
 	totpKey, _ := totp.Generate(totp.GenerateOpts{
 		Issuer:      "NightTroop",
@@ -141,17 +144,25 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 	})
 
 	totpSecret := totpKey.Secret()
+
+	if db.serverConfig.Mode == config.Development {
+		// We are going to override this stuff in dev, just to make it easier
+		password = config.DEV_ADMIN_PASSWORD
+		hashedPassword = utils.HashPassword(password)
+		totpSecret = config.DEV_ADMIN_TOTP_SECRET
+	}
+
 	encTOTPSecret, err := db.serverConfig.Encrypt(totpSecret)
 	if err != nil {
 		return fmt.Errorf("cannot encrypt TOTP secret: %w", err)
 	}
 
-	_, err = db.AdminsCreate.Exec(ctx, FIRST_ADMIN_NAME, hashedPassword, "admin", encTOTPSecret)
+	_, err = db.AdminsCreate.Exec(ctx, adminName, hashedPassword, "admin", encTOTPSecret)
 	if err != nil {
 		return fmt.Errorf("cannot create admin: %w", err)
 	}
 
-	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", FIRST_ADMIN_NAME, password, totpSecret)
+	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", adminName, password, totpSecret)
 	encBundle, err := db.serverConfig.Encrypt(bundle)
 	if err != nil {
 		return fmt.Errorf("cannot encrypt admin bundle: %w", err)
