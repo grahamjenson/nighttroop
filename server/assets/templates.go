@@ -7,7 +7,7 @@ import (
 // Public Templates
 //go:generate go run ./gen/template.go -base public/base.html -file public/create_user.html
 //go:generate go run ./gen/template.go -base public/created_user_info.htmx                     -in "url string, token string, backup_key string"
-//go:generate go run ./gen/template.go -base public/create_user_rate_limited.htmx              -in "Seconds string"
+//go:generate go run ./gen/template.go -base public/create_user_rate_limited.htmx              -in "seconds string"
 
 // Control Templates
 //go:generate go run ./gen/template.go -base control/base.html -file control/login.html

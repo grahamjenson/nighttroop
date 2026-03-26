@@ -37,8 +37,9 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		allowed, remainingTime := config.RateLimiters.CreateUserAllowed(utils.GetIP(r))
 		if !allowed {
-			http.Error(w, fmt.Sprintf("Too many requests wait %d seconds", remainingTime), http.StatusTooManyRequests)
-			w.Write([]byte(fmt.Sprintf("Too many requests wait %d seconds", remainingTime)))
+			w.WriteHeader(http.StatusTooManyRequests)
+			publicTemplates.CreateUserRateLimited(w, fmt.Sprintf("%d", remainingTime))
+
 			return
 		}
 

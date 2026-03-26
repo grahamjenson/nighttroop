@@ -8,6 +8,9 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// This contains all rate limiters in the system
+// This might be more efficient if joined together, but right now this is fine
+// TODO: find out if this needs optimisation
 type RateLimiters struct {
 	serverConfig ServerConfig
 
@@ -22,7 +25,8 @@ type RateLimiters struct {
 	userCreateLimiter   *rate.Limiter
 	userCreateIpLimiter *lru.Cache[string, *rate.Limiter]
 
-	rateMutex *sync.Mutex // Having a single mutex will slow things down, but that is kind of the point here
+	publicRateMutex *sync.Mutex // Having a single mutex will slow things down, but that is kind of the point here
+	userRateMutex   *sync.Mutex
 }
 
 func newRateLimiters(config ServerConfig) *RateLimiters {
@@ -43,7 +47,10 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 
 		userCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.UserCreateGlobalPerMinuteLimit)/60.0), config.UserCreateGlobalPerMinuteBurst),
 		userCreateIpLimiter: lruMust(maxUsers * wiggle),
-		rateMutex:           &sync.Mutex{},
+
+		// Keep these seperate to stop public endpoint interfering with users
+		publicRateMutex: &sync.Mutex{},
+		userRateMutex:   &sync.Mutex{},
 	}
 
 }
@@ -58,8 +65,8 @@ func lruMust(maxEntries int) *lru.Cache[string, *rate.Limiter] {
 
 // Global function to check user create rate limit
 func (r *RateLimiters) CreateUserAllowed(ipAddress string) (bool, int) {
-	r.rateMutex.Lock()
-	defer r.rateMutex.Unlock()
+	r.publicRateMutex.Lock()
+	defer r.publicRateMutex.Unlock()
 
 	ipLimiter := r.getOrCreateLimiter(r.userCreateIpLimiter, ipAddress, r.serverConfig.UserCreateIPPerMinuteLimit, r.serverConfig.UserCreateIPPerMinuteBurst)
 	ipallow, ipdelay := Allow(ipLimiter)
@@ -70,8 +77,8 @@ func (r *RateLimiters) CreateUserAllowed(ipAddress string) (bool, int) {
 
 // This will return false if any rate limiter is blocking, with a min of time left until rate is restored
 func (r *RateLimiters) UserReadAllowed(userId string, deviceID string, ipAddress string) (bool, int) {
-	r.rateMutex.Lock()
-	defer r.rateMutex.Unlock()
+	r.userRateMutex.Lock()
+	defer r.userRateMutex.Unlock()
 
 	ipLimiter := r.getOrCreateLimiter(r.ipReadRateLimiters, ipAddress, r.serverConfig.IPReadPerMinuteLimit, r.serverConfig.IPReadPerMinuteBurst)
 	deviceLimiter := r.getOrCreateLimiter(r.deviceReadRateLimiters, deviceID, r.serverConfig.DeviceReadPerMinuteLimit, r.serverConfig.DeviceReadPerMinuteBurst)
@@ -84,8 +91,8 @@ func (r *RateLimiters) UserReadAllowed(userId string, deviceID string, ipAddress
 }
 
 func (r *RateLimiters) UserWriteAllowed(userId string, deviceID string, ipAddress string) (bool, int) {
-	r.rateMutex.Lock()
-	defer r.rateMutex.Unlock()
+	r.userRateMutex.Lock()
+	defer r.userRateMutex.Unlock()
 
 	ipLimiter := r.getOrCreateLimiter(r.ipWriteRateLimiters, ipAddress, r.serverConfig.IPWritePerMinuteLimit, r.serverConfig.IPWritePerMinuteBurst)
 	deviceLimiter := r.getOrCreateLimiter(r.deviceWriteRateLimiters, deviceID, r.serverConfig.DeviceWritePerMinuteLimit, r.serverConfig.DeviceWritePerMinuteBurst)
@@ -107,10 +114,21 @@ func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limi
 }
 
 func Allow(limiter *rate.Limiter) (bool, time.Duration) {
-	if limiter.Allow() {
+	// Use a reservation to return the amount of time until the next event is allowed.
+	res := limiter.Reserve()
+	defer res.Cancel() // Cancel the reservation to avoid consuming tokens
+
+	// If the reservation is not possible (e.g., burst size exceeded)
+	if !res.OK() {
+		return false, 0
+	}
+
+	delay := res.Delay()
+	if delay == 0 {
 		return true, 0
 	}
-	return false, limiter.Reserve().Delay()
+
+	return false, delay
 }
 
 func maxDuration(durations ...time.Duration) int {

@@ -26,13 +26,13 @@ func getCreateUserRateLimitedTemplate() (*template.Template, error) {
 	return CreateUserRateLimitedTemplate, nil
 }
 
-func CreateUserRateLimited(w io.Writer, Seconds string) error {
+func CreateUserRateLimited(w io.Writer, seconds string) error {
 	tmpl, err := getCreateUserRateLimitedTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Seconds": Seconds})
+	err = tmpl.Execute(w, map[string]any{"seconds": seconds})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
