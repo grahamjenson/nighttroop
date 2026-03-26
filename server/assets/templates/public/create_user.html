@@ -10,15 +10,7 @@
         <div>
 
             <button id="create-user-btn" class="btn btn-primary btn-create" hx-post="/user" hx-target="#panel-content"
-                hx-swap="innerHTML" hx-indicator="#loading" hx-on::before-swap="
-                    const status = event.detail.xhr.status;
-                    if (status < 200 || status >= 300) { 
-                        event.detail.shouldSwap = false; 
-                        document.getElementById('error-container').innerHTML = event.detail.xhr.responseText || 'An unexpected error occurred.';
-                    } else {
-                        document.getElementById('error-container').innerHTML = ''; // Clear previous errors on success
-                    }
-                ">
+                hx-swap="innerHTML" hx-indicator="#loading" hx-target-error="#error-container">
                 Create User
             </button>
 
@@ -27,9 +19,10 @@
                 <div class="text-secondary mt-2">Creating User...</div>
             </div>
 
-            <!-- Global error spot for this panel -->
+
             <div id="error-container" class="mt-3"></div>
         </div>
+
     </div>
 
     <div class="text-center text-secondary small mt-3">

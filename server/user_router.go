@@ -25,9 +25,9 @@ const UserDBKey ctxUserDBKey = 0
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	static.AddSatticRoutes(r)
-
 	r.Use(GetUserMiddleware(controlDB))
+
+	static.AddSatticRoutes(r)
 
 	r.Post("/ping", func(w http.ResponseWriter, r *http.Request) {
 		userDB := GetUser(r.Context())

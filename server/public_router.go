@@ -29,6 +29,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 	})
 
 	r.Post("/user", POSTCreateUserHandler(controlDB, config))
+
 	return r
 }
 
@@ -37,17 +38,12 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		allowed, remainingTime := config.RateLimiters.CreateUserAllowed(utils.GetIP(r))
 		if !allowed {
 			http.Error(w, fmt.Sprintf("Too many requests wait %d seconds", remainingTime), http.StatusTooManyRequests)
+			w.Write([]byte(fmt.Sprintf("Too many requests wait %d seconds", remainingTime)))
 			return
 		}
 
-	}
-}
-
-func createUser(controlDB *db.ControlDB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
 		// Check to see if there is 10k users and return error if there is
-		if controlDB.GetNUsersDBs() > 10000 {
+		if controlDB.GetNUsersDBs() > config.MaxUsers {
 			http.Error(w, "Full: Too many users", http.StatusTooManyRequests)
 			return
 		}
@@ -83,5 +79,6 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 			}
 			return
 		}
+
 	}
 }
