@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -42,4 +43,17 @@ func DeleteFiles(paths []string) error {
 		}
 	}
 	return nil
+}
+
+func RelPathBetween(newBasePath string, targetPath string) string {
+
+	absFile, _ := filepath.Abs(targetPath)
+	absBase, _ := filepath.Abs(newBasePath)
+
+	relPath, err := filepath.Rel(absBase, absFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return relPath
 }

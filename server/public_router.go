@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
-	"nighttroop.t1d.nz/server/assets/templates"
+	publicTemplates "nighttroop.t1d.nz/server/assets/templates/public"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 )
@@ -18,25 +18,22 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 
 	static.AddSatticRoutes(r)
 
-	// Create New User Route
-	// Documentation Route
-	// Public Facing SEO route
+	// TODO Documentation route, public facing SEO route
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		err := templates.PublicCreateUser(w)
+		err := publicTemplates.CreateUser(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	})
 
-	r.Post("/user", createUser(controlDB))
+	r.Post("/user", POSTCreateUserHandler(controlDB, config))
 	return r
 }
 
-func GetCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
-
+func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		allowed, remainingTime := config.RateLimiters.CreateUserAllowed(utils.GetIP(r))
 		if !allowed {
 			http.Error(w, fmt.Sprintf("Too many requests wait %d seconds", remainingTime), http.StatusTooManyRequests)
@@ -74,13 +71,13 @@ func createUser(controlDB *db.ControlDB) http.HandlerFunc {
 		case utils.AcceptTypeHTMX:
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			err := templates.PublicCreateUser(w, "url", "token", "backup_key")
+			err := publicTemplates.CreatedUserInfo(w, "url", "token", "backup_key")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
 		default:
-			err = templates.PublicCreateUser(w, "url", "token", "backup_key")
+			err = publicTemplates.CreatedUserInfo(w, "url", "token", "backup_key")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

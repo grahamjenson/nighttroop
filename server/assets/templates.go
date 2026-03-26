@@ -5,12 +5,13 @@ import (
 )
 
 // Public Templates
-//go:generate go run ./gen/template.go -name public_create_user -base base.html -file public/create_user.html
-//go:generate go run ./gen/template.go -name public_created_user_info -in "url string, token string, backup_key string" -base public/created_user_info.htmx
+//go:generate go run ./gen/template.go -base public/base.html -file public/create_user.html
+//go:generate go run ./gen/template.go -base public/created_user_info.htmx                     -in "url string, token string, backup_key string"
+//go:generate go run ./gen/template.go -base public/create_user_rate_limited.htmx              -in "Seconds string"
 
 // Control Templates
-//go:generate go run ./gen/template.go -name control_login -base base.html -file control/login.html
-//go:generate go run ./gen/template.go -name control_dashboard  -base base.html -file control/dashboard.html
+//go:generate go run ./gen/template.go -base control/base.html -file control/login.html
+//go:generate go run ./gen/template.go -base control/base.html -file control/dashboard.html
 
 // Static Assets
 

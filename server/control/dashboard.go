@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/assets/templates"
+	controlTemplates "nighttroop.t1d.nz/server/assets/templates/control"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -15,7 +15,7 @@ func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Render Dashboard")
 		w.Header().Set("Content-Type", "text/html")
-		err := templates.ControlDashboard(w)
+		err := controlTemplates.Dashboard(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
