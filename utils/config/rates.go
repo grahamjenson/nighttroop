@@ -25,7 +25,7 @@ type RateLimiters struct {
 	rateMutex *sync.Mutex // Having a single mutex will slow things down, but that is kind of the point here
 }
 
-func NewRateLimiters(config ServerConfig) *RateLimiters {
+func newRateLimiters(config ServerConfig) *RateLimiters {
 	maxUsers := config.MaxUsers
 	maxDevices := config.MaxDevicesPerUser
 	wiggle := 2

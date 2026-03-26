@@ -37,8 +37,9 @@ func GetCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		allowed, remainingTime := config.RateLimiters.CreateUserAllowed(utils.GetIP(r))
 		if !allowed {
-			http.Error(w, "Too many requests", http.StatusTooManyRequests)
+			http.Error(w, fmt.Sprintf("Too many requests wait %d seconds", remainingTime), http.StatusTooManyRequests)
 			return
 		}
 

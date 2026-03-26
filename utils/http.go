@@ -58,3 +58,23 @@ func GetContentType(r *http.Request) ContentType {
 		return ContentTypeJSON
 	}
 }
+
+func GetIP(r *http.Request) string {
+	// Check X-Forwarded-For header first (in case of reverse proxy)
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	if xForwardedFor != "" {
+		// The X-Forwarded-For header can contain multiple IPs, the first one is the client's IP
+		ips := strings.Split(xForwardedFor, ",")
+		return strings.TrimSpace(ips[0])
+	}
+
+	// Fallback to RemoteAddr
+	ip := r.RemoteAddr
+
+	// RemoteAddr can contain port, so split by colon and take the first part
+	if colonIndex := strings.LastIndex(ip, ":"); colonIndex != -1 {
+		ip = ip[:colonIndex]
+	}
+
+	return ip
+}

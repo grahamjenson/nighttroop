@@ -93,6 +93,9 @@ type ServerConfig struct {
 	jwtUserValidator    *jwt.Validator
 }
 
+const USER_READ_LIMIT = 60
+const USER_WRITE_LIMIT = 20
+
 // Priority is
 // 1. Args
 // 2. ENVAR
@@ -136,18 +139,19 @@ func NewServerConfig() (ServerConfig, error) {
 
 		// RATE LIMTERS
 		// User Rate Limits
-		UserReadPerMinuteLimit:    configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_LIMIT", 100),
-		UserReadPerMinuteBurst:    configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_BURST", 200),
-		UserWritePerMinuteLimit:   configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_LIMIT", 50),
-		UserWritePerMinuteBurst:   configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_BURST", 100),
-		DeviceReadPerMinuteLimit:  configIntSelect(dotenvdev, dotenv, "DEVICE_READ_PER_MINUTE_LIMIT", 100),
-		DeviceReadPerMinuteBurst:  configIntSelect(dotenvdev, dotenv, "DEVICE_READ_PER_MINUTE_BURST", 200),
-		DeviceWritePerMinuteLimit: configIntSelect(dotenvdev, dotenv, "DEVICE_WRITE_PER_MINUTE_LIMIT", 50),
-		DeviceWritePerMinuteBurst: configIntSelect(dotenvdev, dotenv, "DEVICE_WRITE_PER_MINUTE_BURST", 100),
-		IPReadPerMinuteLimit:      configIntSelect(dotenvdev, dotenv, "IP_READ_PER_MINUTE_LIMIT", 200),
-		IPReadPerMinuteBurst:      configIntSelect(dotenvdev, dotenv, "IP_READ_PER_MINUTE_BURST", 400),
-		IPWritePerMinuteLimit:     configIntSelect(dotenvdev, dotenv, "IP_WRITE_PER_MINUTE_LIMIT", 100),
-		IPWritePerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "IP_WRITE_PER_MINUTE_BURST", 200),
+		// TODO fine tune these a bit more
+		UserReadPerMinuteLimit:    configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_LIMIT", USER_READ_LIMIT),
+		UserReadPerMinuteBurst:    configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_BURST", USER_READ_LIMIT*2),
+		UserWritePerMinuteLimit:   configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_LIMIT", USER_WRITE_LIMIT),
+		UserWritePerMinuteBurst:   configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_BURST", USER_WRITE_LIMIT*4),
+		DeviceReadPerMinuteLimit:  configIntSelect(dotenvdev, dotenv, "DEVICE_READ_PER_MINUTE_LIMIT", USER_READ_LIMIT),
+		DeviceReadPerMinuteBurst:  configIntSelect(dotenvdev, dotenv, "DEVICE_READ_PER_MINUTE_BURST", USER_READ_LIMIT*4),
+		DeviceWritePerMinuteLimit: configIntSelect(dotenvdev, dotenv, "DEVICE_WRITE_PER_MINUTE_LIMIT", USER_WRITE_LIMIT),
+		DeviceWritePerMinuteBurst: configIntSelect(dotenvdev, dotenv, "DEVICE_WRITE_PER_MINUTE_BURST", USER_WRITE_LIMIT*4),
+		IPReadPerMinuteLimit:      configIntSelect(dotenvdev, dotenv, "IP_READ_PER_MINUTE_LIMIT", USER_READ_LIMIT),
+		IPReadPerMinuteBurst:      configIntSelect(dotenvdev, dotenv, "IP_READ_PER_MINUTE_BURST", USER_READ_LIMIT*2),
+		IPWritePerMinuteLimit:     configIntSelect(dotenvdev, dotenv, "IP_WRITE_PER_MINUTE_LIMIT", USER_WRITE_LIMIT),
+		IPWritePerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "IP_WRITE_PER_MINUTE_BURST", USER_WRITE_LIMIT*4),
 
 		// User Create Rate Limits
 		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 10),
@@ -166,7 +170,7 @@ func NewServerConfig() (ServerConfig, error) {
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
 	}
 
-	serverConfig.RateLimiters = NewRateLimiters(serverConfig)
+	serverConfig.RateLimiters = newRateLimiters(serverConfig)
 
 	mode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
 	err = serverConfig.ConfigCreateEncryptionKeys(dotenvdev, dotenv)
