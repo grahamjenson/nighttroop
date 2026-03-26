@@ -8,8 +8,11 @@ import (
 	"text/template"
 )
 
-//go:embed public/create_user.htmx
+//go:embed base.html
 var PublicCreateUserBase string
+
+//go:embed public/create_user.html
+var PublicCreateUserCreateUserHtml string
 
 var PublicCreateUserTemplate *template.Template
 
@@ -22,17 +25,21 @@ func getPublicCreateUserTemplate() (*template.Template, error) {
 	if err != nil {
 		return nil, err
 	}
+	PublicCreateUserTemplate, err = PublicCreateUserTemplate.Parse(PublicCreateUserCreateUserHtml)
+	if err != nil {
+		return nil, err
+	}
 
 	return PublicCreateUserTemplate, nil
 }
 
-func PublicCreateUser(w io.Writer, url string, token string, backup_key string) error {
+func PublicCreateUser(w io.Writer) error {
 	tmpl, err := getPublicCreateUserTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"url": url, "token": token, "backup_key": backup_key})
+	err = tmpl.Execute(w, nil)
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)

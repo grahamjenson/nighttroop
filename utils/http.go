@@ -1,11 +1,9 @@
-package server
+package utils
 
 import (
 	"net/http"
 	"strings"
 )
-
-const TOKEN_COOKIE = "token"
 
 type AcceptType int
 

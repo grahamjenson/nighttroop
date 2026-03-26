@@ -48,22 +48,37 @@ type ServerConfig struct {
 	// paths
 	SqlitePath string
 
-	// User Rate Limits
-	UserReadRateLimit  int
-	UserReadRateBurst  int
-	UserWriteRateLimit int
-	UserWriteRateBurst int
+	// Rate Limits
+	UserReadPerMinuteLimit    int
+	UserReadPerMinuteBurst    int
+	UserWritePerMinuteLimit   int
+	UserWritePerMinuteBurst   int
+	DeviceReadPerMinuteLimit  int
+	DeviceReadPerMinuteBurst  int
+	DeviceWritePerMinuteLimit int
+	DeviceWritePerMinuteBurst int
+	IPReadPerMinuteLimit      int
+	IPReadPerMinuteBurst      int
+	IPWritePerMinuteLimit     int
+	IPWritePerMinuteBurst     int
+
+	// Global
+	UserCreateGlobalPerMinuteLimit int
+	UserCreateGlobalPerMinuteBurst int
+	UserCreateIPPerMinuteLimit     int
+	UserCreateIPPerMinuteBurst     int
 
 	// User Limits
 	MaxUsers              int
+	MaxDevicesPerUser     int
 	MaxUserInactiveInMins int
 	MaxUserDBSizeMB       int
-	UserCreateRateLimit   int
-	UserCreateRateBurst   int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
+
+	RateLimiters *RateLimiters
 
 	// These keys are used to encrypt secrets in the DB and S3 at rest
 	// This has the option to add additional keys
@@ -119,24 +134,39 @@ func NewServerConfig() (ServerConfig, error) {
 		// paths
 		SqlitePath: configStringSelect(dotenvdev, dotenv, "SQLITE_PATH", "./data"),
 
+		// RATE LIMTERS
 		// User Rate Limits
-		UserReadRateLimit:  configIntSelect(dotenvdev, dotenv, "USER_READ_RATE_LIMIT", 100),
-		UserReadRateBurst:  configIntSelect(dotenvdev, dotenv, "USER_READ_RATE_BURST", 200),
-		UserWriteRateLimit: configIntSelect(dotenvdev, dotenv, "USER_WRITE_RATE_LIMIT", 50),
-		UserWriteRateBurst: configIntSelect(dotenvdev, dotenv, "USER_WRITE_RATE_BURST", 100),
+		UserReadPerMinuteLimit:    configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_LIMIT", 100),
+		UserReadPerMinuteBurst:    configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_BURST", 200),
+		UserWritePerMinuteLimit:   configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_LIMIT", 50),
+		UserWritePerMinuteBurst:   configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_BURST", 100),
+		DeviceReadPerMinuteLimit:  configIntSelect(dotenvdev, dotenv, "DEVICE_READ_PER_MINUTE_LIMIT", 100),
+		DeviceReadPerMinuteBurst:  configIntSelect(dotenvdev, dotenv, "DEVICE_READ_PER_MINUTE_BURST", 200),
+		DeviceWritePerMinuteLimit: configIntSelect(dotenvdev, dotenv, "DEVICE_WRITE_PER_MINUTE_LIMIT", 50),
+		DeviceWritePerMinuteBurst: configIntSelect(dotenvdev, dotenv, "DEVICE_WRITE_PER_MINUTE_BURST", 100),
+		IPReadPerMinuteLimit:      configIntSelect(dotenvdev, dotenv, "IP_READ_PER_MINUTE_LIMIT", 200),
+		IPReadPerMinuteBurst:      configIntSelect(dotenvdev, dotenv, "IP_READ_PER_MINUTE_BURST", 400),
+		IPWritePerMinuteLimit:     configIntSelect(dotenvdev, dotenv, "IP_WRITE_PER_MINUTE_LIMIT", 100),
+		IPWritePerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "IP_WRITE_PER_MINUTE_BURST", 200),
+
+		// User Create Rate Limits
+		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 10),
+		UserCreateGlobalPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
+		UserCreateIPPerMinuteLimit:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_LIMIT", 1),
+		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
 
 		// User Limits
 		MaxUsers:              configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
+		MaxDevicesPerUser:     configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
 		MaxUserInactiveInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_INACTIVE_IN_MINS", 60*24*30), // 30 days
 		MaxUserDBSizeMB:       configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_MB", 100),
-
-		UserCreateRateLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_RATE_LIMIT", 10),
-		UserCreateRateBurst: configIntSelect(dotenvdev, dotenv, "USER_CREATE_RATE_BURST", 100),
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 10),
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
 	}
+
+	serverConfig.RateLimiters = NewRateLimiters(serverConfig)
 
 	mode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
 	err = serverConfig.ConfigCreateEncryptionKeys(dotenvdev, dotenv)
@@ -185,18 +215,29 @@ func NewServerConfig() (ServerConfig, error) {
 	flag.StringVar(&serverConfig.SqlitePath, "sqlitedbpath", serverConfig.SqlitePath, "Path to store sqlite DB files")
 
 	// User Rate Limits
-	flag.IntVar(&serverConfig.UserReadRateLimit, "userreadratelimit", serverConfig.UserReadRateLimit, "User Read Rate Limit (requests per second)")
-	flag.IntVar(&serverConfig.UserReadRateBurst, "userreadrateburst", serverConfig.UserReadRateBurst, "User Read Rate Burst (maximum number of requests in a burst)")
-	flag.IntVar(&serverConfig.UserWriteRateLimit, "userwriteratelimit", serverConfig.UserWriteRateLimit, "User Write Rate Limit (requests per second)")
-	flag.IntVar(&serverConfig.UserWriteRateBurst, "userwriterateburst", serverConfig.UserWriteRateBurst, "User Write Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.UserReadPerMinuteLimit, "userreadratelimit", serverConfig.UserReadPerMinuteLimit, "User Read Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.UserReadPerMinuteBurst, "userreadrateburst", serverConfig.UserReadPerMinuteBurst, "User Read Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.UserWritePerMinuteLimit, "userwriteratelimit", serverConfig.UserWritePerMinuteLimit, "User Write Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.UserWritePerMinuteBurst, "userwriterateburst", serverConfig.UserWritePerMinuteBurst, "User Write Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.DeviceReadPerMinuteLimit, "devicereadratelimit", serverConfig.DeviceReadPerMinuteLimit, "Device Read Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.DeviceReadPerMinuteBurst, "devicereadrateburst", serverConfig.DeviceReadPerMinuteBurst, "Device Read Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.DeviceWritePerMinuteLimit, "devicewriteratelimit", serverConfig.DeviceWritePerMinuteLimit, "Device Write Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.DeviceWritePerMinuteBurst, "devicewriterateburst", serverConfig.DeviceWritePerMinuteBurst, "Device Write Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.IPReadPerMinuteLimit, "ipreadratelimit", serverConfig.IPReadPerMinuteLimit, "IP Read Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.IPReadPerMinuteBurst, "ipreadrateburst", serverConfig.IPReadPerMinuteBurst, "IP Read Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.IPWritePerMinuteLimit, "ipwriteratelimit", serverConfig.IPWritePerMinuteLimit, "IP Write Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.IPWritePerMinuteBurst, "ipwriterateburst", serverConfig.IPWritePerMinuteBurst, "IP Write Rate Burst (maximum number of requests in a burst)")
 
 	// User Limits
 	flag.IntVar(&serverConfig.MaxUsers, "maxusers", serverConfig.MaxUsers, "Maximum number of users")
+	flag.IntVar(&serverConfig.MaxDevicesPerUser, "maxdevicesperuser", serverConfig.MaxDevicesPerUser, "Maximum number of devices per user")
 	flag.IntVar(&serverConfig.MaxUserDBSizeMB, "maxuserdbsizemb", serverConfig.MaxUserDBSizeMB, "Maximum user DB size in MB")
 	flag.IntVar(&serverConfig.MaxUserInactiveInMins, "maxuserinactiveinmins", serverConfig.MaxUserInactiveInMins, "Maximum user inactive time in minutes (after this they are archived)")
 
-	flag.IntVar(&serverConfig.UserCreateRateLimit, "usercreateratelimit", serverConfig.UserCreateRateLimit, "User Create Rate Limit (requests per second)")
-	flag.IntVar(&serverConfig.UserCreateRateBurst, "usercreaterateburst", serverConfig.UserCreateRateBurst, "User Create Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.UserCreateGlobalPerMinuteLimit, "usercreateratelimit", serverConfig.UserCreateGlobalPerMinuteLimit, "User Create Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.UserCreateGlobalPerMinuteBurst, "usercreaterateburst", serverConfig.UserCreateGlobalPerMinuteBurst, "User Create Rate Burst (maximum number of requests in a burst)")
+	flag.IntVar(&serverConfig.UserCreateIPPerMinuteLimit, "usercreateipratelimit", serverConfig.UserCreateIPPerMinuteLimit, "User Create IP Rate Limit (requests per second)")
+	flag.IntVar(&serverConfig.UserCreateIPPerMinuteBurst, "usercreateiprateburst", serverConfig.UserCreateIPPerMinuteBurst, "User Create IP Rate Burst (maximum number of requests in a burst)")
 
 	// Backup Config
 	flag.IntVar(&serverConfig.ControlBackupIntervalInSeconds, "controlbackupinterval", serverConfig.ControlBackupIntervalInSeconds, "Control DB Backup Interval in seconds")
@@ -325,9 +366,13 @@ func printServerConfig(config ServerConfig) {
 	fmt.Printf("Host: %s://%s:%d\n", config.HostProtocol, config.HostName, config.HostPort)
 	fmt.Printf("S3: %s@%s/%s\n", config.S3AccessKeyID, config.S3URL, config.S3Bucket)
 	fmt.Printf("SQLite Path: %s\n", config.SqlitePath)
-	fmt.Printf("User Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.UserReadRateLimit, config.UserWriteRateLimit, config.UserReadRateBurst, config.UserWriteRateBurst)
-	fmt.Printf("Max Users/User DB Size/Age (mins): %d / %d / %d\n", config.MaxUsers, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
-	fmt.Printf("User Create Rate Limit: %d req/s burst %d\n", config.UserCreateRateLimit, config.UserCreateRateBurst)
+	fmt.Printf("User Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.UserReadPerMinuteLimit, config.UserWritePerMinuteLimit, config.UserReadPerMinuteBurst, config.UserWritePerMinuteBurst)
+	fmt.Printf("Device Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.DeviceReadPerMinuteLimit, config.DeviceWritePerMinuteLimit, config.DeviceReadPerMinuteBurst, config.DeviceWritePerMinuteBurst)
+	fmt.Printf("IP Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.IPReadPerMinuteLimit, config.IPWritePerMinuteLimit, config.IPReadPerMinuteBurst, config.IPWritePerMinuteBurst)
+	fmt.Printf("User Create Rate Limit req/s: %d burst %d\n", config.UserCreateGlobalPerMinuteLimit, config.UserCreateGlobalPerMinuteBurst)
+	fmt.Printf("User Create IP Rate Limit req/s: %d burst %d\n", config.UserCreateIPPerMinuteLimit, config.UserCreateIPPerMinuteBurst)
+
+	fmt.Printf("Max Users/Max Devices, User DB Size/Age (mins): %d / %d / %d / %d\n", config.MaxUsers, config.MaxDevicesPerUser, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
 	fmt.Printf("Backup Interval (Control/Batch) in seconds: %d / %d\n", config.ControlBackupIntervalInSeconds, config.BatchBackupIntervalInSeconds)
 }
 

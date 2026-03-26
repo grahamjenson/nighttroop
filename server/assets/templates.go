@@ -5,8 +5,8 @@ import (
 )
 
 // Public Templates
-//go:generate go run ./gen/template.go -name public_index -base base.html -file public/index.html
-//go:generate go run ./gen/template.go -name public_create_user -in "url string, token string, backup_key string" -base public/create_user.htmx
+//go:generate go run ./gen/template.go -name public_create_user -base base.html -file public/create_user.html
+//go:generate go run ./gen/template.go -name public_created_user_info -in "url string, token string, backup_key string" -base public/created_user_info.htmx
 
 // Control Templates
 //go:generate go run ./gen/template.go -name control_login -base base.html -file control/login.html

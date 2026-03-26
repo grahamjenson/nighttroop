@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	mtdb "nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/go-chi/chi/v5"
@@ -24,6 +25,8 @@ const UserDBKey ctxUserDBKey = 0
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
+	static.AddSatticRoutes(r)
+
 	r.Use(GetUserMiddleware(controlDB))
 
 	r.Post("/ping", func(w http.ResponseWriter, r *http.Request) {
