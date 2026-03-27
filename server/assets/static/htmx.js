@@ -5157,323 +5157,192 @@ var htmx = (function () {
     return htmx
 })()
 
-    /** @typedef {'get'|'head'|'post'|'put'|'delete'|'connect'|'options'|'trace'|'patch'} HttpVerb */
+/** @typedef {'get'|'head'|'post'|'put'|'delete'|'connect'|'options'|'trace'|'patch'} HttpVerb */
 
-    /**
-     * @typedef {Object} SwapOptions
-     * @property {string} [select]
-     * @property {string} [selectOOB]
-     * @property {*} [eventInfo]
-     * @property {string} [anchor]
-     * @property {Element} [contextElement]
-     * @property {swapCallback} [afterSwapCallback]
-     * @property {swapCallback} [afterSettleCallback]
-     * @property {swapCallback} [beforeSwapCallback]
-     * @property {string} [title]
-     * @property {boolean} [historyRequest]
-     */
+/**
+ * @typedef {Object} SwapOptions
+ * @property {string} [select]
+ * @property {string} [selectOOB]
+ * @property {*} [eventInfo]
+ * @property {string} [anchor]
+ * @property {Element} [contextElement]
+ * @property {swapCallback} [afterSwapCallback]
+ * @property {swapCallback} [afterSettleCallback]
+ * @property {swapCallback} [beforeSwapCallback]
+ * @property {string} [title]
+ * @property {boolean} [historyRequest]
+ */
 
-    /**
-     * @callback swapCallback
-     */
+/**
+ * @callback swapCallback
+ */
 
-    /**
-     * @typedef {'innerHTML' | 'outerHTML' | 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend' | 'delete' | 'none' | string} HtmxSwapStyle
-     */
+/**
+ * @typedef {'innerHTML' | 'outerHTML' | 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend' | 'delete' | 'none' | string} HtmxSwapStyle
+ */
 
-    /**
-     * @typedef HtmxSwapSpecification
-     * @property {HtmxSwapStyle} swapStyle
-     * @property {number} swapDelay
-     * @property {number} settleDelay
-     * @property {boolean} [transition]
-     * @property {boolean} [ignoreTitle]
-     * @property {string} [head]
-     * @property {'top' | 'bottom' | number } [scroll]
-     * @property {string} [scrollTarget]
-     * @property {string} [show]
-     * @property {string} [showTarget]
-     * @property {boolean} [focusScroll]
-     */
+/**
+ * @typedef HtmxSwapSpecification
+ * @property {HtmxSwapStyle} swapStyle
+ * @property {number} swapDelay
+ * @property {number} settleDelay
+ * @property {boolean} [transition]
+ * @property {boolean} [ignoreTitle]
+ * @property {string} [head]
+ * @property {'top' | 'bottom' | number } [scroll]
+ * @property {string} [scrollTarget]
+ * @property {string} [show]
+ * @property {string} [showTarget]
+ * @property {boolean} [focusScroll]
+ */
 
-    /**
-     * @typedef {((this:Node, evt:Event) => boolean) & {source: string}} ConditionalFunction
-     */
+/**
+ * @typedef {((this:Node, evt:Event) => boolean) & {source: string}} ConditionalFunction
+ */
 
-    /**
-     * @typedef {Object} HtmxTriggerSpecification
-     * @property {string} trigger
-     * @property {number} [pollInterval]
-     * @property {ConditionalFunction} [eventFilter]
-     * @property {boolean} [changed]
-     * @property {boolean} [once]
-     * @property {boolean} [consume]
-     * @property {number} [delay]
-     * @property {string} [from]
-     * @property {string} [target]
-     * @property {number} [throttle]
-     * @property {string} [queue]
-     * @property {string} [root]
-     * @property {string} [threshold]
-     */
+/**
+ * @typedef {Object} HtmxTriggerSpecification
+ * @property {string} trigger
+ * @property {number} [pollInterval]
+ * @property {ConditionalFunction} [eventFilter]
+ * @property {boolean} [changed]
+ * @property {boolean} [once]
+ * @property {boolean} [consume]
+ * @property {number} [delay]
+ * @property {string} [from]
+ * @property {string} [target]
+ * @property {number} [throttle]
+ * @property {string} [queue]
+ * @property {string} [root]
+ * @property {string} [threshold]
+ */
 
-    /**
-     * @typedef {{elt: Element, message: string, validity: ValidityState}} HtmxElementValidationError
-     */
+/**
+ * @typedef {{elt: Element, message: string, validity: ValidityState}} HtmxElementValidationError
+ */
 
-    /**
-     * @typedef {Record<string, string>} HtmxHeaderSpecification
-     * @property {'true'} HX-Request
-     * @property {string|null} HX-Trigger
-     * @property {string|null} HX-Trigger-Name
-     * @property {string|null} HX-Target
-     * @property {string} HX-Current-URL
-     * @property {string} [HX-Prompt]
-     * @property {'true'} [HX-Boosted]
-     * @property {string} [Content-Type]
-     * @property {'true'} [HX-History-Restore-Request]
-     */
+/**
+ * @typedef {Record<string, string>} HtmxHeaderSpecification
+ * @property {'true'} HX-Request
+ * @property {string|null} HX-Trigger
+ * @property {string|null} HX-Trigger-Name
+ * @property {string|null} HX-Target
+ * @property {string} HX-Current-URL
+ * @property {string} [HX-Prompt]
+ * @property {'true'} [HX-Boosted]
+ * @property {string} [Content-Type]
+ * @property {'true'} [HX-History-Restore-Request]
+ */
 
-    /**
-     * @typedef HtmxAjaxHelperContext
-     * @property {Element|string} [source]
-     * @property {Event} [event]
-     * @property {HtmxAjaxHandler} [handler]
-     * @property {Element|string} [target]
-     * @property {HtmxSwapStyle} [swap]
-     * @property {Object|FormData} [values]
-     * @property {Record<string,string>} [headers]
-     * @property {string} [select]
-     * @property {string} [push]
-     * @property {string} [replace]
-     * @property {string} [selectOOB]
-     */
+/**
+ * @typedef HtmxAjaxHelperContext
+ * @property {Element|string} [source]
+ * @property {Event} [event]
+ * @property {HtmxAjaxHandler} [handler]
+ * @property {Element|string} [target]
+ * @property {HtmxSwapStyle} [swap]
+ * @property {Object|FormData} [values]
+ * @property {Record<string,string>} [headers]
+ * @property {string} [select]
+ * @property {string} [push]
+ * @property {string} [replace]
+ * @property {string} [selectOOB]
+ */
 
-    /**
-     * @typedef {Object} HtmxRequestConfig
-     * @property {boolean} boosted
-     * @property {boolean} useUrlParams
-     * @property {FormData} formData
-     * @property {Object} parameters formData proxy
-     * @property {FormData} unfilteredFormData
-     * @property {Object} unfilteredParameters unfilteredFormData proxy
-     * @property {HtmxHeaderSpecification} headers
-     * @property {Element} elt
-     * @property {Element} target
-     * @property {HttpVerb} verb
-     * @property {HtmxElementValidationError[]} errors
-     * @property {boolean} withCredentials
-     * @property {number} timeout
-     * @property {string} path
-     * @property {Event} triggeringEvent
-     */
+/**
+ * @typedef {Object} HtmxRequestConfig
+ * @property {boolean} boosted
+ * @property {boolean} useUrlParams
+ * @property {FormData} formData
+ * @property {Object} parameters formData proxy
+ * @property {FormData} unfilteredFormData
+ * @property {Object} unfilteredParameters unfilteredFormData proxy
+ * @property {HtmxHeaderSpecification} headers
+ * @property {Element} elt
+ * @property {Element} target
+ * @property {HttpVerb} verb
+ * @property {HtmxElementValidationError[]} errors
+ * @property {boolean} withCredentials
+ * @property {number} timeout
+ * @property {string} path
+ * @property {Event} triggeringEvent
+ */
 
-    /**
-     * @typedef {Object} HtmxResponseInfo
-     * @property {XMLHttpRequest} xhr
-     * @property {Element} target
-     * @property {HtmxRequestConfig} requestConfig
-     * @property {HtmxAjaxEtc} etc
-     * @property {boolean} boosted
-     * @property {string} select
-     * @property {{requestPath: string, finalRequestPath: string, responsePath: string|null, anchor: string}} pathInfo
-     * @property {boolean} [failed]
-     * @property {boolean} [successful]
-     * @property {boolean} [keepIndicators]
-     */
+/**
+ * @typedef {Object} HtmxResponseInfo
+ * @property {XMLHttpRequest} xhr
+ * @property {Element} target
+ * @property {HtmxRequestConfig} requestConfig
+ * @property {HtmxAjaxEtc} etc
+ * @property {boolean} boosted
+ * @property {string} select
+ * @property {{requestPath: string, finalRequestPath: string, responsePath: string|null, anchor: string}} pathInfo
+ * @property {boolean} [failed]
+ * @property {boolean} [successful]
+ * @property {boolean} [keepIndicators]
+ */
 
-    /**
-     * @typedef {Object} HtmxAjaxEtc
-     * @property {boolean} [returnPromise]
-     * @property {HtmxAjaxHandler} [handler]
-     * @property {string} [select]
-     * @property {Element} [targetOverride]
-     * @property {HtmxSwapStyle} [swapOverride]
-     * @property {Record<string,string>} [headers]
-     * @property {Object|FormData} [values]
-     * @property {boolean} [credentials]
-     * @property {number} [timeout]
-     * @property {string} [push]
-     * @property {string} [replace]
-     * @property {string} [selectOOB]
-     */
+/**
+ * @typedef {Object} HtmxAjaxEtc
+ * @property {boolean} [returnPromise]
+ * @property {HtmxAjaxHandler} [handler]
+ * @property {string} [select]
+ * @property {Element} [targetOverride]
+ * @property {HtmxSwapStyle} [swapOverride]
+ * @property {Record<string,string>} [headers]
+ * @property {Object|FormData} [values]
+ * @property {boolean} [credentials]
+ * @property {number} [timeout]
+ * @property {string} [push]
+ * @property {string} [replace]
+ * @property {string} [selectOOB]
+ */
 
-    /**
-     * @typedef {Object} HtmxResponseHandlingConfig
-     * @property {string} [code]
-     * @property {boolean} swap
-     * @property {boolean} [error]
-     * @property {boolean} [ignoreTitle]
-     * @property {string} [select]
-     * @property {string} [target]
-     * @property {string} [swapOverride]
-     * @property {string} [event]
-     */
+/**
+ * @typedef {Object} HtmxResponseHandlingConfig
+ * @property {string} [code]
+ * @property {boolean} swap
+ * @property {boolean} [error]
+ * @property {boolean} [ignoreTitle]
+ * @property {string} [select]
+ * @property {string} [target]
+ * @property {string} [swapOverride]
+ * @property {string} [event]
+ */
 
-    /**
-     * @typedef {HtmxResponseInfo & {shouldSwap: boolean, serverResponse: any, isError: boolean, ignoreTitle: boolean, selectOverride:string, swapOverride:string}} HtmxBeforeSwapDetails
-     */
+/**
+ * @typedef {HtmxResponseInfo & {shouldSwap: boolean, serverResponse: any, isError: boolean, ignoreTitle: boolean, selectOverride:string, swapOverride:string}} HtmxBeforeSwapDetails
+ */
 
-    /**
-     * @callback HtmxAjaxHandler
-     * @param {Element} elt
-     * @param {HtmxResponseInfo} responseInfo
-     */
+/**
+ * @callback HtmxAjaxHandler
+ * @param {Element} elt
+ * @param {HtmxResponseInfo} responseInfo
+ */
 
-    /**
-     * @typedef {(() => void)} HtmxSettleTask
-     */
+/**
+ * @typedef {(() => void)} HtmxSettleTask
+ */
 
-    /**
-     * @typedef {Object} HtmxSettleInfo
-     * @property {HtmxSettleTask[]} tasks
-     * @property {Element[]} elts
-     * @property {string} [title]
-     */
+/**
+ * @typedef {Object} HtmxSettleInfo
+ * @property {HtmxSettleTask[]} tasks
+ * @property {Element[]} elts
+ * @property {string} [title]
+ */
 
-    /**
-     * @see https://github.com/bigskysoftware/htmx-extensions/blob/main/README.md
-     * @typedef {Object} HtmxExtension
-     * @property {(api: any) => void} init
-     * @property {(name: string, event: CustomEvent) => boolean} onEvent
-     * @property {(text: string, xhr: XMLHttpRequest, elt: Element) => string} transformResponse
-     * @property {(swapStyle: HtmxSwapStyle) => boolean} isInlineSwap
-     * @property {(swapStyle: HtmxSwapStyle, target: Node, fragment: Node, settleInfo: HtmxSettleInfo) => boolean|Node[]} handleSwap
-     * @property {(xhr: XMLHttpRequest, parameters: FormData, elt: Node) => *|string|null} encodeParameters
-     * @property {() => string[]|null} getSelectors
-     */
+/**
+ * @see https://github.com/bigskysoftware/htmx-extensions/blob/main/README.md
+ * @typedef {Object} HtmxExtension
+ * @property {(api: any) => void} init
+ * @property {(name: string, event: CustomEvent) => boolean} onEvent
+ * @property {(text: string, xhr: XMLHttpRequest, elt: Element) => string} transformResponse
+ * @property {(swapStyle: HtmxSwapStyle) => boolean} isInlineSwap
+ * @property {(swapStyle: HtmxSwapStyle, target: Node, fragment: Node, settleInfo: HtmxSettleInfo) => boolean|Node[]} handleSwap
+ * @property {(xhr: XMLHttpRequest, parameters: FormData, elt: Node) => *|string|null} encodeParameters
+ * @property {() => string[]|null} getSelectors
+ */
 
 
-    ///////////
-    // EXTENSIONS
-    ///////////
 
-    (function () {
-        /** @type {import("../htmx").HtmxInternalApi} */
-        var api
 
-        var attrPrefix = 'hx-target-'
-
-        // IE11 doesn't support string.startsWith
-        function startsWith(str, prefix) {
-            return str.substring(0, prefix.length) === prefix
-        }
-
-        /**
-           * @param {HTMLElement} elt
-           * @param {number} respCode
-           * @returns {HTMLElement | null}
-           */
-        function getRespCodeTarget(elt, respCodeNumber) {
-            if (!elt || !respCodeNumber) return null
-
-            var respCode = respCodeNumber.toString()
-
-            // '*' is the original syntax, as the obvious character for a wildcard.
-            // The 'x' alternative was added for maximum compatibility with HTML
-            // templating engines, due to ambiguity around which characters are
-            // supported in HTML attributes.
-            //
-            // Start with the most specific possible attribute and generalize from
-            // there.
-            var attrPossibilities = [
-                respCode,
-
-                respCode.substring(0, 2) + '*',
-                respCode.substring(0, 2) + 'x',
-
-                respCode.substring(0, 1) + '*',
-                respCode.substring(0, 1) + 'x',
-                respCode.substring(0, 1) + '**',
-                respCode.substring(0, 1) + 'xx',
-
-                '*',
-                'x',
-                '***',
-                'xxx'
-            ]
-            if (startsWith(respCode, '4') || startsWith(respCode, '5')) {
-                attrPossibilities.push('error')
-            }
-
-            for (var i = 0; i < attrPossibilities.length; i++) {
-                var attr = attrPrefix + attrPossibilities[i]
-                var attrValue = api.getClosestAttributeValue(elt, attr)
-                if (attrValue) {
-                    if (attrValue === 'this') {
-                        return api.findThisElement(elt, attr)
-                    } else {
-                        return api.querySelectorExt(elt, attrValue)
-                    }
-                }
-            }
-
-            return null
-        }
-
-        /** @param {Event} evt */
-        function handleErrorFlag(evt) {
-            if (evt.detail.isError) {
-                if (htmx.config.responseTargetUnsetsError) {
-                    evt.detail.isError = false
-                }
-            } else if (htmx.config.responseTargetSetsError) {
-                evt.detail.isError = true
-            }
-        }
-
-        htmx.defineExtension('response-targets', {
-
-            /** @param {import("../htmx").HtmxInternalApi} apiRef */
-            init: function (apiRef) {
-                api = apiRef
-
-                if (htmx.config.responseTargetUnsetsError === undefined) {
-                    htmx.config.responseTargetUnsetsError = true
-                }
-                if (htmx.config.responseTargetSetsError === undefined) {
-                    htmx.config.responseTargetSetsError = false
-                }
-                if (htmx.config.responseTargetPrefersExisting === undefined) {
-                    htmx.config.responseTargetPrefersExisting = false
-                }
-                if (htmx.config.responseTargetPrefersRetargetHeader === undefined) {
-                    htmx.config.responseTargetPrefersRetargetHeader = true
-                }
-            },
-
-            /**
-                 * @param {string} name
-                 * @param {Event} evt
-                 */
-            onEvent: function (name, evt) {
-                if (name === 'htmx:beforeSwap' &&
-                    evt.detail.xhr &&
-                    evt.detail.xhr.status !== 200) {
-                    if (evt.detail.target) {
-                        if (htmx.config.responseTargetPrefersExisting) {
-                            evt.detail.shouldSwap = true
-                            handleErrorFlag(evt)
-                            return true
-                        }
-                        if (htmx.config.responseTargetPrefersRetargetHeader &&
-                            evt.detail.xhr.getAllResponseHeaders().match(/HX-Retarget:/i)) {
-                            evt.detail.shouldSwap = true
-                            handleErrorFlag(evt)
-                            return true
-                        }
-                    }
-                    if (!evt.detail.requestConfig) {
-                        return true
-                    }
-                    var target = getRespCodeTarget(evt.detail.requestConfig.elt, evt.detail.xhr.status)
-                    if (target) {
-                        handleErrorFlag(evt)
-                        evt.detail.shouldSwap = true
-                        evt.detail.target = target
-                    }
-                    return true
-                }
-            }
-        })
-    })()

@@ -2,7 +2,9 @@
 package static
 
 import (
+	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 
@@ -11,22 +13,39 @@ import (
 
 //go:embed favicon.ico
 var StaticFaviconIco []byte
+var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
 
 //go:embed htmx.js
 var StaticHtmxJs []byte
+var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
 
 //go:embed bootstrap.js
 var StaticBootstrapJs []byte
+var StaticBootstrapJsETag = generateETag([]byte(StaticBootstrapJs))
 
 //go:embed bootstrap.css
 var StaticBootstrapCss []byte
+var StaticBootstrapCssETag = generateETag([]byte(StaticBootstrapCss))
 
 //go:embed logo.png
 var StaticLogoPng []byte
+var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
+
+//go:embed htmx_response_targets.js
+var StaticHtmxResponseTargetsJs []byte
+var StaticHtmxResponseTargetsJsETag = generateETag([]byte(StaticHtmxResponseTargetsJs))
+
+//go:embed robots.txt
+var StaticRobotsTxt []byte
+var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
 
 func AddSatticRoutes(r chi.Router) error {
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/x-icon")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticFaviconIcoETag)
+
 		_, err := w.Write([]byte(StaticFaviconIco))
 		if err != nil {
 			fmt.Printf("Failed to write response for favicon.ico: %v\n", err)
@@ -34,6 +53,10 @@ func AddSatticRoutes(r chi.Router) error {
 	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticHtmxJsETag)
+
 		_, err := w.Write([]byte(StaticHtmxJs))
 		if err != nil {
 			fmt.Printf("Failed to write response for htmx.js: %v\n", err)
@@ -41,6 +64,10 @@ func AddSatticRoutes(r chi.Router) error {
 	})
 	r.Get("/bootstrap.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticBootstrapJsETag)
+
 		_, err := w.Write([]byte(StaticBootstrapJs))
 		if err != nil {
 			fmt.Printf("Failed to write response for bootstrap.js: %v\n", err)
@@ -48,6 +75,10 @@ func AddSatticRoutes(r chi.Router) error {
 	})
 	r.Get("/bootstrap.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticBootstrapCssETag)
+
 		_, err := w.Write([]byte(StaticBootstrapCss))
 		if err != nil {
 			fmt.Printf("Failed to write response for bootstrap.css: %v\n", err)
@@ -55,11 +86,43 @@ func AddSatticRoutes(r chi.Router) error {
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticLogoPngETag)
+
 		_, err := w.Write([]byte(StaticLogoPng))
 		if err != nil {
 			fmt.Printf("Failed to write response for logo.png: %v\n", err)
 		}
 	})
+	r.Get("/htmx_response_targets.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticHtmxResponseTargetsJsETag)
+
+		_, err := w.Write([]byte(StaticHtmxResponseTargetsJs))
+		if err != nil {
+			fmt.Printf("Failed to write response for htmx_response_targets.js: %v\n", err)
+		}
+	})
+	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticRobotsTxtETag)
+
+		_, err := w.Write([]byte(StaticRobotsTxt))
+		if err != nil {
+			fmt.Printf("Failed to write response for robots.txt: %v\n", err)
+		}
+	})
 
 	return nil
+}
+
+func generateETag(data []byte) string {
+	hash := sha256.Sum256(data)
+	// Return the first 16 chars of the hash wrapped in double quotes
+	return fmt.Sprintf("\"%s\"", hex.EncodeToString(hash[:8]))
 }

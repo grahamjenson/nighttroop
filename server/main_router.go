@@ -37,7 +37,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			fmt.Println("Routing to control router")
 			controlRouter.ServeHTTP(w, r.WithContext(ctx))
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
-			fmt.Println("Routing to public router")
+			fmt.Printf("Routing %s to public router\n", r.URL.Path)
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case utils.ValidateUserID(subdomain):
 			fmt.Println("Routing to user router for user:", subdomain)

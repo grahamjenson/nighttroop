@@ -20,6 +20,8 @@ package static
 import (
 	"fmt"
 	"net/http"
+	"crypto/sha256"
+	"encoding/hex"
 	_ "embed"
 	
 	"github.com/go-chi/chi/v5"
@@ -30,6 +32,8 @@ import (
 
 //go:embed {{.FileName}}
 var {{.VarName}} []byte
+var {{.VarName}}ETag = generateETag([]byte({{.VarName}}))
+
 {{- end}}
 
 
@@ -37,6 +41,10 @@ func AddSatticRoutes(r chi.Router) error {
 	{{- range .GetFileVars }}
 	r.Get("/{{.FileName}}", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "{{.ContentType}}")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", {{.VarName}}ETag)
+
 		_, err := w.Write([]byte({{.VarName}}))
 		if err != nil {
 			fmt.Printf("Failed to write response for {{.FileName}}: %v\n", err)
@@ -47,6 +55,11 @@ func AddSatticRoutes(r chi.Router) error {
 	return nil
 }
 
+func generateETag(data []byte) string {
+	hash := sha256.Sum256(data)
+	// Return the first 16 chars of the hash wrapped in double quotes
+	return fmt.Sprintf("\"%s\"", hex.EncodeToString(hash[:8]))
+}
 `
 
 type Config struct {
