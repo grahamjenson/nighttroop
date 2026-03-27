@@ -2,7 +2,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,9 +9,8 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/httputils"
 )
-
-const SubdomainKey ctxSubdomainKey = 1
 
 func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Handler {
 
@@ -30,23 +28,19 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			return
 		}
 
-		ctx = context.WithValue(ctx, SubdomainKey, subdomain)
+		ctx = httputils.SetSubdomainInHTTPContext(ctx, subdomain)
 
 		switch {
 		case subdomain == "control" || subdomain == "admin":
-			fmt.Println("Routing to control router")
 			controlRouter.ServeHTTP(w, r.WithContext(ctx))
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
-			fmt.Printf("Routing %s to public router\n", r.URL.Path)
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case utils.ValidateUserID(subdomain):
-			fmt.Println("Routing to user router for user:", subdomain)
 			userRouter.ServeHTTP(w, r.WithContext(ctx))
 		default:
 			fmt.Printf("Main router 404 for subdomain: %s\n", subdomain)
 			http.NotFound(w, r)
 		}
-
 	})
 
 }
@@ -93,14 +87,4 @@ func GetSubdomain(host_header, hostname string) (string, error) {
 	}
 
 	return "", fmt.Errorf("unexpected error parsing host: %s", host) // This should never happen but just in case
-}
-
-func GetSubdomaiFromHTTPContext(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
-	if reqID, ok := ctx.Value(SubdomainKey).(string); ok {
-		return reqID
-	}
-	return ""
 }

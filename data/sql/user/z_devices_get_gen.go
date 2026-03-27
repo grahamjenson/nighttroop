@@ -6,19 +6,26 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"time"
 )
 
 var DevicesGetRaw string = `
 SELECT name,
-    token
+    token,
+    role, 
+    created_at,
+    last_seen_at
 FROM devices
-where name = ? OR token = ?
+where name = ?
 LIMIT 1;
 `
 
 type DevicesGetModel struct {
-	Name  string
-	token string
+	Name       string
+	Token      string
+	Role       string
+	CreatedAt  *time.Time
+	LastSeenAt *time.Time
 }
 
 type DevicesGetStmt struct {
@@ -36,8 +43,8 @@ func NewDevicesGet(sqldb *sql.DB, errs *[]error) *DevicesGetStmt {
 	return &DevicesGetStmt{stmt: stmt}
 }
 
-func (s *DevicesGetStmt) Query(ctx context.Context, Name string, token string) ([]DevicesGetModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Name, token)
+func (s *DevicesGetStmt) Query(ctx context.Context, Name string) ([]DevicesGetModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Name)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesGet query error: %w", err)
 	}
@@ -47,7 +54,7 @@ func (s *DevicesGetStmt) Query(ctx context.Context, Name string, token string) (
 	for rows.Next() {
 		var model DevicesGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Name, &model.token); err != nil {
+		if err := rows.Scan(&model.Name, &model.Token, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("DevicesGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -55,17 +62,17 @@ func (s *DevicesGetStmt) Query(ctx context.Context, Name string, token string) (
 	return results, nil
 }
 
-func (s *DevicesGetStmt) Exec(ctx context.Context, Name string, token string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Name, token)
+func (s *DevicesGetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Name)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesGet exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string, token string) (DevicesGetModel, error) {
+func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string) (DevicesGetModel, error) {
 	var model DevicesGetModel
-	err := s.stmt.QueryRowContext(ctx, Name, token).Scan(&model.Name, &model.token)
+	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Token, &model.Role, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
 		return model, fmt.Errorf("DevicesGet query row error: %w", err)
 	}

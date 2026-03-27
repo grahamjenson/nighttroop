@@ -5,9 +5,10 @@ package sql
 //
 
 // devices
-//go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "Name string,token string" -out "Name string,token string"
-//go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "Name string,token string"
-//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "Name string,token string, LastSeenAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "Name string" -out "Name string, Token string, Role string, CreatedAt *time.Time, LastSeenAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "Name string, Token string, Role string"
+//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "Name string, Token string, Role string, CreatedAt *time.Time, LastSeenAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_update_last_seen_at.sql  -in "Name string"
 
 //
 // Control

@@ -13,7 +13,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/tink-crypto/tink-go/v2 v2.6.0
 	golang.org/x/crypto v0.49.0
-	golang.org/x/sync v0.13.0
+	golang.org/x/sync v0.20.0
 	golang.org/x/time v0.11.0
 )
 
@@ -29,6 +29,11 @@ require (
 	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/boombuler/barcode v1.1.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
+	golang.org/x/tools v0.43.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 )
+
+tool golang.org/x/tools/cmd/goimports

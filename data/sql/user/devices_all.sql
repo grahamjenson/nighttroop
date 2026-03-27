@@ -1,1 +1,1 @@
-SELECT name, created_at, last_seen_at FROM devices;
+SELECT name, token, role, created_at, last_seen_at FROM devices;

@@ -1,5 +1,8 @@
 SELECT name,
-    token
+    token,
+    role, 
+    created_at,
+    last_seen_at
 FROM devices
-where name = ? OR token = ?
+where name = ?
 LIMIT 1;

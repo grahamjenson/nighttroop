@@ -9,8 +9,8 @@ import (
 )
 
 var DevicesCreateRaw string = `
-INSERT INTO devices (name, token)
-VALUES (?, ?);
+INSERT INTO devices (name, token, role)
+VALUES (?, ?, ?);
 `
 
 type DevicesCreateModel struct {
@@ -31,8 +31,8 @@ func NewDevicesCreate(sqldb *sql.DB, errs *[]error) *DevicesCreateStmt {
 	return &DevicesCreateStmt{stmt: stmt}
 }
 
-func (s *DevicesCreateStmt) Query(ctx context.Context, Name string, token string) ([]DevicesCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Name, token)
+func (s *DevicesCreateStmt) Query(ctx context.Context, Name string, Token string, Role string) ([]DevicesCreateModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, Name, Token, Role)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesCreate query error: %w", err)
 	}
@@ -50,17 +50,17 @@ func (s *DevicesCreateStmt) Query(ctx context.Context, Name string, token string
 	return results, nil
 }
 
-func (s *DevicesCreateStmt) Exec(ctx context.Context, Name string, token string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Name, token)
+func (s *DevicesCreateStmt) Exec(ctx context.Context, Name string, Token string, Role string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Name, Token, Role)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesCreate exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *DevicesCreateStmt) QueryRow(ctx context.Context, Name string, token string) (DevicesCreateModel, error) {
+func (s *DevicesCreateStmt) QueryRow(ctx context.Context, Name string, Token string, Role string) (DevicesCreateModel, error) {
 	var model DevicesCreateModel
-	err := s.stmt.QueryRowContext(ctx, Name, token).Scan()
+	err := s.stmt.QueryRowContext(ctx, Name, Token, Role).Scan()
 	if err != nil {
 		return model, fmt.Errorf("DevicesCreate query row error: %w", err)
 	}

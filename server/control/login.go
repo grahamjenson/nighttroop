@@ -13,6 +13,7 @@ import (
 	controlTemplates "nighttroop.t1d.nz/server/assets/templates/control"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 const TOKEN_COOKIE = "control_token"
@@ -45,14 +46,14 @@ func GETLoginPageHandler() http.HandlerFunc {
 func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// is this HTML FORM or JSON?
-		contentType := utils.GetContentType(r)
+		contentType := httputils.GetContentType(r)
 
 		username := ""
 		password := ""
 		totpToken := ""
 
 		switch contentType {
-		case utils.ContentTypeJSON:
+		case httputils.ContentTypeJSON:
 			var creds LoginRequest
 			if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 				http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -61,7 +62,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			username = creds.Username
 			password = creds.Password
 			totpToken = creds.TOTP
-		case utils.ContentTypeForm:
+		case httputils.ContentTypeForm:
 
 			if err := r.ParseForm(); err != nil {
 				http.Error(w, "Invalid form data", http.StatusBadRequest)
@@ -88,10 +89,10 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		acceptType := utils.GetAcceptType(r)
+		acceptType := httputils.GetAcceptType(r)
 
 		switch acceptType {
-		case utils.AcceptTypeHTMX, utils.AcceptTypeHTML:
+		case httputils.AcceptTypeHTMX, httputils.AcceptTypeHTML:
 			// Default set the cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:     TOKEN_COOKIE,
@@ -164,10 +165,10 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			contentType := utils.GetAcceptType(r)
+			contentType := httputils.GetAcceptType(r)
 			tokenStr := ""
 			switch contentType {
-			case utils.AcceptTypeJSON:
+			case httputils.AcceptTypeJSON:
 				authHeader := r.Header.Get("Authorization")
 				if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 					http.Error(w, "Unauthorized Header", http.StatusUnauthorized)

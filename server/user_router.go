@@ -3,112 +3,30 @@ package server
 // User router enables user specific router, and can route to NS router if endpoint hits that layer.
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"strings"
-
-	mtdb "nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/server/control"
+	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/utils"
 )
-
-type ctxUserDBKey int
-type ctxSubdomainKey int
-
-// RequestIDKey is the key that holds the unique request ID in a request context.
-const UserDBKey ctxUserDBKey = 0
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	r.Use(GetUserMiddleware(controlDB))
+	r.Use(user.GetUserMiddleware(controlDB))
 
 	static.AddSatticRoutes(r)
 
-	r.Post("/ping", func(w http.ResponseWriter, r *http.Request) {
-		userDB := GetUser(r.Context())
+	r.Get("/login", user.GETLoginPageHandler())
+	r.Post("/login", user.POSTLogin(controlDB, config))
 
-		if userDB == nil {
-			fmt.Println("User NOT found")
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
-		}
-
-		accept := r.Header.Get("Accept")
-
-		if accept == "application/json" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write(fmt.Appendf(nil, "{\"ping\": \"pong\"}"))
-			return
-		}
-
-		if accept == "text/htmx" {
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Pong"))
-			return
-		}
-
+	r.Group(func(r chi.Router) {
+		r.Use(control.JWTAuthMiddleware(controlDB, config))
+		r.Get("/", control.GetDashboardHandler(controlDB, config))
+		r.Get("/logout", control.GETLogoutHandler(config))
 	})
+
+	r.Get("/ping", user.GETPingHandler())
 	return r
-}
-
-func GetUserMiddleware(controlDB *mtdb.ControlDB) func(http.Handler) http.Handler {
-
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			host := r.Host
-			subdomain := strings.Split(host, ".")[0] // Get the first part of the host
-			ctx = context.WithValue(ctx, SubdomainKey, subdomain)
-
-			apiToken := r.URL.Query().Get("token")
-
-			if subdomain == "control" {
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-
-			// Search for users
-			userDB, userModel, err := controlDB.GetUser(subdomain, true)
-			// We ignore errors and this is a best effort middleware
-			// Each route needs to check the user if needed
-			if err != nil || userDB == nil || userModel == nil {
-				// If the user is not found, we can return a 404
-				fmt.Println("User Middleware Error", err)
-				http.NotFound(w, r)
-				return
-			}
-
-			verified := utils.VerifyPassword("", apiToken)
-			if !verified {
-				fmt.Println("User token error", err)
-				// write an not auth http error
-				http.Error(w, "Not Authorized", http.StatusUnauthorized)
-				return
-			}
-
-			ctx = context.WithValue(ctx, UserDBKey, userDB)
-			next.ServeHTTP(w, r.WithContext(ctx))
-
-		}
-
-		return http.HandlerFunc(fn)
-	}
-}
-
-// GetUser retrieves the user ID from the context.
-func GetUser(ctx context.Context) *mtdb.UserDB {
-	if ctx == nil {
-		return nil
-	}
-	if reqID, ok := ctx.Value(UserDBKey).(*mtdb.UserDB); ok {
-		return reqID
-	}
-	return nil
 }

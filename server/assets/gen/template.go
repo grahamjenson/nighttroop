@@ -22,9 +22,7 @@ import (
 	"io"
 	_ "embed"
 	"text/template"
-{{- range .AdditionalPackages}}
-	"{{.}}"
-{{- end}}
+	"time"
 )
 
 //go:embed {{.TemplateBase}}
@@ -82,15 +80,14 @@ func {{.Name}}(w io.Writer{{ if .HasInputs }}, {{.Inputs}} {{ end }}) error {
 `
 
 type Config struct {
-	Name               string
-	Package            string
-	TemplateBase       string
-	TemplateFiles      utils.FlagFileList
-	HasInputs          bool
-	Inputs             string
-	InputParams        string
-	AdditionalPackages []string
-	HasFiles           bool
+	Name          string
+	Package       string
+	TemplateBase  string
+	TemplateFiles utils.FlagFileList
+	HasInputs     bool
+	Inputs        string
+	InputParams   string
+	HasFiles      bool
 }
 
 func (c Config) GetFileVars() []utils.FlagStringFileName {
@@ -142,12 +139,6 @@ func main() {
 	name := utils.SnakeToCapitalCamelCase(outfilename)
 	pkg := filepath.Dir(filePathToUse)
 
-	additionalPackages := []string{}
-	if strings.Contains(*inputs, "time.Time") {
-		// If any input or output includes time.Time, we need to import the time package
-		additionalPackages = append(additionalPackages, "time")
-	}
-
 	// inputParams is a string params.{name}, params.{name}, ...
 	inputParms := []string{}
 	for _, param := range strings.Split(*inputs, ",") {
@@ -173,15 +164,14 @@ func main() {
 	}
 
 	cfg := Config{
-		Name:               name,
-		Package:            pkg,
-		TemplateBase:       utils.RelPathBetween(pkg, *base),
-		TemplateFiles:      templateFiles,
-		HasFiles:           len(templateFiles) != 0,
-		Inputs:             *inputs,
-		InputParams:        strings.Join(inputParms, ", "),
-		HasInputs:          len(inputList) != 0,
-		AdditionalPackages: additionalPackages,
+		Name:          name,
+		Package:       pkg,
+		TemplateBase:  utils.RelPathBetween(pkg, *base),
+		TemplateFiles: templateFiles,
+		HasFiles:      len(templateFiles) != 0,
+		Inputs:        *inputs,
+		InputParams:   strings.Join(inputParms, ", "),
+		HasInputs:     len(inputList) != 0,
 	}
 
 	outputPath := "templates/" + pkg + "/z_" + outfilename + "_gen.go"
@@ -193,6 +183,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to execute template: %v", err))
 	}
+
 	// Format the generated code
-	exec.Command("go", "fmt", outputPath).Run()
+	exec.Command("go", "tool", "goimports", "-w", outputPath).Run()
 }
