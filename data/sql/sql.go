@@ -1,18 +1,18 @@
 package sql
 
-//
+//////////////
 // User
-//
+///////////////
 
 // devices
-//go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "Name string" -out "Name string, Token string, Role string, CreatedAt *time.Time, LastSeenAt *time.Time"
-//go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "Name string, Token string, Role string"
-//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "Name string, Token string, Role string, CreatedAt *time.Time, LastSeenAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_get.sql -in "Name string" -out "Name string, Password string, TotpSecret string, Role string, CreatedAt *time.Time, LastSeenAt *time.Time"
+//go:generate go run ./gen/prepared.go  -file user/devices_create.sql -in "Name string, Password string, TotpSecret string, Role string"
+//go:generate go run ./gen/prepared.go  -file user/devices_all.sql  -out "Name string, Password string, TotpSecret string, Role string, CreatedAt *time.Time, LastSeenAt *time.Time"
 //go:generate go run ./gen/prepared.go  -file user/devices_update_last_seen_at.sql  -in "Name string"
 
-//
+////////////
 // Control
-//
+//////////////
 
 // admins
 //go:generate go run ./gen/prepared.go  -file control/admins_create.sql -in "Name string,Password string,Role string,TotpSecret string"
@@ -30,9 +30,9 @@ package sql
 //go:generate go run ./gen/prepared.go  -file control/users_update_last_seen.sql  -in "Subdomain string"
 //go:generate go run ./gen/prepared.go  -file control/users_truncate_all.sql
 
-//
+//////////////
 // MIGRATIONS
-//
+///////////////
 
 // Control
 //go:generate go run ./gen/migration.go -name control -file migrations/control_0001.sql

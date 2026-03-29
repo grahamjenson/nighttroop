@@ -11,7 +11,8 @@ import (
 
 var DevicesGetRaw string = `
 SELECT name,
-    token,
+    password,
+    totp_secret,
     role, 
     created_at,
     last_seen_at
@@ -22,7 +23,8 @@ LIMIT 1;
 
 type DevicesGetModel struct {
 	Name       string
-	Token      string
+	Password   string
+	TotpSecret string
 	Role       string
 	CreatedAt  *time.Time
 	LastSeenAt *time.Time
@@ -54,7 +56,7 @@ func (s *DevicesGetStmt) Query(ctx context.Context, Name string) ([]DevicesGetMo
 	for rows.Next() {
 		var model DevicesGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Name, &model.Token, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("DevicesGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -72,7 +74,7 @@ func (s *DevicesGetStmt) Exec(ctx context.Context, Name string) (sql.Result, err
 
 func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string) (DevicesGetModel, error) {
 	var model DevicesGetModel
-	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Token, &model.Role, &model.CreatedAt, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
 		return model, fmt.Errorf("DevicesGet query row error: %w", err)
 	}

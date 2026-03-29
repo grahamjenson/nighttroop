@@ -26,13 +26,13 @@ func getCreatedUserInfoTemplate() (*template.Template, error) {
 	return CreatedUserInfoTemplate, nil
 }
 
-func CreatedUserInfo(w io.Writer, url string, token string, backup_key string) error {
+func CreatedUserInfo(w io.Writer, url string, password string, totp_secret string, backup_key string) error {
 	tmpl, err := getCreatedUserInfoTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"url": url, "token": token, "backup_key": backup_key})
+	err = tmpl.Execute(w, map[string]any{"url": url, "password": password, "totp_secret": totp_secret, "backup_key": backup_key})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)

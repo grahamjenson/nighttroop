@@ -5,13 +5,12 @@ import (
 
 	"github.com/pquerna/otp/totp"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/config"
 )
 
 func (cfg *ServerConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
 	totpKey, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "NightTroop",
-		AccountName: accountName,
+		AccountName: fmt.Sprintf("%s@%s", accountName, cfg.HostName),
 	})
 
 	if err != nil {
@@ -20,10 +19,7 @@ func (cfg *ServerConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSe
 
 	totpSecret = totpKey.Secret()
 
-	if cfg.Mode == config.Development {
-		// We are going to override this stuff in dev, just to make it easier
-		password = DEV_ADMIN_PASSWORD
-		hashedPassword = utils.HashPassword(password)
+	if cfg.Mode == Development || cfg.Mode == Test {
 		totpSecret = DEV_ADMIN_TOTP_SECRET
 	}
 
@@ -37,13 +33,22 @@ func (cfg *ServerConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSe
 
 func (cfg *ServerConfig) GeneratePassword() (password, hashedPassword string, err error) {
 	password, hashedPassword, err = utils.SecureCredentials()
-	if cfg.Mode == config.Development {
+
+	if cfg.Mode == Development || cfg.Mode == Test {
 		// We are going to override this stuff in dev, just to make it easier
 		password = DEV_ADMIN_PASSWORD
 		hashedPassword = utils.HashPassword(password)
 	}
+
 	if err != nil {
 		return "", "", fmt.Errorf("cannot generate secure credentials: %w", err)
 	}
 	return password, hashedPassword, nil
+}
+
+func (cfg *ServerConfig) TOTPValidate(token, secret string) bool {
+	if secret == DEV_ADMIN_TOTP_SECRET {
+		return token == "123123"
+	}
+	return totp.Validate(token, secret)
 }

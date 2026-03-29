@@ -122,10 +122,10 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*controlsql.AdminsGetModel, error) {
+func loginTheControlUser(controlDB *db.ControlDB, cfg config.ServerConfig, username, password, totpToken string) (*controlsql.AdminsGetModel, error) {
 	admin, err := controlDB.AdminsGet.QueryRow(context.TODO(), username)
 
-	totpSecret, err := config.Decrypt(admin.TotpSecret)
+	totpSecret, err := cfg.Decrypt(admin.TotpSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +133,13 @@ func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, us
 	if !utils.VerifyPassword(password, admin.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
-	if !utils.TOTPValidate(totpToken, totpSecret) {
+	if !cfg.TOTPValidate(totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
 	return &admin, nil
 }
 
-func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
+func GETLogoutHandler(cfg config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Render Logout")
@@ -149,7 +149,7 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 			MaxAge:   -1,
 			Expires:  time.Unix(0, 0),
 			HttpOnly: true,
-			Secure:   config.IsHTTPS(), // Set to true if using HTTPS
+			Secure:   cfg.IsHTTPS(), // Set to true if using HTTPS
 			Path:     "/",
 			SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
 		})
@@ -167,7 +167,7 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 // 1. API: JWT token as Authorization header (for API requests)
 // 2. API: (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
 // 3. BROWSER: Cookie with JWT token (we are not supporting token in URL that is a bad idea)
-func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func(http.Handler) http.Handler {
+func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			contentType := httputils.GetAcceptType(r)
@@ -191,7 +191,7 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, config config.ServerCon
 				tokenStr = cookie.Value
 			}
 
-			adminName, err := config.VerifyControlJWTToken(tokenStr)
+			adminName, err := cfg.VerifyControlJWTToken(tokenStr)
 
 			if err != nil {
 				http.Error(w, "Bad Token", http.StatusInternalServerError)

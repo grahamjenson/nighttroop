@@ -19,6 +19,7 @@ type ServerMode int
 const (
 	Production ServerMode = iota
 	Development
+	Test
 )
 
 const FIRST_ADMIN_NAME = "admin"
@@ -269,6 +270,8 @@ func (config *ServerConfig) ValidateClean(mode string) error {
 		config.Mode = Production
 	case "development":
 		config.Mode = Development
+	case "test":
+		config.Mode = Test
 	default:
 		return fmt.Errorf("invalid mode: %s", mode)
 	}
@@ -278,8 +281,8 @@ func (config *ServerConfig) ValidateClean(mode string) error {
 		fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
 	}
 
-	if config.HostProtocol == "http" && config.Mode != Development {
-		return fmt.Errorf("http is only allowed in development mode")
+	if config.HostProtocol == "http" && config.Mode != Development && config.Mode != Test {
+		return fmt.Errorf("http is only allowed in development or test mode")
 	}
 
 	return nil

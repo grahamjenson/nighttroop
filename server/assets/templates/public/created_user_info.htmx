@@ -16,8 +16,10 @@
     <div class="mb-3">
         <textarea id="resultBox" class="form-control" wrap="off" rows="6" readonly>
 URL: {{.url}}
-Token: {{.token}}
+Token: {{.password}}
+TOTP Secret: {{.totp_secret}}
 Backup Key: {{.backup_key}}
+
                         </textarea>
     </div>
 

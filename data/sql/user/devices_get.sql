@@ -1,5 +1,6 @@
 SELECT name,
-    token,
+    password,
+    totp_secret,
     role, 
     created_at,
     last_seen_at

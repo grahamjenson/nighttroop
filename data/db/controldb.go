@@ -112,7 +112,7 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 	for _, model := range res {
 		users = append(users, model.Subdomain)
 		// User DB has to be avaialble
-		userDB, err := NewUserDB(context.TODO(), model.Subdomain, true)
+		userDB, err := NewUserDB(context.TODO(), model.Subdomain, true, db.serverConfig)
 		if err != nil {
 			return users, fmt.Errorf("UserDB failed to be added to the ControlDB list, %w", err)
 		}
@@ -138,7 +138,7 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 		return fmt.Errorf("cannot generate admin password: %w", err)
 	}
 
-	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("admin"))
+	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("%s@%s", adminName, db.serverConfig.HostName))
 	if err != nil {
 		return fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
@@ -190,12 +190,12 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 		return nil, "", "", "", fmt.Errorf("cannot generate admin password: %w", err)
 	}
 
-	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("admin"))
+	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("%s@%s.%s", config.FIRST_ADMIN_NAME, subdomain, db.serverConfig.HostName))
 	if err != nil {
 		return nil, "", "", "", fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
-	userDB, err := NewUserDB(context.TODO(), subdomain, false)
+	userDB, err := NewUserDB(context.TODO(), subdomain, false, db.serverConfig)
 	if err != nil {
 
 		userDB.TryCloseAndDelete()
@@ -216,6 +216,15 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 		return nil, "", "", "", fmt.Errorf("cannot create user: %w", err)
 	}
 
+	////
+	// Setup the new UserDB
+	////
+
+	_, err = userDB.DevicesCreate.Exec(context.TODO(), config.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, config.UserRoleAdmin.String())
+	if err != nil {
+		userDB.TryCloseAndDelete()
+		return nil, "", "", "", fmt.Errorf("cannot create admin device: %w", err)
+	}
 	db.users[subdomain] = userDB
 
 	return userDB, adminPassword, backupPassword, totpSecret, nil

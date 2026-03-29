@@ -1,2 +1,2 @@
-INSERT INTO devices (name, token, role)
-VALUES (?, ?, ?);
+INSERT INTO devices (name, password, totp_secret, role)
+VALUES (?, ?, ?, ?);

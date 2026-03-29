@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
 type BackupJobs struct {
@@ -24,12 +25,12 @@ type BackupJobs struct {
 	cancel func()
 	wg     sync.WaitGroup
 
-	S3Client *utils.S3Client
+	S3Client *s3utils.S3Client
 }
 
 // BackupJobs
 // Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
-func SetupBackupJobs(config config.ServerConfig, controlDB *db.ControlDB, s3Client *utils.S3Client) *BackupJobs {
+func SetupBackupJobs(config config.ServerConfig, controlDB *db.ControlDB, s3Client *s3utils.S3Client) *BackupJobs {
 
 	jobs := &BackupJobs{
 		controlDB:             controlDB,

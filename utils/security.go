@@ -7,10 +7,7 @@ import (
 	"math/big"
 	badrand "math/rand"
 
-	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
-	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/config"
 )
 
 const (
@@ -79,38 +76,4 @@ func HashPassword(password string) string {
 func VerifyPassword(plainPassword, storedHash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(plainPassword))
 	return err == nil
-}
-
-func TOTPValidate(token, secret string) bool {
-	if secret == config.DEV_ADMIN_TOTP_SECRET {
-		return token == "123123"
-	}
-	return totp.Validate(token, secret)
-}
-
-func TOTPGenerate(accountName string, encryptFunc func(string) (string, error)) (totpSecret, totpEncSecret string, err error) {
-	totpKey, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "NightTroop",
-		AccountName: accountName,
-	})
-
-	if err != nil {
-		return "", "", fmt.Errorf("cannot generate TOTP key: %w", err)
-	}
-
-	totpSecret = totpKey.Secret()
-
-	if db.serverConfig.Mode == config.Development {
-		// We are going to override this stuff in dev, just to make it easier
-		password = config.DEV_ADMIN_PASSWORD
-		hashedPassword = utils.HashPassword(password)
-		totpSecret = config.DEV_ADMIN_TOTP_SECRET
-	}
-
-	encTOTPSecret, err := db.serverConfig.Encrypt(totpSecret)
-	if err != nil {
-		return fmt.Errorf("cannot encrypt TOTP secret: %w", err)
-	}
-
-	return totpSecret, encTOTPSecret, nil
 }

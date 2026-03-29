@@ -1,4 +1,4 @@
-package utils
+package s3utils
 
 import (
 	"archive/tar"
@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/pierrec/lz4/v4"
@@ -82,7 +83,7 @@ func NewS3Client(config config.ServerConfig) *S3Client {
 
 func (c *S3Client) TestS3Client() error {
 	testKey := c.TestObjectPath()
-	randomGen := NextUserID()
+	randomGen := utils.NextUserID()
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
 
 	_, err := c.s3.PutObject(context.TODO(), &s3.PutObjectInput{
@@ -154,7 +155,7 @@ func (c *S3Client) TestObjectPath() string {
 ////
 
 func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
-	defer TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, nil)
+	defer utils.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, nil)
 	if len(paths) == 0 {
 		fmt.Printf("No files to sync for %s\n", key)
 		return nil

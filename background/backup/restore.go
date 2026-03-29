@@ -9,9 +9,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
-func TryRestoreAllFiles(s3Client *utils.S3Client) error {
+func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 	defer utils.TrackTime(time.Now(), "TryRestoreAllFiles", nil, nil)
 	fmt.Println("TryRestoreAllFiles")
 
@@ -29,7 +30,7 @@ func TryRestoreAllFiles(s3Client *utils.S3Client) error {
 	return nil
 }
 
-func TryDownloadExtractControlDbs(s3Client *utils.S3Client) error {
+func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
 	// If it already exists dont download
 	if utils.FileExists(utils.CONTROL_DB_PATH) {
 		return nil
@@ -58,7 +59,7 @@ func TryDownloadExtractControlDbs(s3Client *utils.S3Client) error {
 	return nil
 }
 
-func TryDownloadExrtractUserDbs(s3Client *utils.S3Client) error {
+func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 	defer utils.TrackTime(time.Now(), "TryDownloadExrtractUserDbs", nil, nil)
 
 	g, _ := errgroup.WithContext(context.Background())
@@ -86,7 +87,7 @@ func TryDownloadExrtractUserDbs(s3Client *utils.S3Client) error {
 	return nil
 }
 
-func TryDownloadExrtractUserDbsForBatch(s3Client *utils.S3Client, char string) (bool, error) {
+func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string) (bool, error) {
 
 	path, _ := utils.UserBatchPaths(char)
 	s3Path := s3Client.UserBatchS3Path(char)

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -37,6 +38,13 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 	return r
 }
 
+type CreateUserResponse struct {
+	UserID     string `json:"userID"`
+	APIKey     string `json:"apiKey"`
+	TOTPSecret string `json:"totpSecret"`
+	BackupKey  string `json:"backupKey"`
+}
+
 func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		allowed, remainingTime := config.RateLimiters.CreateUserAllowed(httputils.GetIP(r))
@@ -48,12 +56,19 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		// Check to see if there is 10k users and return error if there is
 		if controlDB.GetNUsersDBs() > config.MaxUsers {
+			// TODO make this a template like above
 			http.Error(w, "Full: Too many users", http.StatusTooManyRequests)
 			return
 		}
 
-		userDB, err := controlDB.CreateUser()
-		apiKey := "ahahaha"
+		userDB, adminPassword, backupPassword, totpSecret, err := controlDB.CreateUser()
+		responseModel := CreateUserResponse{
+			UserID:     userDB.Subdomain,
+			APIKey:     adminPassword,
+			BackupKey:  backupPassword,
+			TOTPSecret: totpSecret,
+		}
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -66,18 +81,18 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		case httputils.AcceptTypeJSON:
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write(fmt.Appendf(nil, "{\"userID\": \"%s\", \"apiKey\": \"%s\"}", userDB.Subdomain, apiKey))
+			json.NewEncoder(w).Encode(responseModel)
 			return
 		case httputils.AcceptTypeHTMX:
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
-			err := publicTemplates.CreatedUserInfo(w, "url", "token", "backup_key")
+			err := publicTemplates.CreatedUserInfo(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
 		default:
-			err = publicTemplates.CreatedUserInfo(w, "url", "token", "backup_key")
+			err = publicTemplates.CreatedUserInfo(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

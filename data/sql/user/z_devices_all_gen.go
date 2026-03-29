@@ -10,12 +10,13 @@ import (
 )
 
 var DevicesAllRaw string = `
-SELECT name, token, role, created_at, last_seen_at FROM devices;
+SELECT name, password, totp_secret, role, created_at, last_seen_at FROM devices;
 `
 
 type DevicesAllModel struct {
 	Name       string
-	Token      string
+	Password   string
+	TotpSecret string
 	Role       string
 	CreatedAt  *time.Time
 	LastSeenAt *time.Time
@@ -47,7 +48,7 @@ func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 	for rows.Next() {
 		var model DevicesAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Name, &model.Token, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("DevicesAll scan error: %w", err)
 		}
 		results = append(results, model)
@@ -65,7 +66,7 @@ func (s *DevicesAllStmt) Exec(ctx context.Context) (sql.Result, error) {
 
 func (s *DevicesAllStmt) QueryRow(ctx context.Context) (DevicesAllModel, error) {
 	var model DevicesAllModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Name, &model.Token, &model.Role, &model.CreatedAt, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
 		return model, fmt.Errorf("DevicesAll query row error: %w", err)
 	}
