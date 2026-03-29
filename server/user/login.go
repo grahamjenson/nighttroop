@@ -36,6 +36,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 	}
 }
 
+// All users with an admin role must have a TOTP password, this is annoying but I think worth it.
 // curl -v -X POST http://control.localhost:8080/token -d '
 // {
 //   "username": "admin",
@@ -163,9 +164,9 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 // //
 
 // There are three ways to validate:
-// 1. JWT token as Authorization header (for API requests)
-// 2. (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
-// 3. Cookie with JWT token for browser (we are not supporting token in URL that is a bad idea)
+// 1. API: JWT token as Authorization header (for API requests)
+// 2. API: (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
+// 3. BROWSER: Cookie with JWT token (we are not supporting token in URL that is a bad idea)
 func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -47,9 +48,14 @@ func SecureRandomString(length int, charset string) string {
 	return string(bytes)
 }
 
-func SecureCredentials() (string, string, error) {
+func SecureCredentials() (password string, hashedPassword string, err error) {
+	return SecureCredentialsWithPrefix("")
+}
+
+func SecureCredentialsWithPrefix(prefix string) (password string, hashedPassword string, err error) {
 	// 1. Generate a secure random string for the password
-	password := SecureRandomString(12, API_KEY_CHAR_SET)
+	password = SecureRandomString(12, API_KEY_CHAR_SET)
+	password = prefix + password
 
 	// 2. Hash the password
 	// Bcrypt automatically generates a unique salt
@@ -80,4 +86,31 @@ func TOTPValidate(token, secret string) bool {
 		return token == "123123"
 	}
 	return totp.Validate(token, secret)
+}
+
+func TOTPGenerate(accountName string, encryptFunc func(string) (string, error)) (totpSecret, totpEncSecret string, err error) {
+	totpKey, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "NightTroop",
+		AccountName: accountName,
+	})
+
+	if err != nil {
+		return "", "", fmt.Errorf("cannot generate TOTP key: %w", err)
+	}
+
+	totpSecret = totpKey.Secret()
+
+	if db.serverConfig.Mode == config.Development {
+		// We are going to override this stuff in dev, just to make it easier
+		password = config.DEV_ADMIN_PASSWORD
+		hashedPassword = utils.HashPassword(password)
+		totpSecret = config.DEV_ADMIN_TOTP_SECRET
+	}
+
+	encTOTPSecret, err := db.serverConfig.Encrypt(totpSecret)
+	if err != nil {
+		return fmt.Errorf("cannot encrypt TOTP secret: %w", err)
+	}
+
+	return totpSecret, encTOTPSecret, nil
 }

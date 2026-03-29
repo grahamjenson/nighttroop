@@ -30,6 +30,10 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 
 	r.Post("/user", POSTCreateUserHandler(controlDB, config))
 
+	// TODO backupKeyhashFcuntions
+	// 1. reset admin passwrod
+	// 2. reset admin totp
+	// 3. download sqlite backup
 	return r
 }
 

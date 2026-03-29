@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pquerna/otp/totp"
 	"nighttroop.t1d.nz/data/sql/control"
 	controlsql "nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/migrations"
@@ -134,28 +133,14 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 		return nil
 	}
 
-	password, hashedPassword, err := utils.SecureCredentials()
+	password, hashedPassword, err := db.serverConfig.GeneratePassword()
 	if err != nil {
-		return fmt.Errorf("cannot generate secure credentials: %w", err)
+		return fmt.Errorf("cannot generate admin password: %w", err)
 	}
 
-	totpKey, _ := totp.Generate(totp.GenerateOpts{
-		Issuer:      "NightTroop",
-		AccountName: fmt.Sprintf("admin@%s", db.serverConfig.HostName),
-	})
-
-	totpSecret := totpKey.Secret()
-
-	if db.serverConfig.Mode == config.Development {
-		// We are going to override this stuff in dev, just to make it easier
-		password = config.DEV_ADMIN_PASSWORD
-		hashedPassword = utils.HashPassword(password)
-		totpSecret = config.DEV_ADMIN_TOTP_SECRET
-	}
-
-	encTOTPSecret, err := db.serverConfig.Encrypt(totpSecret)
+	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("admin"))
 	if err != nil {
-		return fmt.Errorf("cannot encrypt TOTP secret: %w", err)
+		return fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
 	_, err = db.AdminsCreate.Exec(ctx, adminName, hashedPassword, "admin", encTOTPSecret)
@@ -185,7 +170,7 @@ type UserCreateMaterial struct {
 	Password      string
 }
 
-func (db *ControlDB) CreateUser() (*UserDB, error) {
+func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
 	subdomain := utils.NextUserID()
 	// Password is used as an API key for the user to access their data
 	// BackupKey
@@ -194,16 +179,27 @@ func (db *ControlDB) CreateUser() (*UserDB, error) {
 	// 	return nil, fmt.Errorf("cannot generate secure credentials: %w", err)
 	// }
 
-	_, backupKeyHash, err := utils.SecureCredentials()
+	// TODO add subdomain to the backupKeyHash to be able to match it to a user.
+	backupPassword, backupKeyHash, err := utils.SecureCredentialsWithPrefix(subdomain + ":")
 	if err != nil {
-		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
+		return nil, "", "", "", fmt.Errorf("cannot generate backup key hash: %w", err)
+	}
+
+	adminPassword, hashedPassword, err := db.serverConfig.GeneratePassword()
+	if err != nil {
+		return nil, "", "", "", fmt.Errorf("cannot generate admin password: %w", err)
+	}
+
+	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("admin"))
+	if err != nil {
+		return nil, "", "", "", fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
 	userDB, err := NewUserDB(context.TODO(), subdomain, false)
 	if err != nil {
 
 		userDB.TryCloseAndDelete()
-		return nil, fmt.Errorf("User DB Creation Error: %w", err)
+		return nil, "", "", "", fmt.Errorf("User DB Creation Error: %w", err)
 	}
 
 	// Lock and write user to the db and add to the in memory map
@@ -217,12 +213,12 @@ func (db *ControlDB) CreateUser() (*UserDB, error) {
 
 		userDB.TryCloseAndDelete()
 
-		return nil, fmt.Errorf("cannot create user: %w", err)
+		return nil, "", "", "", fmt.Errorf("cannot create user: %w", err)
 	}
 
 	db.users[subdomain] = userDB
 
-	return userDB, nil
+	return userDB, adminPassword, backupPassword, totpSecret, nil
 }
 
 ////
