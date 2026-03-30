@@ -50,7 +50,7 @@ func (config *ServerConfig) createJWTPrimitives() error {
 // CONTROL JWT
 ////
 
-func (config *ServerConfig) GenerateControlJWTToken(userName string) (string, time.Time, error) {
+func (config *ServerConfig) GenerateControlJWTToken(userName string, role string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -60,6 +60,9 @@ func (config *ServerConfig) GenerateControlJWTToken(userName string) (string, ti
 		Audience:  &ControlAudience,
 		ExpiresAt: &expiresAt,
 		IssuedAt:  &now,
+		CustomClaims: map[string]any{
+			"role": role,
+		},
 	})
 	if err != nil {
 		return "", time.Time{}, err
@@ -73,21 +76,31 @@ func (config *ServerConfig) GenerateControlJWTToken(userName string) (string, ti
 	return tokenString, expiresAt, nil
 }
 
-func (config *ServerConfig) VerifyControlJWTToken(tokenStr string) (string, error) {
+func (config *ServerConfig) VerifyControlJWTToken(tokenStr string) (string, string, error) {
 	// Verify and parse in one step
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtControlValidator)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return verifiedJWT.Subject()
+	subject, err := verifiedJWT.Subject()
+	if err != nil {
+		return "", "", err
+	}
+
+	role, err := verifiedJWT.StringClaim("role")
+	if err != nil {
+		return "", "", err
+	}
+
+	return subject, role, nil
 }
 
 ////
 // USER JWT
 ////
 
-func (config *ServerConfig) GenerateUserJWTToken(deviceName string) (string, error) {
+func (config *ServerConfig) GenerateUserJWTToken(deviceName string, role string) (string, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -97,6 +110,9 @@ func (config *ServerConfig) GenerateUserJWTToken(deviceName string) (string, err
 		Audience:  &UserAudience,
 		ExpiresAt: &expiresAt,
 		IssuedAt:  &now,
+		CustomClaims: map[string]any{
+			"role": role,
+		},
 	})
 	if err != nil {
 		return "", err
@@ -106,11 +122,22 @@ func (config *ServerConfig) GenerateUserJWTToken(deviceName string) (string, err
 	return config.jwtMac.ComputeMACAndEncode(rawJWT)
 }
 
-func (config *ServerConfig) VerifyUserJWTToken(tokenStr string) (string, error) {
+func (config *ServerConfig) VerifyUserJWTToken(tokenStr string) (string, string, error) {
 
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtUserValidator)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return verifiedJWT.Subject()
+
+	subject, err := verifiedJWT.Subject()
+	if err != nil {
+		return "", "", err
+	}
+
+	role, err := verifiedJWT.StringClaim("role")
+	if err != nil {
+		return "", "", err
+	}
+
+	return subject, role, nil
 }

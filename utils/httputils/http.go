@@ -60,6 +60,11 @@ func GetContentType(r *http.Request) ContentType {
 }
 
 func GetIP(r *http.Request) string {
+	ipAddress := GetIPFromHTTPContext(r.Context())
+	if ipAddress != "" {
+		return ipAddress
+	}
+
 	// Check X-Forwarded-For header first (in case of reverse proxy)
 	xForwardedFor := r.Header.Get("X-Forwarded-For")
 	if xForwardedFor != "" {

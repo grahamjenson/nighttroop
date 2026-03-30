@@ -44,7 +44,7 @@ func NextUserID() string {
 	return SecureRandomString(USER_ID_LENGTH, USER_CHAR_SET)
 }
 
-func ValidateUserID(userID string) bool {
+func SyntacticallyValidateUserID(userID string) bool {
 	if len(userID) != USER_ID_LENGTH {
 		return false
 	}

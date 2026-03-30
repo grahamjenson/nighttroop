@@ -16,10 +16,7 @@ import (
 
 func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-
 	static.AddSatticRoutes(r)
-
-	// TODO Documentation route, public facing SEO route
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		err := publicTemplates.CreateUser(w)
@@ -31,6 +28,9 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 
 	r.Post("/user", POSTCreateUserHandler(controlDB, config))
 
+	// TODO public routes
+	// 1. Documentation
+	// 2. SEO
 	// TODO backupKeyhashFcuntions
 	// 1. reset admin passwrod
 	// 2. reset admin totp
@@ -47,7 +47,7 @@ type CreateUserResponse struct {
 
 func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		allowed, remainingTime := config.RateLimiters.CreateUserAllowed(httputils.GetIP(r))
+		allowed, remainingTime := httputils.CreateUserAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
 			publicTemplates.CreateUserRateLimited(w, fmt.Sprintf("%d", remainingTime))

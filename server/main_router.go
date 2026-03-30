@@ -21,22 +21,45 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		subdomain, err := GetSubdomain(r.Host, config.HostName)
+		// Global Rate Limit
+		allowed := config.RateLimiters.GlobalRateLimiter.Allow()
+		if !allowed {
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, "Too many requests, global rate limit exceeded")
+			return
+		}
+
+		// Global IP Address Rate Limit
+		ipAddress := httputils.GetIP(r)
+		ctx = httputils.SetIPInHTTPContext(ctx, ipAddress)
+		allowed = config.RateLimiters.GetGlobalIPRateLimiter(ipAddress).Allow()
+		if !allowed {
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, "Too many requests, IP rate limit exceeded")
+			return
+		}
+
+		subdomain, err := GetSubdomainFromHeader(r.Host, config.HostName)
+		ctx = httputils.SetSubdomainInHTTPContext(ctx, subdomain)
 		if err != nil {
 			fmt.Printf("Main router 404 for host header: %s, error: %v\n", r.Host, err)
 			http.NotFound(w, r)
 			return
 		}
 
-		ctx = httputils.SetSubdomainInHTTPContext(ctx, subdomain)
-
 		switch {
 		case subdomain == "control" || subdomain == "admin":
 			controlRouter.ServeHTTP(w, r.WithContext(ctx))
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
 			public.ServeHTTP(w, r.WithContext(ctx))
-		case utils.ValidateUserID(subdomain):
-			userRouter.ServeHTTP(w, r.WithContext(ctx))
+		case utils.SyntacticallyValidateUserID(subdomain):
+			// Check to see if in memory map
+			if controlDB.UserExists(subdomain) {
+				userRouter.ServeHTTP(w, r.WithContext(ctx))
+			} else {
+				fmt.Printf("Main router 404 for subdomain: %s\n", subdomain)
+				http.NotFound(w, r)
+			}
 		default:
 			fmt.Printf("Main router 404 for subdomain: %s\n", subdomain)
 			http.NotFound(w, r)
@@ -47,9 +70,9 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 
 // This is a bit annoying but for subdomain routing we need to get the subdomain from the host header
 // For this we need to know the expected host like nt.t1d.nz and then summize the subdomain from there
-// What we do is we get the header, remove the port, split it by '.' and then get the part immediatly
-// If the host is wrong, or there are too many subdomains, we return null, to be handled with a 404
-func GetSubdomain(host_header, hostname string) (string, error) {
+// What we do is we get the header, remove the port, remove the expected host and leave the subdomain
+// We also have to deal with localhost
+func GetSubdomainFromHeader(host_header, hostname string) (string, error) {
 	// remove port if present
 	host := host_header
 	// Remove the port if it is there

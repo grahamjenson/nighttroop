@@ -298,6 +298,13 @@ func (db *ControlDB) AllInactiveUsers(maxAge time.Duration) ([]*UserDB, error) {
 	return users, nil
 }
 
+func (db *ControlDB) UserExists(subdomain string) bool {
+	db.usersRWLock.RLock()
+	_, ok := db.users[subdomain]
+	db.usersRWLock.RUnlock()
+	return ok
+}
+
 func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *control.UsersGetModel, error) {
 	// Check if user exists in the db
 	model, err := db.UsersGet.QueryRow(context.TODO(), subdomain)

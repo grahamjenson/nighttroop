@@ -122,7 +122,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, cfg config.ServerConfig, username, password, totpToken string) (*controlsql.AdminsGetModel, error) {
+func loginTheUser(controlDB *db.ControlDB, cfg config.ServerConfig, username, password, totpToken string) (*controlsql.AdminsGetModel, error) {
 	admin, err := controlDB.AdminsGet.QueryRow(context.TODO(), username)
 
 	totpSecret, err := cfg.Decrypt(admin.TotpSecret)
@@ -157,50 +157,4 @@ func GETLogoutHandler(cfg config.ServerConfig) http.HandlerFunc {
 		// 3. Redirect the user to the login page
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	}
-}
 
-// //
-// Middleware
-// //
-
-// There are three ways to validate:
-// 1. API: JWT token as Authorization header (for API requests)
-// 2. API: (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
-// 3. BROWSER: Cookie with JWT token (we are not supporting token in URL that is a bad idea)
-func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			contentType := httputils.GetAcceptType(r)
-			tokenStr := ""
-			switch contentType {
-			case httputils.AcceptTypeJSON:
-				authHeader := r.Header.Get("Authorization")
-				if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-					http.Error(w, "Unauthorized Header", http.StatusUnauthorized)
-					return
-				}
-
-				tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-			default:
-				cookie, err := r.Cookie(TOKEN_COOKIE)
-				if err != nil {
-					fmt.Println("Control Router: No token cookie found, redirecting to login")
-					http.Redirect(w, r, "/login", http.StatusSeeOther)
-					return
-				}
-				tokenStr = cookie.Value
-			}
-
-			adminName, err := cfg.VerifyControlJWTToken(tokenStr)
-
-			if err != nil {
-				http.Error(w, "Bad Token", http.StatusInternalServerError)
-				return
-			}
-
-			// Optional: Inject claims into context
-			ctx := context.WithValue(r.Context(), "adminName", adminName)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}

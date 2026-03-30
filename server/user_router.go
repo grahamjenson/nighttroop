@@ -14,15 +14,16 @@ import (
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	r.Use(user.GetUserMiddleware(controlDB))
-
 	static.AddSatticRoutes(r)
 
+	// These are essentially public (if the person knows the subdomain) but are protected by Global and IP rate limiters in the main router
 	r.Get("/login", user.GETLoginPageHandler())
 	r.Post("/login", user.POSTLogin(controlDB, config))
 
 	r.Group(func(r chi.Router) {
-		r.Use(control.JWTAuthMiddleware(controlDB, config))
+		r.Use(user.JWTPlusTokenAuthMiddleware(controlDB, config))
+		r.Use(user.UserRateLimitMiddleware(config))
+
 		r.Get("/", control.GetDashboardHandler(controlDB, config))
 		r.Get("/logout", control.GETLogoutHandler(config))
 	})
