@@ -16,21 +16,21 @@ func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool,
 }
 
 func UserReadAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userID := GetSubdomainFromHTTPContext(r.Context())
-	DeviceIDKey := GetDeviceIDFromHTTPContext(r.Context())
+	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
+	deviceName := GetDeviceNameFromHTTPContext(r.Context())
 
-	readLimiter := serverConfig.RateLimiters.GetUserReadLimiter(userID)
-	deviceLimiter := serverConfig.RateLimiters.GetDeviceReadLimiter(DeviceIDKey)
+	readLimiter := serverConfig.RateLimiters.GetUserReadLimiter(userSubdomain)
+	deviceLimiter := serverConfig.RateLimiters.GetDeviceReadLimiter(deviceName)
 
 	return AllowAll(readLimiter, deviceLimiter)
 }
 
 func UserWriteAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userID := GetSubdomainFromHTTPContext(r.Context())
-	DeviceIDKey := GetDeviceIDFromHTTPContext(r.Context())
+	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
+	deviceName := GetDeviceNameFromHTTPContext(r.Context())
 
-	writeLimiter := serverConfig.RateLimiters.GetUserWriteLimiter(userID)
-	deviceLimiter := serverConfig.RateLimiters.GetDeviceWriteLimiter(DeviceIDKey)
+	writeLimiter := serverConfig.RateLimiters.GetUserWriteLimiter(userSubdomain)
+	deviceLimiter := serverConfig.RateLimiters.GetDeviceWriteLimiter(deviceName)
 
 	return AllowAll(writeLimiter, deviceLimiter)
 }

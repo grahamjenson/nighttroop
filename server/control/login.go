@@ -18,7 +18,7 @@ import (
 const TOKEN_COOKIE = "control_token"
 
 type LoginRequest struct {
-	Username string `json:"username"`
+	Name     string `json:"name"`
 	Password string `json:"password"`
 	TOTP     string `json:"totp"`
 }
@@ -58,7 +58,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 				http.Error(w, "Invalid request payload", http.StatusBadRequest)
 				return
 			}
-			username = creds.Username
+			username = creds.Name
 			password = creds.Password
 			totpToken = creds.TOTP
 		case httputils.ContentTypeForm:
@@ -68,7 +68,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 				return
 			}
 
-			username = r.FormValue("username")
+			username = r.FormValue("name")
 			password = r.FormValue("password")
 			totpToken = r.FormValue("totp")
 		default:
@@ -113,7 +113,8 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			// Default to JSON because this is API first
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{
-				"token": tokenString,
+				"token":      tokenString,
+				"expires_at": expiresAt.Format(time.RFC3339),
 			})
 			return
 		}
@@ -122,7 +123,9 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*controlsql.AdminsGetModel, error) {
 	admin, err := controlDB.AdminsGet.QueryRow(context.TODO(), username)
-
+	if err != nil {
+		return nil, fmt.Errorf("admin not found: %w", err)
+	}
 	totpSecret, err := config.Decrypt(admin.TotpSecret)
 	if err != nil {
 		return nil, err

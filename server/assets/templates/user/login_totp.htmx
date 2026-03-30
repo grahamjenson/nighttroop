@@ -1,0 +1,27 @@
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm border-0" style="max-width: 400px; width: 100%;">
+        <div class="card-body p-4">
+
+            <!-- Form updated with POST method -->
+            <form action="/login_totp" method="POST" class="needs-validation">
+
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">Requires TOTP</h2>
+                </div>
+
+                <!-- TOTP -->
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">Authenticator Code</label>
+                    <input type="text" name="totp" class="form-control form-control-lg text-center letter-spacing-2"
+                        placeholder="000 000" inputmode="numeric" pattern="[0-9]*" required>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                    Log In
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>

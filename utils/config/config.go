@@ -91,6 +91,7 @@ type ServerConfig struct {
 	jwtMac              jwt.MAC
 	jwtControlValidator *jwt.Validator
 	jwtUserValidator    *jwt.Validator
+	jwtPreAuthValidator *jwt.Validator
 }
 
 const USER_READ_LIMIT = 60

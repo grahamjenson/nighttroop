@@ -10,6 +10,7 @@ import (
 // AUDIENCE STRINGS
 var ControlAudience = "control"
 var UserAudience = "user"
+var PreAuthAudience = "preauth"
 
 // //
 // Creating the primitives
@@ -39,9 +40,19 @@ func (config *ServerConfig) createJWTPrimitives() error {
 		return fmt.Errorf("failed to create JWT user validator: %w", err)
 	}
 
+	preAuthValidator, err := jwt.NewValidator(&jwt.ValidatorOpts{
+		ExpectIssuedInThePast: true,
+		ExpectedAudience:      &PreAuthAudience,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to create JWT pre-auth validator: %w", err)
+	}
+
 	config.jwtMac = mac
 	config.jwtControlValidator = controlValidator
 	config.jwtUserValidator = userValidator
+	config.jwtPreAuthValidator = preAuthValidator
 
 	return nil
 }
@@ -100,7 +111,7 @@ func (config *ServerConfig) VerifyControlJWTToken(tokenStr string) (string, stri
 // USER JWT
 ////
 
-func (config *ServerConfig) GenerateUserJWTToken(deviceName string, role string) (string, error) {
+func (config *ServerConfig) GenerateUserJWTToken(deviceName string, role string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -115,11 +126,15 @@ func (config *ServerConfig) GenerateUserJWTToken(deviceName string, role string)
 		},
 	})
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
 
 	// 3. Sign and return
-	return config.jwtMac.ComputeMACAndEncode(rawJWT)
+	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return tokenString, expiresAt, nil
 }
 
 func (config *ServerConfig) VerifyUserJWTToken(tokenStr string) (string, string, error) {
@@ -140,4 +155,45 @@ func (config *ServerConfig) VerifyUserJWTToken(tokenStr string) (string, string,
 	}
 
 	return subject, role, nil
+}
+
+///
+// PREAUTH JWT (For TOTP flow)
+///
+
+func (config *ServerConfig) GeneratePreAuthJWTToken(deviceName string) (string, time.Time, error) {
+
+	now := time.Now()
+
+	expiresAt := now.Add(time.Minute * 5)
+
+	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
+		Subject:   &deviceName,
+		Audience:  &PreAuthAudience,
+		ExpiresAt: &expiresAt,
+		IssuedAt:  &now,
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	tokenString, err := config.jwtMac.ComputeMACAndEncode(rawJWT)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return tokenString, expiresAt, nil
+}
+
+func (config *ServerConfig) VerifyPreAuthJWTToken(tokenStr string) (string, error) {
+	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtPreAuthValidator)
+	if err != nil {
+		return "", err
+	}
+
+	subject, err := verifiedJWT.Subject()
+	if err != nil {
+		return "", err
+	}
+
+	return subject, nil
 }

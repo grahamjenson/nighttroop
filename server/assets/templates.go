@@ -13,6 +13,11 @@ import (
 //go:generate go run ./gen/template.go -base control/base.html -file control/login.html
 //go:generate go run ./gen/template.go -base control/base.html -file control/dashboard.html
 
+// User Templates
+//go:generate go run ./gen/template.go -base user/base.html -file user/login.html
+//go:generate go run ./gen/template.go -base user/login_totp.htmx
+//go:generate go run ./gen/template.go -base user/base.html -file user/dashboard.html
+
 // Static Assets
 
 //go:generate go run ./gen/static.go -file favicon.ico -file htmx.js -file bootstrap.js -file bootstrap.css -file logo.png -file htmx_response_targets.js -file robots.txt
