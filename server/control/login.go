@@ -78,6 +78,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		admin, err := loginTheControlUser(controlDB, config, username, password, totpToken)
 		if err != nil {
+
 			http.Error(w, "Invalid credentials "+err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -103,10 +104,9 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 				SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
 			})
 
-			w.Header().Set("Content-Type", "text/html")
-
 			fmt.Println("Login successful, redirecting to dashboard...")
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			w.Header().Set("HX-Redirect", "/")
+			w.WriteHeader(http.StatusOK)
 
 			return
 		default:
