@@ -13,6 +13,7 @@ import (
 func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var err error
 			contentType := httputils.GetAcceptType(r)
 			tokenStr := ""
 			switch contentType {
@@ -25,13 +26,12 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 
 				tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
 			default:
-				cookie, err := r.Cookie(TOKEN_COOKIE)
+				tokenStr, err = httputils.GetControlTokenFromRequest(r)
 				if err != nil {
 					fmt.Println("Control Router: No token cookie found, redirecting to login")
 					http.Redirect(w, r, "/login", http.StatusSeeOther)
 					return
 				}
-				tokenStr = cookie.Value
 			}
 
 			adminName, role, err := config.VerifyControlJWTToken(tokenStr)

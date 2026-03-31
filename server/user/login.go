@@ -15,9 +15,6 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-const TOKEN_COOKIE = "user_token"
-const PRE_AUTH_TOKEN_COOKIE = "pre_auth_token"
-
 type LoginRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
@@ -80,16 +77,12 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		}
 		if deviceRequiresTOTPValidation(device) {
 			// set a temporary token
-			tempToken, expiresAt, err := config.GeneratePreAuthJWTToken(device.Name)
-			http.SetCookie(w, &http.Cookie{
-				Name:     PRE_AUTH_TOKEN_COOKIE,
-				Value:    tempToken,
-				Expires:  expiresAt,
-				HttpOnly: true,
-				Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-				Path:     "/",
-				SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
-			})
+
+			err = httputils.SetUserPreAuthCookie(config, w, device.Name)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error setting pre-auth cookie: %s", err.Error()), http.StatusInternalServerError)
+				return
+			}
 
 			w.Header().Set("Content-Type", "text/html")
 			err = userTemplates.LoginTotp(w)
@@ -107,15 +100,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		}
 
 		// Set proper cookie and redirect to dashboard
-		http.SetCookie(w, &http.Cookie{
-			Name:     TOKEN_COOKIE,
-			Value:    tokenString,
-			Expires:  expiresAt,
-			HttpOnly: true,
-			Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-			Path:     "/",
-			SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
-		})
+		httputils.SetUserLoginCookie(config, w, tokenString, expiresAt)
 
 		fmt.Println("Login successful")
 		w.Header().Set("HX-Redirect", "/")
@@ -145,13 +130,11 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 			return
 		}
 
-		preAuthCookie, err := r.Cookie(PRE_AUTH_TOKEN_COOKIE)
+		preAuthToken, err := httputils.GetUserPreAuthTokenFromRequest(r)
 		if err != nil {
-			http.Error(w, "Pre-auth token not found", http.StatusUnauthorized)
+			http.Error(w, "Pre-auth token is required", http.StatusBadRequest)
 			return
 		}
-
-		preAuthToken := preAuthCookie.Value
 
 		deviceName, err := config.VerifyPreAuthJWTToken(preAuthToken)
 		if err != nil {
@@ -185,25 +168,10 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		}
 
 		// Set proper cookie and redirect to dashboard
-		http.SetCookie(w, &http.Cookie{
-			Name:     TOKEN_COOKIE,
-			Value:    tokenString,
-			Expires:  expiresAt,
-			HttpOnly: true,
-			Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-			Path:     "/",
-			SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
-		})
+		httputils.SetUserLoginCookie(config, w, tokenString, expiresAt)
 
 		// Clear the pre-auth token cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     PRE_AUTH_TOKEN_COOKIE,
-			Value:    "",
-			MaxAge:   -1,
-			Expires:  time.Unix(0, 0),
-			HttpOnly: true,
-			Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-		})
+		httputils.ClearUserPreAuthCookie(config, w)
 
 		fmt.Println("TOTP verification successful, user logged in")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -288,20 +256,12 @@ func deviceRequiresTOTPValidation(device *usersql.DevicesGetModel) bool {
 	}
 	return false
 }
+
 func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Render Logout")
-		http.SetCookie(w, &http.Cookie{
-			Name:     TOKEN_COOKIE,
-			Value:    "",
-			MaxAge:   -1,
-			Expires:  time.Unix(0, 0),
-			HttpOnly: true,
-			Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-			Path:     "/",
-			SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
-		})
+		httputils.ClearUserLoginCookie(config, w)
 
 		// 3. Redirect the user to the login page
 		http.Redirect(w, r, "/login", http.StatusSeeOther)

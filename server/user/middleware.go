@@ -47,59 +47,36 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			tokenStr := ""
+			jwttokenStr := ""
 
 			// 1. Check API Header (Bearer Token)
 			authHeader := r.Header.Get("Authorization")
 			if strings.HasPrefix(authHeader, "Bearer ") {
-				tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-			}
-
-			// 2. Check URL Param (Raw Token - "not good/insecure" per docs)
-			if tokenStr == "" {
-				tokenStr = r.URL.Query().Get("token")
+				jwttokenStr = strings.TrimPrefix(authHeader, "Bearer ")
 			}
 
 			// 3. Check Browser Cookie (Fallback for non-JSON or missing headers)
-			if tokenStr == "" {
-				cookie, err := r.Cookie(TOKEN_COOKIE)
+			if jwttokenStr == "" {
+				cookieToken, err := httputils.GetUserTokenFromRequest(r)
 				if err == nil {
-					tokenStr = cookie.Value
+					jwttokenStr = cookieToken
 				}
 			}
 
-			contentType := httputils.GetAcceptType(r)
-
-			// If still no token, handle based on content type
-			if tokenStr == "" {
-				if contentType == httputils.AcceptTypeJSON {
+			if jwttokenStr != "" {
+				deviceName, role, err := cfg.VerifyUserJWTToken(tokenStr)
+			} else {
+				// The only other means of authing is with token param
+				tokenParam := r.URL.Query().Get("token")
+				if tokenParam == "" {
 					http.Error(w, "Unauthorized: No token provided", http.StatusUnauthorized)
-				} else {
-					http.Redirect(w, r, "/login", http.StatusSeeOther)
-				}
-				return
-			}
-
-			switch contentType {
-			case httputils.AcceptTypeJSON:
-				authHeader := r.Header.Get("Authorization")
-				if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-					http.Error(w, "Unauthorized Header", http.StatusUnauthorized)
 					return
 				}
-
-				tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-			default:
-				cookie, err := r.Cookie(TOKEN_COOKIE)
-				if err != nil {
-					fmt.Println("Control Router: No token cookie found, redirecting to login")
-					http.Redirect(w, r, "/login", http.StatusSeeOther)
-					return
-				}
-				tokenStr = cookie.Value
+				subdomain := httputils.GetSubdomainFromHTTPContext(ctx)
+				userDB, _, err := controlDB.GetUser(subdomain, false)
+				subdomain, deviceName, password := tokenParamSplit(tokenParam)
+				deviceName, role, err := cfg.VerifyUserToken(tokenParam)
 			}
-
-			deviceName, role, err := cfg.VerifyUserJWTToken(tokenStr)
 
 			if err != nil {
 				http.Error(w, "Bad Token", http.StatusInternalServerError)

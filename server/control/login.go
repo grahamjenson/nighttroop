@@ -15,8 +15,6 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-const TOKEN_COOKIE = "control_token"
-
 type LoginRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
@@ -94,15 +92,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		switch acceptType {
 		case httputils.AcceptTypeHTMX, httputils.AcceptTypeHTML:
 			// Default set the cookie
-			http.SetCookie(w, &http.Cookie{
-				Name:     TOKEN_COOKIE,
-				Value:    tokenString,
-				Expires:  expiresAt,
-				HttpOnly: true,
-				Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-				Path:     "/",
-				SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
-			})
+			httputils.SetControlLoginCookie(config, w, tokenString, expiresAt)
 
 			fmt.Println("Login successful, redirecting to dashboard...")
 			w.Header().Set("HX-Redirect", "/")
@@ -144,16 +134,7 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Render Logout")
-		http.SetCookie(w, &http.Cookie{
-			Name:     TOKEN_COOKIE,
-			Value:    "",
-			MaxAge:   -1,
-			Expires:  time.Unix(0, 0),
-			HttpOnly: true,
-			Secure:   config.IsHTTPS(), // Set to true if using HTTPS
-			Path:     "/",
-			SameSite: http.SameSiteStrictMode, // Going Strict here because we shouldnt have external links to the control plane
-		})
+		httputils.ClearControlLoginCookie(config, w)
 
 		// 3. Redirect the user to the login page
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
