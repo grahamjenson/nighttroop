@@ -21,6 +21,17 @@ type LoginRequest struct {
 	TOTP     string `json:"totp"`
 }
 
+func POSTLogoutHandler(config config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Println("Render Logout")
+		config.Security.ClearControlLoginCookie(w)
+
+		// 3. Redirect the user to the login page
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+}
+
 func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
@@ -53,7 +64,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		case httputils.ContentTypeJSON:
 			var creds LoginRequest
 			if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-				http.Error(w, "Invalid request payload", http.StatusBadRequest)
+				genericLoginError(w, r, fmt.Errorf("Invalid JSON payload: %w", err))
 				return
 			}
 			username = creds.Name
@@ -62,7 +73,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		case httputils.ContentTypeForm:
 
 			if err := r.ParseForm(); err != nil {
-				http.Error(w, "Invalid form data", http.StatusBadRequest)
+				genericLoginError(w, r, fmt.Errorf("Invalid form data: %w", err))
 				return
 			}
 
@@ -70,20 +81,19 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			password = r.FormValue("password")
 			totpToken = r.FormValue("totp")
 		default:
-			http.Error(w, "Unsupported Content-Type", http.StatusUnsupportedMediaType)
+			genericLoginError(w, r, fmt.Errorf("Unsupported Content-Type: %s", contentType))
 			return
 		}
 
 		admin, err := loginTheControlUser(controlDB, config, username, password, totpToken)
 		if err != nil {
-
-			http.Error(w, "Invalid credentials "+err.Error(), http.StatusUnauthorized)
+			genericLoginError(w, r, fmt.Errorf("Invalid credentials: %w", err))
 			return
 		}
 
 		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, admin.Role)
 		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			genericLoginError(w, r, fmt.Errorf("Failed to generate JWT token: %w", err))
 			return
 		}
 
@@ -102,7 +112,6 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		fmt.Println("Login successful, redirecting to dashboard...")
 		w.Header().Set("HX-Redirect", "/")
-		w.WriteHeader(http.StatusOK)
 
 	}
 }
@@ -124,15 +133,4 @@ func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, us
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
 	return &admin, nil
-}
-
-func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		fmt.Println("Render Logout")
-		config.Security.ClearControlLoginCookie(w)
-
-		// 3. Redirect the user to the login page
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	}
 }

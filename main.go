@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,6 +31,8 @@ func main() {
 
 func run() error {
 	var err error
+
+	setupLogging()
 
 	// Make all envars and config in one struct
 	serverConfig, err := config.NewServerConfig()
@@ -105,7 +108,11 @@ func run() error {
 func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.Server {
 	fmt.Printf("listening on 8080\n")
 
-	httpServer := &http.Server{Addr: ":8080", Handler: server.GetMainHandler(controlDB, serverConfig)}
+	// The outer most layer is CORS and CSRF protection
+	// The big caveat is that GET HEAD and OPTIONS requests will not have CSRF protection
+	// SO NO STATE CHANGING IN GET REQUESTS
+	corsCSRFMiddleware := http.NewCrossOriginProtection()
+	httpServer := &http.Server{Addr: ":8080", Handler: corsCSRFMiddleware.Handler(server.GetMainHandler(controlDB, serverConfig))}
 
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -116,6 +123,16 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 	return httpServer
 }
 
+func setupLogging() {
+	// 1. Create a JSON handler writing to standard output
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug, // Set minimum log level
+	})
+
+	// 2. Create the logger and set it as the global default
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+}
 func ValidateServer(c *s3utils.S3Client) error {
 	_, _, err := security.SecureCredentials()
 	if err != nil {

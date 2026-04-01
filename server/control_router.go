@@ -19,7 +19,7 @@ func NewControlRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.R
 	r.Group(func(r chi.Router) {
 		r.Use(control.JWTAuthMiddleware(controlDB, config))
 		r.Get("/", control.GetDashboardHandler(controlDB, config))
-		r.Get("/logout", control.GETLogoutHandler(config))
+		r.Post("/logout", control.POSTLogoutHandler(config))
 	})
 	return r
 }

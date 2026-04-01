@@ -2,6 +2,7 @@ package control
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -16,14 +17,18 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var err error
 
-			deviceName, deviceRole, err := tryLoginWithJWTToken(controlDB, config, r)
+			userName, userRole, err := tryLoginWithJWTToken(config, r)
+
 			if err == nil {
+				slog.Info("Control User Logged In", "user_name", userName, "role", userRole)
 				ctx := r.Context()
-				httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				httputils.SetDeviceNameInHTTPContext(ctx, userName)
+				httputils.SetRoleInHTTPContext(ctx, userRole)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
+
+			slog.Info("Control User Not Logged In", "user_name", userName, "role", userRole, "error", err.Error())
 
 			if httputils.GetAcceptType(r).API() {
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
@@ -31,16 +36,15 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 				w.Header().Set("HX-Redirect", "/login")
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			}
-			return
 		})
 	}
 }
 
-func tryLoginWithJWTToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, error) {
+func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		deviceName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
 		if err != nil {
 			return "", "", fmt.Errorf("bad JWT token: %w", err)
 		}
@@ -52,10 +56,10 @@ func tryLoginWithJWTToken(controlDB *db.ControlDB, config config.ServerConfig, r
 	}
 
 	// Check for Cookie
-	cookieToken, err := security.GetUserTokenFromRequest(r)
+	cookieToken, err := security.GetControlTokenFromRequest(r)
 	if err == nil {
 		jwttokenStr := cookieToken
-		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		deviceName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
 		if err != nil {
 			return "", "", fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}

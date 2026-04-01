@@ -19,6 +19,11 @@ type ServerConfig struct {
 	HostPort     int
 	HostProtocol string // http or https, used for generating links.
 
+	// Some common Host URLs cached here so we dont fmt.Sprintf them all the time
+	HostNameWithPort string
+	HostURL          string
+	HostURLWithPort  string
+
 	// s3 config
 	S3Bucket          string
 	S3URL             string
@@ -126,8 +131,9 @@ func NewServerConfig() (ServerConfig, error) {
 		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
 
 		// Authed User Rate Limits
-		UserGETPerMinuteLimit:  configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_LIMIT", USER_GET_LIMIT),
-		UserGETPerMinuteBurst:  configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_BURST", USER_GET_LIMIT*2),
+		UserGETPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_LIMIT", USER_GET_LIMIT),
+		UserGETPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_BURST", USER_GET_LIMIT*2),
+
 		UserPOSTPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_LIMIT", USER_POST_LIMIT),
 		UserPOSTPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
 
@@ -210,6 +216,11 @@ func NewServerConfig() (ServerConfig, error) {
 	if err := serverConfig.ValidateClean(mode); err != nil {
 		return ServerConfig{}, err
 	}
+
+	// Precompute some Host URLs
+	serverConfig.HostNameWithPort = fmt.Sprintf("%s:%d", serverConfig.HostName, serverConfig.HostPort)
+	serverConfig.HostURL = fmt.Sprintf("%s://%s", serverConfig.HostProtocol, serverConfig.HostName)
+	serverConfig.HostURLWithPort = fmt.Sprintf("%s://%s:%d", serverConfig.HostProtocol, serverConfig.HostName, serverConfig.HostPort)
 
 	printServerConfig(serverConfig)
 	return serverConfig, nil
@@ -333,10 +344,6 @@ func printServerConfig(config ServerConfig) {
 
 	fmt.Printf("Max Users/Max Devices, User DB Size/Age (mins): %d / %d / %d / %d\n", config.MaxUsers, config.MaxDevicesPerUser, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
 	fmt.Printf("Backup Interval (Control/Batch) in seconds: %d / %d\n", config.ControlBackupIntervalInSeconds, config.BatchBackupIntervalInSeconds)
-}
-
-func (config *ServerConfig) GetHostURL() string {
-	return fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort)
 }
 
 func (config *ServerConfig) IsHTTPS() bool {

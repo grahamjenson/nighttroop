@@ -47,7 +47,7 @@ func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
 			userDB, userGetModel, err := controlDB.GetUser(subdomain, true)
 
 			if err != nil {
-				http.Error(w, "User not found", http.StatusNotFound)
+				genericLoginError(w, r, fmt.Errorf("User not found: %w", err))
 				return
 			}
 			ctx := httputils.SetUserDBAndModelInHTTPContext(r.Context(), userDB, userGetModel)
@@ -66,7 +66,7 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 			ctx := r.Context()
 			acceptType := httputils.GetAcceptType(r)
 
-			deviceName, deviceRole, keepGoing, err := tryLoginWithJWTToken(controlDB, cfg, r)
+			deviceName, deviceRole, keepGoing, err := tryLoginWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
 				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
@@ -77,7 +77,8 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 			// If the JWT token is present but incorrect we need to stop
 			if !keepGoing {
 				if acceptType.API() {
-					http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
+					genericLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
+					return
 				} else {
 					w.Header().Set("HX-Redirect", "/login")
 					http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -98,7 +99,8 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 			}
 
 			if acceptType.API() {
-				http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
+				genericLoginError(w, r, fmt.Errorf("Unauthorized: No valid authentication method found"))
+				return
 			} else {
 				w.Header().Set("HX-Redirect", "/login")
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -109,7 +111,7 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 
 // Try get the Auth Header
 // Then try get the cookie
-func tryLoginWithJWTToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, bool, error) {
+func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, string, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
