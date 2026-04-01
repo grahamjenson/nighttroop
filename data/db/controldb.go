@@ -13,6 +13,8 @@ import (
 	"nighttroop.t1d.nz/data/sql/migrations"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 type ControlDB struct {
@@ -123,7 +125,7 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 
 func (db *ControlDB) createAdminIfNoneExists() error {
 	ctx := context.TODO()
-	adminName := config.FIRST_ADMIN_NAME
+	adminName := consts.FIRST_ADMIN_NAME
 	model, err := db.AdminsGet.QueryRow(ctx, adminName)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cannot query admin: %w", err)
@@ -132,12 +134,12 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 		return nil
 	}
 
-	password, hashedPassword, err := db.serverConfig.GeneratePassword()
+	password, hashedPassword, err := db.serverConfig.Security.GeneratePassword()
 	if err != nil {
 		return fmt.Errorf("cannot generate admin password: %w", err)
 	}
 
-	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("%s@%s", adminName, db.serverConfig.HostName))
+	totpSecret, encTOTPSecret, err := db.serverConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s", adminName, db.serverConfig.HostName))
 	if err != nil {
 		return fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
@@ -148,7 +150,7 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 	}
 
 	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", adminName, password, totpSecret)
-	encBundle, err := db.serverConfig.Encrypt(bundle)
+	encBundle, err := db.serverConfig.Security.Encrypt(bundle)
 	if err != nil {
 		return fmt.Errorf("cannot encrypt admin bundle: %w", err)
 	}
@@ -179,17 +181,17 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// }
 
 	// TODO add subdomain to the backupKeyHash to be able to match it to a user.
-	backupPassword, backupKeyHash, err := utils.SecureCredentialsWithPrefix(subdomain + ":")
+	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain + ":")
 	if err != nil {
 		return nil, "", "", "", fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
 
-	adminPassword, hashedPassword, err := db.serverConfig.GeneratePassword()
+	adminPassword, hashedPassword, err := db.serverConfig.Security.GeneratePassword()
 	if err != nil {
 		return nil, "", "", "", fmt.Errorf("cannot generate admin password: %w", err)
 	}
 
-	totpSecret, encTOTPSecret, err := db.serverConfig.TOTPGenerate(fmt.Sprintf("%s@%s.%s", config.FIRST_ADMIN_NAME, subdomain, db.serverConfig.HostName))
+	totpSecret, encTOTPSecret, err := db.serverConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", consts.FIRST_ADMIN_NAME, subdomain, db.serverConfig.HostName))
 	if err != nil {
 		return nil, "", "", "", fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
@@ -219,7 +221,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// Setup the new UserDB
 	////
 
-	_, err = userDB.DevicesCreate.Exec(context.TODO(), config.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, config.UserRoleAdmin.String())
+	_, err = userDB.DevicesCreate.Exec(context.TODO(), consts.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, consts.UserRoleAdmin.String())
 	if err != nil {
 		userDB.TryCloseAndDelete()
 		return nil, "", "", "", fmt.Errorf("cannot create admin device: %w", err)

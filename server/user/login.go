@@ -10,9 +10,9 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	usersql "nighttroop.t1d.nz/data/sql/user"
 	userTemplates "nighttroop.t1d.nz/server/assets/templates/user"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 type LoginRequest struct {
@@ -78,7 +78,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		if deviceRequiresTOTPValidation(device) {
 			// set a temporary token
 
-			err = httputils.SetUserPreAuthCookie(config, w, device.Name)
+			err = config.Security.SetUserPreAuthCookie(w, device.Name)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error setting pre-auth cookie: %s", err.Error()), http.StatusInternalServerError)
 				return
@@ -93,14 +93,14 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		tokenString, expiresAt, err := config.GenerateUserJWTToken(device.Name, device.Role)
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, device.Role)
 		if err != nil {
 			http.Error(w, "Internal server error Token", http.StatusInternalServerError)
 			return
 		}
 
 		// Set proper cookie and redirect to dashboard
-		httputils.SetUserLoginCookie(config, w, tokenString, expiresAt)
+		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
 		fmt.Println("Login successful")
 		w.Header().Set("HX-Redirect", "/")
@@ -130,13 +130,13 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 			return
 		}
 
-		preAuthToken, err := httputils.GetUserPreAuthTokenFromRequest(r)
+		preAuthToken, err := security.GetUserPreAuthTokenFromRequest(r)
 		if err != nil {
 			http.Error(w, "Pre-auth token is required", http.StatusBadRequest)
 			return
 		}
 
-		deviceName, err := config.VerifyPreAuthJWTToken(preAuthToken)
+		deviceName, err := config.Security.VerifyPreAuthJWTToken(preAuthToken)
 		if err != nil {
 			http.Error(w, "Invalid pre-auth token", http.StatusUnauthorized)
 			return
@@ -149,29 +149,29 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 			return
 		}
 
-		totpSecret, err := config.Decrypt(device.TotpSecret)
+		totpSecret, err := config.Security.Decrypt(device.TotpSecret)
 		if err != nil {
 			http.Error(w, "Error decrypting TOTP secret", http.StatusInternalServerError)
 			return
 		}
 
-		if !config.TOTPValidate(totpToken, totpSecret) {
+		if !config.Security.TOTPValidate(totpToken, totpSecret) {
 			http.Error(w, "Invalid TOTP token", http.StatusUnauthorized)
 			return
 		}
 
 		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.GenerateUserJWTToken(device.Name, device.Role)
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, device.Role)
 		if err != nil {
 			http.Error(w, "Internal server error Token", http.StatusInternalServerError)
 			return
 		}
 
 		// Set proper cookie and redirect to dashboard
-		httputils.SetUserLoginCookie(config, w, tokenString, expiresAt)
+		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
 		// Clear the pre-auth token cookie
-		httputils.ClearUserPreAuthCookie(config, w)
+		config.Security.ClearUserPreAuthCookie(w)
 
 		fmt.Println("TOTP verification successful, user logged in")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -198,7 +198,7 @@ func postLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		return
 	}
 
-	tokenString, expiresAt, err := config.GenerateUserJWTToken(device.Name, device.Role)
+	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, device.Role)
 	if err != nil {
 		http.Error(w, "Internal server error Token", http.StatusInternalServerError)
 		return
@@ -218,7 +218,7 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, devicename, password string) (*
 		return nil, fmt.Errorf("device not found: %w", err)
 	}
 
-	if !utils.VerifyPassword(password, device.Password) {
+	if !security.VerifyPassword(password, device.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
 
@@ -236,11 +236,11 @@ func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, pas
 		return nil, fmt.Errorf("User requires TOTP secret")
 	}
 
-	totpSecret, err := cfg.Decrypt(device.TotpSecret)
+	totpSecret, err := cfg.Security.Decrypt(device.TotpSecret)
 	if err != nil {
 		return nil, err
 	}
-	if !cfg.TOTPValidate(totpToken, totpSecret) {
+	if !cfg.Security.TOTPValidate(totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
 
@@ -261,7 +261,7 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Render Logout")
-		httputils.ClearUserLoginCookie(config, w)
+		config.Security.ClearUserLoginCookie(w)
 
 		// 3. Redirect the user to the login page
 		http.Redirect(w, r, "/login", http.StatusSeeOther)

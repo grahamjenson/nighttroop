@@ -33,6 +33,14 @@ func NewUsersGetBatch(sqldb *sql.DB, errs *[]error) *UsersGetBatchStmt {
 	return &UsersGetBatchStmt{stmt: stmt}
 }
 
+func (s *UsersGetBatchStmt) Exec(ctx context.Context, batch string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, batch)
+	if err != nil {
+		return nil, fmt.Errorf("UsersGetBatch exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGetBatchModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, batch)
 	if err != nil {
@@ -52,14 +60,6 @@ func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGet
 	return results, nil
 }
 
-func (s *UsersGetBatchStmt) Exec(ctx context.Context, batch string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, batch)
-	if err != nil {
-		return nil, fmt.Errorf("UsersGetBatch exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *UsersGetBatchStmt) QueryRow(ctx context.Context, batch string) (UsersGetBatchModel, error) {
 	var model UsersGetBatchModel
 	err := s.stmt.QueryRowContext(ctx, batch).Scan(&model.Subdomain, &model.LastSeenAt)
@@ -67,4 +67,15 @@ func (s *UsersGetBatchStmt) QueryRow(ctx context.Context, batch string) (UsersGe
 		return model, fmt.Errorf("UsersGetBatch query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *UsersGetBatchStmt) QueryRowExpanded(ctx context.Context, batch string) (string, *time.Time, error) {
+	var model UsersGetBatchModel
+	err := s.stmt.QueryRowContext(ctx, batch).Scan(&model.Subdomain, &model.LastSeenAt)
+	if err != nil {
+		return model.Subdomain, model.LastSeenAt, fmt.Errorf("UsersGetBatch query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Subdomain, model.LastSeenAt, nil
 }

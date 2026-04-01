@@ -245,7 +245,7 @@ func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error)
 // //
 func (c *S3Client) createTarLZ4(files []string, writer io.Writer) error {
 	// Wrap all up in encryption
-	encWriter, err := c.ServerConfig.EncryptingWriter(writer)
+	encWriter, err := c.ServerConfig.Security.EncryptingWriter(writer)
 	if err != nil {
 		return fmt.Errorf("cannot create encrypting writer: %w", err)
 	}
@@ -310,7 +310,7 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 
 	// Wrap with decryption
-	decReader, err := c.ServerConfig.DecryptingReader(reader)
+	decReader, err := c.ServerConfig.Security.DecryptingReader(reader)
 	if err != nil {
 		return fmt.Errorf("cannot create decrypting reader: %w", err)
 	}

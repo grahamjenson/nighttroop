@@ -31,38 +31,10 @@ func NewUsersCreate(sqldb *sql.DB, errs *[]error) *UsersCreateStmt {
 	return &UsersCreateStmt{stmt: stmt}
 }
 
-func (s *UsersCreateStmt) Query(ctx context.Context, Subdomain string, BackupKeyHash string) ([]UsersCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Subdomain, BackupKeyHash)
-	if err != nil {
-		return nil, fmt.Errorf("UsersCreate query error: %w", err)
-	}
-	defer rows.Close()
-
-	var results []UsersCreateModel
-	for rows.Next() {
-		var model UsersCreateModel
-		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
-			return nil, fmt.Errorf("UsersCreate scan error: %w", err)
-		}
-		results = append(results, model)
-	}
-	return results, nil
-}
-
 func (s *UsersCreateStmt) Exec(ctx context.Context, Subdomain string, BackupKeyHash string) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, Subdomain, BackupKeyHash)
 	if err != nil {
 		return nil, fmt.Errorf("UsersCreate exec error: %w", err)
 	}
 	return req, nil
-}
-
-func (s *UsersCreateStmt) QueryRow(ctx context.Context, Subdomain string, BackupKeyHash string) (UsersCreateModel, error) {
-	var model UsersCreateModel
-	err := s.stmt.QueryRowContext(ctx, Subdomain, BackupKeyHash).Scan()
-	if err != nil {
-		return model, fmt.Errorf("UsersCreate query row error: %w", err)
-	}
-	return model, nil
 }

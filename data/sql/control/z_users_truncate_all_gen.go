@@ -30,38 +30,10 @@ func NewUsersTruncateAll(sqldb *sql.DB, errs *[]error) *UsersTruncateAllStmt {
 	return &UsersTruncateAllStmt{stmt: stmt}
 }
 
-func (s *UsersTruncateAllStmt) Query(ctx context.Context) ([]UsersTruncateAllModel, error) {
-	rows, err := s.stmt.QueryContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("UsersTruncateAll query error: %w", err)
-	}
-	defer rows.Close()
-
-	var results []UsersTruncateAllModel
-	for rows.Next() {
-		var model UsersTruncateAllModel
-		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
-			return nil, fmt.Errorf("UsersTruncateAll scan error: %w", err)
-		}
-		results = append(results, model)
-	}
-	return results, nil
-}
-
 func (s *UsersTruncateAllStmt) Exec(ctx context.Context) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("UsersTruncateAll exec error: %w", err)
 	}
 	return req, nil
-}
-
-func (s *UsersTruncateAllStmt) QueryRow(ctx context.Context) (UsersTruncateAllModel, error) {
-	var model UsersTruncateAllModel
-	err := s.stmt.QueryRowContext(ctx).Scan()
-	if err != nil {
-		return model, fmt.Errorf("UsersTruncateAll query row error: %w", err)
-	}
-	return model, nil
 }

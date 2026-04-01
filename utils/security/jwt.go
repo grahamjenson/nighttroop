@@ -1,4 +1,4 @@
-package config
+package security
 
 import (
 	"fmt"
@@ -12,10 +12,17 @@ var ControlAudience = "control"
 var UserAudience = "user"
 var PreAuthAudience = "preauth"
 
+type JWTStuff struct {
+	jwtMac              jwt.MAC
+	jwtControlValidator *jwt.Validator
+	jwtUserValidator    *jwt.Validator
+	jwtPreAuthValidator *jwt.Validator
+}
+
 // //
 // Creating the primitives
 // //
-func (config *ServerConfig) createJWTPrimitives() error {
+func (config *SecurityConfig) createJWTPrimitives() error {
 
 	mac, err := jwt.NewMAC(config.JWTKeySet)
 	if err != nil {
@@ -61,7 +68,7 @@ func (config *ServerConfig) createJWTPrimitives() error {
 // CONTROL JWT
 ////
 
-func (config *ServerConfig) GenerateControlJWTToken(userName string, role string) (string, time.Time, error) {
+func (config *SecurityConfig) GenerateControlJWTToken(userName string, role string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -87,7 +94,7 @@ func (config *ServerConfig) GenerateControlJWTToken(userName string, role string
 	return tokenString, expiresAt, nil
 }
 
-func (config *ServerConfig) VerifyControlJWTToken(tokenStr string) (string, string, error) {
+func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, string, error) {
 	// Verify and parse in one step
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtControlValidator)
 	if err != nil {
@@ -111,7 +118,7 @@ func (config *ServerConfig) VerifyControlJWTToken(tokenStr string) (string, stri
 // USER JWT
 ////
 
-func (config *ServerConfig) GenerateUserJWTToken(deviceName string, role string) (string, time.Time, error) {
+func (config *SecurityConfig) GenerateUserJWTToken(deviceName string, role string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -137,7 +144,7 @@ func (config *ServerConfig) GenerateUserJWTToken(deviceName string, role string)
 	return tokenString, expiresAt, nil
 }
 
-func (config *ServerConfig) VerifyUserJWTToken(tokenStr string) (string, string, error) {
+func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, string, error) {
 
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtUserValidator)
 	if err != nil {
@@ -161,7 +168,7 @@ func (config *ServerConfig) VerifyUserJWTToken(tokenStr string) (string, string,
 // PREAUTH JWT (For TOTP flow)
 ///
 
-func (config *ServerConfig) GeneratePreAuthJWTToken(deviceName string) (string, time.Time, error) {
+func (config *SecurityConfig) GeneratePreAuthJWTToken(deviceName string) (string, time.Time, error) {
 
 	now := time.Now()
 
@@ -184,7 +191,7 @@ func (config *ServerConfig) GeneratePreAuthJWTToken(deviceName string) (string, 
 	return tokenString, expiresAt, nil
 }
 
-func (config *ServerConfig) VerifyPreAuthJWTToken(tokenStr string) (string, error) {
+func (config *SecurityConfig) VerifyPreAuthJWTToken(tokenStr string) (string, error) {
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtPreAuthValidator)
 	if err != nil {
 		return "", err

@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func(http.Handler) http.Handler {
@@ -26,7 +27,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 
 				tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
 			default:
-				tokenStr, err = httputils.GetControlTokenFromRequest(r)
+				tokenStr, err = security.GetControlTokenFromRequest(r)
 				if err != nil {
 					fmt.Println("Control Router: No token cookie found, redirecting to login")
 					http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -34,7 +35,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 				}
 			}
 
-			adminName, role, err := config.VerifyControlJWTToken(tokenStr)
+			adminName, role, err := config.Security.VerifyControlJWTToken(tokenStr)
 
 			if err != nil {
 				http.Error(w, "Bad Token", http.StatusInternalServerError)

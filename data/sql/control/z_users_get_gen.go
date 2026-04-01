@@ -37,6 +37,14 @@ func NewUsersGet(sqldb *sql.DB, errs *[]error) *UsersGetStmt {
 	return &UsersGetStmt{stmt: stmt}
 }
 
+func (s *UsersGetStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Subdomain)
+	if err != nil {
+		return nil, fmt.Errorf("UsersGet exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, Subdomain)
 	if err != nil {
@@ -56,14 +64,6 @@ func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetM
 	return results, nil
 }
 
-func (s *UsersGetStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Subdomain)
-	if err != nil {
-		return nil, fmt.Errorf("UsersGet exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *UsersGetStmt) QueryRow(ctx context.Context, Subdomain string) (UsersGetModel, error) {
 	var model UsersGetModel
 	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt)
@@ -71,4 +71,15 @@ func (s *UsersGetStmt) QueryRow(ctx context.Context, Subdomain string) (UsersGet
 		return model, fmt.Errorf("UsersGet query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *UsersGetStmt) QueryRowExpanded(ctx context.Context, Subdomain string) (string, *time.Time, *time.Time, error) {
+	var model UsersGetModel
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt)
+	if err != nil {
+		return model.Subdomain, model.CreatedAt, model.LastSeenAt, fmt.Errorf("UsersGet query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Subdomain, model.CreatedAt, model.LastSeenAt, nil
 }

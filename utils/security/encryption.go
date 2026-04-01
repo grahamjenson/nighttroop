@@ -1,4 +1,4 @@
-package config
+package security
 
 import (
 	"bytes"
@@ -19,8 +19,7 @@ import (
 // 2. File encryption key set (StreamingAEAD) - for encrypting large files (e.g., backups)
 // 3. JWT key set - for signing and verifying JWT tokens
 // They are base64 encoded and comma separated in KEY_SETS env
-func (config *ServerConfig) ConfigCreateEncryptionKeys(dotenvdev map[string]string, dotenv map[string]string) error {
-	keySetsRaw := configStringSelect(dotenvdev, dotenv, "KEY_SETS", "")
+func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) error {
 	if keySetsRaw == "" {
 		return fmt.Errorf("no key sets provided") // No keys provided, we can generate them later
 	}
@@ -102,7 +101,7 @@ func readKeySetFromBase64(rawKeySet string) (*keyset.Handle, error) {
 // Encryption Methods
 // //
 
-func (config *ServerConfig) Encrypt(plaintext string) (string, error) {
+func (config *SecurityConfig) Encrypt(plaintext string) (string, error) {
 
 	ciphertext, err := config.aeadEnc.Encrypt([]byte(plaintext), nil)
 	if err != nil {
@@ -112,7 +111,7 @@ func (config *ServerConfig) Encrypt(plaintext string) (string, error) {
 	return base64.RawStdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (config *ServerConfig) Decrypt(ciphertext string) (string, error) {
+func (config *SecurityConfig) Decrypt(ciphertext string) (string, error) {
 	ciphertextBytes, err := base64.RawStdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode base64 ciphertext: %w", err)
@@ -126,10 +125,10 @@ func (config *ServerConfig) Decrypt(ciphertext string) (string, error) {
 	return string(plaintext), nil
 }
 
-func (config *ServerConfig) EncryptingWriter(writer io.Writer) (io.WriteCloser, error) {
+func (config *SecurityConfig) EncryptingWriter(writer io.Writer) (io.WriteCloser, error) {
 	return config.streamEnc.NewEncryptingWriter(writer, nil)
 }
 
-func (config *ServerConfig) DecryptingReader(reader io.Reader) (io.Reader, error) {
+func (config *SecurityConfig) DecryptingReader(reader io.Reader) (io.Reader, error) {
 	return config.streamEnc.NewDecryptingReader(reader, nil)
 }

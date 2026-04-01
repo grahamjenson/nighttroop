@@ -16,9 +16,9 @@ import (
 	"nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 func main() {
@@ -117,7 +117,7 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 }
 
 func ValidateServer(c *s3utils.S3Client) error {
-	_, _, err := utils.SecureCredentials()
+	_, _, err := security.SecureCredentials()
 	if err != nil {
 		return fmt.Errorf("error generating secure credentials: %w", err)
 	}

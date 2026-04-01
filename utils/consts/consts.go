@@ -1,6 +1,20 @@
-package config
+package consts
 
-// Control Roles
+type ServerMode int
+
+const (
+	Production ServerMode = iota
+	Development
+	Test
+)
+
+const FIRST_ADMIN_NAME = "admin"
+
+// //
+// DEVELOPMENT HARDCODED STUFF
+// //
+const DEV_ADMIN_PASSWORD = "password"
+const DEV_ADMIN_TOTP_SECRET = "FakeTOTPSecretForDevOnly" // This is not a real secret, just for development. In production this should be generated and stored securely.
 
 type ControlRole int
 

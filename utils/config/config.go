@@ -8,30 +8,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tink-crypto/tink-go/v2/jwt"
-	"github.com/tink-crypto/tink-go/v2/keyset"
-
-	"github.com/tink-crypto/tink-go/v2/tink"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 )
-
-type ServerMode int
-
-const (
-	Production ServerMode = iota
-	Development
-	Test
-)
-
-const FIRST_ADMIN_NAME = "admin"
-
-// //
-// DEVELOPMENT HARDCODED STUFF
-// //
-const DEV_ADMIN_PASSWORD = "password"
-const DEV_ADMIN_TOTP_SECRET = "FakeTOTPSecretForDevOnly" // This is not a real secret, just for development. In production this should be generated and stored securely.
 
 type ServerConfig struct {
-	Mode ServerMode
+	Mode consts.ServerMode
 
 	HostName     string
 	HostPort     int
@@ -82,16 +64,7 @@ type ServerConfig struct {
 
 	// These keys are used to encrypt secrets in the DB and S3 at rest
 	// This has the option to add additional keys
-	EncryptionKeySet       *keyset.Handle
-	StreamEncryptionKeySet *keyset.Handle // for files
-	JWTKeySet              *keyset.Handle
-
-	aeadEnc             tink.AEAD
-	streamEnc           tink.StreamingAEAD
-	jwtMac              jwt.MAC
-	jwtControlValidator *jwt.Validator
-	jwtUserValidator    *jwt.Validator
-	jwtPreAuthValidator *jwt.Validator
+	Security *security.SecurityConfig
 }
 
 const USER_READ_LIMIT = 60
@@ -119,12 +92,12 @@ func NewServerConfig() (ServerConfig, error) {
 
 	// DEFAULTS
 	serverConfig := ServerConfig{
-		Mode: Development,
+		Mode: consts.Development,
 
 		// Host config
 		HostName:     configStringSelect(dotenvdev, dotenv, "HOST_NAME", "nt.local.t1d.nz"),
 		HostPort:     configIntSelect(dotenvdev, dotenv, "HOST_PORT", 3000),
-		HostProtocol: configStringSelect(dotenvdev, dotenv, "HOST_PROTOCOL", "http"),
+		HostProtocol: configStringSelect(dotenvdev, dotenv, "HOST_PROTOCOL", "https"),
 
 		// s3 config
 		S3Bucket:          configStringSelect(dotenvdev, dotenv, "S3_BUCKET", "mybucket"),
@@ -172,10 +145,9 @@ func NewServerConfig() (ServerConfig, error) {
 	serverConfig.RateLimiters = newRateLimiters(serverConfig)
 
 	mode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
-	err = serverConfig.ConfigCreateEncryptionKeys(dotenvdev, dotenv)
-	if err != nil {
-		return ServerConfig{}, fmt.Errorf("cannot create encryption key sets: %w", err)
-	}
+
+	keySetsRaw := configStringSelect(dotenvdev, dotenv, "KEY_SETS", "")
+	serverConfig.Security = security.NewSecurityConfig(keySetsRaw, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 
 	if len(dotenvdev) > 0 {
 		fmt.Printf("Unknown .env.dev variables: ")
@@ -248,11 +220,11 @@ func (config *ServerConfig) ValidateClean(mode string) error {
 
 	switch strings.ToLower(mode) {
 	case "production":
-		config.Mode = Production
+		config.Mode = consts.Production
 	case "development":
-		config.Mode = Development
+		config.Mode = consts.Development
 	case "test":
-		config.Mode = Test
+		config.Mode = consts.Test
 	default:
 		return fmt.Errorf("invalid mode: %s", mode)
 	}
@@ -262,7 +234,7 @@ func (config *ServerConfig) ValidateClean(mode string) error {
 		fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
 	}
 
-	if config.HostProtocol == "http" && config.Mode != Development && config.Mode != Test {
+	if config.HostProtocol == "http" && config.Mode != consts.Development && config.Mode != consts.Test {
 		return fmt.Errorf("http is only allowed in development or test mode")
 	}
 
@@ -350,7 +322,7 @@ func readDotEnvFile(filename string) (map[string]string, error) {
 func printServerConfig(config ServerConfig) {
 	// This is a concise printing of all non-secure information at startup
 	fmt.Printf("Server Config:\n")
-	fmt.Printf("Mode: %s\n", map[ServerMode]string{Production: "Production", Development: "Development"}[config.Mode])
+	fmt.Printf("Mode: %s\n", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test"}[config.Mode])
 	fmt.Printf("Host: %s://%s:%d\n", config.HostProtocol, config.HostName, config.HostPort)
 	fmt.Printf("S3: %s@%s/%s\n", config.S3AccessKeyID, config.S3URL, config.S3Bucket)
 	fmt.Printf("SQLite Path: %s\n", config.SqlitePath)

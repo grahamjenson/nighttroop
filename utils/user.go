@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"regexp"
+
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // CONSTS
@@ -41,7 +43,7 @@ func UserBatchPaths(char string) (string, string) {
 }
 
 func NextUserID() string {
-	return SecureRandomString(USER_ID_LENGTH, USER_CHAR_SET)
+	return security.SecureRandomString(USER_ID_LENGTH, USER_CHAR_SET)
 }
 
 func SyntacticallyValidateUserID(userID string) bool {

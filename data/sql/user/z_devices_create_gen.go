@@ -31,38 +31,10 @@ func NewDevicesCreate(sqldb *sql.DB, errs *[]error) *DevicesCreateStmt {
 	return &DevicesCreateStmt{stmt: stmt}
 }
 
-func (s *DevicesCreateStmt) Query(ctx context.Context, Name string, Password string, TotpSecret string, Role string) ([]DevicesCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Name, Password, TotpSecret, Role)
-	if err != nil {
-		return nil, fmt.Errorf("DevicesCreate query error: %w", err)
-	}
-	defer rows.Close()
-
-	var results []DevicesCreateModel
-	for rows.Next() {
-		var model DevicesCreateModel
-		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
-			return nil, fmt.Errorf("DevicesCreate scan error: %w", err)
-		}
-		results = append(results, model)
-	}
-	return results, nil
-}
-
 func (s *DevicesCreateStmt) Exec(ctx context.Context, Name string, Password string, TotpSecret string, Role string) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, Name, Password, TotpSecret, Role)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesCreate exec error: %w", err)
 	}
 	return req, nil
-}
-
-func (s *DevicesCreateStmt) QueryRow(ctx context.Context, Name string, Password string, TotpSecret string, Role string) (DevicesCreateModel, error) {
-	var model DevicesCreateModel
-	err := s.stmt.QueryRowContext(ctx, Name, Password, TotpSecret, Role).Scan()
-	if err != nil {
-		return model, fmt.Errorf("DevicesCreate query row error: %w", err)
-	}
-	return model, nil
 }

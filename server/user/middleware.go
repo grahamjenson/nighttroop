@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http.Handler {
@@ -57,26 +58,43 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 
 			// 3. Check Browser Cookie (Fallback for non-JSON or missing headers)
 			if jwttokenStr == "" {
-				cookieToken, err := httputils.GetUserTokenFromRequest(r)
+				cookieToken, err := security.GetUserTokenFromRequest(r)
 				if err == nil {
 					jwttokenStr = cookieToken
 				}
 			}
 
 			if jwttokenStr != "" {
-				deviceName, role, err := cfg.VerifyUserJWTToken(tokenStr)
-			} else {
-				// The only other means of authing is with token param
-				tokenParam := r.URL.Query().Get("token")
-				if tokenParam == "" {
-					http.Error(w, "Unauthorized: No token provided", http.StatusUnauthorized)
+				deviceName, role, err := cfg.Security.VerifyUserJWTToken(jwttokenStr)
+				if err != nil {
+					http.Error(w, "Bad JWT Token", http.StatusInternalServerError)
 					return
 				}
-				subdomain := httputils.GetSubdomainFromHTTPContext(ctx)
-				userDB, _, err := controlDB.GetUser(subdomain, false)
-				subdomain, deviceName, password := tokenParamSplit(tokenParam)
-				deviceName, role, err := cfg.VerifyUserToken(tokenParam)
+				httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				httputils.SetRoleInHTTPContext(ctx, role)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+
 			}
+
+			/////
+			// Legacy slow annoying method of validating the token param
+			////
+			// The only other means of authing is with token param
+			tokenParam := r.URL.Query().Get("token")
+			if tokenParam == "" {
+				http.Error(w, "Unauthorized: No token provided", http.StatusUnauthorized)
+				return
+			}
+
+			subdomain := httputils.GetSubdomainFromHTTPContext(ctx)
+			userDB, _, err := controlDB.GetUser(subdomain, false)
+			if err != nil {
+				http.Error(w, "User not found", http.StatusNotFound)
+				return
+			}
+
+			deviceName, role, err := cfg.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.DevicesGet)
 
 			if err != nil {
 				http.Error(w, "Bad Token", http.StatusInternalServerError)

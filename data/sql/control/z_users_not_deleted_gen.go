@@ -37,6 +37,14 @@ func NewUsersNotDeleted(sqldb *sql.DB, errs *[]error) *UsersNotDeletedStmt {
 	return &UsersNotDeletedStmt{stmt: stmt}
 }
 
+func (s *UsersNotDeletedStmt) Exec(ctx context.Context) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("UsersNotDeleted exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *UsersNotDeletedStmt) Query(ctx context.Context) ([]UsersNotDeletedModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
@@ -56,14 +64,6 @@ func (s *UsersNotDeletedStmt) Query(ctx context.Context) ([]UsersNotDeletedModel
 	return results, nil
 }
 
-func (s *UsersNotDeletedStmt) Exec(ctx context.Context) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("UsersNotDeleted exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *UsersNotDeletedStmt) QueryRow(ctx context.Context) (UsersNotDeletedModel, error) {
 	var model UsersNotDeletedModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
@@ -71,4 +71,15 @@ func (s *UsersNotDeletedStmt) QueryRow(ctx context.Context) (UsersNotDeletedMode
 		return model, fmt.Errorf("UsersNotDeleted query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *UsersNotDeletedStmt) QueryRowExpanded(ctx context.Context) (string, *time.Time, *time.Time, *time.Time, error) {
+	var model UsersNotDeletedModel
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
+	if err != nil {
+		return model.Subdomain, model.CreatedAt, model.LastSeenAt, model.DeletedAt, fmt.Errorf("UsersNotDeleted query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Subdomain, model.CreatedAt, model.LastSeenAt, model.DeletedAt, nil
 }

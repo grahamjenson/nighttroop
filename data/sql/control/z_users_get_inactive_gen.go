@@ -34,6 +34,14 @@ func NewUsersGetInactive(sqldb *sql.DB, errs *[]error) *UsersGetInactiveStmt {
 	return &UsersGetInactiveStmt{stmt: stmt}
 }
 
+func (s *UsersGetInactiveStmt) Exec(ctx context.Context, minutes float64) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, minutes)
+	if err != nil {
+		return nil, fmt.Errorf("UsersGetInactive exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]UsersGetInactiveModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, minutes)
 	if err != nil {
@@ -53,14 +61,6 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]Us
 	return results, nil
 }
 
-func (s *UsersGetInactiveStmt) Exec(ctx context.Context, minutes float64) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, minutes)
-	if err != nil {
-		return nil, fmt.Errorf("UsersGetInactive exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, minutes float64) (UsersGetInactiveModel, error) {
 	var model UsersGetInactiveModel
 	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain)
@@ -68,4 +68,15 @@ func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, minutes float64) (U
 		return model, fmt.Errorf("UsersGetInactive query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *UsersGetInactiveStmt) QueryRowExpanded(ctx context.Context, minutes float64) (string, error) {
+	var model UsersGetInactiveModel
+	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain)
+	if err != nil {
+		return model.Subdomain, fmt.Errorf("UsersGetInactive query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Subdomain, nil
 }

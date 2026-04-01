@@ -10,9 +10,9 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	controlsql "nighttroop.t1d.nz/data/sql/control"
 	controlTemplates "nighttroop.t1d.nz/server/assets/templates/control"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 type LoginRequest struct {
@@ -81,7 +81,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		tokenString, expiresAt, err := config.GenerateControlJWTToken(admin.Name, admin.Role)
+		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, admin.Role)
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
@@ -92,7 +92,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		switch acceptType {
 		case httputils.AcceptTypeHTMX, httputils.AcceptTypeHTML:
 			// Default set the cookie
-			httputils.SetControlLoginCookie(config, w, tokenString, expiresAt)
+			config.Security.SetControlLoginCookie(w, tokenString, expiresAt)
 
 			fmt.Println("Login successful, redirecting to dashboard...")
 			w.Header().Set("HX-Redirect", "/")
@@ -116,15 +116,15 @@ func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, us
 	if err != nil {
 		return nil, fmt.Errorf("admin not found: %w", err)
 	}
-	totpSecret, err := config.Decrypt(admin.TotpSecret)
+	totpSecret, err := config.Security.Decrypt(admin.TotpSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	if !utils.VerifyPassword(password, admin.Password) {
+	if !security.VerifyPassword(password, admin.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
-	if !config.TOTPValidate(totpToken, totpSecret) {
+	if !config.Security.TOTPValidate(totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
 	return &admin, nil
@@ -134,7 +134,7 @@ func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Render Logout")
-		httputils.ClearControlLoginCookie(config, w)
+		config.Security.ClearControlLoginCookie(w)
 
 		// 3. Redirect the user to the login page
 		http.Redirect(w, r, "/login", http.StatusSeeOther)

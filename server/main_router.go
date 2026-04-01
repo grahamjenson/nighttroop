@@ -53,6 +53,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case utils.SyntacticallyValidateUserID(subdomain):
+
 			// Check to see if in memory map
 			if controlDB.UserExists(subdomain) {
 				userRouter.ServeHTTP(w, r.WithContext(ctx))

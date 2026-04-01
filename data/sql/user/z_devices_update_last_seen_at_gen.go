@@ -33,38 +33,10 @@ func NewDevicesUpdateLastSeenAt(sqldb *sql.DB, errs *[]error) *DevicesUpdateLast
 	return &DevicesUpdateLastSeenAtStmt{stmt: stmt}
 }
 
-func (s *DevicesUpdateLastSeenAtStmt) Query(ctx context.Context, Name string) ([]DevicesUpdateLastSeenAtModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Name)
-	if err != nil {
-		return nil, fmt.Errorf("DevicesUpdateLastSeenAt query error: %w", err)
-	}
-	defer rows.Close()
-
-	var results []DevicesUpdateLastSeenAtModel
-	for rows.Next() {
-		var model DevicesUpdateLastSeenAtModel
-		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
-			return nil, fmt.Errorf("DevicesUpdateLastSeenAt scan error: %w", err)
-		}
-		results = append(results, model)
-	}
-	return results, nil
-}
-
 func (s *DevicesUpdateLastSeenAtStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, Name)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesUpdateLastSeenAt exec error: %w", err)
 	}
 	return req, nil
-}
-
-func (s *DevicesUpdateLastSeenAtStmt) QueryRow(ctx context.Context, Name string) (DevicesUpdateLastSeenAtModel, error) {
-	var model DevicesUpdateLastSeenAtModel
-	err := s.stmt.QueryRowContext(ctx, Name).Scan()
-	if err != nil {
-		return model, fmt.Errorf("DevicesUpdateLastSeenAt query row error: %w", err)
-	}
-	return model, nil
 }

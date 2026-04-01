@@ -37,6 +37,14 @@ func NewUsersAll(sqldb *sql.DB, errs *[]error) *UsersAllStmt {
 	return &UsersAllStmt{stmt: stmt}
 }
 
+func (s *UsersAllStmt) Exec(ctx context.Context) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("UsersAll exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
@@ -56,14 +64,6 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	return results, nil
 }
 
-func (s *UsersAllStmt) Exec(ctx context.Context) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("UsersAll exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
 	var model UsersAllModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
@@ -71,4 +71,15 @@ func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
 		return model, fmt.Errorf("UsersAll query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *UsersAllStmt) QueryRowExpanded(ctx context.Context) (string, *time.Time, *time.Time, *time.Time, error) {
+	var model UsersAllModel
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
+	if err != nil {
+		return model.Subdomain, model.CreatedAt, model.LastSeenAt, model.DeletedAt, fmt.Errorf("UsersAll query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Subdomain, model.CreatedAt, model.LastSeenAt, model.DeletedAt, nil
 }

@@ -37,6 +37,14 @@ func NewAdminsGet(sqldb *sql.DB, errs *[]error) *AdminsGetStmt {
 	return &AdminsGetStmt{stmt: stmt}
 }
 
+func (s *AdminsGetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Name)
+	if err != nil {
+		return nil, fmt.Errorf("AdminsGet exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, Name)
 	if err != nil {
@@ -56,14 +64,6 @@ func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetMode
 	return results, nil
 }
 
-func (s *AdminsGetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Name)
-	if err != nil {
-		return nil, fmt.Errorf("AdminsGet exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *AdminsGetStmt) QueryRow(ctx context.Context, Name string) (AdminsGetModel, error) {
 	var model AdminsGetModel
 	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt)
@@ -71,4 +71,15 @@ func (s *AdminsGetStmt) QueryRow(ctx context.Context, Name string) (AdminsGetMod
 		return model, fmt.Errorf("AdminsGet query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *AdminsGetStmt) QueryRowExpanded(ctx context.Context, Name string) (string, string, string, string, *time.Time, *time.Time, error) {
+	var model AdminsGetModel
+	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt)
+	if err != nil {
+		return model.Name, model.Password, model.Role, model.TotpSecret, model.LastSeenAt, model.CreatedAt, fmt.Errorf("AdminsGet query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Name, model.Password, model.Role, model.TotpSecret, model.LastSeenAt, model.CreatedAt, nil
 }

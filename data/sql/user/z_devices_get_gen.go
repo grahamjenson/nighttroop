@@ -45,6 +45,14 @@ func NewDevicesGet(sqldb *sql.DB, errs *[]error) *DevicesGetStmt {
 	return &DevicesGetStmt{stmt: stmt}
 }
 
+func (s *DevicesGetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Name)
+	if err != nil {
+		return nil, fmt.Errorf("DevicesGet exec error: %w", err)
+	}
+	return req, nil
+}
+
 func (s *DevicesGetStmt) Query(ctx context.Context, Name string) ([]DevicesGetModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, Name)
 	if err != nil {
@@ -64,14 +72,6 @@ func (s *DevicesGetStmt) Query(ctx context.Context, Name string) ([]DevicesGetMo
 	return results, nil
 }
 
-func (s *DevicesGetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Name)
-	if err != nil {
-		return nil, fmt.Errorf("DevicesGet exec error: %w", err)
-	}
-	return req, nil
-}
-
 func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string) (DevicesGetModel, error) {
 	var model DevicesGetModel
 	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
@@ -79,4 +79,15 @@ func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string) (DevicesGetM
 		return model, fmt.Errorf("DevicesGet query row error: %w", err)
 	}
 	return model, nil
+}
+
+func (s *DevicesGetStmt) QueryRowExpanded(ctx context.Context, Name string) (string, string, string, string, *time.Time, *time.Time, error) {
+	var model DevicesGetModel
+	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
+	if err != nil {
+		return model.Name, model.Password, model.TotpSecret, model.Role, model.CreatedAt, model.LastSeenAt, fmt.Errorf("DevicesGet query row error: %w", err)
+	}
+
+	// 2. Return variables and the error (error will be non-nil if Scan fails)
+	return model.Name, model.Password, model.TotpSecret, model.Role, model.CreatedAt, model.LastSeenAt, nil
 }

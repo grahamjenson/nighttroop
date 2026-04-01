@@ -1,13 +1,13 @@
-package config
+package security
 
 import (
 	"fmt"
 
 	"github.com/pquerna/otp/totp"
-	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
-func (cfg *ServerConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
+func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
 	totpKey, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "NightTroop",
 		AccountName: fmt.Sprintf("%s@%s", accountName, cfg.HostName),
@@ -19,8 +19,8 @@ func (cfg *ServerConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSe
 
 	totpSecret = totpKey.Secret()
 
-	if cfg.Mode == Development || cfg.Mode == Test {
-		totpSecret = DEV_ADMIN_TOTP_SECRET
+	if cfg.Mode == consts.Development || cfg.Mode == consts.Test {
+		totpSecret = consts.DEV_ADMIN_TOTP_SECRET
 	}
 
 	encTOTPSecret, err := cfg.Encrypt(totpSecret)
@@ -31,13 +31,13 @@ func (cfg *ServerConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSe
 	return totpSecret, encTOTPSecret, nil
 }
 
-func (cfg *ServerConfig) GeneratePassword() (password, hashedPassword string, err error) {
-	password, hashedPassword, err = utils.SecureCredentials()
+func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, err error) {
+	password, hashedPassword, err = SecureCredentials()
 
-	if cfg.Mode == Development || cfg.Mode == Test {
+	if cfg.Mode == consts.Development || cfg.Mode == consts.Test {
 		// We are going to override this stuff in dev, just to make it easier
-		password = DEV_ADMIN_PASSWORD
-		hashedPassword = utils.HashPassword(password)
+		password = consts.DEV_ADMIN_PASSWORD
+		hashedPassword = HashPassword(password)
 	}
 
 	if err != nil {
@@ -46,8 +46,8 @@ func (cfg *ServerConfig) GeneratePassword() (password, hashedPassword string, er
 	return password, hashedPassword, nil
 }
 
-func (cfg *ServerConfig) TOTPValidate(token, secret string) bool {
-	if secret == DEV_ADMIN_TOTP_SECRET {
+func (cfg *SecurityConfig) TOTPValidate(token, secret string) bool {
+	if secret == consts.DEV_ADMIN_TOTP_SECRET {
 		return token == "123123"
 	}
 	return totp.Validate(token, secret)

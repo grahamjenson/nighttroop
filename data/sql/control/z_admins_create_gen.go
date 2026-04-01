@@ -31,38 +31,10 @@ func NewAdminsCreate(sqldb *sql.DB, errs *[]error) *AdminsCreateStmt {
 	return &AdminsCreateStmt{stmt: stmt}
 }
 
-func (s *AdminsCreateStmt) Query(ctx context.Context, Name string, Password string, Role string, TotpSecret string) ([]AdminsCreateModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, Name, Password, Role, TotpSecret)
-	if err != nil {
-		return nil, fmt.Errorf("AdminsCreate query error: %w", err)
-	}
-	defer rows.Close()
-
-	var results []AdminsCreateModel
-	for rows.Next() {
-		var model AdminsCreateModel
-		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
-			return nil, fmt.Errorf("AdminsCreate scan error: %w", err)
-		}
-		results = append(results, model)
-	}
-	return results, nil
-}
-
 func (s *AdminsCreateStmt) Exec(ctx context.Context, Name string, Password string, Role string, TotpSecret string) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, Name, Password, Role, TotpSecret)
 	if err != nil {
 		return nil, fmt.Errorf("AdminsCreate exec error: %w", err)
 	}
 	return req, nil
-}
-
-func (s *AdminsCreateStmt) QueryRow(ctx context.Context, Name string, Password string, Role string, TotpSecret string) (AdminsCreateModel, error) {
-	var model AdminsCreateModel
-	err := s.stmt.QueryRowContext(ctx, Name, Password, Role, TotpSecret).Scan()
-	if err != nil {
-		return model, fmt.Errorf("AdminsCreate query row error: %w", err)
-	}
-	return model, nil
 }
