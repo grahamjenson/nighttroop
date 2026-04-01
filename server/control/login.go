@@ -25,7 +25,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := controlTemplates.Login(w)
+		err := controlTemplates.LoginHtml(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -87,9 +87,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		acceptType := httputils.GetAcceptType(r)
-
-		if acceptType.API() {
+		if httputils.GetAcceptType(r).API() {
 			// Default to JSON because this is API first
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{

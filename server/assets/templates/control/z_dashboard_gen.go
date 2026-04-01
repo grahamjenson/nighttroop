@@ -9,32 +9,32 @@ import (
 )
 
 //go:embed base.html
-var DashboardBase string
+var DashboardHtmlBase string
 
 //go:embed dashboard.html
-var DashboardDashboardHtml string
+var DashboardHtmlDashboardHtml string
 
-var DashboardTemplate *template.Template
+var DashboardHtmlTemplate *template.Template
 
-func getDashboardTemplate() (*template.Template, error) {
-	if DashboardTemplate != nil {
-		return DashboardTemplate, nil
+func getDashboardHtmlTemplate() (*template.Template, error) {
+	if DashboardHtmlTemplate != nil {
+		return DashboardHtmlTemplate, nil
 	}
 
-	DashboardTemplate, err := template.New("Dashboard").Parse(DashboardBase)
+	DashboardHtmlTemplate, err := template.New("DashboardHtml").Parse(DashboardHtmlBase)
 	if err != nil {
 		return nil, err
 	}
-	DashboardTemplate, err = DashboardTemplate.Parse(DashboardDashboardHtml)
+	DashboardHtmlTemplate, err = DashboardHtmlTemplate.Parse(DashboardHtmlDashboardHtml)
 	if err != nil {
 		return nil, err
 	}
 
-	return DashboardTemplate, nil
+	return DashboardHtmlTemplate, nil
 }
 
-func Dashboard(w io.Writer) error {
-	tmpl, err := getDashboardTemplate()
+func DashboardHtml(w io.Writer) error {
+	tmpl, err := getDashboardHtmlTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

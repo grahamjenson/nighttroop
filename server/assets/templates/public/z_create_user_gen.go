@@ -9,32 +9,32 @@ import (
 )
 
 //go:embed base.html
-var CreateUserBase string
+var CreateUserHtmlBase string
 
 //go:embed create_user.html
-var CreateUserCreateUserHtml string
+var CreateUserHtmlCreateUserHtml string
 
-var CreateUserTemplate *template.Template
+var CreateUserHtmlTemplate *template.Template
 
-func getCreateUserTemplate() (*template.Template, error) {
-	if CreateUserTemplate != nil {
-		return CreateUserTemplate, nil
+func getCreateUserHtmlTemplate() (*template.Template, error) {
+	if CreateUserHtmlTemplate != nil {
+		return CreateUserHtmlTemplate, nil
 	}
 
-	CreateUserTemplate, err := template.New("CreateUser").Parse(CreateUserBase)
+	CreateUserHtmlTemplate, err := template.New("CreateUserHtml").Parse(CreateUserHtmlBase)
 	if err != nil {
 		return nil, err
 	}
-	CreateUserTemplate, err = CreateUserTemplate.Parse(CreateUserCreateUserHtml)
+	CreateUserHtmlTemplate, err = CreateUserHtmlTemplate.Parse(CreateUserHtmlCreateUserHtml)
 	if err != nil {
 		return nil, err
 	}
 
-	return CreateUserTemplate, nil
+	return CreateUserHtmlTemplate, nil
 }
 
-func CreateUser(w io.Writer) error {
-	tmpl, err := getCreateUserTemplate()
+func CreateUserHtml(w io.Writer) error {
+	tmpl, err := getCreateUserHtmlTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

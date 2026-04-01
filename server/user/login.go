@@ -21,11 +21,22 @@ type LoginRequest struct {
 	TOTP     string `json:"totp"`
 }
 
+func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Println("Render Logout")
+		config.Security.ClearUserLoginCookie(w)
+
+		// 3. Redirect the user to the login page
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+}
+
 func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := userTemplates.Login(w)
+		err := userTemplates.LoginHtml(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -44,17 +55,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// is this HTML FORM or JSON?
-		acceptType := httputils.GetAcceptType(r)
 
-		// API login is different enough to just immediatly bail on finding common code
-		if acceptType.API() {
-			postLoginFromAPI(controlDB, config, r, w)
-			return
-		}
-
-		////
-		// Browser Login
-		////
 		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 		userDB, _, err := controlDB.GetUser(subdomain, false)
 		if err != nil {
@@ -62,25 +63,33 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		devicename := ""
-		password := ""
+		// API login is different enough to just immediatly bail on finding common code
+		if httputils.GetAcceptType(r).API() {
+			postLoginFromAPI(userDB, config, r, w)
+			return
+		}
+
+		////
+		// Browser Login
+		////
 
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Invalid form data", http.StatusBadRequest)
 			return
 		}
 
-		devicename = r.FormValue("name")
-		password = r.FormValue("password")
+		formName := r.FormValue("name")
+		formPassword := r.FormValue("password")
 
-		device, err := loginTheUserPasswordOnly(userDB, devicename, password)
+		// First thing validate the password
+		device, err := loginTheUserPasswordOnly(userDB, formName, formPassword)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Invalid credentials with %s", err.Error()), http.StatusUnauthorized)
 			return
 		}
-		if deviceRequiresTOTPValidation(device) {
-			// set a temporary token
 
+		if !deviceRequiresTOTPValidation(device) {
+			// set a temporary token
 			err = config.Security.SetUserPreAuthCookie(w, device.Name)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error setting pre-auth cookie: %s", err.Error()), http.StatusInternalServerError)
@@ -88,7 +97,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			err = userTemplates.LoginTotp(w)
+			err = userTemplates.LoginTotpHtmx(w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -105,7 +114,6 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		// Set proper cookie and redirect to dashboard
 		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
-		fmt.Println("Login successful")
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusOK)
 
@@ -181,17 +189,42 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 	}
 }
 
-func postLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
+func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*usersql.DevicesGetModel, error) {
+	if formName == "" || formPassword == "" {
+		return nil, fmt.Errorf("device name and password are required")
+	}
+
+	device, err := userDB.DevicesGet.QueryRow(context.TODO(), formName)
+	if err != nil {
+		return nil, fmt.Errorf("device not found: %w", err)
+	}
+
+	if !security.VerifyPassword(formPassword, device.Password) {
+		return nil, fmt.Errorf("invalid password")
+	}
+
+	return &device, nil
+}
+
+func deviceRequiresTOTPValidation(device *usersql.DevicesGetModel) bool {
+	// Constraint: TOTP validation is required for admin users
+	if device.Role == "admin" {
+		return true
+	}
+	// Constraint TOTP validation is required for any user with a TOTP secret set (even if not admin)
+	if device.TotpSecret != "" {
+		return true
+	}
+	return false
+}
+
+// ///
+// API Login functions
+// ///
+func postLoginFromAPI(userDB *db.UserDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-
-	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-	userDB, _, err := controlDB.GetUser(subdomain, false)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -215,19 +248,6 @@ func postLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 }
 
-func loginTheUserPasswordOnly(userDB *db.UserDB, devicename, password string) (*usersql.DevicesGetModel, error) {
-	device, err := userDB.DevicesGet.QueryRow(context.TODO(), devicename)
-	if err != nil {
-		return nil, fmt.Errorf("device not found: %w", err)
-	}
-
-	if !security.VerifyPassword(password, device.Password) {
-		return nil, fmt.Errorf("invalid password")
-	}
-
-	return &device, nil
-}
-
 func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, password, totpToken string) (*usersql.DevicesGetModel, error) {
 	device, err := loginTheUserPasswordOnly(userDB, devicename, password)
 	if err != nil {
@@ -248,25 +268,4 @@ func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, pas
 	}
 
 	return device, nil
-}
-
-func deviceRequiresTOTPValidation(device *usersql.DevicesGetModel) bool {
-	if device.Role == "admin" {
-		return true
-	}
-	if device.TotpSecret != "" {
-		return true
-	}
-	return false
-}
-
-func GETLogoutHandler(config config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		fmt.Println("Render Logout")
-		config.Security.ClearUserLoginCookie(w)
-
-		// 3. Redirect the user to the login page
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	}
 }

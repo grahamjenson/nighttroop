@@ -9,25 +9,25 @@ import (
 )
 
 //go:embed login_totp.htmx
-var LoginTotpBase string
+var LoginTotpHtmxBase string
 
-var LoginTotpTemplate *template.Template
+var LoginTotpHtmxTemplate *template.Template
 
-func getLoginTotpTemplate() (*template.Template, error) {
-	if LoginTotpTemplate != nil {
-		return LoginTotpTemplate, nil
+func getLoginTotpHtmxTemplate() (*template.Template, error) {
+	if LoginTotpHtmxTemplate != nil {
+		return LoginTotpHtmxTemplate, nil
 	}
 
-	LoginTotpTemplate, err := template.New("LoginTotp").Parse(LoginTotpBase)
+	LoginTotpHtmxTemplate, err := template.New("LoginTotpHtmx").Parse(LoginTotpHtmxBase)
 	if err != nil {
 		return nil, err
 	}
 
-	return LoginTotpTemplate, nil
+	return LoginTotpHtmxTemplate, nil
 }
 
-func LoginTotp(w io.Writer) error {
-	tmpl, err := getLoginTotpTemplate()
+func LoginTotpHtmx(w io.Writer) error {
+	tmpl, err := getLoginTotpHtmxTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

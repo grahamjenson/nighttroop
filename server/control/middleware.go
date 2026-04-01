@@ -25,8 +25,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 				return
 			}
 
-			acceptType := httputils.GetAcceptType(r)
-			if acceptType.API() {
+			if httputils.GetAcceptType(r).API() {
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
 			} else {
 				w.Header().Set("HX-Redirect", "/login")

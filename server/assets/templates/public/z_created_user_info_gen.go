@@ -9,25 +9,25 @@ import (
 )
 
 //go:embed created_user_info.htmx
-var CreatedUserInfoBase string
+var CreatedUserInfoHtmxBase string
 
-var CreatedUserInfoTemplate *template.Template
+var CreatedUserInfoHtmxTemplate *template.Template
 
-func getCreatedUserInfoTemplate() (*template.Template, error) {
-	if CreatedUserInfoTemplate != nil {
-		return CreatedUserInfoTemplate, nil
+func getCreatedUserInfoHtmxTemplate() (*template.Template, error) {
+	if CreatedUserInfoHtmxTemplate != nil {
+		return CreatedUserInfoHtmxTemplate, nil
 	}
 
-	CreatedUserInfoTemplate, err := template.New("CreatedUserInfo").Parse(CreatedUserInfoBase)
+	CreatedUserInfoHtmxTemplate, err := template.New("CreatedUserInfoHtmx").Parse(CreatedUserInfoHtmxBase)
 	if err != nil {
 		return nil, err
 	}
 
-	return CreatedUserInfoTemplate, nil
+	return CreatedUserInfoHtmxTemplate, nil
 }
 
-func CreatedUserInfo(w io.Writer, url string, password string, totp_secret string, backup_key string) error {
-	tmpl, err := getCreatedUserInfoTemplate()
+func CreatedUserInfoHtmx(w io.Writer, url string, password string, totp_secret string, backup_key string) error {
+	tmpl, err := getCreatedUserInfoHtmxTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

@@ -9,25 +9,25 @@ import (
 )
 
 //go:embed create_user_rate_limited.htmx
-var CreateUserRateLimitedBase string
+var CreateUserRateLimitedHtmxBase string
 
-var CreateUserRateLimitedTemplate *template.Template
+var CreateUserRateLimitedHtmxTemplate *template.Template
 
-func getCreateUserRateLimitedTemplate() (*template.Template, error) {
-	if CreateUserRateLimitedTemplate != nil {
-		return CreateUserRateLimitedTemplate, nil
+func getCreateUserRateLimitedHtmxTemplate() (*template.Template, error) {
+	if CreateUserRateLimitedHtmxTemplate != nil {
+		return CreateUserRateLimitedHtmxTemplate, nil
 	}
 
-	CreateUserRateLimitedTemplate, err := template.New("CreateUserRateLimited").Parse(CreateUserRateLimitedBase)
+	CreateUserRateLimitedHtmxTemplate, err := template.New("CreateUserRateLimitedHtmx").Parse(CreateUserRateLimitedHtmxBase)
 	if err != nil {
 		return nil, err
 	}
 
-	return CreateUserRateLimitedTemplate, nil
+	return CreateUserRateLimitedHtmxTemplate, nil
 }
 
-func CreateUserRateLimited(w io.Writer, seconds string) error {
-	tmpl, err := getCreateUserRateLimitedTemplate()
+func CreateUserRateLimitedHtmx(w io.Writer, seconds string) error {
+	tmpl, err := getCreateUserRateLimitedHtmxTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

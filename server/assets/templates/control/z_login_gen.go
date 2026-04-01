@@ -9,32 +9,32 @@ import (
 )
 
 //go:embed base.html
-var LoginBase string
+var LoginHtmlBase string
 
 //go:embed login.html
-var LoginLoginHtml string
+var LoginHtmlLoginHtml string
 
-var LoginTemplate *template.Template
+var LoginHtmlTemplate *template.Template
 
-func getLoginTemplate() (*template.Template, error) {
-	if LoginTemplate != nil {
-		return LoginTemplate, nil
+func getLoginHtmlTemplate() (*template.Template, error) {
+	if LoginHtmlTemplate != nil {
+		return LoginHtmlTemplate, nil
 	}
 
-	LoginTemplate, err := template.New("Login").Parse(LoginBase)
+	LoginHtmlTemplate, err := template.New("LoginHtml").Parse(LoginHtmlBase)
 	if err != nil {
 		return nil, err
 	}
-	LoginTemplate, err = LoginTemplate.Parse(LoginLoginHtml)
+	LoginHtmlTemplate, err = LoginHtmlTemplate.Parse(LoginHtmlLoginHtml)
 	if err != nil {
 		return nil, err
 	}
 
-	return LoginTemplate, nil
+	return LoginHtmlTemplate, nil
 }
 
-func Login(w io.Writer) error {
-	tmpl, err := getLoginTemplate()
+func LoginHtml(w io.Writer) error {
+	tmpl, err := getLoginHtmlTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

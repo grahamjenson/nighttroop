@@ -135,8 +135,9 @@ func main() {
 		filePathToUse = templateFiles[0]
 	}
 	filenameToUse := filepath.Base(filePathToUse)
-	outfilename := strings.TrimSuffix(filenameToUse, filepath.Ext(filenameToUse))
-	name := utils.SnakeToCapitalCamelCase(outfilename)
+	exension := filepath.Ext(filenameToUse)
+	outfilename := strings.TrimSuffix(filenameToUse, exension)
+	name := utils.SnakeToCapitalCamelCase(outfilename + "_" + strings.TrimPrefix(exension, "."))
 	pkg := filepath.Dir(filePathToUse)
 
 	// inputParams is a string params.{name}, params.{name}, ...

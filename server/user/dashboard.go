@@ -14,7 +14,7 @@ func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Render Dashboard")
 		w.Header().Set("Content-Type", "text/html")
-		err := userTemplates.Dashboard(w)
+		err := userTemplates.DashboardHtml(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

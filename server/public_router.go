@@ -19,7 +19,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 	static.AddSatticRoutes(r)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		err := publicTemplates.CreateUser(w)
+		err := publicTemplates.CreateUserHtml(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -50,7 +50,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		allowed, remainingTime := httputils.CreateUserAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			publicTemplates.CreateUserRateLimited(w, fmt.Sprintf("%d", remainingTime))
+			publicTemplates.CreateUserRateLimitedHtmx(w, fmt.Sprintf("%d", remainingTime))
 			return
 		}
 
@@ -75,9 +75,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		}
 		fmt.Printf("Number of Users %d, Number of Routines %d\n", controlDB.GetNUsersDBs(), runtime.NumGoroutine())
 
-		acceptType := httputils.GetAcceptType(r)
-
-		if acceptType.API() {
+		if httputils.GetAcceptType(r).API() {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(responseModel)
@@ -86,7 +84,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = publicTemplates.CreatedUserInfo(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
+		err = publicTemplates.CreatedUserInfoHtmx(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
