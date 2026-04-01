@@ -13,9 +13,10 @@ import (
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
+	r.Use(user.UserRateLimitMiddleware(config))
+
 	static.AddSatticRoutes(r)
 	// Rate Limiter is before auth because auth can be expencive
-	r.Use(user.UserRateLimitMiddleware(config))
 
 	// Publically availabl (if the person knows the subdomain) endpoints
 	r.Get("/login", user.GETLoginPageHandler())
