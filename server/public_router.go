@@ -77,26 +77,18 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		acceptType := httputils.GetAcceptType(r)
 
-		switch acceptType {
-		case httputils.AcceptTypeJSON:
+		if acceptType.API() {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(responseModel)
 			return
-		case httputils.AcceptTypeHTMX:
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			err := publicTemplates.CreatedUserInfo(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			return
-		default:
-			err = publicTemplates.CreatedUserInfo(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		err = publicTemplates.CreatedUserInfo(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 	}

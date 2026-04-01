@@ -15,37 +15,53 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var err error
-			contentType := httputils.GetAcceptType(r)
-			tokenStr := ""
-			switch contentType {
-			case httputils.AcceptTypeJSON:
-				authHeader := r.Header.Get("Authorization")
-				if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-					http.Error(w, "Unauthorized Header", http.StatusUnauthorized)
-					return
-				}
 
-				tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-			default:
-				tokenStr, err = security.GetControlTokenFromRequest(r)
-				if err != nil {
-					fmt.Println("Control Router: No token cookie found, redirecting to login")
-					http.Redirect(w, r, "/login", http.StatusSeeOther)
-					return
-				}
-			}
-
-			adminName, role, err := config.Security.VerifyControlJWTToken(tokenStr)
-
-			if err != nil {
-				http.Error(w, "Bad Token", http.StatusInternalServerError)
+			deviceName, deviceRole, err := tryLoginWithJWTToken(controlDB, config, r)
+			if err == nil {
+				ctx := r.Context()
+				httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
-			// Optional: Inject claims into context
-			ctx := httputils.SetAdminNameInHTTPContext(r.Context(), adminName)
-			ctx = httputils.SetRoleInHTTPContext(ctx, role)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			acceptType := httputils.GetAcceptType(r)
+			if acceptType.API() {
+				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
+			} else {
+				w.Header().Set("HX-Redirect", "/login")
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+			}
+			return
 		})
 	}
+}
+
+func tryLoginWithJWTToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		if err != nil {
+			return "", "", fmt.Errorf("bad JWT token: %w", err)
+		}
+		return deviceName, role, nil
+	}
+
+	if authHeader != "" {
+		return "", "", fmt.Errorf("Auth Header exists but is not Bearer token")
+	}
+
+	// Check for Cookie
+	cookieToken, err := security.GetUserTokenFromRequest(r)
+	if err == nil {
+		jwttokenStr := cookieToken
+		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		if err != nil {
+			return "", "", fmt.Errorf("Bad Cookie JWT token: %w", err)
+		}
+		return deviceName, role, nil
+	}
+
+	return "", "", fmt.Errorf("No JWT token found")
 }

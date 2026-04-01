@@ -39,6 +39,10 @@ func GetAcceptType(r *http.Request) AcceptType {
 	}
 }
 
+func (at AcceptType) API() bool {
+	return at == AcceptTypeJSON
+}
+
 type ContentType int
 
 const (

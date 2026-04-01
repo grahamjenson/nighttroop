@@ -11,11 +11,11 @@ import (
 type RateLimiters struct {
 	serverConfig ServerConfig
 
-	deviceReadRateLimiters *lru.Cache[string, *rate.Limiter]
-	userReadRateLimiters   *lru.Cache[string, *rate.Limiter]
+	deviceGETRateLimiters *lru.Cache[string, *rate.Limiter]
+	userGETRateLimiters   *lru.Cache[string, *rate.Limiter]
 
-	deviceWriteRateLimiters *lru.Cache[string, *rate.Limiter]
-	userWriteRateLimiters   *lru.Cache[string, *rate.Limiter]
+	devicePOSTRateLimiters *lru.Cache[string, *rate.Limiter]
+	userPOSTRateLimiters   *lru.Cache[string, *rate.Limiter]
 
 	UserCreateLimiter   *rate.Limiter
 	userCreateIpLimiter *lru.Cache[string, *rate.Limiter]
@@ -32,11 +32,11 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 	return &RateLimiters{
 		serverConfig: config,
 
-		deviceReadRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
-		userReadRateLimiters:   lruMust(maxUsers * wiggle),
+		deviceGETRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
+		userGETRateLimiters:   lruMust(maxUsers * wiggle),
 
-		deviceWriteRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
-		userWriteRateLimiters:   lruMust(maxUsers * wiggle),
+		devicePOSTRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
+		userPOSTRateLimiters:   lruMust(maxUsers * wiggle),
 
 		UserCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.UserCreateGlobalPerMinuteLimit)/60.0), config.UserCreateGlobalPerMinuteBurst),
 		userCreateIpLimiter: lruMust(maxUsers * wiggle),
@@ -77,21 +77,21 @@ func (r *RateLimiters) GetUserCreateIPRateLimiter(ipAddress string) *rate.Limite
 // User Rate Limiters
 // //
 
-func (r *RateLimiters) GetDeviceReadLimiter(deviceID string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.deviceReadRateLimiters, deviceID, r.serverConfig.UserReadPerMinuteLimit, r.serverConfig.UserReadPerMinuteBurst)
+func (r *RateLimiters) DeviceGETLimiter(deviceID string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.deviceGETRateLimiters, deviceID, r.serverConfig.UserGETPerMinuteLimit, r.serverConfig.UserGETPerMinuteBurst)
 }
 
-func (r *RateLimiters) GetDeviceWriteLimiter(deviceID string) *rate.Limiter {
+func (r *RateLimiters) DevicePOSTLimiter(deviceID string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.deviceWriteRateLimiters, deviceID, r.serverConfig.UserWritePerMinuteLimit, r.serverConfig.UserWritePerMinuteBurst)
+	return r.getOrCreateLimiter(r.devicePOSTRateLimiters, deviceID, r.serverConfig.UserPOSTPerMinuteLimit, r.serverConfig.UserPOSTPerMinuteBurst)
 }
 
-func (r *RateLimiters) GetUserReadLimiter(userId string) *rate.Limiter {
+func (r *RateLimiters) UserGETLimiter(userId string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.userReadRateLimiters, userId, r.serverConfig.UserReadPerMinuteLimit, r.serverConfig.UserReadPerMinuteBurst)
+	return r.getOrCreateLimiter(r.userGETRateLimiters, userId, r.serverConfig.UserGETPerMinuteLimit, r.serverConfig.UserGETPerMinuteBurst)
 }
 
-func (r *RateLimiters) GetUserWriteLimiter(userId string) *rate.Limiter {
+func (r *RateLimiters) UserPOSTLimiter(userId string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.userWriteRateLimiters, userId, r.serverConfig.UserWritePerMinuteLimit, r.serverConfig.UserWritePerMinuteBurst)
+	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userId, r.serverConfig.UserPOSTPerMinuteLimit, r.serverConfig.UserPOSTPerMinuteBurst)
 }

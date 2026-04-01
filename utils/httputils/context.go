@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/control"
 )
 
 type HTTPContextKeys int
 
 const (
 	UserDBKey HTTPContextKeys = iota
+	UserGetModelKey
 	SubdomainKey
 	DeviceNameKey
 	IPAddressKey
@@ -72,18 +74,25 @@ func GetIPFromHTTPContext(ctx context.Context) string {
 // UserDB
 ////
 
-func SetUserDBInHTTPContext(ctx context.Context, userDB *db.UserDB) context.Context {
-	return context.WithValue(ctx, UserDBKey, userDB)
+func SetUserDBAndModelInHTTPContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.UsersGetModel) context.Context {
+	ctx = context.WithValue(ctx, UserDBKey, userDB)
+	ctx = context.WithValue(ctx, UserGetModelKey, userGetModel)
+	return ctx
 }
 
-func GetUserFromHTTPContext(ctx context.Context) *db.UserDB {
+func GetUserDBAndModelFromHTTPContext(ctx context.Context) (*db.UserDB, *control.UsersGetModel) {
 	if ctx == nil {
-		return nil
+		return nil, nil
 	}
+	var userDB *db.UserDB
+	var userGetModel *control.UsersGetModel
 	if reqID, ok := ctx.Value(UserDBKey).(*db.UserDB); ok {
-		return reqID
+		userDB = reqID
 	}
-	return nil
+	if reqID, ok := ctx.Value(UserGetModelKey).(*control.UsersGetModel); ok {
+		userGetModel = reqID
+	}
+	return userDB, userGetModel
 }
 
 // /

@@ -25,7 +25,7 @@ func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 func GETPingHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		userDB := httputils.GetUserFromHTTPContext(r.Context())
+		userDB, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
 
 		if userDB == nil {
 			fmt.Println("User NOT found")

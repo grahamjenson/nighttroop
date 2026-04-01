@@ -44,14 +44,17 @@ func GETLoginPageHandler() http.HandlerFunc {
 func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// is this HTML FORM or JSON?
-		contentType := httputils.GetContentType(r)
+		acceptType := httputils.GetAcceptType(r)
 
 		// API login is different enough to just immediatly bail on finding common code
-		if contentType == httputils.ContentTypeJSON {
+		if acceptType.API() {
 			postLoginFromAPI(controlDB, config, r, w)
 			return
 		}
 
+		////
+		// Browser Login
+		////
 		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 		userDB, _, err := controlDB.GetUser(subdomain, false)
 		if err != nil {

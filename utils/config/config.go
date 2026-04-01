@@ -39,10 +39,10 @@ type ServerConfig struct {
 	GlobalIPPerMinuteBurst int
 
 	// Authenticated Rate Limits
-	UserReadPerMinuteLimit  int
-	UserReadPerMinuteBurst  int
-	UserWritePerMinuteLimit int
-	UserWritePerMinuteBurst int
+	UserGETPerMinuteLimit  int
+	UserGETPerMinuteBurst  int
+	UserPOSTPerMinuteLimit int
+	UserPOSTPerMinuteBurst int
 
 	// User Create Rate Limits
 	UserCreateGlobalPerMinuteLimit int
@@ -67,8 +67,8 @@ type ServerConfig struct {
 	Security *security.SecurityConfig
 }
 
-const USER_READ_LIMIT = 60
-const USER_WRITE_LIMIT = 20
+const USER_GET_LIMIT = 60
+const USER_POST_LIMIT = 20
 
 // Priority is
 // 1. Args
@@ -126,10 +126,10 @@ func NewServerConfig() (ServerConfig, error) {
 		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
 
 		// Authed User Rate Limits
-		UserReadPerMinuteLimit:  configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_LIMIT", USER_READ_LIMIT),
-		UserReadPerMinuteBurst:  configIntSelect(dotenvdev, dotenv, "USER_READ_PER_MINUTE_BURST", USER_READ_LIMIT*2),
-		UserWritePerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_LIMIT", USER_WRITE_LIMIT),
-		UserWritePerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_WRITE_PER_MINUTE_BURST", USER_WRITE_LIMIT*4),
+		UserGETPerMinuteLimit:  configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_LIMIT", USER_GET_LIMIT),
+		UserGETPerMinuteBurst:  configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_BURST", USER_GET_LIMIT*2),
+		UserPOSTPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_LIMIT", USER_POST_LIMIT),
+		UserPOSTPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
 
 		// User Limits
 		MaxUsers:              configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
@@ -327,7 +327,7 @@ func printServerConfig(config ServerConfig) {
 	fmt.Printf("S3: %s@%s/%s\n", config.S3AccessKeyID, config.S3URL, config.S3Bucket)
 	fmt.Printf("SQLite Path: %s\n", config.SqlitePath)
 	fmt.Printf("Global Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.GlobalRateLimit, config.GlobalRateLimit, config.GlobalRateBurst, config.GlobalRateBurst)
-	fmt.Printf("User Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.UserReadPerMinuteLimit, config.UserWritePerMinuteLimit, config.UserReadPerMinuteBurst, config.UserWritePerMinuteBurst)
+	fmt.Printf("User Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.UserGETPerMinuteLimit, config.UserPOSTPerMinuteLimit, config.UserGETPerMinuteBurst, config.UserPOSTPerMinuteBurst)
 	fmt.Printf("User Create Rate Limit req/s: %d burst %d\n", config.UserCreateGlobalPerMinuteLimit, config.UserCreateGlobalPerMinuteBurst)
 	fmt.Printf("User Create IP Rate Limit req/s: %d burst %d\n", config.UserCreateIPPerMinuteLimit, config.UserCreateIPPerMinuteBurst)
 

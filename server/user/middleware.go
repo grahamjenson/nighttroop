@@ -17,7 +17,7 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 			method := strings.ToUpper(r.Method)
 			if method == http.MethodGet || method == http.MethodHead {
 				// For GET and HEAD requests, we can use a more permissive rate limit
-				allowed, remainingTime := httputils.UserReadAllowed(config, r)
+				allowed, remainingTime := httputils.UserGETAllowed(config, r)
 				// TODO handle both html and json response types
 				if !allowed {
 					w.WriteHeader(http.StatusTooManyRequests)
@@ -26,7 +26,7 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 				}
 			} else {
 				// For POST, PUT, DELETE, etc., we should enforce a stricter rate limit
-				allowed, remainingTime := httputils.UserWriteAllowed(config, r)
+				allowed, remainingTime := httputils.UserPOSTAllowed(config, r)
 				if !allowed {
 					w.WriteHeader(http.StatusTooManyRequests)
 					fmt.Fprintf(w, "Too many requests, write rate limit exceeded. Try again in %d seconds.", remainingTime)
@@ -39,6 +39,23 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 	}
 }
 
+// This middleware happens after auth
+func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+			userDB, userGetModel, err := controlDB.GetUser(subdomain, true)
+
+			if err != nil {
+				http.Error(w, "User not found", http.StatusNotFound)
+				return
+			}
+			ctx := httputils.SetUserDBAndModelInHTTPContext(r.Context(), userDB, userGetModel)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
 // There are three ways to validate:
 // 1. API: JWT token as Authorization header (for API requests)
 // 2. API: (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
@@ -47,65 +64,97 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
+			acceptType := httputils.GetAcceptType(r)
 
-			jwttokenStr := ""
-
-			// 1. Check API Header (Bearer Token)
-			authHeader := r.Header.Get("Authorization")
-			if strings.HasPrefix(authHeader, "Bearer ") {
-				jwttokenStr = strings.TrimPrefix(authHeader, "Bearer ")
-			}
-
-			// 3. Check Browser Cookie (Fallback for non-JSON or missing headers)
-			if jwttokenStr == "" {
-				cookieToken, err := security.GetUserTokenFromRequest(r)
-				if err == nil {
-					jwttokenStr = cookieToken
-				}
-			}
-
-			if jwttokenStr != "" {
-				deviceName, role, err := cfg.Security.VerifyUserJWTToken(jwttokenStr)
-				if err != nil {
-					http.Error(w, "Bad JWT Token", http.StatusInternalServerError)
-					return
-				}
-				httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				httputils.SetRoleInHTTPContext(ctx, role)
+			deviceName, deviceRole, keepGoing, err := tryLoginWithJWTToken(controlDB, cfg, r)
+			if err == nil {
+				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
+			}
 
+			// If the JWT token is present but incorrect we need to stop
+			if !keepGoing {
+				if acceptType.API() {
+					http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
+				} else {
+					w.Header().Set("HX-Redirect", "/login")
+					http.Redirect(w, r, "/login", http.StatusSeeOther)
+				}
+				return
 			}
 
 			/////
 			// Legacy slow annoying method of validating the token param
-			////
-			// The only other means of authing is with token param
-			tokenParam := r.URL.Query().Get("token")
-			if tokenParam == "" {
-				http.Error(w, "Unauthorized: No token provided", http.StatusUnauthorized)
+			//// Last Chance
+
+			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
+			if err == nil {
+				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
-			subdomain := httputils.GetSubdomainFromHTTPContext(ctx)
-			userDB, _, err := controlDB.GetUser(subdomain, false)
-			if err != nil {
-				http.Error(w, "User not found", http.StatusNotFound)
-				return
+			if acceptType.API() {
+				http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
+			} else {
+				w.Header().Set("HX-Redirect", "/login")
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			}
-
-			deviceName, role, err := cfg.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.DevicesGet)
-
-			if err != nil {
-				http.Error(w, "Bad Token", http.StatusInternalServerError)
-				return
-			}
-
-			// Optional: Inject claims into context
-			ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-			ctx = httputils.SetRoleInHTTPContext(ctx, role)
-
-			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// Try get the Auth Header
+// Then try get the cookie
+func tryLoginWithJWTToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, bool, error) {
+	authHeader := r.Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		if err != nil {
+			return "", "", false, fmt.Errorf("bad JWT token: %w", err)
+		}
+		return deviceName, role, true, nil
+	}
+
+	if authHeader != "" {
+		return "", "", false, fmt.Errorf("Auth Header exists but is not Bearer token")
+	}
+
+	// Check for Cookie
+	cookieToken, err := security.GetUserTokenFromRequest(r)
+	if err == nil {
+		jwttokenStr := cookieToken
+		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		if err != nil {
+			return "", "", false, fmt.Errorf("Bad Cookie JWT token: %w", err)
+		}
+		return deviceName, role, true, nil
+	}
+
+	return "", "", true, fmt.Errorf("No JWT token found")
+}
+
+func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, error) {
+	// TODO if login is successful actually create JWT token and return it as cookie if browser
+	tokenParam := r.URL.Query().Get("token")
+	if tokenParam == "" {
+		return "", "", fmt.Errorf("no token provided")
+	}
+
+	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+	userDB, _, err := controlDB.GetUser(subdomain, false)
+	if err != nil {
+		return "", "", fmt.Errorf("user not found: %w", err)
+	}
+
+	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.DevicesGet)
+	if err != nil {
+		return "", "", fmt.Errorf("bad token: %w", err)
+	}
+
+	return deviceName, role, nil
 }

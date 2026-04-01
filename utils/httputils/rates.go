@@ -15,22 +15,22 @@ func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool,
 	return AllowAll(createLimiter, ipLimiter)
 }
 
-func UserReadAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
 	deviceName := GetDeviceNameFromHTTPContext(r.Context())
 
-	readLimiter := serverConfig.RateLimiters.GetUserReadLimiter(userSubdomain)
-	deviceLimiter := serverConfig.RateLimiters.GetDeviceReadLimiter(deviceName)
+	readLimiter := serverConfig.RateLimiters.UserGETLimiter(userSubdomain)
+	deviceLimiter := serverConfig.RateLimiters.DeviceGETLimiter(deviceName)
 
 	return AllowAll(readLimiter, deviceLimiter)
 }
 
-func UserWriteAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
 	deviceName := GetDeviceNameFromHTTPContext(r.Context())
 
-	writeLimiter := serverConfig.RateLimiters.GetUserWriteLimiter(userSubdomain)
-	deviceLimiter := serverConfig.RateLimiters.GetDeviceWriteLimiter(deviceName)
+	writeLimiter := serverConfig.RateLimiters.UserPOSTLimiter(userSubdomain)
+	deviceLimiter := serverConfig.RateLimiters.DevicePOSTLimiter(deviceName)
 
 	return AllowAll(writeLimiter, deviceLimiter)
 }

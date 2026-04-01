@@ -89,17 +89,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		acceptType := httputils.GetAcceptType(r)
 
-		switch acceptType {
-		case httputils.AcceptTypeHTMX, httputils.AcceptTypeHTML:
-			// Default set the cookie
-			config.Security.SetControlLoginCookie(w, tokenString, expiresAt)
-
-			fmt.Println("Login successful, redirecting to dashboard...")
-			w.Header().Set("HX-Redirect", "/")
-			w.WriteHeader(http.StatusOK)
-
-			return
-		default:
+		if acceptType.API() {
 			// Default to JSON because this is API first
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{
@@ -108,6 +98,14 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			})
 			return
 		}
+
+		// Default set the cookie
+		config.Security.SetControlLoginCookie(w, tokenString, expiresAt)
+
+		fmt.Println("Login successful, redirecting to dashboard...")
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
+
 	}
 }
 

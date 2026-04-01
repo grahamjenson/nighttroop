@@ -46,10 +46,12 @@ func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSub
 		return "", "", fmt.Errorf("subdomain mismatch")
 	}
 
+	// Constraint: Not allowed to use a user with TOTP with legacy token
 	if deviceTotpSecret != "" {
 		return "", "", fmt.Errorf("legacy token cannot be used for devices with TOTP enabled")
 	}
 
+	// Constraint: Not allowed to be admin and use legacy token
 	if deviceRole == consts.UserRoleAdmin.String() {
 		return "", "", fmt.Errorf("legacy token cannot be used for admin devices")
 	}
