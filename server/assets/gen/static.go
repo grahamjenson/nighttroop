@@ -3,7 +3,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"mime"
 	"os"
@@ -100,9 +99,23 @@ func getContentType(filename string) string {
 
 func main() {
 	var staticFiles utils.FlagFileList
-	flag.Var(&staticFiles, "file", "Static files to embed")
-
-	flag.Parse()
+	// loop over the folder ../static and add all files to the StaticFiles list
+	err := filepath.Walk("static", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			relativePath, err := filepath.Rel("static", path)
+			if err != nil {
+				return err
+			}
+			staticFiles = append(staticFiles, relativePath)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Failed to walk static directory: %v", err))
+	}
 
 	for _, file := range staticFiles {
 		if fileInfo, err := os.Stat("static/" + file); err != nil || fileInfo.IsDir() {
@@ -119,7 +132,7 @@ func main() {
 	f, _ := os.Create(outputPath)
 	defer f.Close()
 
-	err := t.Execute(f, cfg)
+	err = t.Execute(f, cfg)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to execute template: %v", err))
 	}

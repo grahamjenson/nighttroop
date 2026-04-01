@@ -15,6 +15,9 @@
 
     <!-- Bootstrap -->
     <link href="bootstrap.css" rel="stylesheet">
+    <script src="popper.min.js"></script>
+    <script src="bootstrap.js"></script>
+
     <script src="htmx.js"></script>
     <script src="htmx_response_targets.js"></script>
 
@@ -25,18 +28,48 @@
     {{ block "header" . }}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
         <div class="container">
-            <a class="navbar-brand text-uppercase" href="/">Nighttroop</a>
+            <a class="navbar-brand text-uppercase fw-bold" href="/">Nighttroop Control Plane</a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Settings</a></li>
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
-                        <form method="POST" action="/logout">
-                            <button type="submit" class="btn btn-outline-light btn-sm ms-lg-2">Logout</button>
-                        </form>
+                        <a class="nav-link active me-lg-3" href="#">Dashboard</a>
+                    </li>
+
+                    <!-- Profile Icon Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <!-- Generic Person Icon (SVG) -->
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                style="width: 35px; height: 35px;">
+                                <svg xmlns="http://w3.org" width="20" height="20" fill="white" class="bi bi-person-fill"
+                                    viewBox="0 0 16 16">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+                                </svg>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow"
+                            aria-labelledby="profileDropdown">
+                            <li>
+                                <h6 class="dropdown-header">Account Settings</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="#">Security</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="POST" action="/logout" class="px-3 py-1">
+                                    <button type="submit"
+                                        class="btn btn-danger btn-sm w-100 text-center">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>

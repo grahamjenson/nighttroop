@@ -37,7 +37,8 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := userTemplates.LoginHtml(w)
+		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+		err := userTemplates.LoginHtml(w, subdomain)
 		if err != nil {
 			http.Error(w, "Template Error", http.StatusInternalServerError)
 			return

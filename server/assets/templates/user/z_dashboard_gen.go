@@ -33,13 +33,13 @@ func getDashboardHtmlTemplate() (*template.Template, error) {
 	return DashboardHtmlTemplate, nil
 }
 
-func DashboardHtml(w io.Writer) error {
+func DashboardHtml(w io.Writer, Subdomain string) error {
 	tmpl, err := getDashboardHtmlTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)

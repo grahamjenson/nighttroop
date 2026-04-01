@@ -11,6 +11,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+//go:embed bootstrap.css
+var StaticBootstrapCss []byte
+var StaticBootstrapCssETag = generateETag([]byte(StaticBootstrapCss))
+
+//go:embed bootstrap.min.js
+var StaticBootstrapMinJs []byte
+var StaticBootstrapMinJsETag = generateETag([]byte(StaticBootstrapMinJs))
+
 //go:embed favicon.ico
 var StaticFaviconIco []byte
 var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
@@ -19,27 +27,49 @@ var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
 var StaticHtmxJs []byte
 var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
 
-//go:embed bootstrap.js
-var StaticBootstrapJs []byte
-var StaticBootstrapJsETag = generateETag([]byte(StaticBootstrapJs))
-
-//go:embed bootstrap.css
-var StaticBootstrapCss []byte
-var StaticBootstrapCssETag = generateETag([]byte(StaticBootstrapCss))
+//go:embed htmx_response_targets.js
+var StaticHtmxResponseTargetsJs []byte
+var StaticHtmxResponseTargetsJsETag = generateETag([]byte(StaticHtmxResponseTargetsJs))
 
 //go:embed logo.png
 var StaticLogoPng []byte
 var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 
-//go:embed htmx_response_targets.js
-var StaticHtmxResponseTargetsJs []byte
-var StaticHtmxResponseTargetsJsETag = generateETag([]byte(StaticHtmxResponseTargetsJs))
+//go:embed popper.min.js
+var StaticPopperMinJs []byte
+var StaticPopperMinJsETag = generateETag([]byte(StaticPopperMinJs))
 
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
 
+//go:embed z_static_gen.go
+var StaticZStaticGenGo []byte
+var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
+
 func AddSatticRoutes(r chi.Router) error {
+	r.Get("/bootstrap.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticBootstrapCssETag)
+
+		_, err := w.Write([]byte(StaticBootstrapCss))
+		if err != nil {
+			fmt.Printf("Failed to write response for bootstrap.css: %v\n", err)
+		}
+	})
+	r.Get("/bootstrap.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticBootstrapMinJsETag)
+
+		_, err := w.Write([]byte(StaticBootstrapMinJs))
+		if err != nil {
+			fmt.Printf("Failed to write response for bootstrap.min.js: %v\n", err)
+		}
+	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/x-icon")
 
@@ -62,26 +92,15 @@ func AddSatticRoutes(r chi.Router) error {
 			fmt.Printf("Failed to write response for htmx.js: %v\n", err)
 		}
 	})
-	r.Get("/bootstrap.js", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/htmx_response_targets.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticBootstrapJsETag)
+		w.Header().Set("ETag", StaticHtmxResponseTargetsJsETag)
 
-		_, err := w.Write([]byte(StaticBootstrapJs))
+		_, err := w.Write([]byte(StaticHtmxResponseTargetsJs))
 		if err != nil {
-			fmt.Printf("Failed to write response for bootstrap.js: %v\n", err)
-		}
-	})
-	r.Get("/bootstrap.css", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/css; charset=utf-8")
-
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticBootstrapCssETag)
-
-		_, err := w.Write([]byte(StaticBootstrapCss))
-		if err != nil {
-			fmt.Printf("Failed to write response for bootstrap.css: %v\n", err)
+			fmt.Printf("Failed to write response for htmx_response_targets.js: %v\n", err)
 		}
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
@@ -95,15 +114,15 @@ func AddSatticRoutes(r chi.Router) error {
 			fmt.Printf("Failed to write response for logo.png: %v\n", err)
 		}
 	})
-	r.Get("/htmx_response_targets.js", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/popper.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticHtmxResponseTargetsJsETag)
+		w.Header().Set("ETag", StaticPopperMinJsETag)
 
-		_, err := w.Write([]byte(StaticHtmxResponseTargetsJs))
+		_, err := w.Write([]byte(StaticPopperMinJs))
 		if err != nil {
-			fmt.Printf("Failed to write response for htmx_response_targets.js: %v\n", err)
+			fmt.Printf("Failed to write response for popper.min.js: %v\n", err)
 		}
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +134,17 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticRobotsTxt))
 		if err != nil {
 			fmt.Printf("Failed to write response for robots.txt: %v\n", err)
+		}
+	})
+	r.Get("/z_static_gen.go", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticZStaticGenGoETag)
+
+		_, err := w.Write([]byte(StaticZStaticGenGo))
+		if err != nil {
+			fmt.Printf("Failed to write response for z_static_gen.go: %v\n", err)
 		}
 	})
 

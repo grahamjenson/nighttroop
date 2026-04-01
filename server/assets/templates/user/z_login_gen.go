@@ -33,13 +33,13 @@ func getLoginHtmlTemplate() (*template.Template, error) {
 	return LoginHtmlTemplate, nil
 }
 
-func LoginHtml(w io.Writer) error {
+func LoginHtml(w io.Writer, Subdomain string) error {
 	tmpl, err := getLoginHtmlTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
