@@ -315,7 +315,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 	if model.Subdomain == "" {
 		return nil, nil, fmt.Errorf("user not found")
 	}
-	fmt.Println("Found User: ", model.Subdomain, model.LastSeenAt)
+
 	lastSeenMoreThan10MinutesAgo := model.LastSeenAt.Add(10 * time.Minute).After(time.Now())
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
 		db.UsersUpdateLastSeen.Exec(context.TODO(), subdomain)

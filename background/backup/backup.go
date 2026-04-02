@@ -4,6 +4,7 @@ package backup
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"sync"
 	"time"
@@ -72,14 +73,14 @@ func (b *BackupJobs) Start() {
 func (b *BackupJobs) BackupToS3() {
 	err := b.backupControl()
 	if err != nil {
-		fmt.Println("Backup error", "error", err)
+		slog.Error("Backup error", "error", err)
 	}
 
 	for _, char := range utils.USER_CHAR_SET {
 		err := b.BackupUserBatch(string(char))
 
 		if err != nil {
-			fmt.Println("Error backing up user batch", "error", err, "char", char)
+			slog.Error("Error backing up user batch", "error", err, "char", char)
 			continue
 		}
 	}
@@ -104,7 +105,7 @@ func (b *BackupJobs) controlBackupLoop() {
 		// Backup DB to S3
 		err := b.backupControl()
 		if err != nil {
-			fmt.Println("Backup error", "error", err)
+			slog.Error("Backup error", "error", err)
 		}
 
 	}
@@ -151,7 +152,7 @@ func (b *BackupJobs) userBackupLoop(interval time.Duration) {
 		err := b.BackupUserBatch(string(char))
 
 		if err != nil {
-			fmt.Println("Error backing up user batch", "error", err, "char", char)
+			slog.Error("Error backing up user batch", "error", err, "char", char)
 			continue
 		}
 
@@ -161,7 +162,7 @@ func (b *BackupJobs) userBackupLoop(interval time.Duration) {
 		if index == 0 {
 			err := b.ArchiveInactiveUsers()
 			if err != nil {
-				fmt.Println("Error archiving", "error", err, "char", char)
+				slog.Error("Error archiving inactive users", "error", err, "char", char)
 				continue
 			}
 		}

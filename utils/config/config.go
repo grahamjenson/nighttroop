@@ -152,7 +152,7 @@ func NewServerConfig() (ServerConfig, error) {
 
 	mode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
 
-	keySetsRaw := configStringSelect(dotenvdev, dotenv, "KEY_SETS", "")
+	keySetsRaw := configStringSelect(dotenvdev, dotenv, consts.KEY_SETS_ENV_KEY, "")
 	serverConfig.Security = security.NewSecurityConfig(keySetsRaw, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 
 	if len(dotenvdev) > 0 {

@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math"
 	"runtime"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 	defer utils.TrackTime(time.Now(), "TryRestoreAllFiles", nil, nil)
-	fmt.Println("TryRestoreAllFiles")
+	slog.Info("TryRestoreAllFiles")
 
 	err := TryDownloadExtractControlDbs(s3Client)
 	if err != nil {
@@ -48,7 +49,7 @@ func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
 
 	found, err := s3Client.DownloadFilesFromS3(s3Client.ControlS3Path(), utils.DB_FOLDER)
 	if !found && err == nil {
-		fmt.Println("No control db backup found")
+		slog.Info("No control db backup found")
 		return nil
 	}
 	// TODO: check to see the error is not a 404
@@ -66,7 +67,7 @@ func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
 	g.SetLimit(limit)
 
-	fmt.Println("TryDownloadExrtractUserDbs running", utils.USER_BATCH_LENGTH, limit)
+	slog.Info("TryDownloadExrtractUserDbs running", "user_batch_length", utils.USER_BATCH_LENGTH, "limit", limit)
 	for _, char := range utils.USER_CHAR_SET {
 		g.Go(func() error {
 			_, err := TryDownloadExrtractUserDbsForBatch(s3Client, string(char))
@@ -78,10 +79,10 @@ func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 	}
 
 	if err := g.Wait(); err != nil {
-		fmt.Printf("One of the TryDownloadExrtractUserDbs  tasks failed: %v\n", err)
+		slog.Error("One of the TryDownloadExrtractUserDbs tasks failed", "error", err)
 		return fmt.Errorf("cannot restore and open all users: %w", err)
 	} else {
-		fmt.Println("All TryDownloadExrtractUserDbs tasks succeeded!")
+		slog.Info("All TryDownloadExrtractUserDbs tasks succeeded!")
 	}
 
 	return nil

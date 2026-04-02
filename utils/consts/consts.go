@@ -54,3 +54,7 @@ func (r UserRole) String() string {
 }
 
 // TODO implement CanCan on the User and Control Roles
+
+/// Some reusable ENVARS
+
+const KEY_SETS_ENV_KEY = "KEY_SETS"

@@ -85,7 +85,7 @@ func run() error {
 	// Wait for signal.
 	<-ctx.Done()
 
-	fmt.Println("\nReceived signal, shutting down")
+	slog.Info("Received shutdown signal, shutting down gracefully...")
 
 	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
@@ -101,7 +101,7 @@ func run() error {
 
 	// Close control and User dbs
 	controlDB.Close()
-	fmt.Println("shut down")
+	slog.Info("Server shutdown complete")
 	return nil
 }
 

@@ -20,7 +20,7 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	}
 
 	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000", path, -cacheSize)
-	fmt.Println("Open", dsn)
+
 	sqldb, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)

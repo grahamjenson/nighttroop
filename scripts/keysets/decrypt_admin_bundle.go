@@ -7,17 +7,18 @@ import (
 	"log"
 	"os"
 
-	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 func main() {
 	// Create Empty Config and
-	configs := config.ServerConfig{}
-	// Create
-	err := configs.ConfigCreateEncryptionKeys(map[string]string{}, map[string]string{}) // This will create the keysets and store them in the config struct
-	if err != nil {
-		log.Fatal(fmt.Errorf("cannot create server config: %w", err))
+	keysetRaw, ok := os.LookupEnv(consts.KEY_SETS_ENV_KEY)
+	if !ok {
+		log.Fatal(fmt.Errorf("KEY_SETS not set in environment"))
 	}
+
+	configs := security.NewSecurityConfig(keysetRaw, consts.Production, "localhost", false) // This will create the keysets and store them in the config struct
 
 	val, ok := os.LookupEnv("ENCRYPTED_ADMIN_BUNDLE")
 	if !ok {
