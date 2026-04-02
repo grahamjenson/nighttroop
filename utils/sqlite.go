@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/mattn/go-sqlite3"
@@ -11,7 +12,7 @@ import (
 
 func SqliteBackup(ctx context.Context, db *sql.DB, path string, backupPath string) error {
 	defer TrackTime(time.Now(), "SqliteBackup "+path, nil, nil)
-	fmt.Println("SqliteBackup", path, backupPath)
+	slog.Info("Starting SqliteBackup", "path", path, "backupPath", backupPath)
 	err := MkParentDirs(backupPath)
 	if err != nil {
 		return fmt.Errorf("cannot create parent directories: %w", err)
@@ -38,20 +39,22 @@ func SqliteBackup(ctx context.Context, db *sql.DB, path string, backupPath strin
 	err = backupCon.Raw(func(backupConRaw any) error {
 		backupConSQLite, ok := backupConRaw.(*sqlite3.SQLiteConn)
 		if !ok {
-			fmt.Println("SqliteBackup err backupConSQLite", path, err)
+			slog.Error("Error getting SQLiteConn for backupConSQLite", "path", path, "error", err)
+
 			return fmt.Errorf("failed to get SQLiteConn backupConSQLite")
 		}
 		srcConn.Raw(func(srcConnRaw any) error {
 
 			srcConnSQLite, ok := srcConnRaw.(*sqlite3.SQLiteConn)
 			if !ok {
-				fmt.Println("SqliteBackup err srcConnSQLite", path, err)
+				slog.Error("Error getting SQLiteConn for srcConnSQLite", "path", path, "error", err)
+
 				return fmt.Errorf("failed to get SQLiteConn srcConnSQLite")
 			}
 
 			backup, err := backupConSQLite.Backup("main", srcConnSQLite, "main")
 			if err != nil {
-				fmt.Println("SqliteBackup err Backup", path, err)
+				slog.Error("Error creating backup", "path", path, "error", err)
 				return fmt.Errorf("cannot create backup no create: %w", err)
 			}
 
@@ -59,7 +62,7 @@ func SqliteBackup(ctx context.Context, db *sql.DB, path string, backupPath strin
 			_, err = backup.Step(-1)
 
 			if err != nil {
-				fmt.Println("SqliteBackup err 3", path, err)
+				slog.Error("Error stepping backup", "path", path, "error", err)
 				return fmt.Errorf("cannot create backup no step 1: %w", err)
 			}
 
@@ -68,7 +71,7 @@ func SqliteBackup(ctx context.Context, db *sql.DB, path string, backupPath strin
 		return nil
 	})
 	if err != nil {
-		fmt.Println("SqliteBackup Error on Raw", path, err)
+		slog.Error("SqliteBackup Error on Raw", "path", path, "error", err)
 		return fmt.Errorf("cannot backup db: %w", err)
 	}
 

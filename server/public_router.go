@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime"
 
@@ -16,6 +17,8 @@ import (
 
 func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
+	AddStandardMiddleware(r, config)
+
 	static.AddSatticRoutes(r)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +76,8 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Printf("Number of Users %d, Number of Routines %d\n", controlDB.GetNUsersDBs(), runtime.NumGoroutine())
+
+		slog.Info("Number of Users", "count", controlDB.GetNUsersDBs(), "routines", runtime.NumGoroutine())
 
 		if httputils.GetAcceptType(r).API() {
 			w.Header().Set("Content-Type", "application/json")

@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -56,7 +57,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticBootstrapCss))
 		if err != nil {
-			fmt.Printf("Failed to write response for bootstrap.css: %v\n", err)
+			slog.Error("Failed to write response for bootstrap.css", "error", err)
 		}
 	})
 	r.Get("/bootstrap.min.js", func(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticBootstrapMinJs))
 		if err != nil {
-			fmt.Printf("Failed to write response for bootstrap.min.js: %v\n", err)
+			slog.Error("Failed to write response for bootstrap.min.js", "error", err)
 		}
 	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +79,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticFaviconIco))
 		if err != nil {
-			fmt.Printf("Failed to write response for favicon.ico: %v\n", err)
+			slog.Error("Failed to write response for favicon.ico", "error", err)
 		}
 	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +90,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticHtmxJs))
 		if err != nil {
-			fmt.Printf("Failed to write response for htmx.js: %v\n", err)
+			slog.Error("Failed to write response for htmx.js", "error", err)
 		}
 	})
 	r.Get("/htmx_response_targets.js", func(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +101,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticHtmxResponseTargetsJs))
 		if err != nil {
-			fmt.Printf("Failed to write response for htmx_response_targets.js: %v\n", err)
+			slog.Error("Failed to write response for htmx_response_targets.js", "error", err)
 		}
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +112,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticLogoPng))
 		if err != nil {
-			fmt.Printf("Failed to write response for logo.png: %v\n", err)
+			slog.Error("Failed to write response for logo.png", "error", err)
 		}
 	})
 	r.Get("/popper.min.js", func(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +123,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticPopperMinJs))
 		if err != nil {
-			fmt.Printf("Failed to write response for popper.min.js: %v\n", err)
+			slog.Error("Failed to write response for popper.min.js", "error", err)
 		}
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +134,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticRobotsTxt))
 		if err != nil {
-			fmt.Printf("Failed to write response for robots.txt: %v\n", err)
+			slog.Error("Failed to write response for robots.txt", "error", err)
 		}
 	})
 	r.Get("/z_static_gen.go", func(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +145,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte(StaticZStaticGenGo))
 		if err != nil {
-			fmt.Printf("Failed to write response for z_static_gen.go: %v\n", err)
+			slog.Error("Failed to write response for z_static_gen.go", "error", err)
 		}
 	})
 

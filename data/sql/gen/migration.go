@@ -19,6 +19,7 @@ package migrations
 
 import (
 	"context"
+	"log/slog"
 	"database/sql"
 	"fmt"
 )
@@ -49,10 +50,11 @@ func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "{{$name}}")
+		slog.Info("Migration already applied, skipping", "migration", "{{$name}}")
+		
 		return nil
 	}
-	fmt.Printf("Migration %s applying\n", "{{$name}}")
+	slog.Info("Migration applying", "migration", "{{$name}}")
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -61,7 +63,7 @@ func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
 	defer tx.Rollback()
 		
 		{{- range $stmt := index $.MigrationStatements $index}}
-			fmt.Printf("Migrating: %s\n", ` + "`" + `{{$stmt.Header}}` + "`" + `)
+			slog.Info("Migrating", "statement", ` + "`" + `{{$stmt.Header}}` + "`" + `)
 			if _, err := tx.ExecContext(ctx, ` + "`" + `{{$stmt.Statement}}` + "`" + `); err != nil {
 				return err
 			}

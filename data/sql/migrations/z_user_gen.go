@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 )
 
 func MigrateUser(ctx context.Context, db *sql.DB) error {
@@ -27,17 +28,18 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "User0001Sql")
+		slog.Info("Migration already applied, skipping", "migration", "User0001Sql")
+
 		return nil
 	}
-	fmt.Printf("Migration %s applying\n", "User0001Sql")
+	slog.Info("Migration applying", "migration", "User0001Sql")
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE devices (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE devices (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE devices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -49,7 +51,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE sgvs (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE sgvs (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -59,7 +61,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE bolus (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE bolus (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -70,7 +72,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE "carbs" (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE "carbs" (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE "carbs" (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     amount REAL NOT NULL,
@@ -78,7 +80,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE tempbasal (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE tempbasal (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE tempbasal (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -89,7 +91,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE temptargets (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE temptargets (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE temptargets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -101,7 +103,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE events (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     TYPE TEXT,
@@ -114,7 +116,7 @@ endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE profile (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE profile (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -140,7 +142,7 @@ UNIQUE(eid)
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE devicestatus (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE devicestatus (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE devicestatus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp INTEGER NOT NULL,

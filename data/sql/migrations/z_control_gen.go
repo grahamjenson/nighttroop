@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 )
 
 func MigrateControl(ctx context.Context, db *sql.DB) error {
@@ -27,17 +28,18 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if versionSeen > 0 {
-		fmt.Printf("Migration %s already applied, skipping\n", "Control0001Sql")
+		slog.Info("Migration already applied, skipping", "migration", "Control0001Sql")
+
 		return nil
 	}
-	fmt.Printf("Migration %s applying\n", "Control0001Sql")
+	slog.Info("Migration applying", "migration", "Control0001Sql")
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE users (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE users (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT UNIQUE NOT NULL,
@@ -49,7 +51,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE admins (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE admins (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -61,7 +63,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	fmt.Printf("Migrating: %s\n", `CREATE TABLE events (`)
+	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     TYPE TEXT,

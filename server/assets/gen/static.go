@@ -19,6 +19,7 @@ package static
 import (
 	"fmt"
 	"net/http"
+	"log/slog"
 	"crypto/sha256"
 	"encoding/hex"
 	_ "embed"
@@ -46,7 +47,7 @@ func AddSatticRoutes(r chi.Router) error {
 
 		_, err := w.Write([]byte({{.VarName}}))
 		if err != nil {
-			fmt.Printf("Failed to write response for {{.FileName}}: %v\n", err)
+			slog.Error("Failed to write response for {{.FileName}}", "error", err)
 		}
 	})
 	{{- end}}

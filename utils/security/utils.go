@@ -2,7 +2,6 @@ package security
 
 import (
 	"crypto/rand"
-	"fmt"
 	"log"
 	"math/big"
 	badrand "math/rand"
@@ -36,7 +35,7 @@ func SecureRandomString(length int, charset string) string {
 	for i := 0; i < length; i++ {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
-			fmt.Println("Bad Secure Random Error: ", err)
+			log.Println("Error generating secure random number: ", err)
 			return InsecureRandomString(length, charset)
 		}
 		bytes[i] = charset[num.Int64()]

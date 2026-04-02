@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -114,6 +115,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			// Set proper cookie and redirect to dashboard
 			config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
+			slog.Info("User logged in", "device", device.Name, "role", device.Role)
 			w.Header().Set("HX-Redirect", "/")
 			w.WriteHeader(http.StatusOK)
 		}
@@ -170,7 +172,8 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		// Set proper cookie and redirect to dashboard
 		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
-		fmt.Println("TOTP verification successful, user logged in")
+		slog.Info("User logged in", "device", device.Name, "role", device.Role)
+
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
@@ -289,6 +292,8 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		genericLoginError(w, r, err)
 		return
 	}
+
+	slog.Info("User logged in", "device", device.Name, "role", device.Role)
 
 }
 

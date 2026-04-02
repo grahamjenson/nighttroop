@@ -3,7 +3,6 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"nighttroop.t1d.nz/data/db"
@@ -13,7 +12,7 @@ import (
 
 func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Render Dashboard")
+
 		w.Header().Set("Content-Type", "text/html")
 		err := controlTemplates.DashboardHtml(w)
 		if err != nil {

@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/utils"
@@ -49,9 +50,9 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 	for _, subdomain := range removeList {
 		err := b.controlDB.DeleteUser(subdomain)
 		if err != nil {
-			fmt.Printf("Failed to delete user %s: %v\n", subdomain, err)
+			slog.Error("Failed to delete user", "subdomain", subdomain, "error", err)
 		} else {
-			fmt.Printf("Deleted user %s\n", subdomain)
+			slog.Info("Deleted user", "subdomain", subdomain)
 		}
 	}
 
@@ -61,9 +62,9 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 
 		err := utils.DeleteFiles([]string{path, backupPath})
 		if err != nil {
-			fmt.Printf("Failed to delete user db files for %s: %v\n", subdomain, err)
+			slog.Error("Failed to delete user db files", "subdomain", subdomain, "error", err)
 		} else {
-			fmt.Printf("Deleted user db files for %s\n", subdomain)
+			slog.Info("Deleted user db files", "subdomain", subdomain)
 		}
 
 	}

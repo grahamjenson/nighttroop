@@ -184,7 +184,7 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 		return nil
 	}
 
-	fmt.Printf("Backing up user batch %s with %d users\n", char, len(users))
+	slog.Info("Backing up user batch", "char", char, "user_count", len(users))
 
 	paths := []string{}
 

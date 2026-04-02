@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -70,6 +71,9 @@ type ServerConfig struct {
 	// These keys are used to encrypt secrets in the DB and S3 at rest
 	// This has the option to add additional keys
 	Security *security.SecurityConfig
+
+	// Logging
+	Logger *slog.Logger
 }
 
 const USER_GET_LIMIT = 60
@@ -81,7 +85,7 @@ const USER_POST_LIMIT = 20
 // 3. .env.dev
 // 4. .env
 // 5. Default
-func NewServerConfig() (ServerConfig, error) {
+func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 
 	dotenvdev, err := readDotEnvFile(".env.dev")
 	if err != nil {
@@ -97,7 +101,8 @@ func NewServerConfig() (ServerConfig, error) {
 
 	// DEFAULTS
 	serverConfig := ServerConfig{
-		Mode: consts.Development,
+		Logger: logger,
+		Mode:   consts.Development,
 
 		// Host config
 		HostName:     configStringSelect(dotenvdev, dotenv, "HOST_NAME", "nt.local.t1d.nz"),
@@ -156,22 +161,24 @@ func NewServerConfig() (ServerConfig, error) {
 	serverConfig.Security = security.NewSecurityConfig(keySetsRaw, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 
 	if len(dotenvdev) > 0 {
-		fmt.Printf("Unknown .env.dev variables: ")
-		for k := range dotenvdev {
-			fmt.Printf("%s,", k)
-
-		}
-		fmt.Printf("\n")
+		slog.Error("Unknown .env.dev variables: ", "variables", func() []string {
+			var keys []string
+			for k := range dotenvdev {
+				keys = append(keys, k)
+			}
+			return keys
+		}())
 		return ServerConfig{}, fmt.Errorf("unknown .env.dev variables")
 	}
 
 	if len(dotenv) > 0 {
-		fmt.Printf("Unknown .env variables: ")
-		for k := range dotenv {
-			fmt.Printf("%s,", k)
-
-		}
-		fmt.Printf("\n")
+		slog.Error("Unknown .env variables: ", "variables", func() []string {
+			var keys []string
+			for k := range dotenv {
+				keys = append(keys, k)
+			}
+			return keys
+		}())
 		return ServerConfig{}, fmt.Errorf("unknown .env variables")
 	}
 
@@ -294,7 +301,7 @@ func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envV
 	if err == nil {
 		return intVal
 	} else {
-		fmt.Printf("Error parsing %s for %s: %s\n", returnval, envVar, err)
+		slog.Error("Error parsing %s for %s: %s", "returnval", returnval, "envVar", envVar, "error", err)
 	}
 
 	return intVal
@@ -332,18 +339,28 @@ func readDotEnvFile(filename string) (map[string]string, error) {
 
 func printServerConfig(config ServerConfig) {
 	// This is a concise printing of all non-secure information at startup
-	fmt.Printf("Server Config:\n")
-	fmt.Printf("Mode: %s\n", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test"}[config.Mode])
-	fmt.Printf("Host: %s://%s:%d\n", config.HostProtocol, config.HostName, config.HostPort)
-	fmt.Printf("S3: %s@%s/%s\n", config.S3AccessKeyID, config.S3URL, config.S3Bucket)
-	fmt.Printf("SQLite Path: %s\n", config.SqlitePath)
-	fmt.Printf("Global Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.GlobalRateLimit, config.GlobalRateLimit, config.GlobalRateBurst, config.GlobalRateBurst)
-	fmt.Printf("User Rate Limit r/w req/s: %d/%d burst %d/%d\n", config.UserGETPerMinuteLimit, config.UserPOSTPerMinuteLimit, config.UserGETPerMinuteBurst, config.UserPOSTPerMinuteBurst)
-	fmt.Printf("User Create Rate Limit req/s: %d burst %d\n", config.UserCreateGlobalPerMinuteLimit, config.UserCreateGlobalPerMinuteBurst)
-	fmt.Printf("User Create IP Rate Limit req/s: %d burst %d\n", config.UserCreateIPPerMinuteLimit, config.UserCreateIPPerMinuteBurst)
-
-	fmt.Printf("Max Users/Max Devices, User DB Size/Age (mins): %d / %d / %d / %d\n", config.MaxUsers, config.MaxDevicesPerUser, config.MaxUserDBSizeMB, config.MaxUserInactiveInMins)
-	fmt.Printf("Backup Interval (Control/Batch) in seconds: %d / %d\n", config.ControlBackupIntervalInSeconds, config.BatchBackupIntervalInSeconds)
+	slog.Info("Server Config",
+		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test"}[config.Mode],
+		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
+		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
+		"SQLitePath", config.SqlitePath,
+		"GlobalRateLimit r/s", config.GlobalRateLimit,
+		"GlobalRateBurst", config.GlobalRateBurst,
+		"UserGETPerMinuteLimit r/s", config.UserGETPerMinuteLimit,
+		"UserGETPerMinuteBurst", config.UserGETPerMinuteBurst,
+		"UserPOSTPerMinuteLimit r/s", config.UserPOSTPerMinuteLimit,
+		"UserPOSTPerMinuteBurst", config.UserPOSTPerMinuteBurst,
+		"UserCreateGlobalPerMinuteLimit r/s", config.UserCreateGlobalPerMinuteLimit,
+		"UserCreateGlobalPerMinuteBurst", config.UserCreateGlobalPerMinuteBurst,
+		"UserCreateIPPerMinuteLimit r/s", config.UserCreateIPPerMinuteLimit,
+		"UserCreateIPPerMinuteBurst", config.UserCreateIPPerMinuteBurst,
+		"MaxUsers", config.MaxUsers,
+		"MaxDevicesPerUser", config.MaxDevicesPerUser,
+		"MaxUserInactiveInMins", config.MaxUserInactiveInMins,
+		"MaxUserDBSizeMB", config.MaxUserDBSizeMB,
+		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
+		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
+	)
 }
 
 func (config *ServerConfig) IsHTTPS() bool {

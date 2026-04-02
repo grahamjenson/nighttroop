@@ -10,6 +10,9 @@ import (
 
 func NewControlRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
+	AddStandardMiddleware(r, config)
+
+
 	static.AddSatticRoutes(r)
 
 	r.Get("/login", control.GETLoginPageHandler())

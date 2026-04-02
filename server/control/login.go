@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -23,8 +24,6 @@ type LoginRequest struct {
 
 func POSTLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		fmt.Println("Render Logout")
 		config.Security.ClearControlLoginCookie(w)
 
 		// 3. Redirect the user to the login page
@@ -110,7 +109,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		// Default set the cookie
 		config.Security.SetControlLoginCookie(w, tokenString, expiresAt)
 
-		fmt.Println("Login successful, redirecting to dashboard...")
+		slog.Info("Admin logged in", "admin", admin.Name, "role", admin.Role)
 		w.Header().Set("HX-Redirect", "/")
 
 	}

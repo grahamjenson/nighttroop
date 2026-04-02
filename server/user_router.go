@@ -13,6 +13,8 @@ import (
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
+	AddStandardMiddleware(r, config)
+
 	r.Use(user.UserRateLimitMiddleware(config))
 
 	static.AddSatticRoutes(r)
@@ -30,8 +32,24 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 
 		r.Get("/", user.GetDashboardHandler(controlDB, config))
 		r.Post("/logout", user.POSTLogoutHandler(config))
+
+		//// TODO
+		// Get Devices probably with pagination returns htmx, include generated tokens and last seen
+		// Delete Device
+		// Change Device Passowrd, role TOTP
+		// Get Device Token
+
+		// Nightscout API endpoints which will be at maybe subdomain.ns.domain route to make sure there is no confict which will mean another router I think
+
 	})
 
-	r.Get("/ping", user.GETPingHandler())
+	return r
+}
+
+func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
+	r := chi.NewRouter()
+	AddStandardMiddleware(r, config)
+	r.Use(user.UserRateLimitMiddleware(config))
+	// Use middleware that allows legacy token auth
 	return r
 }

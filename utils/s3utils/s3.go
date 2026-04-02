@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
@@ -69,7 +69,7 @@ func NewS3Client(config config.ServerConfig) *S3Client {
 		HostName:        config.HostName,
 	}
 
-	fmt.Println("S3Client Being Created", c.Bucket, c.Region, c.Endpoint)
+	slog.Info("S3Client Being Created", "bucket", c.Bucket, "region", c.Region, "endpoint", c.Endpoint)
 
 	c.s3 = s3.NewFromConfig(aws.Config{Region: c.Region}, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(c.Endpoint)
@@ -157,10 +157,10 @@ func (c *S3Client) TestObjectPath() string {
 func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 	defer utils.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, nil)
 	if len(paths) == 0 {
-		fmt.Printf("No files to sync for %s\n", key)
+		slog.Error("No files to sync for %s", "key", key)
 		return nil
 	}
-	fmt.Printf("Syncing all files to single LZ4 %v\n", len(paths))
+	slog.Info("Syncing all files to single LZ4", "count", len(paths))
 	ctx := context.TODO()
 
 	// Creating the pipes
@@ -172,16 +172,15 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 		defer pw.Close()
 		err := c.createTarLZ4(paths, pw)
 		if err != nil {
-			fmt.Println("Error creating tar LZ4", err)
+			slog.Error("Error creating tar LZ4", "key", key, "error", err)
 			// Important: propagate error to the reader side
 			pw.CloseWithError(err)
 		}
 	}()
 
-	fmt.Println("Streaming to S3")
 	err := c.uploadStreamToS3(ctx, key, pr)
 	if err != nil {
-		fmt.Println("Ennot upload stream to s", err)
+		slog.Error("Error uploading stream to s3", "key", key, "error", err)
 		return fmt.Errorf("cannot upload stream to s3: %w", err)
 	}
 
@@ -197,7 +196,7 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 	})
 
 	if err != nil {
-		log.Printf("Failed to upload Stream: %v\n", err)
+		slog.Error("Failed to upload Stream", "key", key, "error", err)
 		return fmt.Errorf("failed to upload Stream: %w", err)
 	}
 
@@ -353,7 +352,7 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 				outFile.Close()
 				return fmt.Errorf("writing file: %w", err)
 			}
-			fmt.Println("Extraction of ", targetPath, " complete")
+			slog.Info("Extraction of file complete", "path", targetPath)
 			outFile.Close()
 
 			// Restore original file permissions
@@ -364,10 +363,10 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 				return fmt.Errorf("chtimes: %w", err)
 			}
 		default:
-			fmt.Printf("Skipping unsupported type: %v\n", header.Typeflag)
+			slog.Warn("Skipping unsupported type", "type", header.Typeflag)
 		}
 	}
 
-	fmt.Println("✅ Extraction complete")
+	slog.Info("Extraction complete")
 	return nil
 }

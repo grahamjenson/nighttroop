@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"strings"
 
@@ -48,7 +49,7 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 
 	}
 
-	fmt.Println("Successfully read encryption key sets from config")
+	slog.Info("Successfully read encryption key sets from config")
 
 	aeadTink, err := aead.New(encKetSet)
 	if err != nil {

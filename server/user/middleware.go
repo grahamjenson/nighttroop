@@ -89,7 +89,7 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 			/////
 			// Legacy slow annoying method of validating the token param
 			//// Last Chance
-
+			// TODO delete this from user router and only allow on Nightscout router
 			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)

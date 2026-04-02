@@ -3,9 +3,13 @@ package server
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
@@ -17,6 +21,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 	controlRouter := NewControlRouter(controlDB, config)
 	userRouter := NewUserRouter(controlDB, config)
 	public := NewPublicRouter(controlDB, config)
+	nightscoutRouter := NewNightscoutRouter(controlDB, config)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -42,7 +47,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 		subdomain, err := GetSubdomainFromHeader(r.Host, config.HostName)
 		ctx = httputils.SetSubdomainInHTTPContext(ctx, subdomain)
 		if err != nil {
-			fmt.Printf("Main router 404 for host header: %s, error: %v\n", r.Host, err)
+			slog.Error("Main router 404 for host header", "host", r.Host, "error", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -52,17 +57,27 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			controlRouter.ServeHTTP(w, r.WithContext(ctx))
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
 			public.ServeHTTP(w, r.WithContext(ctx))
+		case strings.HasSuffix(subdomain, ".ns"):
+			userSubdomain := strings.TrimSuffix(subdomain, ".ns")
+			// so <userid>.ns.domain routes to the nightscout compatible API
+			if utils.SyntacticallyValidateUserID(userSubdomain) && controlDB.UserExists(userSubdomain) {
+				// Reset subdomain without the .ns suffix
+				ctx = httputils.SetSubdomainInHTTPContext(ctx, userSubdomain)
+				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
+			} else {
+				slog.Error("Main router 404 for nightscout subdomain", "subdomain", subdomain)
+				http.NotFound(w, r)
+			}
 		case utils.SyntacticallyValidateUserID(subdomain):
-
 			// Check to see if in memory map
 			if controlDB.UserExists(subdomain) {
 				userRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
-				fmt.Printf("Main router 404 for subdomain: %s\n", subdomain)
+				slog.Error("Main router 404 for subdomain", "subdomain", subdomain)
 				http.NotFound(w, r)
 			}
 		default:
-			fmt.Printf("Main router 404 for subdomain: %s\n", subdomain)
+			slog.Error("Main router 404 for subdomain", "subdomain", subdomain)
 			http.NotFound(w, r)
 		}
 	})
@@ -111,4 +126,12 @@ func GetSubdomainFromHeader(host_header, hostname string) (string, error) {
 	}
 
 	return "", fmt.Errorf("unexpected error parsing host: %s", host) // This should never happen but just in case
+}
+
+func AddStandardMiddleware(router chi.Router, config config.ServerConfig) {
+	router.Use(middleware.RequestID)
+	router.Use(httputils.NewLogger(config.Logger))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
+	router.Use(middleware.Timeout(30 * time.Second))
 }
