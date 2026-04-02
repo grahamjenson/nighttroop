@@ -39,8 +39,6 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 		// Change Device Passowrd, role TOTP
 		// Get Device Token
 
-		// Nightscout API endpoints which will be at maybe subdomain.ns.domain route to make sure there is no confict which will mean another router I think
-
 	})
 
 	return r
@@ -51,5 +49,10 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	AddStandardMiddleware(r, config)
 	r.Use(user.UserRateLimitMiddleware(config))
 	// Use middleware that allows legacy token auth
+
+	// TODO
+	// Nightscout API endpoints routed from subdomain.ns.domain
+	// This is API only, and should be exaclty the same as Nightscout API including auth
+
 	return r
 }
