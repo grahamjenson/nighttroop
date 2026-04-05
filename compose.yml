@@ -18,7 +18,8 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "sleep 2; /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin; /usr/bin/mc rb --force myminio/mybucket; /usr/bin/mc mb myminio/mybucket; exit 0; "
+      /bin/sh -c "sleep 2; /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin; /usr/bin/mc rb --force myminio/mybucket; /usr/bin/mc mb myminio/mybucket"
+
 
 volumes:
   minio-data:

@@ -312,7 +312,8 @@ func readDotEnvFile(filename string) (map[string]string, error) {
 
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		slog.Warn(fmt.Sprintf("Could not open ENV file: %s", filename), "error", err)
+		return envMap, nil
 	}
 	defer file.Close()
 

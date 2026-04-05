@@ -23,35 +23,39 @@ so you can fill out your dexcom username/password +
 
 # Testing locally
 
-```
-docker run -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"
-```
-
-Then
+Docker runs our local test s3 server `minio`
 
 ```
-go run main.go --dev
+brew install docker colima docker-compose
+colima start
+docker-compose up
 ```
 
+```
+go run main.go
+```
+
+Then go to `localhost:8080` and create a user, `control.localhost:8080` and login as control.
+In Development all initial passwords are `password` and all TOTP is `123123`
 
 
-
-# Goals:
-1. 
-
+# TODO:
+1. Login Counter ratelimiter per IP and per username
+1. NS endpoints
+1. Dashboard/Profile/Security endpoints/pages for control and user
+1. Sentry integration with errors/logs/metrics
+1. Translations
+1. app for multiple people at a time
 
 The goal is to make an app for diabetes camps that can add all the kids and see their numbers and show alarms/highlight issues.
 
 
 
 
-
+# Syncing
 Each request set the `to-be-synced` to be `true`;
-
 Write an infinite go routine per user every 30 seconds checks `to-be-synced` and will fetch data if `true`.
 
-
-Write an app, let it take a name and a picture, add a user. Then call the service create a user
 
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
