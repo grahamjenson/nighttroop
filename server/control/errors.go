@@ -10,4 +10,5 @@ func genericLoginError(w http.ResponseWriter, r *http.Request, err error, args .
 	allArgs := append([]any{"error", err}, args...)
 	slog.Info("Control User Login Failed", allArgs...)
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+
 }

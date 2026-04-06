@@ -44,6 +44,9 @@ type ServerConfig struct {
 	GlobalIPPerMinuteLimit int
 	GlobalIPPerMinuteBurst int
 
+	UserLoginPerMinuteLimit int
+	UserLoginPerMinuteBurst int
+
 	// Authenticated Rate Limits
 	UserGETPerMinuteLimit  int
 	UserGETPerMinuteBurst  int
@@ -128,6 +131,9 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		GlobalRateBurst:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_BURST", 100000),
 		GlobalIPPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", 100), // Stop DOS
 		GlobalIPPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_BURST", 200),
+
+		UserLoginPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
+		UserLoginPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_BURST", 10),
 
 		// User Create Rate Limits
 		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 20),

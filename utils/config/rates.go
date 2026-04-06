@@ -1,6 +1,8 @@
 package config
 
 import (
+	"math"
+
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
 )
@@ -10,6 +12,9 @@ import (
 // TODO: find out if this needs optimisation
 type RateLimiters struct {
 	serverConfig ServerConfig
+
+	userLoginRateLimiters *lru.Cache[string, *rate.Limiter]
+	ipLoginRateLimiters   *lru.Cache[string, *rate.Limiter]
 
 	deviceGETRateLimiters *lru.Cache[string, *rate.Limiter]
 	userGETRateLimiters   *lru.Cache[string, *rate.Limiter]
@@ -31,6 +36,9 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 	// We are using the hashicorp LRU to make sure that we dont run out of memory if all users with all devices are hitting us always
 	return &RateLimiters{
 		serverConfig: config,
+
+		userLoginRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
+		ipLoginRateLimiters:   lruMust(maxUsers * maxDevices * wiggle * 2),
 
 		deviceGETRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
 		userGETRateLimiters:   lruMust(maxUsers * wiggle),
@@ -94,4 +102,18 @@ func (r *RateLimiters) UserGETLimiter(userId string) *rate.Limiter {
 func (r *RateLimiters) UserPOSTLimiter(userId string) *rate.Limiter {
 
 	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userId, r.serverConfig.UserPOSTPerMinuteLimit, r.serverConfig.UserPOSTPerMinuteBurst)
+}
+
+func (r *RateLimiters) UserLoginAllow(userID string, ip string) (bool, int) {
+	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, userID, r.serverConfig.UserLoginPerMinuteLimit, r.serverConfig.UserLoginPerMinuteBurst)
+	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, r.serverConfig.UserLoginPerMinuteLimit, r.serverConfig.UserLoginPerMinuteBurst)
+
+	// Calculate tokens remaining
+	userTokens := userLimiter.Tokens()
+	ipTokens := ipLimiter.Tokens()
+
+	// The effective remaining attempts is the minimum of user and IP limits
+	remaining := int(math.Min(userTokens, ipTokens))
+
+	return userLimiter.Allow() && ipLimiter.Allow(), remaining
 }

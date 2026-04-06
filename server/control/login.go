@@ -66,6 +66,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 				genericLoginError(w, r, fmt.Errorf("Invalid JSON payload: %w", err))
 				return
 			}
+
 			username = creds.Name
 			password = creds.Password
 			totpToken = creds.TOTP
@@ -81,6 +82,12 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			totpToken = r.FormValue("totp")
 		default:
 			genericLoginError(w, r, fmt.Errorf("Unsupported Content-Type: %s", contentType))
+			return
+		}
+
+		allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", "control", username), r.RemoteAddr)
+		if !allowedToAttempt {
+			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return
 		}
 
