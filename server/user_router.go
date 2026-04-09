@@ -27,8 +27,8 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 
 	r.Group(func(r chi.Router) {
 		// Checks read and write rates and makes sure not over limit
-		r.Use(user.JWTPlusTokenAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
-		r.Use(user.UserDBMiddleware(controlDB))                   // Adds User DB and model to the context
+		r.Use(user.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
+		r.Use(user.UserDBMiddleware(controlDB))          // Adds User DB and model to the context
 
 		r.Get("/", user.GetDashboardHandler(controlDB, config))
 		r.Post("/logout", user.POSTLogoutHandler(config))
@@ -48,11 +48,85 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	r := chi.NewRouter()
 	AddStandardMiddleware(r, config)
 	r.Use(user.UserRateLimitMiddleware(config))
-	// Use middleware that allows legacy token auth
+	// No unauthed endpoints in Nightscout
+	// It is encouraged that users update their auth to JWT tokens for speed and security though
+	r.Use(user.NightscoutAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
 
-	// TODO
-	// Nightscout API endpoints routed from subdomain.ns.domain
-	// This is API only, and should be exaclty the same as Nightscout API including auth
+	// Versioned APIs
+	r.Mount("/api/v1", v1Routes())
+	r.Mount("/api/v2", v2Routes())
+	r.Mount("/api/v3", v3Routes())
+
+	return r
+}
+
+func v1Routes() chi.Router {
+	r := chi.NewRouter()
+
+	// ---- ENTRIES (sgv) ----
+	r.Route("/entries", func(r chi.Router) {
+		r.Get("/", user.NSGetEntries)
+		r.Get(".json", user.NSGetEntries)
+
+		r.Post("/", user.NSCreateEntry)
+		r.Post(".json", user.NSCreateEntry)
+	})
+
+	// ---- TREATMENTS ----
+	r.Route("/treatments", func(r chi.Router) {
+		r.Get("/", user.NSGetTreatments)
+		r.Get(".json", user.NSGetTreatments)
+
+		r.Post("/", user.NSCreateTreatment)
+		r.Post(".json", user.NSCreateTreatment)
+
+	})
+
+	// ---- DEVICE STATUS ----
+	r.Route("/devicestatus", func(r chi.Router) {
+		r.Get("/", user.NSGetDeviceStatus)
+		r.Post("/", user.NSCreateDeviceStatus)
+	})
+
+	// ---- PROFILE ----
+	r.Route("/profile", func(r chi.Router) {
+		r.Get("/", user.NSGetProfiles)
+		r.Post("/", user.NSCreateProfile)
+	})
+
+	return r
+}
+
+func v2Routes() chi.Router {
+	r := chi.NewRouter()
+
+	// Entries
+	r.Route("/properties", func(r chi.Router) {
+		r.Get("/", user.NSGetProperties)
+
+	})
+
+	// TODO token=$token is not a param
+	r.Route("/authorization/request", func(r chi.Router) {
+		r.Get("/", user.NSGetNightscoutJWTToken)
+		r.Post("/", user.NSGetNightscoutJWTToken)
+	})
+
+	return r
+}
+
+func v3Routes() chi.Router {
+	r := chi.NewRouter()
+
+	// Entries (sgv)
+	r.Route("/entries", func(r chi.Router) {
+		r.Get("/", user.NSGetEntries)
+	})
+
+	// Treatments
+	r.Route("/treatments", func(r chi.Router) {
+		r.Get("/", user.NSGetTreatments)
+	})
 
 	return r
 }

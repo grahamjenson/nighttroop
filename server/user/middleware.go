@@ -60,37 +60,13 @@ func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
 // 1. API: JWT token as Authorization header (for API requests)
 // 2. API: (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
 // 3. BROWSER: Cookie with JWT token (we are not supporting token in URL that is a bad idea)
-func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
+func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			acceptType := httputils.GetAcceptType(r)
 
-			deviceName, deviceRole, keepGoing, err := tryLoginWithJWTToken(cfg, r)
-			if err == nil {
-				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-
-			// If the JWT token is present but incorrect we need to stop
-			if !keepGoing {
-				if acceptType.API() {
-					genericLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
-					return
-				} else {
-					w.Header().Set("HX-Redirect", "/login")
-					http.Redirect(w, r, "/login", http.StatusSeeOther)
-				}
-				return
-			}
-
-			/////
-			// Legacy slow annoying method of validating the token param
-			//// Last Chance
-			// TODO delete this from user router and only allow on Nightscout router
-			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
+			deviceName, deviceRole, _, err := tryLoginWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
 				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
@@ -99,12 +75,13 @@ func JWTPlusTokenAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig
 			}
 
 			if acceptType.API() {
-				genericLoginError(w, r, fmt.Errorf("Unauthorized: No valid authentication method found"))
+				genericLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
 				return
 			} else {
 				w.Header().Set("HX-Redirect", "/login")
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			}
+
 		})
 	}
 }
@@ -138,6 +115,39 @@ func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 	}
 
 	return "", "", true, fmt.Errorf("No JWT token found")
+}
+
+func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			deviceName, deviceRole, keepGoing, err := tryLoginWithJWTToken(cfg, r)
+			if err == nil {
+				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			// If the JWT token is present but incorrect we need to stop
+			if !keepGoing {
+				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
+				return
+			}
+
+			// Last Chance
+			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
+			if err == nil {
+				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
+		})
+	}
 }
 
 func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, error) {
