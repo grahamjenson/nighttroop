@@ -3,17 +3,51 @@ package sync
 
 import (
 	"context"
+	"log/slog"
 	"sync"
+	"time"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 )
+
+// The big problem with this is since the user defines their own nightscout they could have a slow site which holds everything up.
+// So we add all users to the sync, but dedupe (TODO) the users that are being slow.
+// Each job also has a timeout, which will prevent a single user from holding up lots of the sync jobs.
+// An attack on the server would be to create a bunch of users that each just timeout the sync jobs slowing everything to a crawl
+// I think the only way to prevent that would be to label servers as bad after a few timeouts and also listing successes.
+// Also since a user can put in their own nightscout URL, another attack would be a user making a bunch of uses pointing at the same site to slowly DDOS another nightscout (or random site).
+// DexCom is a bit easier as the URLs are fixed, custom nightscout needs more security. Definitly log and warn users and throttle users as well.
+
+// The primary way to stop abuse is to rate limit any syncing activity, until it essentially tries once every day.
+// The rules to stop this (in order of checking):
+// Static Checks we can make:
+// 1. User can only sync if recently active (last hour)
+// 2. URL:
+//     a. Must not be from this host.
+//     b. The server is not nighttroop instance (we can check that with token format)
+//
+// Checks of call metadata:
+// 1. Return must be a 200
+// 2. Return must be within a time limit (like 5 seconds)
+//
+// Checks of returned data:
+// 1. Data must be in a strictly valid format (otherwise ignore it and delay syncing)
+// 2. Some new data must be present. If nothing is new then double the sync time
+//
+// Post reporting for control to consider blocking:
+// 1. Slow or repeated URLS
+// 2. total failures
+// All delays are on the user, even if the user is syncing from multiple sources
 
 type SyncJobs struct {
 	controlDB *db.ControlDB
 	ctx       context.Context
 	cancel    func()
 	wg        sync.WaitGroup
+	interval  time.Duration
+
+	jobCh chan *db.UserDB
 }
 
 // Background Jobs
@@ -22,16 +56,73 @@ func SetupSyncJobs(config config.ServerConfig, controlDB *db.ControlDB) *SyncJob
 
 	jobs := &SyncJobs{
 		controlDB: controlDB,
+		interval:  time.Duration(30 * time.Second),
+		jobCh:     make(chan *db.UserDB, 100),
 	}
 
 	jobs.ctx, jobs.cancel = context.WithCancel(context.Background())
+
+	for i := 0; i < 100; i++ {
+		jobs.wg.Add(1)
+		go jobs.worker(i)
+	}
 
 	return jobs
 }
 
 func (b *SyncJobs) Start() {
-	// Start backup Jobs
-	// TODO sync jobs and all that stuff
+	syncTicker := time.NewTicker(b.interval)
+	defer syncTicker.Stop()
+
+	b.wg.Add(1)
+	go b.scheduler()
+}
+
+func (b *SyncJobs) scheduler() {
+	defer b.wg.Done()
+
+	syncTicker := time.NewTicker(b.interval)
+	defer syncTicker.Stop()
+
+	for {
+		select {
+		case <-b.ctx.Done():
+			return
+
+		case <-syncTicker.C:
+			users := b.controlDB.AllUsers()
+			// Need to get the user from the DB as well because we need to check last active time (caching in memory would cause a stampede of
+			for _, userDB := range users {
+
+				// Non-blocking submit (prevents deadlock if full)
+				select {
+				case b.jobCh <- userDB:
+				case <-b.ctx.Done():
+					return
+				}
+			}
+		}
+	}
+}
+
+func (b *SyncJobs) worker(id int) {
+	defer b.wg.Done()
+
+	for {
+		select {
+		case <-b.ctx.Done():
+			return
+
+		case userDB := <-b.jobCh:
+			slog.Info("starting sync", "worker_id", id, "subdomain", userDB.Subdomain)
+			SyncUserData(userDB)
+		}
+	}
+}
+
+func SyncUserData(userDB *db.UserDB) {
+	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
+	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
 func (b *SyncJobs) Stop() {

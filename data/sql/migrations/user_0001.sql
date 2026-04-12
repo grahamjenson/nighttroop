@@ -1,4 +1,6 @@
--- DEVICES TABLE is used to login and interact with the API.
+---------------------------------------------------
+-- TABLES FOR USING NIGHTTROOP
+---------------------------------------------------
 CREATE TABLE devices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -9,13 +11,56 @@ CREATE TABLE devices (
     last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- This reports device status above
+CREATE TABLE devicestatus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp INTEGER NOT NULL,
+    device INTEGER FOREIGN KEY REFERENCES devices(id),
+    deviceBattery INTEGER,
+    pumpBattery INTEGER,
+    pumpStatus TEXT,
+    pumpReservoir REAL,
+    loopStatus TEXT,
+    loopTimestamp INTEGER,
+    created_at INTEGER DEFAULT (unixepoch())
+);
+
+-- Data souces like dexcom/nightscout (only one per type), has real deletes for saftey
+CREATE TABLE data_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- Nightscout/Dexcom/Device (Device being a default one, which can be referenced from device)
+    type TEXT UNIQUE NOT NULL,
+    url TEXT NOT NULL,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
+    last_attempted_sync INTEGER,
+    last_successful_sync INTEGER,
+    consecutive_failed_syncs INTEGER DEFAULT 0,
+    total_failed_syncs INTEGER,
+    previous_sync_error TEXT -- stored to show to user as feedback
+
+);
+
+---------------------------------------------------
+-- TABLES ABOUT PATIENT DATA
+---------------------------------------------------
+
 CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    -- External ID if synced from another source
-    eid TEXT,
+    -- The id used extenally to this system (like remote NS id, dexcom id) maybe preceeded by the source like (dexcom-123) to make unique
+    eid TEXT, 
+
+    created_by_type TEXT, -- "device", "data_source"
+    created_by_id INTEGER, -- id of either device or data_source that created this entry
+    
+    
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value INTEGER,
     timestamp INTEGER,
+
     -- CONTRAINTS
     UNIQUE(eid)
 );
@@ -30,7 +75,7 @@ CREATE TABLE bolus (
     UNIQUE(eid)
 );
 
-CREATE TABLE "carbs" (
+CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     amount REAL NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -57,17 +102,7 @@ CREATE TABLE temptargets (
     UNIQUE(eid)
 );
 
-CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
-    details TEXT,
-    START INTEGER,
-    END INTEGER,
--- VIRTUAL
-timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
-);
+
 
 CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,15 +131,32 @@ targets_json TEXT, -- { [high, low] }
 UNIQUE(eid)
 );
 
-CREATE TABLE devicestatus (
+
+
+---------------------------------------------------
+-- LOGS
+-- hooks into the slog logging system and writes certain events here 
+---------------------------------------------------
+
+
+CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp INTEGER NOT NULL,
-    device TEXT,
-    uploaderBattery INTEGER,
-    pumpBattery INTEGER,
-    pumpStatus TEXT,
-    pumpReservoir REAL,
-    loopStatus TEXT,
-    loopTimestamp INTEGER,
-    created_at INTEGER DEFAULT (unixepoch())
+     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
+     value REAL,
+     TYPE TEXT,
+     timestamp INTEGER,
+    -- CONTRAINTS
+    UNIQUE(eid)
+);
+
+CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    TYPE TEXT,
+    details TEXT,
+    START INTEGER,
+    END INTEGER,
+-- VIRTUAL
+timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
 );

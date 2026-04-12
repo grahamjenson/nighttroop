@@ -38,7 +38,8 @@ func (r ControlRole) String() string {
 type UserRole int
 
 const (
-	UserRoleAdmin UserRole = iota
+	UserRoleAdmin    UserRole = iota
+	UserRolePWDPhone          // PWD (person with diabetes) phone that controls pump/cgm...
 	UserRoleRead
 )
 
@@ -46,6 +47,8 @@ func (r UserRole) String() string {
 	switch r {
 	case UserRoleAdmin:
 		return "admin"
+	case UserRolePWDPhone:
+		return "pwd_phone"
 	case UserRoleRead:
 		return "read"
 	default:

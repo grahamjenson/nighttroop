@@ -1,10 +1,9 @@
 # TODO
 
-1. JWT implementation middleware for both control and user
 2. Nightscout reimplementation routes
 3. make sure tink is thread safe
-4. Write the nightscout basic endpoints.
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
+1. Write data sync logic and protections, punishing bad servers...
 6. Have a property per user of `to-be-synced`. 
 
 # NightTroop
