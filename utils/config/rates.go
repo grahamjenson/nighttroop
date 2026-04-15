@@ -64,17 +64,17 @@ func lruMust(maxEntries int) *lru.Cache[string, *rate.Limiter] {
 	return cache
 }
 
-func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, rps int, burst int) *rate.Limiter {
+func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, rps float64, burst int) *rate.Limiter {
 	limiter, exists := limiters.Get(key)
 	if !exists {
-		limiter = rate.NewLimiter(rate.Limit(float64(rps)/60.0), burst)
+		limiter = rate.NewLimiter(rate.Limit(rps/60.0), burst)
 		limiters.Add(key, limiter)
 	}
 	return limiter
 }
 
 func (r *RateLimiters) GetGlobalIPRateLimiter(ipAddress string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipAddress, r.serverConfig.GlobalIPPerMinuteLimit, r.serverConfig.GlobalIPPerMinuteBurst)
+	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipAddress, float64(r.serverConfig.GlobalIPPerMinuteLimit), r.serverConfig.GlobalIPPerMinuteBurst)
 }
 
 func (r *RateLimiters) GetUserCreateIPRateLimiter(ipAddress string) *rate.Limiter {
@@ -86,27 +86,27 @@ func (r *RateLimiters) GetUserCreateIPRateLimiter(ipAddress string) *rate.Limite
 // //
 
 func (r *RateLimiters) DeviceGETLimiter(deviceID string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.deviceGETRateLimiters, deviceID, r.serverConfig.UserGETPerMinuteLimit, r.serverConfig.UserGETPerMinuteBurst)
+	return r.getOrCreateLimiter(r.deviceGETRateLimiters, deviceID, float64(r.serverConfig.UserGETPerMinuteLimit), r.serverConfig.UserGETPerMinuteBurst)
 }
 
 func (r *RateLimiters) DevicePOSTLimiter(deviceID string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.devicePOSTRateLimiters, deviceID, r.serverConfig.UserPOSTPerMinuteLimit, r.serverConfig.UserPOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.devicePOSTRateLimiters, deviceID, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
 }
 
 func (r *RateLimiters) UserGETLimiter(userId string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.userGETRateLimiters, userId, r.serverConfig.UserGETPerMinuteLimit, r.serverConfig.UserGETPerMinuteBurst)
+	return r.getOrCreateLimiter(r.userGETRateLimiters, userId, float64(r.serverConfig.UserGETPerMinuteLimit), r.serverConfig.UserGETPerMinuteBurst)
 }
 
 func (r *RateLimiters) UserPOSTLimiter(userId string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userId, r.serverConfig.UserPOSTPerMinuteLimit, r.serverConfig.UserPOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userId, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
 }
 
 func (r *RateLimiters) UserLoginAllow(userID string, ip string) (bool, int) {
-	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, userID, r.serverConfig.UserLoginPerMinuteLimit, r.serverConfig.UserLoginPerMinuteBurst)
-	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, r.serverConfig.UserLoginPerMinuteLimit, r.serverConfig.UserLoginPerMinuteBurst)
+	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, userID, float64(r.serverConfig.UserLoginPerMinuteLimit), r.serverConfig.UserLoginPerMinuteBurst)
+	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, float64(r.serverConfig.UserLoginPerMinuteLimit), r.serverConfig.UserLoginPerMinuteBurst)
 
 	// Calculate tokens remaining
 	userTokens := userLimiter.Tokens()

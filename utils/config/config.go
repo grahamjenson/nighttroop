@@ -56,7 +56,7 @@ type ServerConfig struct {
 	// User Create Rate Limits
 	UserCreateGlobalPerMinuteLimit int
 	UserCreateGlobalPerMinuteBurst int
-	UserCreateIPPerMinuteLimit     int
+	UserCreateIPPerMinuteLimit     float64
 	UserCreateIPPerMinuteBurst     int
 
 	// User Limits
@@ -138,7 +138,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		// User Create Rate Limits
 		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 20),
 		UserCreateGlobalPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
-		UserCreateIPPerMinuteLimit:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_LIMIT", 1),
+		UserCreateIPPerMinuteLimit:     configFloatSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_LIMIT", 0.1), // 1 event every 10 minutes
 		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
 
 		// Authed User Rate Limits
@@ -311,6 +311,34 @@ func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envV
 	}
 
 	return intVal
+}
+
+func configFloatSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue float64) float64 {
+
+	returnval := fmt.Sprintf("%d", defaultValue)
+
+	if val, ok := dotenv[envVar]; ok {
+		returnval = val
+		delete(dotenv, envVar) // delete so we can find unknown keys later
+	}
+
+	if val, ok := dotenvdev[envVar]; ok {
+		returnval = val
+		delete(dotenvdev, envVar) // delete so we can find unknown keys later
+	}
+
+	if val, ok := os.LookupEnv(envVar); ok {
+		returnval = val
+	}
+
+	floatVal, err := strconv.ParseFloat(returnval, 64)
+	if err == nil {
+		return floatVal
+	} else {
+		slog.Error("Error parsing %s for %s: %s", "returnval", returnval, "envVar", envVar, "error", err)
+	}
+
+	return floatVal
 }
 
 func readDotEnvFile(filename string) (map[string]string, error) {
