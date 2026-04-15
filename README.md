@@ -1,10 +1,12 @@
 # TODO
 
+1. Delete user after 30 mins if the user has not logged in 
+1. Delete user after 2 days if no data has been written FOR THE FIRST TIME -- no archive.
+1. Do math on user creation and destruction make sure that someone clicking the button doesnt kill everything
 2. Nightscout reimplementation routes
 3. make sure tink is thread safe
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
 1. Write data sync logic and protections, punishing bad servers...
-6. Have a property per user of `to-be-synced`. 
 
 # NightTroop
 
