@@ -20,6 +20,10 @@ var StaticBootstrapCssETag = generateETag([]byte(StaticBootstrapCss))
 var StaticBootstrapMinJs []byte
 var StaticBootstrapMinJsETag = generateETag([]byte(StaticBootstrapMinJs))
 
+//go:embed d3.js
+var StaticD3Js []byte
+var StaticD3JsETag = generateETag([]byte(StaticD3Js))
+
 //go:embed favicon.ico
 var StaticFaviconIco []byte
 var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
@@ -69,6 +73,17 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticBootstrapMinJs))
 		if err != nil {
 			slog.Error("Failed to write response for bootstrap.min.js", "error", err)
+		}
+	})
+	r.Get("/d3.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticD3JsETag)
+
+		_, err := w.Write([]byte(StaticD3Js))
+		if err != nil {
+			slog.Error("Failed to write response for d3.js", "error", err)
 		}
 	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {

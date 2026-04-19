@@ -12,7 +12,6 @@ func NewControlRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.R
 	r := chi.NewRouter()
 	AddStandardMiddleware(r, config)
 
-
 	static.AddSatticRoutes(r)
 
 	r.Get("/login", control.GETLoginPageHandler())
@@ -23,6 +22,15 @@ func NewControlRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.R
 		r.Use(control.JWTAuthMiddleware(controlDB, config))
 		r.Get("/", control.GetDashboardHandler(controlDB, config))
 		r.Post("/logout", control.POSTLogoutHandler(config))
+
+		//// TODO
+		// Get Users probably with pagination returns htmx
+		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes
+		// Get Admin Users
+		// Reset Admin User Password (cannot do currently logged in user)
+		// Reset Admin User TOTP (cannot do currently logged in user)
+		// Change role of user (admin, user, read only)
+		// Delete User (cannot delete currently logged in user)
 	})
 	return r
 }

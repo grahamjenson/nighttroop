@@ -51,10 +51,43 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	slog.Info("Migrating", "statement", `CREATE TABLE devicestatus (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE devicestatus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp INTEGER NOT NULL,
+    device INTEGER FOREIGN KEY REFERENCES devices(id),
+    deviceBattery INTEGER,
+    pumpBattery INTEGER,
+    pumpStatus TEXT,
+    pumpReservoir REAL,
+    loopStatus TEXT,
+    loopTimestamp INTEGER,
+    created_at INTEGER DEFAULT (unixepoch())
+)`); err != nil {
+		return err
+	}
+	slog.Info("Migrating", "statement", `CREATE TABLE data_sources (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE data_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT UNIQUE NOT NULL,
+    url TEXT NOT NULL,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_attempted_sync INTEGER,
+    last_successful_sync INTEGER,
+    consecutive_failed_syncs INTEGER DEFAULT 0,
+    total_failed_syncs INTEGER,
+    previous_sync_error TEXT -- stored to show to user as feedback
+)`); err != nil {
+		return err
+	}
 	slog.Info("Migrating", "statement", `CREATE TABLE sgvs (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT,
+    eid TEXT, 
+    created_by_type TEXT, -- "device", "data_source"
+    created_by_id INTEGER, -- id of either device or data_source that created this entry
     value INTEGER,
     timestamp INTEGER,
     UNIQUE(eid)
@@ -72,8 +105,8 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	slog.Info("Migrating", "statement", `CREATE TABLE "carbs" (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE "carbs" (
+	slog.Info("Migrating", "statement", `CREATE TABLE carbs (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     amount REAL NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -103,19 +136,6 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
-	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
-    details TEXT,
-    START INTEGER,
-    END INTEGER,
-timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
-)`); err != nil {
-		return err
-	}
 	slog.Info("Migrating", "statement", `CREATE TABLE profile (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,18 +162,26 @@ UNIQUE(eid)
 )`); err != nil {
 		return err
 	}
-	slog.Info("Migrating", "statement", `CREATE TABLE devicestatus (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE devicestatus (
+	slog.Info("Migrating", "statement", `CREATE TABLE logs (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp INTEGER NOT NULL,
-    device TEXT,
-    uploaderBattery INTEGER,
-    pumpBattery INTEGER,
-    pumpStatus TEXT,
-    pumpReservoir REAL,
-    loopStatus TEXT,
-    loopTimestamp INTEGER,
-    created_at INTEGER DEFAULT (unixepoch())
+     value REAL,
+     TYPE TEXT,
+     timestamp INTEGER,
+    UNIQUE(eid)
+)`); err != nil {
+		return err
+	}
+	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    TYPE TEXT,
+    details TEXT,
+    START INTEGER,
+    END INTEGER,
+timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
 )`); err != nil {
 		return err
 	}

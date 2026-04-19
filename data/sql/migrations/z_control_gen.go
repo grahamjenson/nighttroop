@@ -76,6 +76,39 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return err
 	}
+	slog.Info("Migrating", "statement", `CREATE TABLE data_source_block_list(`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE data_source_block_list(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT, -- in case it is a dexcom account or something
+    url TEXT,
+    reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`); err != nil {
+		return err
+	}
+	slog.Info("Migrating", "statement", `CREATE TABLE logs (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+     value REAL,
+     TYPE TEXT,
+     timestamp INTEGER,
+    UNIQUE(eid)
+)`); err != nil {
+		return err
+	}
+	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    TYPE TEXT,
+    details TEXT,
+    START INTEGER,
+    END INTEGER,
+timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+)`); err != nil {
+		return err
+	}
 
 	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001Sql"); err != nil {
 		return err
