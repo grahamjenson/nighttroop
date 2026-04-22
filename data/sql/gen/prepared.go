@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -227,12 +228,13 @@ func main() {
 	}
 
 	// file is like user/devices_get.sql
-	parts := strings.Split(*file, "/")
-	name := parts[len(parts)-1]
-	outfilename := strings.TrimSuffix(name, ".sql")
-	name = utils.SnakeToCapitalCamelCase(outfilename)
+	inputFileName := filepath.Base(*file) // devices_get.sql
+	inputFileDir := filepath.Dir(*file)
+	pkg := filepath.Base(inputFileDir)
 
-	pkg := parts[0]
+	outfilename := strings.TrimSuffix(inputFileName, ".sql")
+	name := utils.SnakeToCapitalCamelCase(outfilename)
+
 	// inputParams is a string params.{name}, params.{name}, ...
 	inputParms := []string{}
 	for _, param := range inputList {
@@ -254,7 +256,7 @@ func main() {
 		InputParams: strings.Join(inputParms, ", "),
 	}
 
-	outputPath := pkg + "/z_" + outfilename + "_gen.go"
+	outputPath := filepath.Join(inputFileDir, "/z_"+outfilename+"_gen.go")
 	t := template.Must(template.New("sql").Parse(tmpl))
 	f, _ := os.Create(outputPath)
 	defer f.Close()

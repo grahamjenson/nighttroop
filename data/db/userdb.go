@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	migrations "nighttroop.t1d.nz/data/sql/migrations"
-	usersql "nighttroop.t1d.nz/data/sql/user"
+	ntsql "nighttroop.t1d.nz/data/sql"
+	"nighttroop.t1d.nz/data/sql/user/migrations"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 )
@@ -22,9 +22,7 @@ type UserDB struct {
 	Subdomain string
 
 	// Prepared statements
-	DevicesGet    *usersql.DevicesGetStmt
-	DevicesCreate *usersql.DevicesCreateStmt
-	DevicesAll    *usersql.DevicesAllStmt
+	Stmts *ntsql.UserStatements
 }
 
 func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config.ServerConfig) (*UserDB, error) {
@@ -51,15 +49,10 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 		return userDB, fmt.Errorf("Migration Error Occured user db: %s %w", subdomain, err)
 	}
 
-	var errs []error
-
-	userDB.DevicesGet = usersql.NewDevicesGet(sqldb, &errs)
-	userDB.DevicesCreate = usersql.NewDevicesCreate(sqldb, &errs)
-	userDB.DevicesAll = usersql.NewDevicesAll(sqldb, &errs)
-
-	if len(errs) > 0 {
+	userDB.Stmts, err = ntsql.NewUserStatements(sqldb)
+	if err != nil {
 		sqldb.Close()
-		return userDB, fmt.Errorf("Error creating prepared statements: %v", errs)
+		return userDB, fmt.Errorf("cannot prepare statements for user db: %s %w", subdomain, err)
 	}
 
 	return userDB, nil

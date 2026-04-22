@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -108,6 +109,10 @@ func main() {
 		panic("Name is required")
 	}
 
+	if len(migrations) == 0 {
+		panic("At least one migration file is required")
+	}
+
 	for _, file := range migrations {
 		if fileInfo, err := os.Stat(file); err != nil || fileInfo.IsDir() {
 			panic("Invalid file: " + file)
@@ -129,8 +134,12 @@ func main() {
 		MigrationStatements: migrationStatements,
 	}
 
-	outputPath := "migrations/z_" + strings.ToLower(*name) + "_gen.go"
+	outFilename := strings.TrimSuffix(strings.ToLower(*name), ".sql")
+	outputFolder := filepath.Dir(migrations[0])
+
+	outputPath := filepath.Join(outputFolder, "z_"+outFilename+"_gen.go")
 	f, _ := os.Create(outputPath)
+	fmt.Println("Generated migration file: " + outputPath)
 	defer f.Close()
 
 	t := template.Must(template.New("migrations").Parse(tmpl))

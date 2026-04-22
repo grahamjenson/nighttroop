@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/control"
-	controlsql "nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/migrations"
+	nssql "nighttroop.t1d.nz/data/sql"
+	"nighttroop.t1d.nz/data/sql/control/migrations"
+	controlsqlusers "nighttroop.t1d.nz/data/sql/control/users"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -27,29 +27,7 @@ type ControlDB struct {
 
 	usersRWLock sync.RWMutex
 
-	////
-	// prepared statements
-	////
-	// ADMINS
-	AdminsCreate *controlsql.AdminsCreateStmt
-	AdminsGet    *controlsql.AdminsGetStmt
-
-	// USERS
-	UsersCreate       *controlsql.UsersCreateStmt
-	UsersGet          *controlsql.UsersGetStmt
-	UsersGetBatch     *controlsql.UsersGetBatchStmt
-	UsersAll          *controlsql.UsersAllStmt
-	UsersNotDeleted   *controlsql.UsersNotDeletedStmt
-	UsersGetInactive  *controlsql.UsersGetInactiveStmt
-	UsersGetNeverSeen *controlsql.UsersGetNeverSeenStmt
-
-	UsersUpdateLastSeen  *controlsql.UsersUpdateLastSeenStmt
-	UsersUpdateLastWrite *controlsql.UsersUpdateLastWriteStmt
-
-	UsersDelete *controlsql.UsersDeleteStmt
-
-	// For Tests
-	TESTONLYUsersTruncateAll *controlsql.UsersTruncateAllStmt
+	Stmts *nssql.ControlStatements
 }
 
 func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
@@ -72,26 +50,10 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 		return nil, fmt.Errorf("cannot migrate control db: %w", err)
 	}
 
-	var errs []error
-
-	// Create the prepared statements
-	controlDB.AdminsCreate = control.NewAdminsCreate(sqldb, &errs)
-	controlDB.AdminsGet = control.NewAdminsGet(sqldb, &errs)
-
-	controlDB.UsersCreate = control.NewUsersCreate(sqldb, &errs)
-	controlDB.UsersDelete = control.NewUsersDelete(sqldb, &errs)
-	controlDB.UsersGet = control.NewUsersGet(sqldb, &errs)
-	controlDB.UsersAll = control.NewUsersAll(sqldb, &errs)
-	controlDB.UsersGetBatch = control.NewUsersGetBatch(sqldb, &errs)
-	controlDB.UsersUpdateLastSeen = control.NewUsersUpdateLastSeen(sqldb, &errs)
-	controlDB.UsersUpdateLastWrite = control.NewUsersUpdateLastWrite(sqldb, &errs)
-	controlDB.TESTONLYUsersTruncateAll = control.NewUsersTruncateAll(sqldb, &errs)
-	controlDB.UsersNotDeleted = control.NewUsersNotDeleted(sqldb, &errs)
-	controlDB.UsersGetInactive = control.NewUsersGetInactive(sqldb, &errs)
-	controlDB.UsersGetNeverSeen = control.NewUsersGetNeverSeen(sqldb, &errs)
-
-	if finalErr := errors.Join(errs...); finalErr != nil {
-		return nil, finalErr
+	// Prepare the statements
+	controlDB.Stmts, err = nssql.NewControlStatements(sqldb)
+	if err != nil {
+		return nil, fmt.Errorf("cannot prepare control statements: %w", err)
 	}
 
 	// If no admin user exists create one with a random password and TOTP secret and print the ENCRYPTED credentials to the console
@@ -111,7 +73,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 // This will fetch all the users in
 func (db *ControlDB) fillUsers() ([]string, error) {
 	users := []string{}
-	res, err := db.UsersNotDeleted.Query(context.TODO())
+	res, err := db.Stmts.UsersNotDeleted.Query(context.TODO())
 
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
@@ -133,7 +95,7 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 func (db *ControlDB) createAdminIfNoneExists() error {
 	ctx := context.TODO()
 	adminName := consts.FIRST_ADMIN_NAME
-	model, err := db.AdminsGet.QueryRow(ctx, adminName)
+	model, err := db.Stmts.AdminsGet.QueryRow(ctx, adminName)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cannot query admin: %w", err)
 	}
@@ -151,7 +113,7 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 		return fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
-	_, err = db.AdminsCreate.Exec(ctx, adminName, hashedPassword, "admin", encTOTPSecret)
+	_, err = db.Stmts.AdminsCreate.Exec(ctx, adminName, hashedPassword, "admin", encTOTPSecret)
 	if err != nil {
 		return fmt.Errorf("cannot create admin: %w", err)
 	}
@@ -214,7 +176,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	db.usersRWLock.Lock()
 	defer db.usersRWLock.Unlock()
 
-	_, err = db.UsersCreate.Exec(context.TODO(), subdomain, backupKeyHash)
+	_, err = db.Stmts.UsersCreate.Exec(context.TODO(), subdomain, backupKeyHash)
 	if err != nil {
 		// Clean up the created DB file
 		// If anything happens later the archiving process can clean it up
@@ -228,7 +190,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// Setup the new UserDB
 	////
 
-	_, err = userDB.DevicesCreate.Exec(context.TODO(), consts.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, consts.UserRoleAdmin.String())
+	_, err = userDB.Stmts.DevicesCreate.Exec(context.TODO(), consts.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, consts.UserRoleAdmin.String())
 	if err != nil {
 		userDB.TryCloseAndDelete()
 		return nil, "", "", "", fmt.Errorf("cannot create admin device: %w", err)
@@ -245,7 +207,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 // TODO think through implications of errors at different places in this method
 func (db *ControlDB) DeleteUsers(subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
-	_, err := db.UsersDelete.Exec(context.TODO(), subdomains)
+	_, err := db.Stmts.UsersDelete.Exec(context.TODO(), subdomains)
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
@@ -310,9 +272,9 @@ func (db *ControlDB) UserExists(subdomain string) bool {
 	return ok
 }
 
-func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *control.UsersGetModel, error) {
+func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *controlsqlusers.UsersGetModel, error) {
 	// Check if user exists in the db
-	model, err := db.UsersGet.QueryRow(context.TODO(), subdomain)
+	model, err := db.Stmts.UsersGet.QueryRow(context.TODO(), subdomain)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot get user: %w", err)
 	}
@@ -322,7 +284,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 
 	lastSeenMoreThan10MinutesAgo := model.LastSeenAt.Add(10 * time.Minute).After(time.Now())
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
-		db.UsersUpdateLastSeen.Exec(context.TODO(), subdomain)
+		db.Stmts.UsersUpdateLastSeen.Exec(context.TODO(), subdomain)
 	}
 
 	db.usersRWLock.RLock()
@@ -339,7 +301,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 
 	users := []*UserDB{}
-	res, err := db.UsersGetBatch.Query(context.TODO(), char)
+	res, err := db.Stmts.UsersGetBatch.Query(context.TODO(), char)
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
 	}
@@ -348,7 +310,7 @@ func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 }
 
 func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.UsersGetNeverSeen.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	res, err := db.Stmts.UsersGetNeverSeen.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
 	if err != nil {
 		return nil, fmt.Errorf("cannot query never seen users: %w", err)
 	}
@@ -357,7 +319,7 @@ func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteM
 }
 
 func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.UsersGetInactive.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	res, err := db.Stmts.UsersGetInactive.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
 	if err != nil {
 		return nil, fmt.Errorf("cannot query inactive users: %w", err)
 	}
@@ -407,7 +369,7 @@ func (db *ControlDB) TestOnlyDeleteAllUsers(users []*UserDB) error {
 		return nil
 	}
 	db.users = make(map[string]*UserDB)
-	_, err := db.TESTONLYUsersTruncateAll.Exec(context.TODO())
+	_, err := db.Stmts.TestUsersTruncateAll.Exec(context.TODO())
 
 	return err
 }

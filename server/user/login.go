@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	usersql "nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/user/devices"
 	userTemplates "nighttroop.t1d.nz/server/assets/templates/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -185,7 +185,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 	}
 }
 
-func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*usersql.DevicesGetModel, error) {
+func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*devices.DevicesGetModel, error) {
 	// First try the JWT token (either header or cookie)
 	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 	userDB, _, err := controlDB.GetUser(subdomain, false)
@@ -194,19 +194,19 @@ func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromT
 		return nil, err
 	}
 
-	device, err := userDB.DevicesGet.QueryRow(context.TODO(), deviceNameFromToken)
+	device, err := userDB.Stmts.DevicesGet.QueryRow(context.TODO(), deviceNameFromToken)
 	if err != nil {
 		return nil, fmt.Errorf("device not found: %w", err)
 	}
 	return &device, nil
 }
 
-func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*usersql.DevicesGetModel, error) {
+func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*devices.DevicesGetModel, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	device, err := userDB.DevicesGet.QueryRow(context.TODO(), formName)
+	device, err := userDB.Stmts.DevicesGet.QueryRow(context.TODO(), formName)
 	if err != nil {
 		return nil, fmt.Errorf("device not found: %w", err)
 	}
@@ -218,7 +218,7 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 	return &device, nil
 }
 
-func deviceRequiresTOTPValidation(device *usersql.DevicesGetModel) bool {
+func deviceRequiresTOTPValidation(device *devices.DevicesGetModel) bool {
 	// Constraint: TOTP validation is required for admin users
 	if device.Role == consts.UserRoleAdmin.String() {
 		return true
@@ -230,7 +230,7 @@ func deviceRequiresTOTPValidation(device *usersql.DevicesGetModel) bool {
 	return false
 }
 
-func validateDeviceTOTP(config config.ServerConfig, device *usersql.DevicesGetModel, totpToken string) error {
+func validateDeviceTOTP(config config.ServerConfig, device *devices.DevicesGetModel, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
@@ -311,7 +311,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 }
 
-func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, password, totpToken string) (*usersql.DevicesGetModel, error) {
+func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, password, totpToken string) (*devices.DevicesGetModel, error) {
 	device, err := loginTheUserPasswordOnly(userDB, devicename, password)
 	if err != nil {
 		return nil, err

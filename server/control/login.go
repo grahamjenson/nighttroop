@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	controlsql "nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/control/admins"
 	controlTemplates "nighttroop.t1d.nz/server/assets/templates/control"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -122,8 +122,8 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*controlsql.AdminsGetModel, error) {
-	admin, err := controlDB.AdminsGet.QueryRow(context.TODO(), username)
+func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*admins.AdminsGetModel, error) {
+	admin, err := controlDB.Stmts.AdminsGet.QueryRow(context.TODO(), username)
 	if err != nil {
 		return nil, fmt.Errorf("admin not found: %w", err)
 	}
