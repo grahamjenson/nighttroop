@@ -46,7 +46,8 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL,
     backup_key_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TIMESTAMP,
+    last_write_at TIMESTAMP,
     deleted_at TIMESTAMP
 )`); err != nil {
 		return err
@@ -59,7 +60,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_seen_at TIMESTAMP, 
 )`); err != nil {
 		return err
 	}

@@ -22,6 +22,25 @@ type DevicesAllModel struct {
 	LastSeenAt *time.Time
 }
 
+func (m DevicesAllModel) GetName() string {
+	return m.Name
+}
+func (m DevicesAllModel) GetPassword() string {
+	return m.Password
+}
+func (m DevicesAllModel) GetTotpSecret() string {
+	return m.TotpSecret
+}
+func (m DevicesAllModel) GetRole() string {
+	return m.Role
+}
+func (m DevicesAllModel) GetCreatedAt() *time.Time {
+	return m.CreatedAt
+}
+func (m DevicesAllModel) GetLastSeenAt() *time.Time {
+	return m.LastSeenAt
+}
+
 type DevicesAllStmt struct {
 	stmt *sql.Stmt
 }
@@ -56,7 +75,7 @@ func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 	for rows.Next() {
 		var model DevicesAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("DevicesAll scan error: %w", err)
 		}
 		results = append(results, model)
@@ -66,7 +85,7 @@ func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
 
 func (s *DevicesAllStmt) QueryRow(ctx context.Context) (DevicesAllModel, error) {
 	var model DevicesAllModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx).Scan()
 	if err != nil {
 		return model, fmt.Errorf("DevicesAll query row error: %w", err)
 	}

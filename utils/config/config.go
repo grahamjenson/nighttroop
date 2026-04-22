@@ -60,10 +60,14 @@ type ServerConfig struct {
 	UserCreateIPPerMinuteBurst     int
 
 	// User Limits
-	MaxUsers              int
-	MaxDevicesPerUser     int
-	MaxUserInactiveInMins int
-	MaxUserDBSizeMB       int
+	MaxUsers                  int
+	MaxDevicesPerUser         int
+	MaxUserLastSeenInMins     int
+	MaxUserLastWrittenInMins  int
+	MaxUserNeverSeenInMins    int
+	MaxUserNeverWrittenInMins int
+
+	MaxUserDBSizeMB int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
@@ -136,7 +140,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		UserLoginPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_BURST", 10),
 
 		// User Create Rate Limits
-		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 20),
+		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 7), // If maxed out this filles up in a day
 		UserCreateGlobalPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
 		UserCreateIPPerMinuteLimit:     configFloatSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_LIMIT", 0.1), // 1 event every 10 minutes
 		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
@@ -149,10 +153,16 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		UserPOSTPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
 
 		// User Limits
-		MaxUsers:              configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
-		MaxDevicesPerUser:     configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
-		MaxUserInactiveInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_INACTIVE_IN_MINS", 60*24*30), // 30 days
-		MaxUserDBSizeMB:       configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_MB", 100),
+		MaxUsers:          configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
+		MaxDevicesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
+		MaxUserDBSizeMB:   configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_MB", 100),
+
+		// Archiving limits
+		MaxUserLastSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_USER_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
+		MaxUserLastWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_LAST_WRITTEN_IN_MINS", 60*24*7), // 1 week
+
+		MaxUserNeverSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_USER_NEVER_SEEN_IN_MINS", 30),       // 30 minutes to login first time
+		MaxUserNeverWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 10),
@@ -195,30 +205,6 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 	flag.StringVar(&serverConfig.HostName, "host", serverConfig.HostName, "Host name for the server")
 	flag.IntVar(&serverConfig.HostPort, "port", serverConfig.HostPort, "Host port for the server")
 	flag.StringVar(&serverConfig.HostProtocol, "protocol", serverConfig.HostProtocol, "Host protocol for the server (http or https)")
-
-	// s3 config
-	flag.StringVar(&serverConfig.S3Bucket, "s3bucket", serverConfig.S3Bucket, "S3 bucket name")
-	flag.StringVar(&serverConfig.S3URL, "s3url", serverConfig.S3URL, "S3 URL")
-	flag.StringVar(&serverConfig.S3AccessKeyID, "s3accesskey", serverConfig.S3AccessKeyID, "S3 Access Key ID")
-	flag.StringVar(&serverConfig.S3AccessSecretKey, "s3secretkey", serverConfig.S3AccessSecretKey, "S3 Access Secret Key")
-
-	// security
-	flag.StringVar(&serverConfig.SecretsEncryptionKey, "secretsencryptionkey", serverConfig.SecretsEncryptionKey, "Secrets Encryption Key")
-
-	// paths
-	flag.StringVar(&serverConfig.SqlitePath, "sqlitedbpath", serverConfig.SqlitePath, "Path to store sqlite DB files")
-
-	// NO FLAGS FOR RATE LIMITERS
-
-	// User Limits
-	flag.IntVar(&serverConfig.MaxUsers, "maxusers", serverConfig.MaxUsers, "Maximum number of users")
-	flag.IntVar(&serverConfig.MaxDevicesPerUser, "maxdevicesperuser", serverConfig.MaxDevicesPerUser, "Maximum number of devices per user")
-	flag.IntVar(&serverConfig.MaxUserDBSizeMB, "maxuserdbsizemb", serverConfig.MaxUserDBSizeMB, "Maximum user DB size in MB")
-	flag.IntVar(&serverConfig.MaxUserInactiveInMins, "maxuserinactiveinmins", serverConfig.MaxUserInactiveInMins, "Maximum user inactive time in minutes (after this they are archived)")
-
-	// Backup Config
-	flag.IntVar(&serverConfig.ControlBackupIntervalInSeconds, "controlbackupinterval", serverConfig.ControlBackupIntervalInSeconds, "Control DB Backup Interval in seconds")
-	flag.IntVar(&serverConfig.BatchBackupIntervalInSeconds, "batchbackupinterval", serverConfig.BatchBackupIntervalInSeconds, "Batch Backup Interval in seconds")
 
 	flag.Parse()
 
@@ -391,7 +377,8 @@ func printServerConfig(config ServerConfig) {
 		"UserCreateIPPerMinuteBurst", config.UserCreateIPPerMinuteBurst,
 		"MaxUsers", config.MaxUsers,
 		"MaxDevicesPerUser", config.MaxDevicesPerUser,
-		"MaxUserInactiveInMins", config.MaxUserInactiveInMins,
+		"MaxUserLastSeenInMins", config.MaxUserLastSeenInMins,
+		"MaxUserLastWrittenInMins", config.MaxUserLastWrittenInMins,
 		"MaxUserDBSizeMB", config.MaxUserDBSizeMB,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,

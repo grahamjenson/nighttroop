@@ -33,8 +33,8 @@ func NewUsersDelete(sqldb *sql.DB, errs *[]error) *UsersDeleteStmt {
 	return &UsersDeleteStmt{stmt: stmt}
 }
 
-func (s *UsersDeleteStmt) Exec(ctx context.Context, Subdomain string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Subdomain)
+func (s *UsersDeleteStmt) Exec(ctx context.Context, Subdomains []string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, Subdomains)
 	if err != nil {
 		return nil, fmt.Errorf("UsersDelete exec error: %w", err)
 	}

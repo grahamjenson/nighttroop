@@ -12,8 +12,9 @@ CREATE TABLE users (
     
     backup_key_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+    -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
+    last_seen_at TIMESTAMP,
+    last_write_at TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
@@ -24,7 +25,7 @@ CREATE TABLE admins (
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_seen_at TIMESTAMP, 
 );
 
 CREATE TABLE events (

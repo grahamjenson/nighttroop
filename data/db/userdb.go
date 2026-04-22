@@ -80,8 +80,8 @@ func (db *UserDB) TryCloseAndDelete() {
 	_ = utils.DeleteFile(path)
 }
 
-func (db *UserDB) Close() {
-	db.SQLiteDB.Close()
+func (db *UserDB) Close() error {
+	return db.SQLiteDB.Close()
 }
 
 func (db *UserDB) URL() string {

@@ -22,6 +22,25 @@ type AdminsGetModel struct {
 	CreatedAt  *time.Time
 }
 
+func (m AdminsGetModel) GetName() string {
+	return m.Name
+}
+func (m AdminsGetModel) GetPassword() string {
+	return m.Password
+}
+func (m AdminsGetModel) GetRole() string {
+	return m.Role
+}
+func (m AdminsGetModel) GetTotpSecret() string {
+	return m.TotpSecret
+}
+func (m AdminsGetModel) GetLastSeenAt() *time.Time {
+	return m.LastSeenAt
+}
+func (m AdminsGetModel) GetCreatedAt() *time.Time {
+	return m.CreatedAt
+}
+
 type AdminsGetStmt struct {
 	stmt *sql.Stmt
 }
@@ -56,7 +75,7 @@ func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetMode
 	for rows.Next() {
 		var model AdminsGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("AdminsGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -66,7 +85,7 @@ func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetMode
 
 func (s *AdminsGetStmt) QueryRow(ctx context.Context, Name string) (AdminsGetModel, error) {
 	var model AdminsGetModel
-	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt)
+	err := s.stmt.QueryRowContext(ctx, Name).Scan()
 	if err != nil {
 		return model, fmt.Errorf("AdminsGet query row error: %w", err)
 	}

@@ -22,6 +22,19 @@ type UsersNotDeletedModel struct {
 	DeletedAt  *time.Time
 }
 
+func (m UsersNotDeletedModel) GetSubdomain() string {
+	return m.Subdomain
+}
+func (m UsersNotDeletedModel) GetCreatedAt() *time.Time {
+	return m.CreatedAt
+}
+func (m UsersNotDeletedModel) GetLastSeenAt() *time.Time {
+	return m.LastSeenAt
+}
+func (m UsersNotDeletedModel) GetDeletedAt() *time.Time {
+	return m.DeletedAt
+}
+
 type UsersNotDeletedStmt struct {
 	stmt *sql.Stmt
 }
@@ -56,7 +69,7 @@ func (s *UsersNotDeletedStmt) Query(ctx context.Context) ([]UsersNotDeletedModel
 	for rows.Next() {
 		var model UsersNotDeletedModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("UsersNotDeleted scan error: %w", err)
 		}
 		results = append(results, model)
@@ -66,7 +79,7 @@ func (s *UsersNotDeletedStmt) Query(ctx context.Context) ([]UsersNotDeletedModel
 
 func (s *UsersNotDeletedStmt) QueryRow(ctx context.Context) (UsersNotDeletedModel, error) {
 	var model UsersNotDeletedModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
+	err := s.stmt.QueryRowContext(ctx).Scan()
 	if err != nil {
 		return model, fmt.Errorf("UsersNotDeleted query row error: %w", err)
 	}

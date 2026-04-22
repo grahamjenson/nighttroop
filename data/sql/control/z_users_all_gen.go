@@ -22,6 +22,19 @@ type UsersAllModel struct {
 	DeletedAt  *time.Time
 }
 
+func (m UsersAllModel) GetSubdomain() string {
+	return m.Subdomain
+}
+func (m UsersAllModel) GetCreatedAt() *time.Time {
+	return m.CreatedAt
+}
+func (m UsersAllModel) GetLastSeenAt() *time.Time {
+	return m.LastSeenAt
+}
+func (m UsersAllModel) GetDeletedAt() *time.Time {
+	return m.DeletedAt
+}
+
 type UsersAllStmt struct {
 	stmt *sql.Stmt
 }
@@ -56,7 +69,7 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	for rows.Next() {
 		var model UsersAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("UsersAll scan error: %w", err)
 		}
 		results = append(results, model)
@@ -66,7 +79,7 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 
 func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
 	var model UsersAllModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
+	err := s.stmt.QueryRowContext(ctx).Scan()
 	if err != nil {
 		return model, fmt.Errorf("UsersAll query row error: %w", err)
 	}

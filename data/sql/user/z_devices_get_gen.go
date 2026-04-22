@@ -30,6 +30,25 @@ type DevicesGetModel struct {
 	LastSeenAt *time.Time
 }
 
+func (m DevicesGetModel) GetName() string {
+	return m.Name
+}
+func (m DevicesGetModel) GetPassword() string {
+	return m.Password
+}
+func (m DevicesGetModel) GetTotpSecret() string {
+	return m.TotpSecret
+}
+func (m DevicesGetModel) GetRole() string {
+	return m.Role
+}
+func (m DevicesGetModel) GetCreatedAt() *time.Time {
+	return m.CreatedAt
+}
+func (m DevicesGetModel) GetLastSeenAt() *time.Time {
+	return m.LastSeenAt
+}
+
 type DevicesGetStmt struct {
 	stmt *sql.Stmt
 }
@@ -64,7 +83,7 @@ func (s *DevicesGetStmt) Query(ctx context.Context, Name string) ([]DevicesGetMo
 	for rows.Next() {
 		var model DevicesGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("DevicesGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -74,7 +93,7 @@ func (s *DevicesGetStmt) Query(ctx context.Context, Name string) ([]DevicesGetMo
 
 func (s *DevicesGetStmt) QueryRow(ctx context.Context, Name string) (DevicesGetModel, error) {
 	var model DevicesGetModel
-	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx, Name).Scan()
 	if err != nil {
 		return model, fmt.Errorf("DevicesGet query row error: %w", err)
 	}

@@ -22,6 +22,16 @@ type UsersGetModel struct {
 	LastSeenAt *time.Time
 }
 
+func (m UsersGetModel) GetSubdomain() string {
+	return m.Subdomain
+}
+func (m UsersGetModel) GetCreatedAt() *time.Time {
+	return m.CreatedAt
+}
+func (m UsersGetModel) GetLastSeenAt() *time.Time {
+	return m.LastSeenAt
+}
+
 type UsersGetStmt struct {
 	stmt *sql.Stmt
 }
@@ -56,7 +66,7 @@ func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetM
 	for rows.Next() {
 		var model UsersGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("UsersGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -66,7 +76,7 @@ func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetM
 
 func (s *UsersGetStmt) QueryRow(ctx context.Context, Subdomain string) (UsersGetModel, error) {
 	var model UsersGetModel
-	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt)
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan()
 	if err != nil {
 		return model, fmt.Errorf("UsersGet query row error: %w", err)
 	}

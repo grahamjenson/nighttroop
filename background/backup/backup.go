@@ -21,7 +21,11 @@ type BackupJobs struct {
 
 	ControlBackupInterval time.Duration
 	BatchBackupInterval   time.Duration
-	MaxUserInactive       time.Duration
+
+	MaxUserLastSeen     time.Duration
+	MaxUserLastWritten  time.Duration
+	MaxUserNeverSeen    time.Duration
+	MaxUserNeverWritten time.Duration
 
 	cancel func()
 	wg     sync.WaitGroup
@@ -37,9 +41,11 @@ func SetupBackupJobs(config config.ServerConfig, controlDB *db.ControlDB, s3Clie
 		controlDB:             controlDB,
 		ControlBackupInterval: time.Duration(config.ControlBackupIntervalInSeconds) * time.Second,
 		BatchBackupInterval:   time.Duration(config.BatchBackupIntervalInSeconds) * time.Second,
-		MaxUserInactive:       time.Duration(config.MaxUserInactiveInMins) * time.Minute,
-
-		S3Client: s3Client,
+		MaxUserLastSeen:       time.Duration(config.MaxUserLastSeenInMins) * time.Minute,
+		MaxUserLastWritten:    time.Duration(config.MaxUserLastWrittenInMins) * time.Minute,
+		MaxUserNeverSeen:      time.Duration(config.MaxUserNeverSeenInMins) * time.Minute,
+		MaxUserNeverWritten:   time.Duration(config.MaxUserNeverWrittenInMins) * time.Minute,
+		S3Client:              s3Client,
 	}
 
 	jobs.ctx, jobs.cancel = context.WithCancel(context.Background())

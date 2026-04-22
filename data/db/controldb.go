@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -34,14 +35,18 @@ type ControlDB struct {
 	AdminsGet    *controlsql.AdminsGetStmt
 
 	// USERS
-	UsersCreate         *controlsql.UsersCreateStmt
-	UsersGet            *controlsql.UsersGetStmt
-	UsersGetBatch       *controlsql.UsersGetBatchStmt
-	UsersAll            *controlsql.UsersAllStmt
-	UsersNotDeleted     *controlsql.UsersNotDeletedStmt
-	UsersGetInactive    *controlsql.UsersGetInactiveStmt
-	UsersUpdateLastSeen *controlsql.UsersUpdateLastSeenStmt
-	UsersDelete         *controlsql.UsersDeleteStmt
+	UsersCreate       *controlsql.UsersCreateStmt
+	UsersGet          *controlsql.UsersGetStmt
+	UsersGetBatch     *controlsql.UsersGetBatchStmt
+	UsersAll          *controlsql.UsersAllStmt
+	UsersNotDeleted   *controlsql.UsersNotDeletedStmt
+	UsersGetInactive  *controlsql.UsersGetInactiveStmt
+	UsersGetNeverSeen *controlsql.UsersGetNeverSeenStmt
+
+	UsersUpdateLastSeen  *controlsql.UsersUpdateLastSeenStmt
+	UsersUpdateLastWrite *controlsql.UsersUpdateLastWriteStmt
+
+	UsersDelete *controlsql.UsersDeleteStmt
 
 	// For Tests
 	TESTONLYUsersTruncateAll *controlsql.UsersTruncateAllStmt
@@ -79,9 +84,11 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	controlDB.UsersAll = control.NewUsersAll(sqldb, &errs)
 	controlDB.UsersGetBatch = control.NewUsersGetBatch(sqldb, &errs)
 	controlDB.UsersUpdateLastSeen = control.NewUsersUpdateLastSeen(sqldb, &errs)
+	controlDB.UsersUpdateLastWrite = control.NewUsersUpdateLastWrite(sqldb, &errs)
 	controlDB.TESTONLYUsersTruncateAll = control.NewUsersTruncateAll(sqldb, &errs)
 	controlDB.UsersNotDeleted = control.NewUsersNotDeleted(sqldb, &errs)
 	controlDB.UsersGetInactive = control.NewUsersGetInactive(sqldb, &errs)
+	controlDB.UsersGetNeverSeen = control.NewUsersGetNeverSeen(sqldb, &errs)
 
 	if finalErr := errors.Join(errs...); finalErr != nil {
 		return nil, finalErr
@@ -235,21 +242,35 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 // Delete USER methods
 ////
 
-func (db *ControlDB) DeleteUser(subdomain string) error {
-	db.usersRWLock.Lock()
-	user, ok := db.users[subdomain]
-	if !ok {
-		db.usersRWLock.Unlock()
-		return fmt.Errorf("user not found")
-	}
-	delete(db.users, subdomain)
-	db.usersRWLock.Unlock()
-
-	user.Close()
-
-	_, err := db.UsersDelete.Exec(context.TODO(), subdomain)
+// TODO think through implications of errors at different places in this method
+func (db *ControlDB) DeleteUsers(subdomains []string) error {
+	// Set the deleted at timestammp in the control DB
+	_, err := db.UsersDelete.Exec(context.TODO(), subdomains)
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
+	}
+
+	// Close the DB and remove from the map
+	for _, subdomain := range subdomains {
+		db.usersRWLock.Lock()
+		user, ok := db.users[subdomain]
+		if !ok {
+			db.usersRWLock.Unlock()
+			return fmt.Errorf("user not found")
+		}
+		delete(db.users, subdomain)
+		db.usersRWLock.Unlock()
+
+		user.Close()
+
+		path, backupPath := utils.UserDBPaths(subdomain)
+
+		err := utils.DeleteFiles([]string{path, backupPath})
+		if err != nil {
+			slog.Error("Failed to delete user db files", "subdomain", subdomain, "error", err)
+		} else {
+			slog.Info("Deleted user db files", "subdomain", subdomain)
+		}
 	}
 
 	return nil
@@ -280,23 +301,6 @@ func (db *ControlDB) AllUsers() []*UserDB {
 		users = append(users, user)
 	}
 	return users
-}
-
-func (db *ControlDB) AllInactiveUsers(maxAge time.Duration) ([]*UserDB, error) {
-	db.usersRWLock.RLock()
-	defer db.usersRWLock.RUnlock()
-
-	inactiveUsers, err := db.UsersGetInactive.Query(context.TODO(), maxAge.Minutes())
-	if err != nil {
-		return nil, fmt.Errorf("InactiveUser Error %w", err)
-	}
-	users := []*UserDB{}
-	for _, iu := range inactiveUsers {
-		user := db.users[iu.Subdomain]
-		users = append(users, user)
-	}
-
-	return users, nil
 }
 
 func (db *ControlDB) UserExists(subdomain string) bool {
@@ -340,32 +344,35 @@ func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 		return users, fmt.Errorf("cannot query users: %w", err)
 	}
 
-	db.usersRWLock.RLock()
-	defer db.usersRWLock.RUnlock()
-
-	for _, model := range res {
-		user := db.users[model.Subdomain]
-		if user == nil {
-			return users, fmt.Errorf("user not found in memory")
-		}
-		users = append(users, user)
-	}
-
-	return users, nil
+	return getUserDBsFromModels(db, res)
 }
 
-func (db *ControlDB) GetInactiveUsers(duration time.Duration) ([]*UserDB, error) {
-	res, err := db.UsersGetInactive.Query(context.TODO(), duration.Minutes())
+func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
+	res, err := db.UsersGetNeverSeen.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	if err != nil {
+		return nil, fmt.Errorf("cannot query never seen users: %w", err)
+	}
+
+	return getUserDBsFromModels(db, res)
+}
+
+func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
+	res, err := db.UsersGetInactive.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
 	if err != nil {
 		return nil, fmt.Errorf("cannot query inactive users: %w", err)
 	}
 
+	return getUserDBsFromModels(db, res)
+
+}
+
+func getUserDBsFromModels[T interface{ GetSubdomain() string }](db *ControlDB, models []T) ([]*UserDB, error) {
 	users := []*UserDB{}
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
 
-	for _, model := range res {
-		user := db.users[model.Subdomain]
+	for _, model := range models {
+		user := db.users[model.GetSubdomain()]
 		if user == nil {
 			return users, fmt.Errorf("user not found in memory")
 		}
@@ -373,7 +380,6 @@ func (db *ControlDB) GetInactiveUsers(duration time.Duration) ([]*UserDB, error)
 	}
 
 	return users, nil
-
 }
 
 ////
@@ -383,7 +389,10 @@ func (db *ControlDB) GetInactiveUsers(duration time.Duration) ([]*UserDB, error)
 func (db *ControlDB) Close() error {
 	// Keep it locked so no new users can be created
 	for _, user := range db.users {
-		user.Close()
+		err := user.Close()
+		if err != nil {
+			slog.Error("Failed to close user db", "subdomain", user.Subdomain, "error", err)
+		}
 	}
 
 	return db.SQLiteDB.Close()

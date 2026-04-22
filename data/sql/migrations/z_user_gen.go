@@ -47,7 +47,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_seen_at TIMESTAMP
 )`); err != nil {
 		return err
 	}

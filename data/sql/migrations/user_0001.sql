@@ -8,7 +8,7 @@ CREATE TABLE devices (
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_seen_at TIMESTAMP
 );
 
 -- This reports device status above

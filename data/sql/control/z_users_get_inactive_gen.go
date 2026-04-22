@@ -9,14 +9,18 @@ import (
 )
 
 var UsersGetInactiveRaw string = `
--- finds users where the last_seen_at is more than minutes ago and deleted_at is null
+-- Inactive Users are users that were once active but have stopped
 SELECT subdomain
 FROM users 
-WHERE deleted_at IS NULL AND last_seen_at < datetime('now', '-' || ? || ' minutes');
+WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || ? || ' minutes') OR last_write_at < datetime('now', '-' || ? || ' minutes'));
 `
 
 type UsersGetInactiveModel struct {
 	Subdomain string
+}
+
+func (m UsersGetInactiveModel) GetSubdomain() string {
+	return m.Subdomain
 }
 
 type UsersGetInactiveStmt struct {
@@ -34,16 +38,16 @@ func NewUsersGetInactive(sqldb *sql.DB, errs *[]error) *UsersGetInactiveStmt {
 	return &UsersGetInactiveStmt{stmt: stmt}
 }
 
-func (s *UsersGetInactiveStmt) Exec(ctx context.Context, minutes float64) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, minutes)
+func (s *UsersGetInactiveStmt) Exec(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, lastSeenMinutes, lastWriteMinutes)
 	if err != nil {
 		return nil, fmt.Errorf("UsersGetInactive exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]UsersGetInactiveModel, error) {
-	rows, err := s.stmt.QueryContext(ctx, minutes)
+func (s *UsersGetInactiveStmt) Query(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) ([]UsersGetInactiveModel, error) {
+	rows, err := s.stmt.QueryContext(ctx, lastSeenMinutes, lastWriteMinutes)
 	if err != nil {
 		return nil, fmt.Errorf("UsersGetInactive query error: %w", err)
 	}
@@ -53,7 +57,7 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]Us
 	for rows.Next() {
 		var model UsersGetInactiveModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Subdomain); err != nil {
+		if err := rows.Scan(); err != nil {
 			return nil, fmt.Errorf("UsersGetInactive scan error: %w", err)
 		}
 		results = append(results, model)
@@ -61,18 +65,18 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, minutes float64) ([]Us
 	return results, nil
 }
 
-func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, minutes float64) (UsersGetInactiveModel, error) {
+func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (UsersGetInactiveModel, error) {
 	var model UsersGetInactiveModel
-	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain)
+	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan()
 	if err != nil {
 		return model, fmt.Errorf("UsersGetInactive query row error: %w", err)
 	}
 	return model, nil
 }
 
-func (s *UsersGetInactiveStmt) QueryRowExpanded(ctx context.Context, minutes float64) (string, error) {
+func (s *UsersGetInactiveStmt) QueryRowExpanded(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (string, error) {
 	var model UsersGetInactiveModel
-	err := s.stmt.QueryRowContext(ctx, minutes).Scan(&model.Subdomain)
+	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan(&model.Subdomain)
 	if err != nil {
 		return model.Subdomain, fmt.Errorf("UsersGetInactive query row error: %w", err)
 	}
