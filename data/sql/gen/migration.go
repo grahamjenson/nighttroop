@@ -59,19 +59,19 @@ func Migration{{$name}}(ctx context.Context, db *sql.DB) error {
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 		
 		{{- range $stmt := index $.MigrationStatements $index}}
 			slog.Info("Migrating", "statement", ` + "`" + `{{$stmt.Header}}` + "`" + `)
 			if _, err := tx.ExecContext(ctx, ` + "`" + `{{$stmt.Statement}}` + "`" + `); err != nil {
-				return err
+				return fmt.Errorf("failed to execute migration statement %s: %w", ` + "`" + `{{$stmt.Header}}` + "`" + `, err)
 			}
 		{{- end}}
 
 	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "{{$name}}"); err != nil {
-		return err
+		return fmt.Errorf("failed to insert migration version: %w", err)
 	}
 
 	return tx.Commit()

@@ -69,7 +69,7 @@ func (s *UsersNotDeletedStmt) Query(ctx context.Context) ([]UsersNotDeletedModel
 	for rows.Next() {
 		var model UsersNotDeletedModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt); err != nil {
 			return nil, fmt.Errorf("UsersNotDeleted scan error: %w", err)
 		}
 		results = append(results, model)
@@ -79,7 +79,7 @@ func (s *UsersNotDeletedStmt) Query(ctx context.Context) ([]UsersNotDeletedModel
 
 func (s *UsersNotDeletedStmt) QueryRow(ctx context.Context) (UsersNotDeletedModel, error) {
 	var model UsersNotDeletedModel
-	err := s.stmt.QueryRowContext(ctx).Scan()
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
 	if err != nil {
 		return model, fmt.Errorf("UsersNotDeleted query row error: %w", err)
 	}

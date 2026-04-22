@@ -64,35 +64,28 @@ func v1Routes() chi.Router {
 	r := chi.NewRouter()
 
 	// ---- ENTRIES (sgv) ----
-	r.Route("/entries", func(r chi.Router) {
-		r.Get("/", user.NSGetEntries)
-		r.Get(".json", user.NSGetEntries)
-
-		r.Post("/", user.NSCreateEntry)
-		r.Post(".json", user.NSCreateEntry)
-	})
+	r.Get("/entries", user.NSGetEntries)
+	r.Get("/entries.json", user.NSGetEntries)
+	r.Post("/entries", user.NSCreateEntry)
+	r.Post("/entries.json", user.NSCreateEntry)
 
 	// ---- TREATMENTS ----
-	r.Route("/treatments", func(r chi.Router) {
-		r.Get("/", user.NSGetTreatments)
-		r.Get(".json", user.NSGetTreatments)
-
-		r.Post("/", user.NSCreateTreatment)
-		r.Post(".json", user.NSCreateTreatment)
-
-	})
+	r.Get("/treatments", user.NSGetTreatments)
+	r.Get("/treatments.json", user.NSGetTreatments)
+	r.Post("/treatments", user.NSCreateTreatment)
+	r.Post("/treatments.json", user.NSCreateTreatment)
 
 	// ---- DEVICE STATUS ----
-	r.Route("/devicestatus", func(r chi.Router) {
-		r.Get("/", user.NSGetDeviceStatus)
-		r.Post("/", user.NSCreateDeviceStatus)
-	})
+	r.Get("/devicestatus", user.NSGetDeviceStatus)
+	r.Get("/devicestatus.json", user.NSGetDeviceStatus)
+	r.Post("/devicestatus", user.NSCreateDeviceStatus)
+	r.Post("/devicestatus.json", user.NSCreateDeviceStatus)
 
 	// ---- PROFILE ----
-	r.Route("/profile", func(r chi.Router) {
-		r.Get("/", user.NSGetProfiles)
-		r.Post("/", user.NSCreateProfile)
-	})
+	r.Get("/profile", user.NSGetProfiles)
+	r.Get("/profile.json", user.NSGetProfiles)
+	r.Post("/profile", user.NSCreateProfile)
+	r.Post("/profile.json", user.NSCreateProfile)
 
 	return r
 }
@@ -100,17 +93,12 @@ func v1Routes() chi.Router {
 func v2Routes() chi.Router {
 	r := chi.NewRouter()
 
-	// Entries
-	r.Route("/properties", func(r chi.Router) {
-		r.Get("/", user.NSGetProperties)
-
-	})
+	r.Get("/properties", user.NSGetProperties)
+	r.Get("/properties.json", user.NSGetProperties)
 
 	// TODO token=$token is not a param
-	r.Route("/authorization/request", func(r chi.Router) {
-		r.Get("/", user.NSGetNightscoutJWTToken)
-		r.Post("/", user.NSGetNightscoutJWTToken)
-	})
+	r.Get("/authorization/request", user.NSGetNightscoutJWTToken)
+	r.Post("/authorization/request", user.NSGetNightscoutJWTToken)
 
 	return r
 }
@@ -119,14 +107,10 @@ func v3Routes() chi.Router {
 	r := chi.NewRouter()
 
 	// Entries (sgv)
-	r.Route("/entries", func(r chi.Router) {
-		r.Get("/", user.NSGetEntries)
-	})
+	r.Get("/entries", user.NSGetEntries)
 
 	// Treatments
-	r.Route("/treatments", func(r chi.Router) {
-		r.Get("/", user.NSGetTreatments)
-	})
+	r.Get("/treatments", user.NSGetTreatments)
 
 	return r
 }

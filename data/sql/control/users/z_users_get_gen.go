@@ -66,7 +66,7 @@ func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetM
 	for rows.Next() {
 		var model UsersGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("UsersGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -76,7 +76,7 @@ func (s *UsersGetStmt) Query(ctx context.Context, Subdomain string) ([]UsersGetM
 
 func (s *UsersGetStmt) QueryRow(ctx context.Context, Subdomain string) (UsersGetModel, error) {
 	var model UsersGetModel
-	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan()
+	err := s.stmt.QueryRowContext(ctx, Subdomain).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
 		return model, fmt.Errorf("UsersGet query row error: %w", err)
 	}

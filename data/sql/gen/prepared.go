@@ -24,7 +24,6 @@ type Config struct {
 
 	Outputs     Outputs
 	InputParams string
-	OutputModel string
 }
 
 type Output struct {
@@ -129,7 +128,7 @@ func (s *{{.Name}}Stmt) Query(ctx context.Context {{if .InputParams}}, {{.Inputs
 	for rows.Next() {
 		var model {{.Name}}Model
 		// Scanning into exported fields
-		if err := rows.Scan({{.OutputModel}}); err != nil {
+		if err := rows.Scan({{.Outputs.OutputsModelList}}); err != nil {
 			return nil, fmt.Errorf("{{.Name}} scan error: %w", err)
 		}
 		results = append(results, model)
@@ -139,7 +138,7 @@ func (s *{{.Name}}Stmt) Query(ctx context.Context {{if .InputParams}}, {{.Inputs
 
 func (s *{{.Name}}Stmt) QueryRow(ctx context.Context {{if .InputParams}}, {{.Inputs}}{{end}}) ({{.Name}}Model, error) {
 	var model {{.Name}}Model
-	err := s.stmt.QueryRowContext(ctx{{if .InputParams}}, {{.InputParams}}{{end}}).Scan({{.OutputModel}})
+	err := s.stmt.QueryRowContext(ctx{{if .InputParams}}, {{.InputParams}}{{end}}).Scan({{.Outputs.OutputsModelList}})
 	if (err != nil) {
 		return model, fmt.Errorf("{{.Name}} query row error: %w", err)
 	} 

@@ -12,7 +12,7 @@ var UsersDeleteRaw string = `
 -- Passed a list of names to delete we update the table deleted at
 UPDATE users
 SET deleted_at = CURRENT_TIMESTAMP
-WHERE subdomain = ?;
+WHERE subdomain IN (SELECT value FROM json_each(?));
 `
 
 type UsersDeleteModel struct {
@@ -33,8 +33,8 @@ func NewUsersDelete(sqldb *sql.DB, errs *[]error) *UsersDeleteStmt {
 	return &UsersDeleteStmt{stmt: stmt}
 }
 
-func (s *UsersDeleteStmt) Exec(ctx context.Context, Subdomains []string) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Subdomains)
+func (s *UsersDeleteStmt) Exec(ctx context.Context, SubdomainsJSONList string) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, SubdomainsJSONList)
 	if err != nil {
 		return nil, fmt.Errorf("UsersDelete exec error: %w", err)
 	}

@@ -1,7 +1,6 @@
 # TODO
 
 2. Nightscout reimplementation routes
-3. make sure tink is thread safe
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
 1. Write data sync logic and protections, punishing bad servers...
 

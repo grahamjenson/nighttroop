@@ -69,7 +69,7 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 	for rows.Next() {
 		var model UsersAllModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt); err != nil {
 			return nil, fmt.Errorf("UsersAll scan error: %w", err)
 		}
 		results = append(results, model)
@@ -79,7 +79,7 @@ func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
 
 func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
 	var model UsersAllModel
-	err := s.stmt.QueryRowContext(ctx).Scan()
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
 	if err != nil {
 		return model, fmt.Errorf("UsersAll query row error: %w", err)
 	}

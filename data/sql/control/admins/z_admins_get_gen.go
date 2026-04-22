@@ -75,7 +75,7 @@ func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetMode
 	for rows.Next() {
 		var model AdminsGetModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt); err != nil {
 			return nil, fmt.Errorf("AdminsGet scan error: %w", err)
 		}
 		results = append(results, model)
@@ -85,7 +85,7 @@ func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetMode
 
 func (s *AdminsGetStmt) QueryRow(ctx context.Context, Name string) (AdminsGetModel, error) {
 	var model AdminsGetModel
-	err := s.stmt.QueryRowContext(ctx, Name).Scan()
+	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt)
 	if err != nil {
 		return model, fmt.Errorf("AdminsGet query row error: %w", err)
 	}

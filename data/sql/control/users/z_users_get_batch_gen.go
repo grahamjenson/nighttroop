@@ -59,7 +59,7 @@ func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGet
 	for rows.Next() {
 		var model UsersGetBatchModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Subdomain, &model.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("UsersGetBatch scan error: %w", err)
 		}
 		results = append(results, model)
@@ -69,7 +69,7 @@ func (s *UsersGetBatchStmt) Query(ctx context.Context, batch string) ([]UsersGet
 
 func (s *UsersGetBatchStmt) QueryRow(ctx context.Context, batch string) (UsersGetBatchModel, error) {
 	var model UsersGetBatchModel
-	err := s.stmt.QueryRowContext(ctx, batch).Scan()
+	err := s.stmt.QueryRowContext(ctx, batch).Scan(&model.Subdomain, &model.LastSeenAt)
 	if err != nil {
 		return model, fmt.Errorf("UsersGetBatch query row error: %w", err)
 	}

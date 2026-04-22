@@ -9,7 +9,7 @@ import (
 )
 
 var UsersGetInactiveRaw string = `
--- Inactive Users are users that were once active but have stopped
+-- Inactive Users are users that were once active but have stopped, so the assumption is they have data 
 SELECT subdomain
 FROM users 
 WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || ? || ' minutes') OR last_write_at < datetime('now', '-' || ? || ' minutes'));
@@ -57,7 +57,7 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, lastSeenMinutes float6
 	for rows.Next() {
 		var model UsersGetInactiveModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Subdomain); err != nil {
 			return nil, fmt.Errorf("UsersGetInactive scan error: %w", err)
 		}
 		results = append(results, model)
@@ -67,7 +67,7 @@ func (s *UsersGetInactiveStmt) Query(ctx context.Context, lastSeenMinutes float6
 
 func (s *UsersGetInactiveStmt) QueryRow(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (UsersGetInactiveModel, error) {
 	var model UsersGetInactiveModel
-	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan()
+	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan(&model.Subdomain)
 	if err != nil {
 		return model, fmt.Errorf("UsersGetInactive query row error: %w", err)
 	}

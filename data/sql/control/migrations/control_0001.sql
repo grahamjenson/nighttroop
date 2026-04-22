@@ -25,19 +25,7 @@ CREATE TABLE admins (
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP, 
-);
-
-CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
-    details TEXT,
-    start INTEGER,
-    end INTEGER,
-
-    timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-    starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-    endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+    last_seen_at TIMESTAMP
 );
 
 -- This is a basic table that will stop certain urls from being added as data sources, for security and abuse prevention
@@ -58,22 +46,22 @@ CREATE TABLE data_source_block_list(
 
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-     value REAL,
-     TYPE TEXT,
-     timestamp INTEGER,
-    -- CONTRAINTS
-    UNIQUE(eid)
+     level TEXT,
+     -- context is a JSON value about where the log occured, e.g. what background job, what user...
+     context TEXT,
+     message TEXT,
+     timestamp INTEGER DEFAULT CURRENT_TIMESTAMP,
+     datetime TEXT GENERATED ALWAYS AS (datetime(timestamp / 1000, 'unixepoch')) VIRTUAL
 );
 
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
+    type TEXT,
     details TEXT,
-    START INTEGER,
-    END INTEGER,
+    start INTEGER,
+    end INTEGER,
 -- VIRTUAL
-timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+timestamp INTEGER GENERATED ALWAYS AS (start) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(start / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(end / 1000, 'unixepoch')) VIRTUAL
 );

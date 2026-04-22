@@ -36,7 +36,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 	slog.Info("Migrating", "statement", `CREATE TABLE users (`)
@@ -50,7 +50,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     last_write_at TIMESTAMP,
     deleted_at TIMESTAMP
 )`); err != nil {
-		return err
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE users (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE admins (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE admins (
@@ -60,22 +60,9 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP, 
+    last_seen_at TIMESTAMP
 )`); err != nil {
-		return err
-	}
-	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
-    details TEXT,
-    start INTEGER,
-    end INTEGER,
-    timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-    starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-    endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
-)`); err != nil {
-		return err
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE admins (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE data_source_block_list(`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE data_source_block_list(
@@ -85,34 +72,35 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     reason TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`); err != nil {
-		return err
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE data_source_block_list(`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE logs (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     value REAL,
-     TYPE TEXT,
-     timestamp INTEGER,
-    UNIQUE(eid)
+     level TEXT,
+     context TEXT,
+     message TEXT,
+     timestamp INTEGER DEFAULT CURRENT_TIMESTAMP,
+     datetime TEXT GENERATED ALWAYS AS (datetime(timestamp / 1000, 'unixepoch')) VIRTUAL
 )`); err != nil {
-		return err
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE logs (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
+    type TEXT,
     details TEXT,
-    START INTEGER,
-    END INTEGER,
-timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+    start INTEGER,
+    end INTEGER,
+timestamp INTEGER GENERATED ALWAYS AS (start) VIRTUAL,
+starttime TEXT GENERATED ALWAYS AS (datetime(start / 1000, 'unixepoch')) VIRTUAL,
+endtime TEXT GENERATED ALWAYS AS (datetime(end / 1000, 'unixepoch')) VIRTUAL
 )`); err != nil {
-		return err
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE events (`, err)
 	}
 
 	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001Sql"); err != nil {
-		return err
+		return fmt.Errorf("failed to insert migration version: %w", err)
 	}
 
 	return tx.Commit()

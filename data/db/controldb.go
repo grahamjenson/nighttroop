@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -207,7 +208,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 // TODO think through implications of errors at different places in this method
 func (db *ControlDB) DeleteUsers(subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
-	_, err := db.Stmts.UsersDelete.Exec(context.TODO(), subdomains)
+	_, err := db.Stmts.UsersDelete.Exec(context.TODO(), fmt.Sprintf("[%s]", strings.Join(subdomains, ",")))
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}

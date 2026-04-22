@@ -65,7 +65,7 @@ func (s *UsersGetNeverSeenStmt) Query(ctx context.Context, lastSeenMinutes float
 	for rows.Next() {
 		var model UsersGetNeverSeenModel
 		// Scanning into exported fields
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&model.Subdomain); err != nil {
 			return nil, fmt.Errorf("UsersGetNeverSeen scan error: %w", err)
 		}
 		results = append(results, model)
@@ -75,7 +75,7 @@ func (s *UsersGetNeverSeenStmt) Query(ctx context.Context, lastSeenMinutes float
 
 func (s *UsersGetNeverSeenStmt) QueryRow(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (UsersGetNeverSeenModel, error) {
 	var model UsersGetNeverSeenModel
-	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan()
+	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan(&model.Subdomain)
 	if err != nil {
 		return model, fmt.Errorf("UsersGetNeverSeen query row error: %w", err)
 	}
