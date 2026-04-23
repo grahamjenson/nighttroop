@@ -15,7 +15,7 @@ CREATE TABLE devices (
 CREATE TABLE devicestatus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp INTEGER NOT NULL,
-    device INTEGER FOREIGN KEY REFERENCES devices(id),
+    device_id INTEGER NOT NULL,
     deviceBattery INTEGER,
     pumpBattery INTEGER,
     pumpStatus TEXT,
@@ -136,27 +136,22 @@ UNIQUE(eid)
 ---------------------------------------------------
 -- LOGS
 -- hooks into the slog logging system and writes certain events here 
+-- systematically truncated "DELETE FROM $logsTableName WHERE id < (SELECT MAX(id) - $maxLogRows FROM $logsTableName)"
 ---------------------------------------------------
-
 
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-     value REAL,
-     TYPE TEXT,
-     timestamp INTEGER,
-    -- CONTRAINTS
-    UNIQUE(eid)
+     level TEXT,
+     -- context is a JSON value about where the log occured, e.g. what background job, what user...
+     context TEXT,
+     message TEXT,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
+    type TEXT,
     details TEXT,
-    START INTEGER,
-    END INTEGER,
--- VIRTUAL
-timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end TIMESTAMP
 );

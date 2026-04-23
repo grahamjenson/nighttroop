@@ -55,7 +55,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE devicestatus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp INTEGER NOT NULL,
-    device INTEGER FOREIGN KEY REFERENCES devices(id),
+    device_id INTEGER NOT NULL,
     deviceBattery INTEGER,
     pumpBattery INTEGER,
     pumpStatus TEXT,
@@ -165,23 +165,20 @@ UNIQUE(eid)
 	slog.Info("Migrating", "statement", `CREATE TABLE logs (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     value REAL,
-     TYPE TEXT,
-     timestamp INTEGER,
-    UNIQUE(eid)
+     level TEXT,
+     context TEXT,
+     message TEXT,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE logs (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    TYPE TEXT,
+    type TEXT,
     details TEXT,
-    START INTEGER,
-    END INTEGER,
-timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(START / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(END / 1000, 'unixepoch')) VIRTUAL
+    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end TIMESTAMP
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE events (`, err)
 	}

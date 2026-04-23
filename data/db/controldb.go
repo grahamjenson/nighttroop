@@ -3,10 +3,10 @@ package db
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
 	"sync"
 	"time"
 
@@ -208,7 +208,8 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 // TODO think through implications of errors at different places in this method
 func (db *ControlDB) DeleteUsers(subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
-	_, err := db.Stmts.UsersDelete.Exec(context.TODO(), fmt.Sprintf("[%s]", strings.Join(subdomains, ",")))
+	bytes, _ := json.Marshal(subdomains)
+	_, err := db.Stmts.UsersDelete.Exec(context.TODO(), string(bytes))
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
@@ -283,7 +284,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 		return nil, nil, fmt.Errorf("user not found")
 	}
 
-	lastSeenMoreThan10MinutesAgo := model.LastSeenAt.Add(10 * time.Minute).After(time.Now())
+	lastSeenMoreThan10MinutesAgo := model.LastSeenAt == nil || time.Now().After(model.LastSeenAt.Add(-10*time.Minute))
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
 		db.Stmts.UsersUpdateLastSeen.Exec(context.TODO(), subdomain)
 	}

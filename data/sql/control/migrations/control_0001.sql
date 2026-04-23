@@ -50,18 +50,13 @@ CREATE TABLE logs (
      -- context is a JSON value about where the log occured, e.g. what background job, what user...
      context TEXT,
      message TEXT,
-     timestamp INTEGER DEFAULT CURRENT_TIMESTAMP,
-     datetime TEXT GENERATED ALWAYS AS (datetime(timestamp / 1000, 'unixepoch')) VIRTUAL
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
     details TEXT,
-    start INTEGER,
-    end INTEGER,
--- VIRTUAL
-timestamp INTEGER GENERATED ALWAYS AS (start) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(start / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(end / 1000, 'unixepoch')) VIRTUAL
+    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end TIMESTAMP
 );

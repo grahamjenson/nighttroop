@@ -80,8 +80,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
      level TEXT,
      context TEXT,
      message TEXT,
-     timestamp INTEGER DEFAULT CURRENT_TIMESTAMP,
-     datetime TEXT GENERATED ALWAYS AS (datetime(timestamp / 1000, 'unixepoch')) VIRTUAL
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE logs (`, err)
 	}
@@ -90,11 +89,8 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
     details TEXT,
-    start INTEGER,
-    end INTEGER,
-timestamp INTEGER GENERATED ALWAYS AS (start) VIRTUAL,
-starttime TEXT GENERATED ALWAYS AS (datetime(start / 1000, 'unixepoch')) VIRTUAL,
-endtime TEXT GENERATED ALWAYS AS (datetime(end / 1000, 'unixepoch')) VIRTUAL
+    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end TIMESTAMP
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE events (`, err)
 	}
