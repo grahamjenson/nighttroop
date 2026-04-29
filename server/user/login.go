@@ -185,7 +185,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 	}
 }
 
-func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*devices.DevicesGetModel, error) {
+func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*devices.GetModel, error) {
 	// First try the JWT token (either header or cookie)
 	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 	userDB, _, err := controlDB.GetUser(subdomain, false)
@@ -201,7 +201,7 @@ func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromT
 	return &device, nil
 }
 
-func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*devices.DevicesGetModel, error) {
+func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*devices.GetModel, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
@@ -218,7 +218,7 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 	return &device, nil
 }
 
-func deviceRequiresTOTPValidation(device *devices.DevicesGetModel) bool {
+func deviceRequiresTOTPValidation(device *devices.GetModel) bool {
 	// Constraint: TOTP validation is required for admin users
 	if device.Role == consts.UserRoleAdmin.String() {
 		return true
@@ -230,7 +230,7 @@ func deviceRequiresTOTPValidation(device *devices.DevicesGetModel) bool {
 	return false
 }
 
-func validateDeviceTOTP(config config.ServerConfig, device *devices.DevicesGetModel, totpToken string) error {
+func validateDeviceTOTP(config config.ServerConfig, device *devices.GetModel, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
@@ -311,7 +311,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 }
 
-func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, password, totpToken string) (*devices.DevicesGetModel, error) {
+func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, password, totpToken string) (*devices.GetModel, error) {
 	device, err := loginTheUserPasswordOnly(userDB, devicename, password)
 	if err != nil {
 		return nil, err

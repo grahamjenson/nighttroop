@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-var UsersGetNeverSeenRaw string = `
+var GetNeverSeenRaw string = `
 -- finds deleted_at is null users where 
 --    last_seen_at is null and created_at is more than minutes ago and 
 --    OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
@@ -23,70 +23,70 @@ WHERE deleted_at IS NULL
         );
 `
 
-type UsersGetNeverSeenModel struct {
+type GetNeverSeenModel struct {
 	Subdomain string
 }
 
-func (m UsersGetNeverSeenModel) GetSubdomain() string {
+func (m GetNeverSeenModel) GetSubdomain() string {
 	return m.Subdomain
 }
 
-type UsersGetNeverSeenStmt struct {
+type GetNeverSeenStmt struct {
 	stmt *sql.Stmt
 }
 
 // Non standard error collection, but makes it much cleaner on creation since we call so many of these
-func NewUsersGetNeverSeen(sqldb *sql.DB, errs *[]error) *UsersGetNeverSeenStmt {
+func NewGetNeverSeen(sqldb *sql.DB, errs *[]error) *GetNeverSeenStmt {
 	var err error
-	stmt, err := sqldb.Prepare(UsersGetNeverSeenRaw)
+	stmt, err := sqldb.Prepare(GetNeverSeenRaw)
 	if err != nil {
-		*errs = append(*errs, fmt.Errorf("UsersGetNeverSeen create error: %w", err))
+		*errs = append(*errs, fmt.Errorf("GetNeverSeen create error: %w", err))
 		return nil
 	}
-	return &UsersGetNeverSeenStmt{stmt: stmt}
+	return &GetNeverSeenStmt{stmt: stmt}
 }
 
-func (s *UsersGetNeverSeenStmt) Exec(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (sql.Result, error) {
+func (s *GetNeverSeenStmt) Exec(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, lastSeenMinutes, lastWriteMinutes)
 	if err != nil {
-		return nil, fmt.Errorf("UsersGetNeverSeen exec error: %w", err)
+		return nil, fmt.Errorf("GetNeverSeen exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *UsersGetNeverSeenStmt) Query(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) ([]UsersGetNeverSeenModel, error) {
+func (s *GetNeverSeenStmt) Query(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) ([]GetNeverSeenModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, lastSeenMinutes, lastWriteMinutes)
 	if err != nil {
-		return nil, fmt.Errorf("UsersGetNeverSeen query error: %w", err)
+		return nil, fmt.Errorf("GetNeverSeen query error: %w", err)
 	}
 	defer rows.Close()
 
-	var results []UsersGetNeverSeenModel
+	var results []GetNeverSeenModel
 	for rows.Next() {
-		var model UsersGetNeverSeenModel
+		var model GetNeverSeenModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.Subdomain); err != nil {
-			return nil, fmt.Errorf("UsersGetNeverSeen scan error: %w", err)
+			return nil, fmt.Errorf("GetNeverSeen scan error: %w", err)
 		}
 		results = append(results, model)
 	}
 	return results, nil
 }
 
-func (s *UsersGetNeverSeenStmt) QueryRow(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (UsersGetNeverSeenModel, error) {
-	var model UsersGetNeverSeenModel
+func (s *GetNeverSeenStmt) QueryRow(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (GetNeverSeenModel, error) {
+	var model GetNeverSeenModel
 	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan(&model.Subdomain)
 	if err != nil {
-		return model, fmt.Errorf("UsersGetNeverSeen query row error: %w", err)
+		return model, fmt.Errorf("GetNeverSeen query row error: %w", err)
 	}
 	return model, nil
 }
 
-func (s *UsersGetNeverSeenStmt) QueryRowExpanded(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (string, error) {
-	var model UsersGetNeverSeenModel
+func (s *GetNeverSeenStmt) QueryRowExpanded(ctx context.Context, lastSeenMinutes float64, lastWriteMinutes float64) (string, error) {
+	var model GetNeverSeenModel
 	err := s.stmt.QueryRowContext(ctx, lastSeenMinutes, lastWriteMinutes).Scan(&model.Subdomain)
 	if err != nil {
-		return model.Subdomain, fmt.Errorf("UsersGetNeverSeen query row error: %w", err)
+		return model.Subdomain, fmt.Errorf("GetNeverSeen query row error: %w", err)
 	}
 
 	// 2. Return variables and the error (error will be non-nil if Scan fails)

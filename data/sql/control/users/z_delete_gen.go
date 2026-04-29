@@ -8,35 +8,35 @@ import (
 	"fmt"
 )
 
-var UsersDeleteRaw string = `
+var DeleteRaw string = `
 -- Passed a list of names to delete we update the table deleted at
 UPDATE users
 SET deleted_at = CURRENT_TIMESTAMP
 WHERE subdomain IN (SELECT value FROM json_each(?));
 `
 
-type UsersDeleteModel struct {
+type DeleteModel struct {
 }
 
-type UsersDeleteStmt struct {
+type DeleteStmt struct {
 	stmt *sql.Stmt
 }
 
 // Non standard error collection, but makes it much cleaner on creation since we call so many of these
-func NewUsersDelete(sqldb *sql.DB, errs *[]error) *UsersDeleteStmt {
+func NewDelete(sqldb *sql.DB, errs *[]error) *DeleteStmt {
 	var err error
-	stmt, err := sqldb.Prepare(UsersDeleteRaw)
+	stmt, err := sqldb.Prepare(DeleteRaw)
 	if err != nil {
-		*errs = append(*errs, fmt.Errorf("UsersDelete create error: %w", err))
+		*errs = append(*errs, fmt.Errorf("Delete create error: %w", err))
 		return nil
 	}
-	return &UsersDeleteStmt{stmt: stmt}
+	return &DeleteStmt{stmt: stmt}
 }
 
-func (s *UsersDeleteStmt) Exec(ctx context.Context, SubdomainsJSONList string) (sql.Result, error) {
+func (s *DeleteStmt) Exec(ctx context.Context, SubdomainsJSONList string) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, SubdomainsJSONList)
 	if err != nil {
-		return nil, fmt.Errorf("UsersDelete exec error: %w", err)
+		return nil, fmt.Errorf("Delete exec error: %w", err)
 	}
 	return req, nil
 }

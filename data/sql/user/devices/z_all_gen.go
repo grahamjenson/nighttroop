@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-var DevicesAllRaw string = `
+var AllRaw string = `
 SELECT name, password, totp_secret, role, created_at, last_seen_at FROM devices;
 `
 
-type DevicesAllModel struct {
+type AllModel struct {
 	Name       string
 	Password   string
 	TotpSecret string
@@ -22,81 +22,81 @@ type DevicesAllModel struct {
 	LastSeenAt *time.Time
 }
 
-func (m DevicesAllModel) GetName() string {
+func (m AllModel) GetName() string {
 	return m.Name
 }
-func (m DevicesAllModel) GetPassword() string {
+func (m AllModel) GetPassword() string {
 	return m.Password
 }
-func (m DevicesAllModel) GetTotpSecret() string {
+func (m AllModel) GetTotpSecret() string {
 	return m.TotpSecret
 }
-func (m DevicesAllModel) GetRole() string {
+func (m AllModel) GetRole() string {
 	return m.Role
 }
-func (m DevicesAllModel) GetCreatedAt() *time.Time {
+func (m AllModel) GetCreatedAt() *time.Time {
 	return m.CreatedAt
 }
-func (m DevicesAllModel) GetLastSeenAt() *time.Time {
+func (m AllModel) GetLastSeenAt() *time.Time {
 	return m.LastSeenAt
 }
 
-type DevicesAllStmt struct {
+type AllStmt struct {
 	stmt *sql.Stmt
 }
 
 // Non standard error collection, but makes it much cleaner on creation since we call so many of these
-func NewDevicesAll(sqldb *sql.DB, errs *[]error) *DevicesAllStmt {
+func NewAll(sqldb *sql.DB, errs *[]error) *AllStmt {
 	var err error
-	stmt, err := sqldb.Prepare(DevicesAllRaw)
+	stmt, err := sqldb.Prepare(AllRaw)
 	if err != nil {
-		*errs = append(*errs, fmt.Errorf("DevicesAll create error: %w", err))
+		*errs = append(*errs, fmt.Errorf("All create error: %w", err))
 		return nil
 	}
-	return &DevicesAllStmt{stmt: stmt}
+	return &AllStmt{stmt: stmt}
 }
 
-func (s *DevicesAllStmt) Exec(ctx context.Context) (sql.Result, error) {
+func (s *AllStmt) Exec(ctx context.Context) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("DevicesAll exec error: %w", err)
+		return nil, fmt.Errorf("All exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *DevicesAllStmt) Query(ctx context.Context) ([]DevicesAllModel, error) {
+func (s *AllStmt) Query(ctx context.Context) ([]AllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("DevicesAll query error: %w", err)
+		return nil, fmt.Errorf("All query error: %w", err)
 	}
 	defer rows.Close()
 
-	var results []DevicesAllModel
+	var results []AllModel
 	for rows.Next() {
-		var model DevicesAllModel
+		var model AllModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt); err != nil {
-			return nil, fmt.Errorf("DevicesAll scan error: %w", err)
+			return nil, fmt.Errorf("All scan error: %w", err)
 		}
 		results = append(results, model)
 	}
 	return results, nil
 }
 
-func (s *DevicesAllStmt) QueryRow(ctx context.Context) (DevicesAllModel, error) {
-	var model DevicesAllModel
+func (s *AllStmt) QueryRow(ctx context.Context) (AllModel, error) {
+	var model AllModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
-		return model, fmt.Errorf("DevicesAll query row error: %w", err)
+		return model, fmt.Errorf("All query row error: %w", err)
 	}
 	return model, nil
 }
 
-func (s *DevicesAllStmt) QueryRowExpanded(ctx context.Context) (string, string, string, string, *time.Time, *time.Time, error) {
-	var model DevicesAllModel
+func (s *AllStmt) QueryRowExpanded(ctx context.Context) (string, string, string, string, *time.Time, *time.Time, error) {
+	var model AllModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.Name, &model.Password, &model.TotpSecret, &model.Role, &model.CreatedAt, &model.LastSeenAt)
 	if err != nil {
-		return model.Name, model.Password, model.TotpSecret, model.Role, model.CreatedAt, model.LastSeenAt, fmt.Errorf("DevicesAll query row error: %w", err)
+		return model.Name, model.Password, model.TotpSecret, model.Role, model.CreatedAt, model.LastSeenAt, fmt.Errorf("All query row error: %w", err)
 	}
 
 	// 2. Return variables and the error (error will be non-nil if Scan fails)

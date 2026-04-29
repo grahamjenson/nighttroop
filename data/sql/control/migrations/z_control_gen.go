@@ -46,6 +46,7 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL,
     backup_key_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
     last_seen_at TIMESTAMP,
     last_write_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -73,16 +74,6 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE data_source_block_list(`, err)
-	}
-	slog.Info("Migrating", "statement", `CREATE TABLE logs (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-     level TEXT,
-     context TEXT,
-     message TEXT,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)`); err != nil {
-		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE logs (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (

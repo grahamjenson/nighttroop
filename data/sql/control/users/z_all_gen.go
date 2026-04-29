@@ -9,88 +9,88 @@ import (
 	"time"
 )
 
-var UsersAllRaw string = `
+var AllRaw string = `
 SELECT subdomain, created_at, last_seen_at, deleted_at
 FROM users;
 
 `
 
-type UsersAllModel struct {
+type AllModel struct {
 	Subdomain  string
 	CreatedAt  *time.Time
 	LastSeenAt *time.Time
 	DeletedAt  *time.Time
 }
 
-func (m UsersAllModel) GetSubdomain() string {
+func (m AllModel) GetSubdomain() string {
 	return m.Subdomain
 }
-func (m UsersAllModel) GetCreatedAt() *time.Time {
+func (m AllModel) GetCreatedAt() *time.Time {
 	return m.CreatedAt
 }
-func (m UsersAllModel) GetLastSeenAt() *time.Time {
+func (m AllModel) GetLastSeenAt() *time.Time {
 	return m.LastSeenAt
 }
-func (m UsersAllModel) GetDeletedAt() *time.Time {
+func (m AllModel) GetDeletedAt() *time.Time {
 	return m.DeletedAt
 }
 
-type UsersAllStmt struct {
+type AllStmt struct {
 	stmt *sql.Stmt
 }
 
 // Non standard error collection, but makes it much cleaner on creation since we call so many of these
-func NewUsersAll(sqldb *sql.DB, errs *[]error) *UsersAllStmt {
+func NewAll(sqldb *sql.DB, errs *[]error) *AllStmt {
 	var err error
-	stmt, err := sqldb.Prepare(UsersAllRaw)
+	stmt, err := sqldb.Prepare(AllRaw)
 	if err != nil {
-		*errs = append(*errs, fmt.Errorf("UsersAll create error: %w", err))
+		*errs = append(*errs, fmt.Errorf("All create error: %w", err))
 		return nil
 	}
-	return &UsersAllStmt{stmt: stmt}
+	return &AllStmt{stmt: stmt}
 }
 
-func (s *UsersAllStmt) Exec(ctx context.Context) (sql.Result, error) {
+func (s *AllStmt) Exec(ctx context.Context) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("UsersAll exec error: %w", err)
+		return nil, fmt.Errorf("All exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *UsersAllStmt) Query(ctx context.Context) ([]UsersAllModel, error) {
+func (s *AllStmt) Query(ctx context.Context) ([]AllModel, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("UsersAll query error: %w", err)
+		return nil, fmt.Errorf("All query error: %w", err)
 	}
 	defer rows.Close()
 
-	var results []UsersAllModel
+	var results []AllModel
 	for rows.Next() {
-		var model UsersAllModel
+		var model AllModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt); err != nil {
-			return nil, fmt.Errorf("UsersAll scan error: %w", err)
+			return nil, fmt.Errorf("All scan error: %w", err)
 		}
 		results = append(results, model)
 	}
 	return results, nil
 }
 
-func (s *UsersAllStmt) QueryRow(ctx context.Context) (UsersAllModel, error) {
-	var model UsersAllModel
+func (s *AllStmt) QueryRow(ctx context.Context) (AllModel, error) {
+	var model AllModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
 	if err != nil {
-		return model, fmt.Errorf("UsersAll query row error: %w", err)
+		return model, fmt.Errorf("All query row error: %w", err)
 	}
 	return model, nil
 }
 
-func (s *UsersAllStmt) QueryRowExpanded(ctx context.Context) (string, *time.Time, *time.Time, *time.Time, error) {
-	var model UsersAllModel
+func (s *AllStmt) QueryRowExpanded(ctx context.Context) (string, *time.Time, *time.Time, *time.Time, error) {
+	var model AllModel
 	err := s.stmt.QueryRowContext(ctx).Scan(&model.Subdomain, &model.CreatedAt, &model.LastSeenAt, &model.DeletedAt)
 	if err != nil {
-		return model.Subdomain, model.CreatedAt, model.LastSeenAt, model.DeletedAt, fmt.Errorf("UsersAll query row error: %w", err)
+		return model.Subdomain, model.CreatedAt, model.LastSeenAt, model.DeletedAt, fmt.Errorf("All query row error: %w", err)
 	}
 
 	// 2. Return variables and the error (error will be non-nil if Scan fails)

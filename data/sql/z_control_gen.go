@@ -12,31 +12,31 @@ import (
 )
 
 type ControlStatements struct {
-	AdminsCreate *admins.AdminsCreateStmt
+	AdminsCreate *admins.CreateStmt
 
-	AdminsGet *admins.AdminsGetStmt
+	AdminsGet *admins.GetStmt
 
-	TestUsersTruncateAll *test.TestUsersTruncateAllStmt
+	TestTestUsersTruncateAll *test.TestUsersTruncateAllStmt
 
-	UsersAll *users.UsersAllStmt
+	UsersAll *users.AllStmt
 
-	UsersCreate *users.UsersCreateStmt
+	UsersCreate *users.CreateStmt
 
-	UsersDelete *users.UsersDeleteStmt
+	UsersDelete *users.DeleteStmt
 
-	UsersGetBatch *users.UsersGetBatchStmt
+	UsersGetBatch *users.GetBatchStmt
 
-	UsersGet *users.UsersGetStmt
+	UsersGet *users.GetStmt
 
-	UsersGetInactive *users.UsersGetInactiveStmt
+	UsersGetInactive *users.GetInactiveStmt
 
-	UsersGetNeverSeen *users.UsersGetNeverSeenStmt
+	UsersGetNeverSeen *users.GetNeverSeenStmt
 
-	UsersNotDeleted *users.UsersNotDeletedStmt
+	UsersNotDeleted *users.NotDeletedStmt
 
-	UsersUpdateLastSeen *users.UsersUpdateLastSeenStmt
+	UsersUpdateLastSeen *users.UpdateLastSeenStmt
 
-	UsersUpdateLastWrite *users.UsersUpdateLastWriteStmt
+	UsersUpdateLastWrite *users.UpdateLastWriteStmt
 }
 
 func NewControlStatements(sqldb *sql.DB) (*ControlStatements, error) {
@@ -44,31 +44,31 @@ func NewControlStatements(sqldb *sql.DB) (*ControlStatements, error) {
 	var errs []error
 	stmts := &ControlStatements{
 
-		AdminsCreate: admins.NewAdminsCreate(sqldb, &errs),
+		AdminsCreate: admins.NewCreate(sqldb, &errs),
 
-		AdminsGet: admins.NewAdminsGet(sqldb, &errs),
+		AdminsGet: admins.NewGet(sqldb, &errs),
 
-		TestUsersTruncateAll: test.NewTestUsersTruncateAll(sqldb, &errs),
+		TestTestUsersTruncateAll: test.NewTestUsersTruncateAll(sqldb, &errs),
 
-		UsersAll: users.NewUsersAll(sqldb, &errs),
+		UsersAll: users.NewAll(sqldb, &errs),
 
-		UsersCreate: users.NewUsersCreate(sqldb, &errs),
+		UsersCreate: users.NewCreate(sqldb, &errs),
 
-		UsersDelete: users.NewUsersDelete(sqldb, &errs),
+		UsersDelete: users.NewDelete(sqldb, &errs),
 
-		UsersGetBatch: users.NewUsersGetBatch(sqldb, &errs),
+		UsersGetBatch: users.NewGetBatch(sqldb, &errs),
 
-		UsersGet: users.NewUsersGet(sqldb, &errs),
+		UsersGet: users.NewGet(sqldb, &errs),
 
-		UsersGetInactive: users.NewUsersGetInactive(sqldb, &errs),
+		UsersGetInactive: users.NewGetInactive(sqldb, &errs),
 
-		UsersGetNeverSeen: users.NewUsersGetNeverSeen(sqldb, &errs),
+		UsersGetNeverSeen: users.NewGetNeverSeen(sqldb, &errs),
 
-		UsersNotDeleted: users.NewUsersNotDeleted(sqldb, &errs),
+		UsersNotDeleted: users.NewNotDeleted(sqldb, &errs),
 
-		UsersUpdateLastSeen: users.NewUsersUpdateLastSeen(sqldb, &errs),
+		UsersUpdateLastSeen: users.NewUpdateLastSeen(sqldb, &errs),
 
-		UsersUpdateLastWrite: users.NewUsersUpdateLastWrite(sqldb, &errs),
+		UsersUpdateLastWrite: users.NewUpdateLastWrite(sqldb, &errs),
 	}
 
 	if finalErr := errors.Join(errs...); finalErr != nil {

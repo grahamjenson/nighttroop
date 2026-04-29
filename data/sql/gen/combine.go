@@ -25,6 +25,7 @@ type Config struct {
 type StructInfo struct {
 	Name            string
 	NameWithoutStmt string
+	AttributeName   string
 	PkgAndName      string
 	NewFunction     string
 }
@@ -42,7 +43,7 @@ import (
 
 type {{.Name}}Statements struct {
 	{{range .Structs}}
-	{{.NameWithoutStmt}} *{{.PkgAndName}}
+	{{.AttributeName}} *{{.PkgAndName}}
 	{{end}}
 }
 
@@ -51,7 +52,7 @@ func New{{.Name}}Statements(sqldb *sql.DB) (*{{.Name}}Statements, error) {
 	var errs []error
 	stmts := &{{.Name}}Statements{
 		{{range .Structs}}
-		{{.NameWithoutStmt}}: {{.NewFunction}}(sqldb, &errs),
+		{{.AttributeName}}: {{.NewFunction}}(sqldb, &errs),
 		{{end}}
 	}
 
@@ -154,6 +155,7 @@ func GetStmtsFromFile(filePath string) (string, []StructInfo, error) {
 	}
 
 	pkgName := node.Name.Name
+	pkgNameCapital := strings.Title(pkgName)
 	var structs []StructInfo
 
 	ast.Inspect(node, func(n ast.Node) bool {
@@ -165,9 +167,11 @@ func GetStmtsFromFile(filePath string) (string, []StructInfo, error) {
 		name := ts.Name.Name
 		if strings.HasSuffix(name, "Stmt") {
 			nameWithoutStmt := strings.TrimSuffix(name, "Stmt")
+			attributeName := pkgNameCapital + nameWithoutStmt
 			s := StructInfo{
 				Name:            name,
 				NameWithoutStmt: nameWithoutStmt,
+				AttributeName:   attributeName,
 				PkgAndName:      fmt.Sprintf("%s.%s", pkgName, name),
 				NewFunction:     fmt.Sprintf("%s.New%s", pkgName, nameWithoutStmt),
 			}

@@ -274,7 +274,7 @@ func (db *ControlDB) UserExists(subdomain string) bool {
 	return ok
 }
 
-func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *controlsqlusers.UsersGetModel, error) {
+func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *controlsqlusers.GetModel, error) {
 	// Check if user exists in the db
 	model, err := db.Stmts.UsersGet.QueryRow(context.TODO(), subdomain)
 	if err != nil {
@@ -371,7 +371,7 @@ func (db *ControlDB) TestOnlyDeleteAllUsers(users []*UserDB) error {
 		return nil
 	}
 	db.users = make(map[string]*UserDB)
-	_, err := db.Stmts.TestUsersTruncateAll.Exec(context.TODO())
+	_, err := db.Stmts.TestTestUsersTruncateAll.Exec(context.TODO())
 
 	return err
 }

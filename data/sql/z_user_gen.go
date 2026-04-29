@@ -10,13 +10,13 @@ import (
 )
 
 type UserStatements struct {
-	DevicesAll *devices.DevicesAllStmt
+	DevicesAll *devices.AllStmt
 
-	DevicesCreate *devices.DevicesCreateStmt
+	DevicesCreate *devices.CreateStmt
 
-	DevicesGet *devices.DevicesGetStmt
+	DevicesGet *devices.GetStmt
 
-	DevicesUpdateLastSeenAt *devices.DevicesUpdateLastSeenAtStmt
+	DevicesUpdateLastSeenAt *devices.UpdateLastSeenAtStmt
 }
 
 func NewUserStatements(sqldb *sql.DB) (*UserStatements, error) {
@@ -24,13 +24,13 @@ func NewUserStatements(sqldb *sql.DB) (*UserStatements, error) {
 	var errs []error
 	stmts := &UserStatements{
 
-		DevicesAll: devices.NewDevicesAll(sqldb, &errs),
+		DevicesAll: devices.NewAll(sqldb, &errs),
 
-		DevicesCreate: devices.NewDevicesCreate(sqldb, &errs),
+		DevicesCreate: devices.NewCreate(sqldb, &errs),
 
-		DevicesGet: devices.NewDevicesGet(sqldb, &errs),
+		DevicesGet: devices.NewGet(sqldb, &errs),
 
-		DevicesUpdateLastSeenAt: devices.NewDevicesUpdateLastSeenAt(sqldb, &errs),
+		DevicesUpdateLastSeenAt: devices.NewUpdateLastSeenAt(sqldb, &errs),
 	}
 
 	if finalErr := errors.Join(errs...); finalErr != nil {

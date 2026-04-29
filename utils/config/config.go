@@ -70,7 +70,8 @@ type ServerConfig struct {
 	MaxUserNeverSeenInMins    int
 	MaxUserNeverWrittenInMins int
 
-	MaxUserDBSizeMB int
+	MaxUserDBSizeKB    int
+	MaxControlDBSizeKB int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
@@ -159,9 +160,10 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		UserPOSTPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
 
 		// User Limits
-		MaxUsers:          configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
-		MaxDevicesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
-		MaxUserDBSizeMB:   configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_MB", 100),
+		MaxUsers:           configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
+		MaxDevicesPerUser:  configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
+		MaxUserDBSizeKB:    configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
+		MaxControlDBSizeKB: configIntSelect(dotenvdev, dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
 
 		// Archiving limits
 		MaxUserLastSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_USER_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
@@ -385,7 +387,7 @@ func printServerConfig(config ServerConfig) {
 		"MaxDevicesPerUser", config.MaxDevicesPerUser,
 		"MaxUserLastSeenInMins", config.MaxUserLastSeenInMins,
 		"MaxUserLastWrittenInMins", config.MaxUserLastWrittenInMins,
-		"MaxUserDBSizeMB", config.MaxUserDBSizeMB,
+		"MaxUserDBSizeKB", config.MaxUserDBSizeKB,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
 	)

@@ -82,6 +82,16 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE data_sources (`, err)
 	}
+	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT,
+    details TEXT,
+    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end TIMESTAMP
+)`); err != nil {
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE events (`, err)
+	}
 	slog.Info("Migrating", "statement", `CREATE TABLE sgvs (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -161,26 +171,6 @@ targets_json TEXT, -- { [high, low] }
 UNIQUE(eid)
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE profile (`, err)
-	}
-	slog.Info("Migrating", "statement", `CREATE TABLE logs (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-     level TEXT,
-     context TEXT,
-     message TEXT,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)`); err != nil {
-		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE logs (`, err)
-	}
-	slog.Info("Migrating", "statement", `CREATE TABLE events (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT,
-    details TEXT,
-    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    end TIMESTAMP
-)`); err != nil {
-		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE events (`, err)
 	}
 
 	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "User0001Sql"); err != nil {

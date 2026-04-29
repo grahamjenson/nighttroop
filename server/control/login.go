@@ -122,7 +122,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*admins.AdminsGetModel, error) {
+func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*admins.GetModel, error) {
 	admin, err := controlDB.Stmts.AdminsGet.QueryRow(context.TODO(), username)
 	if err != nil {
 		return nil, fmt.Errorf("admin not found: %w", err)

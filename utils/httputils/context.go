@@ -74,22 +74,22 @@ func GetIPFromHTTPContext(ctx context.Context) string {
 // UserDB
 ////
 
-func SetUserDBAndModelInHTTPContext(ctx context.Context, userDB *db.UserDB, userGetModel *users.UsersGetModel) context.Context {
+func SetUserDBAndModelInHTTPContext(ctx context.Context, userDB *db.UserDB, userGetModel *users.GetModel) context.Context {
 	ctx = context.WithValue(ctx, UserDBKey, userDB)
 	ctx = context.WithValue(ctx, UserGetModelKey, userGetModel)
 	return ctx
 }
 
-func GetUserDBAndModelFromHTTPContext(ctx context.Context) (*db.UserDB, *users.UsersGetModel) {
+func GetUserDBAndModelFromHTTPContext(ctx context.Context) (*db.UserDB, *users.GetModel) {
 	if ctx == nil {
 		return nil, nil
 	}
 	var userDB *db.UserDB
-	var userGetModel *users.UsersGetModel
+	var userGetModel *users.GetModel
 	if reqID, ok := ctx.Value(UserDBKey).(*db.UserDB); ok {
 		userDB = reqID
 	}
-	if reqID, ok := ctx.Value(UserGetModelKey).(*users.UsersGetModel); ok {
+	if reqID, ok := ctx.Value(UserGetModelKey).(*users.GetModel); ok {
 		userGetModel = reqID
 	}
 	return userDB, userGetModel

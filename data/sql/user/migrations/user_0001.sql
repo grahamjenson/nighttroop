@@ -44,6 +44,15 @@ CREATE TABLE data_sources (
 
 );
 
+-- Events table primarily used to show user issues and results of events like syncing errors or login attempts, stuff like that.
+CREATE TABLE events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT,
+    details TEXT,
+    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end TIMESTAMP
+);
+
 ---------------------------------------------------
 -- TABLES ABOUT PATIENT DATA
 ---------------------------------------------------
@@ -133,25 +142,3 @@ UNIQUE(eid)
 
 
 
----------------------------------------------------
--- LOGS
--- hooks into the slog logging system and writes certain events here 
--- systematically truncated "DELETE FROM $logsTableName WHERE id < (SELECT MAX(id) - $maxLogRows FROM $logsTableName)"
----------------------------------------------------
-
-CREATE TABLE logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-     level TEXT,
-     -- context is a JSON value about where the log occured, e.g. what background job, what user...
-     context TEXT,
-     message TEXT,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT,
-    details TEXT,
-    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    end TIMESTAMP
-);

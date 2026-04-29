@@ -12,6 +12,10 @@ CREATE TABLE users (
     
     backup_key_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
+    
+
     -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
     last_seen_at TIMESTAMP,
     last_write_at TIMESTAMP,
@@ -29,6 +33,7 @@ CREATE TABLE admins (
 );
 
 -- This is a basic table that will stop certain urls from being added as data sources, for security and abuse prevention
+-- TODO: everything here
 CREATE TABLE data_source_block_list(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT, -- in case it is a dexcom account or something
@@ -37,21 +42,8 @@ CREATE TABLE data_source_block_list(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
----------------------------------------------------
--- LOGS
--- hooks into the slog logging system and writes certain events here 
--- systematically truncated "DELETE FROM $logsTableName WHERE id < (SELECT MAX(id) - $maxLogRows FROM $logsTableName)"
----------------------------------------------------
-
-CREATE TABLE logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-     level TEXT,
-     -- context is a JSON value about where the log occured, e.g. what background job, what user...
-     context TEXT,
-     message TEXT,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- primarily used to show control issues and results, as well as timing functions.
+-- Can show when different background jobs run, their results and any errors.
 
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-var AdminsGetRaw string = `
+var GetRaw string = `
 SELECT name, password, role, totp_secret, last_seen_at, created_at FROM admins WHERE name = ?;
 `
 
-type AdminsGetModel struct {
+type GetModel struct {
 	Name       string
 	Password   string
 	Role       string
@@ -22,81 +22,81 @@ type AdminsGetModel struct {
 	CreatedAt  *time.Time
 }
 
-func (m AdminsGetModel) GetName() string {
+func (m GetModel) GetName() string {
 	return m.Name
 }
-func (m AdminsGetModel) GetPassword() string {
+func (m GetModel) GetPassword() string {
 	return m.Password
 }
-func (m AdminsGetModel) GetRole() string {
+func (m GetModel) GetRole() string {
 	return m.Role
 }
-func (m AdminsGetModel) GetTotpSecret() string {
+func (m GetModel) GetTotpSecret() string {
 	return m.TotpSecret
 }
-func (m AdminsGetModel) GetLastSeenAt() *time.Time {
+func (m GetModel) GetLastSeenAt() *time.Time {
 	return m.LastSeenAt
 }
-func (m AdminsGetModel) GetCreatedAt() *time.Time {
+func (m GetModel) GetCreatedAt() *time.Time {
 	return m.CreatedAt
 }
 
-type AdminsGetStmt struct {
+type GetStmt struct {
 	stmt *sql.Stmt
 }
 
 // Non standard error collection, but makes it much cleaner on creation since we call so many of these
-func NewAdminsGet(sqldb *sql.DB, errs *[]error) *AdminsGetStmt {
+func NewGet(sqldb *sql.DB, errs *[]error) *GetStmt {
 	var err error
-	stmt, err := sqldb.Prepare(AdminsGetRaw)
+	stmt, err := sqldb.Prepare(GetRaw)
 	if err != nil {
-		*errs = append(*errs, fmt.Errorf("AdminsGet create error: %w", err))
+		*errs = append(*errs, fmt.Errorf("Get create error: %w", err))
 		return nil
 	}
-	return &AdminsGetStmt{stmt: stmt}
+	return &GetStmt{stmt: stmt}
 }
 
-func (s *AdminsGetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
+func (s *GetStmt) Exec(ctx context.Context, Name string) (sql.Result, error) {
 	req, err := s.stmt.ExecContext(ctx, Name)
 	if err != nil {
-		return nil, fmt.Errorf("AdminsGet exec error: %w", err)
+		return nil, fmt.Errorf("Get exec error: %w", err)
 	}
 	return req, nil
 }
 
-func (s *AdminsGetStmt) Query(ctx context.Context, Name string) ([]AdminsGetModel, error) {
+func (s *GetStmt) Query(ctx context.Context, Name string) ([]GetModel, error) {
 	rows, err := s.stmt.QueryContext(ctx, Name)
 	if err != nil {
-		return nil, fmt.Errorf("AdminsGet query error: %w", err)
+		return nil, fmt.Errorf("Get query error: %w", err)
 	}
 	defer rows.Close()
 
-	var results []AdminsGetModel
+	var results []GetModel
 	for rows.Next() {
-		var model AdminsGetModel
+		var model GetModel
 		// Scanning into exported fields
 		if err := rows.Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt); err != nil {
-			return nil, fmt.Errorf("AdminsGet scan error: %w", err)
+			return nil, fmt.Errorf("Get scan error: %w", err)
 		}
 		results = append(results, model)
 	}
 	return results, nil
 }
 
-func (s *AdminsGetStmt) QueryRow(ctx context.Context, Name string) (AdminsGetModel, error) {
-	var model AdminsGetModel
+func (s *GetStmt) QueryRow(ctx context.Context, Name string) (GetModel, error) {
+	var model GetModel
 	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt)
 	if err != nil {
-		return model, fmt.Errorf("AdminsGet query row error: %w", err)
+		return model, fmt.Errorf("Get query row error: %w", err)
 	}
 	return model, nil
 }
 
-func (s *AdminsGetStmt) QueryRowExpanded(ctx context.Context, Name string) (string, string, string, string, *time.Time, *time.Time, error) {
-	var model AdminsGetModel
+func (s *GetStmt) QueryRowExpanded(ctx context.Context, Name string) (string, string, string, string, *time.Time, *time.Time, error) {
+	var model GetModel
 	err := s.stmt.QueryRowContext(ctx, Name).Scan(&model.Name, &model.Password, &model.Role, &model.TotpSecret, &model.LastSeenAt, &model.CreatedAt)
 	if err != nil {
-		return model.Name, model.Password, model.Role, model.TotpSecret, model.LastSeenAt, model.CreatedAt, fmt.Errorf("AdminsGet query row error: %w", err)
+		return model.Name, model.Password, model.Role, model.TotpSecret, model.LastSeenAt, model.CreatedAt, fmt.Errorf("Get query row error: %w", err)
 	}
 
 	// 2. Return variables and the error (error will be non-nil if Scan fails)
