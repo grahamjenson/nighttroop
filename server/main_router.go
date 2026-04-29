@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	sentryhttp "github.com/getsentry/sentry-go/http"
+	slogchi "github.com/samber/slog-chi"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"nighttroop.t1d.nz/data/db"
@@ -130,7 +133,15 @@ func GetSubdomainFromHeader(host_header, hostname string) (string, error) {
 
 func AddStandardMiddleware(router chi.Router, config config.ServerConfig) {
 	router.Use(middleware.RequestID)
-	router.Use(httputils.NewLogger(config.Logger))
+
+	if config.SentryDSN != "" {
+		sentryMiddleware := sentryhttp.New(sentryhttp.Options{
+			Repanic: true,
+		})
+		router.Use(sentryMiddleware.Handle)
+	}
+
+	router.Use(slogchi.New(config.Logger))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
 	router.Use(middleware.Timeout(30 * time.Second))

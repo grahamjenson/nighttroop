@@ -31,6 +31,9 @@ type ServerConfig struct {
 	S3AccessKeyID     string
 	S3AccessSecretKey string
 
+	// sentry
+	SentryDSN string
+
 	// security
 	SecretsEncryptionKey string
 
@@ -121,6 +124,9 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		S3URL:             configStringSelect(dotenvdev, dotenv, "S3_URL", "http://localhost:9000"),
 		S3AccessKeyID:     configStringSelect(dotenvdev, dotenv, "S3_ACCESS_KEY", "minioadmin"),
 		S3AccessSecretKey: configStringSelect(dotenvdev, dotenv, "S3_SECRET_KEY", "minioadmin"),
+
+		// sentry
+		SentryDSN: configStringSelect(dotenvdev, dotenv, "SENTRY_DSN", ""),
 
 		// security
 		SecretsEncryptionKey: configStringSelect(dotenvdev, dotenv, "SECRETS_ENCRYPTION_KEY", "mysecretencryptionkey"),

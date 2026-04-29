@@ -50,8 +50,29 @@
                         </a>
                     </li>
 
-                    <li class="nav-item"><a class="nav-link" href="#">Reports</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Devices</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Reports
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                            <li><a class="dropdown-item" href="#">Daily Report</a></li>
+                            <li><a class="dropdown-item" href="#">Monthly Report</a></li>
+                            <li><a class="dropdown-item" href="#">Custom Report</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="devicesDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Devices
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="devicesDropdown">
+                            <li><a class="dropdown-item" href="#">All Devices</a></li>
+                            <li><a class="dropdown-item" href="#">Add Device</a></li>
+                            <li><a class="dropdown-item" href="#">Device Settings</a></li>
+                        </ul>
+                    </li>
 
                     <!-- Profile Icon Dropdown -->
                     <li class="nav-item dropdown">
@@ -73,6 +94,7 @@
                             </li>
                             <li><a class="dropdown-item" href="#">Profile</a></li>
                             <li><a class="dropdown-item" href="#">Security</a></li>
+                            <li><a class="dropdown-item" href="#">Data</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>

@@ -1,6 +1,9 @@
 # TODO
 
-2. Nightscout reimplementation routes
+2. Logging with contexts to DBs, 
+1. error reporting with sentry, 
+1. check that users dont get error responses traces
+1. Nightscout reimplementation routes
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
 1. Write data sync logic and protections, punishing bad servers...
 

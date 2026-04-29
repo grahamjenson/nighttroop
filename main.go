@@ -12,7 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	_ "github.com/mattn/go-sqlite3"
+	slogmulti "github.com/samber/slog-multi"
+	slogsentry "github.com/samber/slog-sentry/v2"
 	"nighttroop.t1d.nz/background/backup"
 	"nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/data/db"
@@ -38,6 +41,16 @@ func run() error {
 	serverConfig, err := config.NewServerConfig(logger)
 	if err != nil {
 		return fmt.Errorf("cannot create server config: %w", err)
+	}
+
+	if serverConfig.SentryDSN != "" {
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn:           serverConfig.SentryDSN,
+			EnableTracing: false,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
@@ -129,12 +142,16 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 
 func setupLogging() *slog.Logger {
 	// 1. Create a JSON handler writing to standard output
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug, // Set minimum log level
 	})
 
-	// 2. Create the logger and set it as the global default
-	logger := slog.New(handler)
+	sentryHandler := slogsentry.Option{
+		Level: slog.LevelError, // Only send errors to Sentry
+	}.NewSentryHandler()
+
+	logger := slog.New(slogmulti.Fanout(jsonHandler, sentryHandler))
+
 	slog.SetDefault(logger)
 	return logger
 }

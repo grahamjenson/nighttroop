@@ -11,7 +11,6 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
 	publicTemplates "nighttroop.t1d.nz/server/assets/templates/public"
-	"nighttroop.t1d.nz/utils/alog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -67,7 +66,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		userDB, adminPassword, backupPassword, totpSecret, err := controlDB.CreateUser()
 		if err != nil {
-			alog.CaptureError(err)
+			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)
 			return
 		}
@@ -92,7 +91,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		w.WriteHeader(http.StatusOK)
 		err = publicTemplates.CreatedUserInfoHtmx(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
 		if err != nil {
-			alog.CaptureError(err)
+			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)
 		}
 
