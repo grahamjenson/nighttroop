@@ -6,10 +6,24 @@ import (
 	_ "embed"
 	"errors"
 
+	"nighttroop.t1d.nz/data/sql/control/events"
+	"nighttroop.t1d.nz/data/sql/user/bolus"
+	"nighttroop.t1d.nz/data/sql/user/carbs"
+	"nighttroop.t1d.nz/data/sql/user/data_sources"
 	"nighttroop.t1d.nz/data/sql/user/devices"
 )
 
 type UserStatements struct {
+	BolusAll *bolus.AllStmt
+
+	BolusCreate *bolus.CreateStmt
+
+	CarbsAll *carbs.AllStmt
+
+	Data_sourcesAll *data_sources.AllStmt
+
+	Data_sourcesCreate *data_sources.CreateStmt
+
 	DevicesAll *devices.AllStmt
 
 	DevicesCreate *devices.CreateStmt
@@ -17,12 +31,24 @@ type UserStatements struct {
 	DevicesGet *devices.GetStmt
 
 	DevicesUpdateLastSeenAt *devices.UpdateLastSeenAtStmt
+
+	EventsTruncate *events.TruncateStmt
 }
 
 func NewUserStatements(sqldb *sql.DB) (*UserStatements, error) {
 
 	var errs []error
 	stmts := &UserStatements{
+
+		BolusAll: bolus.NewAll(sqldb, &errs),
+
+		BolusCreate: bolus.NewCreate(sqldb, &errs),
+
+		CarbsAll: carbs.NewAll(sqldb, &errs),
+
+		Data_sourcesAll: data_sources.NewAll(sqldb, &errs),
+
+		Data_sourcesCreate: data_sources.NewCreate(sqldb, &errs),
 
 		DevicesAll: devices.NewAll(sqldb, &errs),
 
@@ -31,6 +57,8 @@ func NewUserStatements(sqldb *sql.DB) (*UserStatements, error) {
 		DevicesGet: devices.NewGet(sqldb, &errs),
 
 		DevicesUpdateLastSeenAt: devices.NewUpdateLastSeenAt(sqldb, &errs),
+
+		EventsTruncate: events.NewTruncate(sqldb, &errs),
 	}
 
 	if finalErr := errors.Join(errs...); finalErr != nil {

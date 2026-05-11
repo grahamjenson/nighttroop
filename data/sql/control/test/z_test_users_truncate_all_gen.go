@@ -9,6 +9,8 @@ import (
 )
 
 var TestUsersTruncateAllRaw string = `
+--IN:
+--OUT:
 DELETE FROM users;
 `
 

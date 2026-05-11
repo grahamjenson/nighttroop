@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"nighttroop.t1d.nz/data/sql/control/admins"
+	"nighttroop.t1d.nz/data/sql/control/events"
 	"nighttroop.t1d.nz/data/sql/control/test"
 	"nighttroop.t1d.nz/data/sql/control/users"
 )
@@ -15,6 +16,8 @@ type ControlStatements struct {
 	AdminsCreate *admins.CreateStmt
 
 	AdminsGet *admins.GetStmt
+
+	EventsTruncate *events.TruncateStmt
 
 	TestTestUsersTruncateAll *test.TestUsersTruncateAllStmt
 
@@ -47,6 +50,8 @@ func NewControlStatements(sqldb *sql.DB) (*ControlStatements, error) {
 		AdminsCreate: admins.NewCreate(sqldb, &errs),
 
 		AdminsGet: admins.NewGet(sqldb, &errs),
+
+		EventsTruncate: events.NewTruncate(sqldb, &errs),
 
 		TestTestUsersTruncateAll: test.NewTestUsersTruncateAll(sqldb, &errs),
 
