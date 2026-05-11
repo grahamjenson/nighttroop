@@ -66,7 +66,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 			ctx := r.Context()
 			acceptType := httputils.GetAcceptType(r)
 
-			deviceName, deviceRole, _, err := tryLoginWithJWTToken(cfg, r)
+			deviceName, deviceRole, _, err := TryLoginWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
 				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
@@ -88,7 +88,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 // Try get the Auth Header
 // Then try get the cookie
-func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, string, bool, error) {
+func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, string, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
@@ -115,58 +115,4 @@ func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 	}
 
 	return "", "", true, fmt.Errorf("No JWT token found")
-}
-
-func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-
-			deviceName, deviceRole, keepGoing, err := tryLoginWithJWTToken(cfg, r)
-			if err == nil {
-				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-
-			// If the JWT token is present but incorrect we need to stop
-			if !keepGoing {
-				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
-				return
-			}
-
-			// Last Chance
-			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
-			if err == nil {
-				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-
-			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
-		})
-	}
-}
-
-func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, error) {
-	// TODO if login is successful actually create JWT token and return it as cookie if browser
-	tokenParam := r.URL.Query().Get("token")
-	if tokenParam == "" {
-		return "", "", fmt.Errorf("no token provided")
-	}
-
-	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-	userDB, _, err := controlDB.GetUser(subdomain, false)
-	if err != nil {
-		return "", "", fmt.Errorf("user not found: %w", err)
-	}
-
-	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.Stmts.DevicesGet)
-	if err != nil {
-		return "", "", fmt.Errorf("bad token: %w", err)
-	}
-
-	return deviceName, role, nil
 }

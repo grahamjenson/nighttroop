@@ -14,6 +14,7 @@ CREATE TABLE devices (
 -- This reports device status above
 CREATE TABLE devicestatus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
     timestamp INTEGER NOT NULL,
     device_id INTEGER NOT NULL,
     deviceBattery INTEGER,
@@ -49,15 +50,15 @@ CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
     details TEXT,
-    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    end TIMESTAMP
+    start_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_at TIMESTAMP
 );
 
 ---------------------------------------------------
 -- TABLES ABOUT PATIENT DATA
 ---------------------------------------------------
 
-CREATE TABLE sgvs (
+CREATE TABLE entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- The id used extenally to this system (like remote NS id, dexcom id) maybe preceeded by the source like (dexcom-123) to make unique
     eid TEXT, 
@@ -67,8 +68,8 @@ CREATE TABLE sgvs (
     
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    value INTEGER,
-    timestamp INTEGER,
+    value REAL,
+    created_at INTEGER,
 
     -- CONTRAINTS
     UNIQUE(eid)
@@ -78,19 +79,22 @@ CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     value REAL,
-    TYPE TEXT,
-    timestamp INTEGER,
+    type TEXT,
+    created_at INTEGER,
     -- CONTRAINTS
     UNIQUE(eid)
 );
 
 CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
     amount REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- CONTRAINTS
+    UNIQUE(eid)
 );
 
-CREATE TABLE tempbasal (
+CREATE TABLE tempbasals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     START INTEGER,

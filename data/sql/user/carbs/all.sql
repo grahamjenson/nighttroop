@@ -1,0 +1,1 @@
+SELECT id, eid, amount, created_at FROM carbs 

@@ -1,0 +1,52 @@
+[
+  {
+    "_id": "65a842f04b47405049900d03",
+    "date": 1705525996000,
+    "sgv": 152,
+    "created_at": "2100-01-17T21:13:16.000Z"
+  },
+  {
+    "_id": "67575609fecbdb404acf9c3d",
+    "device": "AAPS-DexcomG6",
+    "date": 1733776878000,
+    "dateString": "2024-12-09T20:41:18.000Z",
+    "isValid": true,
+    "sgv": 56,
+    "direction": "FortyFiveDown",
+    "type": "sgv",
+    "created_at": "2024-12-09T20:41:45.284Z"
+  },
+  {
+    "_id": "65a841c64b4740e2bf900d01",
+    "app": "AAPS",
+    "date": 1705525695000,
+    "device": "AAPS-Dexcom",
+    "direction": "Flat",
+    "isReadOnly": false,
+    "isValid": true,
+    "sgv": 157,
+    "type": "sgv",
+    "unfiltered": 0.2,
+    "units": "mg/dl",
+    "utcOffset": 780,
+    "created_at": "2024-01-17T21:08:15.000Z",
+    "identifier": "c48da0ae-56f6-51de-85c0-86abc03e9808",
+    "srvModified": 1705525702859,
+    "srvCreated": 1705525702859,
+    "subject": "phone"
+  },
+  {
+    "_id": "B4274B2D-2B01-4989-B853-E56601706FD0",
+    "direction": "Flat",
+    "filtered": 103,
+    "date": 1745689080000.0002,
+    "unfiltered": 103,
+    "type": "sgv",
+    "sgv": 103,
+    "dateString": "2025-04-26T17:38:00.000Z",
+    "glucose": 103,
+    "utcOffset": 0,
+    "sysTime": "2025-04-26T17:38:00.000Z",
+    "device": "unknown"
+  }
+]

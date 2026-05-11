@@ -1,0 +1,1 @@
+SELECT id, eid, value, type, created_at FROM bolus 

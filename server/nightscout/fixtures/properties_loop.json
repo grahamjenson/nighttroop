@@ -1,0 +1,534 @@
+{
+    "bgnow": {
+        "mean": 114,
+        "last": 114,
+        "mills": 1747188787491.822,
+        "sgvs": [
+            {
+                "_id": "6823fc3a7e3927436cb536ab",
+                "mgdl": 114,
+                "mills": 1747188787491.822,
+                "device": "loop://Dexcom/G6/21.0",
+                "direction": "Flat",
+                "type": "sgv",
+                "scaled": 114
+            }
+        ]
+    },
+    "delta": {
+        "absolute": 5,
+        "elapsedMins": 5.000858516438802,
+        "interpolated": false,
+        "mean5MinsAgo": 109,
+        "times": {
+            "recent": 1747188787491.822,
+            "previous": 1747188487440.311
+        },
+        "mgdl": 5,
+        "scaled": 5,
+        "display": "+5",
+        "previous": {
+            "mean": 109,
+            "last": 109,
+            "mills": 1747188487440.311,
+            "sgvs": [
+                {
+                    "_id": "6823fb107e3927436cb5361c",
+                    "mgdl": 109,
+                    "mills": 1747188487440.311,
+                    "device": "loop://Dexcom/G6/21.0",
+                    "direction": "Flat",
+                    "type": "sgv",
+                    "scaled": 109
+                }
+            ]
+        }
+    },
+    "buckets": [
+        {
+            "mean": 114,
+            "last": 114,
+            "mills": 1747188787491.822,
+            "index": 0,
+            "fromMills": 1747188637491.822,
+            "toMills": 1747188937491.822,
+            "sgvs": [
+                {
+                    "_id": "6823fc3a7e3927436cb536ab",
+                    "mgdl": 114,
+                    "mills": 1747188787491.822,
+                    "device": "loop://Dexcom/G6/21.0",
+                    "direction": "Flat",
+                    "type": "sgv",
+                    "scaled": 114
+                }
+            ]
+        },
+        {
+            "mean": 109,
+            "last": 109,
+            "mills": 1747188487440.311,
+            "index": 1,
+            "fromMills": 1747188337491.822,
+            "toMills": 1747188637491.822,
+            "sgvs": [
+                {
+                    "_id": "6823fb107e3927436cb5361c",
+                    "mgdl": 109,
+                    "mills": 1747188487440.311,
+                    "device": "loop://Dexcom/G6/21.0",
+                    "direction": "Flat",
+                    "type": "sgv",
+                    "scaled": 109
+                }
+            ]
+        },
+        {
+            "mean": 104,
+            "last": 104,
+            "mills": 1747188187450.0361,
+            "index": 2,
+            "fromMills": 1747188037491.822,
+            "toMills": 1747188337491.822,
+            "sgvs": [
+                {
+                    "_id": "6823f9e77e3927436cb535a6",
+                    "mgdl": 104,
+                    "mills": 1747188187450.0361,
+                    "device": "loop://Dexcom/G6/21.0",
+                    "direction": "Flat",
+                    "type": "sgv",
+                    "scaled": 104
+                }
+            ]
+        },
+        {
+            "mean": 100,
+            "last": 100,
+            "mills": 1747187887429.239,
+            "index": 3,
+            "fromMills": 1747187737491.822,
+            "toMills": 1747188037491.822,
+            "sgvs": [
+                {
+                    "_id": "6823f8b67e3927436cb5351e",
+                    "mgdl": 100,
+                    "mills": 1747187887429.239,
+                    "device": "loop://Dexcom/G6/21.0",
+                    "direction": "Flat",
+                    "type": "sgv",
+                    "scaled": 100
+                }
+            ]
+        }
+    ],
+    "rawbg": {},
+    "direction": {
+        "display": null,
+        "value": "Flat",
+        "label": "→",
+        "entity": "&#8594;"
+    },
+    "upbat": {
+        "level": 75,
+        "display": "80%",
+        "status": "current",
+        "devices": {
+            "loop://iPhone": {
+                "name": "loop://iPhone",
+                "uri": "loop://iPhone",
+                "statuses": [
+                    {
+                        "uploader": {
+                            "battery": 80,
+                            "name": "iPhone",
+                            "timestamp": "2025-05-14T02:13:21Z",
+                            "value": 80,
+                            "display": "80%",
+                            "level": 75
+                        },
+                        "created_at": "2025-05-14T02:13:21.000Z",
+                        "mills": 1747188801000,
+                        "_id": "6823fc4224e3e5030c3a71a4"
+                    },
+                    {
+                        "uploader": {
+                            "battery": 80,
+                            "timestamp": "2025-05-14T02:08:28Z",
+                            "name": "iPhone",
+                            "value": 80,
+                            "display": "80%",
+                            "level": 75
+                        },
+                        "created_at": "2025-05-14T02:08:28.000Z",
+                        "mills": 1747188508000,
+                        "_id": "6823fb1c24e3e5030c3a71a3"
+                    },
+                    {
+                        "uploader": {
+                            "battery": 80,
+                            "timestamp": "2025-05-14T02:03:19Z",
+                            "name": "iPhone",
+                            "value": 80,
+                            "display": "80%",
+                            "level": 75
+                        },
+                        "created_at": "2025-05-14T02:03:19.000Z",
+                        "mills": 1747188199000,
+                        "_id": "6823f9e724e3e5030c3a71a2"
+                    },
+                    {
+                        "uploader": {
+                            "timestamp": "2025-05-14T01:58:26Z",
+                            "battery": 80,
+                            "name": "iPhone",
+                            "value": 80,
+                            "display": "80%",
+                            "level": 75
+                        },
+                        "created_at": "2025-05-14T01:58:26.000Z",
+                        "mills": 1747187906000,
+                        "_id": "6823f8c224e3e5030c3a71a1"
+                    },
+                    {
+                        "uploader": {
+                            "battery": 80,
+                            "name": "iPhone",
+                            "timestamp": "2025-05-14T01:53:14Z",
+                            "value": 80,
+                            "display": "80%",
+                            "level": 75
+                        },
+                        "created_at": "2025-05-14T01:53:14.000Z",
+                        "mills": 1747187594000,
+                        "_id": "6823f78b24e3e5030c3a71a0"
+                    },
+                    {
+                        "uploader": {
+                            "name": "iPhone",
+                            "timestamp": "2025-05-14T01:48:23Z",
+                            "battery": 85,
+                            "value": 85,
+                            "display": "85%",
+                            "level": 75
+                        },
+                        "created_at": "2025-05-14T01:48:23.000Z",
+                        "mills": 1747187303000,
+                        "_id": "6823f66824e3e5030c3a719f"
+                    }
+                ],
+                "min": {
+                    "battery": 80,
+                    "name": "iPhone",
+                    "timestamp": "2025-05-14T02:13:21Z",
+                    "value": 80,
+                    "display": "80%",
+                    "level": 75
+                }
+            }
+        },
+        "min": {
+            "battery": 80,
+            "name": "iPhone",
+            "timestamp": "2025-05-14T02:13:21Z",
+            "value": 80,
+            "display": "80%",
+            "level": 75
+        }
+    },
+    "ar2": {
+        "forecast": {
+            "predicted": [
+                {
+                    "mills": 1747189089491.822,
+                    "mgdl": 118,
+                    "color": "cyan",
+                    "scaled": 118
+                },
+                {
+                    "mills": 1747189389491.822,
+                    "mgdl": 121,
+                    "color": "cyan",
+                    "scaled": 121
+                },
+                {
+                    "mills": 1747189689491.822,
+                    "mgdl": 123,
+                    "color": "cyan",
+                    "scaled": 123
+                },
+                {
+                    "mills": 1747189989491.822,
+                    "mgdl": 125,
+                    "color": "cyan",
+                    "scaled": 125
+                },
+                {
+                    "mills": 1747190289491.822,
+                    "mgdl": 127,
+                    "color": "cyan",
+                    "scaled": 127
+                },
+                {
+                    "mills": 1747190589491.822,
+                    "mgdl": 128,
+                    "color": "cyan",
+                    "scaled": 128
+                }
+            ],
+            "avgLoss": 0.0003774909364197982
+        },
+        "displayLine": "BG 15m: 123 mg/dl"
+    },
+    "iob": {
+        "iob": 1.087,
+        "source": "Loop",
+        "device": "loop://iPhone",
+        "mills": 1747188600000,
+        "treatmentIob": 3.658,
+        "display": "1.09",
+        "displayLine": "IOB: 1.09U"
+    },
+    "cob": {
+        "cob": 5.0947962907626785,
+        "source": "Loop",
+        "device": "loop://iPhone",
+        "mills": 1747188600000,
+        "display": 5.1,
+        "displayLine": "COB: 5.1g"
+    },
+    "pump": {
+        "_id": "6823fc4224e3e5030c3a71a4",
+        "device": "loop://iPhone",
+        "uploader": {
+            "battery": 80,
+            "name": "iPhone",
+            "timestamp": "2025-05-14T02:13:21Z",
+            "value": 80,
+            "display": "80%",
+            "level": 75
+        },
+        "loop": {
+            "predicted": {
+                "startDate": "2025-05-14T02:13:07Z",
+                "values": [
+                    114,
+                    115.88,
+                    120.29,
+                    123.05,
+                    123.98,
+                    123.57,
+                    122.9,
+                    121.95,
+                    120.71,
+                    119.17,
+                    117.34,
+                    115.4,
+                    113.75,
+                    112.21,
+                    110.79,
+                    109.46,
+                    108.24,
+                    107.1,
+                    106.05,
+                    105.09,
+                    104.19,
+                    103.37,
+                    102.62,
+                    101.94,
+                    101.31,
+                    100.74,
+                    100.23,
+                    99.77,
+                    99.37,
+                    99,
+                    98.69,
+                    98.41,
+                    98.18,
+                    97.99,
+                    97.83,
+                    97.7,
+                    97.6,
+                    97.53,
+                    97.48,
+                    97.46,
+                    97.46,
+                    97.49,
+                    97.53,
+                    97.58,
+                    97.66,
+                    97.75,
+                    97.86,
+                    97.98,
+                    98.11,
+                    98.26,
+                    98.41,
+                    98.57,
+                    98.75,
+                    98.93,
+                    99.11,
+                    99.26,
+                    99.4,
+                    99.53,
+                    99.63,
+                    99.72,
+                    99.8,
+                    99.87,
+                    99.93,
+                    99.97,
+                    100.01,
+                    100.04,
+                    100.06,
+                    100.08,
+                    100.09,
+                    100.1,
+                    100.11,
+                    100.11,
+                    100.12,
+                    100.12,
+                    100.12,
+                    100.12
+                ]
+            },
+            "timestamp": "2025-05-14T02:13:21Z",
+            "automaticDoseRecommendation": {
+                "bolusVolume": 0.05,
+                "timestamp": "2025-05-14T02:13:21Z"
+            },
+            "iob": {
+                "iob": 1.0870623804830117,
+                "timestamp": "2025-05-14T02:10:00Z"
+            },
+            "name": "Loop",
+            "cob": {
+                "cob": 5.0947962907626785,
+                "timestamp": "2025-05-14T02:10:00Z"
+            },
+            "recommendedBolus": 0.15,
+            "enacted": {
+                "timestamp": "2025-05-14T02:13:13Z",
+                "rate": 0,
+                "received": true,
+                "duration": 0,
+                "bolusVolume": 0
+            },
+            "version": "3.2.2.65"
+        },
+        "override": {
+            "timestamp": "2025-05-14T02:13:21Z",
+            "active": false
+        },
+        "created_at": "2025-05-14T02:13:21.000Z",
+        "pump": {
+            "bolusing": false,
+            "secondsFromGMT": 28800,
+            "manufacturer": "Insulet",
+            "pumpID": "1F068529",
+            "clock": "2025-05-14T02:13:21Z",
+            "model": "Eros",
+            "suspended": false
+        },
+        "utcOffset": 0,
+        "mills": 1747188801000,
+        "clockMills": 1747188801000,
+        "data": {
+            "level": -3,
+            "clock": {
+                "value": "2025-05-14T02:13:21.000Z",
+                "label": "Last Clock",
+                "display": "2m ago",
+                "level": -3
+            },
+            "reservoir": {
+                "label": "Reservoir",
+                "display": "50+ U"
+            },
+            "reservoir_display_override": null,
+            "reservoir_level_override": null,
+            "manufacturer": "Insulet",
+            "model": "Eros",
+            "extended": null,
+            "device": {
+                "label": "Device",
+                "display": "loop://iPhone"
+            },
+            "title": "Pump Status"
+        }
+    },
+    "openaps": {
+        "seenDevices": {},
+        "lastEnacted": null,
+        "lastNotEnacted": null,
+        "lastSuggested": null,
+        "lastIOB": null,
+        "lastMMTune": null,
+        "lastPredBGs": null,
+        "status": {
+            "symbol": "⚠",
+            "code": "warning",
+            "label": "Warning"
+        }
+    },
+    "bwp": {
+        "effect": 43.48,
+        "outcome": 70.52000000000001,
+        "bolusEstimate": -0.6119999999999998,
+        "scaledSGV": 114,
+        "iob": 1.087,
+        "belowLowTarget": false,
+        "aimTarget": 95,
+        "aimTargetString": "below low",
+        "tempBasalAdjustment": {
+            "thirtymin": -22,
+            "onehour": 39
+        },
+        "bolusEstimateDisplay": "-0.62",
+        "outcomeDisplay": 71,
+        "displayIOB": "1.08",
+        "effectDisplay": 43,
+        "displayLine": "BWP: -0.62U"
+    },
+    "cage": {
+        "found": false,
+        "age": 0,
+        "treatmentDate": null,
+        "checkForAlert": false,
+        "level": -3,
+        "display": "n/a "
+    },
+    "sage": {
+        "Sensor Start": {
+            "found": false,
+            "level": -3
+        },
+        "Sensor Change": {
+            "found": false
+        },
+        "min": "Sensor Start"
+    },
+    "basal": {
+        "display": "1.000U",
+        "current": {
+            "basal": 1,
+            "treatment": null,
+            "combobolustreatment": null,
+            "tempbasal": 1,
+            "combobolusbasal": 0,
+            "totalbasal": 1
+        }
+    },
+    "dbsize": {
+        "display": "0%",
+        "status": "current",
+        "totalDataSize": 149.3323516845703,
+        "dataPercentage": 0,
+        "notificationLevel": 0,
+        "details": {
+            "maxSize": 15000,
+            "dataSize": 149.33
+        }
+    },
+    "runtimestate": {
+        "state": "loaded"
+    }
+}
