@@ -17,6 +17,9 @@ DELETE FROM users;
 type TestUsersTruncateAllModel struct {
 }
 
+type ITestUsersTruncateAll interface {
+}
+
 type TestUsersTruncateAllStmt struct {
 	stmt *sql.Stmt
 }

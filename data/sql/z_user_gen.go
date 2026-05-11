@@ -6,11 +6,16 @@ import (
 	_ "embed"
 	"errors"
 
-	"nighttroop.t1d.nz/data/sql/control/events"
+	"nighttroop.t1d.nz/data/sql/control/event"
 	"nighttroop.t1d.nz/data/sql/user/bolus"
-	"nighttroop.t1d.nz/data/sql/user/carbs"
-	"nighttroop.t1d.nz/data/sql/user/data_sources"
-	"nighttroop.t1d.nz/data/sql/user/devices"
+	"nighttroop.t1d.nz/data/sql/user/carb"
+	"nighttroop.t1d.nz/data/sql/user/data_source"
+	"nighttroop.t1d.nz/data/sql/user/device"
+	"nighttroop.t1d.nz/data/sql/user/devicestatus"
+	"nighttroop.t1d.nz/data/sql/user/entry"
+	"nighttroop.t1d.nz/data/sql/user/profile"
+	"nighttroop.t1d.nz/data/sql/user/tempbasal"
+	"nighttroop.t1d.nz/data/sql/user/temptarget"
 )
 
 type UserStatements struct {
@@ -18,21 +23,39 @@ type UserStatements struct {
 
 	BolusCreate *bolus.CreateStmt
 
-	CarbsAll *carbs.AllStmt
+	BolusGet *bolus.GetStmt
 
-	Data_sourcesAll *data_sources.AllStmt
+	CarbAll *carb.AllStmt
 
-	Data_sourcesCreate *data_sources.CreateStmt
+	CarbGet *carb.GetStmt
 
-	DevicesAll *devices.AllStmt
+	Data_sourceAll *data_source.AllStmt
 
-	DevicesCreate *devices.CreateStmt
+	Data_sourceCreate *data_source.CreateStmt
 
-	DevicesGet *devices.GetStmt
+	Data_sourceGet *data_source.GetStmt
 
-	DevicesUpdateLastSeenAt *devices.UpdateLastSeenAtStmt
+	DeviceAll *device.AllStmt
 
-	EventsTruncate *events.TruncateStmt
+	DeviceCreate *device.CreateStmt
+
+	DeviceGet *device.GetStmt
+
+	DeviceUpdateLastSeenAt *device.UpdateLastSeenAtStmt
+
+	DevicestatusGet *devicestatus.GetStmt
+
+	EntryAll *entry.AllStmt
+
+	EntryGet *entry.GetStmt
+
+	EventTruncate *event.TruncateStmt
+
+	ProfileGet *profile.GetStmt
+
+	TempbasalGet *tempbasal.GetStmt
+
+	TemptargetGet *temptarget.GetStmt
 }
 
 func NewUserStatements(sqldb *sql.DB) (*UserStatements, error) {
@@ -44,21 +67,39 @@ func NewUserStatements(sqldb *sql.DB) (*UserStatements, error) {
 
 		BolusCreate: bolus.NewCreate(sqldb, &errs),
 
-		CarbsAll: carbs.NewAll(sqldb, &errs),
+		BolusGet: bolus.NewGet(sqldb, &errs),
 
-		Data_sourcesAll: data_sources.NewAll(sqldb, &errs),
+		CarbAll: carb.NewAll(sqldb, &errs),
 
-		Data_sourcesCreate: data_sources.NewCreate(sqldb, &errs),
+		CarbGet: carb.NewGet(sqldb, &errs),
 
-		DevicesAll: devices.NewAll(sqldb, &errs),
+		Data_sourceAll: data_source.NewAll(sqldb, &errs),
 
-		DevicesCreate: devices.NewCreate(sqldb, &errs),
+		Data_sourceCreate: data_source.NewCreate(sqldb, &errs),
 
-		DevicesGet: devices.NewGet(sqldb, &errs),
+		Data_sourceGet: data_source.NewGet(sqldb, &errs),
 
-		DevicesUpdateLastSeenAt: devices.NewUpdateLastSeenAt(sqldb, &errs),
+		DeviceAll: device.NewAll(sqldb, &errs),
 
-		EventsTruncate: events.NewTruncate(sqldb, &errs),
+		DeviceCreate: device.NewCreate(sqldb, &errs),
+
+		DeviceGet: device.NewGet(sqldb, &errs),
+
+		DeviceUpdateLastSeenAt: device.NewUpdateLastSeenAt(sqldb, &errs),
+
+		DevicestatusGet: devicestatus.NewGet(sqldb, &errs),
+
+		EntryAll: entry.NewAll(sqldb, &errs),
+
+		EntryGet: entry.NewGet(sqldb, &errs),
+
+		EventTruncate: event.NewTruncate(sqldb, &errs),
+
+		ProfileGet: profile.NewGet(sqldb, &errs),
+
+		TempbasalGet: tempbasal.NewGet(sqldb, &errs),
+
+		TemptargetGet: temptarget.NewGet(sqldb, &errs),
 	}
 
 	if finalErr := errors.Join(errs...); finalErr != nil {

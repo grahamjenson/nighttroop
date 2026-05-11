@@ -1,3 +1,3 @@
---IN: Id int, Eid string, Value string, Type string, CreatedAt *time.Time
+--IN: id int, eid string, value string, type string, created_at *time.Time
 --OUT:
 INSERT INTO bolus (id, eid, value, type, created_at) VALUES (?, ?, ?, ?, ?);

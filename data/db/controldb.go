@@ -12,7 +12,7 @@ import (
 
 	nssql "nighttroop.t1d.nz/data/sql"
 	"nighttroop.t1d.nz/data/sql/control/migrations"
-	controlsqlusers "nighttroop.t1d.nz/data/sql/control/users"
+	controlsqlusers "nighttroop.t1d.nz/data/sql/control/user"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -74,20 +74,20 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 // This will fetch all the users in
 func (db *ControlDB) fillUsers() ([]string, error) {
 	users := []string{}
-	res, err := db.Stmts.UsersNotDeleted.Query(context.TODO())
+	res, err := db.Stmts.UserNotDeleted.Query(context.TODO())
 
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
 	}
 
 	for _, model := range res {
-		users = append(users, model.Subdomain)
+		users = append(users, model.Subdomain())
 		// User DB has to be avaialble
-		userDB, err := NewUserDB(context.TODO(), model.Subdomain, true, db.serverConfig)
+		userDB, err := NewUserDB(context.TODO(), model.Subdomain(), true, db.serverConfig)
 		if err != nil {
 			return users, fmt.Errorf("UserDB failed to be added to the ControlDB list, %w", err)
 		}
-		db.users[model.Subdomain] = userDB
+		db.users[model.Subdomain()] = userDB
 	}
 
 	return users, nil
@@ -96,11 +96,11 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 func (db *ControlDB) createAdminIfNoneExists() error {
 	ctx := context.TODO()
 	adminName := consts.FIRST_ADMIN_NAME
-	model, err := db.Stmts.AdminsGet.QueryRow(ctx, adminName)
+	model, err := db.Stmts.AdminGet.QueryRow(ctx, adminName)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cannot query admin: %w", err)
 	}
-	if model.Name == adminName {
+	if model.Name() == adminName {
 		return nil
 	}
 
@@ -114,7 +114,7 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 		return fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
-	_, err = db.Stmts.AdminsCreate.Exec(ctx, adminName, hashedPassword, "admin", encTOTPSecret)
+	_, err = db.Stmts.AdminCreate.Exec(ctx, adminName, hashedPassword, "admin", encTOTPSecret)
 	if err != nil {
 		return fmt.Errorf("cannot create admin: %w", err)
 	}
@@ -177,7 +177,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	db.usersRWLock.Lock()
 	defer db.usersRWLock.Unlock()
 
-	_, err = db.Stmts.UsersCreate.Exec(context.TODO(), subdomain, backupKeyHash)
+	_, err = db.Stmts.UserCreate.Exec(context.TODO(), subdomain, backupKeyHash)
 	if err != nil {
 		// Clean up the created DB file
 		// If anything happens later the archiving process can clean it up
@@ -191,7 +191,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// Setup the new UserDB
 	////
 
-	_, err = userDB.Stmts.DevicesCreate.Exec(context.TODO(), consts.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, consts.UserRoleAdmin.String())
+	_, err = userDB.Stmts.DeviceCreate.Exec(context.TODO(), consts.FIRST_ADMIN_NAME, hashedPassword, encTOTPSecret, consts.UserRoleAdmin.String())
 	if err != nil {
 		userDB.TryCloseAndDelete()
 		return nil, "", "", "", fmt.Errorf("cannot create admin device: %w", err)
@@ -209,7 +209,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 func (db *ControlDB) DeleteUsers(subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
 	bytes, _ := json.Marshal(subdomains)
-	_, err := db.Stmts.UsersDelete.Exec(context.TODO(), string(bytes))
+	_, err := db.Stmts.UserDelete.Exec(context.TODO(), string(bytes))
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
@@ -274,19 +274,19 @@ func (db *ControlDB) UserExists(subdomain string) bool {
 	return ok
 }
 
-func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *controlsqlusers.GetModel, error) {
+func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, controlsqlusers.IUser, error) {
 	// Check if user exists in the db
-	model, err := db.Stmts.UsersGet.QueryRow(context.TODO(), subdomain)
+	model, err := db.Stmts.UserGet.QueryRow(context.TODO(), subdomain)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot get user: %w", err)
 	}
-	if model.Subdomain == "" {
+	if model.Subdomain() == "" {
 		return nil, nil, fmt.Errorf("user not found")
 	}
 
-	lastSeenMoreThan10MinutesAgo := model.LastSeenAt == nil || time.Now().After(model.LastSeenAt.Add(-10*time.Minute))
+	lastSeenMoreThan10MinutesAgo := model.LastSeenAt() == nil || time.Now().After(model.LastSeenAt().Add(-10*time.Minute))
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
-		db.Stmts.UsersUpdateLastSeen.Exec(context.TODO(), subdomain)
+		db.Stmts.UserUpdateLastSeen.Exec(context.TODO(), subdomain)
 	}
 
 	db.usersRWLock.RLock()
@@ -297,13 +297,13 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 		return nil, nil, fmt.Errorf("user not found in memory")
 	}
 
-	return user, &model, nil
+	return user, model, nil
 }
 
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 
 	users := []*UserDB{}
-	res, err := db.Stmts.UsersGetBatch.Query(context.TODO(), char)
+	res, err := db.Stmts.UserGetBatch.Query(context.TODO(), char)
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
 	}
@@ -312,7 +312,7 @@ func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 }
 
 func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.Stmts.UsersGetNeverSeen.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	res, err := db.Stmts.UserGetNeverSeen.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
 	if err != nil {
 		return nil, fmt.Errorf("cannot query never seen users: %w", err)
 	}
@@ -321,7 +321,7 @@ func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteM
 }
 
 func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.Stmts.UsersGetInactive.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	res, err := db.Stmts.UserGetInactive.Query(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
 	if err != nil {
 		return nil, fmt.Errorf("cannot query inactive users: %w", err)
 	}
@@ -330,13 +330,13 @@ func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMi
 
 }
 
-func getUserDBsFromModels[T interface{ GetSubdomain() string }](db *ControlDB, models []T) ([]*UserDB, error) {
+func getUserDBsFromModels[T interface{ Subdomain() string }](db *ControlDB, models []T) ([]*UserDB, error) {
 	users := []*UserDB{}
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
 
 	for _, model := range models {
-		user := db.users[model.GetSubdomain()]
+		user := db.users[model.Subdomain()]
 		if user == nil {
 			return users, fmt.Errorf("user not found in memory")
 		}

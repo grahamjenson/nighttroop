@@ -6,40 +6,40 @@ import (
 	_ "embed"
 	"errors"
 
-	"nighttroop.t1d.nz/data/sql/control/admins"
-	"nighttroop.t1d.nz/data/sql/control/events"
+	"nighttroop.t1d.nz/data/sql/control/admin"
+	"nighttroop.t1d.nz/data/sql/control/event"
 	"nighttroop.t1d.nz/data/sql/control/test"
-	"nighttroop.t1d.nz/data/sql/control/users"
+	"nighttroop.t1d.nz/data/sql/control/user"
 )
 
 type ControlStatements struct {
-	AdminsCreate *admins.CreateStmt
+	AdminCreate *admin.CreateStmt
 
-	AdminsGet *admins.GetStmt
+	AdminGet *admin.GetStmt
 
-	EventsTruncate *events.TruncateStmt
+	EventTruncate *event.TruncateStmt
 
 	TestTestUsersTruncateAll *test.TestUsersTruncateAllStmt
 
-	UsersAll *users.AllStmt
+	UserAll *user.AllStmt
 
-	UsersCreate *users.CreateStmt
+	UserCreate *user.CreateStmt
 
-	UsersDelete *users.DeleteStmt
+	UserDelete *user.DeleteStmt
 
-	UsersGetBatch *users.GetBatchStmt
+	UserGetBatch *user.GetBatchStmt
 
-	UsersGet *users.GetStmt
+	UserGet *user.GetStmt
 
-	UsersGetInactive *users.GetInactiveStmt
+	UserGetInactive *user.GetInactiveStmt
 
-	UsersGetNeverSeen *users.GetNeverSeenStmt
+	UserGetNeverSeen *user.GetNeverSeenStmt
 
-	UsersNotDeleted *users.NotDeletedStmt
+	UserNotDeleted *user.NotDeletedStmt
 
-	UsersUpdateLastSeen *users.UpdateLastSeenStmt
+	UserUpdateLastSeen *user.UpdateLastSeenStmt
 
-	UsersUpdateLastWrite *users.UpdateLastWriteStmt
+	UserUpdateLastWrite *user.UpdateLastWriteStmt
 }
 
 func NewControlStatements(sqldb *sql.DB) (*ControlStatements, error) {
@@ -47,33 +47,33 @@ func NewControlStatements(sqldb *sql.DB) (*ControlStatements, error) {
 	var errs []error
 	stmts := &ControlStatements{
 
-		AdminsCreate: admins.NewCreate(sqldb, &errs),
+		AdminCreate: admin.NewCreate(sqldb, &errs),
 
-		AdminsGet: admins.NewGet(sqldb, &errs),
+		AdminGet: admin.NewGet(sqldb, &errs),
 
-		EventsTruncate: events.NewTruncate(sqldb, &errs),
+		EventTruncate: event.NewTruncate(sqldb, &errs),
 
 		TestTestUsersTruncateAll: test.NewTestUsersTruncateAll(sqldb, &errs),
 
-		UsersAll: users.NewAll(sqldb, &errs),
+		UserAll: user.NewAll(sqldb, &errs),
 
-		UsersCreate: users.NewCreate(sqldb, &errs),
+		UserCreate: user.NewCreate(sqldb, &errs),
 
-		UsersDelete: users.NewDelete(sqldb, &errs),
+		UserDelete: user.NewDelete(sqldb, &errs),
 
-		UsersGetBatch: users.NewGetBatch(sqldb, &errs),
+		UserGetBatch: user.NewGetBatch(sqldb, &errs),
 
-		UsersGet: users.NewGet(sqldb, &errs),
+		UserGet: user.NewGet(sqldb, &errs),
 
-		UsersGetInactive: users.NewGetInactive(sqldb, &errs),
+		UserGetInactive: user.NewGetInactive(sqldb, &errs),
 
-		UsersGetNeverSeen: users.NewGetNeverSeen(sqldb, &errs),
+		UserGetNeverSeen: user.NewGetNeverSeen(sqldb, &errs),
 
-		UsersNotDeleted: users.NewNotDeleted(sqldb, &errs),
+		UserNotDeleted: user.NewNotDeleted(sqldb, &errs),
 
-		UsersUpdateLastSeen: users.NewUpdateLastSeen(sqldb, &errs),
+		UserUpdateLastSeen: user.NewUpdateLastSeen(sqldb, &errs),
 
-		UsersUpdateLastWrite: users.NewUpdateLastWrite(sqldb, &errs),
+		UserUpdateLastWrite: user.NewUpdateLastWrite(sqldb, &errs),
 	}
 
 	if finalErr := errors.Join(errs...); finalErr != nil {

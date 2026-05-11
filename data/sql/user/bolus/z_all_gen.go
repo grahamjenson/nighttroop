@@ -12,32 +12,40 @@ import (
 var AllRaw string = `
 
 --IN:
---OUT: Id int, Eid string, Value string, Type string, CreatedAt *time.Time
+--OUT: id int, eid string, value string, type string, created_at *time.Time
 SELECT id, eid, value, type, created_at FROM bolus 
 `
 
 type AllModel struct {
-	Id        int
-	Eid       string
-	Value     string
-	Type      string
-	CreatedAt *time.Time
+	id         int
+	eid        string
+	value      string
+	type_      string
+	created_at *time.Time
 }
 
-func (m AllModel) GetId() int {
-	return m.Id
+type IAll interface {
+	Id() int
+	Eid() string
+	Value() string
+	Type() string
+	CreatedAt() *time.Time
 }
-func (m AllModel) GetEid() string {
-	return m.Eid
+
+func (m AllModel) Id() int {
+	return m.id
 }
-func (m AllModel) GetValue() string {
-	return m.Value
+func (m AllModel) Eid() string {
+	return m.eid
 }
-func (m AllModel) GetType() string {
-	return m.Type
+func (m AllModel) Value() string {
+	return m.value
 }
-func (m AllModel) GetCreatedAt() *time.Time {
-	return m.CreatedAt
+func (m AllModel) Type() string {
+	return m.type_
+}
+func (m AllModel) CreatedAt() *time.Time {
+	return m.created_at
 }
 
 type AllStmt struct {
@@ -63,18 +71,18 @@ func (s *AllStmt) Exec(ctx context.Context) (sql.Result, error) {
 	return req, nil
 }
 
-func (s *AllStmt) Query(ctx context.Context) ([]AllModel, error) {
+func (s *AllStmt) Query(ctx context.Context) ([]IAll, error) {
 	rows, err := s.stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("All query error: %w", err)
 	}
 	defer rows.Close()
 
-	var results []AllModel
+	var results []IAll
 	for rows.Next() {
 		var model AllModel
 		// Scanning into exported fields
-		if err := rows.Scan(&model.Id, &model.Eid, &model.Value, &model.Type, &model.CreatedAt); err != nil {
+		if err := rows.Scan(&model.id, &model.eid, &model.value, &model.type_, &model.created_at); err != nil {
 			return nil, fmt.Errorf("All scan error: %w", err)
 		}
 		results = append(results, model)
@@ -82,9 +90,9 @@ func (s *AllStmt) Query(ctx context.Context) ([]AllModel, error) {
 	return results, nil
 }
 
-func (s *AllStmt) QueryRow(ctx context.Context) (AllModel, error) {
+func (s *AllStmt) QueryRow(ctx context.Context) (IAll, error) {
 	var model AllModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Id, &model.Eid, &model.Value, &model.Type, &model.CreatedAt)
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.id, &model.eid, &model.value, &model.type_, &model.created_at)
 	if err != nil {
 		return model, fmt.Errorf("All query row error: %w", err)
 	}
@@ -93,11 +101,11 @@ func (s *AllStmt) QueryRow(ctx context.Context) (AllModel, error) {
 
 func (s *AllStmt) QueryRowExpanded(ctx context.Context) (int, string, string, string, *time.Time, error) {
 	var model AllModel
-	err := s.stmt.QueryRowContext(ctx).Scan(&model.Id, &model.Eid, &model.Value, &model.Type, &model.CreatedAt)
+	err := s.stmt.QueryRowContext(ctx).Scan(&model.id, &model.eid, &model.value, &model.type_, &model.created_at)
 	if err != nil {
-		return model.Id, model.Eid, model.Value, model.Type, model.CreatedAt, fmt.Errorf("All query row error: %w", err)
+		return model.id, model.eid, model.value, model.type_, model.created_at, fmt.Errorf("All query row error: %w", err)
 	}
 
 	// 2. Return variables and the error (error will be non-nil if Scan fails)
-	return model.Id, model.Eid, model.Value, model.Type, model.CreatedAt, nil
+	return model.id, model.eid, model.value, model.type_, model.created_at, nil
 }

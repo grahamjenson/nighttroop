@@ -10,12 +10,15 @@ import (
 )
 
 var CreateRaw string = `
---IN: Id int, Eid string, Value string, Type string, CreatedAt *time.Time
+--IN: id int, eid string, value string, type string, created_at *time.Time
 --OUT:
 INSERT INTO bolus (id, eid, value, type, created_at) VALUES (?, ?, ?, ?, ?);
 `
 
 type CreateModel struct {
+}
+
+type ICreate interface {
 }
 
 type CreateStmt struct {
@@ -33,8 +36,8 @@ func NewCreate(sqldb *sql.DB, errs *[]error) *CreateStmt {
 	return &CreateStmt{stmt: stmt}
 }
 
-func (s *CreateStmt) Exec(ctx context.Context, Id int, Eid string, Value string, Type string, CreatedAt *time.Time) (sql.Result, error) {
-	req, err := s.stmt.ExecContext(ctx, Id, Eid, Value, Type, CreatedAt)
+func (s *CreateStmt) Exec(ctx context.Context, id int, eid string, value string, type_ string, created_at *time.Time) (sql.Result, error) {
+	req, err := s.stmt.ExecContext(ctx, id, eid, value, type_, created_at)
 	if err != nil {
 		return nil, fmt.Errorf("Create exec error: %w", err)
 	}

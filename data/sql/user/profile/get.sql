@@ -1,0 +1,3 @@
+--IN: id int
+--OUT: id int, eid string, store_id string, name string, start *time.Time, timestamp *time.Time, duration *time.Duration, end *time.Time, start_time string, end_time string, source string, percent int, dia int, units string, timezone string, carb_ratios_json string, insulin_sensitivities_json string, basal_rates_json string, targets_json string
+SELECT id, eid, store_id, name, start, timestamp, duration, end, start_time, end_time, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json FROM profiles WHERE id = ?;
