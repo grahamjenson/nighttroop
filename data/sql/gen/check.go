@@ -11,9 +11,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"nighttroop.t1d.nz/data/sql/control"
-	controlMigrations "nighttroop.t1d.nz/data/sql/control/migrations"
+
 	"nighttroop.t1d.nz/data/sql/user"
-	userMigrations "nighttroop.t1d.nz/data/sql/user/migrations"
 )
 
 func main() {
@@ -48,7 +47,7 @@ func checkUsers() error {
 	}
 	defer db.Close()
 
-	err = userMigrations.MigrateUser(context.TODO(), db)
+	err = user.MigrateUp(db)
 	if err != nil {
 		return fmt.Errorf("failed to migrate user db: %w", err)
 	}
@@ -82,9 +81,9 @@ func checkControl() error {
 	}
 	defer db.Close()
 
-	err = controlMigrations.MigrateControl(context.TODO(), db)
+	err = control.MigrateUp(db)
 	if err != nil {
-		return fmt.Errorf("failed to migrate user db: %w", err)
+		return fmt.Errorf("failed to migrate control db: %w", err)
 	}
 
 	_, err = control.Prepare(context.TODO(), db)

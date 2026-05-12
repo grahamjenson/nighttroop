@@ -10,8 +10,7 @@ import (
 	"sync"
 	"time"
 
-	controlsql "nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/control/migrations"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
@@ -28,7 +27,7 @@ type ControlDB struct {
 
 	usersRWLock sync.RWMutex
 
-	Queries *controlsql.Queries
+	Queries *control.Queries
 }
 
 func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
@@ -46,13 +45,13 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	}
 
 	// Migrate the DB, run any unrun migrations
-	err = migrations.MigrateControl(context.TODO(), sqldb)
+	err = control.MigrateUp(sqldb)
 	if err != nil {
 		return nil, fmt.Errorf("cannot migrate control db: %w", err)
 	}
 
 	// Prepare the statements
-	controlDB.Queries, err = controlsql.Prepare(context.TODO(), sqldb)
+	controlDB.Queries, err = control.Prepare(context.TODO(), sqldb)
 	if err != nil {
 		return nil, fmt.Errorf("cannot prepare control statements: %w", err)
 	}
@@ -114,7 +113,7 @@ func (db *ControlDB) createAdminIfNoneExists() error {
 		return fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
-	_, err = db.Queries.CreateAdmin(ctx, controlsql.CreateAdminParams{
+	_, err = db.Queries.CreateAdmin(ctx, control.CreateAdminParams{
 		Name:       adminName,
 		Password:   hashedPassword,
 		Role:       "admin",
@@ -287,7 +286,7 @@ func (db *ControlDB) UserExists(subdomain string) bool {
 	return ok
 }
 
-func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *controlsql.User, error) {
+func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *control.User, error) {
 	// Check if user exists in the db
 	model, err := db.Queries.GetUser(context.TODO(), subdomain)
 	if err != nil {
@@ -343,7 +342,7 @@ func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMi
 
 }
 
-func getUserDBsFromModels(db *ControlDB, models []controlsql.User) ([]*UserDB, error) {
+func getUserDBsFromModels(db *ControlDB, models []control.User) ([]*UserDB, error) {
 	users := []*UserDB{}
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()

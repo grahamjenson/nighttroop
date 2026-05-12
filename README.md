@@ -27,6 +27,8 @@ so you can fill out your dexcom username/password +
 Docker runs our local test s3 server `minio`
 
 ```
+brew install sqlc
+brew install golang-migrate
 brew install docker colima docker-compose
 colima start
 docker-compose up

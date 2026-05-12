@@ -76,9 +76,8 @@ func main() {
 
 	migrationFiles := getMigrationFiles(*folder + "/migrations")
 
-	// TODO: moveto golang-migrate to make it easier to manage
 	// This builds the migration file
-	err := gen.BuildMigration(*folder, migrationFiles)
+	err := gen.BuildMigration(*folder)
 	if err != nil {
 		log.Fatalf("Failed to build migration: %v", err)
 	}
@@ -133,7 +132,7 @@ func getMigrationFiles(folder string) []string {
 			return nil
 		}
 
-		if strings.HasSuffix(path, ".sql") && strings.Contains(path, "migrations") {
+		if strings.HasSuffix(path, ".up.sql") && strings.Contains(path, "migrations") {
 			sqlFiles = append(sqlFiles, path)
 		}
 

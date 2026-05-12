@@ -1,7 +1,6 @@
 package nightscout
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -57,20 +56,10 @@ func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig
 		return "", "", fmt.Errorf("user not found: %w", err)
 	}
 
-	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain)
+	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.GetDeviceSplat)
 	if err != nil {
 		return "", "", fmt.Errorf("bad token: %w", err)
 	}
 
 	return deviceName, role, nil
-}
-
-func deviceGetter(ctx context.Context, name string) (string, string, *string, string, error) {
-	userDB := httputils.GetUserDBFromHTTPContext(ctx)
-	device, err := userDB.Queries.GetDevice(ctx, name)
-	if err != nil {
-		return "", "", nil, "", fmt.Errorf("device not found: %w", err)
-	}
-
-	return device.Name, device.Password, &device.TotpSecret, device.Role, nil
 }
