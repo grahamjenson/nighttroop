@@ -46,13 +46,13 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     password TEXT NOT NULL,
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_seen_at TIMESTAMP
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE devices (`, err)
 	}
-	slog.Info("Migrating", "statement", `CREATE TABLE devicestatus (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE devicestatus (
+	slog.Info("Migrating", "statement", `CREATE TABLE device_status (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE device_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     timestamp INTEGER NOT NULL,
@@ -63,9 +63,9 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     pumpReservoir REAL,
     loopStatus TEXT,
     loopTimestamp INTEGER,
-    created_at INTEGER DEFAULT (unixepoch())
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 )`); err != nil {
-		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE devicestatus (`, err)
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE device_status (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE data_sources (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE data_sources (
@@ -74,7 +74,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     url TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_attempted_sync INTEGER,
     last_successful_sync INTEGER,
     consecutive_failed_syncs INTEGER DEFAULT 0,
@@ -99,8 +99,8 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     eid TEXT, 
     created_by_type TEXT, -- "device", "data_source"
     created_by_id INTEGER, -- id of either device or data_source that created this entry
-    value REAL,
-    created_at INTEGER,
+    value REAL NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     UNIQUE(eid)
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE entries (`, err)
@@ -111,7 +111,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     eid TEXT,
     value REAL,
     type TEXT,
-    created_at INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     UNIQUE(eid)
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE bolus (`, err)
@@ -121,25 +121,27 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     amount REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     UNIQUE(eid)
 )`); err != nil {
 		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE carbs (`, err)
 	}
-	slog.Info("Migrating", "statement", `CREATE TABLE tempbasals (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE tempbasals (
+	slog.Info("Migrating", "statement", `CREATE TABLE temp_basals (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     eid TEXT,
     START INTEGER,
     duration INTEGER,
     value REAL,
     UNIQUE(eid)
 )`); err != nil {
-		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE tempbasals (`, err)
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE temp_basals (`, err)
 	}
-	slog.Info("Migrating", "statement", `CREATE TABLE temptargets (`)
-	if _, err := tx.ExecContext(ctx, `CREATE TABLE temptargets (
+	slog.Info("Migrating", "statement", `CREATE TABLE temp_targets (`)
+	if _, err := tx.ExecContext(ctx, `CREATE TABLE temp_targets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     eid TEXT,
     START INTEGER,
     duration INTEGER,
@@ -147,7 +149,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     lowTarget INTEGER,
     UNIQUE(eid)
 )`); err != nil {
-		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE temptargets (`, err)
+		return fmt.Errorf("failed to execute migration statement %s: %w", `CREATE TABLE temp_targets (`, err)
 	}
 	slog.Info("Migrating", "statement", `CREATE TABLE profile (`)
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE profile (
@@ -155,6 +157,7 @@ func MigrationUser0001Sql(ctx context.Context, db *sql.DB) error {
     eid TEXT,
     storeid TEXT,
     name TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     START INTEGER,
     timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,
     duration INTEGER,

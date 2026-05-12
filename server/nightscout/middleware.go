@@ -56,7 +56,7 @@ func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig
 		return "", "", fmt.Errorf("user not found: %w", err)
 	}
 
-	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.Stmts.DeviceGet)
+	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.Queries.GetDevice)
 	if err != nil {
 		return "", "", fmt.Errorf("bad token: %w", err)
 	}

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control/admin"
+	"nighttroop.t1d.nz/data/sql/control"
 	controlTemplates "nighttroop.t1d.nz/server/assets/templates/control"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -97,7 +97,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name(), admin.Role())
+		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, admin.Role)
 		if err != nil {
 			genericLoginError(w, r, fmt.Errorf("Failed to generate JWT token: %w", err))
 			return
@@ -116,27 +116,27 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		// Default set the cookie
 		config.Security.SetControlLoginCookie(w, tokenString, expiresAt)
 
-		slog.Info("Admin logged in", "admin", admin.Name(), "role", admin.Role())
+		slog.Info("Admin logged in", "admin", admin.Name, "role", admin.Role)
 		w.Header().Set("HX-Redirect", "/")
 
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (admin.IAdmin, error) {
-	admin, err := controlDB.Stmts.AdminGet.QueryRow(context.TODO(), username)
+func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*control.Admin, error) {
+	admin, err := controlDB.Queries.GetAdmin(context.TODO(), username)
 	if err != nil {
 		return nil, fmt.Errorf("admin not found: %w", err)
 	}
-	totpSecret, err := config.Security.Decrypt(admin.TotpSecret())
+	totpSecret, err := config.Security.Decrypt(admin.TotpSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	if !security.VerifyPassword(password, admin.Password()) {
+	if !security.VerifyPassword(password, admin.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
 	if !config.Security.TOTPValidate(totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
-	return admin, nil
+	return &admin, nil
 }

@@ -7,12 +7,12 @@ CREATE TABLE devices (
     password TEXT NOT NULL,
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_seen_at TIMESTAMP
 );
 
 -- This reports device status above
-CREATE TABLE devicestatus (
+CREATE TABLE device_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     timestamp INTEGER NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE devicestatus (
     pumpReservoir REAL,
     loopStatus TEXT,
     loopTimestamp INTEGER,
-    created_at INTEGER DEFAULT (unixepoch())
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Data souces like dexcom/nightscout (only one per type), has real deletes for saftey
@@ -34,7 +34,7 @@ CREATE TABLE data_sources (
     url TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
     last_attempted_sync INTEGER,
@@ -68,8 +68,8 @@ CREATE TABLE entries (
     
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    value REAL,
-    created_at INTEGER,
+    value REAL NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     -- CONTRAINTS
     UNIQUE(eid)
@@ -80,7 +80,7 @@ CREATE TABLE bolus (
     eid TEXT,
     value REAL,
     type TEXT,
-    created_at INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     -- CONTRAINTS
     UNIQUE(eid)
 );
@@ -89,13 +89,14 @@ CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     amount REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     -- CONTRAINTS
     UNIQUE(eid)
 );
 
-CREATE TABLE tempbasals (
+CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     eid TEXT,
     START INTEGER,
     duration INTEGER,
@@ -104,8 +105,9 @@ CREATE TABLE tempbasals (
     UNIQUE(eid)
 );
 
-CREATE TABLE temptargets (
+CREATE TABLE temp_targets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     eid TEXT,
     START INTEGER,
     duration INTEGER,
@@ -122,6 +124,7 @@ CREATE TABLE profile (
     eid TEXT,
     storeid TEXT,
     name TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     -- Date stuff
     START INTEGER,
     timestamp INTEGER GENERATED ALWAYS AS (START) VIRTUAL,

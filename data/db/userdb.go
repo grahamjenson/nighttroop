@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	ntsql "nighttroop.t1d.nz/data/sql"
+	usersql "nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/data/sql/user/migrations"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
@@ -22,7 +22,7 @@ type UserDB struct {
 	Subdomain string
 
 	// Prepared statements
-	Stmts *ntsql.UserStatements
+	Queries *usersql.Queries
 }
 
 func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config.ServerConfig) (*UserDB, error) {
@@ -49,7 +49,7 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 		return userDB, fmt.Errorf("Migration Error Occured user db: %s %w", subdomain, err)
 	}
 
-	userDB.Stmts, err = ntsql.NewUserStatements(sqldb)
+	userDB.Queries, err = usersql.Prepare(context.TODO(), sqldb)
 	if err != nil {
 		sqldb.Close()
 		return userDB, fmt.Errorf("cannot prepare statements for user db: %s %w", subdomain, err)

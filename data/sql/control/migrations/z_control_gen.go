@@ -17,6 +17,9 @@ func MigrateControl(ctx context.Context, db *sql.DB) error {
 	if err := MigrationControl0001Sql(ctx, db); err != nil {
 		return err
 	}
+	if err := MigrationControl0002Sql(ctx, db); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -43,8 +46,8 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 	if _, err := tx.ExecContext(ctx, `CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT UNIQUE NOT NULL,
-    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL,
-    backup_key_hash TEXT,
+    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL NOT NULL,
+    backup_key_hash TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
     last_seen_at TIMESTAMP,
@@ -87,6 +90,33 @@ func MigrationControl0001Sql(ctx context.Context, db *sql.DB) error {
 	}
 
 	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0001Sql"); err != nil {
+		return fmt.Errorf("failed to insert migration version: %w", err)
+	}
+
+	return tx.Commit()
+}
+
+func MigrationControl0002Sql(ctx context.Context, db *sql.DB) error {
+
+	var versionSeen int
+	err := db.QueryRow("SELECT COUNT(version) FROM schema_migrations WHERE version = ?;", "Control0002Sql").Scan(&versionSeen)
+	if err != nil {
+		return err
+	}
+	if versionSeen > 0 {
+		slog.Info("Migration already applied, skipping", "migration", "Control0002Sql")
+
+		return nil
+	}
+	slog.Info("Migration applying", "migration", "Control0002Sql")
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?);", "Control0002Sql"); err != nil {
 		return fmt.Errorf("failed to insert migration version: %w", err)
 	}
 

@@ -74,22 +74,23 @@ func main() {
 		panic("Invalid folder: " + *folder)
 	}
 
-	preparedStatementFiles := getSQLFilesToParse(*folder)
-	for _, file := range preparedStatementFiles {
-		err := gen.BuildPrepared(file)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to build prepared statement for file %s: %v", file, err))
-		}
-	}
+	migrationFiles := getMigrationFiles(*folder + "/migrations")
 
-	err := gen.BuildMigration(*folder, getMigrationFiles(*folder+"/migrations"))
+	// TODO: moveto golang-migrate to make it easier to manage
+	// This builds the migration file
+	err := gen.BuildMigration(*folder, migrationFiles)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to build migration: %v", err))
 	}
 
-	err = gen.BuildCombine(*folder)
+	err = gen.BuildSchema(*folder+"/schema.sql", migrationFiles)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to build combine: %v", err))
+		panic(fmt.Sprintf("Failed to build schema: %v", err))
+	}
+
+	err = gen.BuildSQLC(*folder)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to build SQLC: %v", err))
 	}
 }
 

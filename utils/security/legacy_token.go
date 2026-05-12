@@ -3,8 +3,8 @@ package security
 import (
 	"context"
 	"fmt"
-	"time"
 
+	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -21,9 +21,7 @@ func (cfg *SecurityConfig) CreateLegacyTokenForDevice(subdomain, deviceName, pas
 	return encryptedToken, nil
 }
 
-type DeviceGetter interface {
-	QueryRowExpanded(ctx context.Context, Name string) (string, string, string, string, *time.Time, *time.Time, error)
-}
+type DeviceGetter func(ctx context.Context, name string) (user.Device, error)
 
 func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSubdomain string, deviceGetter DeviceGetter) (string, string, error) {
 	decryptedToken, err := cfg.Decrypt(tokenStr)
@@ -37,10 +35,16 @@ func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSub
 		return "", "", fmt.Errorf("invalid token format: %w", err)
 	}
 
-	deviceName, devicePassword, deviceTotpSecret, deviceRole, _, _, err := deviceGetter.QueryRowExpanded(context.TODO(), tokenName)
+	device, err := deviceGetter(context.TODO(), tokenName)
+
 	if err != nil {
 		return "", "", fmt.Errorf("device not found: %w", err)
 	}
+
+	deviceName := device.Name
+	devicePassword := device.Password
+	deviceTotpSecret := device.TotpSecret
+	deviceRole := device.Role
 
 	if deviceSubdomain != tokenSubdomain {
 		return "", "", fmt.Errorf("subdomain mismatch")
