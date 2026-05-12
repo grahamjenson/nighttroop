@@ -92,6 +92,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to build SQLC: %v", err))
 	}
+
 }
 
 func getSQLFilesToParse(folder string) []string {
