@@ -1,23 +1,3 @@
--- name: CreateAdmin :one
-INSERT INTO admins (name, password, role, totp_secret) VALUES (?, ?, ?, ?) RETURNING *;
-
--- name: GetAdmin :one
-SELECT * FROM admins WHERE name = ?;
-
-
-
--- name: TruncateEvents :exec
-DELETE FROM events WHERE id < (SELECT MAX(e.id) - ? FROM events as e);
-
-
--- name: TESTTruncateUsers :exec
-DELETE FROM users;
-
-
-
------------------------------
--- USERS
------------------------------
 
 -- name: GetAllUsers :many
 SELECT * FROM users;
@@ -73,3 +53,12 @@ WHERE subdomain = ?;
 UPDATE users
 SET last_write_at = CURRENT_TIMESTAMP
 WHERE subdomain = ?;
+
+
+
+------------------
+--- TESTING
+------------------
+
+-- name: TESTTruncateUsers :exec
+DELETE FROM users;

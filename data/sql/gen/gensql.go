@@ -4,7 +4,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	if fileInfo, err := os.Stat(*folder); err != nil || !fileInfo.IsDir() {
-		panic("Invalid folder: " + *folder)
+		log.Fatalf("Invalid folder: " + *folder)
 	}
 
 	migrationFiles := getMigrationFiles(*folder + "/migrations")
@@ -80,17 +80,17 @@ func main() {
 	// This builds the migration file
 	err := gen.BuildMigration(*folder, migrationFiles)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to build migration: %v", err))
+		log.Fatalf("Failed to build migration: %v", err)
 	}
 
 	err = gen.BuildSchema(*folder+"/schema.sql", migrationFiles)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to build schema: %v", err))
+		log.Fatalf("Failed to build schema: %v", err)
 	}
 
 	err = gen.BuildSQLC(*folder)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to build SQLC: %v", err))
+		log.Fatalf("Failed to build SQLC: %v", err)
 	}
 
 }
