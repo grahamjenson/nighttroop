@@ -141,11 +141,11 @@ func main() {
 	flag.Parse()
 
 	baseFilePath := *folder + "/base.html"
-	if _, err := os.Stat("templates/" + baseFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
 		panic("Base template is required: " + baseFilePath)
 	}
 
-	baseFileInputs, baseFileInputParams := extractInputsFromTemplateFile("templates/" + baseFilePath)
+	baseFileInputs, baseFileInputParams := extractInputsFromTemplateFile(baseFilePath)
 	templateFiles := getAllTemplateFiles(*folder)
 	templateDataList := buildTemplateDataList(*folder, templateFiles, baseFileInputs, baseFileInputParams)
 	cfg := Config{
@@ -155,7 +155,7 @@ func main() {
 		HTMXTemplate: "`{{ block \"content\" . }}{{ end }}`",
 	}
 
-	outputPath := "templates/z_" + *folder + "_gen.go"
+	outputPath := "./z_" + *folder + "_gen.go"
 	t := template.Must(template.New(*folder + "Template").Parse(tmpl))
 	f, _ := os.Create(outputPath)
 	defer f.Close()
@@ -174,13 +174,11 @@ func main() {
 func getAllTemplateFiles(folder string) []string {
 	files := []string{}
 
-	err := filepath.Walk("templates/"+folder, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() && filepath.Ext(path) == ".html" && filepath.Base(path) != "base.html" {
-			// remove templates/ from path
-			path = strings.TrimPrefix(path, "templates/")
 			files = append(files, path)
 		}
 		return nil
@@ -195,11 +193,11 @@ func buildTemplateDataList(folder string, files []string, baseFileInputs, baseFi
 	templateList := TemplateDataList{}
 
 	for _, file := range files {
-		filename := filepath.Base(file)
 
-		name := strings.TrimSuffix(filename, ".html")
-
-		inputs, inputParams := extractInputsFromTemplateFile("templates/" + file)
+		name := strings.TrimSuffix(file, ".html")
+		name = strings.ReplaceAll(name, "/", "_")
+		name = utils.SnakeToCapitalCamelCase(name)
+		inputs, inputParams := extractInputsFromTemplateFile(file)
 		allInputs := []string{}
 		allInputParams := []string{}
 
@@ -211,7 +209,7 @@ func buildTemplateDataList(folder string, files []string, baseFileInputs, baseFi
 		allInputParams = append(allInputParams, inputParams...)
 
 		templateList = append(templateList, TemplateData{
-			Name:           utils.SnakeToCapitalCamelCase(folder + "_" + name),
+			Name:           name,
 			FileName:       file,
 			Inputs:         strings.Join(inputs, ", "),
 			InputParams:    strings.Join(inputParams, ", "),

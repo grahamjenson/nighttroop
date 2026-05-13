@@ -37,6 +37,18 @@ var UserSyncSettingsTemplateString string
 var UserSyncSettingsTemplate *template.Template
 var UserSyncSettingsHTMXTemplate *template.Template
 
+//go:embed user/toasts/failure.html
+var UserToastsFailureTemplateString string
+
+var UserToastsFailureTemplate *template.Template
+var UserToastsFailureHTMXTemplate *template.Template
+
+//go:embed user/toasts/success.html
+var UserToastsSuccessTemplateString string
+
+var UserToastsSuccessTemplate *template.Template
+var UserToastsSuccessHTMXTemplate *template.Template
+
 func getUserDashboardTemplate() (*template.Template, error) {
 	if UserDashboardTemplate != nil {
 		return UserDashboardTemplate, nil
@@ -281,6 +293,134 @@ func UserSyncSettingsHTML(w io.Writer, Subdomain string) error {
 
 func UserSyncSettingsHTMX(w io.Writer) error {
 	tmpl, err := getUserSyncSettingsHTMXTemplate()
+	if err != nil {
+		return fmt.Errorf("failed to get template: %w", err)
+	}
+
+	err = tmpl.Execute(w, nil)
+
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	return nil
+}
+
+func getUserToastsFailureTemplate() (*template.Template, error) {
+	if UserToastsFailureTemplate != nil {
+		return UserToastsFailureTemplate, nil
+	}
+
+	UserToastsFailureTemplate, err := template.New("UserToastsFailure").Parse(UserBaseTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	UserToastsFailureTemplate, err = UserToastsFailureTemplate.Parse(UserToastsFailureTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserToastsFailureTemplate, nil
+}
+
+func getUserToastsFailureHTMXTemplate() (*template.Template, error) {
+	if UserToastsFailureHTMXTemplate != nil {
+		return UserToastsFailureHTMXTemplate, nil
+	}
+
+	UserToastsFailureHTMXTemplate, err := template.New("UserToastsFailure").Parse(htmxUserTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	UserToastsFailureHTMXTemplate, err = UserToastsFailureHTMXTemplate.Parse(UserToastsFailureTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserToastsFailureHTMXTemplate, nil
+}
+
+func UserToastsFailureHTML(w io.Writer, Subdomain string) error {
+	tmpl, err := getUserToastsFailureTemplate()
+	if err != nil {
+		return fmt.Errorf("failed to get template: %w", err)
+	}
+
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
+
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	return nil
+}
+
+func UserToastsFailureHTMX(w io.Writer) error {
+	tmpl, err := getUserToastsFailureHTMXTemplate()
+	if err != nil {
+		return fmt.Errorf("failed to get template: %w", err)
+	}
+
+	err = tmpl.Execute(w, nil)
+
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	return nil
+}
+
+func getUserToastsSuccessTemplate() (*template.Template, error) {
+	if UserToastsSuccessTemplate != nil {
+		return UserToastsSuccessTemplate, nil
+	}
+
+	UserToastsSuccessTemplate, err := template.New("UserToastsSuccess").Parse(UserBaseTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	UserToastsSuccessTemplate, err = UserToastsSuccessTemplate.Parse(UserToastsSuccessTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserToastsSuccessTemplate, nil
+}
+
+func getUserToastsSuccessHTMXTemplate() (*template.Template, error) {
+	if UserToastsSuccessHTMXTemplate != nil {
+		return UserToastsSuccessHTMXTemplate, nil
+	}
+
+	UserToastsSuccessHTMXTemplate, err := template.New("UserToastsSuccess").Parse(htmxUserTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	UserToastsSuccessHTMXTemplate, err = UserToastsSuccessHTMXTemplate.Parse(UserToastsSuccessTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserToastsSuccessHTMXTemplate, nil
+}
+
+func UserToastsSuccessHTML(w io.Writer, Subdomain string) error {
+	tmpl, err := getUserToastsSuccessTemplate()
+	if err != nil {
+		return fmt.Errorf("failed to get template: %w", err)
+	}
+
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
+
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	return nil
+}
+
+func UserToastsSuccessHTMX(w io.Writer) error {
+	tmpl, err := getUserToastsSuccessHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
