@@ -1,3 +1,5 @@
+{{/*PARAM seconds string */}}
+{{ define "content" }}
 <div id="rate-limit-alert" class="alert alert-warning border-0 shadow-sm mt-3" role="alert">
     <div class=" d-flex align-items-center justify-content-center">
         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
@@ -24,3 +26,4 @@
         }
     }, 1000);
 </script>
+{{ end }}

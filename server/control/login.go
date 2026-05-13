@@ -10,7 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	controlTemplates "nighttroop.t1d.nz/server/assets/templates/control"
+	"nighttroop.t1d.nz/server/assets/templates"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -35,7 +35,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := controlTemplates.LoginHtml(w)
+		err := templates.ControlLoginHTML(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

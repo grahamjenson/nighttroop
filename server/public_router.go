@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
-	publicTemplates "nighttroop.t1d.nz/server/assets/templates/public"
+	"nighttroop.t1d.nz/server/assets/templates"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -22,7 +22,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 	static.AddSatticRoutes(r)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		err := publicTemplates.CreateUserHtml(w)
+		err := templates.PublicCreateUserHTML(w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -53,7 +53,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		allowed, remainingTime := httputils.CreateUserAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			publicTemplates.CreateUserRateLimitedHtmx(w, fmt.Sprintf("%d", remainingTime))
+			templates.PublicCreateUserRateLimitedHTMX(w, fmt.Sprintf("%d", remainingTime))
 			return
 		}
 
@@ -89,7 +89,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = publicTemplates.CreatedUserInfoHtmx(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
+		err = templates.PublicCreatedUserInfoHTMX(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
 		if err != nil {
 			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)

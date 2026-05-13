@@ -31,6 +31,10 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 		r.Use(user.UserDBMiddleware(controlDB))          // Adds User DB and model to the context
 
 		r.Get("/", user.GetDashboardHandler(controlDB, config))
+
+		r.Get("/sync-settings", user.GetSyncSettingsHandler(controlDB, config))
+
+		// Actions
 		r.Post("/logout", user.POSTLogoutHandler(config))
 
 		//// TODO

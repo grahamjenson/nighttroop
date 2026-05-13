@@ -1,3 +1,6 @@
+{{/*PARAM url string, password string, totp_secret string, backup_key string */}}
+
+{{ define "content" }}
 <div class="text-start">
 
     <div class="mb-3">
@@ -52,3 +55,4 @@ Backup Key: {{.backup_key}}
         });
     });
 </script>
+{{ end }}

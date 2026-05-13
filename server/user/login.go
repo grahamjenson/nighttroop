@@ -11,7 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/user"
 
-	userTemplates "nighttroop.t1d.nz/server/assets/templates/user"
+	"nighttroop.t1d.nz/server/assets/templates"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -40,7 +40,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 		//
 		w.Header().Set("Content-Type", "text/html")
 		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-		err := userTemplates.LoginHtml(w, subdomain)
+		err := templates.UserLoginHTML(w, subdomain)
 		if err != nil {
 			http.Error(w, "Template Error", http.StatusInternalServerError)
 			return
@@ -107,7 +107,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			err = userTemplates.LoginTotpHtmx(w)
+			err = templates.UserLoginTotpHTMX(w)
 			if err != nil {
 				genericLoginError(w, r, err)
 				return
