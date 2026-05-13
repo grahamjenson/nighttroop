@@ -30,9 +30,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allCarbsStmt, err = db.PrepareContext(ctx, allCarbs); err != nil {
 		return nil, fmt.Errorf("error preparing query AllCarbs: %w", err)
 	}
-	if q.allDataSourcesStmt, err = db.PrepareContext(ctx, allDataSources); err != nil {
-		return nil, fmt.Errorf("error preparing query AllDataSources: %w", err)
-	}
 	if q.allDeviceStatusStmt, err = db.PrepareContext(ctx, allDeviceStatus); err != nil {
 		return nil, fmt.Errorf("error preparing query AllDeviceStatus: %w", err)
 	}
@@ -48,6 +45,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allProfilesStmt, err = db.PrepareContext(ctx, allProfiles); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfiles: %w", err)
 	}
+	if q.allSyncSourcesStmt, err = db.PrepareContext(ctx, allSyncSources); err != nil {
+		return nil, fmt.Errorf("error preparing query AllSyncSources: %w", err)
+	}
 	if q.allTempBasalsStmt, err = db.PrepareContext(ctx, allTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempBasals: %w", err)
 	}
@@ -60,9 +60,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createCarbStmt, err = db.PrepareContext(ctx, createCarb); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateCarb: %w", err)
 	}
-	if q.createDataSourceStmt, err = db.PrepareContext(ctx, createDataSource); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateDataSource: %w", err)
-	}
 	if q.createDeviceStmt, err = db.PrepareContext(ctx, createDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateDevice: %w", err)
 	}
@@ -71,6 +68,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.createEventStmt, err = db.PrepareContext(ctx, createEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEvent: %w", err)
+	}
+	if q.createSyncSourceStmt, err = db.PrepareContext(ctx, createSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSyncSource: %w", err)
 	}
 	if q.getDeviceStmt, err = db.PrepareContext(ctx, getDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDevice: %w", err)
@@ -91,11 +91,6 @@ func (q *Queries) Close() error {
 	if q.allCarbsStmt != nil {
 		if cerr := q.allCarbsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allCarbsStmt: %w", cerr)
-		}
-	}
-	if q.allDataSourcesStmt != nil {
-		if cerr := q.allDataSourcesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allDataSourcesStmt: %w", cerr)
 		}
 	}
 	if q.allDeviceStatusStmt != nil {
@@ -123,6 +118,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allProfilesStmt: %w", cerr)
 		}
 	}
+	if q.allSyncSourcesStmt != nil {
+		if cerr := q.allSyncSourcesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allSyncSourcesStmt: %w", cerr)
+		}
+	}
 	if q.allTempBasalsStmt != nil {
 		if cerr := q.allTempBasalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allTempBasalsStmt: %w", cerr)
@@ -143,11 +143,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createCarbStmt: %w", cerr)
 		}
 	}
-	if q.createDataSourceStmt != nil {
-		if cerr := q.createDataSourceStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createDataSourceStmt: %w", cerr)
-		}
-	}
 	if q.createDeviceStmt != nil {
 		if cerr := q.createDeviceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createDeviceStmt: %w", cerr)
@@ -161,6 +156,11 @@ func (q *Queries) Close() error {
 	if q.createEventStmt != nil {
 		if cerr := q.createEventStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createEventStmt: %w", cerr)
+		}
+	}
+	if q.createSyncSourceStmt != nil {
+		if cerr := q.createSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSyncSourceStmt: %w", cerr)
 		}
 	}
 	if q.getDeviceStmt != nil {
@@ -214,20 +214,20 @@ type Queries struct {
 	tx                         *sql.Tx
 	allBolusesStmt             *sql.Stmt
 	allCarbsStmt               *sql.Stmt
-	allDataSourcesStmt         *sql.Stmt
 	allDeviceStatusStmt        *sql.Stmt
 	allDevicesStmt             *sql.Stmt
 	allEntriesStmt             *sql.Stmt
 	allEventsStmt              *sql.Stmt
 	allProfilesStmt            *sql.Stmt
+	allSyncSourcesStmt         *sql.Stmt
 	allTempBasalsStmt          *sql.Stmt
 	allTempTargetsStmt         *sql.Stmt
 	createBolusStmt            *sql.Stmt
 	createCarbStmt             *sql.Stmt
-	createDataSourceStmt       *sql.Stmt
 	createDeviceStmt           *sql.Stmt
 	createEntryStmt            *sql.Stmt
 	createEventStmt            *sql.Stmt
+	createSyncSourceStmt       *sql.Stmt
 	getDeviceStmt              *sql.Stmt
 	updateDeviceLastSeenAtStmt *sql.Stmt
 }
@@ -238,20 +238,20 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                         tx,
 		allBolusesStmt:             q.allBolusesStmt,
 		allCarbsStmt:               q.allCarbsStmt,
-		allDataSourcesStmt:         q.allDataSourcesStmt,
 		allDeviceStatusStmt:        q.allDeviceStatusStmt,
 		allDevicesStmt:             q.allDevicesStmt,
 		allEntriesStmt:             q.allEntriesStmt,
 		allEventsStmt:              q.allEventsStmt,
 		allProfilesStmt:            q.allProfilesStmt,
+		allSyncSourcesStmt:         q.allSyncSourcesStmt,
 		allTempBasalsStmt:          q.allTempBasalsStmt,
 		allTempTargetsStmt:         q.allTempTargetsStmt,
 		createBolusStmt:            q.createBolusStmt,
 		createCarbStmt:             q.createCarbStmt,
-		createDataSourceStmt:       q.createDataSourceStmt,
 		createDeviceStmt:           q.createDeviceStmt,
 		createEntryStmt:            q.createEntryStmt,
 		createEventStmt:            q.createEventStmt,
+		createSyncSourceStmt:       q.createSyncSourceStmt,
 		getDeviceStmt:              q.getDeviceStmt,
 		updateDeviceLastSeenAtStmt: q.updateDeviceLastSeenAtStmt,
 	}

@@ -277,13 +277,13 @@ func getUserSyncSettingsHTMXTemplate() (*template.Template, error) {
 	return UserSyncSettingsHTMXTemplate, nil
 }
 
-func UserSyncSettingsHTML(w io.Writer, Subdomain string) error {
+func UserSyncSettingsHTML(w io.Writer, Subdomain string, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
 	tmpl, err := getUserSyncSettingsTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_region": dex_region, "dex_enabled": dex_enabled})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -291,13 +291,13 @@ func UserSyncSettingsHTML(w io.Writer, Subdomain string) error {
 	return nil
 }
 
-func UserSyncSettingsHTMX(w io.Writer) error {
+func UserSyncSettingsHTMX(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
 	tmpl, err := getUserSyncSettingsHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, map[string]any{"ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_region": dex_region, "dex_enabled": dex_enabled})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)

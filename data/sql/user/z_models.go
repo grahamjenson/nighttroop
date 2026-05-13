@@ -23,20 +23,6 @@ type Carb struct {
 	CreatedAt time.Time
 }
 
-type DataSource struct {
-	ID                     int64
-	Type                   string
-	Url                    string
-	Username               string
-	Password               string
-	CreatedAt              time.Time
-	LastAttemptedSync      *int64
-	LastSuccessfulSync     *int64
-	ConsecutiveFailedSyncs *int64
-	TotalFailedSyncs       *int64
-	PreviousSyncError      *string
-}
-
 type Device struct {
 	ID         int64
 	Name       string
@@ -102,6 +88,23 @@ type Profile struct {
 type SqliteSequence struct {
 	Name interface{}
 	Seq  interface{}
+}
+
+type SyncSource struct {
+	ID                     int64
+	Type                   string
+	Password               string
+	CreatedAt              time.Time
+	Url                    string
+	Username               string
+	Region                 string
+	Data                   string
+	Frequency              int64
+	LastAttemptedSync      *int64
+	LastSuccessfulSync     *int64
+	ConsecutiveFailedSyncs *int64
+	TotalFailedSyncs       *int64
+	PreviousSyncError      *string
 }
 
 type TempBasal struct {

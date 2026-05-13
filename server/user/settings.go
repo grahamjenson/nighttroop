@@ -23,6 +23,13 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 			return
 		}
 
+		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
+		sync_sources, err := userdb.Queries.AllSyncSources(r.Context())
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
 		if acceptType == httputils.AcceptTypeHTML {
 			templates.UserSyncSettingsHTML(w, subdomain)
 			return

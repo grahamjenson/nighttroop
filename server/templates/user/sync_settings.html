@@ -1,9 +1,22 @@
+{{/*PARAM ns_url string */}}
+{{/*PARAM ns_password_garbage string */}}
+{{/*PARAM ns_enabled bool */}}
+{{/*PARAM dex_username string */}}
+{{/*PARAM dex_password_garbage string */}}
+{{/*PARAM dex_region string */}}
+{{/*PARAM dex_enabled bool */}}
+
+{{ template "user/base.html" . }}
 {{ define "content" }}
 <div class="card p-4 shadow-sm">
     <h3 class="border-bottom pb-2">Sync Settings</h3>
     <p class="text-muted">Configure how NightTroop syncs with external services.</p>
 
-    <!-- Form updates the status feedback inside the card or pushes an OOB Toast -->
+    <div class="alert alert-warning mt-2 ps-3 py-2 small" role="alert">
+        <strong>Warning:</strong>
+        Disabling and saving will permanently delete your credentials from our servers.
+    </div>
+
     <form hx-post="/sync-settings" hx-target="#form-feedback" class="mt-4">
         <div id="form-feedback"></div>
 
@@ -12,9 +25,9 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Nightscout Sync</h5>
                 <div class="form-check form-switch">
-                    <!-- Controlled via simple toggle visibility script -->
+                    <!-- Toggles the disabled state of all inputs within #ns-fields -->
                     <input class="form-check-input" type="checkbox" name="ns_enabled" id="nightscoutSync" checked
-                        onchange="document.getElementById('ns-fields').classList.toggle('d-none', !this.checked)">
+                        onchange="document.querySelectorAll('#ns-fields input').forEach(el => el.disabled = !this.checked);">
                     <label class="form-check-label" for="nightscoutSync">Enable</label>
                 </div>
             </div>
@@ -22,7 +35,6 @@
             <div id="ns-fields" class="row g-3">
                 <div class="col-md-7">
                     <label for="nsUrl" class="form-label">Nightscout URL</label>
-                    <!-- Pattern prevents trailing slashes or subpaths (e.g. rejects domain.com) -->
                     <input type="url" class="form-control" id="nsUrl" name="ns_url"
                         placeholder="https://your-nightscout.herokuapp.com" pattern="https?://[^/]+"
                         title="URL must not contain a sub-path or trailing slash (e.g., https://example.com)" required>
@@ -40,34 +52,37 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Dexcom Share Sync</h5>
                 <div class="form-check form-switch">
+                    <!-- Toggles the disabled state of all inputs within #dex-fields -->
                     <input class="form-check-input" type="checkbox" name="dex_enabled" id="dexcomSync"
-                        onchange="document.getElementById('dex-fields').classList.toggle('d-none', !this.checked)">
+                        onchange="document.querySelectorAll('#dex-fields input').forEach(el => el.disabled = !this.checked);">
+
                     <label class="form-check-label" for="dexcomSync">Enable</label>
                 </div>
             </div>
 
-            <!-- Initially hidden because checkbox is unchecked -->
-            <div id="dex-fields" class="row g-3 d-none">
+            <!-- Removed d-none class. Added disabled attributes to inputs to match unchecked state on initial load -->
+            <div id="dex-fields" class="row g-3">
                 <div class="col-md-5">
                     <label for="dexUsername" class="form-label">Dexcom Username</label>
-                    <input type="text" class="form-control" id="dexUsername" name="dex_username">
+                    <input type="text" class="form-control" id="dexUsername" name="dex_username" disabled>
                 </div>
                 <div class="col-md-4">
                     <label for="dexPassword" class="form-label">Dexcom Password</label>
-                    <input type="password" class="form-control" id="dexPassword" name="dex_password">
+                    <input type="password" class="form-control" id="dexPassword" name="dex_password" disabled>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <div class="w-100 p-2 bg-white border rounded d-flex justify-content-around align-items-center"
                         style="height: 38px;">
-                        <span class="small text-muted me-1">Server Region:</span>
+                        <span class="small text-muted me-1">Region:</span>
                         <div class="form-check form-check-inline mb-0">
-                            <input class="form-check-input" type="radio" name="dex_region" id="regionUS" value="US"
-                                checked>
+                            <input class="form-check-input" type="radio" name="dex_region" id="regionUS" value="USA"
+                                checked disabled>
                             <label class="form-check-label small" for="regionUS">USA</label>
                         </div>
                         <div class="form-check form-check-inline mb-0">
-                            <input class="form-check-input" type="radio" name="dex_region" id="regionINT" value="INT">
-                            <label class="form-check-label small" for="regionINT">Outside USA</label>
+                            <input class="form-check-input" type="radio" name="dex_region" id="regionINT"
+                                value="NOT_USA" disabled>
+                            <label class="form-check-label small" for="regionINT">Other</label>
                         </div>
                     </div>
                 </div>
@@ -80,4 +95,5 @@
         </div>
     </form>
 </div>
+
 {{ end }}

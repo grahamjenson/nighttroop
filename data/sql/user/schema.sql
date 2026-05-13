@@ -17,24 +17,6 @@ CREATE TABLE carbs (
     UNIQUE(eid)
 );
 
-CREATE TABLE data_sources (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    -- Nightscout/Dexcom/Device (Device being a default one, which can be referenced from device)
-    type TEXT UNIQUE NOT NULL,
-    url TEXT NOT NULL,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-
-    -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
-    last_attempted_sync INTEGER,
-    last_successful_sync INTEGER,
-    consecutive_failed_syncs INTEGER DEFAULT 0,
-    total_failed_syncs INTEGER,
-    previous_sync_error TEXT -- stored to show to user as feedback
-
-);
-
 CREATE TABLE device_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
@@ -54,7 +36,7 @@ CREATE TABLE devices (
     name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     totp_secret TEXT NOT NULL,
-    role TEXT NOT NULL,
+    role TEXT NOT NULL, -- Something like Read/Carer/Full/Admin/LoopPhone
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_seen_at TIMESTAMP
 );
@@ -113,6 +95,32 @@ UNIQUE(eid)
 );
 
 CREATE TABLE sqlite_sequence(name,seq);
+
+CREATE TABLE sync_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- Nightscout/Dexcom
+    type TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+
+    -- NIGHTSCOUT
+    url TEXT NOT NULL, 
+
+    -- DEXCOM
+    username TEXT NOT NULL,
+    region TEXT NOT NULL,
+    
+    data TEXT NOT NULL, -- comma seperated list of what data to sync, empty means all, values like "treatments,entries"...
+    frequency INTEGER NOT NULL, -- how often to sync in seconds
+
+    -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
+    last_attempted_sync INTEGER,
+    last_successful_sync INTEGER,
+    consecutive_failed_syncs INTEGER DEFAULT 0,
+    total_failed_syncs INTEGER,
+    previous_sync_error TEXT -- stored to show to user as feedback
+);
 
 CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
