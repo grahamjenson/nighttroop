@@ -8,10 +8,12 @@ package user
 import (
 	"context"
 	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const allSyncSources = `-- name: AllSyncSources :many
-SELECT id, type, password, created_at, url, username, region, data, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error FROM sync_sources ORDER BY created_at DESC
+SELECT id, type, password, created_at, enabled, url, username, dexcom_region, sync_items, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error FROM sync_sources ORDER BY created_at DESC
 `
 
 func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
@@ -28,10 +30,11 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 			&i.Type,
 			&i.Password,
 			&i.CreatedAt,
+			&i.Enabled,
 			&i.Url,
 			&i.Username,
-			&i.Region,
-			&i.Data,
+			&i.DexcomRegion,
+			&i.SyncItems,
 			&i.Frequency,
 			&i.LastAttemptedSync,
 			&i.LastSuccessfulSync,
@@ -59,7 +62,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
 type CreateSyncSourceParams struct {
 	ID                     int64
-	Type                   string
+	Type                   consts.SyncSourceType
 	Url                    string
 	Username               string
 	Password               string

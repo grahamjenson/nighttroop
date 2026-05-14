@@ -6,6 +6,8 @@ package user
 
 import (
 	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 type Bolus struct {
@@ -28,7 +30,7 @@ type Device struct {
 	Name       string
 	Password   string
 	TotpSecret string
-	Role       string
+	Role       consts.DeviceRole
 	CreatedAt  time.Time
 	LastSeenAt *time.Time
 }
@@ -92,13 +94,14 @@ type SqliteSequence struct {
 
 type SyncSource struct {
 	ID                     int64
-	Type                   string
+	Type                   consts.SyncSourceType
 	Password               string
 	CreatedAt              time.Time
+	Enabled                bool
 	Url                    string
 	Username               string
-	Region                 string
-	Data                   string
+	DexcomRegion           consts.DexcomRegion
+	SyncItems              *string
 	Frequency              int64
 	LastAttemptedSync      *int64
 	LastSuccessfulSync     *int64

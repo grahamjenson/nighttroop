@@ -6,6 +6,8 @@ package control
 
 import (
 	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 type Admin struct {
@@ -13,7 +15,7 @@ type Admin struct {
 	Name       string
 	Password   string
 	TotpSecret string
-	Role       string
+	Role       consts.AdminRole
 	CreatedAt  *time.Time
 	LastSeenAt *time.Time
 }

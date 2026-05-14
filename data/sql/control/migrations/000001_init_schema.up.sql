@@ -27,7 +27,7 @@ CREATE TABLE admins (
     name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     totp_secret TEXT NOT NULL,
-    role TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('admin', 'read')), -- for future use, can have different levels of admin access
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_seen_at TIMESTAMP
 );

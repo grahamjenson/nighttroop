@@ -20,9 +20,9 @@ func (cfg *SecurityConfig) CreateLegacyTokenForDevice(subdomain, deviceName, pas
 	return encryptedToken, nil
 }
 
-type DeviceGetter func(ctx context.Context, name string) (deviceName string, password string, totpSecret string, role string, err error)
+type DeviceGetter func(ctx context.Context, name string) (deviceName string, password string, totpSecret string, role consts.DeviceRole, err error)
 
-func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSubdomain string, deviceGetter DeviceGetter) (string, string, error) {
+func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSubdomain string, deviceGetter DeviceGetter) (string, consts.DeviceRole, error) {
 	decryptedToken, err := cfg.Decrypt(tokenStr)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to decrypt token: %w", err)
@@ -50,7 +50,7 @@ func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSub
 	}
 
 	// Constraint: Not allowed to be admin and use legacy token
-	if deviceRole == consts.UserRoleAdmin.String() {
+	if deviceRole == consts.DeviceRoleAdmin {
 		return "", "", fmt.Errorf("legacy token cannot be used for admin devices")
 	}
 

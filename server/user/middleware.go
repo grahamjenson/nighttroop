@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -69,7 +70,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 			deviceName, deviceRole, _, err := TryLoginWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -88,7 +89,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 // Try get the Auth Header
 // Then try get the cookie
-func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, string, bool, error) {
+func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.DeviceRole, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")

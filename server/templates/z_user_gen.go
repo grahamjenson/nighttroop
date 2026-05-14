@@ -31,11 +31,11 @@ var UserLoginTotpTemplateString string
 var UserLoginTotpTemplate *template.Template
 var UserLoginTotpHTMXTemplate *template.Template
 
-//go:embed user/sync_settings.html
-var UserSyncSettingsTemplateString string
+//go:embed user/settings/sync.html
+var UserSettingsSyncTemplateString string
 
-var UserSyncSettingsTemplate *template.Template
-var UserSyncSettingsHTMXTemplate *template.Template
+var UserSettingsSyncTemplate *template.Template
+var UserSettingsSyncHTMXTemplate *template.Template
 
 //go:embed user/toasts/failure.html
 var UserToastsFailureTemplateString string
@@ -241,44 +241,44 @@ func UserLoginTotpHTMX(w io.Writer) error {
 	return nil
 }
 
-func getUserSyncSettingsTemplate() (*template.Template, error) {
-	if UserSyncSettingsTemplate != nil {
-		return UserSyncSettingsTemplate, nil
+func getUserSettingsSyncTemplate() (*template.Template, error) {
+	if UserSettingsSyncTemplate != nil {
+		return UserSettingsSyncTemplate, nil
 	}
 
-	UserSyncSettingsTemplate, err := template.New("UserSyncSettings").Parse(UserBaseTemplateString)
+	UserSettingsSyncTemplate, err := template.New("UserSettingsSync").Parse(UserBaseTemplateString)
 	if err != nil {
 		return nil, err
 	}
 
-	UserSyncSettingsTemplate, err = UserSyncSettingsTemplate.Parse(UserSyncSettingsTemplateString)
+	UserSettingsSyncTemplate, err = UserSettingsSyncTemplate.Parse(UserSettingsSyncTemplateString)
 	if err != nil {
 		return nil, err
 	}
 
-	return UserSyncSettingsTemplate, nil
+	return UserSettingsSyncTemplate, nil
 }
 
-func getUserSyncSettingsHTMXTemplate() (*template.Template, error) {
-	if UserSyncSettingsHTMXTemplate != nil {
-		return UserSyncSettingsHTMXTemplate, nil
+func getUserSettingsSyncHTMXTemplate() (*template.Template, error) {
+	if UserSettingsSyncHTMXTemplate != nil {
+		return UserSettingsSyncHTMXTemplate, nil
 	}
 
-	UserSyncSettingsHTMXTemplate, err := template.New("UserSyncSettings").Parse(htmxUserTemplateString)
+	UserSettingsSyncHTMXTemplate, err := template.New("UserSettingsSync").Parse(htmxUserTemplateString)
 	if err != nil {
 		return nil, err
 	}
 
-	UserSyncSettingsHTMXTemplate, err = UserSyncSettingsHTMXTemplate.Parse(UserSyncSettingsTemplateString)
+	UserSettingsSyncHTMXTemplate, err = UserSettingsSyncHTMXTemplate.Parse(UserSettingsSyncTemplateString)
 	if err != nil {
 		return nil, err
 	}
 
-	return UserSyncSettingsHTMXTemplate, nil
+	return UserSettingsSyncHTMXTemplate, nil
 }
 
-func UserSyncSettingsHTML(w io.Writer, Subdomain string, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
-	tmpl, err := getUserSyncSettingsTemplate()
+func UserSettingsSyncHTML(w io.Writer, Subdomain string, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
+	tmpl, err := getUserSettingsSyncTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
@@ -291,8 +291,8 @@ func UserSyncSettingsHTML(w io.Writer, Subdomain string, ns_url string, ns_passw
 	return nil
 }
 
-func UserSyncSettingsHTMX(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
-	tmpl, err := getUserSyncSettingsHTMXTemplate()
+func UserSettingsSyncHTMX(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
+	tmpl, err := getUserSettingsSyncHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}

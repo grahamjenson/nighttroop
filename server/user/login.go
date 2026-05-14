@@ -221,7 +221,7 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 
 func deviceRequiresTOTPValidation(device *user.Device) bool {
 	// Constraint: TOTP validation is required for admin users
-	if device.Role == consts.UserRoleAdmin.String() {
+	if device.Role == consts.DeviceRoleAdmin {
 		return true
 	}
 

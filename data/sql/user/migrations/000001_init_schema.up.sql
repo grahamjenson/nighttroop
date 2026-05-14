@@ -6,7 +6,7 @@ CREATE TABLE devices (
     name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     totp_secret TEXT NOT NULL,
-    role TEXT NOT NULL, -- Something like Read/Carer/Full/Admin/LoopPhone
+    role TEXT NOT NULL CHECK(role IN ('admin', 'pwd_phone', 'read')), -- Something like Read/Carer/Full/Admin/LoopPhone
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_seen_at TIMESTAMP
 );
@@ -29,27 +29,28 @@ CREATE TABLE device_status (
 -- Data souces like dexcom/nightscout (only one per type), has real deletes for saftey
 CREATE TABLE sync_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+
     -- Nightscout/Dexcom
-    type TEXT UNIQUE NOT NULL,
+    type TEXT UNIQUE NOT NULL CHECK(type IN ('nightscout', 'dexcom')),
     password TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-
+    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
 
     -- NIGHTSCOUT
     url TEXT NOT NULL, 
 
     -- DEXCOM
     username TEXT NOT NULL,
-    region TEXT NOT NULL,
+    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
     
-    data TEXT NOT NULL, -- comma seperated list of what data to sync, empty means all, values like "treatments,entries"...
-    frequency INTEGER NOT NULL, -- how often to sync in seconds
+    sync_items TEXT, -- comma seperated list of what data to sync, empty or null means all, values like "treatments,entries"...
+    frequency INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
 
     -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
     last_attempted_sync INTEGER,
     last_successful_sync INTEGER,
     consecutive_failed_syncs INTEGER DEFAULT 0,
-    total_failed_syncs INTEGER,
+    total_failed_syncs INTEGER DEFAULT 0,
     previous_sync_error TEXT -- stored to show to user as feedback
 );
 

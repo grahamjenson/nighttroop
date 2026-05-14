@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -18,7 +19,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			deviceName, deviceRole, keepGoing, err := user.TryLoginWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -33,7 +34,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
 			if err == nil {
 				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, deviceRole)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -43,7 +44,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 	}
 }
 
-func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, string, error) {
+func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.DeviceRole, error) {
 
 	tokenParam := r.URL.Query().Get("token")
 	if tokenParam == "" {
@@ -61,5 +62,5 @@ func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig
 		return "", "", fmt.Errorf("bad token: %w", err)
 	}
 
-	return deviceName, role, nil
+	return deviceName, consts.DeviceRole(role), nil
 }

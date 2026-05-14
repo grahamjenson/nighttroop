@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -23,7 +24,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 				slog.Info("Control User Logged In", "user_name", userName, "role", userRole)
 				ctx := r.Context()
 				httputils.SetDeviceNameInHTTPContext(ctx, userName)
-				httputils.SetRoleInHTTPContext(ctx, userRole)
+				httputils.SetRoleInHTTPContext(ctx, string(userRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -40,7 +41,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 	}
 }
 
-func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, string, error) {
+func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.AdminRole, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")

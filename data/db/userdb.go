@@ -9,6 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 // //
@@ -81,7 +82,7 @@ func (db *UserDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }
 
-func (db *UserDB) GetDeviceSplat(ctx context.Context, name string) (deviceName string, password string, totpSecret string, role string, err error) {
+func (db *UserDB) GetDeviceSplat(ctx context.Context, name string) (deviceName string, password string, totpSecret string, role consts.DeviceRole, err error) {
 	device, err := db.Queries.GetDevice(ctx, name)
 	if err != nil {
 		return "", "", "", "", fmt.Errorf("device not found: %w", err)

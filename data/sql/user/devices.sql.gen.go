@@ -7,6 +7,8 @@ package user
 
 import (
 	"context"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
@@ -95,7 +97,7 @@ type CreateDeviceParams struct {
 	Name       string
 	Password   string
 	TotpSecret string
-	Role       string
+	Role       consts.DeviceRole
 }
 
 func (q *Queries) CreateDevice(ctx context.Context, arg CreateDeviceParams) error {

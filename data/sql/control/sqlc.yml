@@ -19,3 +19,14 @@ sql:
         output_querier_file_name: "z_querier.go"
         output_batch_file_name: "z_batch.go"
         output_copyfrom_file_name: "z_copyfrom.go"
+
+overrides:
+  go:
+    rename:
+      bolu: Bolus
+    overrides:
+      - column: "admins.role"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "AdminRole"
+   

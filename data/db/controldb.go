@@ -201,7 +201,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 		Name:       consts.FIRST_ADMIN_NAME,
 		Password:   hashedPassword,
 		TotpSecret: encTOTPSecret,
-		Role:       consts.UserRoleAdmin.String(),
+		Role:       consts.DeviceRoleAdmin,
 	})
 
 	if err != nil {

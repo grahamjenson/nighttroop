@@ -7,6 +7,8 @@ package control
 
 import (
 	"context"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const createAdmin = `-- name: CreateAdmin :one
@@ -16,7 +18,7 @@ INSERT INTO admins (name, password, role, totp_secret) VALUES (?, ?, ?, ?) RETUR
 type CreateAdminParams struct {
 	Name       string
 	Password   string
-	Role       string
+	Role       consts.AdminRole
 	TotpSecret string
 }
 

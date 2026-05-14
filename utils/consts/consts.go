@@ -16,48 +16,40 @@ const FIRST_ADMIN_NAME = "admin"
 const DEV_ADMIN_PASSWORD = "password"
 const DEV_ADMIN_TOTP_SECRET = "FakeTOTPSecretForDevOnly" // This is not a real secret, just for development. In production this should be generated and stored securely.
 
-type ControlRole int
+type AdminRole string
 
 const (
-	ControlRoleAdmin ControlRole = iota
-	ControlRoleRead
+	AdminRoleAdmin AdminRole = "admin"
+	AdminRoleRead  AdminRole = "read"
 )
-
-func (r ControlRole) String() string {
-	switch r {
-	case ControlRoleAdmin:
-		return "admin"
-	case ControlRoleRead:
-		return "read"
-	default:
-		return "unknown"
-	}
-}
 
 // User Roles
-type UserRole int
+type DeviceRole string
 
 const (
-	UserRoleAdmin    UserRole = iota
-	UserRolePWDPhone          // PWD (person with diabetes) phone that controls pump/cgm...
-	UserRoleRead
+	DeviceRoleAdmin    DeviceRole = "admin"
+	DeviceRolePWDPhone DeviceRole = "pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
+	DeviceRoleRead     DeviceRole = "read"
 )
 
-func (r UserRole) String() string {
-	switch r {
-	case UserRoleAdmin:
-		return "admin"
-	case UserRolePWDPhone:
-		return "pwd_phone"
-	case UserRoleRead:
-		return "read"
-	default:
-		return "unknown"
-	}
-}
-
-// TODO implement CanCan on the User and Control Roles
+// TODO implement CanCan on the User and Admin Roles
 
 /// Some reusable ENVARS
 
 const KEY_SETS_ENV_KEY = "KEY_SETS"
+
+/// Sync Source Types
+
+type DexcomRegion string
+
+const (
+	DexcomRegionUS    DexcomRegion = "USA"
+	DexcomRegionOther DexcomRegion = "OTHER"
+)
+
+type SyncSourceType string
+
+const (
+	SyncSourceTypeNightscout SyncSourceType = "NIGHTSCOUT"
+	SyncSourceTypeDexcom     SyncSourceType = "DEXCOM"
+)
