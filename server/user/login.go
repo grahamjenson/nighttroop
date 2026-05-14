@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/templates"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -72,12 +73,12 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 		userDB, _, err := controlDB.GetUser(subdomain, false)
 		if err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
 		if err := r.ParseForm(); err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
@@ -94,7 +95,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		// First thing validate the password
 		device, err := loginTheUserPasswordOnly(userDB, formName, formPassword)
 		if err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
@@ -102,21 +103,21 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			// If the Device Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
 			err = config.Security.SetUserPreAuthCookie(w, device.Name)
 			if err != nil {
-				genericLoginError(w, r, err)
+				errors.GenericDeviceLoginError(w, r, err)
 				return
 			}
 
 			w.Header().Set("Content-Type", "text/html")
 			err = templates.UserLoginTotpHTMX(w)
 			if err != nil {
-				genericLoginError(w, r, err)
+				errors.GenericDeviceLoginError(w, r, err)
 				return
 			}
 			return
 		} else {
 			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 			if err != nil {
-				genericLoginError(w, r, err)
+				errors.GenericDeviceLoginError(w, r, err)
 				return
 			}
 
@@ -135,14 +136,14 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if httputils.GetAcceptType(r).API() {
-			genericLoginError(w, r, fmt.Errorf("API login not supported for TOTP endpoint"))
+			errors.GenericDeviceLoginError(w, r, fmt.Errorf("API login not supported for TOTP endpoint"))
 			return
 		}
 
 		// 1. Fetch And Validate Pre-Auth Token
 		deviceNameFromToken, err := fetchVerifyPreAuthToken(config, r)
 		if err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
@@ -150,27 +151,27 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 
 		device, err := getTheDeviceModel(controlDB, r, deviceNameFromToken)
 		if err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
 		// THIS IS A HTTP ONLY ROUTE
 		if err := r.ParseForm(); err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
 		totpToken := r.FormValue("totp")
 		err = validateDeviceTOTP(config, device, totpToken)
 		if err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
 		// TOTP is valid, generate the real JWT token
 		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 		if err != nil {
-			genericLoginError(w, r, err)
+			errors.GenericDeviceLoginError(w, r, err)
 			return
 		}
 
@@ -270,13 +271,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 	userDB, _, err := controlDB.GetUser(subdomain, false)
 	if err != nil {
-		genericLoginError(w, r, err)
+		errors.GenericDeviceLoginError(w, r, err)
 		return
 	}
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		genericLoginError(w, r, err)
+		errors.GenericDeviceLoginError(w, r, err)
 		return
 	}
 
@@ -289,13 +290,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 	device, err := loginTheUserAPI(userDB, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
-		genericLoginError(w, r, err)
+		errors.GenericDeviceLoginError(w, r, err)
 		return
 	}
 
 	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 	if err != nil {
-		genericLoginError(w, r, err)
+		errors.GenericDeviceLoginError(w, r, err)
 		return
 	}
 
@@ -305,7 +306,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		"expires_at": expiresAt.Format(time.RFC3339),
 	})
 	if err != nil {
-		genericLoginError(w, r, err)
+		errors.GenericDeviceLoginError(w, r, err)
 		return
 	}
 

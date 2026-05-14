@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/templates"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -63,7 +64,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		case httputils.ContentTypeJSON:
 			var creds LoginRequest
 			if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-				genericLoginError(w, r, fmt.Errorf("Invalid JSON payload: %w", err))
+				errors.GenericAdminLoginError(w, r, fmt.Errorf("Invalid JSON payload: %w", err))
 				return
 			}
 
@@ -73,7 +74,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		case httputils.ContentTypeForm:
 
 			if err := r.ParseForm(); err != nil {
-				genericLoginError(w, r, fmt.Errorf("Invalid form data: %w", err))
+				errors.GenericAdminLoginError(w, r, fmt.Errorf("Invalid form data: %w", err))
 				return
 			}
 
@@ -81,7 +82,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			password = r.FormValue("password")
 			totpToken = r.FormValue("totp")
 		default:
-			genericLoginError(w, r, fmt.Errorf("Unsupported Content-Type: %s", contentType))
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("Unsupported Content-Type: %s", contentType))
 			return
 		}
 
@@ -93,13 +94,13 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		admin, err := loginTheControlUser(controlDB, config, username, password, totpToken)
 		if err != nil {
-			genericLoginError(w, r, fmt.Errorf("Invalid credentials: %w", err))
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("Invalid credentials: %w", err))
 			return
 		}
 
 		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))
 		if err != nil {
-			genericLoginError(w, r, fmt.Errorf("Failed to generate JWT token: %w", err))
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("Failed to generate JWT token: %w", err))
 			return
 		}
 

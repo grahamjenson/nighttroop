@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/templates"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -61,22 +62,18 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		if acceptType == httputils.AcceptTypeHTML {
 			err = templates.UserSettingsSyncHTML(w, subdomain, ns_url, ns_password_garbage, ns_enabled, dex_username, dex_password_garbage, dex_usa_region, dex_enabled)
 			if err != nil {
-				slog.Error("Failed to render sync settings HTML template", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", subdomain)
 				return
 			}
-			slog.Info("Rendered Sync Settings HTML", "subdomain", subdomain, "ns_enabled", ns_enabled, "dex_enabled", dex_enabled)
 			return
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
 			err = templates.UserSettingsSyncHTMX(w, ns_url, ns_password_garbage, ns_enabled, dex_username, dex_password_garbage, dex_usa_region, dex_enabled)
 			if err != nil {
-				slog.Error("Failed to render sync settings HTMX template", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", subdomain)
 				return
 			}
-			slog.Info("Rendered Sync Settings HTMX", "subdomain", subdomain, "ns_enabled", ns_enabled, "dex_enabled", dex_enabled)
 			return
 		}
 

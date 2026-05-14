@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -48,7 +49,7 @@ func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
 			userDB, userGetModel, err := controlDB.GetUser(subdomain, true)
 
 			if err != nil {
-				genericLoginError(w, r, fmt.Errorf("User not found: %w", err))
+				errors.GenericDeviceLoginError(w, r, fmt.Errorf("User not found: %w", err))
 				return
 			}
 			ctx := httputils.SetUserDBAndModelInHTTPContext(r.Context(), userDB, userGetModel)
@@ -76,7 +77,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 			}
 
 			if acceptType.API() {
-				genericLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
+				errors.GenericDeviceLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
 				return
 			} else {
 				w.Header().Set("HX-Redirect", "/login")
