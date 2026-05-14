@@ -55,7 +55,6 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 }
 
 const createSyncSource = `-- name: CreateSyncSource :exec
-
 INSERT INTO sync_sources (type, password, enabled, url, username, dexcom_region) 
 VALUES (?, ?, ?, ?, ?, ?)
 `
@@ -71,6 +70,48 @@ type CreateSyncSourceParams struct {
 
 func (q *Queries) CreateSyncSource(ctx context.Context, arg CreateSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createSyncSourceStmt, createSyncSource,
+		arg.Type,
+		arg.Password,
+		arg.Enabled,
+		arg.Url,
+		arg.Username,
+		arg.DexcomRegion,
+	)
+	return err
+}
+
+const deleteSyncSource = `-- name: DeleteSyncSource :exec
+DELETE FROM sync_sources WHERE id = ?
+`
+
+// HARD DELETE FOR SAFTEY
+func (q *Queries) DeleteSyncSource(ctx context.Context, id int64) error {
+	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, id)
+	return err
+}
+
+const upsertSyncSource = `-- name: UpsertSyncSource :exec
+INSERT INTO sync_sources (type, password, enabled, url, username, dexcom_region)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT(type) DO UPDATE SET
+    password = excluded.password,
+    enabled = excluded.enabled,
+    url = excluded.url,
+    username = excluded.username,
+    dexcom_region = excluded.dexcom_region
+`
+
+type UpsertSyncSourceParams struct {
+	Type         consts.SyncSourceType
+	Password     string
+	Enabled      bool
+	Url          *string
+	Username     *string
+	DexcomRegion consts.DexcomRegion
+}
+
+func (q *Queries) UpsertSyncSource(ctx context.Context, arg UpsertSyncSourceParams) error {
+	_, err := q.exec(ctx, q.upsertSyncSourceStmt, upsertSyncSource,
 		arg.Type,
 		arg.Password,
 		arg.Enabled,

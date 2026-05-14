@@ -72,11 +72,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createSyncSourceStmt, err = db.PrepareContext(ctx, createSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSyncSource: %w", err)
 	}
+	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
+	}
 	if q.getDeviceStmt, err = db.PrepareContext(ctx, getDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDevice: %w", err)
 	}
 	if q.updateDeviceLastSeenAtStmt, err = db.PrepareContext(ctx, updateDeviceLastSeenAt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDeviceLastSeenAt: %w", err)
+	}
+	if q.upsertSyncSourceStmt, err = db.PrepareContext(ctx, upsertSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertSyncSource: %w", err)
 	}
 	return &q, nil
 }
@@ -163,6 +169,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createSyncSourceStmt: %w", cerr)
 		}
 	}
+	if q.deleteSyncSourceStmt != nil {
+		if cerr := q.deleteSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSyncSourceStmt: %w", cerr)
+		}
+	}
 	if q.getDeviceStmt != nil {
 		if cerr := q.getDeviceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getDeviceStmt: %w", cerr)
@@ -171,6 +182,11 @@ func (q *Queries) Close() error {
 	if q.updateDeviceLastSeenAtStmt != nil {
 		if cerr := q.updateDeviceLastSeenAtStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateDeviceLastSeenAtStmt: %w", cerr)
+		}
+	}
+	if q.upsertSyncSourceStmt != nil {
+		if cerr := q.upsertSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertSyncSourceStmt: %w", cerr)
 		}
 	}
 	return err
@@ -228,8 +244,10 @@ type Queries struct {
 	createEntryStmt            *sql.Stmt
 	createEventStmt            *sql.Stmt
 	createSyncSourceStmt       *sql.Stmt
+	deleteSyncSourceStmt       *sql.Stmt
 	getDeviceStmt              *sql.Stmt
 	updateDeviceLastSeenAtStmt *sql.Stmt
+	upsertSyncSourceStmt       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -252,7 +270,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createEntryStmt:            q.createEntryStmt,
 		createEventStmt:            q.createEventStmt,
 		createSyncSourceStmt:       q.createSyncSourceStmt,
+		deleteSyncSourceStmt:       q.deleteSyncSourceStmt,
 		getDeviceStmt:              q.getDeviceStmt,
 		updateDeviceLastSeenAtStmt: q.updateDeviceLastSeenAtStmt,
+		upsertSyncSourceStmt:       q.upsertSyncSourceStmt,
 	}
 }

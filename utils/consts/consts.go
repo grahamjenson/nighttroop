@@ -1,5 +1,7 @@
 package consts
 
+import "log/slog"
+
 type ServerMode int
 
 const (
@@ -46,6 +48,24 @@ const (
 	DexcomRegionUS    DexcomRegion = "USA"
 	DexcomRegionOther DexcomRegion = "OTHER"
 )
+
+func NewDexcomRegionFromString(s string) DexcomRegion {
+	switch s {
+	case "USA":
+		return DexcomRegionUS
+	case "OTHER":
+		return DexcomRegionOther
+	case "INT":
+		return DexcomRegionOther
+	case "on":
+		return DexcomRegionUS
+	case "off":
+		return DexcomRegionOther
+	default:
+		slog.Error("Invalid Dexcom region provided", "dex_region", s)
+		return DexcomRegionOther // Default to OTHER if invalid, but log the error
+	}
+}
 
 type SyncSourceType string
 

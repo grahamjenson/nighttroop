@@ -1,7 +1,8 @@
+{{/*PARAM response string */}}
+
 {{ define "content" }}
 
-<!-- Main form target response goes here -->
-<div class="alert alert-danger"
+<div class="alert alert-success"
     style="max-height: 100px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, opacity 0.3s ease;"
     hx-on::load="setTimeout(() => { 
          this.style.maxHeight = '0'; 
@@ -12,11 +13,7 @@
          this.style.opacity = '0';
          setTimeout(() => this.remove(), 400); 
      }, 4600)">
-    Failed to save settings. Please check your inputs.
+    {{ .response }}
 </div>
-
-
-
-
 
 {{ end }}

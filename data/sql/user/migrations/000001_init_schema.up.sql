@@ -31,7 +31,7 @@ CREATE TABLE sync_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     -- Nightscout/Dexcom
-    type TEXT UNIQUE NOT NULL CHECK(type IN ('nightscout', 'dexcom')),
+    type TEXT UNIQUE NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
     password TEXT NOT NULL, -- or ns token
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
