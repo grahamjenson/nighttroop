@@ -277,13 +277,13 @@ func getUserSettingsSyncHTMXTemplate() (*template.Template, error) {
 	return UserSettingsSyncHTMXTemplate, nil
 }
 
-func UserSettingsSyncHTML(w io.Writer, Subdomain string, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
+func UserSettingsSyncHTML(w io.Writer, Subdomain string, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool) error {
 	tmpl, err := getUserSettingsSyncTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_region": dex_region, "dex_enabled": dex_enabled})
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -291,13 +291,13 @@ func UserSettingsSyncHTML(w io.Writer, Subdomain string, ns_url string, ns_passw
 	return nil
 }
 
-func UserSettingsSyncHTMX(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_region string, dex_enabled bool) error {
+func UserSettingsSyncHTMX(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool) error {
 	tmpl, err := getUserSettingsSyncHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_region": dex_region, "dex_enabled": dex_enabled})
+	err = tmpl.Execute(w, map[string]any{"ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)

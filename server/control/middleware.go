@@ -49,7 +49,7 @@ func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 		if err != nil {
 			return "", "", fmt.Errorf("bad JWT token: %w", err)
 		}
-		return deviceName, role, nil
+		return deviceName, consts.AdminRole(role), nil
 	}
 
 	if authHeader != "" {
@@ -64,7 +64,7 @@ func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 		if err != nil {
 			return "", "", fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		return deviceName, role, nil
+		return deviceName, consts.AdminRole(role), nil
 	}
 
 	return "", "", fmt.Errorf("No JWT token found")

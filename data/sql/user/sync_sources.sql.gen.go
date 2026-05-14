@@ -7,7 +7,6 @@ package user
 
 import (
 	"context"
-	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -56,37 +55,28 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 }
 
 const createSyncSource = `-- name: CreateSyncSource :exec
-INSERT INTO sync_sources (id, type, url, username, password, created_at, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error) 
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+INSERT INTO sync_sources (type, password, enabled, url, username, dexcom_region) 
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateSyncSourceParams struct {
-	ID                     int64
-	Type                   consts.SyncSourceType
-	Url                    string
-	Username               string
-	Password               string
-	CreatedAt              time.Time
-	LastAttemptedSync      *int64
-	LastSuccessfulSync     *int64
-	ConsecutiveFailedSyncs *int64
-	TotalFailedSyncs       *int64
-	PreviousSyncError      *string
+	Type         consts.SyncSourceType
+	Password     string
+	Enabled      bool
+	Url          *string
+	Username     *string
+	DexcomRegion consts.DexcomRegion
 }
 
 func (q *Queries) CreateSyncSource(ctx context.Context, arg CreateSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createSyncSourceStmt, createSyncSource,
-		arg.ID,
 		arg.Type,
+		arg.Password,
+		arg.Enabled,
 		arg.Url,
 		arg.Username,
-		arg.Password,
-		arg.CreatedAt,
-		arg.LastAttemptedSync,
-		arg.LastSuccessfulSync,
-		arg.ConsecutiveFailedSyncs,
-		arg.TotalFailedSyncs,
-		arg.PreviousSyncError,
+		arg.DexcomRegion,
 	)
 	return err
 }

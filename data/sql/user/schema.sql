@@ -101,15 +101,15 @@ CREATE TABLE sync_sources (
 
     -- Nightscout/Dexcom
     type TEXT UNIQUE NOT NULL CHECK(type IN ('nightscout', 'dexcom')),
-    password TEXT NOT NULL,
+    password TEXT NOT NULL, -- or ns token
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
 
     -- NIGHTSCOUT
-    url TEXT NOT NULL, 
+    url TEXT, 
 
     -- DEXCOM
-    username TEXT NOT NULL,
+    username TEXT,
     dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
     
     sync_items TEXT, -- comma seperated list of what data to sync, empty or null means all, values like "treatments,entries"...

@@ -3,10 +3,9 @@
 {{/*PARAM ns_enabled bool */}}
 {{/*PARAM dex_username string */}}
 {{/*PARAM dex_password_garbage string */}}
-{{/*PARAM dex_region string */}}
+{{/*PARAM dex_usa_region bool */}}
 {{/*PARAM dex_enabled bool */}}
 
-{{ template "user/base.html" . }}
 {{ define "content" }}
 <div class="card shadow-sm border-0">
     <div class="card-body p-4">
@@ -16,11 +15,6 @@
             <div class="text-muted small">
                 Configure how NightTroop syncs with external services.
             </div>
-        </div>
-
-        <div class="alert alert-warning py-2 small">
-            <strong>Warning:</strong>
-            Disabling and saving will permanently delete your credentials from our servers.
         </div>
 
         <form hx-post="/sync-settings" hx-target="#form-feedback" class="mt-4" id="syncForm">
@@ -38,7 +32,7 @@
 
                         <div class="form-check form-switch m-0">
                             <input class="form-check-input js-toggle-section" type="checkbox" id="nightscoutSync"
-                                data-target="#ns-fields" checked>
+                                data-target="#ns-fields" {{if .ns_enabled}}checked{{end}}>
                             <label class="form-check-label" for="nightscoutSync">Enable</label>
                         </div>
                     </div>
@@ -72,7 +66,7 @@
 
                         <div class="form-check form-switch m-0">
                             <input class="form-check-input js-toggle-section" type="checkbox" id="dexcomSync"
-                                data-target="#dex-fields">
+                                data-target="#dex-fields" {{if .dex_enabled}}checked{{end}}>
                             <label class="form-check-label" for="dexcomSync">Enable</label>
                         </div>
                     </div>
@@ -80,29 +74,28 @@
                     <div id="dex-fields" class="row g-3">
                         <div class="col-md-5">
                             <label class="form-label">Dexcom Username</label>
-                            <input type="text" class="form-control" name="dex_username" disabled>
+                            <input type="text" class="form-control" name="dex_username" value="{{.dex_username}}" {{if
+                                not .dex_enabled}}disabled{{end}}>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Dexcom Password</label>
-                            <input type="password" class="form-control" name="dex_password" disabled>
+                            <input type="password" class="form-control" name="dex_password"
+                                value="{{.dex_password_garbage}}" {{if not .dex_enabled}}disabled{{end}}>
                         </div>
 
                         <div class="col-md-3">
                             <label class="form-label">Region</label>
 
-                            <div class="d-flex gap-3 align-items-center bg-white border rounded px-2 py-1">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="dex_region" value="USA" checked
-                                        disabled>
-                                    <label class="form-check-label small">USA</label>
+                            <div class="d-flex align-items-center bg-white border rounded px-3 py-2 gap-2">
+                                <span class="small text-muted">Other</span>
+
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="dex_region" {{if
+                                        .dex_usa_region}}checked{{end}} disabled>
                                 </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="dex_region" value="OTHER"
-                                        disabled>
-                                    <label class="form-check-label small">Other</label>
-                                </div>
+                                <span class="small text-muted fw-semibold">USA</span>
                             </div>
                         </div>
                     </div>

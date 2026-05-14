@@ -98,8 +98,8 @@ type SyncSource struct {
 	Password               string
 	CreatedAt              time.Time
 	Enabled                bool
-	Url                    string
-	Username               string
+	Url                    *string
+	Username               *string
 	DexcomRegion           consts.DexcomRegion
 	SyncItems              *string
 	Frequency              int64

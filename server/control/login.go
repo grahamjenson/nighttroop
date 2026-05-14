@@ -97,7 +97,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, admin.Role)
+		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))
 		if err != nil {
 			genericLoginError(w, r, fmt.Errorf("Failed to generate JWT token: %w", err))
 			return

@@ -114,7 +114,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 			return
 		} else {
-			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, device.Role)
+			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 			if err != nil {
 				genericLoginError(w, r, err)
 				return
@@ -168,7 +168,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		}
 
 		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, device.Role)
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 		if err != nil {
 			genericLoginError(w, r, err)
 			return
@@ -293,7 +293,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		return
 	}
 
-	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, device.Role)
+	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 	if err != nil {
 		genericLoginError(w, r, err)
 		return

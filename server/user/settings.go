@@ -1,12 +1,14 @@
 package user
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/templates"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -24,22 +26,61 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		}
 
 		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
-		sync_sources, err := userdb.Queries.AllSyncSources(r.Context())
+		nightscout, dexcom, err := userdb.GetAllSyncSources(r.Context())
+
 		if err != nil {
+			slog.Error("Failed to get sync sources from DB", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 
+		ns_url := ""
+		ns_password_garbage := ""
+		ns_enabled := false
+		if nightscout != nil {
+			if nightscout.Url != nil {
+				ns_url = *nightscout.Url
+			}
+			ns_password_garbage = ""
+			ns_enabled = nightscout.Enabled
+		}
+
+		dex_username := ""
+		dex_password_garbage := ""
+		dex_usa_region := false
+		dex_enabled := false
+		if dexcom != nil {
+			if dexcom.Username != nil {
+				dex_username = *dexcom.Username
+			}
+			dex_password_garbage = ""
+			dex_usa_region = dexcom.DexcomRegion == consts.DexcomRegionUS
+			dex_enabled = dexcom.Enabled
+		}
+
 		if acceptType == httputils.AcceptTypeHTML {
-			templates.UserSyncSettingsHTML(w, subdomain)
+			err = templates.UserSettingsSyncHTML(w, subdomain, ns_url, ns_password_garbage, ns_enabled, dex_username, dex_password_garbage, dex_usa_region, dex_enabled)
+			if err != nil {
+				slog.Error("Failed to render sync settings HTML template", "error", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+			slog.Info("Rendered Sync Settings HTML", "subdomain", subdomain, "ns_enabled", ns_enabled, "dex_enabled", dex_enabled)
 			return
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			templates.UserSyncSettingsHTMX(w)
+			err = templates.UserSettingsSyncHTMX(w, ns_url, ns_password_garbage, ns_enabled, dex_username, dex_password_garbage, dex_usa_region, dex_enabled)
+			if err != nil {
+				slog.Error("Failed to render sync settings HTMX template", "error", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+			slog.Info("Rendered Sync Settings HTMX", "subdomain", subdomain, "ns_enabled", ns_enabled, "dex_enabled", dex_enabled)
 			return
-
 		}
+
+		slog.Error("Unsupported Accept Type", "accept_type", acceptType)
 
 	}
 }

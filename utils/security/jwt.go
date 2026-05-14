@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/tink-crypto/tink-go/v2/jwt"
-	"nighttroop.t1d.nz/utils/consts"
 )
 
 // AUDIENCE STRINGS
@@ -69,7 +68,7 @@ func (config *SecurityConfig) createJWTPrimitives() error {
 // CONTROL JWT
 ////
 
-func (config *SecurityConfig) GenerateControlJWTToken(userName string, role consts.AdminRole) (string, time.Time, error) {
+func (config *SecurityConfig) GenerateControlJWTToken(userName string, role string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -95,7 +94,7 @@ func (config *SecurityConfig) GenerateControlJWTToken(userName string, role cons
 	return tokenString, expiresAt, nil
 }
 
-func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, consts.AdminRole, error) {
+func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, string, error) {
 	// Verify and parse in one step
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtControlValidator)
 	if err != nil {
@@ -112,14 +111,14 @@ func (config *SecurityConfig) VerifyControlJWTToken(tokenStr string) (string, co
 		return "", "", err
 	}
 
-	return subject, consts.AdminRole(role), nil
+	return subject, string(role), nil
 }
 
 ////
 // USER JWT
 ////
 
-func (config *SecurityConfig) GenerateUserJWTToken(deviceName string, role consts.DeviceRole) (string, time.Time, error) {
+func (config *SecurityConfig) GenerateUserJWTToken(deviceName string, role string) (string, time.Time, error) {
 
 	now := time.Now()
 	expiresAt := now.Add(time.Hour * 1)
@@ -145,7 +144,7 @@ func (config *SecurityConfig) GenerateUserJWTToken(deviceName string, role const
 	return tokenString, expiresAt, nil
 }
 
-func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, consts.DeviceRole, error) {
+func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, string, error) {
 
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtUserValidator)
 	if err != nil {
@@ -162,7 +161,7 @@ func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, const
 		return "", "", err
 	}
 
-	return subject, consts.DeviceRole(role), nil
+	return subject, string(role), nil
 }
 
 ///
