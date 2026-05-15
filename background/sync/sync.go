@@ -1,4 +1,3 @@
-// Make the backgorund jobs orthogonal to the DB
 package sync
 
 import (
@@ -11,6 +10,8 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
+// This is a background job runner that loops over users and syncs some data (initially just entries) from Nighscout and/or Dexcom.
+//
 // The big problem with this is since the user defines their own nightscout they could have a slow site which holds everything up.
 // So we add all users to the sync, but dedupe (TODO) the users that are being slow.
 // Each job also has a timeout, which will prevent a single user from holding up lots of the sync jobs.

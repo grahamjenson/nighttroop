@@ -49,6 +49,12 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		if nightscout != nil {
 			if nightscout.Url != nil {
 				ns_url = *nightscout.Url
+				ns_url, err = config.Security.Decrypt(ns_url)
+				if err != nil {
+					slog.Error("Failed to decrypt Nightscout URL from DB", "error", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
 			}
 			ns_enabled = nightscout.Enabled
 			ns_id = &nightscout.ID
@@ -62,7 +68,12 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		var dex_id *int64 = nil
 		if dexcom != nil {
 			if dexcom.Username != nil {
-				dex_username = *dexcom.Username
+				dex_username, err = config.Security.Decrypt(*dexcom.Username)
+				if err != nil {
+					slog.Error("Failed to decrypt Dexcom username from DB", "error", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
 			}
 			dex_usa_region = dexcom.DexcomRegion == consts.DexcomRegionUS
 			dex_enabled = dexcom.Enabled
@@ -116,7 +127,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		if syncSourceType == consts.SyncSourceTypeNightscout {
-			err = saveNightScoutSettings(ctx, userdb, config.Security, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
+			err = saveNightScoutSettings(ctx, userdb, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
 		} else {
 			err = saveDexcomSettings(ctx, userdb, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
 		}
@@ -198,7 +209,9 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 // UTIL METHODS
 ////////
 
-func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, security *security.SecurityConfig, nightscout *user.SyncSource, nsUrl string, nsPassword string, enabled bool) error {
+func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config config.ServerConfig, nightscout *user.SyncSource, nsUrl string, nsPassword string, enabled bool) error {
+	security := config.Security
+
 	var err error
 	errMsg := ""
 	if nsUrl == "" {
@@ -206,6 +219,7 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, security *se
 	} else {
 
 		nsUrlURl, err := url.Parse(nsUrl)
+
 		if err != nil {
 			errMsg += "Nightscout URL is not a valid URL. "
 		} else {
@@ -214,6 +228,10 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, security *se
 			}
 			if nsUrlURl.RawQuery != "" {
 				errMsg += "Nightscout URL cannot have query parameters. "
+			}
+			// Cant be the host or a subdomain of the host
+			if strings.HasSuffix(nsUrlURl.Hostname(), "."+config.HostName) {
+				errMsg += "Nightscout cannot be on this host."
 			}
 		}
 	}
@@ -231,12 +249,17 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, security *se
 		return fmt.Errorf("Failed to encrypt Nightscout password: %w", err)
 	}
 
+	encUrl, err := security.Encrypt(nsUrl)
+	if err != nil {
+		return fmt.Errorf("Failed to encrypt Nightscout URL: %w", err)
+	}
+
 	if nightscout == nil { // NEW
 		err = userdb.Queries.CreateSyncSource(ctx, user.CreateSyncSourceParams{
 			Type:         consts.SyncSourceTypeNightscout,
 			Password:     encPassword,
 			Enabled:      enabled,
-			Url:          &nsUrl,
+			Url:          &encUrl,
 			DexcomRegion: consts.DexcomRegionOther, // Required, but not relevant for Nightscout
 		})
 		if err != nil {
@@ -249,7 +272,7 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, security *se
 		err = userdb.Queries.UpdateSyncSourceWithoutPassword(ctx, user.UpdateSyncSourceWithoutPasswordParams{
 			Type:         consts.SyncSourceTypeNightscout,
 			Enabled:      enabled,
-			Url:          &nsUrl,
+			Url:          &encUrl,
 			DexcomRegion: consts.DexcomRegionOther,
 		})
 	} else {
@@ -257,7 +280,7 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, security *se
 			Type:         consts.SyncSourceTypeNightscout,
 			Password:     encPassword,
 			Enabled:      enabled,
-			Url:          &nsUrl,
+			Url:          &encUrl,
 			DexcomRegion: consts.DexcomRegionOther, // Required
 		})
 	}
@@ -288,13 +311,18 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 		return fmt.Errorf("Failed to encrypt Dexcom password: %w", err)
 	}
 
+	encUsername, err := security.Encrypt(dexUsername)
+	if err != nil {
+		return fmt.Errorf("Failed to encrypt Dexcom username: %w", err)
+	}
+
 	if dexcom == nil { // NEW
 
 		err = userdb.Queries.CreateSyncSource(ctx, user.CreateSyncSourceParams{
 			Type:         consts.SyncSourceTypeDexcom,
 			Password:     encPassword,
 			Enabled:      dexEnabled,
-			Username:     &dexUsername,
+			Username:     &encUsername,
 			DexcomRegion: region,
 		})
 		if err != nil {
@@ -307,7 +335,7 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 		err = userdb.Queries.UpdateSyncSourceWithoutPassword(ctx, user.UpdateSyncSourceWithoutPasswordParams{
 			Type:         consts.SyncSourceTypeDexcom,
 			Enabled:      dexEnabled,
-			Username:     &dexUsername,
+			Username:     &encUsername,
 			DexcomRegion: region,
 		})
 	} else {
@@ -315,7 +343,7 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 			Type:         consts.SyncSourceTypeDexcom,
 			Password:     encPassword,
 			Enabled:      dexEnabled,
-			Username:     &dexUsername,
+			Username:     &encUsername,
 			DexcomRegion: region,
 		})
 	}

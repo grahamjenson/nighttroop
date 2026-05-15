@@ -116,11 +116,17 @@ CREATE TABLE sync_sources (
     frequency INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
 
     -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
-    last_attempted_sync INTEGER,
-    last_successful_sync INTEGER,
+    last_attempted_sync DATETIME,
+    last_successful_sync DATETIME,
+    
     consecutive_failed_syncs INTEGER DEFAULT 0,
     total_failed_syncs INTEGER DEFAULT 0,
-    previous_sync_error TEXT -- stored to show to user as feedback
+    previous_sync_error TEXT, -- stored to show to user as feedback
+
+    success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
+    failure_ema REAL,
+    total_ema REAL,
+    last_sync_duration INTEGER -- 1 for success, 0 for failure, null for never tried, used for quick checks without having to look at timestamps 
 );
 
 CREATE TABLE temp_basals (

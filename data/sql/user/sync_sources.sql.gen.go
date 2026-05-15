@@ -11,8 +11,55 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+const allEnabledSyncSources = `-- name: AllEnabledSyncSources :many
+SELECT id, type, password, created_at, enabled, url, username, dexcom_region, sync_items, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources WHERE enabled = 1
+`
+
+func (q *Queries) AllEnabledSyncSources(ctx context.Context) ([]SyncSource, error) {
+	rows, err := q.query(ctx, q.allEnabledSyncSourcesStmt, allEnabledSyncSources)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SyncSource
+	for rows.Next() {
+		var i SyncSource
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Password,
+			&i.CreatedAt,
+			&i.Enabled,
+			&i.Url,
+			&i.Username,
+			&i.DexcomRegion,
+			&i.SyncItems,
+			&i.Frequency,
+			&i.LastAttemptedSync,
+			&i.LastSuccessfulSync,
+			&i.ConsecutiveFailedSyncs,
+			&i.TotalFailedSyncs,
+			&i.PreviousSyncError,
+			&i.SuccessEma,
+			&i.FailureEma,
+			&i.TotalEma,
+			&i.LastSyncDuration,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const allSyncSources = `-- name: AllSyncSources :many
-SELECT id, type, password, created_at, enabled, url, username, dexcom_region, sync_items, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error FROM sync_sources ORDER BY created_at DESC
+SELECT id, type, password, created_at, enabled, url, username, dexcom_region, sync_items, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources ORDER BY created_at DESC
 `
 
 func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
@@ -40,6 +87,10 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 			&i.ConsecutiveFailedSyncs,
 			&i.TotalFailedSyncs,
 			&i.PreviousSyncError,
+			&i.SuccessEma,
+			&i.FailureEma,
+			&i.TotalEma,
+			&i.LastSyncDuration,
 		); err != nil {
 			return nil, err
 		}
@@ -90,6 +141,38 @@ func (q *Queries) DeleteSyncSource(ctx context.Context, type_ consts.SyncSourceT
 	return err
 }
 
+const updateSyncFailure = `-- name: UpdateSyncFailure :exec
+UPDATE sync_sources
+SET
+    last_attempted_sync = CURRENT_TIMESTAMP,
+
+    consecutive_failed_syncs = consecutive_failed_syncs + 1,
+    total_failed_syncs = total_failed_syncs + 1,
+
+    failure_ema = CASE
+        WHEN failure_ema IS NULL THEN CAST(?1 AS REAL)
+        ELSE (0.2 * CAST(?1 AS REAL))
+            + (0.8 * failure_ema)
+    END,
+
+    total_ema = CASE
+        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
+        ELSE (0.2 * CAST(?1 AS REAL))
+            + (0.8 * total_ema)
+    END,
+
+    previous_sync_error = ?2,
+
+    last_sync_duration = ?1
+
+WHERE type = ?3
+`
+
+func (q *Queries) UpdateSyncFailure(ctx context.Context, elapsedMs *int64, errorMessage *string, type_ consts.SyncSourceType) error {
+	_, err := q.exec(ctx, q.updateSyncFailureStmt, updateSyncFailure, elapsedMs, errorMessage, type_)
+	return err
+}
+
 const updateSyncSource = `-- name: UpdateSyncSource :exec
 UPDATE sync_sources SET password = ?, enabled = ?, url = ?, username = ?, dexcom_region = ? WHERE type = ?
 `
@@ -135,5 +218,39 @@ func (q *Queries) UpdateSyncSourceWithoutPassword(ctx context.Context, arg Updat
 		arg.DexcomRegion,
 		arg.Type,
 	)
+	return err
+}
+
+const updateSyncSuccess = `-- name: UpdateSyncSuccess :exec
+
+UPDATE sync_sources
+SET
+    last_attempted_sync = CURRENT_TIMESTAMP,
+    last_successful_sync = CURRENT_TIMESTAMP,
+
+    consecutive_failed_syncs = 0,
+
+    success_ema = CASE
+        WHEN success_ema IS NULL THEN CAST(?1 AS REAL)
+        ELSE (0.2 * CAST(?1 AS REAL))
+            + (0.8 * success_ema)
+    END,
+
+    total_ema = CASE
+        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
+        ELSE (0.2 * CAST(?1 AS REAL))
+            + (0.8 * total_ema)
+    END,
+
+    last_sync_duration = ?1,
+
+    previous_sync_error = NULL
+
+WHERE type = ?2
+`
+
+// ---- Updates to the Sync Reporting -----
+func (q *Queries) UpdateSyncSuccess(ctx context.Context, elapsedMs *int64, type_ consts.SyncSourceType) error {
+	_, err := q.exec(ctx, q.updateSyncSuccessStmt, updateSyncSuccess, elapsedMs, type_)
 	return err
 }

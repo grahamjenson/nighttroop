@@ -103,11 +103,15 @@ type SyncSource struct {
 	DexcomRegion           consts.DexcomRegion
 	SyncItems              *string
 	Frequency              int64
-	LastAttemptedSync      *int64
-	LastSuccessfulSync     *int64
+	LastAttemptedSync      *time.Time
+	LastSuccessfulSync     *time.Time
 	ConsecutiveFailedSyncs *int64
 	TotalFailedSyncs       *int64
 	PreviousSyncError      *string
+	SuccessEma             *float64
+	FailureEma             *float64
+	TotalEma               *float64
+	LastSyncDuration       *int64
 }
 
 type TempBasal struct {
