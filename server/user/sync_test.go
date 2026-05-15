@@ -6,3 +6,4 @@ package user_test
 // - No Path
 // - No params
 // - Not this host
+// - Only HTTPS (http in dev allowed)

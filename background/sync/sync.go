@@ -12,8 +12,23 @@ import (
 
 // This is a background job runner that loops over users and syncs some data (initially just entries) from Nighscout and/or Dexcom.
 //
-// The big problem with this is since the user defines their own nightscout they could have a slow site which holds everything up.
-// So we add all users to the sync, but dedupe (TODO) the users that are being slow.
+// The big problem is the user defines their own nightscout URL.
+// If the user is malicious, they could intend to slow down Nighttroop or DDOS another site.
+//
+// They could slow down Nighttroop by:
+// 1. having it point at Nighttroop (syncing to itself)
+// 1. Pointing at a server that takes a long time to respond or never responds
+// 1. Pointing to a server that sometimes responds and sometimes doesn't, causing timeouts and retries
+//
+// They could DDOS another site by:
+// 1. pointing many users at the same site.
+// 1. pointing at an expencive call on another site causing issues there
+//
+// To deal with these issues:
+// 1. Cant point URL at Nighttroop (or any subdomain of Nighttroop)
+// 2. If a users sync is taking too long or failing decrease the rate at which they sync (until they are disabled)
+// 3. Check for users pointing to the same host, find the user that last updated their sync, disable the rest
+// Users
 // Each job also has a timeout, which will prevent a single user from holding up lots of the sync jobs.
 // An attack on the server would be to create a bunch of users that each just timeout the sync jobs slowing everything to a crawl
 // I think the only way to prevent that would be to label servers as bad after a few timeouts and also listing successes.

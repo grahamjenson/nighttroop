@@ -18,7 +18,9 @@ type SecurityConfig struct {
 	EncryptionKeySet       *keyset.Handle
 	StreamEncryptionKeySet *keyset.Handle // for files
 	JWTKeySet              *keyset.Handle
+	MACKeySet              *keyset.Handle
 
+	mac                 tink.MAC
 	aeadEnc             tink.AEAD
 	streamEnc           tink.StreamingAEAD
 	jwtMac              jwt.MAC
@@ -45,4 +47,16 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 	}
 
 	return cfg
+}
+
+func (config *SecurityConfig) IsDev() bool {
+	return config.Mode == consts.Development
+}
+
+func (config *SecurityConfig) IsProd() bool {
+	return config.Mode == consts.Production
+}
+
+func (config *SecurityConfig) IsTest() bool {
+	return config.Mode == consts.Test
 }

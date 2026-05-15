@@ -19,7 +19,7 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 
 	totpSecret = totpKey.Secret()
 
-	if cfg.Mode == consts.Development || cfg.Mode == consts.Test {
+	if cfg.IsDev() || cfg.IsTest() {
 		totpSecret = consts.DEV_ADMIN_TOTP_SECRET
 	}
 
@@ -34,7 +34,7 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, err error) {
 	password, hashedPassword, err = SecureCredentials()
 
-	if cfg.Mode == consts.Development || cfg.Mode == consts.Test {
+	if cfg.IsDev() || cfg.IsTest() {
 		// We are going to override this stuff in dev, just to make it easier
 		password = consts.DEV_ADMIN_PASSWORD
 		hashedPassword = HashPassword(password)

@@ -13,6 +13,7 @@ import (
 	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
 	"github.com/tink-crypto/tink-go/v2/jwt"
 	"github.com/tink-crypto/tink-go/v2/keyset"
+	"github.com/tink-crypto/tink-go/v2/mac"
 	"github.com/tink-crypto/tink-go/v2/streamingaead"
 )
 
@@ -33,7 +34,12 @@ func main() {
 		log.Fatal(fmt.Errorf("failed to create JWT keyset: %w", err))
 	}
 
-	fmt.Printf("%s,%s,%s", aesKS, streamKS, jwtKS)
+	macKS, err := createBase64MACKeyset()
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to create MAC keyset: %w", err))
+	}
+
+	fmt.Printf("%s,%s,%s,%s", aesKS, streamKS, jwtKS, macKS)
 }
 
 func createBase64StreamingAEADKeyset() (string, error) {
@@ -65,6 +71,15 @@ func createBase64JWTKeyset() (string, error) {
 	return base64AKeySet(nkh)
 }
 
+func createBase64MACKeyset() (string, error) {
+	// 1. Create the handle
+	nkh, err := keyset.NewHandle(mac.HMACSHA256Tag256KeyTemplate())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return base64AKeySet(nkh)
+}
 func base64AKeySet(handle *keyset.Handle) (string, error) {
 	// 2. Export to Binary (for the Base64 string)
 	binBuf := new(bytes.Buffer)

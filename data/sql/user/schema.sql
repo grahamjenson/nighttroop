@@ -107,7 +107,8 @@ CREATE TABLE sync_sources (
 
     -- NIGHTSCOUT
     url TEXT, 
-
+    hostname TEXT,  
+    -- this is not easily dont in SQL
     -- DEXCOM
     username TEXT,
     dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER

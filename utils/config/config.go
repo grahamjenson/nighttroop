@@ -233,6 +233,18 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 	return serverConfig, nil
 }
 
+func (config *ServerConfig) IsDev() bool {
+	return config.Mode == consts.Development
+}
+
+func (config *ServerConfig) IsProd() bool {
+	return config.Mode == consts.Production
+}
+
+func (config *ServerConfig) IsTest() bool {
+	return config.Mode == consts.Test
+}
+
 func (config *ServerConfig) ValidateClean(mode string) error {
 	// Deal with mode
 
@@ -249,10 +261,10 @@ func (config *ServerConfig) ValidateClean(mode string) error {
 
 	config.HostProtocol = strings.ToLower(config.HostProtocol)
 	if config.HostProtocol != "http" && config.HostProtocol != "https" {
-		fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
+		return fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
 	}
 
-	if config.HostProtocol == "http" && config.Mode != consts.Development && config.Mode != consts.Test {
+	if config.HostProtocol == "http" && !config.IsDev() && !config.IsTest() {
 		return fmt.Errorf("http is only allowed in development or test mode")
 	}
 

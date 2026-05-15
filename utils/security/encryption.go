@@ -12,6 +12,7 @@ import (
 	"github.com/tink-crypto/tink-go/v2/aead"
 	"github.com/tink-crypto/tink-go/v2/insecurecleartextkeyset"
 	"github.com/tink-crypto/tink-go/v2/keyset"
+	"github.com/tink-crypto/tink-go/v2/mac"
 	"github.com/tink-crypto/tink-go/v2/streamingaead"
 )
 
@@ -25,13 +26,14 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 		return fmt.Errorf("no key sets provided") // No keys provided, we can generate them later
 	}
 	rawKeySets := strings.Split(keySetsRaw, ",")
-	if len(rawKeySets) != 3 {
+	if len(rawKeySets) != 4 {
 		return fmt.Errorf("invalid number of key sets provided: %d", len(rawKeySets))
 	}
 
 	encKeyRaw := rawKeySets[0]
 	fileEncKeyRaw := rawKeySets[1]
 	jwtKeyRaw := rawKeySets[2]
+	macKeyRaw := rawKeySets[3]
 
 	encKetSet, err := readKeySetFromBase64(encKeyRaw)
 	if err != nil {
@@ -49,6 +51,11 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 
 	}
 
+	macKeySet, err := readKeySetFromBase64(macKeyRaw)
+	if err != nil {
+		return fmt.Errorf("failed to read MAC key set: %w", err)
+	}
+
 	slog.Info("Successfully read encryption key sets from config")
 
 	aeadTink, err := aead.New(encKetSet)
@@ -61,19 +68,21 @@ func (config *SecurityConfig) ConfigCreateEncryptionKeys(keySetsRaw string) erro
 		return fmt.Errorf("failed to create StreamingAEAD primitive: %w", err)
 	}
 
+	macEnc, err := mac.New(macKeySet)
+	if err != nil {
+		return fmt.Errorf("failed to create MAC primitive: %w", err)
+	}
+
 	// Store KeySets
 	config.EncryptionKeySet = encKetSet
 	config.StreamEncryptionKeySet = fileEncKeySet // for files
 	config.JWTKeySet = jwtKeySet
+	config.MACKeySet = macKeySet
 
 	// Store primitives
 	config.aeadEnc = aeadTink
 	config.streamEnc = streamEnc
-
-	err = config.createJWTPrimitives()
-	if err != nil {
-		return fmt.Errorf("failed to create JWT primitives: %w", err)
-	}
+	config.mac = macEnc
 
 	return nil
 

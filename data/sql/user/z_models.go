@@ -99,6 +99,7 @@ type SyncSource struct {
 	CreatedAt              time.Time
 	Enabled                bool
 	Url                    *string
+	Hostname               *string
 	Username               *string
 	DexcomRegion           consts.DexcomRegion
 	SyncItems              *string

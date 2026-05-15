@@ -66,14 +66,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createDeviceStmt, err = db.PrepareContext(ctx, createDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateDevice: %w", err)
 	}
+	if q.createDexcomSyncSourceStmt, err = db.PrepareContext(ctx, createDexcomSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateDexcomSyncSource: %w", err)
+	}
 	if q.createEntryStmt, err = db.PrepareContext(ctx, createEntry); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEntry: %w", err)
 	}
 	if q.createEventStmt, err = db.PrepareContext(ctx, createEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEvent: %w", err)
 	}
-	if q.createSyncSourceStmt, err = db.PrepareContext(ctx, createSyncSource); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateSyncSource: %w", err)
+	if q.createNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, createNightscoutSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateNightscoutSyncSource: %w", err)
 	}
 	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
@@ -84,14 +87,20 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateDeviceLastSeenAtStmt, err = db.PrepareContext(ctx, updateDeviceLastSeenAt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDeviceLastSeenAt: %w", err)
 	}
+	if q.updateDexcomSyncSourceStmt, err = db.PrepareContext(ctx, updateDexcomSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSource: %w", err)
+	}
+	if q.updateDexcomSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateDexcomSyncSourceWithoutPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSourceWithoutPassword: %w", err)
+	}
+	if q.updateNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSource: %w", err)
+	}
+	if q.updateNightscoutSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSourceWithoutPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSourceWithoutPassword: %w", err)
+	}
 	if q.updateSyncFailureStmt, err = db.PrepareContext(ctx, updateSyncFailure); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncFailure: %w", err)
-	}
-	if q.updateSyncSourceStmt, err = db.PrepareContext(ctx, updateSyncSource); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSyncSource: %w", err)
-	}
-	if q.updateSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateSyncSourceWithoutPassword); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSyncSourceWithoutPassword: %w", err)
 	}
 	if q.updateSyncSuccessStmt, err = db.PrepareContext(ctx, updateSyncSuccess); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSuccess: %w", err)
@@ -171,6 +180,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createDeviceStmt: %w", cerr)
 		}
 	}
+	if q.createDexcomSyncSourceStmt != nil {
+		if cerr := q.createDexcomSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createDexcomSyncSourceStmt: %w", cerr)
+		}
+	}
 	if q.createEntryStmt != nil {
 		if cerr := q.createEntryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createEntryStmt: %w", cerr)
@@ -181,9 +195,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createEventStmt: %w", cerr)
 		}
 	}
-	if q.createSyncSourceStmt != nil {
-		if cerr := q.createSyncSourceStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createSyncSourceStmt: %w", cerr)
+	if q.createNightscoutSyncSourceStmt != nil {
+		if cerr := q.createNightscoutSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createNightscoutSyncSourceStmt: %w", cerr)
 		}
 	}
 	if q.deleteSyncSourceStmt != nil {
@@ -201,19 +215,29 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateDeviceLastSeenAtStmt: %w", cerr)
 		}
 	}
+	if q.updateDexcomSyncSourceStmt != nil {
+		if cerr := q.updateDexcomSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateDexcomSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.updateDexcomSyncSourceWithoutPasswordStmt != nil {
+		if cerr := q.updateDexcomSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateDexcomSyncSourceWithoutPasswordStmt: %w", cerr)
+		}
+	}
+	if q.updateNightscoutSyncSourceStmt != nil {
+		if cerr := q.updateNightscoutSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateNightscoutSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.updateNightscoutSyncSourceWithoutPasswordStmt != nil {
+		if cerr := q.updateNightscoutSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateNightscoutSyncSourceWithoutPasswordStmt: %w", cerr)
+		}
+	}
 	if q.updateSyncFailureStmt != nil {
 		if cerr := q.updateSyncFailureStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSyncFailureStmt: %w", cerr)
-		}
-	}
-	if q.updateSyncSourceStmt != nil {
-		if cerr := q.updateSyncSourceStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSyncSourceStmt: %w", cerr)
-		}
-	}
-	if q.updateSyncSourceWithoutPasswordStmt != nil {
-		if cerr := q.updateSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSyncSourceWithoutPasswordStmt: %w", cerr)
 		}
 	}
 	if q.updateSyncSuccessStmt != nil {
@@ -258,61 +282,67 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                  DBTX
-	tx                                  *sql.Tx
-	allBolusesStmt                      *sql.Stmt
-	allCarbsStmt                        *sql.Stmt
-	allDeviceStatusStmt                 *sql.Stmt
-	allDevicesStmt                      *sql.Stmt
-	allEnabledSyncSourcesStmt           *sql.Stmt
-	allEntriesStmt                      *sql.Stmt
-	allEventsStmt                       *sql.Stmt
-	allProfilesStmt                     *sql.Stmt
-	allSyncSourcesStmt                  *sql.Stmt
-	allTempBasalsStmt                   *sql.Stmt
-	allTempTargetsStmt                  *sql.Stmt
-	createBolusStmt                     *sql.Stmt
-	createCarbStmt                      *sql.Stmt
-	createDeviceStmt                    *sql.Stmt
-	createEntryStmt                     *sql.Stmt
-	createEventStmt                     *sql.Stmt
-	createSyncSourceStmt                *sql.Stmt
-	deleteSyncSourceStmt                *sql.Stmt
-	getDeviceStmt                       *sql.Stmt
-	updateDeviceLastSeenAtStmt          *sql.Stmt
-	updateSyncFailureStmt               *sql.Stmt
-	updateSyncSourceStmt                *sql.Stmt
-	updateSyncSourceWithoutPasswordStmt *sql.Stmt
-	updateSyncSuccessStmt               *sql.Stmt
+	db                                            DBTX
+	tx                                            *sql.Tx
+	allBolusesStmt                                *sql.Stmt
+	allCarbsStmt                                  *sql.Stmt
+	allDeviceStatusStmt                           *sql.Stmt
+	allDevicesStmt                                *sql.Stmt
+	allEnabledSyncSourcesStmt                     *sql.Stmt
+	allEntriesStmt                                *sql.Stmt
+	allEventsStmt                                 *sql.Stmt
+	allProfilesStmt                               *sql.Stmt
+	allSyncSourcesStmt                            *sql.Stmt
+	allTempBasalsStmt                             *sql.Stmt
+	allTempTargetsStmt                            *sql.Stmt
+	createBolusStmt                               *sql.Stmt
+	createCarbStmt                                *sql.Stmt
+	createDeviceStmt                              *sql.Stmt
+	createDexcomSyncSourceStmt                    *sql.Stmt
+	createEntryStmt                               *sql.Stmt
+	createEventStmt                               *sql.Stmt
+	createNightscoutSyncSourceStmt                *sql.Stmt
+	deleteSyncSourceStmt                          *sql.Stmt
+	getDeviceStmt                                 *sql.Stmt
+	updateDeviceLastSeenAtStmt                    *sql.Stmt
+	updateDexcomSyncSourceStmt                    *sql.Stmt
+	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
+	updateNightscoutSyncSourceStmt                *sql.Stmt
+	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
+	updateSyncFailureStmt                         *sql.Stmt
+	updateSyncSuccessStmt                         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                  tx,
-		tx:                                  tx,
-		allBolusesStmt:                      q.allBolusesStmt,
-		allCarbsStmt:                        q.allCarbsStmt,
-		allDeviceStatusStmt:                 q.allDeviceStatusStmt,
-		allDevicesStmt:                      q.allDevicesStmt,
-		allEnabledSyncSourcesStmt:           q.allEnabledSyncSourcesStmt,
-		allEntriesStmt:                      q.allEntriesStmt,
-		allEventsStmt:                       q.allEventsStmt,
-		allProfilesStmt:                     q.allProfilesStmt,
-		allSyncSourcesStmt:                  q.allSyncSourcesStmt,
-		allTempBasalsStmt:                   q.allTempBasalsStmt,
-		allTempTargetsStmt:                  q.allTempTargetsStmt,
-		createBolusStmt:                     q.createBolusStmt,
-		createCarbStmt:                      q.createCarbStmt,
-		createDeviceStmt:                    q.createDeviceStmt,
-		createEntryStmt:                     q.createEntryStmt,
-		createEventStmt:                     q.createEventStmt,
-		createSyncSourceStmt:                q.createSyncSourceStmt,
-		deleteSyncSourceStmt:                q.deleteSyncSourceStmt,
-		getDeviceStmt:                       q.getDeviceStmt,
-		updateDeviceLastSeenAtStmt:          q.updateDeviceLastSeenAtStmt,
-		updateSyncFailureStmt:               q.updateSyncFailureStmt,
-		updateSyncSourceStmt:                q.updateSyncSourceStmt,
-		updateSyncSourceWithoutPasswordStmt: q.updateSyncSourceWithoutPasswordStmt,
-		updateSyncSuccessStmt:               q.updateSyncSuccessStmt,
+		db:                             tx,
+		tx:                             tx,
+		allBolusesStmt:                 q.allBolusesStmt,
+		allCarbsStmt:                   q.allCarbsStmt,
+		allDeviceStatusStmt:            q.allDeviceStatusStmt,
+		allDevicesStmt:                 q.allDevicesStmt,
+		allEnabledSyncSourcesStmt:      q.allEnabledSyncSourcesStmt,
+		allEntriesStmt:                 q.allEntriesStmt,
+		allEventsStmt:                  q.allEventsStmt,
+		allProfilesStmt:                q.allProfilesStmt,
+		allSyncSourcesStmt:             q.allSyncSourcesStmt,
+		allTempBasalsStmt:              q.allTempBasalsStmt,
+		allTempTargetsStmt:             q.allTempTargetsStmt,
+		createBolusStmt:                q.createBolusStmt,
+		createCarbStmt:                 q.createCarbStmt,
+		createDeviceStmt:               q.createDeviceStmt,
+		createDexcomSyncSourceStmt:     q.createDexcomSyncSourceStmt,
+		createEntryStmt:                q.createEntryStmt,
+		createEventStmt:                q.createEventStmt,
+		createNightscoutSyncSourceStmt: q.createNightscoutSyncSourceStmt,
+		deleteSyncSourceStmt:           q.deleteSyncSourceStmt,
+		getDeviceStmt:                  q.getDeviceStmt,
+		updateDeviceLastSeenAtStmt:     q.updateDeviceLastSeenAtStmt,
+		updateDexcomSyncSourceStmt:     q.updateDexcomSyncSourceStmt,
+		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
+		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
+		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
+		updateSyncFailureStmt:                         q.updateSyncFailureStmt,
+		updateSyncSuccessStmt:                         q.updateSyncSuccessStmt,
 	}
 }
