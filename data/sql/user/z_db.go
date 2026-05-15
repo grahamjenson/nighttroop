@@ -81,6 +81,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
 	}
+	if q.disableNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, disableNightscoutSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query DisableNightscoutSyncSource: %w", err)
+	}
 	if q.getDeviceStmt, err = db.PrepareContext(ctx, getDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDevice: %w", err)
 	}
@@ -205,6 +208,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSyncSourceStmt: %w", cerr)
 		}
 	}
+	if q.disableNightscoutSyncSourceStmt != nil {
+		if cerr := q.disableNightscoutSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing disableNightscoutSyncSourceStmt: %w", cerr)
+		}
+	}
 	if q.getDeviceStmt != nil {
 		if cerr := q.getDeviceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getDeviceStmt: %w", cerr)
@@ -303,6 +311,7 @@ type Queries struct {
 	createEventStmt                               *sql.Stmt
 	createNightscoutSyncSourceStmt                *sql.Stmt
 	deleteSyncSourceStmt                          *sql.Stmt
+	disableNightscoutSyncSourceStmt               *sql.Stmt
 	getDeviceStmt                                 *sql.Stmt
 	updateDeviceLastSeenAtStmt                    *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
@@ -315,30 +324,31 @@ type Queries struct {
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                             tx,
-		tx:                             tx,
-		allBolusesStmt:                 q.allBolusesStmt,
-		allCarbsStmt:                   q.allCarbsStmt,
-		allDeviceStatusStmt:            q.allDeviceStatusStmt,
-		allDevicesStmt:                 q.allDevicesStmt,
-		allEnabledSyncSourcesStmt:      q.allEnabledSyncSourcesStmt,
-		allEntriesStmt:                 q.allEntriesStmt,
-		allEventsStmt:                  q.allEventsStmt,
-		allProfilesStmt:                q.allProfilesStmt,
-		allSyncSourcesStmt:             q.allSyncSourcesStmt,
-		allTempBasalsStmt:              q.allTempBasalsStmt,
-		allTempTargetsStmt:             q.allTempTargetsStmt,
-		createBolusStmt:                q.createBolusStmt,
-		createCarbStmt:                 q.createCarbStmt,
-		createDeviceStmt:               q.createDeviceStmt,
-		createDexcomSyncSourceStmt:     q.createDexcomSyncSourceStmt,
-		createEntryStmt:                q.createEntryStmt,
-		createEventStmt:                q.createEventStmt,
-		createNightscoutSyncSourceStmt: q.createNightscoutSyncSourceStmt,
-		deleteSyncSourceStmt:           q.deleteSyncSourceStmt,
-		getDeviceStmt:                  q.getDeviceStmt,
-		updateDeviceLastSeenAtStmt:     q.updateDeviceLastSeenAtStmt,
-		updateDexcomSyncSourceStmt:     q.updateDexcomSyncSourceStmt,
+		db:                              tx,
+		tx:                              tx,
+		allBolusesStmt:                  q.allBolusesStmt,
+		allCarbsStmt:                    q.allCarbsStmt,
+		allDeviceStatusStmt:             q.allDeviceStatusStmt,
+		allDevicesStmt:                  q.allDevicesStmt,
+		allEnabledSyncSourcesStmt:       q.allEnabledSyncSourcesStmt,
+		allEntriesStmt:                  q.allEntriesStmt,
+		allEventsStmt:                   q.allEventsStmt,
+		allProfilesStmt:                 q.allProfilesStmt,
+		allSyncSourcesStmt:              q.allSyncSourcesStmt,
+		allTempBasalsStmt:               q.allTempBasalsStmt,
+		allTempTargetsStmt:              q.allTempTargetsStmt,
+		createBolusStmt:                 q.createBolusStmt,
+		createCarbStmt:                  q.createCarbStmt,
+		createDeviceStmt:                q.createDeviceStmt,
+		createDexcomSyncSourceStmt:      q.createDexcomSyncSourceStmt,
+		createEntryStmt:                 q.createEntryStmt,
+		createEventStmt:                 q.createEventStmt,
+		createNightscoutSyncSourceStmt:  q.createNightscoutSyncSourceStmt,
+		deleteSyncSourceStmt:            q.deleteSyncSourceStmt,
+		disableNightscoutSyncSourceStmt: q.disableNightscoutSyncSourceStmt,
+		getDeviceStmt:                   q.getDeviceStmt,
+		updateDeviceLastSeenAtStmt:      q.updateDeviceLastSeenAtStmt,
+		updateDexcomSyncSourceStmt:      q.updateDexcomSyncSourceStmt,
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
 		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
 		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,

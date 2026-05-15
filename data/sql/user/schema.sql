@@ -103,12 +103,13 @@ CREATE TABLE sync_sources (
     type TEXT UNIQUE NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
     password TEXT NOT NULL, -- or ns token
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
 
     -- NIGHTSCOUT
     url TEXT, 
-    hostname TEXT,  
-    -- this is not easily dont in SQL
+    hostname TEXT,  -- this is not easily dont in SQL
+
     -- DEXCOM
     username TEXT,
     dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER

@@ -97,6 +97,7 @@ type SyncSource struct {
 	Type                   consts.SyncSourceType
 	Password               string
 	CreatedAt              time.Time
+	UpdatedAt              time.Time
 	Enabled                bool
 	Url                    *string
 	Hostname               *string

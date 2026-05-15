@@ -14,10 +14,13 @@ INSERT INTO sync_sources (type, password, enabled, url, hostname)
 VALUES ("NIGHTSCOUT", ?, ?, ?, ?);
 
 -- name: UpdateNightscoutSyncSource :exec
-UPDATE sync_sources SET password = ?, enabled = ?, url = ?, hostname = ? WHERE type = "NIGHTSCOUT";
+UPDATE sync_sources SET password = ?, enabled = ?, url = ?, hostname = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT";
 
 -- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE sync_sources SET enabled = ?, url = ?, hostname = ? WHERE type = "NIGHTSCOUT";
+UPDATE sync_sources SET enabled = ?, url = ?, hostname = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT";
+
+-- name: DisableNightscoutSyncSource :exec
+UPDATE sync_sources SET enabled = 0, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT";
 
 -----
 -- DEXCOM
@@ -28,10 +31,14 @@ VALUES ("DEXCOM", ?, ?, ?, ?);
 
 
 -- name: UpdateDexcomSyncSource :exec
-UPDATE sync_sources SET password = ?, enabled = ?, username = ?, dexcom_region = ? WHERE type = "DEXCOM";
+UPDATE sync_sources SET password = ?, enabled = ?, username = ?, dexcom_region = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM";
 
 -- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE sync_sources SET enabled = ?, username = ?, dexcom_region = ? WHERE type = "DEXCOM";
+UPDATE sync_sources SET enabled = ?, username = ?, dexcom_region = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM";
+
+
+
+
 
 -- HARD DELETE FOR SAFTEY
 -- name: DeleteSyncSource :exec
