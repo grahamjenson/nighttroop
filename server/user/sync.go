@@ -1,11 +1,11 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -43,19 +43,18 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 
 		var ns_id *int64 = nil
 		ns_url := ""
-		ns_password_garbage := ""
+		ns_password_garbage := consts.PASSWORD_GARBAGE_VALUE
 		ns_enabled := false
 		if nightscout != nil {
 			if nightscout.Url != nil {
 				ns_url = *nightscout.Url
 			}
-			ns_password_garbage = ""
 			ns_enabled = nightscout.Enabled
 			ns_id = &nightscout.ID
 		}
 
 		dex_username := ""
-		dex_password_garbage := ""
+		dex_password_garbage := consts.PASSWORD_GARBAGE_VALUE
 		dex_usa_region := false
 		dex_enabled := false
 		var dex_id *int64 = nil
@@ -63,7 +62,6 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 			if dexcom.Username != nil {
 				dex_username = *dexcom.Username
 			}
-			dex_password_garbage = ""
 			dex_usa_region = dexcom.DexcomRegion == consts.DexcomRegionUS
 			dex_enabled = dexcom.Enabled
 			dex_id = &dexcom.ID
@@ -94,7 +92,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 	}
 }
 
-func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig, syncSourceType consts.SyncSourceType) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
 		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
@@ -106,18 +104,19 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 			return
 		}
 
-		// 2. Extract form values
-		nsEnabled := r.FormValue("ns_enabled") == "on"
-		nsUrl := strings.TrimSpace(r.FormValue("ns_url"))
-		nsPassword := r.FormValue("ns_password")
+		nightscout, dexcom, err := userdb.GetAllSyncSources(ctx)
 
-		dexEnabled := r.FormValue("dex_enabled") == "on"
-		dexUsername := strings.TrimSpace(r.FormValue("dex_username"))
-		dexPassword := r.FormValue("dex_password")
-		dexRegionStr := r.FormValue("dex_region") // "US" or "INT"
-		dexRegion := consts.NewDexcomRegionFromString(dexRegionStr)
+		if err != nil {
+			slog.Error("Failed to get sync sources from DB", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 
-		saveNS, saveDex, err := validateSyncSettingInputs(nsUrl, nsPassword, dexUsername, dexPassword)
+		if syncSourceType == consts.SyncSourceTypeNightscout {
+			err = saveNightScoutSettings(ctx, userdb, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
+		} else {
+			err = saveDexcomSettings(ctx, userdb, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
+		}
 
 		if err != nil {
 			slog.Error("Validation error for sync settings inputs", "error", err)
@@ -125,58 +124,9 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 			return
 		}
 
-		tx, err := userdb.SQLiteDB.BeginTx(ctx, nil)
-		if err != nil {
-			slog.Error("Failed to begin transaction for sync source updates", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		defer tx.Rollback()
-
-		userdbWithTx := userdb.Queries.WithTx(tx)
-
-		if saveNS {
-			err = userdbWithTx.UpsertSyncSource(ctx, user.UpsertSyncSourceParams{
-				Type:         consts.SyncSourceTypeNightscout,
-				Password:     nsPassword,
-				Enabled:      nsEnabled,
-				Url:          &nsUrl,
-				Username:     nil,
-				DexcomRegion: consts.DexcomRegionOther,
-			})
-			if err != nil {
-				slog.Error("Failed to upsert Nightscout sync source", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-		}
-		if saveDex {
-			err = userdbWithTx.UpsertSyncSource(ctx, user.UpsertSyncSourceParams{
-				Type:         consts.SyncSourceTypeDexcom,
-				Password:     dexPassword,
-				Enabled:      dexEnabled,
-				Url:          nil,
-				Username:     &dexUsername,
-				DexcomRegion: dexRegion,
-			})
-			if err != nil {
-				slog.Error("Failed to upsert Dexcom sync source", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-		}
-
-		err = tx.Commit()
-
-		if err != nil {
-			slog.Error("Failed to commit sync source updates", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
 		if acceptType == httputils.AcceptTypeHTML {
 			// After saving, redirect back to the sync settings page
-			http.Redirect(w, r, "/sync-settings", http.StatusSeeOther)
+			http.Redirect(w, r, "/sync_settings", http.StatusSeeOther)
 			return
 		}
 
@@ -188,30 +138,32 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		// Default to JSON response for unsupported types
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "Sync settings saved successfully!"}`))
+		err = templates.UserFormResponsesSuccessJSON(w, "Sync Settings Saved")
+		if err != nil {
+			slog.Error("Failed to write JSON response for successful sync settings save", "error", err)
+		}
 	}
 }
 
 func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		acceptType := httputils.GetAcceptType(r)
 		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
 
 		// 1. Extract ID from URL path
-		idStr := chi.URLParam(r, "id")
-		if idStr == "" {
-			http.Error(w, "Bad Request: Missing ID", http.StatusBadRequest)
-			return
-		}
-		id, err := strconv.ParseInt(idStr, 10, 64)
-		if err != nil {
-			http.Error(w, "Bad Request: Invalid ID", http.StatusBadRequest)
+		typeStr := chi.URLParam(r, "type")
+		if typeStr == "" {
+			http.Error(w, "Bad Request: Missing type", http.StatusBadRequest)
 			return
 		}
 
-		// 2. TODO: Execute your database deletion logic here using the extracted ID
-		err = userdb.Queries.DeleteSyncSource(r.Context(), id)
+		type_, err := consts.NewSyncSourceTypeFromString(strings.ToUpper(typeStr))
+		if err != nil {
+			http.Error(w, "Bad Request: Invalid type", http.StatusBadRequest)
+			return
+		}
+
+		err = userdb.Queries.DeleteSyncSource(r.Context(), type_)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
@@ -219,15 +171,16 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 
 		if acceptType == httputils.AcceptTypeHTML {
 			// After deletion, redirect back to the sync settings page
-			http.Redirect(w, r, "/sync-settings", http.StatusSeeOther)
+			http.Redirect(w, r, "/sync_settings", http.StatusSeeOther)
 			return
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
 			// Return a success message that HTMX can use to trigger a toast notification
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+			w.Header().Set("HX-Redirect", "/sync_settings")
 			w.WriteHeader(http.StatusOK)
-			w.Header().Set("HX-Redirect", "/sync-settings")
 			return
 		}
 
@@ -238,22 +191,17 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 	}
 }
 
-func validateSyncSettingInputs(nsUrl string, nsPassword string, dexUsername string, dexPassword string) (bool, bool, error) {
-	saveNS := false
-	saveDex := false
+///////
+// UTIL METHODS
+////////
+
+func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, nightscout *user.SyncSource, nsUrl string, nsPassword string, enabled bool) error {
+	var err error
 	errMsg := ""
+	if nsUrl == "" {
+		errMsg += "Nightscout URL cannot be empty. "
+	} else {
 
-	if nsUrl != "" {
-		saveNS = true
-	}
-
-	if dexUsername != "" {
-		saveDex = true
-	}
-
-	// Validations
-	if saveNS {
-		// URL cannot have a path or query
 		nsUrlURl, err := url.Parse(nsUrl)
 		if err != nil {
 			errMsg += "Nightscout URL is not a valid URL. "
@@ -265,24 +213,100 @@ func validateSyncSettingInputs(nsUrl string, nsPassword string, dexUsername stri
 				errMsg += "Nightscout URL cannot have query parameters. "
 			}
 		}
-		if nsPassword == "" {
-			errMsg += "Nightscout password cannot be empty. "
-
-		}
 	}
+	if nsPassword == "" {
+		errMsg += "Nightscout password cannot be empty. "
 
-	if saveDex {
-		if dexUsername == "" {
-			errMsg += "Dexcom username cannot be empty. "
-		}
-
-		if dexPassword == "" {
-			errMsg += "Dexcom password cannot be empty. "
-		}
 	}
 
 	if errMsg != "" {
-		return saveNS, saveDex, fmt.Errorf(errMsg)
+		return fmt.Errorf(errMsg)
 	}
-	return saveNS, saveDex, nil
+	if nightscout == nil { // NEW
+		err = userdb.Queries.CreateSyncSource(ctx, user.CreateSyncSourceParams{
+			Type:     consts.SyncSourceTypeNightscout,
+			Password: nsPassword,
+			Enabled:  enabled,
+			Url:      &nsUrl,
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to create Nightscout sync source: %w", err)
+		}
+		return nil
+	}
+
+	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
+		err = userdb.Queries.UpdateSyncSourceWithoutPassword(ctx, user.UpdateSyncSourceWithoutPasswordParams{
+			Type:         consts.SyncSourceTypeNightscout,
+			Enabled:      enabled,
+			Url:          &nsUrl,
+			DexcomRegion: consts.DexcomRegionOther,
+		})
+	} else {
+		err = userdb.Queries.UpdateSyncSource(ctx, user.UpdateSyncSourceParams{
+			Type:         consts.SyncSourceTypeNightscout,
+			Password:     nsPassword,
+			Enabled:      enabled,
+			Url:          &nsUrl,
+			DexcomRegion: consts.DexcomRegionOther, // Required
+		})
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to update Nightscout sync source: %w", err)
+	}
+
+	return nil
+}
+
+func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, dexcom *user.SyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
+	var err error
+	errMsg := ""
+	if dexUsername == "" {
+		errMsg += "Dexcom username cannot be empty. "
+	}
+	if dexPassword == "" {
+		errMsg += "Dexcom password cannot be empty. "
+	}
+
+	if errMsg != "" {
+		return fmt.Errorf(errMsg)
+	}
+
+	if dexcom == nil { // NEW
+		err = userdb.Queries.CreateSyncSource(ctx, user.CreateSyncSourceParams{
+			Type:         consts.SyncSourceTypeDexcom,
+			Password:     dexPassword,
+			Enabled:      dexEnabled,
+			Username:     &dexUsername,
+			DexcomRegion: region,
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to create Dexcom sync source: %w", err)
+		}
+		return nil
+	}
+
+	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
+		err = userdb.Queries.UpdateSyncSourceWithoutPassword(ctx, user.UpdateSyncSourceWithoutPasswordParams{
+			Type:         consts.SyncSourceTypeDexcom,
+			Enabled:      dexEnabled,
+			Username:     &dexUsername,
+			DexcomRegion: region,
+		})
+	} else {
+		err = userdb.Queries.UpdateSyncSource(ctx, user.UpdateSyncSourceParams{
+			Type:         consts.SyncSourceTypeDexcom,
+			Password:     dexPassword,
+			Enabled:      dexEnabled,
+			Username:     &dexUsername,
+			DexcomRegion: region,
+		})
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to update Dexcom sync source: %w", err)
+	}
+
+	return nil
 }

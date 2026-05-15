@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -32,9 +33,10 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 
 		r.Get("/", user.GetDashboardHandler(controlDB, config))
 
-		r.Get("/sync-settings", user.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/sync-settings", user.POSTSyncSettingsHandler(controlDB, config))
-
+		r.Get("/sync_settings", user.GetSyncSettingsHandler(controlDB, config))
+		r.Post("/sync_settings/nightscout", user.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeNightscout))
+		r.Post("/sync_settings/dexcom", user.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeDexcom))
+		r.Delete("/sync_settings/{type}", user.DELETESyncSettingsHandler(controlDB, config))
 		// Actions
 		r.Post("/logout", user.POSTLogoutHandler(config))
 

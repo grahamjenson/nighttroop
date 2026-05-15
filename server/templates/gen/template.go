@@ -23,6 +23,7 @@ import (
 	_ "embed"
 	"text/template"
 	"time"
+	"encoding/json"
 )
 
 var htmx{{.FolderName}}TemplateString = {{.HTMXTemplate}}
@@ -79,6 +80,7 @@ func get{{.Name}}HTMXTemplate() (*template.Template, error) {
 	return {{.Name}}HTMXTemplate, nil
 }
 
+
 func {{.Name}}HTML(w io.Writer{{ if .HasAllInputs }}, {{.AllInputs}} {{ end }}) error {
 	tmpl, err := get{{.Name}}Template()
 	if err != nil {
@@ -110,6 +112,28 @@ func {{.Name}}HTMX(w io.Writer{{ if .HasInputs }}, {{.Inputs}} {{ end }}) error 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
+	return nil
+}
+
+func {{.Name}}JSON(w io.Writer{{ if .HasInputs }}, {{.Inputs}} {{ end }}) error {
+	var payload any
+
+	{{ if .HasInputs }}
+	payload = map[string]any{ {{.InputParams}} }
+	{{ else }}
+	payload = map[string]any{}
+	{{ end }}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
 	return nil
 }
 

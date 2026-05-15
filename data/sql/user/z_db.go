@@ -81,8 +81,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateDeviceLastSeenAtStmt, err = db.PrepareContext(ctx, updateDeviceLastSeenAt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDeviceLastSeenAt: %w", err)
 	}
-	if q.upsertSyncSourceStmt, err = db.PrepareContext(ctx, upsertSyncSource); err != nil {
-		return nil, fmt.Errorf("error preparing query UpsertSyncSource: %w", err)
+	if q.updateSyncSourceStmt, err = db.PrepareContext(ctx, updateSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSyncSource: %w", err)
+	}
+	if q.updateSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateSyncSourceWithoutPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSyncSourceWithoutPassword: %w", err)
 	}
 	return &q, nil
 }
@@ -184,9 +187,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateDeviceLastSeenAtStmt: %w", cerr)
 		}
 	}
-	if q.upsertSyncSourceStmt != nil {
-		if cerr := q.upsertSyncSourceStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing upsertSyncSourceStmt: %w", cerr)
+	if q.updateSyncSourceStmt != nil {
+		if cerr := q.updateSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.updateSyncSourceWithoutPasswordStmt != nil {
+		if cerr := q.updateSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSyncSourceWithoutPasswordStmt: %w", cerr)
 		}
 	}
 	return err
@@ -226,53 +234,55 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                         DBTX
-	tx                         *sql.Tx
-	allBolusesStmt             *sql.Stmt
-	allCarbsStmt               *sql.Stmt
-	allDeviceStatusStmt        *sql.Stmt
-	allDevicesStmt             *sql.Stmt
-	allEntriesStmt             *sql.Stmt
-	allEventsStmt              *sql.Stmt
-	allProfilesStmt            *sql.Stmt
-	allSyncSourcesStmt         *sql.Stmt
-	allTempBasalsStmt          *sql.Stmt
-	allTempTargetsStmt         *sql.Stmt
-	createBolusStmt            *sql.Stmt
-	createCarbStmt             *sql.Stmt
-	createDeviceStmt           *sql.Stmt
-	createEntryStmt            *sql.Stmt
-	createEventStmt            *sql.Stmt
-	createSyncSourceStmt       *sql.Stmt
-	deleteSyncSourceStmt       *sql.Stmt
-	getDeviceStmt              *sql.Stmt
-	updateDeviceLastSeenAtStmt *sql.Stmt
-	upsertSyncSourceStmt       *sql.Stmt
+	db                                  DBTX
+	tx                                  *sql.Tx
+	allBolusesStmt                      *sql.Stmt
+	allCarbsStmt                        *sql.Stmt
+	allDeviceStatusStmt                 *sql.Stmt
+	allDevicesStmt                      *sql.Stmt
+	allEntriesStmt                      *sql.Stmt
+	allEventsStmt                       *sql.Stmt
+	allProfilesStmt                     *sql.Stmt
+	allSyncSourcesStmt                  *sql.Stmt
+	allTempBasalsStmt                   *sql.Stmt
+	allTempTargetsStmt                  *sql.Stmt
+	createBolusStmt                     *sql.Stmt
+	createCarbStmt                      *sql.Stmt
+	createDeviceStmt                    *sql.Stmt
+	createEntryStmt                     *sql.Stmt
+	createEventStmt                     *sql.Stmt
+	createSyncSourceStmt                *sql.Stmt
+	deleteSyncSourceStmt                *sql.Stmt
+	getDeviceStmt                       *sql.Stmt
+	updateDeviceLastSeenAtStmt          *sql.Stmt
+	updateSyncSourceStmt                *sql.Stmt
+	updateSyncSourceWithoutPasswordStmt *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                         tx,
-		tx:                         tx,
-		allBolusesStmt:             q.allBolusesStmt,
-		allCarbsStmt:               q.allCarbsStmt,
-		allDeviceStatusStmt:        q.allDeviceStatusStmt,
-		allDevicesStmt:             q.allDevicesStmt,
-		allEntriesStmt:             q.allEntriesStmt,
-		allEventsStmt:              q.allEventsStmt,
-		allProfilesStmt:            q.allProfilesStmt,
-		allSyncSourcesStmt:         q.allSyncSourcesStmt,
-		allTempBasalsStmt:          q.allTempBasalsStmt,
-		allTempTargetsStmt:         q.allTempTargetsStmt,
-		createBolusStmt:            q.createBolusStmt,
-		createCarbStmt:             q.createCarbStmt,
-		createDeviceStmt:           q.createDeviceStmt,
-		createEntryStmt:            q.createEntryStmt,
-		createEventStmt:            q.createEventStmt,
-		createSyncSourceStmt:       q.createSyncSourceStmt,
-		deleteSyncSourceStmt:       q.deleteSyncSourceStmt,
-		getDeviceStmt:              q.getDeviceStmt,
-		updateDeviceLastSeenAtStmt: q.updateDeviceLastSeenAtStmt,
-		upsertSyncSourceStmt:       q.upsertSyncSourceStmt,
+		db:                                  tx,
+		tx:                                  tx,
+		allBolusesStmt:                      q.allBolusesStmt,
+		allCarbsStmt:                        q.allCarbsStmt,
+		allDeviceStatusStmt:                 q.allDeviceStatusStmt,
+		allDevicesStmt:                      q.allDevicesStmt,
+		allEntriesStmt:                      q.allEntriesStmt,
+		allEventsStmt:                       q.allEventsStmt,
+		allProfilesStmt:                     q.allProfilesStmt,
+		allSyncSourcesStmt:                  q.allSyncSourcesStmt,
+		allTempBasalsStmt:                   q.allTempBasalsStmt,
+		allTempTargetsStmt:                  q.allTempTargetsStmt,
+		createBolusStmt:                     q.createBolusStmt,
+		createCarbStmt:                      q.createCarbStmt,
+		createDeviceStmt:                    q.createDeviceStmt,
+		createEntryStmt:                     q.createEntryStmt,
+		createEventStmt:                     q.createEventStmt,
+		createSyncSourceStmt:                q.createSyncSourceStmt,
+		deleteSyncSourceStmt:                q.deleteSyncSourceStmt,
+		getDeviceStmt:                       q.getDeviceStmt,
+		updateDeviceLastSeenAtStmt:          q.updateDeviceLastSeenAtStmt,
+		updateSyncSourceStmt:                q.updateSyncSourceStmt,
+		updateSyncSourceWithoutPasswordStmt: q.updateSyncSourceWithoutPasswordStmt,
 	}
 }

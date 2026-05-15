@@ -81,43 +81,59 @@ func (q *Queries) CreateSyncSource(ctx context.Context, arg CreateSyncSourcePara
 }
 
 const deleteSyncSource = `-- name: DeleteSyncSource :exec
-DELETE FROM sync_sources WHERE id = ?
+DELETE FROM sync_sources WHERE type = ?
 `
 
 // HARD DELETE FOR SAFTEY
-func (q *Queries) DeleteSyncSource(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, id)
+func (q *Queries) DeleteSyncSource(ctx context.Context, type_ consts.SyncSourceType) error {
+	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, type_)
 	return err
 }
 
-const upsertSyncSource = `-- name: UpsertSyncSource :exec
-INSERT INTO sync_sources (type, password, enabled, url, username, dexcom_region)
-VALUES (?, ?, ?, ?, ?, ?)
-ON CONFLICT(type) DO UPDATE SET
-    password = excluded.password,
-    enabled = excluded.enabled,
-    url = excluded.url,
-    username = excluded.username,
-    dexcom_region = excluded.dexcom_region
+const updateSyncSource = `-- name: UpdateSyncSource :exec
+UPDATE sync_sources SET password = ?, enabled = ?, url = ?, username = ?, dexcom_region = ? WHERE type = ?
 `
 
-type UpsertSyncSourceParams struct {
-	Type         consts.SyncSourceType
+type UpdateSyncSourceParams struct {
 	Password     string
 	Enabled      bool
 	Url          *string
 	Username     *string
 	DexcomRegion consts.DexcomRegion
+	Type         consts.SyncSourceType
 }
 
-func (q *Queries) UpsertSyncSource(ctx context.Context, arg UpsertSyncSourceParams) error {
-	_, err := q.exec(ctx, q.upsertSyncSourceStmt, upsertSyncSource,
-		arg.Type,
+func (q *Queries) UpdateSyncSource(ctx context.Context, arg UpdateSyncSourceParams) error {
+	_, err := q.exec(ctx, q.updateSyncSourceStmt, updateSyncSource,
 		arg.Password,
 		arg.Enabled,
 		arg.Url,
 		arg.Username,
 		arg.DexcomRegion,
+		arg.Type,
+	)
+	return err
+}
+
+const updateSyncSourceWithoutPassword = `-- name: UpdateSyncSourceWithoutPassword :exec
+UPDATE sync_sources SET enabled = ?, url = ?, username = ?, dexcom_region = ? WHERE type = ?
+`
+
+type UpdateSyncSourceWithoutPasswordParams struct {
+	Enabled      bool
+	Url          *string
+	Username     *string
+	DexcomRegion consts.DexcomRegion
+	Type         consts.SyncSourceType
+}
+
+func (q *Queries) UpdateSyncSourceWithoutPassword(ctx context.Context, arg UpdateSyncSourceWithoutPasswordParams) error {
+	_, err := q.exec(ctx, q.updateSyncSourceWithoutPasswordStmt, updateSyncSourceWithoutPassword,
+		arg.Enabled,
+		arg.Url,
+		arg.Username,
+		arg.DexcomRegion,
+		arg.Type,
 	)
 	return err
 }

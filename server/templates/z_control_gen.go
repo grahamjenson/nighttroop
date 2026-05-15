@@ -3,6 +3,7 @@ package templates
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"text/template"
@@ -95,6 +96,24 @@ func ControlDashboardHTMX(w io.Writer) error {
 	return nil
 }
 
+func ControlDashboardJSON(w io.Writer) error {
+	var payload any
+
+	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
+	return nil
+}
+
 func getControlLoginTemplate() (*template.Template, error) {
 	if ControlLoginTemplate != nil {
 		return ControlLoginTemplate, nil
@@ -159,6 +178,24 @@ func ControlLoginHTMX(w io.Writer) error {
 	return nil
 }
 
+func ControlLoginJSON(w io.Writer) error {
+	var payload any
+
+	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
+	return nil
+}
+
 func getControlUsersTemplate() (*template.Template, error) {
 	if ControlUsersTemplate != nil {
 		return ControlUsersTemplate, nil
@@ -220,5 +257,23 @@ func ControlUsersHTMX(w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
+	return nil
+}
+
+func ControlUsersJSON(w io.Writer) error {
+	var payload any
+
+	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
 	return nil
 }

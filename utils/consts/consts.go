@@ -1,6 +1,9 @@
 package consts
 
-import "log/slog"
+import (
+	"fmt"
+	"log/slog"
+)
 
 type ServerMode int
 
@@ -73,3 +76,17 @@ const (
 	SyncSourceTypeNightscout SyncSourceType = "NIGHTSCOUT"
 	SyncSourceTypeDexcom     SyncSourceType = "DEXCOM"
 )
+
+func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
+	switch s {
+	case "NIGHTSCOUT":
+		return SyncSourceTypeNightscout, nil
+	case "DEXCOM":
+		return SyncSourceTypeDexcom, nil
+	default:
+		slog.Error("Invalid sync source type provided", "sync_source_type", s)
+		return "", fmt.Errorf("invalid sync source type: %s", s)
+	}
+}
+
+const PASSWORD_GARBAGE_VALUE = "********"

@@ -3,6 +3,7 @@ package templates
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"text/template"
@@ -113,6 +114,24 @@ func UserDashboardHTMX(w io.Writer) error {
 	return nil
 }
 
+func UserDashboardJSON(w io.Writer) error {
+	var payload any
+
+	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
+	return nil
+}
+
 func getUserFormResponsesFailureTemplate() (*template.Template, error) {
 	if UserFormResponsesFailureTemplate != nil {
 		return UserFormResponsesFailureTemplate, nil
@@ -174,6 +193,24 @@ func UserFormResponsesFailureHTMX(w io.Writer, response string) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
+	return nil
+}
+
+func UserFormResponsesFailureJSON(w io.Writer, response string) error {
+	var payload any
+
+	payload = map[string]any{"response": response}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
 	return nil
 }
 
@@ -241,6 +278,24 @@ func UserFormResponsesSuccessHTMX(w io.Writer, response string) error {
 	return nil
 }
 
+func UserFormResponsesSuccessJSON(w io.Writer, response string) error {
+	var payload any
+
+	payload = map[string]any{"response": response}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
+	return nil
+}
+
 func getUserLoginTemplate() (*template.Template, error) {
 	if UserLoginTemplate != nil {
 		return UserLoginTemplate, nil
@@ -302,6 +357,24 @@ func UserLoginHTMX(w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
+	return nil
+}
+
+func UserLoginJSON(w io.Writer) error {
+	var payload any
+
+	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
 	return nil
 }
 
@@ -369,6 +442,24 @@ func UserLoginTotpHTMX(w io.Writer) error {
 	return nil
 }
 
+func UserLoginTotpJSON(w io.Writer) error {
+	var payload any
+
+	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
+	return nil
+}
+
 func getUserSettingsSyncTemplate() (*template.Template, error) {
 	if UserSettingsSyncTemplate != nil {
 		return UserSettingsSyncTemplate, nil
@@ -430,5 +521,23 @@ func UserSettingsSyncHTMX(w io.Writer, ns_url string, ns_password_garbage string
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
+	return nil
+}
+
+func UserSettingsSyncJSON(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) error {
+	var payload any
+
+	payload = map[string]any{"ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "ns_id": ns_id, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled, "dex_id": dex_id}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
 	return nil
 }
