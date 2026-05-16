@@ -11,57 +11,8 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-const allEnabledSyncSources = `-- name: AllEnabledSyncSources :many
-SELECT id, type, password, created_at, updated_at, enabled, url, hostname, username, dexcom_region, sync_items, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources WHERE enabled = 1
-`
-
-func (q *Queries) AllEnabledSyncSources(ctx context.Context) ([]SyncSource, error) {
-	rows, err := q.query(ctx, q.allEnabledSyncSourcesStmt, allEnabledSyncSources)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []SyncSource
-	for rows.Next() {
-		var i SyncSource
-		if err := rows.Scan(
-			&i.ID,
-			&i.Type,
-			&i.Password,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Enabled,
-			&i.Url,
-			&i.Hostname,
-			&i.Username,
-			&i.DexcomRegion,
-			&i.SyncItems,
-			&i.Frequency,
-			&i.LastAttemptedSync,
-			&i.LastSuccessfulSync,
-			&i.ConsecutiveFailedSyncs,
-			&i.TotalFailedSyncs,
-			&i.PreviousSyncError,
-			&i.SuccessEma,
-			&i.FailureEma,
-			&i.TotalEma,
-			&i.LastSyncDuration,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const allSyncSources = `-- name: AllSyncSources :many
-SELECT id, type, password, created_at, updated_at, enabled, url, hostname, username, dexcom_region, sync_items, frequency, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources ORDER BY created_at DESC
+SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region, sync_items, sync_interval_seconds, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources ORDER BY created_at DESC
 `
 
 func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
@@ -76,16 +27,14 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Type,
+			&i.UrlOrUsername,
 			&i.Password,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enabled,
-			&i.Url,
-			&i.Hostname,
-			&i.Username,
 			&i.DexcomRegion,
 			&i.SyncItems,
-			&i.Frequency,
+			&i.SyncIntervalSeconds,
 			&i.LastAttemptedSync,
 			&i.LastSuccessfulSync,
 			&i.ConsecutiveFailedSyncs,
@@ -110,15 +59,15 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 }
 
 const createDexcomSyncSource = `-- name: CreateDexcomSyncSource :exec
-INSERT INTO sync_sources (type, password, enabled, username, dexcom_region) 
+INSERT INTO sync_sources (type, password, enabled, url_or_username, dexcom_region) 
 VALUES ("DEXCOM", ?, ?, ?, ?)
 `
 
 type CreateDexcomSyncSourceParams struct {
-	Password     string
-	Enabled      bool
-	Username     *string
-	DexcomRegion consts.DexcomRegion
+	Password      string
+	Enabled       bool
+	UrlOrUsername string
+	DexcomRegion  consts.DexcomRegion
 }
 
 // ---
@@ -128,7 +77,7 @@ func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSy
 	_, err := q.exec(ctx, q.createDexcomSyncSourceStmt, createDexcomSyncSource,
 		arg.Password,
 		arg.Enabled,
-		arg.Username,
+		arg.UrlOrUsername,
 		arg.DexcomRegion,
 	)
 	return err
@@ -136,27 +85,15 @@ func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSy
 
 const createNightscoutSyncSource = `-- name: CreateNightscoutSyncSource :exec
 
-INSERT INTO sync_sources (type, password, enabled, url, hostname) 
-VALUES ("NIGHTSCOUT", ?, ?, ?, ?)
+INSERT INTO sync_sources (type, password, enabled, url_or_username) 
+VALUES ("NIGHTSCOUT", ?, ?, ?)
 `
-
-type CreateNightscoutSyncSourceParams struct {
-	Password string
-	Enabled  bool
-	Url      *string
-	Hostname *string
-}
 
 // ---
 // Nighscout
 // ----
-func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, arg CreateNightscoutSyncSourceParams) error {
-	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource,
-		arg.Password,
-		arg.Enabled,
-		arg.Url,
-		arg.Hostname,
-	)
+func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, password string, enabled bool, urlOrUsername string) error {
+	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource, password, enabled, urlOrUsername)
 	return err
 }
 
@@ -179,63 +116,99 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context) error {
 	return err
 }
 
+const toBeSyncedSources = `-- name: ToBeSyncedSources :many
+SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region, sync_items, sync_interval_seconds, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources WHERE enabled = 1 AND (last_attempted_sync IS NULL OR last_attempted_sync <= datetime('now', '-' || sync_interval_seconds || ' seconds'))
+`
+
+// ToBeSyncedSources gets enabled and ready for syncing souces using sync_interval_seconds and last_attempted_sync to determine when the next sync should be attempted
+func (q *Queries) ToBeSyncedSources(ctx context.Context) ([]SyncSource, error) {
+	rows, err := q.query(ctx, q.toBeSyncedSourcesStmt, toBeSyncedSources)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SyncSource
+	for rows.Next() {
+		var i SyncSource
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.UrlOrUsername,
+			&i.Password,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Enabled,
+			&i.DexcomRegion,
+			&i.SyncItems,
+			&i.SyncIntervalSeconds,
+			&i.LastAttemptedSync,
+			&i.LastSuccessfulSync,
+			&i.ConsecutiveFailedSyncs,
+			&i.TotalFailedSyncs,
+			&i.PreviousSyncError,
+			&i.SuccessEma,
+			&i.FailureEma,
+			&i.TotalEma,
+			&i.LastSyncDuration,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
-UPDATE sync_sources SET password = ?, enabled = ?, username = ?, dexcom_region = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
+UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
 `
 
 type UpdateDexcomSyncSourceParams struct {
-	Password     string
-	Enabled      bool
-	Username     *string
-	DexcomRegion consts.DexcomRegion
+	Password      string
+	Enabled       bool
+	UrlOrUsername string
+	DexcomRegion  consts.DexcomRegion
 }
 
 func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSyncSourceParams) error {
 	_, err := q.exec(ctx, q.updateDexcomSyncSourceStmt, updateDexcomSyncSource,
 		arg.Password,
 		arg.Enabled,
-		arg.Username,
+		arg.UrlOrUsername,
 		arg.DexcomRegion,
 	)
 	return err
 }
 
 const updateDexcomSyncSourceWithoutPassword = `-- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE sync_sources SET enabled = ?, username = ?, dexcom_region = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
+UPDATE sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
 `
 
-func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, enabled bool, username *string, dexcomRegion consts.DexcomRegion) error {
-	_, err := q.exec(ctx, q.updateDexcomSyncSourceWithoutPasswordStmt, updateDexcomSyncSourceWithoutPassword, enabled, username, dexcomRegion)
+func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, enabled bool, urlOrUsername string, dexcomRegion consts.DexcomRegion) error {
+	_, err := q.exec(ctx, q.updateDexcomSyncSourceWithoutPasswordStmt, updateDexcomSyncSourceWithoutPassword, enabled, urlOrUsername, dexcomRegion)
 	return err
 }
 
 const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
-UPDATE sync_sources SET password = ?, enabled = ?, url = ?, hostname = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
+UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
 `
 
-type UpdateNightscoutSyncSourceParams struct {
-	Password string
-	Enabled  bool
-	Url      *string
-	Hostname *string
-}
-
-func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNightscoutSyncSourceParams) error {
-	_, err := q.exec(ctx, q.updateNightscoutSyncSourceStmt, updateNightscoutSyncSource,
-		arg.Password,
-		arg.Enabled,
-		arg.Url,
-		arg.Hostname,
-	)
+func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, password string, enabled bool, urlOrUsername string) error {
+	_, err := q.exec(ctx, q.updateNightscoutSyncSourceStmt, updateNightscoutSyncSource, password, enabled, urlOrUsername)
 	return err
 }
 
 const updateNightscoutSyncSourceWithoutPassword = `-- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE sync_sources SET enabled = ?, url = ?, hostname = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
+UPDATE sync_sources SET enabled = ?, url_or_username = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
 `
 
-func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, enabled bool, url *string, hostname *string) error {
-	_, err := q.exec(ctx, q.updateNightscoutSyncSourceWithoutPasswordStmt, updateNightscoutSyncSourceWithoutPassword, enabled, url, hostname)
+func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, enabled bool, urlOrUsername string) error {
+	_, err := q.exec(ctx, q.updateNightscoutSyncSourceWithoutPasswordStmt, updateNightscoutSyncSourceWithoutPassword, enabled, urlOrUsername)
 	return err
 }
 

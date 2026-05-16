@@ -77,6 +77,10 @@ type ServerConfig struct {
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
 
+	// Sync Config
+	BackgroundSyncWorkers int
+	SyncIntervalInSeconds int
+
 	RateLimiters *RateLimiters
 
 	// These keys are used to encrypt secrets in the DB and S3 at rest
@@ -175,6 +179,10 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 10),
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
+
+		// Sync Config
+		BackgroundSyncWorkers: configIntSelect(dotenvdev, dotenv, "BACKGROUND_SYNC_WORKERS", 5),
+		SyncIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "SYNC_INTERVAL_IN_SECONDS", 30),
 	}
 
 	serverConfig.RateLimiters = newRateLimiters(serverConfig)

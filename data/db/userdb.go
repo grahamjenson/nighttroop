@@ -109,3 +109,22 @@ func (db *UserDB) GetAllSyncSources(ctx context.Context) (nightscout *user.SyncS
 	return nightscout, dexcom, nil
 
 }
+
+func (db *UserDB) GetToBeSyncedSources(ctx context.Context) (nightscout *user.SyncSource, dexcom *user.SyncSource, err error) {
+	sync_sources, err := db.Queries.ToBeSyncedSources(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting enabled sync sources: %w", err)
+	}
+
+	for _, ss := range sync_sources {
+		if ss.Type == consts.SyncSourceTypeNightscout {
+			nightscout = &ss
+		}
+		if ss.Type == consts.SyncSourceTypeDexcom {
+			dexcom = &ss
+		}
+	}
+
+	return nightscout, dexcom, nil
+
+}

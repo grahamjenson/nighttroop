@@ -47,14 +47,11 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		ns_password_garbage := ""
 		ns_enabled := false
 		if nightscout != nil {
-			if nightscout.Url != nil {
-				ns_url = *nightscout.Url
-				ns_url, err = config.Security.Decrypt(ns_url)
-				if err != nil {
-					slog.Error("Failed to decrypt Nightscout URL from DB", "error", err)
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-					return
-				}
+			ns_url, err = config.Security.Decrypt(nightscout.UrlOrUsername)
+			if err != nil {
+				slog.Error("Failed to decrypt Nightscout URL from DB", "error", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
 			}
 			ns_enabled = nightscout.Enabled
 			ns_id = &nightscout.ID
@@ -67,14 +64,13 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		dex_enabled := false
 		var dex_id *int64 = nil
 		if dexcom != nil {
-			if dexcom.Username != nil {
-				dex_username, err = config.Security.Decrypt(*dexcom.Username)
-				if err != nil {
-					slog.Error("Failed to decrypt Dexcom username from DB", "error", err)
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-					return
-				}
+			dex_username, err = config.Security.Decrypt(dexcom.UrlOrUsername)
+			if err != nil {
+				slog.Error("Failed to decrypt Dexcom username from DB", "error", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
 			}
+
 			dex_usa_region = dexcom.DexcomRegion == consts.DexcomRegionUS
 			dex_enabled = dexcom.Enabled
 			dex_id = &dexcom.ID
@@ -219,24 +215,9 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 	var err error
 	errMsg := ""
 
-	nsUrlURl, err := url.Parse(nsUrl)
-
+	nsUrl, err = nsURLNormalizeValidate(nsUrl, config)
 	if err != nil {
 		errMsg += "Nightscout URL is not a valid URL. "
-	} else {
-		if nsUrlURl.Scheme != "https" && !(config.IsDev() && nsUrlURl.Scheme == "http") {
-			errMsg += "Nightscout URL must use HTTPS."
-		}
-		if nsUrlURl.Path != "" && nsUrlURl.Path != "/" {
-			errMsg += "Nightscout URL cannot have a path. "
-		}
-		if nsUrlURl.RawQuery != "" {
-			errMsg += "Nightscout URL cannot have query parameters. "
-		}
-		// Cant be the host or a subdomain of the host
-		if strings.HasSuffix(nsUrlURl.Hostname(), "."+config.HostName) {
-			errMsg += "Nightscout cannot be on this host."
-		}
 	}
 
 	if nsPassword == "" {
@@ -258,18 +239,8 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 		return fmt.Errorf("Failed to encrypt Nightscout URL: %w", err)
 	}
 
-	encHostname, err := security.GenerateHash(nsUrlURl.Hostname())
-	if err != nil {
-		return fmt.Errorf("Failed to generate hash for Nightscout hostname: %w", err)
-	}
-
 	if nightscout == nil { // NEW
-		err = userdb.Queries.CreateNightscoutSyncSource(ctx, user.CreateNightscoutSyncSourceParams{
-			Password: encPassword,
-			Enabled:  enabled,
-			Url:      &encUrl,
-			Hostname: &encHostname,
-		})
+		err = userdb.Queries.CreateNightscoutSyncSource(ctx, encPassword, enabled, encUrl)
 		if err != nil {
 			return fmt.Errorf("Failed to create Nightscout sync source: %w", err)
 		}
@@ -277,15 +248,10 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 	}
 
 	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = userdb.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, enabled, &encUrl, &encHostname)
+		err = userdb.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, enabled, encUrl)
 
 	} else {
-		err = userdb.Queries.UpdateNightscoutSyncSource(ctx, user.UpdateNightscoutSyncSourceParams{
-			Password: encPassword,
-			Enabled:  enabled,
-			Url:      &encUrl,
-			Hostname: &encHostname,
-		})
+		err = userdb.Queries.UpdateNightscoutSyncSource(ctx, encPassword, enabled, encUrl)
 	}
 
 	if err != nil {
@@ -293,6 +259,53 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 	}
 
 	return nil
+}
+
+func nsURLNormalizeValidate(rawUrl string, config config.ServerConfig) (string, error) {
+	errMsg := ""
+	nsURL, err := url.Parse(rawUrl)
+	if err != nil {
+		return "", fmt.Errorf("Invalid URL: %w", err)
+	}
+
+	scheme := strings.ToLower(nsURL.Scheme)
+	host := strings.ToLower(nsURL.Hostname())
+	path := nsURL.Path
+	params := nsURL.RawQuery
+	port := nsURL.Port()
+
+	if (port == "80" && scheme == "http") || (port == "443" && scheme == "https") {
+		port = "" // Remove default ports
+	}
+
+	if scheme != "https" && !(config.IsDev() && scheme == "http") {
+		errMsg += "Nightscout URL must use HTTPS."
+	}
+	if path != "" && path != "/" {
+		errMsg += "Nightscout URL cannot have a path. "
+	}
+	if params != "" {
+		errMsg += "Nightscout URL cannot have query parameters. "
+	}
+
+	err = httputils.IsNightscoutURLBlocked(host, config)
+	if err != nil {
+		errMsg += "Nightscout URL is blocked." + err.Error()
+	}
+
+	if errMsg != "" {
+		return "", fmt.Errorf(errMsg)
+	}
+
+	// Normalize the URL by removing default Ports
+
+	normalizedUrl := fmt.Sprintf("%s://%s", scheme, host)
+	// if the port is specified and is not the default port
+	if port != "" {
+		normalizedUrl = fmt.Sprintf("%s://%s:%s", scheme, host, port)
+	}
+
+	return normalizedUrl, nil
 }
 
 func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *security.SecurityConfig, dexcom *user.SyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
@@ -322,10 +335,10 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 	if dexcom == nil { // NEW
 
 		err = userdb.Queries.CreateDexcomSyncSource(ctx, user.CreateDexcomSyncSourceParams{
-			Password:     encPassword,
-			Enabled:      dexEnabled,
-			Username:     &encUsername,
-			DexcomRegion: region,
+			Password:      encPassword,
+			Enabled:       dexEnabled,
+			UrlOrUsername: encUsername,
+			DexcomRegion:  region,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to create Dexcom sync source: %w", err)
@@ -334,13 +347,13 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 	}
 
 	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = userdb.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, dexEnabled, &encUsername, region)
+		err = userdb.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, dexEnabled, encUsername, region)
 	} else {
 		err = userdb.Queries.UpdateDexcomSyncSource(ctx, user.UpdateDexcomSyncSourceParams{
-			Password:     encPassword,
-			Enabled:      dexEnabled,
-			Username:     &encUsername,
-			DexcomRegion: region,
+			Password:      encPassword,
+			Enabled:       dexEnabled,
+			UrlOrUsername: encUsername,
+			DexcomRegion:  region,
 		})
 	}
 

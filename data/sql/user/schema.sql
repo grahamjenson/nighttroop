@@ -101,21 +101,18 @@ CREATE TABLE sync_sources (
 
     -- Nightscout/Dexcom
     type TEXT UNIQUE NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
+    url_or_username TEXT NOT NULL, -- url for nightscout, username for dexcom
     password TEXT NOT NULL, -- or ns token
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
-
-    -- NIGHTSCOUT
-    url TEXT, 
-    hostname TEXT,  -- this is not easily dont in SQL
+    
 
     -- DEXCOM
-    username TEXT,
     dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
     
     sync_items TEXT, -- comma seperated list of what data to sync, empty or null means all, values like "treatments,entries"...
-    frequency INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
+    sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
 
     -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
     last_attempted_sync DATETIME,

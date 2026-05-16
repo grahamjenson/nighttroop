@@ -95,16 +95,14 @@ type SqliteSequence struct {
 type SyncSource struct {
 	ID                     int64
 	Type                   consts.SyncSourceType
+	UrlOrUsername          string
 	Password               string
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
 	Enabled                bool
-	Url                    *string
-	Hostname               *string
-	Username               *string
 	DexcomRegion           consts.DexcomRegion
 	SyncItems              *string
-	Frequency              int64
+	SyncIntervalSeconds    int64
 	LastAttemptedSync      *time.Time
 	LastSuccessfulSync     *time.Time
 	ConsecutiveFailedSyncs *int64

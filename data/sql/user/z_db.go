@@ -36,9 +36,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allDevicesStmt, err = db.PrepareContext(ctx, allDevices); err != nil {
 		return nil, fmt.Errorf("error preparing query AllDevices: %w", err)
 	}
-	if q.allEnabledSyncSourcesStmt, err = db.PrepareContext(ctx, allEnabledSyncSources); err != nil {
-		return nil, fmt.Errorf("error preparing query AllEnabledSyncSources: %w", err)
-	}
 	if q.allEntriesStmt, err = db.PrepareContext(ctx, allEntries); err != nil {
 		return nil, fmt.Errorf("error preparing query AllEntries: %w", err)
 	}
@@ -87,6 +84,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getDeviceStmt, err = db.PrepareContext(ctx, getDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDevice: %w", err)
 	}
+	if q.toBeSyncedSourcesStmt, err = db.PrepareContext(ctx, toBeSyncedSources); err != nil {
+		return nil, fmt.Errorf("error preparing query ToBeSyncedSources: %w", err)
+	}
 	if q.updateDeviceLastSeenAtStmt, err = db.PrepareContext(ctx, updateDeviceLastSeenAt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDeviceLastSeenAt: %w", err)
 	}
@@ -131,11 +131,6 @@ func (q *Queries) Close() error {
 	if q.allDevicesStmt != nil {
 		if cerr := q.allDevicesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allDevicesStmt: %w", cerr)
-		}
-	}
-	if q.allEnabledSyncSourcesStmt != nil {
-		if cerr := q.allEnabledSyncSourcesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allEnabledSyncSourcesStmt: %w", cerr)
 		}
 	}
 	if q.allEntriesStmt != nil {
@@ -218,6 +213,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getDeviceStmt: %w", cerr)
 		}
 	}
+	if q.toBeSyncedSourcesStmt != nil {
+		if cerr := q.toBeSyncedSourcesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing toBeSyncedSourcesStmt: %w", cerr)
+		}
+	}
 	if q.updateDeviceLastSeenAtStmt != nil {
 		if cerr := q.updateDeviceLastSeenAtStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateDeviceLastSeenAtStmt: %w", cerr)
@@ -296,7 +296,6 @@ type Queries struct {
 	allCarbsStmt                                  *sql.Stmt
 	allDeviceStatusStmt                           *sql.Stmt
 	allDevicesStmt                                *sql.Stmt
-	allEnabledSyncSourcesStmt                     *sql.Stmt
 	allEntriesStmt                                *sql.Stmt
 	allEventsStmt                                 *sql.Stmt
 	allProfilesStmt                               *sql.Stmt
@@ -313,6 +312,7 @@ type Queries struct {
 	deleteSyncSourceStmt                          *sql.Stmt
 	disableNightscoutSyncSourceStmt               *sql.Stmt
 	getDeviceStmt                                 *sql.Stmt
+	toBeSyncedSourcesStmt                         *sql.Stmt
 	updateDeviceLastSeenAtStmt                    *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
@@ -330,7 +330,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allCarbsStmt:                    q.allCarbsStmt,
 		allDeviceStatusStmt:             q.allDeviceStatusStmt,
 		allDevicesStmt:                  q.allDevicesStmt,
-		allEnabledSyncSourcesStmt:       q.allEnabledSyncSourcesStmt,
 		allEntriesStmt:                  q.allEntriesStmt,
 		allEventsStmt:                   q.allEventsStmt,
 		allProfilesStmt:                 q.allProfilesStmt,
@@ -347,6 +346,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteSyncSourceStmt:            q.deleteSyncSourceStmt,
 		disableNightscoutSyncSourceStmt: q.disableNightscoutSyncSourceStmt,
 		getDeviceStmt:                   q.getDeviceStmt,
+		toBeSyncedSourcesStmt:           q.toBeSyncedSourcesStmt,
 		updateDeviceLastSeenAtStmt:      q.updateDeviceLastSeenAtStmt,
 		updateDexcomSyncSourceStmt:      q.updateDexcomSyncSourceStmt,
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
