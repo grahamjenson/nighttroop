@@ -102,12 +102,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateNightscoutSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSourceWithoutPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSourceWithoutPassword: %w", err)
 	}
-	if q.updateSyncFailureStmt, err = db.PrepareContext(ctx, updateSyncFailure); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSyncFailure: %w", err)
-	}
-	if q.updateSyncSuccessStmt, err = db.PrepareContext(ctx, updateSyncSuccess); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSyncSuccess: %w", err)
-	}
 	return &q, nil
 }
 
@@ -243,16 +237,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateNightscoutSyncSourceWithoutPasswordStmt: %w", cerr)
 		}
 	}
-	if q.updateSyncFailureStmt != nil {
-		if cerr := q.updateSyncFailureStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSyncFailureStmt: %w", cerr)
-		}
-	}
-	if q.updateSyncSuccessStmt != nil {
-		if cerr := q.updateSyncSuccessStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSyncSuccessStmt: %w", cerr)
-		}
-	}
 	return err
 }
 
@@ -318,8 +302,6 @@ type Queries struct {
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
 	updateNightscoutSyncSourceStmt                *sql.Stmt
 	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
-	updateSyncFailureStmt                         *sql.Stmt
-	updateSyncSuccessStmt                         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -352,7 +334,5 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
 		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
 		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
-		updateSyncFailureStmt:                         q.updateSyncFailureStmt,
-		updateSyncSuccessStmt:                         q.updateSyncSuccessStmt,
 	}
 }

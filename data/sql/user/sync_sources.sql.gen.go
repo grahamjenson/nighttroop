@@ -12,7 +12,7 @@ import (
 )
 
 const allSyncSources = `-- name: AllSyncSources :many
-SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region, sync_items, sync_interval_seconds, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources ORDER BY created_at DESC
+SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region FROM sync_sources ORDER BY created_at DESC
 `
 
 func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
@@ -33,17 +33,6 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 			&i.UpdatedAt,
 			&i.Enabled,
 			&i.DexcomRegion,
-			&i.SyncItems,
-			&i.SyncIntervalSeconds,
-			&i.LastAttemptedSync,
-			&i.LastSuccessfulSync,
-			&i.ConsecutiveFailedSyncs,
-			&i.TotalFailedSyncs,
-			&i.PreviousSyncError,
-			&i.SuccessEma,
-			&i.FailureEma,
-			&i.TotalEma,
-			&i.LastSyncDuration,
 		); err != nil {
 			return nil, err
 		}
@@ -101,7 +90,7 @@ const deleteSyncSource = `-- name: DeleteSyncSource :exec
 DELETE FROM sync_sources WHERE type = ?
 `
 
-// HARD DELETE FOR SAFTEY
+// DELETE is real for security
 func (q *Queries) DeleteSyncSource(ctx context.Context, type_ consts.SyncSourceType) error {
 	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, type_)
 	return err
@@ -117,7 +106,7 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context) error {
 }
 
 const toBeSyncedSources = `-- name: ToBeSyncedSources :many
-SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region, sync_items, sync_interval_seconds, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration FROM sync_sources WHERE enabled = 1 AND (last_attempted_sync IS NULL OR last_attempted_sync <= datetime('now', '-' || sync_interval_seconds || ' seconds'))
+SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region FROM sync_sources WHERE enabled = 1 AND (last_attempted_sync IS NULL OR last_attempted_sync <= datetime('now', '-' || sync_interval_seconds || ' seconds'))
 `
 
 // ToBeSyncedSources gets enabled and ready for syncing souces using sync_interval_seconds and last_attempted_sync to determine when the next sync should be attempted
@@ -139,17 +128,6 @@ func (q *Queries) ToBeSyncedSources(ctx context.Context) ([]SyncSource, error) {
 			&i.UpdatedAt,
 			&i.Enabled,
 			&i.DexcomRegion,
-			&i.SyncItems,
-			&i.SyncIntervalSeconds,
-			&i.LastAttemptedSync,
-			&i.LastSuccessfulSync,
-			&i.ConsecutiveFailedSyncs,
-			&i.TotalFailedSyncs,
-			&i.PreviousSyncError,
-			&i.SuccessEma,
-			&i.FailureEma,
-			&i.TotalEma,
-			&i.LastSyncDuration,
 		); err != nil {
 			return nil, err
 		}
@@ -209,71 +187,5 @@ UPDATE sync_sources SET enabled = ?, url_or_username = ?,  updated_at = CURRENT_
 
 func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, enabled bool, urlOrUsername string) error {
 	_, err := q.exec(ctx, q.updateNightscoutSyncSourceWithoutPasswordStmt, updateNightscoutSyncSourceWithoutPassword, enabled, urlOrUsername)
-	return err
-}
-
-const updateSyncFailure = `-- name: UpdateSyncFailure :exec
-UPDATE sync_sources
-SET
-    last_attempted_sync = CURRENT_TIMESTAMP,
-
-    consecutive_failed_syncs = consecutive_failed_syncs + 1,
-    total_failed_syncs = total_failed_syncs + 1,
-
-    failure_ema = CASE
-        WHEN failure_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
-            + (0.8 * failure_ema)
-    END,
-
-    total_ema = CASE
-        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
-            + (0.8 * total_ema)
-    END,
-
-    previous_sync_error = ?2,
-
-    last_sync_duration = ?1
-
-WHERE type = ?3
-`
-
-func (q *Queries) UpdateSyncFailure(ctx context.Context, elapsedMs *int64, errorMessage *string, type_ consts.SyncSourceType) error {
-	_, err := q.exec(ctx, q.updateSyncFailureStmt, updateSyncFailure, elapsedMs, errorMessage, type_)
-	return err
-}
-
-const updateSyncSuccess = `-- name: UpdateSyncSuccess :exec
-
-UPDATE sync_sources
-SET
-    last_attempted_sync = CURRENT_TIMESTAMP,
-    last_successful_sync = CURRENT_TIMESTAMP,
-
-    consecutive_failed_syncs = 0,
-
-    success_ema = CASE
-        WHEN success_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
-            + (0.8 * success_ema)
-    END,
-
-    total_ema = CASE
-        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
-            + (0.8 * total_ema)
-    END,
-
-    last_sync_duration = ?1,
-
-    previous_sync_error = NULL
-
-WHERE type = ?2
-`
-
-// ---- Updates to the Sync Reporting -----
-func (q *Queries) UpdateSyncSuccess(ctx context.Context, elapsedMs *int64, type_ consts.SyncSourceType) error {
-	_, err := q.exec(ctx, q.updateSyncSuccessStmt, updateSyncSuccess, elapsedMs, type_)
 	return err
 }

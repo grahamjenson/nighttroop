@@ -93,25 +93,14 @@ type SqliteSequence struct {
 }
 
 type SyncSource struct {
-	ID                     int64
-	Type                   consts.SyncSourceType
-	UrlOrUsername          string
-	Password               string
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
-	Enabled                bool
-	DexcomRegion           consts.DexcomRegion
-	SyncItems              *string
-	SyncIntervalSeconds    int64
-	LastAttemptedSync      *time.Time
-	LastSuccessfulSync     *time.Time
-	ConsecutiveFailedSyncs *int64
-	TotalFailedSyncs       *int64
-	PreviousSyncError      *string
-	SuccessEma             *float64
-	FailureEma             *float64
-	TotalEma               *float64
-	LastSyncDuration       *int64
+	ID            int64
+	Type          consts.SyncSourceType
+	UrlOrUsername string
+	Password      string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Enabled       bool
+	DexcomRegion  consts.DexcomRegion
 }
 
 type TempBasal struct {

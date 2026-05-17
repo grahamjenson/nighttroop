@@ -97,9 +97,8 @@ UNIQUE(eid)
 CREATE TABLE sqlite_sequence(name,seq);
 
 CREATE TABLE sync_sources (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
     -- Nightscout/Dexcom
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT UNIQUE NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
     url_or_username TEXT NOT NULL, -- url for nightscout, username for dexcom
     password TEXT NOT NULL, -- or ns token
@@ -109,23 +108,7 @@ CREATE TABLE sync_sources (
     
 
     -- DEXCOM
-    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
-    
-    sync_items TEXT, -- comma seperated list of what data to sync, empty or null means all, values like "treatments,entries"...
-    sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
-
-    -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
-    last_attempted_sync DATETIME,
-    last_successful_sync DATETIME,
-    
-    consecutive_failed_syncs INTEGER DEFAULT 0,
-    total_failed_syncs INTEGER DEFAULT 0,
-    previous_sync_error TEXT, -- stored to show to user as feedback
-
-    success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
-    failure_ema REAL,
-    total_ema REAL,
-    last_sync_duration INTEGER -- 1 for success, 0 for failure, null for never tried, used for quick checks without having to look at timestamps 
+    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER' -- USA or OTHER
 );
 
 CREATE TABLE temp_basals (

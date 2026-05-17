@@ -41,6 +41,24 @@ type SqliteSequence struct {
 	Seq  interface{}
 }
 
+type SyncSourceReport struct {
+	ID                        int64
+	CreatedAt                 time.Time
+	UpdatedAt                 time.Time
+	UniqHash                  string
+	SyncIntervalSecondsReason *string
+	SyncIntervalSeconds       int64
+	LastAttemptedSync         *time.Time
+	LastSuccessfulSync        *time.Time
+	ConsecutiveFailedSyncs    *int64
+	TotalFailedSyncs          *int64
+	PreviousSyncError         *string
+	SuccessEma                *float64
+	FailureEma                *float64
+	TotalEma                  *float64
+	LastSyncDuration          *int64
+}
+
 type User struct {
 	ID               int64
 	Subdomain        string

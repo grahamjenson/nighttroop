@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -56,12 +57,22 @@ type UserDBSyncData struct {
 }
 
 type SyncJobWithData struct {
+	uniqHash                 string // hash of the sync source config (type, URL/username, password, dexcom region) used for deduping
 	users                    []*UserDBSyncData
 	synctype                 consts.SyncSourceType
 	unencryptedPassword      string
 	unencryptedURLOrUsername string
-	dexcomRegion             consts.DexcomRegion // only used for dexcom, empty for nightscout
+	dexcomRegion             consts.DexcomRegion      // only used for dexcom, empty for nightscout
+	report                   control.SyncSourceReport // the current report for this sync source, used to update after the sync with results like success/failure, time taken, etc.
 	// Any other data we want to pass to the job, like the last time we successfully synced, or the number of consecutive failures, etc.
+}
+
+func (s *SyncJobWithData) Subdomains() []string {
+	subdomains := make([]string, len(s.users))
+	for i, user := range s.users {
+		subdomains[i] = user.UserDB.Subdomain
+	}
+	return subdomains
 }
 
 // Background Jobs
@@ -152,11 +163,19 @@ func addSyncJobToHashMap(config config.ServerConfig, userDB *db.UserDB, syncSour
 
 	// Any two users with this constalations will be making the exact same request to the same URL.
 	// We are deduping these requests to prevent multiple calls
-	uniqHash := fmt.Sprintf("%s:%s:%s:%s", syncSource.Type, unencryptedURLOrUsername, unencryptedPassword, syncSource.DexcomRegion)
+	uniqString := fmt.Sprintf("%s:%s:%s", syncSource.Type, unencryptedURLOrUsername, unencryptedPassword)
+	if syncSource.Type == consts.SyncSourceTypeDexcom {
+		uniqString = fmt.Sprintf("%s:%s:%s:%s", syncSource.Type, unencryptedURLOrUsername, unencryptedPassword, syncSource.DexcomRegion)
+	}
+	uniqHash, err := config.Security.GenerateHash(uniqString)
+	if err != nil {
+		return fmt.Errorf("error generating hash for sync job: %w", err)
+	}
 
 	jobData, exists := nsUniqHashMap[uniqHash]
 	if !exists {
 		nsUniqHashMap[uniqHash] = &SyncJobWithData{
+			uniqHash:                 uniqHash,
 			users:                    []*UserDBSyncData{{UserDB: userDB, SyncSource: syncSource}},
 			synctype:                 syncSource.Type,
 			unencryptedPassword:      unencryptedPassword,
@@ -179,15 +198,10 @@ func (b *SyncJobs) worker(id int) {
 			return
 
 		case syncJob := <-b.jobCh:
-			slog.Info("starting sync", "worker_id", id, "subdomain", syncJob.UserDB.Subdomain)
-			SyncUserData(syncJob)
+			slog.Info("starting sync", "worker_id", id, "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype)
+			b.SyncUserData(syncJob)
 		}
 	}
-}
-
-func SyncUserData(syncJob *SyncJobWithData) {
-	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
-	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
 func (b *SyncJobs) Stop() {
@@ -196,4 +210,38 @@ func (b *SyncJobs) Stop() {
 	// This will wait
 	b.wg.Wait()
 
+}
+
+/////////////
+// Actual SyncJob Work
+//////////////
+
+func (b *SyncJobs) SyncUserData(syncJob *SyncJobWithData) {
+	var err error
+	syncJob.report, err = b.controlDB.Queries.CreateOrUpdateSyncSourceReport(context.TODO(), syncJob.uniqHash)
+	if err != nil {
+		slog.Error("error creating or updating sync source report", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
+		return
+	}
+
+	if syncJob.synctype == consts.SyncSourceTypeNightscout {
+		err = b.syncNightscout(syncJob)
+	} else if syncJob.synctype == consts.SyncSourceTypeDexcom {
+		err = b.syncDexcom(syncJob)
+	}
+	if err != nil {
+		slog.Error("error syncing user data", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
+
+	}
+
+	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
+	// This will be called on a schedule, and also on demand when a user logs in or something like that
+}
+
+func (b *SyncJobs) syncNightscout(syncJob *SyncJobWithData) error {
+	return nil
+}
+
+func (b *SyncJobs) syncDexcom(syncJob *SyncJobWithData) error {
+	return nil
 }

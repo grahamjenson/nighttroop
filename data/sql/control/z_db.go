@@ -27,6 +27,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createAdminStmt, err = db.PrepareContext(ctx, createAdmin); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateAdmin: %w", err)
 	}
+	if q.createOrUpdateSyncSourceReportStmt, err = db.PrepareContext(ctx, createOrUpdateSyncSourceReport); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateOrUpdateSyncSourceReport: %w", err)
+	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
@@ -60,6 +63,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.truncateEventsStmt, err = db.PrepareContext(ctx, truncateEvents); err != nil {
 		return nil, fmt.Errorf("error preparing query TruncateEvents: %w", err)
 	}
+	if q.updateSyncSourceReportsFailureStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsFailure); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsFailure: %w", err)
+	}
+	if q.updateSyncSourceReportsSuccessStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsSuccess); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsSuccess: %w", err)
+	}
 	if q.updateUserLastSeenAtStmt, err = db.PrepareContext(ctx, updateUserLastSeenAt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserLastSeenAt: %w", err)
 	}
@@ -74,6 +83,11 @@ func (q *Queries) Close() error {
 	if q.createAdminStmt != nil {
 		if cerr := q.createAdminStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createAdminStmt: %w", cerr)
+		}
+	}
+	if q.createOrUpdateSyncSourceReportStmt != nil {
+		if cerr := q.createOrUpdateSyncSourceReportStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createOrUpdateSyncSourceReportStmt: %w", cerr)
 		}
 	}
 	if q.createUserStmt != nil {
@@ -131,6 +145,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing truncateEventsStmt: %w", cerr)
 		}
 	}
+	if q.updateSyncSourceReportsFailureStmt != nil {
+		if cerr := q.updateSyncSourceReportsFailureStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSyncSourceReportsFailureStmt: %w", cerr)
+		}
+	}
+	if q.updateSyncSourceReportsSuccessStmt != nil {
+		if cerr := q.updateSyncSourceReportsSuccessStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSyncSourceReportsSuccessStmt: %w", cerr)
+		}
+	}
 	if q.updateUserLastSeenAtStmt != nil {
 		if cerr := q.updateUserLastSeenAtStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateUserLastSeenAtStmt: %w", cerr)
@@ -178,41 +202,47 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                        DBTX
-	tx                        *sql.Tx
-	createAdminStmt           *sql.Stmt
-	createUserStmt            *sql.Stmt
-	deleteUsersStmt           *sql.Stmt
-	getAdminStmt              *sql.Stmt
-	getAllUsersStmt           *sql.Stmt
-	getBatchUsersStmt         *sql.Stmt
-	getInactiveUsersStmt      *sql.Stmt
-	getNeverSeenUsersStmt     *sql.Stmt
-	getNotDeletedUsersStmt    *sql.Stmt
-	getUserStmt               *sql.Stmt
-	tESTTruncateUsersStmt     *sql.Stmt
-	truncateEventsStmt        *sql.Stmt
-	updateUserLastSeenAtStmt  *sql.Stmt
-	updateUserLastWriteAtStmt *sql.Stmt
+	db                                 DBTX
+	tx                                 *sql.Tx
+	createAdminStmt                    *sql.Stmt
+	createOrUpdateSyncSourceReportStmt *sql.Stmt
+	createUserStmt                     *sql.Stmt
+	deleteUsersStmt                    *sql.Stmt
+	getAdminStmt                       *sql.Stmt
+	getAllUsersStmt                    *sql.Stmt
+	getBatchUsersStmt                  *sql.Stmt
+	getInactiveUsersStmt               *sql.Stmt
+	getNeverSeenUsersStmt              *sql.Stmt
+	getNotDeletedUsersStmt             *sql.Stmt
+	getUserStmt                        *sql.Stmt
+	tESTTruncateUsersStmt              *sql.Stmt
+	truncateEventsStmt                 *sql.Stmt
+	updateSyncSourceReportsFailureStmt *sql.Stmt
+	updateSyncSourceReportsSuccessStmt *sql.Stmt
+	updateUserLastSeenAtStmt           *sql.Stmt
+	updateUserLastWriteAtStmt          *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                        tx,
-		tx:                        tx,
-		createAdminStmt:           q.createAdminStmt,
-		createUserStmt:            q.createUserStmt,
-		deleteUsersStmt:           q.deleteUsersStmt,
-		getAdminStmt:              q.getAdminStmt,
-		getAllUsersStmt:           q.getAllUsersStmt,
-		getBatchUsersStmt:         q.getBatchUsersStmt,
-		getInactiveUsersStmt:      q.getInactiveUsersStmt,
-		getNeverSeenUsersStmt:     q.getNeverSeenUsersStmt,
-		getNotDeletedUsersStmt:    q.getNotDeletedUsersStmt,
-		getUserStmt:               q.getUserStmt,
-		tESTTruncateUsersStmt:     q.tESTTruncateUsersStmt,
-		truncateEventsStmt:        q.truncateEventsStmt,
-		updateUserLastSeenAtStmt:  q.updateUserLastSeenAtStmt,
-		updateUserLastWriteAtStmt: q.updateUserLastWriteAtStmt,
+		db:                                 tx,
+		tx:                                 tx,
+		createAdminStmt:                    q.createAdminStmt,
+		createOrUpdateSyncSourceReportStmt: q.createOrUpdateSyncSourceReportStmt,
+		createUserStmt:                     q.createUserStmt,
+		deleteUsersStmt:                    q.deleteUsersStmt,
+		getAdminStmt:                       q.getAdminStmt,
+		getAllUsersStmt:                    q.getAllUsersStmt,
+		getBatchUsersStmt:                  q.getBatchUsersStmt,
+		getInactiveUsersStmt:               q.getInactiveUsersStmt,
+		getNeverSeenUsersStmt:              q.getNeverSeenUsersStmt,
+		getNotDeletedUsersStmt:             q.getNotDeletedUsersStmt,
+		getUserStmt:                        q.getUserStmt,
+		tESTTruncateUsersStmt:              q.tESTTruncateUsersStmt,
+		truncateEventsStmt:                 q.truncateEventsStmt,
+		updateSyncSourceReportsFailureStmt: q.updateSyncSourceReportsFailureStmt,
+		updateSyncSourceReportsSuccessStmt: q.updateSyncSourceReportsSuccessStmt,
+		updateUserLastSeenAtStmt:           q.updateUserLastSeenAtStmt,
+		updateUserLastWriteAtStmt:          q.updateUserLastWriteAtStmt,
 	}
 }
