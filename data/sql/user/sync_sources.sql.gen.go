@@ -105,43 +105,6 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context) error {
 	return err
 }
 
-const toBeSyncedSources = `-- name: ToBeSyncedSources :many
-SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region FROM sync_sources WHERE enabled = 1 AND (last_attempted_sync IS NULL OR last_attempted_sync <= datetime('now', '-' || sync_interval_seconds || ' seconds'))
-`
-
-// ToBeSyncedSources gets enabled and ready for syncing souces using sync_interval_seconds and last_attempted_sync to determine when the next sync should be attempted
-func (q *Queries) ToBeSyncedSources(ctx context.Context) ([]SyncSource, error) {
-	rows, err := q.query(ctx, q.toBeSyncedSourcesStmt, toBeSyncedSources)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []SyncSource
-	for rows.Next() {
-		var i SyncSource
-		if err := rows.Scan(
-			&i.ID,
-			&i.Type,
-			&i.UrlOrUsername,
-			&i.Password,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Enabled,
-			&i.DexcomRegion,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
 UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
 `

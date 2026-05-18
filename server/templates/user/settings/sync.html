@@ -54,7 +54,7 @@
 
                             <input type="url" class="form-control" name="ns_url"
                                 placeholder="https://your-nightscout.herokuapp.com" pattern="https?://[^/]+" required
-                                value="{{.ns_url}}">
+                                value="{{.ns_url}}" autocomplete="off" autocapitalize="none" spellcheck="false">
 
                             <div class="form-text">
                                 Base URL only (no path or trailing slash)
@@ -68,7 +68,7 @@
 
                             <input type="password" class="form-control" name="ns_password" required
                                 value="{{.ns_password_garbage}}" onmousedown="event.preventDefault(); this.select();"
-                                data-placeholder-password="true">
+                                data-placeholder-password="true" , autocomplete="new-password">
                         </div>
                     </div>
 
@@ -131,7 +131,8 @@
                                 Dexcom Username
                             </label>
 
-                            <input type="text" class="form-control" name="dex_username" value="{{.dex_username}}">
+                            <input type="text" class="form-control" name="dex_username" value="{{.dex_username}}"
+                                autocomplete="off" autocapitalize="none" spellcheck="false">
                         </div>
 
                         <div class="col-md-4">
@@ -141,7 +142,7 @@
 
                             <input type="password" class="form-control" name="dex_password"
                                 value="{{.dex_password_garbage}}" onmousedown="event.preventDefault(); this.select();"
-                                data-placeholder-password="true">
+                                data-placeholder-password="true" autocomplete="new-password">
                         </div>
 
                         <div class="col-md-3">

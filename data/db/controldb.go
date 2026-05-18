@@ -147,7 +147,7 @@ type UserCreateMaterial struct {
 }
 
 func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
-	subdomain := utils.NextUserID()
+	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
 	// Password is used as an API key for the user to access their data
 	// BackupKey
 	// password, hash, err := utils.SecureCredentials()

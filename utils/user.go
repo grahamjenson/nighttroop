@@ -42,7 +42,34 @@ func UserBatchPaths(char string) (string, string) {
 	return dbPath, backupPath
 }
 
-func NextUserID() string {
+// Length of strings must be USER_ID_LENGTH and chars must be in USER_CHAR_SET
+var firstUserSubdomains = []string{
+	"alicezzz",
+	"bobzzzzz",
+	"charliez",
+	"davezzzz",
+	"evezzzzz",
+	"frankzzz",
+	"gracezzz",
+	"heidizzz",
+	"ivanzzzz",
+	"judyzzzz",
+	"malloryz",
+	"oscarzzz",
+	"peggyzzz",
+	"trentzz",
+	"victorzz",
+	"wendyzzz",
+}
+
+func NextUserID(usePrecomputedList bool) string {
+	if usePrecomputedList {
+		if !(len(firstUserSubdomains) == 0) {
+			next := firstUserSubdomains[0]
+			firstUserSubdomains = firstUserSubdomains[1:]
+			return next
+		}
+	}
 	return security.SecureRandomString(USER_ID_LENGTH, USER_CHAR_SET)
 }
 

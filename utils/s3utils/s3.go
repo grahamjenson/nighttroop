@@ -83,7 +83,7 @@ func NewS3Client(config config.ServerConfig) *S3Client {
 
 func (c *S3Client) TestS3Client() error {
 	testKey := c.TestObjectPath()
-	randomGen := utils.NextUserID()
+	randomGen := utils.NextUserID(false)
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
 
 	_, err := c.s3.PutObject(context.TODO(), &s3.PutObjectInput{

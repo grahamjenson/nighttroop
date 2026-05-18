@@ -2,11 +2,6 @@
 -- name: AllSyncSources :many
 SELECT * FROM sync_sources ORDER BY created_at DESC;
 
-
--- ToBeSyncedSources gets enabled and ready for syncing souces using sync_interval_seconds and last_attempted_sync to determine when the next sync should be attempted
--- name: ToBeSyncedSources :many
-SELECT * FROM sync_sources WHERE enabled = 1 AND (last_attempted_sync IS NULL OR last_attempted_sync <= datetime('now', '-' || sync_interval_seconds || ' seconds'));
-
 -----
 -- Nighscout
 ------ 

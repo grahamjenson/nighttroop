@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -113,40 +114,46 @@ func (b *SyncJobs) scheduler() {
 			return
 
 		case <-syncTicker.C:
-			users := b.controlDB.AllUsers()
-
-			nsUniqHashMap := map[string]*SyncJobWithData{} // hostname to sync jobs
-
-			for _, userDB := range users {
-				ns, dex, err := userDB.GetToBeSyncedSources(context.TODO())
-				if err != nil {
-					slog.Error("error getting sync sources for user", "subdomain", userDB.Subdomain, "error", err)
-					continue
-				}
-				err = addSyncJobToHashMap(b.config, userDB, ns, nsUniqHashMap)
-				if err != nil {
-					slog.Error("error adding Nightscout sync job to hash map", "subdomain", userDB.Subdomain, "error", err, "ns", ns)
-				}
-
-				err = addSyncJobToHashMap(b.config, userDB, dex, nsUniqHashMap)
-				if err != nil {
-					slog.Error("error adding Dexcom sync job to hash map", "subdomain", userDB.Subdomain, "error", err, "dexcom", dex)
-				}
-			}
-
-			// Need to get the user from the DB as well because we need to check last active time (caching in memory would cause a stampede of
-			for _, syncJobs := range nsUniqHashMap {
-				// Non-blocking submit (prevents deadlock if full)
-				select {
-				case b.jobCh <- syncJobs:
-				case <-b.ctx.Done():
-					return
-				}
-
-			}
+			b.Tick()
 		}
 	}
 }
+
+func (b *SyncJobs) Tick() {
+	defer utils.TrackTime(time.Now(), "SyncJobs.Tick", nil, nil)
+	users := b.controlDB.AllUsers()
+
+	nsUniqHashMap := map[string]*SyncJobWithData{} // hostname to sync jobs
+
+	for _, userDB := range users {
+		ns, dex, err := userDB.GetAllSyncSources(context.TODO())
+		if err != nil {
+			slog.Error("error getting sync sources for user", "subdomain", userDB.Subdomain, "error", err)
+			continue
+		}
+		err = addSyncJobToHashMap(b.config, userDB, ns, nsUniqHashMap)
+		if err != nil {
+			slog.Error("error adding Nightscout sync job to hash map", "subdomain", userDB.Subdomain, "error", err, "ns", ns)
+		}
+
+		err = addSyncJobToHashMap(b.config, userDB, dex, nsUniqHashMap)
+		if err != nil {
+			slog.Error("error adding Dexcom sync job to hash map", "subdomain", userDB.Subdomain, "error", err, "dexcom", dex)
+		}
+	}
+
+	// Need to get the user from the DB as well because we need to check last active time (caching in memory would cause a stampede of
+	for _, syncJobs := range nsUniqHashMap {
+		// Non-blocking submit (prevents deadlock if full)
+		select {
+		case b.jobCh <- syncJobs:
+		case <-b.ctx.Done():
+			return
+		}
+
+	}
+}
+
 func addSyncJobToHashMap(config config.ServerConfig, userDB *db.UserDB, syncSource *user.SyncSource, nsUniqHashMap map[string]*SyncJobWithData) error {
 	if syncSource == nil || !syncSource.Enabled {
 		return nil
@@ -224,24 +231,35 @@ func (b *SyncJobs) SyncUserData(syncJob *SyncJobWithData) {
 		return
 	}
 
-	if syncJob.synctype == consts.SyncSourceTypeNightscout {
+	startTime := time.Now()
+	switch syncJob.synctype {
+	case consts.SyncSourceTypeNightscout:
 		err = b.syncNightscout(syncJob)
-	} else if syncJob.synctype == consts.SyncSourceTypeDexcom {
+	case consts.SyncSourceTypeDexcom:
 		err = b.syncDexcom(syncJob)
 	}
-	if err != nil {
-		slog.Error("error syncing user data", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
+	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
+	if err != nil {
+		errMsg := err.Error()
+		slog.Error("error syncing user data", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
+		b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), &elapsedTimeMS, &errMsg, syncJob.uniqHash)
+		return
 	}
+
+	slog.Info("finished sync", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "elapsed_time_ms", elapsedTimeMS)
+	b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncJob.uniqHash)
 
 	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
 	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
 func (b *SyncJobs) syncNightscout(syncJob *SyncJobWithData) error {
+	slog.Info("Syncing Nightscout", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "url", syncJob.unencryptedURLOrUsername)
 	return nil
 }
 
 func (b *SyncJobs) syncDexcom(syncJob *SyncJobWithData) error {
+	slog.Info("Syncing Dexcom", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "username", syncJob.unencryptedURLOrUsername, "dexcom_region", syncJob.dexcomRegion)
 	return nil
 }
