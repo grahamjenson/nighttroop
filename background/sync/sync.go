@@ -243,12 +243,18 @@ func (b *SyncJobs) SyncUserData(syncJob *SyncJobWithData) {
 	if err != nil {
 		errMsg := err.Error()
 		slog.Error("error syncing user data", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
-		b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), &elapsedTimeMS, &errMsg, syncJob.uniqHash)
+		err = b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), &errMsg, &elapsedTimeMS, syncJob.uniqHash)
+		if err != nil {
+			slog.Error("error updating sync source report with failure", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
+		}
 		return
 	}
 
 	slog.Info("finished sync", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "elapsed_time_ms", elapsedTimeMS)
-	b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncJob.uniqHash)
+	err = b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncJob.uniqHash)
+	if err != nil {
+		slog.Error("error updating sync source report with success", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "error", err)
+	}
 
 	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
 	// This will be called on a schedule, and also on demand when a user logs in or something like that

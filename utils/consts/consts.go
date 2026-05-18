@@ -64,6 +64,8 @@ func NewDexcomRegionFromString(s string) DexcomRegion {
 		return DexcomRegionUS
 	case "off":
 		return DexcomRegionOther
+	case "":
+		return DexcomRegionOther
 	default:
 		slog.Error("Invalid Dexcom region provided", "dex_region", s)
 		return DexcomRegionOther // Default to OTHER if invalid, but log the error

@@ -42,21 +42,25 @@ type SqliteSequence struct {
 }
 
 type SyncSourceReport struct {
-	ID                        int64
-	CreatedAt                 time.Time
-	UpdatedAt                 time.Time
-	UniqHash                  string
-	SyncIntervalSecondsReason *string
-	SyncIntervalSeconds       int64
-	LastAttemptedSync         *time.Time
-	LastSuccessfulSync        *time.Time
-	ConsecutiveFailedSyncs    *int64
-	TotalFailedSyncs          *int64
-	PreviousSyncError         *string
-	SuccessEma                *float64
-	FailureEma                *float64
-	TotalEma                  *float64
-	LastSyncDuration          *int64
+	ID                         int64
+	CreatedAt                  time.Time
+	UpdatedAt                  time.Time
+	UniqHash                   string
+	SyncIntervalSecondsReason  *string
+	SyncIntervalSeconds        int64
+	LastAttemptedSync          *time.Time
+	LastSuccessfulSync         *time.Time
+	LastFailedSync             *time.Time
+	TotalSyncs                 *int64
+	TotalSuccessfulSyncs       *int64
+	TotalFailedSyncs           *int64
+	ConsecutiveSuccessfulSyncs *int64
+	ConsecutiveFailedSyncs     *int64
+	PreviousSyncError          *string
+	TotalEma                   *float64
+	SuccessEma                 *float64
+	FailureEma                 *float64
+	LastSyncDuration           *int64
 }
 
 type User struct {

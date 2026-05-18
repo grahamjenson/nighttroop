@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 )
@@ -16,9 +17,9 @@ func TrackTime(start time.Time, name string, log *bool, info *string) {
 	// log is true or nil here
 
 	if info != nil {
-		slog.Info("Timer", "name", name, "elapsed", elapsed.Milliseconds(), "info", *info)
+		slog.Info(fmt.Sprintf("Timer: %s", name), "elapsed", elapsed.Milliseconds(), "info", *info)
 	} else {
-		slog.Info("Timer", "name", name, "elapsed", elapsed.Milliseconds())
+		slog.Info(fmt.Sprintf("Timer: %s", name), "elapsed", elapsed.Milliseconds())
 	}
 
 }

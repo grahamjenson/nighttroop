@@ -160,7 +160,7 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 		slog.Error("No files to sync for %s", "key", key)
 		return nil
 	}
-	slog.Info("Encoding to single LZ4", "count", len(paths))
+
 	ctx := context.TODO()
 
 	// Creating the pipes

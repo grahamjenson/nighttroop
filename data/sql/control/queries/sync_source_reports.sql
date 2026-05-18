@@ -15,14 +15,23 @@ ON CONFLICT(uniq_hash) DO UPDATE SET
     last_attempted_sync = CURRENT_TIMESTAMP
 RETURNING *;
 
+
+
 -- name: UpdateSyncSourceReportsSuccess :exec
 UPDATE sync_source_reports
 SET
     updated_at = CURRENT_TIMESTAMP,
-
     last_successful_sync = CURRENT_TIMESTAMP,
 
+    -- Counters
+    total_syncs = total_syncs + 1,
+    total_successful_syncs = total_successful_syncs + 1,
+    
+    consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
+
+    -- Timing
+    last_sync_duration = sqlc.arg(elapsed_ms),
 
     success_ema = CASE
         WHEN success_ema IS NULL THEN CAST(sqlc.arg(elapsed_ms) AS REAL)
@@ -34,11 +43,7 @@ SET
         WHEN total_ema IS NULL THEN CAST(sqlc.arg(elapsed_ms) AS REAL)
         ELSE (0.2 * CAST(sqlc.arg(elapsed_ms) AS REAL))
             + (0.8 * total_ema)
-    END,
-
-    last_sync_duration = sqlc.arg(elapsed_ms),
-
-    previous_sync_error = NULL
+    END
 
 WHERE uniq_hash = sqlc.arg(uniq_hash);
 
@@ -47,10 +52,19 @@ WHERE uniq_hash = sqlc.arg(uniq_hash);
 UPDATE sync_source_reports
 SET
     updated_at = CURRENT_TIMESTAMP,
-    last_attempted_sync = CURRENT_TIMESTAMP,
+    last_failed_sync = CURRENT_TIMESTAMP,
 
-    consecutive_failed_syncs = consecutive_failed_syncs + 1,
+    -- Counters 
+    total_syncs = total_syncs + 1,
     total_failed_syncs = total_failed_syncs + 1,
+    
+    consecutive_failed_syncs = consecutive_failed_syncs + 1,
+    consecutive_successful_syncs = 0,
+
+    previous_sync_error = sqlc.arg(error_message),
+
+    -- Timing
+    last_sync_duration = sqlc.arg(elapsed_ms),
 
     failure_ema = CASE
         WHEN failure_ema IS NULL THEN CAST(sqlc.arg(elapsed_ms) AS REAL)
@@ -62,10 +76,6 @@ SET
         WHEN total_ema IS NULL THEN CAST(sqlc.arg(elapsed_ms) AS REAL)
         ELSE (0.2 * CAST(sqlc.arg(elapsed_ms) AS REAL))
             + (0.8 * total_ema)
-    END,
-
-    previous_sync_error = sqlc.arg(error_message),
-
-    last_sync_duration = sqlc.arg(elapsed_ms)
+    END
 
 WHERE uniq_hash = sqlc.arg(uniq_hash);

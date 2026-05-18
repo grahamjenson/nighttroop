@@ -23,7 +23,7 @@ VALUES (
 ON CONFLICT(uniq_hash) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
     last_attempted_sync = CURRENT_TIMESTAMP
-RETURNING id, created_at, updated_at, uniq_hash, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, consecutive_failed_syncs, total_failed_syncs, previous_sync_error, success_ema, failure_ema, total_ema, last_sync_duration
+RETURNING id, created_at, updated_at, uniq_hash, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_error, total_ema, success_ema, failure_ema, last_sync_duration
 `
 
 // ---- Updates to the Sync Reporting -----
@@ -39,12 +39,16 @@ func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqHash s
 		&i.SyncIntervalSeconds,
 		&i.LastAttemptedSync,
 		&i.LastSuccessfulSync,
-		&i.ConsecutiveFailedSyncs,
+		&i.LastFailedSync,
+		&i.TotalSyncs,
+		&i.TotalSuccessfulSyncs,
 		&i.TotalFailedSyncs,
+		&i.ConsecutiveSuccessfulSyncs,
+		&i.ConsecutiveFailedSyncs,
 		&i.PreviousSyncError,
+		&i.TotalEma,
 		&i.SuccessEma,
 		&i.FailureEma,
-		&i.TotalEma,
 		&i.LastSyncDuration,
 	)
 	return i, err
@@ -54,32 +58,37 @@ const updateSyncSourceReportsFailure = `-- name: UpdateSyncSourceReportsFailure 
 UPDATE sync_source_reports
 SET
     updated_at = CURRENT_TIMESTAMP,
-    last_attempted_sync = CURRENT_TIMESTAMP,
+    last_failed_sync = CURRENT_TIMESTAMP,
 
-    consecutive_failed_syncs = consecutive_failed_syncs + 1,
+    -- Counters 
+    total_syncs = total_syncs + 1,
     total_failed_syncs = total_failed_syncs + 1,
+    
+    consecutive_failed_syncs = consecutive_failed_syncs + 1,
+    consecutive_successful_syncs = 0,
+
+    previous_sync_error = ?1,
+
+    -- Timing
+    last_sync_duration = ?2,
 
     failure_ema = CASE
-        WHEN failure_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
+        WHEN failure_ema IS NULL THEN CAST(?2 AS REAL)
+        ELSE (0.2 * CAST(?2 AS REAL))
             + (0.8 * failure_ema)
     END,
 
     total_ema = CASE
-        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
+        WHEN total_ema IS NULL THEN CAST(?2 AS REAL)
+        ELSE (0.2 * CAST(?2 AS REAL))
             + (0.8 * total_ema)
-    END,
-
-    previous_sync_error = ?2,
-
-    last_sync_duration = ?1
+    END
 
 WHERE uniq_hash = ?3
 `
 
-func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, elapsedMs *int64, errorMessage *string, uniqHash string) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, elapsedMs, errorMessage, uniqHash)
+func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, errorMessage *string, elapsedMs *int64, uniqHash string) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, errorMessage, elapsedMs, uniqHash)
 	return err
 }
 
@@ -87,10 +96,17 @@ const updateSyncSourceReportsSuccess = `-- name: UpdateSyncSourceReportsSuccess 
 UPDATE sync_source_reports
 SET
     updated_at = CURRENT_TIMESTAMP,
-
     last_successful_sync = CURRENT_TIMESTAMP,
 
+    -- Counters
+    total_syncs = total_syncs + 1,
+    total_successful_syncs = total_successful_syncs + 1,
+    
+    consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
+
+    -- Timing
+    last_sync_duration = ?1,
 
     success_ema = CASE
         WHEN success_ema IS NULL THEN CAST(?1 AS REAL)
@@ -102,11 +118,7 @@ SET
         WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
         ELSE (0.2 * CAST(?1 AS REAL))
             + (0.8 * total_ema)
-    END,
-
-    last_sync_duration = ?1,
-
-    previous_sync_error = NULL
+    END
 
 WHERE uniq_hash = ?2
 `

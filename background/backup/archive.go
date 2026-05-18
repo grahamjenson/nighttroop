@@ -39,7 +39,9 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 	if err != nil {
 		slog.Error("Failed to delete user", "subdomain", removeList, "error", err)
 	} else {
-		slog.Info("Deleted user", "subdomain", removeList)
+		if len(removeList) > 0 {
+			slog.Info("Deleted user", "subdomain", removeList)
+		}
 	}
 
 	return nil

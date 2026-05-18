@@ -34,20 +34,35 @@ CREATE TABLE sync_source_reports (
     -- We do not store the actual sync data here, that is on the user, but we need to store the results
     uniq_hash TEXT UNIQUE NOT NULL, -- <type>_<username>_<password>_<dexcom_region> for dexcom, <type>_<url>_<token> for nightscout
 
+    -- Frequency of syncs used to punish bad servers or behaviour
     sync_interval_seconds_reason TEXT, 
     sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
 
-    -- Rather than having a seperate table data_source_sync_report or something, we will simplify by just having this here
+
+
+    -- Timing of syncs
     last_attempted_sync DATETIME,
     last_successful_sync DATETIME,
-    
-    consecutive_failed_syncs INTEGER DEFAULT 0,
+    last_failed_sync DATETIME,
+
+
+    -- Counters
+    total_syncs INTEGER DEFAULT 0,
+    total_successful_syncs INTEGER DEFAULT 0,
     total_failed_syncs INTEGER DEFAULT 0,
+
+    consecutive_successful_syncs INTEGER DEFAULT 0,
+    consecutive_failed_syncs INTEGER DEFAULT 0,
+
+    -- Previous Error Text
     previous_sync_error TEXT, -- stored to show to user as feedback
 
+    -- Timing EMAs to then determine frequency on
+    total_ema REAL,
     success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
     failure_ema REAL,
-    total_ema REAL,
+    
+    -- Duration of last sync in ms
     last_sync_duration INTEGER -- 1 for success, 0 for failure, null for never tried, used for quick checks without having to look at timestamps 
 );
 
