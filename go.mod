@@ -41,6 +41,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
 	golang.org/x/text v0.35.0 // indirect

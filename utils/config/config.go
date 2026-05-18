@@ -89,6 +89,10 @@ type ServerConfig struct {
 
 	// Logging
 	Logger *slog.Logger
+
+	// Dexcom Client ID and Secret
+	DexcomClientID     string
+	DexcomClientSecret string
 }
 
 const USER_GET_LIMIT = 60
@@ -183,6 +187,10 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenvdev, dotenv, "BACKGROUND_SYNC_WORKERS", 5),
 		SyncIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "SYNC_INTERVAL_IN_SECONDS", 30),
+
+		// Dexcom Config
+		DexcomClientID:     configStringSelect(dotenvdev, dotenv, "DEXCOM_CLIENT_ID", ""),
+		DexcomClientSecret: configStringSelect(dotenvdev, dotenv, "DEXCOM_CLIENT_SECRET", ""),
 	}
 
 	serverConfig.RateLimiters = newRateLimiters(serverConfig)

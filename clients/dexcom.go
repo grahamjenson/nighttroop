@@ -1,2 +1,0 @@
-// Dexcom Client
-package clients

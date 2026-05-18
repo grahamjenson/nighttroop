@@ -59,7 +59,8 @@ UPDATE sync_source_reports
 SET
     updated_at = CURRENT_TIMESTAMP,
     last_failed_sync = CURRENT_TIMESTAMP,
-
+    previous_sync_error = ?1,
+    
     -- Counters 
     total_syncs = total_syncs + 1,
     total_failed_syncs = total_failed_syncs + 1,
@@ -67,7 +68,7 @@ SET
     consecutive_failed_syncs = consecutive_failed_syncs + 1,
     consecutive_successful_syncs = 0,
 
-    previous_sync_error = ?1,
+    
 
     -- Timing
     last_sync_duration = ?2,

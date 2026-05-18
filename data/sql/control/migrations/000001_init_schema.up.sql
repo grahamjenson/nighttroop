@@ -54,7 +54,7 @@ CREATE TABLE sync_source_reports (
     uniq_hash TEXT UNIQUE NOT NULL, -- <type>_<username>_<password>_<dexcom_region> for dexcom, <type>_<url>_<token> for nightscout
 
     -- Frequency of syncs used to punish bad servers or behaviour
-    sync_interval_seconds_reason TEXT, 
+    sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default', 
     sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
 
 

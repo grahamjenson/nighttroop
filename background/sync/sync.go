@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"nighttroop.t1d.nz/clients/dexcom_client"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/user"
@@ -231,6 +232,8 @@ func (b *SyncJobs) SyncUserData(syncJob *SyncJobWithData) {
 		return
 	}
 
+	// Check that enought time has passed since the last sync to rerun sync
+
 	startTime := time.Now()
 	switch syncJob.synctype {
 	case consts.SyncSourceTypeNightscout:
@@ -266,6 +269,26 @@ func (b *SyncJobs) syncNightscout(syncJob *SyncJobWithData) error {
 }
 
 func (b *SyncJobs) syncDexcom(syncJob *SyncJobWithData) error {
-	slog.Info("Syncing Dexcom", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "username", syncJob.unencryptedURLOrUsername, "dexcom_region", syncJob.dexcomRegion)
+	slog.Info("Syncing Dexcom", "uniq_hash", syncJob.uniqHash, "subdomains", syncJob.Subdomains(), "sync_type", syncJob.synctype, "dexcom_region", syncJob.dexcomRegion)
+
+	client := dexcom_client.NewClient(syncJob.unencryptedURLOrUsername, syncJob.unencryptedPassword, syncJob.dexcomRegion == consts.DexcomRegionOther)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	egvs, err := client.FetchLastHourEGVs(ctx)
+	if err != nil {
+		return fmt.Errorf("Dexcom Error: %w", err)
+	}
+
+	for _, e := range egvs {
+		fmt.Printf(
+			"%s %d mg/dL %s (%s)\n",
+			e.DisplayTime.Format(time.RFC3339),
+			e.Value,
+			e.TrendArrow,
+			e.Trend,
+		)
+	}
 	return nil
 }
