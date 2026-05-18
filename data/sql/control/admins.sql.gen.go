@@ -22,7 +22,7 @@ type CreateAdminParams struct {
 	TotpSecret string
 }
 
-func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error) {
+func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (*Admin, error) {
 	row := q.queryRow(ctx, q.createAdminStmt, createAdmin,
 		arg.Name,
 		arg.Password,
@@ -39,14 +39,14 @@ func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin
 		&i.CreatedAt,
 		&i.LastSeenAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getAdmin = `-- name: GetAdmin :one
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at FROM admins WHERE name = ?
 `
 
-func (q *Queries) GetAdmin(ctx context.Context, name string) (Admin, error) {
+func (q *Queries) GetAdmin(ctx context.Context, name string) (*Admin, error) {
 	row := q.queryRow(ctx, q.getAdminStmt, getAdmin, name)
 	var i Admin
 	err := row.Scan(
@@ -58,5 +58,5 @@ func (q *Queries) GetAdmin(ctx context.Context, name string) (Admin, error) {
 		&i.CreatedAt,
 		&i.LastSeenAt,
 	)
-	return i, err
+	return &i, err
 }

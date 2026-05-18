@@ -309,7 +309,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 		return nil, nil, fmt.Errorf("user not found in memory")
 	}
 
-	return user, &model, nil
+	return user, model, nil
 }
 
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
@@ -342,7 +342,7 @@ func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMi
 
 }
 
-func getUserDBsFromModels(db *ControlDB, models []control.User) ([]*UserDB, error) {
+func getUserDBsFromModels(db *ControlDB, models []*control.User) ([]*UserDB, error) {
 	users := []*UserDB{}
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()

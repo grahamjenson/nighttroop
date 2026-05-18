@@ -24,6 +24,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.completeJobStmt, err = db.PrepareContext(ctx, completeJob); err != nil {
+		return nil, fmt.Errorf("error preparing query CompleteJob: %w", err)
+	}
 	if q.createAdminStmt, err = db.PrepareContext(ctx, createAdmin); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateAdmin: %w", err)
 	}
@@ -35,6 +38,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteUsersStmt, err = db.PrepareContext(ctx, deleteUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUsers: %w", err)
+	}
+	if q.failJobStmt, err = db.PrepareContext(ctx, failJob); err != nil {
+		return nil, fmt.Errorf("error preparing query FailJob: %w", err)
+	}
+	if q.findJobStmt, err = db.PrepareContext(ctx, findJob); err != nil {
+		return nil, fmt.Errorf("error preparing query FindJob: %w", err)
 	}
 	if q.getAdminStmt, err = db.PrepareContext(ctx, getAdmin); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAdmin: %w", err)
@@ -56,6 +65,18 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
+	}
+	if q.markJobsForConsumerStmt, err = db.PrepareContext(ctx, markJobsForConsumer); err != nil {
+		return nil, fmt.Errorf("error preparing query MarkJobsForConsumer: %w", err)
+	}
+	if q.queueJobIgnoreDupeStmt, err = db.PrepareContext(ctx, queueJobIgnoreDupe); err != nil {
+		return nil, fmt.Errorf("error preparing query QueueJobIgnoreDupe: %w", err)
+	}
+	if q.queueJobReplaceDupeStmt, err = db.PrepareContext(ctx, queueJobReplaceDupe); err != nil {
+		return nil, fmt.Errorf("error preparing query QueueJobReplaceDupe: %w", err)
+	}
+	if q.resetJobsStmt, err = db.PrepareContext(ctx, resetJobs); err != nil {
+		return nil, fmt.Errorf("error preparing query ResetJobs: %w", err)
 	}
 	if q.tESTTruncateUsersStmt, err = db.PrepareContext(ctx, tESTTruncateUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query TESTTruncateUsers: %w", err)
@@ -80,6 +101,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.completeJobStmt != nil {
+		if cerr := q.completeJobStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing completeJobStmt: %w", cerr)
+		}
+	}
 	if q.createAdminStmt != nil {
 		if cerr := q.createAdminStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createAdminStmt: %w", cerr)
@@ -98,6 +124,16 @@ func (q *Queries) Close() error {
 	if q.deleteUsersStmt != nil {
 		if cerr := q.deleteUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUsersStmt: %w", cerr)
+		}
+	}
+	if q.failJobStmt != nil {
+		if cerr := q.failJobStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing failJobStmt: %w", cerr)
+		}
+	}
+	if q.findJobStmt != nil {
+		if cerr := q.findJobStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing findJobStmt: %w", cerr)
 		}
 	}
 	if q.getAdminStmt != nil {
@@ -133,6 +169,26 @@ func (q *Queries) Close() error {
 	if q.getUserStmt != nil {
 		if cerr := q.getUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
+		}
+	}
+	if q.markJobsForConsumerStmt != nil {
+		if cerr := q.markJobsForConsumerStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing markJobsForConsumerStmt: %w", cerr)
+		}
+	}
+	if q.queueJobIgnoreDupeStmt != nil {
+		if cerr := q.queueJobIgnoreDupeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing queueJobIgnoreDupeStmt: %w", cerr)
+		}
+	}
+	if q.queueJobReplaceDupeStmt != nil {
+		if cerr := q.queueJobReplaceDupeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing queueJobReplaceDupeStmt: %w", cerr)
+		}
+	}
+	if q.resetJobsStmt != nil {
+		if cerr := q.resetJobsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing resetJobsStmt: %w", cerr)
 		}
 	}
 	if q.tESTTruncateUsersStmt != nil {
@@ -204,10 +260,13 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                 DBTX
 	tx                                 *sql.Tx
+	completeJobStmt                    *sql.Stmt
 	createAdminStmt                    *sql.Stmt
 	createOrUpdateSyncSourceReportStmt *sql.Stmt
 	createUserStmt                     *sql.Stmt
 	deleteUsersStmt                    *sql.Stmt
+	failJobStmt                        *sql.Stmt
+	findJobStmt                        *sql.Stmt
 	getAdminStmt                       *sql.Stmt
 	getAllUsersStmt                    *sql.Stmt
 	getBatchUsersStmt                  *sql.Stmt
@@ -215,6 +274,10 @@ type Queries struct {
 	getNeverSeenUsersStmt              *sql.Stmt
 	getNotDeletedUsersStmt             *sql.Stmt
 	getUserStmt                        *sql.Stmt
+	markJobsForConsumerStmt            *sql.Stmt
+	queueJobIgnoreDupeStmt             *sql.Stmt
+	queueJobReplaceDupeStmt            *sql.Stmt
+	resetJobsStmt                      *sql.Stmt
 	tESTTruncateUsersStmt              *sql.Stmt
 	truncateEventsStmt                 *sql.Stmt
 	updateSyncSourceReportsFailureStmt *sql.Stmt
@@ -227,10 +290,13 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                 tx,
 		tx:                                 tx,
+		completeJobStmt:                    q.completeJobStmt,
 		createAdminStmt:                    q.createAdminStmt,
 		createOrUpdateSyncSourceReportStmt: q.createOrUpdateSyncSourceReportStmt,
 		createUserStmt:                     q.createUserStmt,
 		deleteUsersStmt:                    q.deleteUsersStmt,
+		failJobStmt:                        q.failJobStmt,
+		findJobStmt:                        q.findJobStmt,
 		getAdminStmt:                       q.getAdminStmt,
 		getAllUsersStmt:                    q.getAllUsersStmt,
 		getBatchUsersStmt:                  q.getBatchUsersStmt,
@@ -238,6 +304,10 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getNeverSeenUsersStmt:              q.getNeverSeenUsersStmt,
 		getNotDeletedUsersStmt:             q.getNotDeletedUsersStmt,
 		getUserStmt:                        q.getUserStmt,
+		markJobsForConsumerStmt:            q.markJobsForConsumerStmt,
+		queueJobIgnoreDupeStmt:             q.queueJobIgnoreDupeStmt,
+		queueJobReplaceDupeStmt:            q.queueJobReplaceDupeStmt,
+		resetJobsStmt:                      q.resetJobsStmt,
 		tESTTruncateUsersStmt:              q.tESTTruncateUsersStmt,
 		truncateEventsStmt:                 q.truncateEventsStmt,
 		updateSyncSourceReportsFailureStmt: q.updateSyncSourceReportsFailureStmt,

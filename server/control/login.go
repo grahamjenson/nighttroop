@@ -139,5 +139,5 @@ func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, us
 	if !config.Security.TOTPValidate(totpToken, totpSecret) {
 		return nil, fmt.Errorf("invalid TOTP token")
 	}
-	return &admin, nil
+	return admin, nil
 }

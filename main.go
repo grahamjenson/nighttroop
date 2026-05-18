@@ -16,8 +16,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	slogmulti "github.com/samber/slog-multi"
 	slogsentry "github.com/samber/slog-sentry/v2"
+	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/background/backup"
-	"nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/config"
@@ -85,14 +85,17 @@ func run() error {
 	//
 	// Background jobs
 	//
-	backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
-	backupJobs.Start()
+	backgroundJobsCtx, backgroundJobsCancel := context.WithCancel(context.Background())
+	background.SetupBackGround(ctx, controlDB)
+	// backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
+	// backupJobs.Start()
 
-	syncJobs := sync.SetupSyncJobs(serverConfig, controlDB)
-	syncJobs.Start()
+	// syncJobs := sync.SetupSyncJobs(serverConfig, controlDB)
+	// syncJobs.Start()
 	//
 	// HTTP
 	// Run web server.
+	fmt.Printf("Starting HTTP server on port %d\n", serverConfig.HostPort)
 	httpServer := setupHTTP(controlDB, serverConfig)
 
 	// Wait for signal.
@@ -105,12 +108,17 @@ func run() error {
 		log.Fatalf("HTTP server Shutdown: %v", err)
 	}
 
-	// Stop the loops
-	syncJobs.Stop()
-	backupJobs.Stop()
+	fmt.Println("Stopping background jobs...")
+	backgroundJobsCancel() // Stop background jobs
+	fmt.Println("Stopped Background jobs")
+	<-backgroundJobsCtx.Done() // Wait for background jobs to stop
+	fmt.Println("Actually Stopped Background jobs")
+	// // Stop the loops
+	// syncJobs.Stop()
+	// backupJobs.Stop()
 
-	// Force a final backup of all dbs
-	backupJobs.BackupToS3() // Force a final backup before exiting
+	// // Force a final backup of all dbs
+	// backupJobs.BackupToS3() // Force a final backup before exiting
 
 	// Close control and User dbs
 	controlDB.Close()

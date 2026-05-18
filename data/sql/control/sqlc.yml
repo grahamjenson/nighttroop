@@ -10,6 +10,7 @@ sql:
 
         emit_prepared_queries: true
         emit_pointers_for_null_types: true
+        emit_result_struct_pointers: true
 
         query_parameter_limit: 3
         
@@ -29,4 +30,11 @@ overrides:
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "AdminRole"
-   
+
+      
+      - column: jobs.consumer_id
+        go_type: "string"
+      - column: jobs.errors
+        go_type:
+          import: "nighttroop.t1d.nz/utils/errors"
+          type: "ErrorList"

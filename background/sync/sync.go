@@ -64,8 +64,8 @@ type SyncJobWithData struct {
 	synctype                 consts.SyncSourceType
 	unencryptedPassword      string
 	unencryptedURLOrUsername string
-	dexcomRegion             consts.DexcomRegion      // only used for dexcom, empty for nightscout
-	report                   control.SyncSourceReport // the current report for this sync source, used to update after the sync with results like success/failure, time taken, etc.
+	dexcomRegion             consts.DexcomRegion       // only used for dexcom, empty for nightscout
+	report                   *control.SyncSourceReport // the current report for this sync source, used to update after the sync with results like success/failure, time taken, etc.
 	// Any other data we want to pass to the job, like the last time we successfully synced, or the number of consecutive failures, etc.
 }
 

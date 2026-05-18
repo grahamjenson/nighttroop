@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 )
 
 type Admin struct {
@@ -34,6 +35,21 @@ type Event struct {
 	Details *string
 	Start   *time.Time
 	End     *time.Time
+}
+
+type Job struct {
+	ID                int64
+	Queue             string
+	Job               string
+	JobStatus         string
+	ExecuteAfter      int64
+	RemainingAttempts int64
+	ConsumerFetchedAt int64
+	FinishedAt        int64
+	DedupingKey       string
+	Errors            errors.ErrorList
+	CreatedAt         int64
+	UpdatedAt         int64
 }
 
 type SqliteSequence struct {

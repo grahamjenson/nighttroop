@@ -27,7 +27,7 @@ RETURNING id, created_at, updated_at, uniq_hash, sync_interval_seconds_reason, s
 `
 
 // ---- Updates to the Sync Reporting -----
-func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqHash string) (SyncSourceReport, error) {
+func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqHash string) (*SyncSourceReport, error) {
 	row := q.queryRow(ctx, q.createOrUpdateSyncSourceReportStmt, createOrUpdateSyncSourceReport, uniqHash)
 	var i SyncSourceReport
 	err := row.Scan(
@@ -51,7 +51,7 @@ func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqHash s
 		&i.FailureEma,
 		&i.LastSyncDuration,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateSyncSourceReportsFailure = `-- name: UpdateSyncSourceReportsFailure :exec

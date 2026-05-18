@@ -14,7 +14,7 @@ INSERT INTO users (subdomain, backup_key_hash)
 VALUES (?, ?) RETURNING id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at
 `
 
-func (q *Queries) CreateUser(ctx context.Context, subdomain string, backupKeyHash string) (User, error) {
+func (q *Queries) CreateUser(ctx context.Context, subdomain string, backupKeyHash string) (*User, error) {
 	row := q.queryRow(ctx, q.createUserStmt, createUser, subdomain, backupKeyHash)
 	var i User
 	err := row.Scan(
@@ -28,7 +28,7 @@ func (q *Queries) CreateUser(ctx context.Context, subdomain string, backupKeyHas
 		&i.LastWriteAt,
 		&i.DeletedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteUsers = `-- name: DeleteUsers :exec
@@ -47,13 +47,13 @@ const getAllUsers = `-- name: GetAllUsers :many
 SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM users
 `
 
-func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
+func (q *Queries) GetAllUsers(ctx context.Context) ([]*User, error) {
 	rows, err := q.query(ctx, q.getAllUsersStmt, getAllUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []*User
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -69,7 +69,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -85,13 +85,13 @@ SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, 
     WHERE batch = ? AND deleted_at IS NULL ORDER BY subdomain DESC
 `
 
-func (q *Queries) GetBatchUsers(ctx context.Context, batch string) ([]User, error) {
+func (q *Queries) GetBatchUsers(ctx context.Context, batch string) ([]*User, error) {
 	rows, err := q.query(ctx, q.getBatchUsersStmt, getBatchUsers, batch)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []*User
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -107,7 +107,7 @@ func (q *Queries) GetBatchUsers(ctx context.Context, batch string) ([]User, erro
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -126,13 +126,13 @@ WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || CAST(?1 AS R
 // @param last_seen_at INT
 // @param last_write_at INT
 // Inactive Users are users that were once active but have stopped, so the assumption is they have data
-func (q *Queries) GetInactiveUsers(ctx context.Context, lastSeenAt float64, lastWriteAt float64) ([]User, error) {
+func (q *Queries) GetInactiveUsers(ctx context.Context, lastSeenAt float64, lastWriteAt float64) ([]*User, error) {
 	rows, err := q.query(ctx, q.getInactiveUsersStmt, getInactiveUsers, lastSeenAt, lastWriteAt)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []*User
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -148,7 +148,7 @@ func (q *Queries) GetInactiveUsers(ctx context.Context, lastSeenAt float64, last
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -175,13 +175,13 @@ SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, 
 //
 //	last_seen_at is null and created_at is more than minutes ago and
 //	OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
-func (q *Queries) GetNeverSeenUsers(ctx context.Context, lastSeenAt float64, lastWriteAt float64) ([]User, error) {
+func (q *Queries) GetNeverSeenUsers(ctx context.Context, lastSeenAt float64, lastWriteAt float64) ([]*User, error) {
 	rows, err := q.query(ctx, q.getNeverSeenUsersStmt, getNeverSeenUsers, lastSeenAt, lastWriteAt)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []*User
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -197,7 +197,7 @@ func (q *Queries) GetNeverSeenUsers(ctx context.Context, lastSeenAt float64, las
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -212,13 +212,13 @@ const getNotDeletedUsers = `-- name: GetNotDeletedUsers :many
 SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM users WHERE deleted_at IS NULL
 `
 
-func (q *Queries) GetNotDeletedUsers(ctx context.Context) ([]User, error) {
+func (q *Queries) GetNotDeletedUsers(ctx context.Context) ([]*User, error) {
 	rows, err := q.query(ctx, q.getNotDeletedUsersStmt, getNotDeletedUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []*User
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -234,7 +234,7 @@ func (q *Queries) GetNotDeletedUsers(ctx context.Context) ([]User, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -249,7 +249,7 @@ const getUser = `-- name: GetUser :one
 SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM users WHERE subdomain = ? AND deleted_at IS NULL
 `
 
-func (q *Queries) GetUser(ctx context.Context, subdomain string) (User, error) {
+func (q *Queries) GetUser(ctx context.Context, subdomain string) (*User, error) {
 	row := q.queryRow(ctx, q.getUserStmt, getUser, subdomain)
 	var i User
 	err := row.Scan(
@@ -263,7 +263,7 @@ func (q *Queries) GetUser(ctx context.Context, subdomain string) (User, error) {
 		&i.LastWriteAt,
 		&i.DeletedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const tESTTruncateUsers = `-- name: TESTTruncateUsers :exec
