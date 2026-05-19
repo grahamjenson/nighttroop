@@ -85,8 +85,9 @@ func run() error {
 	//
 	// Background jobs
 	//
-	backgroundJobsCtx, backgroundJobsCancel := context.WithCancel(context.Background())
-	background.SetupBackGround(ctx, controlDB)
+	backgroundManager := background.NewBackGroundManager(controlDB, serverConfig)
+	backgroundManager.Start()
+	defer backgroundManager.Stop()
 	// backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
 	// backupJobs.Start()
 
@@ -103,16 +104,16 @@ func run() error {
 
 	slog.Info("Received shutdown signal, shutting down gracefully...")
 
-	shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("HTTP server Shutdown: %v", err)
+		slog.Error("HTTP server Shutdown Error", "err", err)
 	}
 
 	fmt.Println("Stopping background jobs...")
-	backgroundJobsCancel() // Stop background jobs
+	backgroundManager.Stop() // Stop background jobs
 	fmt.Println("Stopped Background jobs")
-	<-backgroundJobsCtx.Done() // Wait for background jobs to stop
-	fmt.Println("Actually Stopped Background jobs")
+
 	// // Stop the loops
 	// syncJobs.Stop()
 	// backupJobs.Stop()

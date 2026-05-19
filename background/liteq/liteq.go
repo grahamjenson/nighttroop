@@ -97,10 +97,12 @@ func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*cont
 	return j.queries.MarkJobsForConsumer(ctx, params.Queue, executeAfter, limit)
 }
 
+type WorkerFunc func(context.Context, *control.Job) error
+
 type ConsumeParams struct {
 	Queue             string
 	PoolSize          int
-	Worker            func(context.Context, *control.Job) error
+	Worker            WorkerFunc
 	VisibilityTimeout int64
 	OnEmptySleep      time.Duration
 }
