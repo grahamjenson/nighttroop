@@ -44,11 +44,6 @@ import (
 
 func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams) {
 	var err error
-	_, err = b.controlDB.Queries.CreateOrUpdateSyncSourceReport(context.TODO(), syncJob.UniqueHash)
-	if err != nil {
-		slog.Error("error creating or updating sync source report", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", err)
-		return
-	}
 
 	// TODO CHECK REPORT AND MAKE SURE NOT ABUSING
 	// Check that enought time has passed since the last sync to rerun sync

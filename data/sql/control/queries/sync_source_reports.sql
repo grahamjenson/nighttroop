@@ -1,19 +1,50 @@
+------ MassCreationOfSyncReports
+
+-- name: CreateSyncReportsForAllSyncSources :exec
+INSERT INTO sync_source_reports (unique_hash)
+SELECT us.unique_hash
+FROM user_sync_sources us
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM sync_source_reports sr
+    WHERE sr.unique_hash = us.unique_hash
+);
+
+
+-- return all sync reports that have an associated enabled user_sync_souce
+-- AND have last_attempted_sync is more than sync_interval_seconds ago or last_attempted_sync is null (never attempted)
+
+-- name: GetSyncReportsToRun :many
+SELECT
+    ssr.unique_hash,
+
+    GROUP_CONCAT(us.subdomain) AS subdomains,
+
+    -- pick a deterministic "first" row (important!)
+    CAST(MIN(us.type) AS TEXT) AS type,
+    CAST(MIN(us.url_or_username) AS TEXT) AS url_or_username,
+    CAST(MIN(us.password) AS TEXT) AS password,
+    CAST(MIN(us.dexcom_region) AS TEXT) AS dexcom_region
+
+FROM sync_source_reports ssr
+JOIN user_sync_sources us
+    ON us.unique_hash = ssr.unique_hash
+
+WHERE us.enabled = 1
+  AND (
+      ssr.last_attempted_sync IS NULL
+      OR ssr.last_attempted_sync <= datetime('now', '-' || ssr.sync_interval_seconds || ' seconds')
+  )
+
+GROUP BY ssr.id;
+
 ------ Updates to the Sync Reporting -----
--- name: CreateOrUpdateSyncSourceReport :one
-INSERT INTO sync_source_reports (
-    unique_hash,
-    last_attempted_sync,
-    updated_at
-)
-VALUES (
-    sqlc.arg(unique_hash),
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-)
-ON CONFLICT(unique_hash) DO UPDATE SET
+-- name: UpdateSyncReportAttempt :exec
+UPDATE sync_source_reports
+SET
     updated_at = CURRENT_TIMESTAMP,
     last_attempted_sync = CURRENT_TIMESTAMP
-RETURNING *;
+WHERE unique_hash = sqlc.arg(unique_hash);
 
 
 

@@ -19,13 +19,13 @@ SELECT id, eid, timestamp, device_id, devicebattery, pumpbattery, pumpstatus, pu
 // ----
 // Device Status
 // -----
-func (q *Queries) AllDeviceStatus(ctx context.Context) ([]DeviceStatus, error) {
+func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) {
 	rows, err := q.query(ctx, q.allDeviceStatusStmt, allDeviceStatus)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DeviceStatus
+	var items []*DeviceStatus
 	for rows.Next() {
 		var i DeviceStatus
 		if err := rows.Scan(
@@ -43,7 +43,7 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]DeviceStatus, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -58,13 +58,13 @@ const allDevices = `-- name: AllDevices :many
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at FROM devices ORDER BY created_at DESC
 `
 
-func (q *Queries) AllDevices(ctx context.Context) ([]Device, error) {
+func (q *Queries) AllDevices(ctx context.Context) ([]*Device, error) {
 	rows, err := q.query(ctx, q.allDevicesStmt, allDevices)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Device
+	var items []*Device
 	for rows.Next() {
 		var i Device
 		if err := rows.Scan(
@@ -78,7 +78,7 @@ func (q *Queries) AllDevices(ctx context.Context) ([]Device, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ const getDevice = `-- name: GetDevice :one
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at FROM devices where name = ? LIMIT 1
 `
 
-func (q *Queries) GetDevice(ctx context.Context, name string) (Device, error) {
+func (q *Queries) GetDevice(ctx context.Context, name string) (*Device, error) {
 	row := q.queryRow(ctx, q.getDeviceStmt, getDevice, name)
 	var i Device
 	err := row.Scan(
@@ -126,7 +126,7 @@ func (q *Queries) GetDevice(ctx context.Context, name string) (Device, error) {
 		&i.CreatedAt,
 		&i.LastSeenAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateDeviceLastSeenAt = `-- name: UpdateDeviceLastSeenAt :exec

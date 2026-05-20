@@ -30,14 +30,26 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createAdminStmt, err = db.PrepareContext(ctx, createAdmin); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateAdmin: %w", err)
 	}
-	if q.createOrUpdateSyncSourceReportStmt, err = db.PrepareContext(ctx, createOrUpdateSyncSourceReport); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateOrUpdateSyncSourceReport: %w", err)
+	if q.createDexcomSyncSourceStmt, err = db.PrepareContext(ctx, createDexcomSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateDexcomSyncSource: %w", err)
+	}
+	if q.createNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, createNightscoutSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateNightscoutSyncSource: %w", err)
+	}
+	if q.createSyncReportsForAllSyncSourcesStmt, err = db.PrepareContext(ctx, createSyncReportsForAllSyncSources); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSyncReportsForAllSyncSources: %w", err)
 	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
+	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
+	}
 	if q.deleteUsersStmt, err = db.PrepareContext(ctx, deleteUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUsers: %w", err)
+	}
+	if q.disableNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, disableNightscoutSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query DisableNightscoutSyncSource: %w", err)
 	}
 	if q.failJobStmt, err = db.PrepareContext(ctx, failJob); err != nil {
 		return nil, fmt.Errorf("error preparing query FailJob: %w", err)
@@ -47,6 +59,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getAdminStmt, err = db.PrepareContext(ctx, getAdmin); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAdmin: %w", err)
+	}
+	if q.getAllUserSyncSourcesForUserStmt, err = db.PrepareContext(ctx, getAllUserSyncSourcesForUser); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllUserSyncSourcesForUser: %w", err)
 	}
 	if q.getAllUsersStmt, err = db.PrepareContext(ctx, getAllUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllUsers: %w", err)
@@ -62,6 +77,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getNotDeletedUsersStmt, err = db.PrepareContext(ctx, getNotDeletedUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNotDeletedUsers: %w", err)
+	}
+	if q.getSyncReportsToRunStmt, err = db.PrepareContext(ctx, getSyncReportsToRun); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSyncReportsToRun: %w", err)
 	}
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
@@ -83,6 +101,21 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.truncateEventsStmt, err = db.PrepareContext(ctx, truncateEvents); err != nil {
 		return nil, fmt.Errorf("error preparing query TruncateEvents: %w", err)
+	}
+	if q.updateDexcomSyncSourceStmt, err = db.PrepareContext(ctx, updateDexcomSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSource: %w", err)
+	}
+	if q.updateDexcomSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateDexcomSyncSourceWithoutPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSourceWithoutPassword: %w", err)
+	}
+	if q.updateNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSource: %w", err)
+	}
+	if q.updateNightscoutSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSourceWithoutPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSourceWithoutPassword: %w", err)
+	}
+	if q.updateSyncReportAttemptStmt, err = db.PrepareContext(ctx, updateSyncReportAttempt); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSyncReportAttempt: %w", err)
 	}
 	if q.updateSyncSourceReportsFailureStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsFailure); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsFailure: %w", err)
@@ -111,9 +144,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createAdminStmt: %w", cerr)
 		}
 	}
-	if q.createOrUpdateSyncSourceReportStmt != nil {
-		if cerr := q.createOrUpdateSyncSourceReportStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createOrUpdateSyncSourceReportStmt: %w", cerr)
+	if q.createDexcomSyncSourceStmt != nil {
+		if cerr := q.createDexcomSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createDexcomSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.createNightscoutSyncSourceStmt != nil {
+		if cerr := q.createNightscoutSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createNightscoutSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.createSyncReportsForAllSyncSourcesStmt != nil {
+		if cerr := q.createSyncReportsForAllSyncSourcesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSyncReportsForAllSyncSourcesStmt: %w", cerr)
 		}
 	}
 	if q.createUserStmt != nil {
@@ -121,9 +164,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
 		}
 	}
+	if q.deleteSyncSourceStmt != nil {
+		if cerr := q.deleteSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSyncSourceStmt: %w", cerr)
+		}
+	}
 	if q.deleteUsersStmt != nil {
 		if cerr := q.deleteUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUsersStmt: %w", cerr)
+		}
+	}
+	if q.disableNightscoutSyncSourceStmt != nil {
+		if cerr := q.disableNightscoutSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing disableNightscoutSyncSourceStmt: %w", cerr)
 		}
 	}
 	if q.failJobStmt != nil {
@@ -139,6 +192,11 @@ func (q *Queries) Close() error {
 	if q.getAdminStmt != nil {
 		if cerr := q.getAdminStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAdminStmt: %w", cerr)
+		}
+	}
+	if q.getAllUserSyncSourcesForUserStmt != nil {
+		if cerr := q.getAllUserSyncSourcesForUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllUserSyncSourcesForUserStmt: %w", cerr)
 		}
 	}
 	if q.getAllUsersStmt != nil {
@@ -164,6 +222,11 @@ func (q *Queries) Close() error {
 	if q.getNotDeletedUsersStmt != nil {
 		if cerr := q.getNotDeletedUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getNotDeletedUsersStmt: %w", cerr)
+		}
+	}
+	if q.getSyncReportsToRunStmt != nil {
+		if cerr := q.getSyncReportsToRunStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSyncReportsToRunStmt: %w", cerr)
 		}
 	}
 	if q.getUserStmt != nil {
@@ -199,6 +262,31 @@ func (q *Queries) Close() error {
 	if q.truncateEventsStmt != nil {
 		if cerr := q.truncateEventsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing truncateEventsStmt: %w", cerr)
+		}
+	}
+	if q.updateDexcomSyncSourceStmt != nil {
+		if cerr := q.updateDexcomSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateDexcomSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.updateDexcomSyncSourceWithoutPasswordStmt != nil {
+		if cerr := q.updateDexcomSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateDexcomSyncSourceWithoutPasswordStmt: %w", cerr)
+		}
+	}
+	if q.updateNightscoutSyncSourceStmt != nil {
+		if cerr := q.updateNightscoutSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateNightscoutSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.updateNightscoutSyncSourceWithoutPasswordStmt != nil {
+		if cerr := q.updateNightscoutSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateNightscoutSyncSourceWithoutPasswordStmt: %w", cerr)
+		}
+	}
+	if q.updateSyncReportAttemptStmt != nil {
+		if cerr := q.updateSyncReportAttemptStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSyncReportAttemptStmt: %w", cerr)
 		}
 	}
 	if q.updateSyncSourceReportsFailureStmt != nil {
@@ -258,61 +346,83 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                 DBTX
-	tx                                 *sql.Tx
-	completeJobStmt                    *sql.Stmt
-	createAdminStmt                    *sql.Stmt
-	createOrUpdateSyncSourceReportStmt *sql.Stmt
-	createUserStmt                     *sql.Stmt
-	deleteUsersStmt                    *sql.Stmt
-	failJobStmt                        *sql.Stmt
-	findJobStmt                        *sql.Stmt
-	getAdminStmt                       *sql.Stmt
-	getAllUsersStmt                    *sql.Stmt
-	getBatchUsersStmt                  *sql.Stmt
-	getInactiveUsersStmt               *sql.Stmt
-	getNeverSeenUsersStmt              *sql.Stmt
-	getNotDeletedUsersStmt             *sql.Stmt
-	getUserStmt                        *sql.Stmt
-	markJobsForConsumerStmt            *sql.Stmt
-	queueJobIgnoreDupeStmt             *sql.Stmt
-	queueJobReplaceDupeStmt            *sql.Stmt
-	resetJobsStmt                      *sql.Stmt
-	tESTTruncateUsersStmt              *sql.Stmt
-	truncateEventsStmt                 *sql.Stmt
-	updateSyncSourceReportsFailureStmt *sql.Stmt
-	updateSyncSourceReportsSuccessStmt *sql.Stmt
-	updateUserLastSeenAtStmt           *sql.Stmt
-	updateUserLastWriteAtStmt          *sql.Stmt
+	db                                            DBTX
+	tx                                            *sql.Tx
+	completeJobStmt                               *sql.Stmt
+	createAdminStmt                               *sql.Stmt
+	createDexcomSyncSourceStmt                    *sql.Stmt
+	createNightscoutSyncSourceStmt                *sql.Stmt
+	createSyncReportsForAllSyncSourcesStmt        *sql.Stmt
+	createUserStmt                                *sql.Stmt
+	deleteSyncSourceStmt                          *sql.Stmt
+	deleteUsersStmt                               *sql.Stmt
+	disableNightscoutSyncSourceStmt               *sql.Stmt
+	failJobStmt                                   *sql.Stmt
+	findJobStmt                                   *sql.Stmt
+	getAdminStmt                                  *sql.Stmt
+	getAllUserSyncSourcesForUserStmt              *sql.Stmt
+	getAllUsersStmt                               *sql.Stmt
+	getBatchUsersStmt                             *sql.Stmt
+	getInactiveUsersStmt                          *sql.Stmt
+	getNeverSeenUsersStmt                         *sql.Stmt
+	getNotDeletedUsersStmt                        *sql.Stmt
+	getSyncReportsToRunStmt                       *sql.Stmt
+	getUserStmt                                   *sql.Stmt
+	markJobsForConsumerStmt                       *sql.Stmt
+	queueJobIgnoreDupeStmt                        *sql.Stmt
+	queueJobReplaceDupeStmt                       *sql.Stmt
+	resetJobsStmt                                 *sql.Stmt
+	tESTTruncateUsersStmt                         *sql.Stmt
+	truncateEventsStmt                            *sql.Stmt
+	updateDexcomSyncSourceStmt                    *sql.Stmt
+	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
+	updateNightscoutSyncSourceStmt                *sql.Stmt
+	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
+	updateSyncReportAttemptStmt                   *sql.Stmt
+	updateSyncSourceReportsFailureStmt            *sql.Stmt
+	updateSyncSourceReportsSuccessStmt            *sql.Stmt
+	updateUserLastSeenAtStmt                      *sql.Stmt
+	updateUserLastWriteAtStmt                     *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                 tx,
-		tx:                                 tx,
-		completeJobStmt:                    q.completeJobStmt,
-		createAdminStmt:                    q.createAdminStmt,
-		createOrUpdateSyncSourceReportStmt: q.createOrUpdateSyncSourceReportStmt,
-		createUserStmt:                     q.createUserStmt,
-		deleteUsersStmt:                    q.deleteUsersStmt,
-		failJobStmt:                        q.failJobStmt,
-		findJobStmt:                        q.findJobStmt,
-		getAdminStmt:                       q.getAdminStmt,
-		getAllUsersStmt:                    q.getAllUsersStmt,
-		getBatchUsersStmt:                  q.getBatchUsersStmt,
-		getInactiveUsersStmt:               q.getInactiveUsersStmt,
-		getNeverSeenUsersStmt:              q.getNeverSeenUsersStmt,
-		getNotDeletedUsersStmt:             q.getNotDeletedUsersStmt,
-		getUserStmt:                        q.getUserStmt,
-		markJobsForConsumerStmt:            q.markJobsForConsumerStmt,
-		queueJobIgnoreDupeStmt:             q.queueJobIgnoreDupeStmt,
-		queueJobReplaceDupeStmt:            q.queueJobReplaceDupeStmt,
-		resetJobsStmt:                      q.resetJobsStmt,
-		tESTTruncateUsersStmt:              q.tESTTruncateUsersStmt,
-		truncateEventsStmt:                 q.truncateEventsStmt,
-		updateSyncSourceReportsFailureStmt: q.updateSyncSourceReportsFailureStmt,
-		updateSyncSourceReportsSuccessStmt: q.updateSyncSourceReportsSuccessStmt,
-		updateUserLastSeenAtStmt:           q.updateUserLastSeenAtStmt,
-		updateUserLastWriteAtStmt:          q.updateUserLastWriteAtStmt,
+		db:                                     tx,
+		tx:                                     tx,
+		completeJobStmt:                        q.completeJobStmt,
+		createAdminStmt:                        q.createAdminStmt,
+		createDexcomSyncSourceStmt:             q.createDexcomSyncSourceStmt,
+		createNightscoutSyncSourceStmt:         q.createNightscoutSyncSourceStmt,
+		createSyncReportsForAllSyncSourcesStmt: q.createSyncReportsForAllSyncSourcesStmt,
+		createUserStmt:                         q.createUserStmt,
+		deleteSyncSourceStmt:                   q.deleteSyncSourceStmt,
+		deleteUsersStmt:                        q.deleteUsersStmt,
+		disableNightscoutSyncSourceStmt:        q.disableNightscoutSyncSourceStmt,
+		failJobStmt:                            q.failJobStmt,
+		findJobStmt:                            q.findJobStmt,
+		getAdminStmt:                           q.getAdminStmt,
+		getAllUserSyncSourcesForUserStmt:       q.getAllUserSyncSourcesForUserStmt,
+		getAllUsersStmt:                        q.getAllUsersStmt,
+		getBatchUsersStmt:                      q.getBatchUsersStmt,
+		getInactiveUsersStmt:                   q.getInactiveUsersStmt,
+		getNeverSeenUsersStmt:                  q.getNeverSeenUsersStmt,
+		getNotDeletedUsersStmt:                 q.getNotDeletedUsersStmt,
+		getSyncReportsToRunStmt:                q.getSyncReportsToRunStmt,
+		getUserStmt:                            q.getUserStmt,
+		markJobsForConsumerStmt:                q.markJobsForConsumerStmt,
+		queueJobIgnoreDupeStmt:                 q.queueJobIgnoreDupeStmt,
+		queueJobReplaceDupeStmt:                q.queueJobReplaceDupeStmt,
+		resetJobsStmt:                          q.resetJobsStmt,
+		tESTTruncateUsersStmt:                  q.tESTTruncateUsersStmt,
+		truncateEventsStmt:                     q.truncateEventsStmt,
+		updateDexcomSyncSourceStmt:             q.updateDexcomSyncSourceStmt,
+		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
+		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
+		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
+		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
+		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
+		updateSyncSourceReportsSuccessStmt:            q.updateSyncSourceReportsSuccessStmt,
+		updateUserLastSeenAtStmt:                      q.updateUserLastSeenAtStmt,
+		updateUserLastWriteAtStmt:                     q.updateUserLastWriteAtStmt,
 	}
 }

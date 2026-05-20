@@ -8,7 +8,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.71
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.1
 	github.com/go-chi/chi/v5 v5.2.3
-	github.com/mattn/go-sqlite3 v1.14.25
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/pquerna/otp v1.5.0
 	github.com/tink-crypto/tink-go/v2 v2.6.0
@@ -33,6 +32,7 @@ require (
 	github.com/getsentry/sentry-go v0.46.1 // indirect
 	github.com/golang-migrate/migrate/v4 v4.19.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/mattn/go-sqlite3 v1.14.44 // indirect
 	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-chi v1.19.0 // indirect

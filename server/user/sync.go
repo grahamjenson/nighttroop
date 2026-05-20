@@ -6,11 +6,12 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/templates"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -24,7 +25,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 
 		acceptType := httputils.GetAcceptType(r)
 		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
+
 		ctx := r.Context()
 
 		if acceptType == httputils.AcceptTypeJSON {
@@ -34,7 +35,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 			return
 		}
 
-		nightscout, dexcom, err := userdb.GetAllSyncSources(ctx)
+		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -104,8 +105,14 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 
 func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig, syncSourceType consts.SyncSourceType) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if allowed, seconds := httputils.UserUpdateSyncAllowed(config, r); !allowed {
+			http.Error(w, "Too Many Requests wait "+strconv.Itoa(seconds)+" seconds", http.StatusTooManyRequests)
+			return
+		}
+
 		acceptType := httputils.GetAcceptType(r)
-		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
+		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+
 		ctx := r.Context()
 
 		// 1. Parse and validate form inputs
@@ -114,7 +121,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 			return
 		}
 
-		nightscout, dexcom, err := userdb.GetAllSyncSources(ctx)
+		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -123,9 +130,9 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		if syncSourceType == consts.SyncSourceTypeNightscout {
-			err = saveNightScoutSettings(ctx, userdb, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
+			err = saveNightScoutSettings(ctx, subdomain, controlDB, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
 		} else {
-			err = saveDexcomSettings(ctx, userdb, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
+			err = saveDexcomSettings(ctx, subdomain, controlDB, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
 		}
 
 		if err != nil {
@@ -158,7 +165,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
-		userdb, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
+		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
 
 		// 1. Extract ID from URL path
 		typeStr := chi.URLParam(r, "type")
@@ -173,7 +180,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 			return
 		}
 
-		err = userdb.Queries.DeleteSyncSource(r.Context(), type_)
+		err = controlDB.Queries.DeleteSyncSource(r.Context(), type_, subdomain)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
@@ -205,7 +212,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 // UTIL METHODS
 ////////
 
-func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config config.ServerConfig, nightscout *user.SyncSource, nsUrl string, nsPassword string, enabled bool) error {
+func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config config.ServerConfig, nightscout *control.UserSyncSource, nsUrl string, nsPassword string, enabled bool) error {
 
 	if nsUrl == "" {
 		return fmt.Errorf("Nightscout URL cannot be empty. ")
@@ -245,7 +252,8 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 	}
 
 	if nightscout == nil { // NEW
-		err = userdb.Queries.CreateNightscoutSyncSource(ctx, user.CreateNightscoutSyncSourceParams{
+		err = controlDB.Queries.CreateNightscoutSyncSource(ctx, control.CreateNightscoutSyncSourceParams{
+			Subdomain:     subdomain,
 			Password:      encPassword,
 			Enabled:       enabled,
 			UrlOrUsername: encUrl,
@@ -258,10 +266,15 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 	}
 
 	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = userdb.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, enabled, encUrl, uniqHash)
-
+		err = controlDB.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, control.UpdateNightscoutSyncSourceWithoutPasswordParams{
+			Subdomain:     subdomain,
+			Enabled:       enabled,
+			UrlOrUsername: encUrl,
+			UniqueHash:    uniqHash,
+		})
 	} else {
-		err = userdb.Queries.UpdateNightscoutSyncSource(ctx, user.UpdateNightscoutSyncSourceParams{
+		err = controlDB.Queries.UpdateNightscoutSyncSource(ctx, control.UpdateNightscoutSyncSourceParams{
+			Subdomain:     subdomain,
 			Password:      encPassword,
 			Enabled:       enabled,
 			UrlOrUsername: encUrl,
@@ -323,7 +336,7 @@ func nsURLNormalizeValidate(rawUrl string, config config.ServerConfig) (string, 
 	return normalizedUrl, nil
 }
 
-func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *security.SecurityConfig, dexcom *user.SyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
+func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, security *security.SecurityConfig, dexcom *control.UserSyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
 	var err error
 	errMsg := ""
 	if dexUsername == "" {
@@ -354,7 +367,8 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 
 	if dexcom == nil { // NEW
 
-		err = userdb.Queries.CreateDexcomSyncSource(ctx, user.CreateDexcomSyncSourceParams{
+		err = controlDB.Queries.CreateDexcomSyncSource(ctx, control.CreateDexcomSyncSourceParams{
+			Subdomain:     subdomain,
 			Password:      encPassword,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
@@ -368,14 +382,16 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 	}
 
 	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = userdb.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, user.UpdateDexcomSyncSourceWithoutPasswordParams{
+		err = controlDB.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, control.UpdateDexcomSyncSourceWithoutPasswordParams{
+			Subdomain:     subdomain,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
 			DexcomRegion:  region,
 			UniqueHash:    uniqHash,
 		})
 	} else {
-		err = userdb.Queries.UpdateDexcomSyncSource(ctx, user.UpdateDexcomSyncSourceParams{
+		err = controlDB.Queries.UpdateDexcomSyncSource(ctx, control.UpdateDexcomSyncSourceParams{
+			Subdomain:     subdomain,
 			Password:      encPassword,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,

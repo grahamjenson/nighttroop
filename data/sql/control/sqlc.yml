@@ -38,3 +38,15 @@ overrides:
         go_type:
           import: "nighttroop.t1d.nz/utils/errors"
           type: "ErrorList"
+
+      - column: "user_sync_sources.dexcom_region"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "DexcomRegion"
+      - column: "user_sync_sources.type"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "SyncSourceType"
+      - column: "user_sync_sources.enabled"
+        go_type:
+          type: "bool"

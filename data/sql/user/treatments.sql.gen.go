@@ -18,13 +18,13 @@ SELECT id, eid, value, type, created_at FROM bolus ORDER BY created_at DESC
 // -----
 // BOLUSES
 // -------
-func (q *Queries) AllBoluses(ctx context.Context) ([]Bolus, error) {
+func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 	rows, err := q.query(ctx, q.allBolusesStmt, allBoluses)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Bolus
+	var items []*Bolus
 	for rows.Next() {
 		var i Bolus
 		if err := rows.Scan(
@@ -36,7 +36,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]Bolus, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -55,13 +55,13 @@ SELECT id, eid, amount, created_at FROM carbs ORDER BY created_at DESC
 // -----
 // CARBS
 // -----
-func (q *Queries) AllCarbs(ctx context.Context) ([]Carb, error) {
+func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 	rows, err := q.query(ctx, q.allCarbsStmt, allCarbs)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Carb
+	var items []*Carb
 	for rows.Next() {
 		var i Carb
 		if err := rows.Scan(
@@ -72,7 +72,7 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]Carb, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -91,13 +91,13 @@ SELECT id, created_at, eid, start, duration, value FROM temp_basals ORDER BY cre
 // ----
 // temp basal
 // -----
-func (q *Queries) AllTempBasals(ctx context.Context) ([]TempBasal, error) {
+func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 	rows, err := q.query(ctx, q.allTempBasalsStmt, allTempBasals)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TempBasal
+	var items []*TempBasal
 	for rows.Next() {
 		var i TempBasal
 		if err := rows.Scan(
@@ -110,7 +110,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]TempBasal, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -129,13 +129,13 @@ SELECT id, created_at, eid, start, duration, hightarget, lowtarget FROM temp_tar
 // ----
 // Temp Targets
 // -----
-func (q *Queries) AllTempTargets(ctx context.Context) ([]TempTarget, error) {
+func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 	rows, err := q.query(ctx, q.allTempTargetsStmt, allTempTargets)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TempTarget
+	var items []*TempTarget
 	for rows.Next() {
 		var i TempTarget
 		if err := rows.Scan(
@@ -149,7 +149,7 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]TempTarget, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

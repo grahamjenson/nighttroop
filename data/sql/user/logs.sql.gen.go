@@ -14,13 +14,13 @@ const allEvents = `-- name: AllEvents :many
 SELECT id, type, details, start_at, end_at FROM events ORDER BY start_at DESC
 `
 
-func (q *Queries) AllEvents(ctx context.Context) ([]Event, error) {
+func (q *Queries) AllEvents(ctx context.Context) ([]*Event, error) {
 	rows, err := q.query(ctx, q.allEventsStmt, allEvents)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Event
+	var items []*Event
 	for rows.Next() {
 		var i Event
 		if err := rows.Scan(
@@ -32,7 +32,7 @@ func (q *Queries) AllEvents(ctx context.Context) ([]Event, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

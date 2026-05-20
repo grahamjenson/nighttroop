@@ -92,6 +92,26 @@ CREATE TABLE sync_source_reports (
     last_sync_duration INTEGER -- 1 for success, 0 for failure, null for never tried, used for quick checks without having to look at timestamps 
 );
 
+CREATE TABLE user_sync_sources (
+    -- Nightscout/Dexcom
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subdomain TEXT NOT NULL, -- only for nightscout, dexcom can leave null
+    type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
+
+    url_or_username TEXT NOT NULL, -- url for nightscout, username for dexcom
+    password TEXT NOT NULL, -- or ns token
+    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
+
+    unique_hash TEXT NOT NULL,
+
+    -- Unique contraint of subdomain and type
+    UNIQUE(subdomain, type)
+);
+
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT UNIQUE NOT NULL,

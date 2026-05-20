@@ -92,18 +92,6 @@ type SqliteSequence struct {
 	Seq  interface{}
 }
 
-type SyncSource struct {
-	ID            int64
-	Type          consts.SyncSourceType
-	UrlOrUsername string
-	Password      string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Enabled       bool
-	UniqueHash    string
-	DexcomRegion  consts.DexcomRegion
-}
-
 type TempBasal struct {
 	ID        int64
 	CreatedAt time.Time

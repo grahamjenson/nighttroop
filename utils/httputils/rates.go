@@ -35,6 +35,14 @@ func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, i
 	return AllowAll(writeLimiter, deviceLimiter)
 }
 
+func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
+
+	writeLimiter := serverConfig.RateLimiters.UserUpdateSyncLimiter(userSubdomain)
+
+	return AllowAll(writeLimiter)
+}
+
 // //
 // Utils Methods
 // //

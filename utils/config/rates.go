@@ -104,6 +104,10 @@ func (r *RateLimiters) UserPOSTLimiter(userId string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userId, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
 }
 
+func (r *RateLimiters) UserUpdateSyncLimiter(userID string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userID, float64(r.serverConfig.UserUpdateSyncPerMinuteLimit), r.serverConfig.UserUpdateSyncPerMinuteBurst)
+}
+
 func (r *RateLimiters) UserLoginAllow(userID string, ip string) (bool, int) {
 	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, userID, float64(r.serverConfig.UserLoginPerMinuteLimit), r.serverConfig.UserLoginPerMinuteBurst)
 	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, float64(r.serverConfig.UserLoginPerMinuteLimit), r.serverConfig.UserLoginPerMinuteBurst)

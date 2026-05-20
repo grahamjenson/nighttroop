@@ -200,7 +200,7 @@ func getTheDeviceModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromT
 	if err != nil {
 		return nil, fmt.Errorf("device not found: %w", err)
 	}
-	return &device, nil
+	return device, nil
 }
 
 func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*user.Device, error) {
@@ -217,7 +217,7 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 		return nil, fmt.Errorf("invalid password")
 	}
 
-	return &device, nil
+	return device, nil
 }
 
 func deviceRequiresTOTPValidation(device *user.Device) bool {

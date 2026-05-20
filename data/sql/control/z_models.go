@@ -90,3 +90,16 @@ type User struct {
 	LastWriteAt      *time.Time
 	DeletedAt        *time.Time
 }
+
+type UserSyncSource struct {
+	ID            int64
+	Subdomain     string
+	Type          consts.SyncSourceType
+	UrlOrUsername string
+	Password      string
+	DexcomRegion  consts.DexcomRegion
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Enabled       bool
+	UniqueHash    string
+}

@@ -366,6 +366,26 @@ func getUserDBsFromModels(db *ControlDB, models []*control.User) ([]*UserDB, err
 	return users, nil
 }
 
+func (db *ControlDB) GetAllUserSyncSources(ctx context.Context, subdomain string) (nightscout *control.UserSyncSource, dexcom *control.UserSyncSource, err error) {
+	// TODO: This might become a problem we could make faster with a dirty flag or something
+	sync_sources, err := db.Queries.GetAllUserSyncSourcesForUser(ctx, subdomain)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
+	}
+
+	for _, ss := range sync_sources {
+		if ss.Type == consts.SyncSourceTypeNightscout {
+			nightscout = ss
+		}
+		if ss.Type == consts.SyncSourceTypeDexcom {
+			dexcom = ss
+		}
+	}
+
+	return nightscout, dexcom, nil
+
+}
+
 ////
 // End of Get USER Methods
 ////

@@ -51,10 +51,12 @@ type ServerConfig struct {
 	UserLoginPerMinuteBurst int
 
 	// Authenticated Rate Limits
-	UserGETPerMinuteLimit  int
-	UserGETPerMinuteBurst  int
-	UserPOSTPerMinuteLimit int
-	UserPOSTPerMinuteBurst int
+	UserGETPerMinuteLimit        int
+	UserGETPerMinuteBurst        int
+	UserPOSTPerMinuteLimit       int
+	UserPOSTPerMinuteBurst       int
+	UserUpdateSyncPerMinuteLimit int
+	UserUpdateSyncPerMinuteBurst int
 
 	// User Create Rate Limits
 	UserCreateGlobalPerMinuteLimit int
@@ -164,11 +166,12 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
 
 		// Authed User Rate Limits
-		UserGETPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_LIMIT", USER_GET_LIMIT),
-		UserGETPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_BURST", USER_GET_LIMIT*2),
-
-		UserPOSTPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_LIMIT", USER_POST_LIMIT),
-		UserPOSTPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
+		UserGETPerMinuteLimit:        configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_LIMIT", USER_GET_LIMIT),
+		UserGETPerMinuteBurst:        configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_BURST", USER_GET_LIMIT*2),
+		UserPOSTPerMinuteLimit:       configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_LIMIT", USER_POST_LIMIT),
+		UserPOSTPerMinuteBurst:       configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
+		UserUpdateSyncPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop users from updating sync settings too much
+		UserUpdateSyncPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_UPDATE_SYNC_PER_MINUTE_BURST", 4),
 
 		// User Limits
 		MaxUsers:          configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),

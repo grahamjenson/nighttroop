@@ -96,22 +96,6 @@ UNIQUE(eid)
 
 CREATE TABLE sqlite_sequence(name,seq);
 
-CREATE TABLE sync_sources (
-    -- Nightscout/Dexcom
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT UNIQUE NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
-    url_or_username TEXT NOT NULL, -- url for nightscout, username for dexcom
-    password TEXT NOT NULL, -- or ns token
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
-    
-    unique_hash TEXT UNIQUE NOT NULL, -- hash of url/username and password to identify this source for syncing
-
-    -- DEXCOM
-    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER' -- USA or OTHER
-);
-
 CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

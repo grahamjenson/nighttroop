@@ -9,49 +9,103 @@ import (
 	"context"
 )
 
-const createOrUpdateSyncSourceReport = `-- name: CreateOrUpdateSyncSourceReport :one
-INSERT INTO sync_source_reports (
-    unique_hash,
-    last_attempted_sync,
-    updated_at
+const createSyncReportsForAllSyncSources = `-- name: CreateSyncReportsForAllSyncSources :exec
+
+INSERT INTO sync_source_reports (unique_hash)
+SELECT us.unique_hash
+FROM user_sync_sources us
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM sync_source_reports sr
+    WHERE sr.unique_hash = us.unique_hash
 )
-VALUES (
-    ?1,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-)
-ON CONFLICT(unique_hash) DO UPDATE SET
+`
+
+// ---- MassCreationOfSyncReports
+func (q *Queries) CreateSyncReportsForAllSyncSources(ctx context.Context) error {
+	_, err := q.exec(ctx, q.createSyncReportsForAllSyncSourcesStmt, createSyncReportsForAllSyncSources)
+	return err
+}
+
+const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
+
+SELECT
+    ssr.unique_hash,
+
+    GROUP_CONCAT(us.subdomain) AS subdomains,
+
+    -- pick a deterministic "first" row (important!)
+    CAST(MIN(us.type) AS TEXT) AS type,
+    CAST(MIN(us.url_or_username) AS TEXT) AS url_or_username,
+    CAST(MIN(us.password) AS TEXT) AS password,
+    CAST(MIN(us.dexcom_region) AS TEXT) AS dexcom_region
+
+FROM sync_source_reports ssr
+JOIN user_sync_sources us
+    ON us.unique_hash = ssr.unique_hash
+
+WHERE us.enabled = 1
+  AND (
+      ssr.last_attempted_sync IS NULL
+      OR ssr.last_attempted_sync <= datetime('now', '-' || ssr.sync_interval_seconds || ' seconds')
+  )
+
+GROUP BY ssr.id
+`
+
+type GetSyncReportsToRunRow struct {
+	UniqueHash    string
+	Subdomains    string
+	Type          string
+	UrlOrUsername string
+	Password      string
+	DexcomRegion  string
+}
+
+// return all sync reports that have an associated enabled user_sync_souce
+// AND have last_attempted_sync is more than sync_interval_seconds ago or last_attempted_sync is null (never attempted)
+func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*GetSyncReportsToRunRow, error) {
+	rows, err := q.query(ctx, q.getSyncReportsToRunStmt, getSyncReportsToRun)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetSyncReportsToRunRow
+	for rows.Next() {
+		var i GetSyncReportsToRunRow
+		if err := rows.Scan(
+			&i.UniqueHash,
+			&i.Subdomains,
+			&i.Type,
+			&i.UrlOrUsername,
+			&i.Password,
+			&i.DexcomRegion,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateSyncReportAttempt = `-- name: UpdateSyncReportAttempt :exec
+UPDATE sync_source_reports
+SET
     updated_at = CURRENT_TIMESTAMP,
     last_attempted_sync = CURRENT_TIMESTAMP
-RETURNING id, created_at, updated_at, unique_hash, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_error, total_ema, success_ema, failure_ema, last_sync_duration
+WHERE unique_hash = ?1
 `
 
 // ---- Updates to the Sync Reporting -----
-func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqueHash string) (*SyncSourceReport, error) {
-	row := q.queryRow(ctx, q.createOrUpdateSyncSourceReportStmt, createOrUpdateSyncSourceReport, uniqueHash)
-	var i SyncSourceReport
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UniqueHash,
-		&i.SyncIntervalSecondsReason,
-		&i.SyncIntervalSeconds,
-		&i.LastAttemptedSync,
-		&i.LastSuccessfulSync,
-		&i.LastFailedSync,
-		&i.TotalSyncs,
-		&i.TotalSuccessfulSyncs,
-		&i.TotalFailedSyncs,
-		&i.ConsecutiveSuccessfulSyncs,
-		&i.ConsecutiveFailedSyncs,
-		&i.PreviousSyncError,
-		&i.TotalEma,
-		&i.SuccessEma,
-		&i.FailureEma,
-		&i.LastSyncDuration,
-	)
-	return &i, err
+func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, uniqueHash string) error {
+	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, uniqueHash)
+	return err
 }
 
 const updateSyncSourceReportsFailure = `-- name: UpdateSyncSourceReportsFailure :exec

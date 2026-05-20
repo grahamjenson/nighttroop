@@ -90,23 +90,3 @@ func (db *UserDB) GetDeviceSplat(ctx context.Context, name string) (deviceName s
 
 	return device.Name, device.Password, device.TotpSecret, device.Role, nil
 }
-
-func (db *UserDB) GetAllSyncSources(ctx context.Context) (nightscout *user.SyncSource, dexcom *user.SyncSource, err error) {
-	// TODO: This might become a problem we could make faster with a dirty flag or something
-	sync_sources, err := db.Queries.AllSyncSources(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
-	}
-
-	for _, ss := range sync_sources {
-		if ss.Type == consts.SyncSourceTypeNightscout {
-			nightscout = &ss
-		}
-		if ss.Type == consts.SyncSourceTypeDexcom {
-			dexcom = &ss
-		}
-	}
-
-	return nightscout, dexcom, nil
-
-}

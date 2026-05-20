@@ -13,13 +13,13 @@ const allProfiles = `-- name: AllProfiles :many
 SELECT id, eid, storeid, name, created_at, start, timestamp, duration, "end", starttime, endtime, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json FROM profile ORDER BY created_at DESC
 `
 
-func (q *Queries) AllProfiles(ctx context.Context) ([]Profile, error) {
+func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 	rows, err := q.query(ctx, q.allProfilesStmt, allProfiles)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Profile
+	var items []*Profile
 	for rows.Next() {
 		var i Profile
 		if err := rows.Scan(
@@ -44,7 +44,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]Profile, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

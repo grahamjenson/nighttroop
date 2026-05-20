@@ -10,6 +10,7 @@ sql:
 
         emit_prepared_queries: true
         emit_pointers_for_null_types: true
+        emit_result_struct_pointers: true
 
         query_parameter_limit: 3
         
@@ -27,17 +28,6 @@ overrides:
     rename:
       bolu: Bolus
     overrides:
-      - column: "sync_sources.dexcom_region"
-        go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
-          type: "DexcomRegion"
-      - column: "sync_sources.type"
-        go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
-          type: "SyncSourceType"
-      - column: "sync_sources.enabled"
-        go_type:
-          type: "bool"
       - column: "devices.role"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"

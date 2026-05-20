@@ -13,13 +13,13 @@ const allEntries = `-- name: AllEntries :many
 SELECT id, eid, created_by_type, created_by_id, value, created_at FROM entries ORDER BY created_at DESC
 `
 
-func (q *Queries) AllEntries(ctx context.Context) ([]Entry, error) {
+func (q *Queries) AllEntries(ctx context.Context) ([]*Entry, error) {
 	rows, err := q.query(ctx, q.allEntriesStmt, allEntries)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Entry
+	var items []*Entry
 	for rows.Next() {
 		var i Entry
 		if err := rows.Scan(
@@ -32,7 +32,7 @@ func (q *Queries) AllEntries(ctx context.Context) ([]Entry, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
