@@ -85,7 +85,7 @@ func run() error {
 	//
 	// Background jobs
 	//
-	backgroundManager := background.NewBackGroundManager(controlDB, serverConfig)
+	backgroundManager := background.NewBackGroundManager(context.Background(), controlDB, serverConfig, s3Client)
 	backgroundManager.Start()
 	defer backgroundManager.Stop()
 	// backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
@@ -110,18 +110,13 @@ func run() error {
 		slog.Error("HTTP server Shutdown Error", "err", err)
 	}
 
-	fmt.Println("Stopping background jobs...")
+	slog.Info("Stopping background jobs...")
 	backgroundManager.Stop() // Stop background jobs
-	fmt.Println("Stopped Background jobs")
 
-	// // Stop the loops
-	// syncJobs.Stop()
-	// backupJobs.Stop()
-
-	// // Force a final backup of all dbs
-	// backupJobs.BackupToS3() // Force a final backup before exiting
+	backgroundManager.BackupJobManager.BackupToS3() // Force a final backup before exiting
 
 	// Close control and User dbs
+	slog.Info("Closing Database connections")
 	controlDB.Close()
 	slog.Info("Server shutdown complete")
 	return nil

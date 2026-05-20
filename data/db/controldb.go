@@ -312,6 +312,14 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 	return user, model, nil
 }
 
+func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
+	res, err := db.Queries.GetBatchUsers(context.TODO(), char)
+	if err != nil {
+		return false, fmt.Errorf("cannot query users: %w", err)
+	}
+	return len(res) > 0, nil
+}
+
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 
 	users := []*UserDB{}

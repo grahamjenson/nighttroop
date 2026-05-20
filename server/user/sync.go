@@ -45,7 +45,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		var ns_id *int64 = nil
 		ns_url := ""
 		ns_password_garbage := ""
-		ns_enabled := false
+		ns_enabled := true
 		if nightscout != nil {
 			ns_url, err = config.Security.Decrypt(nightscout.UrlOrUsername)
 			if err != nil {
@@ -61,7 +61,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		dex_username := ""
 		dex_password_garbage := ""
 		dex_usa_region := false
-		dex_enabled := false
+		dex_enabled := true
 		var dex_id *int64 = nil
 		if dexcom != nil {
 			dex_username, err = config.Security.Decrypt(dexcom.UrlOrUsername)

@@ -9,7 +9,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-func (b *BackupJobs) ArchiveInactiveUsers() error {
+func (b *BackupJobManager) ArchiveInactiveUsers() error {
 	defer utils.TrackTime(time.Now(), "ArchiveInactiveUsers", nil, nil)
 
 	deleteList, err := b.findUsersToDeleteWithoutArchiving()
@@ -48,7 +48,7 @@ func (b *BackupJobs) ArchiveInactiveUsers() error {
 }
 
 // The users we delete without archiving are users that
-func (b *BackupJobs) findUsersToDeleteWithoutArchiving() ([]string, error) {
+func (b *BackupJobManager) findUsersToDeleteWithoutArchiving() ([]string, error) {
 	users, err := b.controlDB.GetNeverSeenUsers(b.MaxUserNeverSeen, b.MaxUserNeverWritten)
 	if err != nil {
 		return nil, fmt.Errorf("Cant get never seen users %w", err)
@@ -70,7 +70,7 @@ func (b *BackupJobs) findUsersToDeleteWithoutArchiving() ([]string, error) {
 
 }
 
-func (b *BackupJobs) findUsersToArchive() ([]*db.UserDB, error) {
+func (b *BackupJobManager) findUsersToArchive() ([]*db.UserDB, error) {
 	users, err := b.controlDB.GetInactiveUsers(b.MaxUserLastSeen, b.MaxUserNeverWritten)
 	if err != nil {
 		return nil, fmt.Errorf("Cant get inactive users %w", err)
@@ -81,7 +81,7 @@ func (b *BackupJobs) findUsersToArchive() ([]*db.UserDB, error) {
 	return users, nil
 }
 
-func (b *BackupJobs) archiveUsers(archiveList []*db.UserDB) ([]string, error) {
+func (b *BackupJobManager) archiveUsers(archiveList []*db.UserDB) ([]string, error) {
 	removeList := []string{}
 	for _, user := range archiveList {
 		if user.Subdomain == "" {

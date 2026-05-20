@@ -70,16 +70,19 @@ type ServerConfig struct {
 	MaxUserNeverSeenInMins    int
 	MaxUserNeverWrittenInMins int
 
-	MaxUserDBSizeKB    int
-	MaxControlDBSizeKB int
-
 	// Backup Config
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
+	ArchiveIntervalInSeconds       int
 
 	// Sync Config
 	BackgroundSyncWorkers int
 	SyncIntervalInSeconds int
+
+	// Truncate Config
+	TruncateIntervalInSeconds int
+	MaxUserDBSizeKB           int
+	MaxControlDBSizeKB        int
 
 	RateLimiters *RateLimiters
 
@@ -168,10 +171,13 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		UserPOSTPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
 
 		// User Limits
-		MaxUsers:           configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
-		MaxDevicesPerUser:  configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
-		MaxUserDBSizeKB:    configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
-		MaxControlDBSizeKB: configIntSelect(dotenvdev, dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
+		MaxUsers:          configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
+		MaxDevicesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
+
+		// Truncate Config
+		MaxUserDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
+		MaxControlDBSizeKB:        configIntSelect(dotenvdev, dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
+		TruncateIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 
 		// Archiving limits
 		MaxUserLastSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_USER_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
@@ -181,8 +187,9 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		MaxUserNeverWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
 
 		// Backup Config
-		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 10),
+		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
+		ArchiveIntervalInSeconds:       configIntSelect(dotenvdev, dotenv, "ARCHIVE_INTERVAL_IN_SECONDS", 3600),    // 1 hour
 
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenvdev, dotenv, "BACKGROUND_SYNC_WORKERS", 5),

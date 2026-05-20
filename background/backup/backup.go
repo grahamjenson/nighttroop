@@ -6,78 +6,14 @@ import (
 	"fmt"
 	"log/slog"
 
-	"sync"
 	"time"
 
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/s3utils"
 )
 
-type BackupJobs struct {
-	controlDB *db.ControlDB
-	ctx       context.Context
-
-	ControlBackupInterval time.Duration
-	BatchBackupInterval   time.Duration
-
-	MaxUserLastSeen     time.Duration
-	MaxUserLastWritten  time.Duration
-	MaxUserNeverSeen    time.Duration
-	MaxUserNeverWritten time.Duration
-
-	cancel func()
-	wg     sync.WaitGroup
-
-	S3Client *s3utils.S3Client
-}
-
-// BackupJobs
-// Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
-func SetupBackupJobs(config config.ServerConfig, controlDB *db.ControlDB, s3Client *s3utils.S3Client) *BackupJobs {
-
-	jobs := &BackupJobs{
-		controlDB:             controlDB,
-		ControlBackupInterval: time.Duration(config.ControlBackupIntervalInSeconds) * time.Second,
-		BatchBackupInterval:   time.Duration(config.BatchBackupIntervalInSeconds) * time.Second,
-		MaxUserLastSeen:       time.Duration(config.MaxUserLastSeenInMins) * time.Minute,
-		MaxUserLastWritten:    time.Duration(config.MaxUserLastWrittenInMins) * time.Minute,
-		MaxUserNeverSeen:      time.Duration(config.MaxUserNeverSeenInMins) * time.Minute,
-		MaxUserNeverWritten:   time.Duration(config.MaxUserNeverWrittenInMins) * time.Minute,
-		S3Client:              s3Client,
-	}
-
-	jobs.ctx, jobs.cancel = context.WithCancel(context.Background())
-
-	return jobs
-}
-
-func (b *BackupJobs) Start() {
-	// Start backup Jobs
-	// CotrolDB backup and Sync Loop
-	if b.ControlBackupInterval > 0 {
-		b.wg.Go(func() {
-			b.controlBackupLoop()
-		})
-	}
-
-	if b.BatchBackupInterval > 0 {
-		b.wg.Add(1)
-		// The goal here is over the BatchBackupInterval we will backup all pools
-		// But we will stagger them so that we do not swamp the CPU or network
-		staggeredInterval := b.BatchBackupInterval / time.Duration(utils.USER_BATCH_LENGTH)
-		go func() {
-			defer b.wg.Done()
-			b.userBackupLoop(staggeredInterval)
-		}()
-	}
-
-}
-
 // This is the last method called to backup both control and user dbs
-func (b *BackupJobs) BackupToS3() {
-	err := b.backupControl()
+func (b *BackupJobManager) BackupToS3() {
+	err := b.BackupControl()
 	if err != nil {
 		slog.Error("Backup error", "error", err)
 	}
@@ -96,33 +32,10 @@ func (b *BackupJobs) BackupToS3() {
 // Control Backup
 // //
 
-func (b *BackupJobs) controlBackupLoop() {
-	syncTicker := time.NewTicker(b.ControlBackupInterval)
-	defer syncTicker.Stop()
-
-	for {
-		// Wait for ticker or context close.
-		select {
-		case <-b.ctx.Done():
-			return
-		case <-syncTicker.C:
-		}
-
-		// Backup DB to S3
-		err := b.backupControl()
-		if err != nil {
-			slog.Error("Backup error", "error", err)
-		}
-
-	}
-
-}
-
-func (b *BackupJobs) backupControl() error {
-	ctx := context.TODO()
+func (b *BackupJobManager) BackupControl() error {
 
 	// Backup the Database
-	err := utils.SqliteBackup(ctx, b.controlDB.SQLiteDB, utils.CONTROL_DB_PATH, utils.CONTROL_DB_BACKUP_PATH)
+	err := utils.SqliteBackup(b.ctx, b.controlDB.SQLiteDB, utils.CONTROL_DB_PATH, utils.CONTROL_DB_BACKUP_PATH)
 	if err != nil {
 		return fmt.Errorf("cannot backup control db: %w", err)
 	}
@@ -140,43 +53,7 @@ func (b *BackupJobs) backupControl() error {
 // User Backup
 // ///
 
-func (b *BackupJobs) userBackupLoop(interval time.Duration) {
-	syncTicker := time.NewTicker(interval)
-	defer syncTicker.Stop()
-
-	index := 0
-	for {
-		// Wait for ticker or context close.
-		select {
-		case <-b.ctx.Done():
-			return
-		case <-syncTicker.C:
-		}
-		char := utils.USER_CHAR_SET[index]
-
-		// Backup the dbs, upload to S3
-		err := b.BackupUserBatch(string(char))
-
-		if err != nil {
-			slog.Error("Error backing up user batch", "error", err, "char", char)
-			continue
-		}
-
-		index = (index + 1) % utils.USER_BATCH_LENGTH
-
-		// Go over all users once per cycle (at the end)
-		if index == 0 {
-			err := b.ArchiveInactiveUsers()
-			if err != nil {
-				slog.Error("Error archiving inactive users", "error", err, "char", char)
-				continue
-			}
-		}
-
-	}
-}
-
-func (b *BackupJobs) BackupUserBatch(char string) error {
+func (b *BackupJobManager) BackupUserBatch(char string) error {
 	trackTrim := false
 	defer utils.TrackTime(time.Now(), "backup user pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
@@ -218,17 +95,4 @@ func (b *BackupJobs) BackupUserBatch(char string) error {
 
 	// Copy the control db to the backup location
 	return nil
-}
-
-//
-//
-//
-
-func (b *BackupJobs) Stop() {
-
-	// This will send a cancel signal to context
-	b.cancel()
-	// This will wait
-	b.wg.Wait()
-
 }
