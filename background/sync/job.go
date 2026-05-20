@@ -28,7 +28,7 @@ type SyncJobManager struct {
 
 type SyncJobParams struct {
 	UserSubdomains   []string
-	UniqHash         string
+	UniqueHash       string
 	EncUrlOrUserName string
 	EncPassword      string
 	DexcomRegion     string
@@ -83,7 +83,7 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 			err = queue.QueueJob(context.Background(), liteq.QueueJobParams{
 				Queue:       SYNC_JOB,
 				Job:         string(jsonRaw),
-				DedupingKey: liteq.ReplaceDuplicate(syncJob.UniqHash),
+				DedupingKey: liteq.ReplaceDuplicate(syncJob.UniqueHash),
 			})
 			if err != nil {
 				slog.Error("Error queueing sync job", "error", err)
@@ -97,7 +97,7 @@ func (b *SyncJobManager) buildSyncJobs() []*SyncJobParams {
 	defer utils.TrackTime(time.Now(), "SyncJobManager.Tick", nil, nil)
 	users := b.controlDB.AllUsers()
 
-	nsUniqHashMap := make(map[string]*SyncJobParams)
+	nsUniqueHashMap := make(map[string]*SyncJobParams)
 
 	for _, userDB := range users {
 		ns, dex, err := userDB.GetAllSyncSources(context.TODO())
@@ -105,19 +105,19 @@ func (b *SyncJobManager) buildSyncJobs() []*SyncJobParams {
 			slog.Error("error getting sync sources for user", "subdomain", userDB.Subdomain, "error", err)
 			continue
 		}
-		err = b.addSyncJobToHashMap(userDB, ns, nsUniqHashMap)
+		err = b.addSyncJobToHashMap(userDB, ns, nsUniqueHashMap)
 		if err != nil {
 			slog.Error("error adding Nightscout sync job to hash map", "subdomain", userDB.Subdomain, "error", err, "ns", ns)
 		}
 
-		err = b.addSyncJobToHashMap(userDB, dex, nsUniqHashMap)
+		err = b.addSyncJobToHashMap(userDB, dex, nsUniqueHashMap)
 		if err != nil {
 			slog.Error("error adding Dexcom sync job to hash map", "subdomain", userDB.Subdomain, "error", err, "dexcom", dex)
 		}
 	}
 
-	syncJobs := make([]*SyncJobParams, 0, len(nsUniqHashMap))
-	for _, syncJob := range nsUniqHashMap {
+	syncJobs := make([]*SyncJobParams, 0, len(nsUniqueHashMap))
+	for _, syncJob := range nsUniqueHashMap {
 		syncJobs = append(syncJobs, syncJob)
 	}
 
@@ -125,20 +125,15 @@ func (b *SyncJobManager) buildSyncJobs() []*SyncJobParams {
 
 }
 
-func (b *SyncJobManager) addSyncJobToHashMap(userDB *db.UserDB, syncSource *user.SyncSource, nsUniqHashMap map[string]*SyncJobParams) error {
+func (b *SyncJobManager) addSyncJobToHashMap(userDB *db.UserDB, syncSource *user.SyncSource, nsUniqueHashMap map[string]*SyncJobParams) error {
 	if syncSource == nil || !syncSource.Enabled {
 		return nil
 	}
 
-	_, _, uniqHash, err := syncSource.GetRawData(b.security)
-	if err != nil {
-		return fmt.Errorf("error getting raw data for sync source: %w", err)
-	}
-
-	jobData, exists := nsUniqHashMap[uniqHash]
+	jobData, exists := nsUniqueHashMap[syncSource.UniqueHash]
 	if !exists {
-		nsUniqHashMap[uniqHash] = &SyncJobParams{
-			UniqHash:         uniqHash,
+		nsUniqueHashMap[syncSource.UniqueHash] = &SyncJobParams{
+			UniqueHash:       syncSource.UniqueHash,
 			UserSubdomains:   []string{userDB.Subdomain},
 			Synctype:         string(syncSource.Type),
 			EncUrlOrUserName: syncSource.UrlOrUsername,

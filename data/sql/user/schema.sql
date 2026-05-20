@@ -106,6 +106,7 @@ CREATE TABLE sync_sources (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
     
+    unique_hash TEXT UNIQUE NOT NULL, -- hash of url/username and password to identify this source for syncing
 
     -- DEXCOM
     dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER' -- USA or OTHER

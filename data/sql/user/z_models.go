@@ -100,6 +100,7 @@ type SyncSource struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Enabled       bool
+	UniqueHash    string
 	DexcomRegion  consts.DexcomRegion
 }
 

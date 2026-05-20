@@ -11,7 +11,7 @@ import (
 
 const createOrUpdateSyncSourceReport = `-- name: CreateOrUpdateSyncSourceReport :one
 INSERT INTO sync_source_reports (
-    uniq_hash,
+    unique_hash,
     last_attempted_sync,
     updated_at
 )
@@ -20,21 +20,21 @@ VALUES (
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
-ON CONFLICT(uniq_hash) DO UPDATE SET
+ON CONFLICT(unique_hash) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
     last_attempted_sync = CURRENT_TIMESTAMP
-RETURNING id, created_at, updated_at, uniq_hash, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_error, total_ema, success_ema, failure_ema, last_sync_duration
+RETURNING id, created_at, updated_at, unique_hash, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_error, total_ema, success_ema, failure_ema, last_sync_duration
 `
 
 // ---- Updates to the Sync Reporting -----
-func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqHash string) (*SyncSourceReport, error) {
-	row := q.queryRow(ctx, q.createOrUpdateSyncSourceReportStmt, createOrUpdateSyncSourceReport, uniqHash)
+func (q *Queries) CreateOrUpdateSyncSourceReport(ctx context.Context, uniqueHash string) (*SyncSourceReport, error) {
+	row := q.queryRow(ctx, q.createOrUpdateSyncSourceReportStmt, createOrUpdateSyncSourceReport, uniqueHash)
 	var i SyncSourceReport
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UniqHash,
+		&i.UniqueHash,
 		&i.SyncIntervalSecondsReason,
 		&i.SyncIntervalSeconds,
 		&i.LastAttemptedSync,
@@ -85,11 +85,11 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE uniq_hash = ?3
+WHERE unique_hash = ?3
 `
 
-func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, errorMessage *string, elapsedMs *int64, uniqHash string) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, errorMessage, elapsedMs, uniqHash)
+func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, errorMessage *string, elapsedMs *int64, uniqueHash string) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, errorMessage, elapsedMs, uniqueHash)
 	return err
 }
 
@@ -121,10 +121,10 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE uniq_hash = ?2
+WHERE unique_hash = ?2
 `
 
-func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, elapsedMs *int64, uniqHash string) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, elapsedMs, uniqHash)
+func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, elapsedMs *int64, uniqueHash string) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, elapsedMs, uniqueHash)
 	return err
 }

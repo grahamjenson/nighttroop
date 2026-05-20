@@ -1,16 +1,16 @@
 ------ Updates to the Sync Reporting -----
 -- name: CreateOrUpdateSyncSourceReport :one
 INSERT INTO sync_source_reports (
-    uniq_hash,
+    unique_hash,
     last_attempted_sync,
     updated_at
 )
 VALUES (
-    sqlc.arg(uniq_hash),
+    sqlc.arg(unique_hash),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
-ON CONFLICT(uniq_hash) DO UPDATE SET
+ON CONFLICT(unique_hash) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
     last_attempted_sync = CURRENT_TIMESTAMP
 RETURNING *;
@@ -45,7 +45,7 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE uniq_hash = sqlc.arg(uniq_hash);
+WHERE unique_hash = sqlc.arg(unique_hash);
 
 
 -- name: UpdateSyncSourceReportsFailure :exec
@@ -79,4 +79,4 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE uniq_hash = sqlc.arg(uniq_hash);
+WHERE unique_hash = sqlc.arg(unique_hash);

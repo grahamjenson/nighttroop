@@ -58,7 +58,7 @@ CREATE TABLE sync_source_reports (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     -- We do not store the actual sync data here, that is on the user, but we need to store the results
-    uniq_hash TEXT UNIQUE NOT NULL, -- <type>_<username>_<password>_<dexcom_region> for dexcom, <type>_<url>_<token> for nightscout
+    unique_hash TEXT UNIQUE NOT NULL, -- <type>_<username>_<password>_<dexcom_region> for dexcom, <type>_<url>_<token> for nightscout
 
     -- Frequency of syncs used to punish bad servers or behaviour
     sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default', 

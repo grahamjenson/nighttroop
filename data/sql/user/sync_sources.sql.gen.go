@@ -12,7 +12,7 @@ import (
 )
 
 const allSyncSources = `-- name: AllSyncSources :many
-SELECT id, type, url_or_username, password, created_at, updated_at, enabled, dexcom_region FROM sync_sources ORDER BY created_at DESC
+SELECT id, type, url_or_username, password, created_at, updated_at, enabled, unique_hash, dexcom_region FROM sync_sources ORDER BY created_at DESC
 `
 
 func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
@@ -32,6 +32,7 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enabled,
+			&i.UniqueHash,
 			&i.DexcomRegion,
 		); err != nil {
 			return nil, err
@@ -48,8 +49,8 @@ func (q *Queries) AllSyncSources(ctx context.Context) ([]SyncSource, error) {
 }
 
 const createDexcomSyncSource = `-- name: CreateDexcomSyncSource :exec
-INSERT INTO sync_sources (type, password, enabled, url_or_username, dexcom_region) 
-VALUES ("DEXCOM", ?, ?, ?, ?)
+INSERT INTO sync_sources (type, password, enabled, url_or_username, dexcom_region, unique_hash) 
+VALUES ("DEXCOM", ?, ?, ?, ?, ?)
 `
 
 type CreateDexcomSyncSourceParams struct {
@@ -57,6 +58,7 @@ type CreateDexcomSyncSourceParams struct {
 	Enabled       bool
 	UrlOrUsername string
 	DexcomRegion  consts.DexcomRegion
+	UniqueHash    string
 }
 
 // ---
@@ -68,21 +70,34 @@ func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSy
 		arg.Enabled,
 		arg.UrlOrUsername,
 		arg.DexcomRegion,
+		arg.UniqueHash,
 	)
 	return err
 }
 
 const createNightscoutSyncSource = `-- name: CreateNightscoutSyncSource :exec
 
-INSERT INTO sync_sources (type, password, enabled, url_or_username) 
-VALUES ("NIGHTSCOUT", ?, ?, ?)
+INSERT INTO sync_sources (type, password, enabled, url_or_username, unique_hash) 
+VALUES ("NIGHTSCOUT", ?, ?, ?, ?)
 `
+
+type CreateNightscoutSyncSourceParams struct {
+	Password      string
+	Enabled       bool
+	UrlOrUsername string
+	UniqueHash    string
+}
 
 // ---
 // Nighscout
 // ----
-func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, password string, enabled bool, urlOrUsername string) error {
-	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource, password, enabled, urlOrUsername)
+func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, arg CreateNightscoutSyncSourceParams) error {
+	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource,
+		arg.Password,
+		arg.Enabled,
+		arg.UrlOrUsername,
+		arg.UniqueHash,
+	)
 	return err
 }
 
@@ -106,7 +121,7 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context) error {
 }
 
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
-UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
+UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
 `
 
 type UpdateDexcomSyncSourceParams struct {
@@ -114,6 +129,7 @@ type UpdateDexcomSyncSourceParams struct {
 	Enabled       bool
 	UrlOrUsername string
 	DexcomRegion  consts.DexcomRegion
+	UniqueHash    string
 }
 
 func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSyncSourceParams) error {
@@ -122,33 +138,58 @@ func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSy
 		arg.Enabled,
 		arg.UrlOrUsername,
 		arg.DexcomRegion,
+		arg.UniqueHash,
 	)
 	return err
 }
 
 const updateDexcomSyncSourceWithoutPassword = `-- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
+UPDATE sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM"
 `
 
-func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, enabled bool, urlOrUsername string, dexcomRegion consts.DexcomRegion) error {
-	_, err := q.exec(ctx, q.updateDexcomSyncSourceWithoutPasswordStmt, updateDexcomSyncSourceWithoutPassword, enabled, urlOrUsername, dexcomRegion)
+type UpdateDexcomSyncSourceWithoutPasswordParams struct {
+	Enabled       bool
+	UrlOrUsername string
+	DexcomRegion  consts.DexcomRegion
+	UniqueHash    string
+}
+
+func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, arg UpdateDexcomSyncSourceWithoutPasswordParams) error {
+	_, err := q.exec(ctx, q.updateDexcomSyncSourceWithoutPasswordStmt, updateDexcomSyncSourceWithoutPassword,
+		arg.Enabled,
+		arg.UrlOrUsername,
+		arg.DexcomRegion,
+		arg.UniqueHash,
+	)
 	return err
 }
 
 const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
-UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
+UPDATE sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
 `
 
-func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, password string, enabled bool, urlOrUsername string) error {
-	_, err := q.exec(ctx, q.updateNightscoutSyncSourceStmt, updateNightscoutSyncSource, password, enabled, urlOrUsername)
+type UpdateNightscoutSyncSourceParams struct {
+	Password      string
+	Enabled       bool
+	UrlOrUsername string
+	UniqueHash    string
+}
+
+func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNightscoutSyncSourceParams) error {
+	_, err := q.exec(ctx, q.updateNightscoutSyncSourceStmt, updateNightscoutSyncSource,
+		arg.Password,
+		arg.Enabled,
+		arg.UrlOrUsername,
+		arg.UniqueHash,
+	)
 	return err
 }
 
 const updateNightscoutSyncSourceWithoutPassword = `-- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE sync_sources SET enabled = ?, url_or_username = ?,  updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
+UPDATE sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT"
 `
 
-func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, enabled bool, urlOrUsername string) error {
-	_, err := q.exec(ctx, q.updateNightscoutSyncSourceWithoutPasswordStmt, updateNightscoutSyncSourceWithoutPassword, enabled, urlOrUsername)
+func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, enabled bool, urlOrUsername string, uniqueHash string) error {
+	_, err := q.exec(ctx, q.updateNightscoutSyncSourceWithoutPasswordStmt, updateNightscoutSyncSourceWithoutPassword, enabled, urlOrUsername, uniqueHash)
 	return err
 }

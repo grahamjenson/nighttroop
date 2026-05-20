@@ -61,7 +61,7 @@ type SyncSourceReport struct {
 	ID                         int64
 	CreatedAt                  time.Time
 	UpdatedAt                  time.Time
-	UniqHash                   string
+	UniqueHash                 string
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
 	LastAttemptedSync          *time.Time

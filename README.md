@@ -1,7 +1,7 @@
 # TODO
 
+
 2. Logging with contexts to DBs, 
-1. 
 1. error reporting with sentry, 
 1. check that users dont get error responses traces
 1. Nightscout reimplementation routes

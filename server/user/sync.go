@@ -239,8 +239,18 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 		return fmt.Errorf("Failed to encrypt Nightscout URL: %w", err)
 	}
 
+	uniqHash, err := generateUniqueHash(security, nsUrl, nsPassword, consts.SyncSourceTypeNightscout, "")
+	if err != nil {
+		return fmt.Errorf("Failed to generate unique hash for Nightscout sync source: %w", err)
+	}
+
 	if nightscout == nil { // NEW
-		err = userdb.Queries.CreateNightscoutSyncSource(ctx, encPassword, enabled, encUrl)
+		err = userdb.Queries.CreateNightscoutSyncSource(ctx, user.CreateNightscoutSyncSourceParams{
+			Password:      encPassword,
+			Enabled:       enabled,
+			UrlOrUsername: encUrl,
+			UniqueHash:    uniqHash,
+		})
 		if err != nil {
 			return fmt.Errorf("Failed to create Nightscout sync source: %w", err)
 		}
@@ -248,10 +258,15 @@ func saveNightScoutSettings(ctx context.Context, userdb *db.UserDB, config confi
 	}
 
 	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = userdb.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, enabled, encUrl)
+		err = userdb.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, enabled, encUrl, uniqHash)
 
 	} else {
-		err = userdb.Queries.UpdateNightscoutSyncSource(ctx, encPassword, enabled, encUrl)
+		err = userdb.Queries.UpdateNightscoutSyncSource(ctx, user.UpdateNightscoutSyncSourceParams{
+			Password:      encPassword,
+			Enabled:       enabled,
+			UrlOrUsername: encUrl,
+			UniqueHash:    uniqHash,
+		})
 	}
 
 	if err != nil {
@@ -332,6 +347,11 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 		return fmt.Errorf("Failed to encrypt Dexcom username: %w", err)
 	}
 
+	uniqHash, err := generateUniqueHash(security, dexUsername, dexPassword, consts.SyncSourceTypeDexcom, string(region))
+	if err != nil {
+		return fmt.Errorf("Failed to generate unique hash for Dexcom sync source: %w", err)
+	}
+
 	if dexcom == nil { // NEW
 
 		err = userdb.Queries.CreateDexcomSyncSource(ctx, user.CreateDexcomSyncSourceParams{
@@ -339,6 +359,7 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
 			DexcomRegion:  region,
+			UniqueHash:    uniqHash,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to create Dexcom sync source: %w", err)
@@ -347,13 +368,19 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 	}
 
 	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = userdb.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, dexEnabled, encUsername, region)
+		err = userdb.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, user.UpdateDexcomSyncSourceWithoutPasswordParams{
+			Enabled:       dexEnabled,
+			UrlOrUsername: encUsername,
+			DexcomRegion:  region,
+			UniqueHash:    uniqHash,
+		})
 	} else {
 		err = userdb.Queries.UpdateDexcomSyncSource(ctx, user.UpdateDexcomSyncSourceParams{
 			Password:      encPassword,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
 			DexcomRegion:  region,
+			UniqueHash:    uniqHash,
 		})
 	}
 
@@ -362,4 +389,21 @@ func saveDexcomSettings(ctx context.Context, userdb *db.UserDB, security *securi
 	}
 
 	return nil
+}
+
+func generateUniqueHash(security *security.SecurityConfig, plainTextURLOrUsername string, plaintTextPassword string, syncSourceType consts.SyncSourceType, dexcomRegion string) (string, error) {
+
+	// Any two users with this constalations will be making the exact same request to the same URL.
+	// We are deduping these requests to prevent multiple calls
+	uniqString := fmt.Sprintf("%s:%s:%s", syncSourceType, plainTextURLOrUsername, plaintTextPassword)
+	if syncSourceType == consts.SyncSourceTypeDexcom {
+		uniqString = fmt.Sprintf("%s:%s:%s:%s", syncSourceType, plainTextURLOrUsername, plaintTextPassword, dexcomRegion)
+	}
+
+	uniqHash, err := security.GenerateHash(uniqString)
+	if err != nil {
+		return "", fmt.Errorf("error generating hash for sync job: %w", err)
+	}
+
+	return uniqHash, nil
 }
