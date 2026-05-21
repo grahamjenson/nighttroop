@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/background/liteq"
@@ -25,12 +24,8 @@ type SyncJobManager struct {
 }
 
 type SyncJobParams struct {
-	UserSubdomains   []string
-	UniqueHash       string
-	EncUrlOrUserName string
-	EncPassword      string
-	DexcomRegion     string
-	Synctype         string
+	UniqueHash string
+	Type       string
 }
 
 func SetupSyncJobManager(config config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -58,8 +53,16 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			slog.Error("Error unmarshalling sync job params", "error", err, "job", j.Job)
 			return nil
 		}
-
-		return b.SyncUserData(&syncJob)
+		syncSources, err := b.controlDB.Queries.GetAllUserSyncSourcesForUniqueHash(ctx, syncJob.UniqueHash)
+		if err != nil {
+			slog.Error("Error getting user sync sources", "error", err, "unique_hash", syncJob.UniqueHash)
+			return err
+		}
+		if len(syncSources) == 0 {
+			slog.Error("No user sync sources found for unique hash", "unique_hash", syncJob.UniqueHash)
+			return nil
+		}
+		return b.SyncUserData(&syncJob, syncSources)
 	}
 }
 
@@ -87,12 +90,8 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 		syncJobs := make([]*SyncJobParams, 0, len(syncReports))
 		for _, report := range syncReports {
 			syncJobs = append(syncJobs, &SyncJobParams{
-				UniqueHash:       report.UniqueHash,
-				UserSubdomains:   strings.Split(report.Subdomains, ","),
-				Synctype:         report.Type,
-				EncUrlOrUserName: report.UrlOrUsername,
-				EncPassword:      report.Password,
-				DexcomRegion:     report.DexcomRegion,
+				UniqueHash: report.UniqueHash,
+				Type:       report.Type,
 			})
 		}
 

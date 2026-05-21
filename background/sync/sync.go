@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -42,35 +43,36 @@ import (
 // Actual SyncJob Work
 //////////////
 
-func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams) error {
+func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams, userSyncSources []*control.UserSyncSource) error {
 	var err error
 
 	// TODO CHECK REPORT AND MAKE SURE NOT ABUSING
 	// Check that enought time has passed since the last sync to rerun sync
 
 	startTime := time.Now()
-	switch consts.SyncSourceType(syncJob.Synctype) {
+
+	switch consts.SyncSourceType(syncJob.Type) {
 	case consts.SyncSourceTypeNightscout:
-		err = b.syncNightscout(syncJob)
+		err = b.syncNightscout(syncJob, userSyncSources)
 	case consts.SyncSourceTypeDexcom:
-		err = b.syncDexcom(syncJob)
+		err = b.syncDexcom(syncJob, userSyncSources)
 	}
 	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
 	if err != nil {
 		errMsg := err.Error()
-		slog.Error("error syncing user data", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", err)
-		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), &errMsg, &elapsedTimeMS, syncJob.UniqueHash)
+		slog.Error("error syncing user data", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type, "error", err)
+		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), []string{errMsg}, &elapsedTimeMS, syncJob.UniqueHash)
 		if updateError != nil {
-			slog.Error("error updating sync source report with failure", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", updateError)
+			slog.Error("error updating sync source report with failure", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type, "error", updateError)
 		}
 		return err
 	}
 
-	slog.Info("finished sync", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "elapsed_time_ms", elapsedTimeMS)
+	slog.Info("finished sync", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type, "elapsed_time_ms", elapsedTimeMS)
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncJob.UniqueHash)
 	if updateError != nil {
-		slog.Error("error updating sync source report with success", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", updateError)
+		slog.Error("error updating sync source report with success", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type, "error", updateError)
 		return updateError
 	}
 
@@ -79,24 +81,32 @@ func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams) error {
 	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
-func (b *SyncJobManager) syncNightscout(syncJob *SyncJobParams) error {
-	slog.Info("Syncing Nightscout", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "url", syncJob.EncUrlOrUserName)
+func (b *SyncJobManager) syncNightscout(syncJob *SyncJobParams, userSyncSources []*control.UserSyncSource) error {
+	slog.Info("Syncing Nightscout", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type)
 	return fmt.Errorf("Not implemented")
 }
 
-func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams) error {
-	slog.Info("Syncing Dexcom", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "dexcom_region", syncJob.DexcomRegion)
+func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams, userSyncSources []*control.UserSyncSource) error {
+	if len(userSyncSources) == 0 {
+		return fmt.Errorf("No user sync sources found for unique hash: %s", syncJob.UniqueHash)
+	}
 
-	unencUsername, err := b.security.Decrypt(syncJob.EncUrlOrUserName)
+	EncUrlOrUserName := userSyncSources[0].UrlOrUsername
+	EncPassword := userSyncSources[0].Password
+	DexcomRegion := userSyncSources[0].DexcomRegion
+
+	slog.Info("Syncing Dexcom", "unique_hash", syncJob.UniqueHash)
+
+	unencUsername, err := b.security.Decrypt(EncUrlOrUserName)
 	if err != nil {
 		return fmt.Errorf("error decrypting username: %w", err)
 	}
-	unencPassword, err := b.security.Decrypt(syncJob.EncPassword)
+	unencPassword, err := b.security.Decrypt(EncPassword)
 	if err != nil {
 		return fmt.Errorf("error decrypting password: %w", err)
 	}
 
-	client := dexcom_client.NewClient(unencUsername, unencPassword, syncJob.DexcomRegion == string(consts.DexcomRegionOther))
+	client := dexcom_client.NewClient(unencUsername, unencPassword, DexcomRegion == consts.DexcomRegionOther)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

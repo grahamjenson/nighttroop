@@ -87,6 +87,44 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, subdomain str
 	return err
 }
 
+const getAllUserSyncSourcesForUniqueHash = `-- name: GetAllUserSyncSourcesForUniqueHash :many
+SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM user_sync_sources where unique_hash = ?
+`
+
+func (q *Queries) GetAllUserSyncSourcesForUniqueHash(ctx context.Context, uniqueHash string) ([]*UserSyncSource, error) {
+	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUniqueHashStmt, getAllUserSyncSourcesForUniqueHash, uniqueHash)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*UserSyncSource
+	for rows.Next() {
+		var i UserSyncSource
+		if err := rows.Scan(
+			&i.ID,
+			&i.Subdomain,
+			&i.Type,
+			&i.UrlOrUsername,
+			&i.Password,
+			&i.DexcomRegion,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Enabled,
+			&i.UniqueHash,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllUserSyncSourcesForUser = `-- name: GetAllUserSyncSourcesForUser :many
 SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM user_sync_sources where subdomain = ?
 `

@@ -101,7 +101,7 @@ CREATE TABLE sync_source_reports (
     consecutive_failed_syncs INTEGER DEFAULT 0,
 
     -- Previous Error Text
-    previous_sync_error TEXT, -- stored to show to user as feedback
+    previous_sync_errors TEXT, -- stored to show to user as feedback
 
     -- Timing EMAs to then determine frequency on
     total_ema REAL,

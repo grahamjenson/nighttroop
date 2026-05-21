@@ -2,6 +2,9 @@
 -- name: GetAllUserSyncSourcesForUser :many
 SELECT * FROM user_sync_sources where subdomain = ?;
 
+-- name: GetAllUserSyncSourcesForUniqueHash :many
+SELECT * FROM user_sync_sources where unique_hash = ?;
+
 -----
 -- Nighscout
 ------ 

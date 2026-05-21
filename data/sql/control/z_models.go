@@ -82,7 +82,7 @@ type SyncSourceReport struct {
 	TotalFailedSyncs           *int64
 	ConsecutiveSuccessfulSyncs *int64
 	ConsecutiveFailedSyncs     *int64
-	PreviousSyncError          *string
+	PreviousSyncErrors         errors.ErrorList
 	TotalEma                   *float64
 	SuccessEma                 *float64
 	FailureEma                 *float64

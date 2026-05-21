@@ -17,19 +17,10 @@ WHERE NOT EXISTS (
 -- name: GetSyncReportsToRun :many
 SELECT
     ssr.unique_hash,
-
-    GROUP_CONCAT(us.subdomain) AS subdomains,
-
-    -- pick a deterministic "first" row (important!)
-    CAST(MIN(us.type) AS TEXT) AS type,
-    CAST(MIN(us.url_or_username) AS TEXT) AS url_or_username,
-    CAST(MIN(us.password) AS TEXT) AS password,
-    CAST(MIN(us.dexcom_region) AS TEXT) AS dexcom_region
-
+    CAST(MIN(us.type) AS TEXT) AS type
 FROM sync_source_reports ssr
 JOIN user_sync_sources us
     ON us.unique_hash = ssr.unique_hash
-
 WHERE us.enabled = 1
   AND (
       ssr.last_attempted_sync IS NULL
@@ -83,7 +74,7 @@ UPDATE sync_source_reports
 SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_failed_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    previous_sync_error = sqlc.arg(error_message),
+    previous_sync_errors = sqlc.arg(error_messages),
     
     -- Counters 
     total_syncs = total_syncs + 1,
