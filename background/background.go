@@ -31,7 +31,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config c
 	cron := cron.New(cron.WithSeconds())
 	consumers := []*liteq.ConsumerSupervisor{}
 	backupjob_manager := backup.SetupBackupJob(ctx, controlDB, config, s3c)
-	truncatejob_manager := truncate.SetupTruncateJobManager(config)
+	truncatejob_manager := truncate.SetupTruncateJobManager(config, controlDB)
 	syncjob_manager := ntsync.SetupSyncJobManager(config, controlDB)
 
 	// Backup Jobs

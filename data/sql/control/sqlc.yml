@@ -38,6 +38,10 @@ overrides:
         go_type:
           import: "nighttroop.t1d.nz/utils/errors"
           type: "ErrorList"
+      - column: job_stats_daily.errors
+        go_type:
+          import: "nighttroop.t1d.nz/utils/errors"
+          type: "ErrorList"
 
       - column: "user_sync_sources.dexcom_region"
         go_type:

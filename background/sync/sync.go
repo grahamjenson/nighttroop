@@ -42,7 +42,7 @@ import (
 // Actual SyncJob Work
 //////////////
 
-func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams) {
+func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams) error {
 	var err error
 
 	// TODO CHECK REPORT AND MAKE SURE NOT ABUSING
@@ -60,26 +60,28 @@ func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams) {
 	if err != nil {
 		errMsg := err.Error()
 		slog.Error("error syncing user data", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", err)
-		err = b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), &errMsg, &elapsedTimeMS, syncJob.UniqueHash)
-		if err != nil {
-			slog.Error("error updating sync source report with failure", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", err)
+		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), &errMsg, &elapsedTimeMS, syncJob.UniqueHash)
+		if updateError != nil {
+			slog.Error("error updating sync source report with failure", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", updateError)
 		}
-		return
+		return err
 	}
 
 	slog.Info("finished sync", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "elapsed_time_ms", elapsedTimeMS)
-	err = b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncJob.UniqueHash)
-	if err != nil {
-		slog.Error("error updating sync source report with success", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", err)
+	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncJob.UniqueHash)
+	if updateError != nil {
+		slog.Error("error updating sync source report with success", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "error", updateError)
+		return updateError
 	}
 
+	return nil
 	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
 	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
 func (b *SyncJobManager) syncNightscout(syncJob *SyncJobParams) error {
 	slog.Info("Syncing Nightscout", "unique_hash", syncJob.UniqueHash, "subdomains", syncJob.UserSubdomains, "sync_type", syncJob.Synctype, "url", syncJob.EncUrlOrUserName)
-	return nil
+	return fmt.Errorf("Not implemented")
 }
 
 func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams) error {

@@ -35,6 +35,25 @@ CREATE TABLE events (
     end INTEGER
 );
 
+CREATE TABLE job_stats_daily (
+    day_queue_job TEXT NOT NULL, -- YYYY-MM-DD::queue::job
+
+    total_jobs INTEGER NOT NULL DEFAULT 0,
+    total_success INTEGER NOT NULL DEFAULT 0,
+    total_failed INTEGER NOT NULL DEFAULT 0,
+
+    duration_sum REAL NOT NULL DEFAULT 0,
+    duration_squared_sum REAL NOT NULL DEFAULT 0,
+
+    errors TEXT NOT NULL DEFAULT '[]',
+
+    -- liteq jobs use epoch in seconds
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
+
+    PRIMARY KEY (day_queue_job)
+);
+
 CREATE TABLE jobs (
     id INTEGER NOT NULL,
     queue TEXT NOT NULL,

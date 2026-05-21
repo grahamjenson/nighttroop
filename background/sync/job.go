@@ -59,8 +59,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			return nil
 		}
 
-		b.SyncUserData(&syncJob)
-		return nil
+		return b.SyncUserData(&syncJob)
 	}
 }
 

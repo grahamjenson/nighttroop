@@ -12,7 +12,8 @@ func (e ErrorList) Value() (driver.Value, error) {
 	if len(e) == 0 {
 		return "[]", nil
 	}
-	return json.Marshal(e)
+	byteArray, err := json.Marshal(e)
+	return string(byteArray), err
 }
 
 func (e *ErrorList) Scan(src interface{}) error {

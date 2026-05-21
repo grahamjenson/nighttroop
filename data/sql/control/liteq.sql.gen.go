@@ -7,6 +7,7 @@ package control
 
 import (
 	"context"
+	"strings"
 
 	"nighttroop.t1d.nz/utils/errors"
 )
@@ -27,6 +28,59 @@ WHERE
 func (q *Queries) CompleteJob(ctx context.Context, id int64) error {
 	_, err := q.exec(ctx, q.completeJobStmt, completeJob, id)
 	return err
+}
+
+const deleteJobsByIds = `-- name: DeleteJobsByIds :exec
+
+
+DELETE FROM jobs
+WHERE id IN (/*SLICE:ids*/?)
+`
+
+// ----------
+// Job Stats
+// ----------
+func (q *Queries) DeleteJobsByIds(ctx context.Context, ids []int64) error {
+	query := deleteJobsByIds
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	_, err := q.exec(ctx, nil, query, queryParams...)
+	return err
+}
+
+const ensureJobStatsDailyForGroup = `-- name: EnsureJobStatsDailyForGroup :one
+
+
+INSERT INTO job_stats_daily (day_queue_job, errors, updated_at)
+VALUES (?, '[]', CAST(unixepoch() AS INTEGER))
+ON CONFLICT(day_queue_job) DO UPDATE SET
+    day_queue_job = day_queue_job -- Forces NOOP assignment to return conflicting row
+RETURNING day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at
+`
+
+// jobs created at more than 1 minute ago
+func (q *Queries) EnsureJobStatsDailyForGroup(ctx context.Context, dayQueueJob string) (*JobStatsDaily, error) {
+	row := q.queryRow(ctx, q.ensureJobStatsDailyForGroupStmt, ensureJobStatsDailyForGroup, dayQueueJob)
+	var i JobStatsDaily
+	err := row.Scan(
+		&i.DayQueueJob,
+		&i.TotalJobs,
+		&i.TotalSuccess,
+		&i.TotalFailed,
+		&i.DurationSum,
+		&i.DurationSquaredSum,
+		&i.Errors,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
 }
 
 const failJob = `-- name: FailJob :exec
@@ -78,6 +132,50 @@ func (q *Queries) FindJob(ctx context.Context, id int64) (*Job, error) {
 		&i.UpdatedAt,
 	)
 	return &i, err
+}
+
+const getJobsToBeSummarised = `-- name: GetJobsToBeSummarised :many
+SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at FROM jobs
+WHERE
+    job_status IN ('completed', 'failed')
+    AND remaining_attempts = 0
+    AND created_at < (CAST(unixepoch() AS INTEGER) - 60)
+`
+
+func (q *Queries) GetJobsToBeSummarised(ctx context.Context) ([]*Job, error) {
+	rows, err := q.query(ctx, q.getJobsToBeSummarisedStmt, getJobsToBeSummarised)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Job
+	for rows.Next() {
+		var i Job
+		if err := rows.Scan(
+			&i.ID,
+			&i.Queue,
+			&i.Job,
+			&i.JobStatus,
+			&i.ExecuteAfter,
+			&i.RemainingAttempts,
+			&i.ConsumerFetchedAt,
+			&i.FinishedAt,
+			&i.DedupingKey,
+			&i.Errors,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const markJobsForConsumer = `-- name: MarkJobsForConsumer :many
@@ -267,4 +365,49 @@ func (q *Queries) ResetJobs(ctx context.Context, queue string, consumerFetchedAt
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const updateJobStatsDaily = `-- name: UpdateJobStatsDaily :exec
+UPDATE job_stats_daily
+SET
+    total_jobs = total_jobs + ?1,
+    total_success = total_success + ?2,
+    total_failed = total_failed + ?3,
+    duration_sum = duration_sum + ?4,
+    duration_squared_sum = duration_squared_sum + ?5,
+    updated_at = CAST(unixepoch() AS INTEGER),
+
+    errors = (
+        SELECT json_group_array(DISTINCT value)
+        FROM (
+            SELECT value FROM json_each(COALESCE(errors, '[]'))
+            UNION ALL
+            SELECT value FROM json_each(?6)
+        )
+    )
+WHERE
+    day_queue_job = ?7
+`
+
+type UpdateJobStatsDailyParams struct {
+	TotalJobs          int64
+	TotalSuccess       int64
+	TotalFailed        int64
+	DurationSum        float64
+	DurationSquaredSum float64
+	Errors             interface{}
+	DayQueueJob        string
+}
+
+func (q *Queries) UpdateJobStatsDaily(ctx context.Context, arg UpdateJobStatsDailyParams) error {
+	_, err := q.exec(ctx, q.updateJobStatsDailyStmt, updateJobStatsDaily,
+		arg.TotalJobs,
+		arg.TotalSuccess,
+		arg.TotalFailed,
+		arg.DurationSum,
+		arg.DurationSquaredSum,
+		arg.Errors,
+		arg.DayQueueJob,
+	)
+	return err
 }

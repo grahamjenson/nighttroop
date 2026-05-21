@@ -42,6 +42,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
+	if q.deleteJobsByIdsStmt, err = db.PrepareContext(ctx, deleteJobsByIds); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteJobsByIds: %w", err)
+	}
 	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
 	}
@@ -50,6 +53,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.disableNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, disableNightscoutSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DisableNightscoutSyncSource: %w", err)
+	}
+	if q.ensureJobStatsDailyForGroupStmt, err = db.PrepareContext(ctx, ensureJobStatsDailyForGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query EnsureJobStatsDailyForGroup: %w", err)
 	}
 	if q.failJobStmt, err = db.PrepareContext(ctx, failJob); err != nil {
 		return nil, fmt.Errorf("error preparing query FailJob: %w", err)
@@ -71,6 +77,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getInactiveUsersStmt, err = db.PrepareContext(ctx, getInactiveUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInactiveUsers: %w", err)
+	}
+	if q.getJobsToBeSummarisedStmt, err = db.PrepareContext(ctx, getJobsToBeSummarised); err != nil {
+		return nil, fmt.Errorf("error preparing query GetJobsToBeSummarised: %w", err)
 	}
 	if q.getNeverSeenUsersStmt, err = db.PrepareContext(ctx, getNeverSeenUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNeverSeenUsers: %w", err)
@@ -107,6 +116,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateDexcomSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateDexcomSyncSourceWithoutPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSourceWithoutPassword: %w", err)
+	}
+	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
 	}
 	if q.updateNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSource: %w", err)
@@ -164,6 +176,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
 		}
 	}
+	if q.deleteJobsByIdsStmt != nil {
+		if cerr := q.deleteJobsByIdsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteJobsByIdsStmt: %w", cerr)
+		}
+	}
 	if q.deleteSyncSourceStmt != nil {
 		if cerr := q.deleteSyncSourceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSyncSourceStmt: %w", cerr)
@@ -177,6 +194,11 @@ func (q *Queries) Close() error {
 	if q.disableNightscoutSyncSourceStmt != nil {
 		if cerr := q.disableNightscoutSyncSourceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing disableNightscoutSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.ensureJobStatsDailyForGroupStmt != nil {
+		if cerr := q.ensureJobStatsDailyForGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing ensureJobStatsDailyForGroupStmt: %w", cerr)
 		}
 	}
 	if q.failJobStmt != nil {
@@ -212,6 +234,11 @@ func (q *Queries) Close() error {
 	if q.getInactiveUsersStmt != nil {
 		if cerr := q.getInactiveUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getInactiveUsersStmt: %w", cerr)
+		}
+	}
+	if q.getJobsToBeSummarisedStmt != nil {
+		if cerr := q.getJobsToBeSummarisedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getJobsToBeSummarisedStmt: %w", cerr)
 		}
 	}
 	if q.getNeverSeenUsersStmt != nil {
@@ -272,6 +299,11 @@ func (q *Queries) Close() error {
 	if q.updateDexcomSyncSourceWithoutPasswordStmt != nil {
 		if cerr := q.updateDexcomSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateDexcomSyncSourceWithoutPasswordStmt: %w", cerr)
+		}
+	}
+	if q.updateJobStatsDailyStmt != nil {
+		if cerr := q.updateJobStatsDailyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateJobStatsDailyStmt: %w", cerr)
 		}
 	}
 	if q.updateNightscoutSyncSourceStmt != nil {
@@ -354,9 +386,11 @@ type Queries struct {
 	createNightscoutSyncSourceStmt                *sql.Stmt
 	createSyncReportsForAllSyncSourcesStmt        *sql.Stmt
 	createUserStmt                                *sql.Stmt
+	deleteJobsByIdsStmt                           *sql.Stmt
 	deleteSyncSourceStmt                          *sql.Stmt
 	deleteUsersStmt                               *sql.Stmt
 	disableNightscoutSyncSourceStmt               *sql.Stmt
+	ensureJobStatsDailyForGroupStmt               *sql.Stmt
 	failJobStmt                                   *sql.Stmt
 	findJobStmt                                   *sql.Stmt
 	getAdminStmt                                  *sql.Stmt
@@ -364,6 +398,7 @@ type Queries struct {
 	getAllUsersStmt                               *sql.Stmt
 	getBatchUsersStmt                             *sql.Stmt
 	getInactiveUsersStmt                          *sql.Stmt
+	getJobsToBeSummarisedStmt                     *sql.Stmt
 	getNeverSeenUsersStmt                         *sql.Stmt
 	getNotDeletedUsersStmt                        *sql.Stmt
 	getSyncReportsToRunStmt                       *sql.Stmt
@@ -376,6 +411,7 @@ type Queries struct {
 	truncateEventsStmt                            *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
+	updateJobStatsDailyStmt                       *sql.Stmt
 	updateNightscoutSyncSourceStmt                *sql.Stmt
 	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
 	updateSyncReportAttemptStmt                   *sql.Stmt
@@ -387,37 +423,41 @@ type Queries struct {
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                     tx,
-		tx:                                     tx,
-		completeJobStmt:                        q.completeJobStmt,
-		createAdminStmt:                        q.createAdminStmt,
-		createDexcomSyncSourceStmt:             q.createDexcomSyncSourceStmt,
-		createNightscoutSyncSourceStmt:         q.createNightscoutSyncSourceStmt,
-		createSyncReportsForAllSyncSourcesStmt: q.createSyncReportsForAllSyncSourcesStmt,
-		createUserStmt:                         q.createUserStmt,
-		deleteSyncSourceStmt:                   q.deleteSyncSourceStmt,
-		deleteUsersStmt:                        q.deleteUsersStmt,
-		disableNightscoutSyncSourceStmt:        q.disableNightscoutSyncSourceStmt,
-		failJobStmt:                            q.failJobStmt,
-		findJobStmt:                            q.findJobStmt,
-		getAdminStmt:                           q.getAdminStmt,
-		getAllUserSyncSourcesForUserStmt:       q.getAllUserSyncSourcesForUserStmt,
-		getAllUsersStmt:                        q.getAllUsersStmt,
-		getBatchUsersStmt:                      q.getBatchUsersStmt,
-		getInactiveUsersStmt:                   q.getInactiveUsersStmt,
-		getNeverSeenUsersStmt:                  q.getNeverSeenUsersStmt,
-		getNotDeletedUsersStmt:                 q.getNotDeletedUsersStmt,
-		getSyncReportsToRunStmt:                q.getSyncReportsToRunStmt,
-		getUserStmt:                            q.getUserStmt,
-		markJobsForConsumerStmt:                q.markJobsForConsumerStmt,
-		queueJobIgnoreDupeStmt:                 q.queueJobIgnoreDupeStmt,
-		queueJobReplaceDupeStmt:                q.queueJobReplaceDupeStmt,
-		resetJobsStmt:                          q.resetJobsStmt,
-		tESTTruncateUsersStmt:                  q.tESTTruncateUsersStmt,
-		truncateEventsStmt:                     q.truncateEventsStmt,
-		updateDexcomSyncSourceStmt:             q.updateDexcomSyncSourceStmt,
-		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
-		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
+		db:                                        tx,
+		tx:                                        tx,
+		completeJobStmt:                           q.completeJobStmt,
+		createAdminStmt:                           q.createAdminStmt,
+		createDexcomSyncSourceStmt:                q.createDexcomSyncSourceStmt,
+		createNightscoutSyncSourceStmt:            q.createNightscoutSyncSourceStmt,
+		createSyncReportsForAllSyncSourcesStmt:    q.createSyncReportsForAllSyncSourcesStmt,
+		createUserStmt:                            q.createUserStmt,
+		deleteJobsByIdsStmt:                       q.deleteJobsByIdsStmt,
+		deleteSyncSourceStmt:                      q.deleteSyncSourceStmt,
+		deleteUsersStmt:                           q.deleteUsersStmt,
+		disableNightscoutSyncSourceStmt:           q.disableNightscoutSyncSourceStmt,
+		ensureJobStatsDailyForGroupStmt:           q.ensureJobStatsDailyForGroupStmt,
+		failJobStmt:                               q.failJobStmt,
+		findJobStmt:                               q.findJobStmt,
+		getAdminStmt:                              q.getAdminStmt,
+		getAllUserSyncSourcesForUserStmt:          q.getAllUserSyncSourcesForUserStmt,
+		getAllUsersStmt:                           q.getAllUsersStmt,
+		getBatchUsersStmt:                         q.getBatchUsersStmt,
+		getInactiveUsersStmt:                      q.getInactiveUsersStmt,
+		getJobsToBeSummarisedStmt:                 q.getJobsToBeSummarisedStmt,
+		getNeverSeenUsersStmt:                     q.getNeverSeenUsersStmt,
+		getNotDeletedUsersStmt:                    q.getNotDeletedUsersStmt,
+		getSyncReportsToRunStmt:                   q.getSyncReportsToRunStmt,
+		getUserStmt:                               q.getUserStmt,
+		markJobsForConsumerStmt:                   q.markJobsForConsumerStmt,
+		queueJobIgnoreDupeStmt:                    q.queueJobIgnoreDupeStmt,
+		queueJobReplaceDupeStmt:                   q.queueJobReplaceDupeStmt,
+		resetJobsStmt:                             q.resetJobsStmt,
+		tESTTruncateUsersStmt:                     q.tESTTruncateUsersStmt,
+		truncateEventsStmt:                        q.truncateEventsStmt,
+		updateDexcomSyncSourceStmt:                q.updateDexcomSyncSourceStmt,
+		updateDexcomSyncSourceWithoutPasswordStmt: q.updateDexcomSyncSourceWithoutPasswordStmt,
+		updateJobStatsDailyStmt:                   q.updateJobStatsDailyStmt,
+		updateNightscoutSyncSourceStmt:            q.updateNightscoutSyncSourceStmt,
 		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
 		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
 		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
