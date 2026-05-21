@@ -1,7 +1,7 @@
 ------ MassCreationOfSyncReports
 
 -- name: CreateSyncReportsForAllSyncSources :exec
-INSERT INTO sync_source_reports (unique_hash)
+INSERT OR IGNORE INTO sync_source_reports (unique_hash)
 SELECT us.unique_hash
 FROM user_sync_sources us
 WHERE NOT EXISTS (

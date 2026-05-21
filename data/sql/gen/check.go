@@ -47,7 +47,7 @@ func checkUsers() error {
 	}
 	defer db.Close()
 
-	err = user.MigrateUp(db)
+	err = user.MigrateUp("dummy", db)
 	if err != nil {
 		return fmt.Errorf("failed to migrate user db: %w", err)
 	}
@@ -81,7 +81,7 @@ func checkControl() error {
 	}
 	defer db.Close()
 
-	err = control.MigrateUp(db)
+	err = control.MigrateUp("dummy", db)
 	if err != nil {
 		return fmt.Errorf("failed to migrate control db: %w", err)
 	}
