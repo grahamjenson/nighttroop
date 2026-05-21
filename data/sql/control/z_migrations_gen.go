@@ -17,7 +17,7 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-func MigrateUp(db *sql.DB) error {
+func MigrateUp(name string, db *sql.DB) error {
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
 		log.Fatal(err)
@@ -43,12 +43,12 @@ func MigrateUp(db *sql.DB) error {
 		log.Fatal(err)
 	}
 
-	log.Println("migrations applied")
+	log.Println("control." + name + " migrations applied")
 
 	return nil
 }
 
-func MigrateDown(db *sql.DB) error {
+func MigrateDown(name string, db *sql.DB) error {
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
 		log.Fatal(err)
@@ -74,7 +74,7 @@ func MigrateDown(db *sql.DB) error {
 		log.Fatal(err)
 	}
 
-	log.Println("migrations rolled back")
+	log.Println("control." + name + " migrations rolled back")
 
 	return nil
 }

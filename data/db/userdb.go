@@ -44,7 +44,7 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 		Subdomain:    subdomain,
 	}
 
-	err = user.MigrateUp(sqldb)
+	err = user.MigrateUp(subdomain, sqldb)
 	if err != nil {
 		sqldb.Close()
 		return userDB, fmt.Errorf("Migration Error Occured user db: %s %w", subdomain, err)

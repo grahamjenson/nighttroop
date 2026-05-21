@@ -7,7 +7,6 @@ package user
 
 import (
 	"context"
-	"time"
 )
 
 const allEvents = `-- name: AllEvents :many
@@ -50,8 +49,8 @@ INSERT INTO events (type, details, start_at, end_at) VALUES (?, ?, ?, ?)
 type CreateEventParams struct {
 	Type    *string
 	Details *string
-	StartAt *time.Time
-	EndAt   *time.Time
+	StartAt int64
+	EndAt   *int64
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) error {

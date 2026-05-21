@@ -104,16 +104,22 @@ func run() error {
 
 	slog.Info("Received shutdown signal, shutting down gracefully...")
 
+	slog.Info("Shutting down HTTP server...")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		slog.Error("HTTP server Shutdown Error", "err", err)
 	}
+	slog.Info("HTTP server shutdown complete")
 
 	slog.Info("Stopping background jobs...")
 	backgroundManager.Stop() // Stop background jobs
 
+	slog.Info("Stopped background jobs complete")
+
+	slog.Info("Performing final backup to S3...")
 	backgroundManager.BackupJobManager.BackupToS3() // Force a final backup before exiting
+	slog.Info("Final backup complete")
 
 	// Close control and User dbs
 	slog.Info("Closing Database connections")

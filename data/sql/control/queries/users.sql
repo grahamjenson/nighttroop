@@ -12,7 +12,7 @@ SELECT * FROM users WHERE subdomain = ? AND deleted_at IS NULL;
 -- Pass a list of users as a string to delete
 -- name: DeleteUsers :exec
 UPDATE users
-SET deleted_at = CURRENT_TIMESTAMP
+SET deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain IN (SELECT value FROM json_each(?));
 
 -- name: GetBatchUsers :many
@@ -46,12 +46,12 @@ SELECT * FROM users WHERE deleted_at IS NULL;
 
 -- name: UpdateUserLastSeenAt :exec
 UPDATE users
-SET last_seen_at = CURRENT_TIMESTAMP
+SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain = ?;
 
 -- name: UpdateUserLastWriteAt :exec
 UPDATE users
-SET last_write_at = CURRENT_TIMESTAMP
+SET last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain = ?;
 
 

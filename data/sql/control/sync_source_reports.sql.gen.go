@@ -47,9 +47,8 @@ JOIN user_sync_sources us
 WHERE us.enabled = 1
   AND (
       ssr.last_attempted_sync IS NULL
-      OR ssr.last_attempted_sync <= datetime('now', '-' || ssr.sync_interval_seconds || ' seconds')
+      OR ssr.last_attempted_sync <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (ssr.sync_interval_seconds * 1000)
   )
-
 GROUP BY ssr.id
 `
 
@@ -97,8 +96,8 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*GetSyncReportsToR
 const updateSyncReportAttempt = `-- name: UpdateSyncReportAttempt :exec
 UPDATE sync_source_reports
 SET
-    updated_at = CURRENT_TIMESTAMP,
-    last_attempted_sync = CURRENT_TIMESTAMP
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE unique_hash = ?1
 `
 
@@ -111,8 +110,8 @@ func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, uniqueHash string
 const updateSyncSourceReportsFailure = `-- name: UpdateSyncSourceReportsFailure :exec
 UPDATE sync_source_reports
 SET
-    updated_at = CURRENT_TIMESTAMP,
-    last_failed_sync = CURRENT_TIMESTAMP,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_failed_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     previous_sync_error = ?1,
     
     -- Counters 
@@ -150,8 +149,8 @@ func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, errorMessa
 const updateSyncSourceReportsSuccess = `-- name: UpdateSyncSourceReportsSuccess :exec
 UPDATE sync_source_reports
 SET
-    updated_at = CURRENT_TIMESTAMP,
-    last_successful_sync = CURRENT_TIMESTAMP,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_successful_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
 
     -- Counters
     total_syncs = total_syncs + 1,

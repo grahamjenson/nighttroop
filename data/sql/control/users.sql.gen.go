@@ -33,7 +33,7 @@ func (q *Queries) CreateUser(ctx context.Context, subdomain string, backupKeyHas
 
 const deleteUsers = `-- name: DeleteUsers :exec
 UPDATE users
-SET deleted_at = CURRENT_TIMESTAMP
+SET deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain IN (SELECT value FROM json_each(?))
 `
 
@@ -281,7 +281,7 @@ func (q *Queries) TESTTruncateUsers(ctx context.Context) error {
 
 const updateUserLastSeenAt = `-- name: UpdateUserLastSeenAt :exec
 UPDATE users
-SET last_seen_at = CURRENT_TIMESTAMP
+SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain = ?
 `
 
@@ -292,7 +292,7 @@ func (q *Queries) UpdateUserLastSeenAt(ctx context.Context, subdomain string) er
 
 const updateUserLastWriteAt = `-- name: UpdateUserLastWriteAt :exec
 UPDATE users
-SET last_write_at = CURRENT_TIMESTAMP
+SET last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain = ?
 `
 

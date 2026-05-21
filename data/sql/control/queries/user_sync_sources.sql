@@ -11,13 +11,13 @@ INSERT INTO user_sync_sources (subdomain, type, password, enabled, url_or_userna
 VALUES (?, "NIGHTSCOUT", ?, ?, ?, ?);
 
 -- name: UpdateNightscoutSyncSource :exec
-UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT" AND subdomain = ?;
+UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?;
 
 -- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT" AND subdomain = ?;
+UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?;
 
 -- name: DisableNightscoutSyncSource :exec
-UPDATE user_sync_sources SET enabled = 0, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT" AND subdomain = ?;
+UPDATE user_sync_sources SET enabled = 0, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?;
 
 -----
 -- DEXCOM
@@ -28,10 +28,10 @@ VALUES (?, "DEXCOM", ?, ?, ?, ?, ?);
 
 
 -- name: UpdateDexcomSyncSource :exec
-UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM" AND subdomain = ?;
+UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND subdomain = ?;
 
 -- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM" AND subdomain = ?;
+UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND subdomain = ?;
 
 
 -- DELETE is real for security

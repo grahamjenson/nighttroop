@@ -79,7 +79,7 @@ func (q *Queries) DeleteSyncSource(ctx context.Context, type_ consts.SyncSourceT
 }
 
 const disableNightscoutSyncSource = `-- name: DisableNightscoutSyncSource :exec
-UPDATE user_sync_sources SET enabled = 0, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT" AND subdomain = ?
+UPDATE user_sync_sources SET enabled = 0, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
 `
 
 func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, subdomain string) error {
@@ -126,7 +126,7 @@ func (q *Queries) GetAllUserSyncSourcesForUser(ctx context.Context, subdomain st
 }
 
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
-UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM" AND subdomain = ?
+UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND subdomain = ?
 `
 
 type UpdateDexcomSyncSourceParams struct {
@@ -151,7 +151,7 @@ func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSy
 }
 
 const updateDexcomSyncSourceWithoutPassword = `-- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "DEXCOM" AND subdomain = ?
+UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND subdomain = ?
 `
 
 type UpdateDexcomSyncSourceWithoutPasswordParams struct {
@@ -174,7 +174,7 @@ func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, arg
 }
 
 const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
-UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT" AND subdomain = ?
+UPDATE user_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
 `
 
 type UpdateNightscoutSyncSourceParams struct {
@@ -197,7 +197,7 @@ func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNigh
 }
 
 const updateNightscoutSyncSourceWithoutPassword = `-- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE type = "NIGHTSCOUT" AND subdomain = ?
+UPDATE user_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
 `
 
 type UpdateNightscoutSyncSourceWithoutPasswordParams struct {

@@ -7,7 +7,6 @@ package user
 
 import (
 	"context"
-	"time"
 )
 
 const allBoluses = `-- name: AllBoluses :many
@@ -168,7 +167,7 @@ type CreateBolusParams struct {
 	Eid       *string
 	Value     *float64
 	Type      *string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error {

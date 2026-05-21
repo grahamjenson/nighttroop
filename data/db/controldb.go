@@ -45,7 +45,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	}
 
 	// Migrate the DB, run any unrun migrations
-	err = control.MigrateUp(sqldb)
+	err = control.MigrateUp("control", sqldb)
 	if err != nil {
 		return nil, fmt.Errorf("cannot migrate control db: %w", err)
 	}
@@ -296,7 +296,7 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 		return nil, nil, fmt.Errorf("user not found")
 	}
 
-	lastSeenMoreThan10MinutesAgo := model.LastSeenAt == nil || time.Now().After(model.LastSeenAt.Add(-10*time.Minute))
+	lastSeenMoreThan10MinutesAgo := model.LastSeenAt == nil || time.Now().After(model.LastSeenAtDate().Add(-10*time.Minute))
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
 		db.Queries.UpdateUserLastSeenAt(context.TODO(), subdomain)
 	}

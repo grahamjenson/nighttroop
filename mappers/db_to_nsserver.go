@@ -11,7 +11,7 @@ import (
 func DBEntryToNSEntry(dbEntry user.Entry) *nightscout.NSEntry {
 	return &nightscout.NSEntry{
 		ID:   fmt.Sprintf("%d", dbEntry.ID),
-		Date: dbEntry.CreatedAt,
+		Date: dbEntry.CreatedAtDate(),
 		SGV:  int(math.Round(dbEntry.Value)),
 	}
 }

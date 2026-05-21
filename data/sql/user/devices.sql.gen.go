@@ -130,7 +130,7 @@ func (q *Queries) GetDevice(ctx context.Context, name string) (*Device, error) {
 }
 
 const updateDeviceLastSeenAt = `-- name: UpdateDeviceLastSeenAt :exec
-UPDATE devices SET last_seen_at = CURRENT_TIMESTAMP WHERE name = ?
+UPDATE devices SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE name = ?
 `
 
 func (q *Queries) UpdateDeviceLastSeenAt(ctx context.Context, name string) error {

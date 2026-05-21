@@ -5,8 +5,6 @@
 package control
 
 import (
-	"time"
-
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 )
@@ -17,24 +15,24 @@ type Admin struct {
 	Password   string
 	TotpSecret string
 	Role       consts.AdminRole
-	CreatedAt  *time.Time
-	LastSeenAt *time.Time
+	CreatedAt  int64
+	LastSeenAt *int64
 }
 
 type DataSourceBlockList struct {
 	ID        int64
+	CreatedAt int64
 	Username  *string
 	Url       *string
 	Reason    *string
-	CreatedAt *time.Time
 }
 
 type Event struct {
 	ID      int64
 	Type    *string
 	Details *string
-	Start   *time.Time
-	End     *time.Time
+	Start   int64
+	End     *int64
 }
 
 type Job struct {
@@ -59,14 +57,14 @@ type SqliteSequence struct {
 
 type SyncSourceReport struct {
 	ID                         int64
-	CreatedAt                  time.Time
-	UpdatedAt                  time.Time
+	CreatedAt                  int64
+	UpdatedAt                  int64
 	UniqueHash                 string
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
-	LastAttemptedSync          *time.Time
-	LastSuccessfulSync         *time.Time
-	LastFailedSync             *time.Time
+	LastAttemptedSync          *int64
+	LastSuccessfulSync         *int64
+	LastFailedSync             *int64
 	TotalSyncs                 *int64
 	TotalSuccessfulSyncs       *int64
 	TotalFailedSyncs           *int64
@@ -84,11 +82,11 @@ type User struct {
 	Subdomain        string
 	Batch            string
 	BackupKeyHash    string
-	CreatedAt        *time.Time
+	CreatedAt        int64
 	MaxDbSizeKbLimit *int64
-	LastSeenAt       *time.Time
-	LastWriteAt      *time.Time
-	DeletedAt        *time.Time
+	LastSeenAt       *int64
+	LastWriteAt      *int64
+	DeletedAt        *int64
 }
 
 type UserSyncSource struct {
@@ -98,8 +96,8 @@ type UserSyncSource struct {
 	UrlOrUsername string
 	Password      string
 	DexcomRegion  consts.DexcomRegion
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	CreatedAt     int64
+	UpdatedAt     int64
 	Enabled       bool
 	UniqueHash    string
 }

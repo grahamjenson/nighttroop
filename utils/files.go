@@ -2,10 +2,18 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 )
+
+func MkDirs(dir string) error {
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("cannot create directory %s: %w", dir, err)
+	}
+	return nil
+}
 
 func MkParentDirs(path string) error {
 	dir := filepath.Dir(path)
@@ -56,4 +64,26 @@ func RelPathBetween(newBasePath string, targetPath string) string {
 	}
 
 	return relPath
+}
+
+type CountingWriter struct {
+	W     io.Writer
+	Bytes int64
+}
+
+func (c *CountingWriter) Write(p []byte) (int, error) {
+	n, err := c.W.Write(p)
+	c.Bytes += int64(n)
+	return n, err
+}
+
+type CountingReader struct {
+	R     io.Reader
+	Bytes int64
+}
+
+func (c *CountingReader) Read(p []byte) (int, error) {
+	n, err := c.R.Read(p)
+	c.Bytes += int64(n)
+	return n, err
 }

@@ -5,8 +5,6 @@
 package user
 
 import (
-	"time"
-
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -15,14 +13,14 @@ type Bolus struct {
 	Eid       *string
 	Value     *float64
 	Type      *string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 type Carb struct {
 	ID        int64
 	Eid       *string
 	Amount    float64
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 type Device struct {
@@ -31,8 +29,8 @@ type Device struct {
 	Password   string
 	TotpSecret string
 	Role       consts.DeviceRole
-	CreatedAt  time.Time
-	LastSeenAt *time.Time
+	CreatedAt  int64
+	LastSeenAt *int64
 }
 
 type DeviceStatus struct {
@@ -46,7 +44,7 @@ type DeviceStatus struct {
 	Pumpreservoir *float64
 	Loopstatus    *string
 	Looptimestamp *int64
-	CreatedAt     time.Time
+	CreatedAt     int64
 }
 
 type Entry struct {
@@ -55,15 +53,15 @@ type Entry struct {
 	CreatedByType *string
 	CreatedByID   *int64
 	Value         float64
-	CreatedAt     time.Time
+	CreatedAt     int64
 }
 
 type Event struct {
 	ID      int64
 	Type    *string
 	Details *string
-	StartAt *time.Time
-	EndAt   *time.Time
+	StartAt int64
+	EndAt   *int64
 }
 
 type Profile struct {
@@ -71,7 +69,7 @@ type Profile struct {
 	Eid                      *string
 	Storeid                  *string
 	Name                     *string
-	CreatedAt                time.Time
+	CreatedAt                int64
 	Start                    *int64
 	Timestamp                *int64
 	Duration                 *int64
@@ -94,7 +92,7 @@ type SqliteSequence struct {
 
 type TempBasal struct {
 	ID        int64
-	CreatedAt time.Time
+	CreatedAt int64
 	Eid       *string
 	Start     *int64
 	Duration  *int64
@@ -103,7 +101,7 @@ type TempBasal struct {
 
 type TempTarget struct {
 	ID         int64
-	CreatedAt  time.Time
+	CreatedAt  int64
 	Eid        *string
 	Start      *int64
 	Duration   *int64

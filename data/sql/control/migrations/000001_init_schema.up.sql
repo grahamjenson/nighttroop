@@ -11,15 +11,16 @@ CREATE TABLE users (
     batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL NOT NULL,
     
     backup_key_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
 
     max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
     
 
     -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
-    last_seen_at TIMESTAMP,
-    last_write_at TIMESTAMP,
-    deleted_at TIMESTAMP
+    last_seen_at INTEGER,
+    last_write_at INTEGER,
+    deleted_at INTEGER
 );
 
 CREATE TABLE admins (
@@ -28,18 +29,19 @@ CREATE TABLE admins (
     password TEXT NOT NULL,
     totp_secret TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('admin', 'read')), -- for future use, can have different levels of admin access
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_seen_at TIMESTAMP
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+    last_seen_at INTEGER
 );
 
 -- This is a basic table that will stop certain urls from being added as data sources, for security and abuse prevention
 -- TODO: everything here
 CREATE TABLE data_source_block_list(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     username TEXT, -- in case it is a dexcom account or something
     url TEXT,
-    reason TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    reason TEXT
 );
 
 
@@ -55,8 +57,9 @@ CREATE TABLE user_sync_sources (
     password TEXT NOT NULL, -- or ns token
     dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
 
     unique_hash TEXT NOT NULL,
@@ -69,8 +72,8 @@ CREATE TABLE user_sync_sources (
 -- This is the reporting table where each username/url password token region combo has a single report for
 CREATE TABLE sync_source_reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
     -- We do not store the actual sync data here, that is on the user, but we need to store the results
     unique_hash TEXT UNIQUE NOT NULL, -- <type>_<username>_<password>_<dexcom_region> for dexcom, <type>_<url>_<token> for nightscout
@@ -82,9 +85,9 @@ CREATE TABLE sync_source_reports (
 
 
     -- Timing of syncs
-    last_attempted_sync DATETIME,
-    last_successful_sync DATETIME,
-    last_failed_sync DATETIME,
+    last_attempted_sync INTEGER,
+    last_successful_sync INTEGER,
+    last_failed_sync INTEGER,
 
 
     -- Counters
@@ -114,8 +117,8 @@ CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
     details TEXT,
-    start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    end TIMESTAMP
+    start INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    end INTEGER
 );
 
 

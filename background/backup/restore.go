@@ -23,6 +23,11 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 	}
 
 	err = TryDownloadExrtractUserDbs(s3Client)
+	// Create the rest of the folders here
+	for _, char := range utils.USER_CHAR_SET {
+		dir, _ := utils.UserBatchPaths(string(char))
+		utils.MkDirs(dir)
+	}
 
 	if err != nil {
 		return fmt.Errorf("cannot try download all files: %w", err)
@@ -47,7 +52,7 @@ func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
 		return fmt.Errorf("cannot create parent directories: %w", err)
 	}
 
-	found, err := s3Client.DownloadFilesFromS3(s3Client.ControlS3Path(), utils.DB_FOLDER)
+	_, found, err := s3Client.DownloadFilesFromS3(s3Client.ControlS3Path(), utils.DB_FOLDER)
 	if !found && err == nil {
 		slog.Info("No control db backup found")
 		return nil
@@ -91,9 +96,12 @@ func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string) (bool, error) {
 
 	path, _ := utils.UserBatchPaths(char)
+	if utils.FileExists(path) {
+		return true, nil
+	}
 	s3Path := s3Client.UserBatchS3Path(char)
 
-	found, err := s3Client.DownloadFilesFromS3(s3Path, path)
+	_, found, err := s3Client.DownloadFilesFromS3(s3Path, path)
 
 	if err != nil {
 		// TODO dont fail here if just not found

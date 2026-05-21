@@ -155,7 +155,8 @@ func (c *S3Client) TestObjectPath() string {
 ////
 
 func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
-	defer utils.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, nil)
+	info := ""
+	defer utils.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, &info)
 	if len(paths) == 0 {
 		slog.Error("No files to sync for %s", "key", key)
 		return nil
@@ -170,7 +171,8 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 	// Create a goroutine to write to the pipe the zip
 	go func() {
 		defer pw.Close()
-		err := c.createTarLZ4(paths, pw)
+		filesize, err := c.createTarLZ4(paths, pw)
+		info = fmt.Sprintf("uploaded %d bytes", filesize)
 		if err != nil {
 			slog.Error("Error creating tar LZ4", "key", key, "error", err)
 			// Important: propagate error to the reader side
@@ -211,8 +213,10 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 // DOWNLOAD METHODS
 ////
 
-func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error) {
-	// This function downloads a path to a user
+func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (int64, bool, error) {
+	info := ""
+	defer utils.TrackTime(time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
+
 	ctx := context.TODO()
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),
@@ -221,18 +225,22 @@ func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error)
 	if err != nil {
 		var noSuchKeyError *types.NoSuchKey
 		if errors.As(err, &noSuchKeyError) {
-			return false, nil
+			info = "Not Found"
+			return 0, false, nil
 		}
-		return false, fmt.Errorf("cannot get object from s3: %w", err)
+		info = "Error"
+		return 0, false, fmt.Errorf("cannot get object from s3: %w", err)
 	}
 	defer out.Body.Close()
+	cr := &utils.CountingReader{R: out.Body}
+	err = c.ExtractTarLZ4(cr, outpath)
 
-	err = c.ExtractTarLZ4(out.Body, outpath)
+	info = fmt.Sprintf("downloaded and extracted %d bytes", cr.Bytes)
 	if err != nil {
-		return true, fmt.Errorf("cannot extract tar LZ4: %w", err)
+		return cr.Bytes, true, fmt.Errorf("cannot extract tar LZ4: %w", err)
 	}
 
-	return true, nil
+	return cr.Bytes, true, nil
 }
 
 ////
@@ -242,11 +250,13 @@ func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (bool, error)
 // //
 // TODO SLOP TO BE REVIEWED
 // //
-func (c *S3Client) createTarLZ4(files []string, writer io.Writer) error {
+
+func (c *S3Client) createTarLZ4(files []string, writer io.Writer) (int64, error) {
+	cw := &utils.CountingWriter{W: writer}
 	// Wrap all up in encryption
-	encWriter, err := c.ServerConfig.Security.EncryptingWriter(writer)
+	encWriter, err := c.ServerConfig.Security.EncryptingWriter(cw)
 	if err != nil {
-		return fmt.Errorf("cannot create encrypting writer: %w", err)
+		return 0, fmt.Errorf("cannot create encrypting writer: %w", err)
 	}
 
 	// Wrap in LZ4 writer
@@ -260,22 +270,22 @@ func (c *S3Client) createTarLZ4(files []string, writer io.Writer) error {
 			tarWriter.Close()
 			lz4Writer.Close()
 			encWriter.Close()
-			return fmt.Errorf("adding %s to tar: %w", file, err)
+			return cw.Bytes, fmt.Errorf("adding %s to tar: %w", file, err)
 		}
 	}
 
 	// Replace the defers with this at the end of createTarLZ4:
 	if err := tarWriter.Close(); err != nil {
-		return fmt.Errorf("closing tar writer: %w", err)
+		return cw.Bytes, fmt.Errorf("closing tar writer: %w", err)
 	}
 	if err := lz4Writer.Close(); err != nil {
-		return fmt.Errorf("closing lz4 writer: %w", err)
+		return cw.Bytes, fmt.Errorf("closing lz4 writer: %w", err)
 	}
 	if err := encWriter.Close(); err != nil {
-		return fmt.Errorf("closing enc writer: %w", err)
+		return cw.Bytes, fmt.Errorf("closing enc writer: %w", err)
 	}
 
-	return nil
+	return cw.Bytes, nil
 }
 
 func addFileToTar(tw *tar.Writer, filePath string) error {
@@ -352,8 +362,9 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 				outFile.Close()
 				return fmt.Errorf("writing file: %w", err)
 			}
-			slog.Info("Extraction of file complete", "path", targetPath)
+
 			outFile.Close()
+			slog.Info("Extraction of file complete", "path", targetPath)
 
 			// Restore original file permissions
 			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
@@ -367,6 +378,5 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 		}
 	}
 
-	slog.Info("Extraction complete")
 	return nil
 }

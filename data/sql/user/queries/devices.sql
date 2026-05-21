@@ -8,7 +8,7 @@ INSERT INTO devices (name, password, totp_secret, role) VALUES (?, ?, ?, ?);
 SELECT * FROM devices where name = ? LIMIT 1;
 
 -- name: UpdateDeviceLastSeenAt :exec
-UPDATE devices SET last_seen_at = CURRENT_TIMESTAMP WHERE name = ?;
+UPDATE devices SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE name = ?;
 
 ------
 -- Device Status
