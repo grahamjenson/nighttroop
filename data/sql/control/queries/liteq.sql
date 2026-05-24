@@ -16,14 +16,14 @@ VALUES
         ?,
         ?,
         'queued',
-        unixepoch(),
-        unixepoch(),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
         ?,
         ?
-    ) ON CONFLICT (deduping_key, job_status)
+    ) ON CONFLICT (deduping_key)
 WHERE
     deduping_key != ''
-    AND job_status = 'queued' DO NOTHING;
+    AND job_status IN ('queued', 'fetched') DO NOTHING;
 
 -- name: QueueJobReplaceDupe :exec
 INSERT INTO
@@ -43,19 +43,19 @@ VALUES
         ?,
         ?,
         'queued',
-        unixepoch(),
-        unixepoch(),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
         ?,
         ?
-    ) ON CONFLICT (deduping_key, job_status)
+    ) ON CONFLICT (deduping_key)
 WHERE
     deduping_key != ''
-    AND job_status = 'queued' DO
+    AND job_status IN ('queued', 'fetched') DO
 UPDATE
 SET
     job = EXCLUDED.job,
     execute_after = EXCLUDED.execute_after,
-    updated_at = unixepoch(),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     remaining_attempts = EXCLUDED.remaining_attempts;
 
 -- name: CompleteJob :exec
@@ -63,9 +63,8 @@ UPDATE
     jobs
 SET
     job_status = 'completed',
-    finished_at = unixepoch(),
-    updated_at = unixepoch(),
-    consumer_fetched_at = 0,
+    finished_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     remaining_attempts = 0
 WHERE
     id = ?;
@@ -78,9 +77,15 @@ SET
         WHEN remaining_attempts <= 1 THEN 'failed'
         ELSE 'queued'
     END,
-    finished_at = 0,
-    updated_at = unixepoch(),
-    consumer_fetched_at = 0,
+    finished_at = CASE
+        WHEN remaining_attempts <= 1 THEN CAST(unixepoch('subsec') * 1000 AS INTEGER)
+        ELSE 0
+    END,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    consumer_fetched_at = CASE
+        WHEN remaining_attempts <= 1 THEN consumer_fetched_at
+        ELSE 0
+    END,
     remaining_attempts = MAX(remaining_attempts - 1, 0),
     errors = ?
 WHERE
@@ -90,8 +95,8 @@ WHERE
 UPDATE
     jobs
 SET
-    consumer_fetched_at = unixepoch(),
-    updated_at = unixepoch(),
+    consumer_fetched_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     job_status = 'fetched'
 WHERE
     jobs.job_status = 'queued'
@@ -120,7 +125,7 @@ SET
         WHEN remaining_attempts <= 1 THEN 'failed'
         ELSE 'queued'
     END,
-    updated_at = unixepoch(),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     consumer_fetched_at = 0,
     remaining_attempts = MAX(remaining_attempts - 1, 0),
     errors = json_insert(errors, '$[#]', 'visibility timeout expired')
@@ -153,12 +158,12 @@ SELECT * FROM jobs
 WHERE
     job_status IN ('completed', 'failed')
     AND remaining_attempts = 0
-    AND created_at < (CAST(unixepoch() AS INTEGER) - 60); --jobs created at more than 1 minute ago
+    AND created_at < (CAST(unixepoch('subsec') * 1000 AS INTEGER) - 60); --jobs created at more than 1 minute ago
 
 
 -- name: EnsureJobStatsDailyForGroup :one
 INSERT INTO job_stats_daily (day_queue_job, errors, updated_at)
-VALUES (?, '[]', CAST(unixepoch() AS INTEGER))
+VALUES (?, '[]', CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ON CONFLICT(day_queue_job) DO UPDATE SET
     day_queue_job = day_queue_job -- Forces NOOP assignment to return conflicting row
 RETURNING *;
@@ -171,7 +176,7 @@ SET
     total_failed = total_failed + sqlc.arg(total_failed),
     duration_sum = duration_sum + sqlc.arg(duration_sum),
     duration_squared_sum = duration_squared_sum + sqlc.arg(duration_squared_sum),
-    updated_at = CAST(unixepoch() AS INTEGER),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
 
     errors = (
         SELECT json_group_array(DISTINCT value)

@@ -43,6 +43,7 @@ UPDATE sync_source_reports
 SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_successful_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
 
     -- Counters
     total_syncs = total_syncs + 1,
@@ -75,6 +76,7 @@ SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_failed_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     previous_sync_errors = sqlc.arg(error_messages),
+    last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     
     -- Counters 
     total_syncs = total_syncs + 1,

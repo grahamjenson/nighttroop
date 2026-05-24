@@ -24,14 +24,14 @@ so you can fill out your dexcom username/password +
 
 # Testing locally
 
-Docker runs our local test s3 server `minio`
+Docker runs our local test s3 server `minio` (the only external dependency)
 
 ```
 brew install sqlc
 brew install golang-migrate
 brew install docker colima docker-compose
 colima start
-docker-compose up
+docker-compose up -d
 ```
 
 ```

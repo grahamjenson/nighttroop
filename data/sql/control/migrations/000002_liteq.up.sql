@@ -19,10 +19,10 @@ WHERE
     job_status = 'queued'
     OR job_status = 'fetched';
 
-CREATE UNIQUE INDEX dedupe ON jobs (deduping_key, job_status)
+CREATE UNIQUE INDEX dedupe ON jobs (deduping_key)
 WHERE
     deduping_key != ''
-    AND job_status = 'queued';
+    AND job_status IN ('queued', 'fetched');
 
 
 --- For reporting
@@ -42,6 +42,14 @@ CREATE TABLE job_stats_daily (
     -- liteq jobs use epoch in seconds
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
+
+    -- Virtual columns for metrics
+    mean_duration REAL GENERATED ALWAYS AS (
+        CASE WHEN total_jobs > 0 
+             THEN duration_sum / total_jobs 
+             ELSE 0 
+        END
+    ) VIRTUAL,
 
     PRIMARY KEY (day_queue_job)
 );

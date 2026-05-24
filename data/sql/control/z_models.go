@@ -60,6 +60,7 @@ type JobStatsDaily struct {
 	Errors             errors.ErrorList
 	CreatedAt          int64
 	UpdatedAt          int64
+	MeanDuration       *float64
 }
 
 type SqliteSequence struct {

@@ -69,9 +69,10 @@ func (c *ConsumerSupervisor) loop() {
 		slog.Info("starting liteq consumer for queue", "queue", c.queueName)
 
 		err := c.queue.Consume(c.consumerContext, ConsumeParams{
-			Queue:    c.queueName,
-			PoolSize: c.poolSize,
-			Worker:   c.worker,
+			Queue:             c.queueName,
+			PoolSize:          c.poolSize,
+			Worker:            c.worker,
+			VisibilityTimeout: 60, // Max time a job can take before being reset to be failed or retried
 		})
 
 		if err != nil {

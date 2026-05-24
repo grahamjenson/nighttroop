@@ -121,7 +121,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		}
 
 		if params.VisibilityTimeout > 0 {
-			_, err := j.queries.ResetJobs(ctx, params.Queue, time.Now().Unix()-params.VisibilityTimeout)
+			_, err := j.queries.ResetJobs(ctx, params.Queue, time.Now().UnixMilli()-(params.VisibilityTimeout*1000))
 
 			if err != nil {
 				return fmt.Errorf("error resetting jobs: %w", err)

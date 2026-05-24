@@ -67,7 +67,8 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 }
 
 func (b *SyncJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
-	syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
+	//syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
+	syncCron := fmt.Sprintf("@every 1s")
 	c.AddFunc(syncCron, b.buildSyncCronFunc(queue))
 }
 
@@ -87,15 +88,13 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 			return
 		}
 
-		syncJobs := make([]*SyncJobParams, 0, len(syncReports))
 		for _, report := range syncReports {
-			syncJobs = append(syncJobs, &SyncJobParams{
+
+			syncJob := &SyncJobParams{
 				UniqueHash: report.UniqueHash,
 				Type:       report.Type,
-			})
-		}
+			}
 
-		for _, syncJob := range syncJobs {
 			jsonRaw, err := json.Marshal(syncJob)
 			if err != nil {
 				slog.Error("Error marshalling sync job params", "error", err, "syncJob", syncJob)
