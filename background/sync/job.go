@@ -68,7 +68,9 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 
 func (b *SyncJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
 	syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
+
 	c.AddFunc(syncCron, b.buildSyncCronFunc(queue))
+
 }
 
 func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
@@ -81,6 +83,11 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 			slog.Error("error creating sync reports for all sync sources", "error", err)
 			return
 		}
+
+		// This gets reports that are:
+		// 1. Have a user with an Enabled sync_source
+		// 2. Are due to run because last attempt is null or was more than the sync interval ago
+		// 3. The User has been seen in the last day
 		syncReports, err := b.controlDB.Queries.GetSyncReportsToRun(context.TODO())
 		if err != nil {
 			slog.Error("error getting sync reports to run", "error", err)

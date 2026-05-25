@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
+	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -82,8 +83,35 @@ func (b *SyncJobManager) SyncUserData(syncJob *SyncJobParams, userSyncSources []
 }
 
 func (b *SyncJobManager) syncNightscout(syncJob *SyncJobParams, userSyncSources []*control.UserSyncSource) error {
-	slog.Info("Syncing Nightscout", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type)
-	return fmt.Errorf("Not implemented")
+	if len(userSyncSources) == 0 {
+		return fmt.Errorf("No user sync sources found for unique hash: %s", syncJob.UniqueHash)
+	}
+
+	unencUsername, unencPassword, _, err := b.getUsernamePasswordRegion(userSyncSources[0])
+	if err != nil {
+		return fmt.Errorf("error getting username, password and region: %w", err)
+	}
+
+	nsc := nightscout_client.NewClient(unencUsername, unencPassword)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	egvs, err := nsc.GetEntries(ctx, 10)
+	if err != nil {
+		return fmt.Errorf("Nightscout Error: %w", err)
+	}
+
+	for _, e := range egvs {
+		fmt.Printf(
+			"NS %s %f mg/dL %s\n",
+			e.DateString.Format(time.RFC3339),
+			e.SGV,
+			e.Direction,
+		)
+	}
+	return nil
+
 }
 
 func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams, userSyncSources []*control.UserSyncSource) error {
@@ -91,24 +119,16 @@ func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams, userSyncSources []*c
 		return fmt.Errorf("No user sync sources found for unique hash: %s", syncJob.UniqueHash)
 	}
 
-	EncUrlOrUserName := userSyncSources[0].UrlOrUsername
-	EncPassword := userSyncSources[0].Password
-	DexcomRegion := userSyncSources[0].DexcomRegion
+	unencUsername, unencPassword, dexcomRegion, err := b.getUsernamePasswordRegion(userSyncSources[0])
+	if err != nil {
+		return fmt.Errorf("error getting username, password and region: %w", err)
+	}
 
 	slog.Info("Syncing Dexcom", "unique_hash", syncJob.UniqueHash)
 
-	unencUsername, err := b.security.Decrypt(EncUrlOrUserName)
-	if err != nil {
-		return fmt.Errorf("error decrypting username: %w", err)
-	}
-	unencPassword, err := b.security.Decrypt(EncPassword)
-	if err != nil {
-		return fmt.Errorf("error decrypting password: %w", err)
-	}
+	client := dexcom_client.NewClient(unencUsername, unencPassword, dexcomRegion == consts.DexcomRegionOther)
 
-	client := dexcom_client.NewClient(unencUsername, unencPassword, DexcomRegion == consts.DexcomRegionOther)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	egvs, err := client.FetchLastHourEGVs(ctx)
@@ -118,7 +138,7 @@ func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams, userSyncSources []*c
 
 	for _, e := range egvs {
 		fmt.Printf(
-			"%s %d mg/dL %s (%s)\n",
+			"Dexcom %s %d mg/dL %s (%s)\n",
 			e.DisplayTime.Format(time.RFC3339),
 			e.Value,
 			e.TrendArrow,
@@ -126,4 +146,21 @@ func (b *SyncJobManager) syncDexcom(syncJob *SyncJobParams, userSyncSources []*c
 		)
 	}
 	return nil
+}
+
+func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.UserSyncSource) (string, string, consts.DexcomRegion, error) {
+
+	encUrlOrUserName := syncSource.UrlOrUsername
+	encPassword := syncSource.Password
+	dexcomRegion := syncSource.DexcomRegion
+
+	unencUsername, err := b.security.Decrypt(encUrlOrUserName)
+	if err != nil {
+		return "", "", "", fmt.Errorf("error decrypting username: %w", err)
+	}
+	unencPassword, err := b.security.Decrypt(encPassword)
+	if err != nil {
+		return "", "", "", fmt.Errorf("error decrypting password: %w", err)
+	}
+	return unencUsername, unencPassword, dexcomRegion, nil
 }

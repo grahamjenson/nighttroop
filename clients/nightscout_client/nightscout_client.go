@@ -70,16 +70,10 @@ func (c *Client) newRequest(
 
 type Entry struct {
 	ID         string    `json:"_id"`
-	Type       string    `json:"type"`
 	DateString time.Time `json:"dateString"`
 	Date       int64     `json:"date"`
-	SGV        int       `json:"sgv"`
+	SGV        float32   `json:"sgv"`
 	Direction  string    `json:"direction"`
-	Device     string    `json:"device"`
-	Filtered   int       `json:"filtered"`
-	Unfiltered int       `json:"unfiltered"`
-	Noise      int       `json:"noise"`
-	RSSI       int       `json:"rssi"`
 }
 
 func (c *Client) GetEntries(
