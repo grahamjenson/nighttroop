@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -14,7 +15,7 @@ import (
 
 func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	AddStandardMiddleware(r, config)
+	httputils.AddStandardMiddleware(r, config)
 
 	r.Use(user.UserRateLimitMiddleware(config))
 

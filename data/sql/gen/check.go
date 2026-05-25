@@ -1,4 +1,4 @@
-//go:build sqlite_math_functions
+//go:build ignore
 
 package main
 

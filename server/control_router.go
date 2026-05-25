@@ -6,11 +6,12 @@ import (
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/control"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func NewControlRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	AddStandardMiddleware(r, config)
+	httputils.AddStandardMiddleware(r, config)
 
 	static.AddSatticRoutes(r)
 

@@ -1,4 +1,4 @@
-package nightscout
+package nightscout_api
 
 import (
 	"fmt"
@@ -63,4 +63,8 @@ func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig
 	}
 
 	return deviceName, consts.DeviceRole(role), nil
+}
+
+func NSGetNightscoutJWTToken(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Not Implemented: JWT token generation is not implemented yet", http.StatusNotImplemented)
 }
