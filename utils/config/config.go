@@ -196,7 +196,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenvdev, dotenv, "BACKGROUND_SYNC_WORKERS", 5),
-		SyncIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "SYNC_INTERVAL_IN_SECONDS", 30),
+		SyncIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "SYNC_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
 
 		// Dexcom Config
 		DexcomClientID:     configStringSelect(dotenvdev, dotenv, "DEXCOM_CLIENT_ID", ""),

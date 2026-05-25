@@ -67,8 +67,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 }
 
 func (b *SyncJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
-	//syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
-	syncCron := fmt.Sprintf("@every 1s")
+	syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
 	c.AddFunc(syncCron, b.buildSyncCronFunc(queue))
 }
 
