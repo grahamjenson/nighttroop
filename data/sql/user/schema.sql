@@ -41,23 +41,6 @@ CREATE TABLE devices (
     last_seen_at INTEGER
 );
 
-CREATE TABLE entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    -- The id used extenally to this system (like remote NS id, dexcom id) maybe preceeded by the source like (dexcom-123) to make unique
-    eid TEXT, 
-
-    created_by_type TEXT, -- "device", "data_source"
-    created_by_id INTEGER, -- id of either device or data_source that created this entry
-    
-    
-    -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    value REAL NOT NULL,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-    -- CONTRAINTS
-    UNIQUE(eid)
-);
-
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
@@ -91,6 +74,24 @@ CREATE TABLE profile (
     insulin_sensitivities_json TEXT -- { [1,2] },
     basal_rates_json TEXT -- {[1,2]},
     targets_json TEXT, -- { [high, low] }
+    -- CONTRAINTS
+    UNIQUE(eid)
+);
+
+CREATE TABLE sgvs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- The id used extenally to this system (like remote NS id, dexcom id) maybe preceeded by the source like (dexcom-123) to make unique
+    eid TEXT, 
+
+    created_by_type TEXT, -- "device", "data_source"
+    created_by_id INTEGER, -- id of either device or data_source that created this entry
+    
+    
+    -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
+    value REAL NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
     -- CONTRAINTS
     UNIQUE(eid)
 );

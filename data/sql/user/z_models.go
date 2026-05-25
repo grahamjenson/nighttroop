@@ -47,15 +47,6 @@ type DeviceStatus struct {
 	CreatedAt     int64
 }
 
-type Entry struct {
-	ID            int64
-	Eid           *string
-	CreatedByType *string
-	CreatedByID   *int64
-	Value         float64
-	CreatedAt     int64
-}
-
 type Event struct {
 	ID      int64
 	Type    *string
@@ -83,6 +74,16 @@ type Profile struct {
 	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson interface{}
+}
+
+type Sgv struct {
+	ID            int64
+	Eid           *string
+	CreatedByType *string
+	CreatedByID   *int64
+	Value         float64
+	CreatedAt     int64
+	UpdatedAt     int64
 }
 
 type SqliteSequence struct {

@@ -40,7 +40,7 @@ CREATE TABLE events (
 -- TABLES ABOUT PATIENT DATA
 ---------------------------------------------------
 
-CREATE TABLE entries (
+CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- The id used extenally to this system (like remote NS id, dexcom id) maybe preceeded by the source like (dexcom-123) to make unique
     eid TEXT, 
@@ -52,7 +52,8 @@ CREATE TABLE entries (
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
     -- CONTRAINTS
     UNIQUE(eid)
 );

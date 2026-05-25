@@ -1,8 +1,11 @@
 package nightscout_api
 
 import (
+	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -13,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -20,30 +24,32 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 	r.Use(user.UserRateLimitMiddleware(config))
+
 	static.AddSatticRoutes(r)
 
-	// Only Unauthed Endpoints are the ones to generate the JWT token
-	// Can pass token asa query param, or JWT in auth header (recommended)
-	r.Get("/api/v2/authorization/request", NSGetNightscoutJWTToken)
-	r.Post("/api/v2/authorization/request", NSGetNightscoutJWTToken)
+	r.Group(func(r chi.Router) {
+		r.Use(NightscoutAuthMiddleware(controlDB, config))
+		r.Use(user.UserDBMiddleware(controlDB))
+		r.Get("/api/v2/authorization/request/token={token}", getAuthRoute(controlDB, config))
 
-	ntDeps := deps.Dependencies{
-		Config: vendorConfig.Config{}.WithDefaults(),
-		Store: &NightTroopAPIStore{
-			controlDB: controlDB,
-			config:    config,
-		},
-		Auth: &NightTroopAPIAuth{
-			controlDB: controlDB,
-			config:    config,
-		},
-	}
+		ntDeps := deps.Dependencies{
+			Config: vendorConfig.Config{}.WithDefaults(),
+			Store: &NightTroopAPIStore{
+				controlDB: controlDB,
+				config:    config,
+			},
+			Auth: &NightTroopAPIAuth{
+				controlDB: controlDB,
+				config:    config,
+			},
+		}
 
-	v1Router := v1.NewNightscoutV1Router(ntDeps)
-	v3Router := v3.NewNightscoutV3Router(ntDeps)
+		v1Router := v1.NewNightscoutV1Router(ntDeps)
+		v3Router := v3.NewNightscoutV3Router(ntDeps)
 
-	r.Mount("/api/v1", v1Router)
-	r.Mount("/api/v3", v3Router)
+		r.Mount("/api/v1", v1Router)
+		r.Mount("/api/v3", v3Router)
+	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
@@ -51,4 +57,87 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	})
 
 	return r
+}
+
+func getAuthRoute(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// The user should have already been verified
+		token, expiresAt, err := config.Security.GenerateUserJWTToken("asd", "asd")
+		if err != nil {
+			http.Error(w, "Internal Server Error: Failed to generate JWT token", http.StatusInternalServerError)
+			return
+		}
+
+		responce := map[string]any{
+			"token":            token,
+			"sub":              "read",
+			"permissionGroups": [][]string{{"*"}, []string{"*:*:read"}},
+			"iat":              time.Now().Unix(),
+			"exp":              expiresAt.Unix(),
+		}
+
+		jsonResponce, err := json.Marshal(responce)
+		if err != nil {
+			http.Error(w, "Internal Server Error: Failed to marshal JSON", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponce)
+	}
+
+}
+
+func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			deviceName, deviceRole, keepGoing, err := user.TryLoginWithJWTToken(cfg, r)
+			if err == nil {
+				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			// If the JWT token is present but incorrect we need to stop
+			if !keepGoing {
+				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
+				return
+			}
+
+			// Last Chance
+			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
+			if err == nil {
+				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
+		})
+	}
+}
+
+func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.DeviceRole, error) {
+
+	tokenParam := r.URL.Query().Get("token")
+	if tokenParam == "" {
+		return "", "", fmt.Errorf("no token provided")
+	}
+
+	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+	userDB, _, err := controlDB.GetUser(subdomain, false)
+	if err != nil {
+		return "", "", fmt.Errorf("user not found: %w", err)
+	}
+
+	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.GetDeviceSplat)
+	if err != nil {
+		return "", "", fmt.Errorf("bad token: %w", err)
+	}
+
+	return deviceName, consts.DeviceRole(role), nil
 }
