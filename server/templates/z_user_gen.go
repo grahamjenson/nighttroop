@@ -44,6 +44,12 @@ var UserLoginTotpTemplateString string
 var UserLoginTotpTemplate *template.Template
 var UserLoginTotpHTMXTemplate *template.Template
 
+//go:embed user/settings/identities.html
+var UserSettingsIdentitiesTemplateString string
+
+var UserSettingsIdentitiesTemplate *template.Template
+var UserSettingsIdentitiesHTMXTemplate *template.Template
+
 //go:embed user/settings/sync.html
 var UserSettingsSyncTemplateString string
 
@@ -446,6 +452,88 @@ func UserLoginTotpJSON(w io.Writer) error {
 	var payload any
 
 	payload = map[string]any{}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+		return fmt.Errorf("failed to write json response: %w", err)
+	}
+
+	return nil
+}
+
+func getUserSettingsIdentitiesTemplate() (*template.Template, error) {
+	if UserSettingsIdentitiesTemplate != nil {
+		return UserSettingsIdentitiesTemplate, nil
+	}
+
+	UserSettingsIdentitiesTemplate, err := template.New("UserSettingsIdentities").Parse(UserBaseTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	UserSettingsIdentitiesTemplate, err = UserSettingsIdentitiesTemplate.Parse(UserSettingsIdentitiesTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserSettingsIdentitiesTemplate, nil
+}
+
+func getUserSettingsIdentitiesHTMXTemplate() (*template.Template, error) {
+	if UserSettingsIdentitiesHTMXTemplate != nil {
+		return UserSettingsIdentitiesHTMXTemplate, nil
+	}
+
+	UserSettingsIdentitiesHTMXTemplate, err := template.New("UserSettingsIdentities").Parse(htmxUserTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	UserSettingsIdentitiesHTMXTemplate, err = UserSettingsIdentitiesHTMXTemplate.Parse(UserSettingsIdentitiesTemplateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserSettingsIdentitiesHTMXTemplate, nil
+}
+
+func UserSettingsIdentitiesHTML(w io.Writer, Subdomain string, devices []*UserIdentity, currentUserIsAdmin bool) error {
+	tmpl, err := getUserSettingsIdentitiesTemplate()
+	if err != nil {
+		return fmt.Errorf("failed to get template: %w", err)
+	}
+
+	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "devices": devices, "currentUserIsAdmin": currentUserIsAdmin})
+
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	return nil
+}
+
+func UserSettingsIdentitiesHTMX(w io.Writer, devices []*UserIdentity, currentUserIsAdmin bool) error {
+	tmpl, err := getUserSettingsIdentitiesHTMXTemplate()
+	if err != nil {
+		return fmt.Errorf("failed to get template: %w", err)
+	}
+
+	err = tmpl.Execute(w, map[string]any{"devices": devices, "currentUserIsAdmin": currentUserIsAdmin})
+
+	if err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+	return nil
+}
+
+func UserSettingsIdentitiesJSON(w io.Writer, devices []*UserIdentity, currentUserIsAdmin bool) error {
+	var payload any
+
+	payload = map[string]any{"devices": devices, "currentUserIsAdmin": currentUserIsAdmin}
 
 	b, err := json.Marshal(payload)
 	if err != nil {

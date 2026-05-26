@@ -20,12 +20,12 @@ func GenericAdminLoginError(w http.ResponseWriter, r *http.Request, err error, a
 }
 
 // We have a very generic error to not give any hints about how far through it was rejected
-func GenericDeviceLoginError(w http.ResponseWriter, r *http.Request, err error, args ...any) {
+func GenericIdentityLoginError(w http.ResponseWriter, r *http.Request, err error, args ...any) {
 	allArgs := append([]any{
 		"error", err,
 		"stack", localStack(),
 	}, args...)
-	slog.Info("Device Login Failed", allArgs...)
+	slog.Info("Identity Login Failed", allArgs...)
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 }
 

@@ -17,22 +17,22 @@ func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool,
 
 func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
-	deviceName := GetDeviceNameFromHTTPContext(r.Context())
+	identityName := GetIdentityNameFromHTTPContext(r.Context())
 
 	readLimiter := serverConfig.RateLimiters.UserGETLimiter(userSubdomain)
-	deviceLimiter := serverConfig.RateLimiters.DeviceGETLimiter(deviceName)
+	identityLimiter := serverConfig.RateLimiters.IdentityGETLimiter(identityName)
 
-	return AllowAll(readLimiter, deviceLimiter)
+	return AllowAll(readLimiter, identityLimiter)
 }
 
 func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
-	deviceName := GetDeviceNameFromHTTPContext(r.Context())
+	identityName := GetIdentityNameFromHTTPContext(r.Context())
 
 	writeLimiter := serverConfig.RateLimiters.UserPOSTLimiter(userSubdomain)
-	deviceLimiter := serverConfig.RateLimiters.DevicePOSTLimiter(deviceName)
+	identityLimiter := serverConfig.RateLimiters.IdentityPOSTLimiter(identityName)
 
-	return AllowAll(writeLimiter, deviceLimiter)
+	return AllowAll(writeLimiter, identityLimiter)
 }
 
 func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {

@@ -66,7 +66,7 @@ type ServerConfig struct {
 
 	// User Limits
 	MaxUsers                  int
-	MaxDevicesPerUser         int
+	MaxIdentitiesPerUser      int
 	MaxUserLastSeenInMins     int
 	MaxUserLastWrittenInMins  int
 	MaxUserNeverSeenInMins    int
@@ -174,8 +174,8 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		UserUpdateSyncPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_UPDATE_SYNC_PER_MINUTE_BURST", 4),
 
 		// User Limits
-		MaxUsers:          configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
-		MaxDevicesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_DEVICES_PER_USER", 10),
+		MaxUsers:             configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
+		MaxIdentitiesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_IDENTITIES_PER_USER", 10),
 
 		// Truncate Config
 		MaxUserDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
@@ -422,7 +422,7 @@ func printServerConfig(config ServerConfig) {
 		"UserCreateIPPerMinuteLimit r/s", config.UserCreateIPPerMinuteLimit,
 		"UserCreateIPPerMinuteBurst", config.UserCreateIPPerMinuteBurst,
 		"MaxUsers", config.MaxUsers,
-		"MaxDevicesPerUser", config.MaxDevicesPerUser,
+		"MaxIdentitiesPerUser", config.MaxIdentitiesPerUser,
 		"MaxUserLastSeenInMins", config.MaxUserLastSeenInMins,
 		"MaxUserLastWrittenInMins", config.MaxUserLastWrittenInMins,
 		"MaxUserDBSizeKB", config.MaxUserDBSizeKB,

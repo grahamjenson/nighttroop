@@ -197,16 +197,16 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// Setup the new UserDB
 	////
 
-	err = userDB.Queries.CreateDevice(context.TODO(), user.CreateDeviceParams{
+	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
 		Name:       consts.FIRST_ADMIN_NAME,
 		Password:   hashedPassword,
-		TotpSecret: encTOTPSecret,
-		Role:       consts.DeviceRoleAdmin,
+		TotpSecret: &encTOTPSecret,
+		Role:       consts.IdentityRoleAdmin,
 	})
 
 	if err != nil {
 		userDB.TryCloseAndDelete()
-		return nil, "", "", "", fmt.Errorf("cannot create admin device: %w", err)
+		return nil, "", "", "", fmt.Errorf("cannot create admin identity: %w", err)
 	}
 	db.users[subdomain] = userDB
 

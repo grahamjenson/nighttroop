@@ -28,7 +28,10 @@ overrides:
     rename:
       bolu: Bolus
     overrides:
-      - column: "devices.role"
+      - column: "identities.role"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
-          type: "DeviceRole"
+          type: "IdentityRole"
+      - column: "identities.enabled"
+        go_type:
+          type: "bool"

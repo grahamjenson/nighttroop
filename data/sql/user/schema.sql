@@ -17,36 +17,37 @@ CREATE TABLE carbs (
     UNIQUE(eid)
 );
 
-CREATE TABLE device_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT,
-    timestamp INTEGER NOT NULL,
-    device_id INTEGER NOT NULL,
-    deviceBattery INTEGER,
-    pumpBattery INTEGER,
-    pumpStatus TEXT,
-    pumpReservoir REAL,
-    loopStatus TEXT,
-    loopTimestamp INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
-);
-
-CREATE TABLE devices (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    totp_secret TEXT NOT NULL,
-    role TEXT NOT NULL CHECK(role IN ('admin', 'pwd_phone', 'read')), -- Something like Read/Carer/Full/Admin/LoopPhone
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    last_seen_at INTEGER
-);
-
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
     details TEXT,
     start_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     end_at INTEGER
+);
+
+CREATE TABLE identities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    totp_secret TEXT,
+    role TEXT NOT NULL CHECK(role IN ('admin', 'pwd_phone', 'read', 'read+write')), -- Something like Read/Carer/Full/Admin/LoopPhone
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    last_seen_at INTEGER,
+    enabled INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE identity_status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT,
+    timestamp INTEGER NOT NULL,
+    identity_id INTEGER NOT NULL,
+    battery_level INTEGER,
+    pump_battery INTEGER,
+    pump_status TEXT,
+    pump_reservoir REAL,
+    loop_status TEXT,
+    loop_timestamp INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 );
 
 CREATE TABLE profile (

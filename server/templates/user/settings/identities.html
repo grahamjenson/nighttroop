@@ -1,0 +1,188 @@
+{{/*PARAM devices []*UserIdentity*/}}
+{{/*PARAM isAdmin bool*/}}
+
+{{ define "content" }}
+
+<div id="mainForm" class="card shadow-sm border-0">
+    <div class="card-body p-4">
+
+        <div class="mb-3 border-bottom pb-2">
+            <h3 class="mb-1">Identity Settings</h3>
+            <div class="text-muted small">
+                An Identity is a set of credentials that can write or read your data. Give each user/device a unique set
+                of credentials then you will be able to see
+                information for each, and find where/what created data.
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="deviceAlerts"></div>
+
+        <!-- User/Device Identities Table -->
+        <div class="table-responsive">
+            <table class="table align-middle table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Password</th>
+                        <th>TOTP</th>
+                        <th>Role</th>
+                        <th>Created</th>
+                        <th>Last Seen</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="deviceTableBody">
+                    {{ range .devices }}
+                    <tr id="device-{{ .ID }}">
+                        <td>
+                            <div class="fw-semibold">{{ .Name }}</div>
+                        </td>
+
+                        <td style="width: 120px;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                onclick="copyIdentityPassword('{{ .Password }}', this)">
+                                Copy Password
+                            </button>
+                        </td>
+
+                        <td>
+                            {{ if .HasTotpSecret }}
+                            <span class="badge bg-success-subtle text-success border">
+                                ✓ Enabled
+                            </span>
+                            {{ else }}
+                            <span class="badge bg-secondary-subtle text-secondary border">
+                                ✕ Disabled
+                            </span>
+                            {{ end }}
+                        </td>
+
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border">
+                                {{ .Role }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="text-muted">
+                                {{ .CreatedAtString }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ if .LastSeenAt }}
+                            <span class="text-muted">
+                                {{ .LastSeenAtString }}
+                            </span>
+                            {{ else }}
+                            <span class="text-muted small">Never</span>
+                            {{ end }}
+                        </td>
+
+                        <td class="text-end">
+                            {{ $isSelf := eq $.CurrentIdentityName .Name }}
+                            {{ $isAdmin := eq .Role "admin" }}
+
+
+                            <button type="button" class="btn btn-sm btn-outline-danger" {{ if not $canDelete
+                                }}disabled{{ end }} {{ if not $canDelete }} data-bs-toggle="tooltip"
+                                data-bs-placement="top" title="
+                                    {{ if not $.CurrentUserIsAdmin }}
+                                        Only admins can delete devices
+                                    {{ else if $isSelf }}
+                                        You cannot delete the device you are logged in as
+                                    {{ else if $isAdmin }}
+                                        Admin devices cannot be deleted
+                                    {{ end }}
+                                    " {{ end }} hx-delete="/settings/devices/{{ .ID }}" hx-target="#device-{{ .ID }}"
+                                hx-swap="outerHTML" hx-confirm="Delete device '{{ .Name }}'?">
+                                Delete
+                            </button>
+
+                        </td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add Identity -->
+        <div id="error-container" class="mt-3"></div>
+        <div class="border-top pt-4 mt-3">
+
+            <h5 class="mb-3">Add Device</h5>
+
+            <form class="row g-3 align-items-end" hx-post="/devices" hx-target="#deviceTableBody" hx-swap="beforeend"
+                hx-on::after-request="
+                    if(event.detail.successful) {
+                        this.reset();
+                    }
+                " hx-target-error="#error-container">
+
+                <div class="col-md-5">
+                    <label class="form-label">Identity Name</label>
+
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Graham's Phone" required {{ if
+                        not .CurrentUserIsAdmin }} disabled {{ end }}>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Role</label>
+
+                    <select name="role" class="form-select" {{ if not .CurrentUserIsAdmin }} disabled {{ end }}>
+                        <option value="admin">admin</option>
+                        <option value="read">read</option>
+                        <option value="pwd_phone">pwd_phone</option>
+                        <option value="read+write">read+write</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100" {{ if not .CurrentUserIsAdmin }} disabled
+                        data-bs-toggle="tooltip" title="Only admins can add identities" {{ end }}>
+                        Add Identity
+                    </button>
+                </div>
+
+            </form>
+
+            {{ if not .CurrentUserIsAdmin }}
+            <div class="text-muted small mt-2">
+                Only administrators can add or remove identities.
+            </div>
+            {{ end }}
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Copy password button
+    async function copyIdentityPassword(password, btn) {
+        try {
+            await navigator.clipboard.writeText(password);
+
+            const original = btn.innerText;
+            btn.innerText = "Copied!";
+            btn.classList.remove("btn-outline-secondary");
+            btn.classList.add("btn-success");
+
+            setTimeout(() => {
+                btn.innerText = original;
+                btn.classList.remove("btn-success");
+                btn.classList.add("btn-outline-secondary");
+            }, 1500);
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to copy password");
+        }
+    }
+</script>
+
+
+
+{{ end }}

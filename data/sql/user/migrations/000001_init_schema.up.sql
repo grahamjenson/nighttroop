@@ -1,28 +1,30 @@
 ---------------------------------------------------
 -- TABLES FOR USING NIGHTTROOP
 ---------------------------------------------------
-CREATE TABLE devices (
+-- This table is like users and devices, as like a sugarpixel isnt a user, it is a device.
+CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    totp_secret TEXT NOT NULL,
-    role TEXT NOT NULL CHECK(role IN ('admin', 'pwd_phone', 'read')), -- Something like Read/Carer/Full/Admin/LoopPhone
+    totp_secret TEXT,
+    role TEXT NOT NULL CHECK(role IN ('admin', 'pwd_phone', 'read', 'read+write')), -- Something like Read/Carer/Full/Admin/LoopPhone
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    last_seen_at INTEGER
+    last_seen_at INTEGER,
+    enabled INTEGER NOT NULL DEFAULT 1
 );
 
 -- This reports device status above
-CREATE TABLE device_status (
+CREATE TABLE identity_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT,
     timestamp INTEGER NOT NULL,
-    device_id INTEGER NOT NULL,
-    deviceBattery INTEGER,
-    pumpBattery INTEGER,
-    pumpStatus TEXT,
-    pumpReservoir REAL,
-    loopStatus TEXT,
-    loopTimestamp INTEGER,
+    identity_id INTEGER NOT NULL,
+    battery_level INTEGER,
+    pump_battery INTEGER,
+    pump_status TEXT,
+    pump_reservoir REAL,
+    loop_status TEXT,
+    loop_timestamp INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 );
 

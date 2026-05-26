@@ -11,8 +11,8 @@ import (
 // Legacy Token
 ///////
 
-func (cfg *SecurityConfig) CreateLegacyTokenForDevice(subdomain, deviceName, password string) (string, error) {
-	tokenStr := fmt.Sprintf("%s:%s:%s", subdomain, deviceName, password)
+func (cfg *SecurityConfig) CreateLegacyTokenForIdentity(subdomain, identityName, password string) (string, error) {
+	tokenStr := fmt.Sprintf("%s:%s:%s", subdomain, identityName, password)
 	encryptedToken, err := cfg.Encrypt(tokenStr)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt token: %w", err)
@@ -20,9 +20,9 @@ func (cfg *SecurityConfig) CreateLegacyTokenForDevice(subdomain, deviceName, pas
 	return encryptedToken, nil
 }
 
-type DeviceGetter func(ctx context.Context, name string) (deviceName string, password string, totpSecret string, role consts.DeviceRole, err error)
+type IdentityGetter func(ctx context.Context, name string) (identityName string, password string, totpSecret *string, role consts.IdentityRole, err error)
 
-func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSubdomain string, deviceGetter DeviceGetter) (string, consts.DeviceRole, error) {
+func (cfg *SecurityConfig) VerifyLegacyTokenForIdentity(tokenStr string, identitySubdomain string, identityGetter IdentityGetter) (string, consts.IdentityRole, error) {
 	decryptedToken, err := cfg.Decrypt(tokenStr)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to decrypt token: %w", err)
@@ -34,29 +34,29 @@ func (cfg *SecurityConfig) VerifyLegacyTokenForDevice(tokenStr string, deviceSub
 		return "", "", fmt.Errorf("invalid token format: %w", err)
 	}
 
-	deviceName, devicePassword, deviceTotpSecret, deviceRole, err := deviceGetter(context.TODO(), tokenName)
+	identityName, identityPassword, identityTotpSecret, identityRole, err := identityGetter(context.TODO(), tokenName)
 
 	if err != nil {
-		return "", "", fmt.Errorf("device not found: %w", err)
+		return "", "", fmt.Errorf("identity not found: %w", err)
 	}
 
-	if deviceSubdomain != tokenSubdomain {
+	if identitySubdomain != tokenSubdomain {
 		return "", "", fmt.Errorf("subdomain mismatch")
 	}
 
 	// Constraint: Not allowed to use a user with TOTP with legacy token
-	if deviceTotpSecret != "" {
-		return "", "", fmt.Errorf("legacy token cannot be used for devices with TOTP enabled")
+	if identityTotpSecret != nil {
+		return "", "", fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
 	}
 
 	// Constraint: Not allowed to be admin and use legacy token
-	if deviceRole == consts.DeviceRoleAdmin {
-		return "", "", fmt.Errorf("legacy token cannot be used for admin devices")
+	if identityRole == consts.IdentityRoleAdmin {
+		return "", "", fmt.Errorf("legacy token cannot be used for admin identities")
 	}
 
-	if !VerifyPassword(tokenPassword, devicePassword) {
+	if !VerifyPassword(tokenPassword, identityPassword) {
 		return "", "", fmt.Errorf("invalid password")
 	}
 
-	return deviceName, deviceRole, nil
+	return identityName, identityRole, nil
 }

@@ -49,7 +49,7 @@ func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
 			userDB, userGetModel, err := controlDB.GetUser(subdomain, true)
 
 			if err != nil {
-				errors.GenericDeviceLoginError(w, r, fmt.Errorf("User not found: %w", err))
+				errors.GenericIdentityLoginError(w, r, fmt.Errorf("User not found: %w", err))
 				return
 			}
 			ctx := httputils.SetUserDBAndModelInHTTPContext(r.Context(), userDB, userGetModel)
@@ -70,14 +70,14 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 			deviceName, deviceRole, _, err := TryLoginWithJWTToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
+				ctx = httputils.SetIdentityNameInHTTPContext(ctx, deviceName)
 				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
 			if acceptType.API() {
-				errors.GenericDeviceLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
+				errors.GenericIdentityLoginError(w, r, fmt.Errorf("Unauthorized: Invalid JWT token"))
 				return
 			} else {
 				w.Header().Set("HX-Redirect", "/login")
@@ -90,7 +90,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 // Try get the Auth Header
 // Then try get the cookie
-func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.DeviceRole, bool, error) {
+func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
@@ -98,7 +98,7 @@ func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 		if err != nil {
 			return "", "", false, fmt.Errorf("bad JWT token: %w", err)
 		}
-		return deviceName, consts.DeviceRole(role), true, nil
+		return deviceName, consts.IdentityRole(role), true, nil
 	}
 
 	if authHeader != "" {
@@ -113,7 +113,7 @@ func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 		if err != nil {
 			return "", "", false, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		return deviceName, consts.DeviceRole(role), true, nil
+		return deviceName, consts.IdentityRole(role), true, nil
 	}
 
 	return "", "", true, fmt.Errorf("No JWT token found")

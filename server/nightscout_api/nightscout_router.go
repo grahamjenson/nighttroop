@@ -93,10 +93,10 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			deviceName, deviceRole, keepGoing, err := user.TryLoginWithJWTToken(cfg, r)
+			identityName, identityRole, keepGoing, err := user.TryLoginWithJWTToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
+				ctx = httputils.SetIdentityNameInHTTPContext(ctx, identityName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(identityRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -108,10 +108,10 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			}
 
 			// Last Chance
-			deviceName, deviceRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
+			identityName, identityRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
 			if err == nil {
-				ctx = httputils.SetDeviceNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
+				ctx = httputils.SetIdentityNameInHTTPContext(ctx, identityName)
+				ctx = httputils.SetRoleInHTTPContext(ctx, string(identityRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -121,7 +121,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 	}
 }
 
-func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.DeviceRole, error) {
+func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, error) {
 
 	tokenParam := r.URL.Query().Get("token")
 	if tokenParam == "" {
@@ -134,10 +134,10 @@ func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig
 		return "", "", fmt.Errorf("user not found: %w", err)
 	}
 
-	deviceName, role, err := config.Security.VerifyLegacyTokenForDevice(tokenParam, subdomain, userDB.GetDeviceSplat)
+	identityName, role, err := config.Security.VerifyLegacyTokenForIdentity(tokenParam, subdomain, userDB.GetDeviceSplat)
 	if err != nil {
 		return "", "", fmt.Errorf("bad token: %w", err)
 	}
 
-	return deviceName, consts.DeviceRole(role), nil
+	return identityName, consts.IdentityRole(role), nil
 }

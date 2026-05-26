@@ -23,7 +23,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 			if err == nil {
 				slog.Info("Control User Logged In", "user_name", userName, "role", userRole)
 				ctx := r.Context()
-				httputils.SetDeviceNameInHTTPContext(ctx, userName)
+				httputils.SetIdentityNameInHTTPContext(ctx, userName)
 				httputils.SetRoleInHTTPContext(ctx, string(userRole))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return

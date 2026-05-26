@@ -13,7 +13,7 @@ const (
 	UserDBKey HTTPContextKeys = iota
 	UserGetModelKey
 	SubdomainKey
-	DeviceNameKey
+	IdentityNameKey
 	IPAddressKey
 	AdminNameKey
 	RoleKey
@@ -37,17 +37,17 @@ func GetSubdomainFromHTTPContext(ctx context.Context) string {
 }
 
 // //
-// DeviceName
+// IdentityName
 // //
-func SetDeviceNameInHTTPContext(ctx context.Context, deviceID string) context.Context {
-	return context.WithValue(ctx, DeviceNameKey, deviceID)
+func SetIdentityNameInHTTPContext(ctx context.Context, identityName string) context.Context {
+	return context.WithValue(ctx, IdentityNameKey, identityName)
 }
 
-func GetDeviceNameFromHTTPContext(ctx context.Context) string {
+func GetIdentityNameFromHTTPContext(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	if reqID, ok := ctx.Value(DeviceNameKey).(string); ok {
+	if reqID, ok := ctx.Value(IdentityNameKey).(string); ok {
 		return reqID
 	}
 	return ""

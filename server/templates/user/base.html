@@ -73,7 +73,9 @@
                             <li><a class="dropdown-item" href="#">Security</a></li>
                             <li><a class="dropdown-item" href="#">Data</a></li>
                             <li><a class="dropdown-item" href="#">Reports</a></li>
-                            <li><a class="dropdown-item" href="#">Devices</a></li>
+                            <li><a class="dropdown-item" hx-get="/devices" hx-target="#main-content" hx-push-url="true"
+                                    hx-swap="innerHTML">User/Device Identities</a></li>
+                            <li>
                             <li><a class="dropdown-item" hx-get="/sync_settings" hx-target="#main-content"
                                     hx-push-url="true" hx-swap="innerHTML">Sync</a></li>
                             <li>

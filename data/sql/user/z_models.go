@@ -23,36 +23,37 @@ type Carb struct {
 	CreatedAt int64
 }
 
-type Device struct {
-	ID         int64
-	Name       string
-	Password   string
-	TotpSecret string
-	Role       consts.DeviceRole
-	CreatedAt  int64
-	LastSeenAt *int64
-}
-
-type DeviceStatus struct {
-	ID            int64
-	Eid           *string
-	Timestamp     int64
-	DeviceID      int64
-	Devicebattery *int64
-	Pumpbattery   *int64
-	Pumpstatus    *string
-	Pumpreservoir *float64
-	Loopstatus    *string
-	Looptimestamp *int64
-	CreatedAt     int64
-}
-
 type Event struct {
 	ID      int64
 	Type    *string
 	Details *string
 	StartAt int64
 	EndAt   *int64
+}
+
+type Identity struct {
+	ID         int64
+	Name       string
+	Password   string
+	TotpSecret *string
+	Role       consts.IdentityRole
+	CreatedAt  int64
+	LastSeenAt *int64
+	Enabled    bool
+}
+
+type IdentityStatus struct {
+	ID            int64
+	Eid           *string
+	Timestamp     int64
+	IdentityID    int64
+	BatteryLevel  *int64
+	PumpBattery   *int64
+	PumpStatus    *string
+	PumpReservoir *float64
+	LoopStatus    *string
+	LoopTimestamp *int64
+	CreatedAt     int64
 }
 
 type Profile struct {

@@ -29,12 +29,13 @@ const (
 )
 
 // User Roles
-type DeviceRole string
+type IdentityRole string
 
 const (
-	DeviceRoleAdmin    DeviceRole = "admin"
-	DeviceRolePWDPhone DeviceRole = "pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
-	DeviceRoleRead     DeviceRole = "read"
+	IdentityRoleAdmin     IdentityRole = "admin"
+	IdentityRolePWDPhone  IdentityRole = "pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
+	IdentityRoleRead      IdentityRole = "read"
+	IdentityRoleReadWrite IdentityRole = "read+write"
 )
 
 // TODO implement CanCan on the User and Admin Roles

@@ -41,11 +41,13 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 		// Actions
 		r.Post("/logout", user.POSTLogoutHandler(config))
 
-		//// TODO
-		// Get Devices probably with pagination returns htmx, include generated tokens and last seen
-		// Delete Device
-		// Change Device Passowrd, role TOTP
-		// Get Device Token
+		r.Get("/identities", user.GETIdentitiesHandler(controlDB, config))
+		r.Post("/identities", user.POSTIdentityHandler(controlDB, config))
+		r.Put("/identities/{identity_id}", user.PUTIdentityHandler(controlDB, config))
+		// Get Identities probably with pagination returns htmx, include generated tokens and last seen
+		// Delete Identity
+		// Change Identity Password, role TOTP
+		// Get Identity Token
 
 	})
 

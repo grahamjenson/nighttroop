@@ -16,11 +16,11 @@ type RateLimiters struct {
 	userLoginRateLimiters *lru.Cache[string, *rate.Limiter]
 	ipLoginRateLimiters   *lru.Cache[string, *rate.Limiter]
 
-	deviceGETRateLimiters *lru.Cache[string, *rate.Limiter]
-	userGETRateLimiters   *lru.Cache[string, *rate.Limiter]
+	identityGETRateLimiters *lru.Cache[string, *rate.Limiter]
+	userGETRateLimiters     *lru.Cache[string, *rate.Limiter]
 
-	devicePOSTRateLimiters *lru.Cache[string, *rate.Limiter]
-	userPOSTRateLimiters   *lru.Cache[string, *rate.Limiter]
+	identityPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
+	userPOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
 
 	UserCreateLimiter   *rate.Limiter
 	userCreateIpLimiter *lru.Cache[string, *rate.Limiter]
@@ -31,26 +31,26 @@ type RateLimiters struct {
 
 func newRateLimiters(config ServerConfig) *RateLimiters {
 	maxUsers := config.MaxUsers
-	maxDevices := config.MaxDevicesPerUser
+	maxIdentities := config.MaxIdentitiesPerUser
 	wiggle := 2
-	// We are using the hashicorp LRU to make sure that we dont run out of memory if all users with all devices are hitting us always
+	// We are using the hashicorp LRU to make sure that we dont run out of memory if all users with all identitys are hitting us always
 	return &RateLimiters{
 		serverConfig: config,
 
-		userLoginRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
-		ipLoginRateLimiters:   lruMust(maxUsers * maxDevices * wiggle * 2),
+		userLoginRateLimiters: lruMust(maxUsers * maxIdentities * wiggle),
+		ipLoginRateLimiters:   lruMust(maxUsers * maxIdentities * wiggle * 2),
 
-		deviceGETRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
-		userGETRateLimiters:   lruMust(maxUsers * wiggle),
+		identityGETRateLimiters: lruMust(maxUsers * maxIdentities * wiggle),
+		userGETRateLimiters:     lruMust(maxUsers * wiggle),
 
-		devicePOSTRateLimiters: lruMust(maxUsers * maxDevices * wiggle),
-		userPOSTRateLimiters:   lruMust(maxUsers * wiggle),
+		identityPOSTRateLimiters: lruMust(maxUsers * maxIdentities * wiggle),
+		userPOSTRateLimiters:     lruMust(maxUsers * wiggle),
 
 		UserCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.UserCreateGlobalPerMinuteLimit)/60.0), config.UserCreateGlobalPerMinuteBurst),
 		userCreateIpLimiter: lruMust(maxUsers * wiggle),
 
 		GlobalRateLimiter:    rate.NewLimiter(rate.Limit(float64(config.GlobalIPPerMinuteLimit)/60.0), config.GlobalIPPerMinuteBurst),
-		globalIPRateLimiters: lruMust(maxUsers * maxDevices * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
+		globalIPRateLimiters: lruMust(maxUsers * maxIdentities * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
 	}
 
 }
@@ -85,13 +85,13 @@ func (r *RateLimiters) GetUserCreateIPRateLimiter(ipAddress string) *rate.Limite
 // User Rate Limiters
 // //
 
-func (r *RateLimiters) DeviceGETLimiter(deviceID string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.deviceGETRateLimiters, deviceID, float64(r.serverConfig.UserGETPerMinuteLimit), r.serverConfig.UserGETPerMinuteBurst)
+func (r *RateLimiters) IdentityGETLimiter(identityID string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.identityGETRateLimiters, identityID, float64(r.serverConfig.UserGETPerMinuteLimit), r.serverConfig.UserGETPerMinuteBurst)
 }
 
-func (r *RateLimiters) DevicePOSTLimiter(deviceID string) *rate.Limiter {
+func (r *RateLimiters) IdentityPOSTLimiter(identityID string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.devicePOSTRateLimiters, deviceID, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, identityID, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
 }
 
 func (r *RateLimiters) UserGETLimiter(userId string) *rate.Limiter {

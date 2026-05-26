@@ -1,10 +1,11 @@
 # TODO
 
 1. EPIC IS SYNCING SGVS FROM NS AND DEXCOM AND GETTING THAT DATA IN CARER
-    1. Device Page To retrieve NS token and information on communication
+    1. Identities Page To retrieve NS token and information on communication
     1. Create non-admin device for care portal role
     1. generate and offer copy token button to call api
     1. Save data from sync as entry
+    1. Save data tag with unique sync identity that created it (sgv is tagged with DexcomSync identity, so that we can trace where stuff comes from)
     1. fetch data in ns store to return to the user
     1. make models a bit nicer, maybe with generics e.g. Record[Entry] or something
     1. write punishment loop for bad syncing
