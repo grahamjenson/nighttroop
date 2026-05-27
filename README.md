@@ -41,6 +41,7 @@ Docker runs our local test s3 server `minio` (the only external dependency)
 
 ```
 brew install sqlc
+brew install templ
 brew install golang-migrate
 brew install docker colima docker-compose
 colima start

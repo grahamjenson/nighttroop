@@ -15,12 +15,6 @@ var htmxUserTemplateString = `{{ block "content" . }}{{ end }}`
 //go:embed user/base.html
 var UserBaseTemplateString string
 
-//go:embed user/dashboard.html
-var UserDashboardTemplateString string
-
-var UserDashboardTemplate *template.Template
-var UserDashboardHTMXTemplate *template.Template
-
 //go:embed user/form_responses/failure.html
 var UserFormResponsesFailureTemplateString string
 
@@ -56,70 +50,6 @@ var UserSettingsSyncTemplateString string
 
 var UserSettingsSyncTemplate *template.Template
 var UserSettingsSyncHTMXTemplate *template.Template
-
-func getUserDashboardTemplate() (*template.Template, error) {
-	if UserDashboardTemplate != nil {
-		return UserDashboardTemplate, nil
-	}
-
-	UserDashboardTemplate, err := template.New("UserDashboard").Parse(UserBaseTemplateString)
-	if err != nil {
-		return nil, err
-	}
-
-	UserDashboardTemplate, err = UserDashboardTemplate.Parse(UserDashboardTemplateString)
-	if err != nil {
-		return nil, err
-	}
-
-	return UserDashboardTemplate, nil
-}
-
-func getUserDashboardHTMXTemplate() (*template.Template, error) {
-	if UserDashboardHTMXTemplate != nil {
-		return UserDashboardHTMXTemplate, nil
-	}
-
-	UserDashboardHTMXTemplate, err := template.New("UserDashboard").Parse(htmxUserTemplateString)
-	if err != nil {
-		return nil, err
-	}
-
-	UserDashboardHTMXTemplate, err = UserDashboardHTMXTemplate.Parse(UserDashboardTemplateString)
-	if err != nil {
-		return nil, err
-	}
-
-	return UserDashboardHTMXTemplate, nil
-}
-
-func UserDashboardHTML(w io.Writer, userContext httputils.UserContext) error {
-	tmpl, err := getUserDashboardTemplate()
-	if err != nil {
-		return fmt.Errorf("failed to get template: %w", err)
-	}
-
-	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
-
-	if err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
-	}
-	return nil
-}
-
-func UserDashboardHTMX(w io.Writer, userContext httputils.UserContext) error {
-	tmpl, err := getUserDashboardHTMXTemplate()
-	if err != nil {
-		return fmt.Errorf("failed to get template: %w", err)
-	}
-
-	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
-
-	if err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
-	}
-	return nil
-}
 
 func getUserFormResponsesFailureTemplate() (*template.Template, error) {
 	if UserFormResponsesFailureTemplate != nil {

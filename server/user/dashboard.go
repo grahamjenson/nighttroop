@@ -4,16 +4,16 @@ import (
 	"net/http"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/templates"
+	"nighttroop.t1d.nz/server/components/user_templ"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		userContext := httputils.GetUserContext(r.Context())
-		err := templates.UserDashboardHTML(w, userContext)
+		//userContext := httputils.GetUserContext(r.Context())
+		err := user_templ.Dashboard().Render(r.Context(), w)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

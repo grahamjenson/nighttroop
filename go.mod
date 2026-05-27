@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/a-h/templ v0.3.1020 // indirect
 	github.com/alitto/pond/v2 v2.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 // indirect
