@@ -1,4 +1,5 @@
-{{/*PARAM Subdomain string */}}
+{{/*PARAM userContext httputils.UserContext */}}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Better Browser Title -->
-    <title>Nighttroop for {{.Subdomain}}</title>
+    <title>Nighttroop for {{.userContext.Subdomain}}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -73,8 +74,8 @@
                             <li><a class="dropdown-item" href="#">Security</a></li>
                             <li><a class="dropdown-item" href="#">Data</a></li>
                             <li><a class="dropdown-item" href="#">Reports</a></li>
-                            <li><a class="dropdown-item" hx-get="/devices" hx-target="#main-content" hx-push-url="true"
-                                    hx-swap="innerHTML">User/Device Identities</a></li>
+                            <li><a class="dropdown-item" hx-get="/identities" hx-target="#main-content"
+                                    hx-push-url="true" hx-swap="innerHTML">User/Device Identities</a></li>
                             <li>
                             <li><a class="dropdown-item" hx-get="/sync_settings" hx-target="#main-content"
                                     hx-push-url="true" hx-swap="innerHTML">Sync</a></li>

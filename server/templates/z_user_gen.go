@@ -3,10 +3,11 @@ package templates
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"io"
 	"text/template"
+
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 var htmxUserTemplateString = `{{ block "content" . }}{{ end }}`
@@ -92,13 +93,13 @@ func getUserDashboardHTMXTemplate() (*template.Template, error) {
 	return UserDashboardHTMXTemplate, nil
 }
 
-func UserDashboardHTML(w io.Writer, Subdomain string) error {
+func UserDashboardHTML(w io.Writer, userContext httputils.UserContext) error {
 	tmpl, err := getUserDashboardTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -106,35 +107,17 @@ func UserDashboardHTML(w io.Writer, Subdomain string) error {
 	return nil
 }
 
-func UserDashboardHTMX(w io.Writer) error {
+func UserDashboardHTMX(w io.Writer, userContext httputils.UserContext) error {
 	tmpl, err := getUserDashboardHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserDashboardJSON(w io.Writer) error {
-	var payload any
-
-	payload = map[string]any{}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -174,13 +157,13 @@ func getUserFormResponsesFailureHTMXTemplate() (*template.Template, error) {
 	return UserFormResponsesFailureHTMXTemplate, nil
 }
 
-func UserFormResponsesFailureHTML(w io.Writer, Subdomain string, response string) error {
+func UserFormResponsesFailureHTML(w io.Writer, userContext httputils.UserContext, response string) error {
 	tmpl, err := getUserFormResponsesFailureTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "response": response})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "response": response})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -188,35 +171,17 @@ func UserFormResponsesFailureHTML(w io.Writer, Subdomain string, response string
 	return nil
 }
 
-func UserFormResponsesFailureHTMX(w io.Writer, response string) error {
+func UserFormResponsesFailureHTMX(w io.Writer, userContext httputils.UserContext, response string) error {
 	tmpl, err := getUserFormResponsesFailureHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"response": response})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "response": response})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserFormResponsesFailureJSON(w io.Writer, response string) error {
-	var payload any
-
-	payload = map[string]any{"response": response}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -256,13 +221,13 @@ func getUserFormResponsesSuccessHTMXTemplate() (*template.Template, error) {
 	return UserFormResponsesSuccessHTMXTemplate, nil
 }
 
-func UserFormResponsesSuccessHTML(w io.Writer, Subdomain string, response string) error {
+func UserFormResponsesSuccessHTML(w io.Writer, userContext httputils.UserContext, response string) error {
 	tmpl, err := getUserFormResponsesSuccessTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "response": response})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "response": response})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -270,35 +235,17 @@ func UserFormResponsesSuccessHTML(w io.Writer, Subdomain string, response string
 	return nil
 }
 
-func UserFormResponsesSuccessHTMX(w io.Writer, response string) error {
+func UserFormResponsesSuccessHTMX(w io.Writer, userContext httputils.UserContext, response string) error {
 	tmpl, err := getUserFormResponsesSuccessHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"response": response})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "response": response})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserFormResponsesSuccessJSON(w io.Writer, response string) error {
-	var payload any
-
-	payload = map[string]any{"response": response}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -338,13 +285,13 @@ func getUserLoginHTMXTemplate() (*template.Template, error) {
 	return UserLoginHTMXTemplate, nil
 }
 
-func UserLoginHTML(w io.Writer, Subdomain string) error {
+func UserLoginHTML(w io.Writer, userContext httputils.UserContext) error {
 	tmpl, err := getUserLoginTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -352,35 +299,17 @@ func UserLoginHTML(w io.Writer, Subdomain string) error {
 	return nil
 }
 
-func UserLoginHTMX(w io.Writer) error {
+func UserLoginHTMX(w io.Writer, userContext httputils.UserContext) error {
 	tmpl, err := getUserLoginHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserLoginJSON(w io.Writer) error {
-	var payload any
-
-	payload = map[string]any{}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -420,13 +349,13 @@ func getUserLoginTotpHTMXTemplate() (*template.Template, error) {
 	return UserLoginTotpHTMXTemplate, nil
 }
 
-func UserLoginTotpHTML(w io.Writer, Subdomain string) error {
+func UserLoginTotpHTML(w io.Writer, userContext httputils.UserContext) error {
 	tmpl, err := getUserLoginTotpTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -434,35 +363,17 @@ func UserLoginTotpHTML(w io.Writer, Subdomain string) error {
 	return nil
 }
 
-func UserLoginTotpHTMX(w io.Writer) error {
+func UserLoginTotpHTMX(w io.Writer, userContext httputils.UserContext) error {
 	tmpl, err := getUserLoginTotpHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserLoginTotpJSON(w io.Writer) error {
-	var payload any
-
-	payload = map[string]any{}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -502,13 +413,13 @@ func getUserSettingsIdentitiesHTMXTemplate() (*template.Template, error) {
 	return UserSettingsIdentitiesHTMXTemplate, nil
 }
 
-func UserSettingsIdentitiesHTML(w io.Writer, Subdomain string, devices []*UserIdentity, currentUserIsAdmin bool) error {
+func UserSettingsIdentitiesHTML(w io.Writer, userContext httputils.UserContext, admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) error {
 	tmpl, err := getUserSettingsIdentitiesTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "devices": devices, "currentUserIsAdmin": currentUserIsAdmin})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "admins": admins, "users": users, "devices": devices, "syncs": syncs})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -516,35 +427,17 @@ func UserSettingsIdentitiesHTML(w io.Writer, Subdomain string, devices []*UserId
 	return nil
 }
 
-func UserSettingsIdentitiesHTMX(w io.Writer, devices []*UserIdentity, currentUserIsAdmin bool) error {
+func UserSettingsIdentitiesHTMX(w io.Writer, userContext httputils.UserContext, admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) error {
 	tmpl, err := getUserSettingsIdentitiesHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"devices": devices, "currentUserIsAdmin": currentUserIsAdmin})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "admins": admins, "users": users, "devices": devices, "syncs": syncs})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserSettingsIdentitiesJSON(w io.Writer, devices []*UserIdentity, currentUserIsAdmin bool) error {
-	var payload any
-
-	payload = map[string]any{"devices": devices, "currentUserIsAdmin": currentUserIsAdmin}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -584,13 +477,13 @@ func getUserSettingsSyncHTMXTemplate() (*template.Template, error) {
 	return UserSettingsSyncHTMXTemplate, nil
 }
 
-func UserSettingsSyncHTML(w io.Writer, Subdomain string, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) error {
+func UserSettingsSyncHTML(w io.Writer, userContext httputils.UserContext, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) error {
 	tmpl, err := getUserSettingsSyncTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"Subdomain": Subdomain, "ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "ns_id": ns_id, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled, "dex_id": dex_id})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "ns_id": ns_id, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled, "dex_id": dex_id})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
@@ -598,34 +491,16 @@ func UserSettingsSyncHTML(w io.Writer, Subdomain string, ns_url string, ns_passw
 	return nil
 }
 
-func UserSettingsSyncHTMX(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) error {
+func UserSettingsSyncHTMX(w io.Writer, userContext httputils.UserContext, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) error {
 	tmpl, err := getUserSettingsSyncHTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	err = tmpl.Execute(w, map[string]any{"ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "ns_id": ns_id, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled, "dex_id": dex_id})
+	err = tmpl.Execute(w, map[string]any{"userContext": userContext, "ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "ns_id": ns_id, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled, "dex_id": dex_id})
 
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func UserSettingsSyncJSON(w io.Writer, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64, dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) error {
-	var payload any
-
-	payload = map[string]any{"ns_url": ns_url, "ns_password_garbage": ns_password_garbage, "ns_enabled": ns_enabled, "ns_id": ns_id, "dex_username": dex_username, "dex_password_garbage": dex_password_garbage, "dex_usa_region": dex_usa_region, "dex_enabled": dex_enabled, "dex_id": dex_id}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }

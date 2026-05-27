@@ -43,7 +43,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 		}
 
 		subdomain, err := GetSubdomainFromHeader(r.Host, config.HostName)
-		ctx = httputils.SetSubdomainInHTTPContext(ctx, subdomain)
+		ctx = httputils.SetSubdomainInUserContext(ctx, subdomain)
 		if err != nil {
 			slog.Error("Main router 404 for host header", "host", r.Host, "error", err)
 			http.NotFound(w, r)
@@ -60,7 +60,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			// so <userid>.ns.domain routes to the nightscout compatible API
 			if utils.SyntacticallyValidateUserID(userSubdomain) && controlDB.UserExists(userSubdomain) {
 				// Reset subdomain without the .ns suffix
-				ctx = httputils.SetSubdomainInHTTPContext(ctx, userSubdomain)
+				ctx = httputils.SetSubdomainInUserContext(ctx, userSubdomain)
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for nightscout subdomain", "subdomain", subdomain)

@@ -12,8 +12,8 @@ import (
 	"nighttroop.t1d.nz/data/sql/user"
 
 	"nighttroop.t1d.nz/server/templates"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -40,8 +40,8 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-		err := templates.UserLoginHTML(w, subdomain)
+		userContext := httputils.GetUserContext(r.Context())
+		err := templates.UserLoginHTML(w, userContext)
 		if err != nil {
 			http.Error(w, "Template Error", http.StatusInternalServerError)
 			return
@@ -70,7 +70,8 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		// Browser Login
 		////
 
-		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+		userContext := httputils.GetUserContext(r.Context())
+		subdomain := userContext.Subdomain
 		userDB, _, err := controlDB.GetUser(subdomain, false)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
@@ -99,7 +100,12 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			return
 		}
 
-		if identityRequiresTOTPValidation(device) {
+		if !can.LoginToWebsite(device.Role) {
+			errors.GenericIdentityLoginError(w, r, fmt.Errorf("identity does not have permission to login to website"))
+			return
+		}
+
+		if can.MustLoginWithTotp(device.Role, device.TotpSecret != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
 			err = config.Security.SetUserPreAuthCookie(w, device.Name)
 			if err != nil {
@@ -108,7 +114,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			err = templates.UserLoginTotpHTMX(w)
+			err = templates.UserLoginTotpHTMX(w, userContext)
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, err)
 				return
@@ -189,8 +195,8 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 
 func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*user.Identity, error) {
 	// First try the JWT token (either header or cookie)
-	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-	userDB, _, err := controlDB.GetUser(subdomain, false)
+	userContext := httputils.GetUserContext(r.Context())
+	userDB, _, err := controlDB.GetUser(userContext.Subdomain, false)
 	if err != nil {
 
 		return nil, err
@@ -220,30 +226,16 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 	return device, nil
 }
 
-func identityRequiresTOTPValidation(device *user.Identity) bool {
-	// Constraint: TOTP validation is required for admin users
-	if device.Role == consts.IdentityRoleAdmin {
-		return true
-	}
-
-	// Constraint TOTP validation is required for any user with a TOTP secret set (even if not admin)
-	if device.TotpSecret != nil && *device.TotpSecret != "" {
-		return true
-	}
-
-	return false
-}
-
 func validateIdentityTOTP(config config.ServerConfig, device *user.Identity, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
 
-	if device.TotpSecret == nil || *device.TotpSecret == "" {
+	if device.TotpSecret == "" {
 		return fmt.Errorf("device does not have a TOTP secret set")
 	}
 
-	totpSecret, err := config.Security.Decrypt(*device.TotpSecret)
+	totpSecret, err := config.Security.Decrypt(device.TotpSecret)
 	if err != nil {
 		return err
 	}
@@ -273,8 +265,8 @@ func fetchVerifyPreAuthToken(config config.ServerConfig, r *http.Request) (strin
 // API Login functions
 // ///
 func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
-	subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-	userDB, _, err := controlDB.GetUser(subdomain, false)
+	userContext := httputils.GetUserContext(r.Context())
+	userDB, _, err := controlDB.GetUser(userContext.Subdomain, false)
 	if err != nil {
 		errors.GenericIdentityLoginError(w, r, err)
 		return
@@ -287,7 +279,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", subdomain, creds.Name), r.RemoteAddr)
+	allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", userContext.Subdomain, creds.Name), r.RemoteAddr)
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return
@@ -326,11 +318,11 @@ func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, pas
 	}
 
 	// An Identity only requires a TOTP secret if the role is admin
-	if identityRequiresTOTPValidation(device) && totpToken == "" {
+	if can.MustLoginWithTotp(device.Role, device.TotpSecret != "") && totpToken == "" {
 		return nil, fmt.Errorf("User requires TOTP secret")
 	}
 
-	totpSecret, err := cfg.Security.Decrypt(*device.TotpSecret)
+	totpSecret, err := cfg.Security.Decrypt(device.TotpSecret)
 	if err != nil {
 		return nil, err
 	}

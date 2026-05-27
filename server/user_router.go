@@ -38,16 +38,15 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 		r.Post("/sync_settings/nightscout", user.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeNightscout))
 		r.Post("/sync_settings/dexcom", user.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeDexcom))
 		r.Delete("/sync_settings/{type}", user.DELETESyncSettingsHandler(controlDB, config))
+
+		// Identities
+		r.Get("/identities", user.GETIdentitiesHandler(controlDB, config))
+		r.Post("/identities/admin", user.POSTIdentityAdminHandler(controlDB, config))
+		r.Post("/identities/user", user.POSTIdentityUserHandler(controlDB, config))
+		r.Post("/identities/device", user.POSTIdentityDeviceHandler(controlDB, config))
+
 		// Actions
 		r.Post("/logout", user.POSTLogoutHandler(config))
-
-		r.Get("/identities", user.GETIdentitiesHandler(controlDB, config))
-		r.Post("/identities", user.POSTIdentityHandler(controlDB, config))
-		r.Put("/identities/{identity_id}", user.PUTIdentityHandler(controlDB, config))
-		// Get Identities probably with pagination returns htmx, include generated tokens and last seen
-		// Delete Identity
-		// Change Identity Password, role TOTP
-		// Get Identity Token
 
 	})
 

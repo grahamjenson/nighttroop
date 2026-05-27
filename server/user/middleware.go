@@ -45,14 +45,15 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+			subdomain := httputils.GetUserContext(r.Context()).Subdomain
 			userDB, userGetModel, err := controlDB.GetUser(subdomain, true)
 
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, fmt.Errorf("User not found: %w", err))
 				return
 			}
-			ctx := httputils.SetUserDBAndModelInHTTPContext(r.Context(), userDB, userGetModel)
+			ctx := httputils.SetUserDBAndModelInUserContext(r.Context(), userDB, userGetModel)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -70,8 +71,8 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 			deviceName, deviceRole, _, err := TryLoginWithJWTToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetIdentityNameInHTTPContext(ctx, deviceName)
-				ctx = httputils.SetRoleInHTTPContext(ctx, string(deviceRole))
+				ctx = httputils.SetIdentityNameInUserContext(ctx, deviceName)
+				ctx = httputils.SetIdentityRoleInUserContext(ctx, deviceRole)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}

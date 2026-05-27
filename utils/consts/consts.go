@@ -15,6 +15,10 @@ const (
 
 const FIRST_ADMIN_NAME = "admin"
 
+const DEXCOM_SYNC_IDENTITY_NAME = "dexcom_sync"
+const NIGHTSCOUT_SYNC_IDENTITY_NAME = "nightscout_sync"
+const LIBRE_SYNC_IDENTITY_NAME = "libre_sync"
+
 // //
 // DEVELOPMENT HARDCODED STUFF
 // //
@@ -31,12 +35,42 @@ const (
 // User Roles
 type IdentityRole string
 
+// Identity Roles are a little TYPE and a little PERMISSIONS.
+// We are staying away from a formal permissions model, to be a bit simplier
 const (
-	IdentityRoleAdmin     IdentityRole = "admin"
-	IdentityRolePWDPhone  IdentityRole = "pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
-	IdentityRoleRead      IdentityRole = "read"
-	IdentityRoleReadWrite IdentityRole = "read+write"
+	IdentityRoleAdmin           IdentityRole = "admin"            // Login with password + totp
+	IdentityRoleUser            IdentityRole = "user"             // Login with password with TOTP
+	IdentityRoleUserReadOnly    IdentityRole = "user_readonly"    // Login with password with TOTP
+	IdentityRoleSync            IdentityRole = "sync"             // Can Write Data
+	IdentityRoleDevicePWDPhone  IdentityRole = "device_pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
+	IdentityRoleDeviceRead      IdentityRole = "device_read"
+	IdentityRoleDeviceReadWrite IdentityRole = "device_read_write"
 )
+
+type IdentityType string
+
+const (
+	IdentityTypeAdmin  IdentityType = "admin"
+	IdentityTypeUser   IdentityType = "user"
+	IdentityTypeDevice IdentityType = "device"
+	IdentityTypeSync   IdentityType = "sync"
+)
+
+func (i IdentityRole) GetType() IdentityType {
+	switch i {
+	case IdentityRoleAdmin:
+		return IdentityTypeAdmin
+	case IdentityRoleUser, IdentityRoleUserReadOnly:
+		return IdentityTypeUser
+	case IdentityRoleSync:
+		return IdentityTypeSync
+	case IdentityRoleDevicePWDPhone, IdentityRoleDeviceRead, IdentityRoleDeviceReadWrite:
+		return IdentityTypeDevice
+	default:
+		slog.Warn("Unknown identity role type", "role", i)
+		return IdentityTypeUser
+	}
+}
 
 // TODO implement CanCan on the User and Admin Roles
 

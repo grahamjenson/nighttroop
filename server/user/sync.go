@@ -24,7 +24,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		acceptType := httputils.GetAcceptType(r)
-		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+		userContext := httputils.GetUserContext(r.Context())
 
 		ctx := r.Context()
 
@@ -35,7 +35,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, subdomain)
+		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, userContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -79,18 +79,18 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
-			err = templates.UserSettingsSyncHTML(w, subdomain, ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id)
+			err = templates.UserSettingsSyncHTML(w, userContext, ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", userContext.Subdomain)
 				return
 			}
 			return
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = templates.UserSettingsSyncHTMX(w, ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id)
+			err = templates.UserSettingsSyncHTMX(w, userContext, ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", userContext.Subdomain)
 				return
 			}
 			return
@@ -111,7 +111,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		acceptType := httputils.GetAcceptType(r)
-		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+		userContext := httputils.GetUserContext(r.Context())
 
 		ctx := r.Context()
 
@@ -121,7 +121,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, subdomain)
+		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, userContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -130,14 +130,14 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		if syncSourceType == consts.SyncSourceTypeNightscout {
-			err = saveNightScoutSettings(ctx, subdomain, controlDB, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
+			err = saveNightScoutSettings(ctx, userContext.Subdomain, controlDB, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
 		} else {
-			err = saveDexcomSettings(ctx, subdomain, controlDB, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
+			err = saveDexcomSettings(ctx, userContext.Subdomain, controlDB, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
 		}
 
 		if err != nil {
 			slog.Error("Validation error for sync settings inputs", "error", err)
-			templates.UserFormResponsesFailureHTMX(w, err.Error())
+			templates.UserFormResponsesFailureHTMX(w, userContext, err.Error())
 			return
 		}
 
@@ -148,14 +148,15 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			templates.UserFormResponsesSuccessHTMX(w, "Sync settings saved successfully!")
+			templates.UserFormResponsesSuccessHTMX(w, userContext, "Sync settings saved successfully!")
 			return
 		}
 
 		// Default to JSON response for unsupported types
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		err = templates.UserFormResponsesSuccessJSON(w, "Sync Settings Saved")
+		jsonResponce := []byte(`{"message": "Sync settings saved successfully!"}`)
+		_, err = w.Write(jsonResponce)
 		if err != nil {
 			slog.Error("Failed to write JSON response for successful sync settings save", "error", err)
 		}
@@ -165,7 +166,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
-		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
+		userContext := httputils.GetUserContext(r.Context())
 
 		// 1. Extract ID from URL path
 		typeStr := chi.URLParam(r, "type")
@@ -180,7 +181,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 			return
 		}
 
-		err = controlDB.Queries.DeleteSyncSource(r.Context(), type_, subdomain)
+		err = controlDB.Queries.DeleteSyncSource(r.Context(), type_, userContext.Subdomain)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return

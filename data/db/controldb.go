@@ -148,27 +148,10 @@ type UserCreateMaterial struct {
 
 func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
 	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
-	// Password is used as an API key for the user to access their data
-	// BackupKey
-	// password, hash, err := utils.SecureCredentials()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("cannot generate secure credentials: %w", err)
-	// }
 
-	// TODO add subdomain to the backupKeyHash to be able to match it to a user.
 	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain + ":")
 	if err != nil {
 		return nil, "", "", "", fmt.Errorf("cannot generate backup key hash: %w", err)
-	}
-
-	adminPassword, hashedPassword, err := db.serverConfig.Security.GeneratePassword()
-	if err != nil {
-		return nil, "", "", "", fmt.Errorf("cannot generate admin password: %w", err)
-	}
-
-	totpSecret, encTOTPSecret, err := db.serverConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", consts.FIRST_ADMIN_NAME, subdomain, db.serverConfig.HostName))
-	if err != nil {
-		return nil, "", "", "", fmt.Errorf("cannot generate admin TOTP: %w", err)
 	}
 
 	userDB, err := NewUserDB(context.TODO(), subdomain, false, db.serverConfig)
@@ -197,20 +180,70 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// Setup the new UserDB
 	////
 
-	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
-		Name:       consts.FIRST_ADMIN_NAME,
-		Password:   hashedPassword,
-		TotpSecret: &encTOTPSecret,
-		Role:       consts.IdentityRoleAdmin,
-	})
+	adminPassword, totpSecret, err = createDefaultUsers(subdomain, db.serverConfig.HostName, userDB, db.serverConfig.Security)
 
 	if err != nil {
 		userDB.TryCloseAndDelete()
 		return nil, "", "", "", fmt.Errorf("cannot create admin identity: %w", err)
 	}
+
 	db.users[subdomain] = userDB
 
 	return userDB, adminPassword, backupPassword, totpSecret, nil
+}
+
+func createDefaultUsers(subdomain, hostname string, userDB *UserDB, security *security.SecurityConfig) (adminPassword, totpSecret string, err error) {
+	adminPassword, hashedPassword, err := security.GeneratePassword()
+	if err != nil {
+		return "", "", fmt.Errorf("cannot generate admin password: %w", err)
+	}
+
+	totpSecret, encTOTPSecret, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", consts.FIRST_ADMIN_NAME, subdomain, hostname))
+	if err != nil {
+		return "", "", fmt.Errorf("cannot generate admin TOTP: %w", err)
+	}
+
+	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
+		Name:       consts.FIRST_ADMIN_NAME,
+		Password:   hashedPassword,
+		TotpSecret: encTOTPSecret,
+		Role:       consts.IdentityRoleAdmin,
+	})
+
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create admin identity: %w", err)
+	}
+
+	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
+		Name:       consts.DEXCOM_SYNC_IDENTITY_NAME,
+		Password:   "",
+		TotpSecret: "",
+		Role:       consts.IdentityRoleSync,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create dexcom sync identity: %w", err)
+	}
+
+	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
+		Name:       consts.NIGHTSCOUT_SYNC_IDENTITY_NAME,
+		Password:   "",
+		TotpSecret: "",
+		Role:       consts.IdentityRoleSync,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create nightscout sync identity: %w", err)
+	}
+
+	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
+		Name:       consts.LIBRE_SYNC_IDENTITY_NAME,
+		Password:   "",
+		TotpSecret: "",
+		Role:       consts.IdentityRoleSync,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create libre sync identity: %w", err)
+	}
+	return adminPassword, totpSecret, nil
 }
 
 ////

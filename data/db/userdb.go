@@ -82,10 +82,10 @@ func (db *UserDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }
 
-func (db *UserDB) GetIdentitySplat(ctx context.Context, name string) (identityName string, password string, totpSecret *string, role consts.IdentityRole, err error) {
+func (db *UserDB) GetIdentitySplat(ctx context.Context, name string) (identityName string, password string, totpSecret string, role consts.IdentityRole, err error) {
 	identity, err := db.Queries.GetIdentity(ctx, name)
 	if err != nil {
-		return "", "", nil, "", fmt.Errorf("identity not found: %w", err)
+		return "", "", "", "", fmt.Errorf("identity not found: %w", err)
 	}
 
 	return identity.Name, identity.Password, identity.TotpSecret, identity.Role, nil

@@ -98,42 +98,20 @@ func {{.Name}}HTML(w io.Writer{{ if .HasAllInputs }}, {{.AllInputs}} {{ end }}) 
 	return nil
 }
 
-func {{.Name}}HTMX(w io.Writer{{ if .HasInputs }}, {{.Inputs}} {{ end }}) error {
+func {{.Name}}HTMX(w io.Writer{{ if .HasAllInputs }}, {{.AllInputs}} {{ end }}) error {
 	tmpl, err := get{{.Name}}HTMXTemplate()
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	{{ if .HasInputs }}
-		err = tmpl.Execute(w, map[string]any{ {{.InputParams}} })
+	{{ if .HasAllInputs }}
+		err = tmpl.Execute(w, map[string]any{ {{.AllInputParams}} })
 	{{ else }}
 		err = tmpl.Execute(w, nil)
 	{{ end }}
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func {{.Name}}JSON(w io.Writer{{ if .HasInputs }}, {{.Inputs}} {{ end }}) error {
-	var payload any
-
-	{{ if .HasInputs }}
-	payload = map[string]any{ {{.InputParams}} }
-	{{ else }}
-	payload = map[string]any{}
-	{{ end }}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
 
@@ -148,14 +126,13 @@ type Config struct {
 }
 
 type TemplateData struct {
-	Name           string
-	FileName       string
-	Inputs         string
-	InputParams    string
+	Name     string
+	FileName string
+
 	AllInputs      string
 	AllInputParams string
-	HasInputs      bool
-	HasAllInputs   bool
+
+	HasAllInputs bool
 }
 
 type TemplateDataList []TemplateData
@@ -233,14 +210,13 @@ func buildTemplateDataList(folder string, files []string, baseFileInputs, baseFi
 		allInputParams = append(allInputParams, inputParams...)
 
 		templateList = append(templateList, TemplateData{
-			Name:           name,
-			FileName:       file,
-			Inputs:         strings.Join(inputs, ", "),
-			InputParams:    strings.Join(inputParams, ", "),
+			Name:     name,
+			FileName: file,
+
 			AllInputs:      strings.Join(allInputs, ", "),
 			AllInputParams: strings.Join(allInputParams, ", "),
-			HasInputs:      len(inputs) > 0,
-			HasAllInputs:   len(allInputs) > 0,
+
+			HasAllInputs: len(allInputs) > 0,
 		})
 	}
 	return templateList

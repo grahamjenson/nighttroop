@@ -97,7 +97,7 @@ INSERT INTO identities (name, password, totp_secret, role) VALUES (?, ?, ?, ?)
 type CreateIdentityParams struct {
 	Name       string
 	Password   string
-	TotpSecret *string
+	TotpSecret string
 	Role       consts.IdentityRole
 }
 

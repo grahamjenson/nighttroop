@@ -20,7 +20,7 @@ func (cfg *SecurityConfig) CreateLegacyTokenForIdentity(subdomain, identityName,
 	return encryptedToken, nil
 }
 
-type IdentityGetter func(ctx context.Context, name string) (identityName string, password string, totpSecret *string, role consts.IdentityRole, err error)
+type IdentityGetter func(ctx context.Context, name string) (identityName string, password string, totpSecret string, role consts.IdentityRole, err error)
 
 func (cfg *SecurityConfig) VerifyLegacyTokenForIdentity(tokenStr string, identitySubdomain string, identityGetter IdentityGetter) (string, consts.IdentityRole, error) {
 	decryptedToken, err := cfg.Decrypt(tokenStr)
@@ -45,7 +45,7 @@ func (cfg *SecurityConfig) VerifyLegacyTokenForIdentity(tokenStr string, identit
 	}
 
 	// Constraint: Not allowed to use a user with TOTP with legacy token
-	if identityTotpSecret != nil {
+	if identityTotpSecret != "" {
 		return "", "", fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
 	}
 

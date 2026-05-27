@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/templates"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -14,13 +15,27 @@ import (
 func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
-		userDB, _ := httputils.GetUserDBAndModelFromHTTPContext(r.Context())
-		subdomain := httputils.GetSubdomainFromHTTPContext(r.Context())
-		identityName := httputils.GetIdentityNameFromHTTPContext(r.Context())
-		identityRole := httputils.GetRoleFromHTTPContext(r.Context())
+		userContext := httputils.GetUserContext(r.Context())
 
-		identities, err := userDB.Queries.AllIdentities(r.Context())
-		userIdentities := templates.IdentitiesModelToUserIdentities(identities, identityName, "")
+		identities, err := userContext.UserDB.Queries.AllIdentities(r.Context())
+
+		adminIdentities := []*templates.UserIdentity{}
+		userIdentities := []*templates.UserIdentity{}
+		deviceIdentities := []*templates.UserIdentity{}
+		syncIdentities := []*templates.UserIdentity{}
+
+		for _, identity := range identities {
+			switch identity.Role.GetType() {
+			case consts.IdentityTypeAdmin:
+				adminIdentities = append(adminIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			case consts.IdentityTypeUser:
+				userIdentities = append(userIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			case consts.IdentityTypeDevice:
+				deviceIdentities = append(deviceIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			case consts.IdentityTypeSync:
+				syncIdentities = append(syncIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			}
+		}
 
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to get identities", err)
@@ -29,19 +44,19 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 
 		if acceptType == httputils.AcceptTypeHTML {
 
-			err = templates.UserSettingsIdentitiesHTML(w, subdomain, userIdentities, identityRole == "admin")
+			err = templates.UserSettingsIdentitiesHTML(w, userContext, adminIdentities, userIdentities, deviceIdentities, syncIdentities)
 			if err != nil {
 				fmt.Println("Error rendering identities template:", err)
-				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", userContext.Subdomain)
 				return
 			}
 			return
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = templates.UserSettingsIdentitiesHTMX(w, userIdentities, identityRole == "admin")
+			err = templates.UserSettingsIdentitiesHTMX(w, userContext, adminIdentities, userIdentities, deviceIdentities, syncIdentities)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return
 			}
 			return
@@ -55,13 +70,22 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 	}
 }
 
-func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+// Create Admin
+func POSTIdentityAdminHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic here
 	}
 }
 
-func PUTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+// Create User
+func POSTIdentityUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Handler logic here
+	}
+}
+
+// Create Device
+func POSTIdentityDeviceHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic here
 	}

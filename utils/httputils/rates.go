@@ -16,8 +16,9 @@ func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool,
 }
 
 func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
-	identityName := GetIdentityNameFromHTTPContext(r.Context())
+	userContext := GetUserContext(r.Context())
+	userSubdomain := userContext.IdentityName
+	identityName := userContext.IdentityName
 
 	readLimiter := serverConfig.RateLimiters.UserGETLimiter(userSubdomain)
 	identityLimiter := serverConfig.RateLimiters.IdentityGETLimiter(identityName)
@@ -26,8 +27,9 @@ func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, in
 }
 
 func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
-	identityName := GetIdentityNameFromHTTPContext(r.Context())
+	userContext := GetUserContext(r.Context())
+	userSubdomain := userContext.IdentityName
+	identityName := userContext.IdentityName
 
 	writeLimiter := serverConfig.RateLimiters.UserPOSTLimiter(userSubdomain)
 	identityLimiter := serverConfig.RateLimiters.IdentityPOSTLimiter(identityName)
@@ -36,7 +38,8 @@ func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, i
 }
 
 func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userSubdomain := GetSubdomainFromHTTPContext(r.Context())
+	userContext := GetUserContext(r.Context())
+	userSubdomain := userContext.IdentityName
 
 	writeLimiter := serverConfig.RateLimiters.UserUpdateSyncLimiter(userSubdomain)
 

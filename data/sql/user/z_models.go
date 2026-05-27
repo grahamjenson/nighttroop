@@ -35,7 +35,7 @@ type Identity struct {
 	ID         int64
 	Name       string
 	Password   string
-	TotpSecret *string
+	TotpSecret string
 	Role       consts.IdentityRole
 	CreatedAt  int64
 	LastSeenAt *int64

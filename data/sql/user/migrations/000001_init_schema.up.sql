@@ -6,8 +6,8 @@ CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    totp_secret TEXT,
-    role TEXT NOT NULL CHECK(role IN ('admin', 'pwd_phone', 'read', 'read+write')), -- Something like Read/Carer/Full/Admin/LoopPhone
+    totp_secret TEXT NOT NULL,
+    role TEXT NOT NULL,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     last_seen_at INTEGER,
     enabled INTEGER NOT NULL DEFAULT 1

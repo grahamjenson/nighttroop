@@ -34,9 +34,9 @@ func POSTLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 
 func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//
+		controlContext := httputils.GetControlContext(r.Context())
 		w.Header().Set("Content-Type", "text/html")
-		err := templates.ControlLoginHTML(w)
+		err := templates.ControlLoginHTML(w, controlContext)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

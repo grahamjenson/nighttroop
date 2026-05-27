@@ -3,7 +3,6 @@ package templates
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"io"
 	"text/template"
@@ -96,24 +95,6 @@ func PublicCreateUserHTMX(w io.Writer) error {
 	return nil
 }
 
-func PublicCreateUserJSON(w io.Writer) error {
-	var payload any
-
-	payload = map[string]any{}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
-	return nil
-}
-
 func getPublicCreateUserRateLimitedTemplate() (*template.Template, error) {
 	if PublicCreateUserRateLimitedTemplate != nil {
 		return PublicCreateUserRateLimitedTemplate, nil
@@ -178,24 +159,6 @@ func PublicCreateUserRateLimitedHTMX(w io.Writer, seconds string) error {
 	return nil
 }
 
-func PublicCreateUserRateLimitedJSON(w io.Writer, seconds string) error {
-	var payload any
-
-	payload = map[string]any{"seconds": seconds}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
-	return nil
-}
-
 func getPublicCreatedUserInfoTemplate() (*template.Template, error) {
 	if PublicCreatedUserInfoTemplate != nil {
 		return PublicCreatedUserInfoTemplate, nil
@@ -257,23 +220,5 @@ func PublicCreatedUserInfoHTMX(w io.Writer, url string, password string, totp_se
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
-	return nil
-}
-
-func PublicCreatedUserInfoJSON(w io.Writer, url string, password string, totp_secret string, backup_key string) error {
-	var payload any
-
-	payload = map[string]any{"url": url, "password": password, "totp_secret": totp_secret, "backup_key": backup_key}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	_, err = w.Write(b)
-	if err != nil {
-		return fmt.Errorf("failed to write json response: %w", err)
-	}
-
 	return nil
 }
