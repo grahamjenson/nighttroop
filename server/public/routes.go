@@ -34,7 +34,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		allowed, remainingTime := httputils.CreateUserAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			public_templ.CreateUserRateLimited(remainingTime).Render(r.Context(), w)
+			public_templ.CreateUserRateLimited(remainingTime+1).Render(r.Context(), w)
 			return
 		}
 

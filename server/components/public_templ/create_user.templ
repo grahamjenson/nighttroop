@@ -5,7 +5,7 @@ import "nighttroop.t1d.nz/server/components/ui/button"
 templ CreateUser() {
 	@PublicBase() {
 		<div class="flex min-h-screen flex-col items-center p-6">
-			<div class="w-full max-w-md rounded-3xl bg-slate-700 p-8 shadow-xl border border-white/5">
+			<div class="w-full max-w-md rounded-3xl bg-slate-600 p-8 shadow-xl border-4 border-slate-900">
 				<!-- Header -->
 				<div class="mb-8 flex flex-col items-center border-b border-white/5 pb-6">
 					<!-- Logo Container Expanded to 160px (10rem) -->
@@ -22,9 +22,9 @@ templ CreateUser() {
 					<div class="w-full flex flex-col items-center justify-center">
 						<!-- Centered & Larger Templ Button -->
 						@button.Button(button.Props{
-							Size:  button.SizeLg,
-							Class: "w-full justify-center h-32 w-64",
-
+							Size:      button.SizeLg,
+							Class:     "w-full justify-center h-32 w-64 bg-slate-800 border-1 border-slate-900 shadow-2xl shadow-slate-900/50 hover:bg-slate-700/80 transition-all duration-200",
+							FullWidth: true,
 							Attributes: templ.Attributes{
 								"hx-post":         "/user",
 								"hx-target":       "#panel-content",
@@ -34,19 +34,14 @@ templ CreateUser() {
 							},
 						}) {
 							<div class="h-5 w-5"></div>
-							<span class="text-2xl font-extrabold uppercase tracking-wide text-white drop-shadow-md">
+							<span class="text-2xl font-extrabold tracking-wide text-white">
 								Create User
 							</span>
 							<div class="h-5 w-5"></div>
 						}
 						<!-- HTMX Loading Indicator -->
-						<div id="loading" class="htmx-indicator mt-6 flex flex-col items-center h-0">
-							<div class="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-400"></div>
-							<div class="mt-3 text-sm text-slate-400">
-								Creating secure identity...
-							</div>
-						</div>
-						<div id="error-container" class="h-0 mt-4 w-full"></div>
+						<div id="loading" class="htmx-indicator"></div>
+						<div id="error-container" class="h-min w-full"></div>
 					</div>
 				</div>
 				<!-- Footer -->
@@ -119,16 +114,26 @@ templ CreateUserInfo(url string, password string, totpSecret string, backupKey s
 				ID:   "copyBtn",
 				Size: button.SizeLg,
 			}) {
-				<span>Copy All </span>
+				<span>Copy All</span>
 			}
 		</div>
 		<!-- Decorative Divider Line -->
 		<div class="border-b border-white/5 my-6"></div>
-		<!-- Action Button: Visit Generated Site -->
-		<div class="text-center">
-			<a href={ url } target="_blank" class="inline-flex items-center justify-center rounded-2xl border-4 border-cyan-400 bg-slate-950 px-8 py-4 text-2xl font-extrabold uppercase tracking-wide text-cyan-400 hover:bg-cyan-500/10 transition-all duration-200 shadow-2xl shadow-cyan-500/20">
-				Visit Your Generated Site →
-			</a>
+		<div class="justify-center flex w-full">
+			<!-- Action Button: Visit Generated Site -->
+			@button.Button(button.Props{
+				Size:      button.SizeLg,
+				Class:     "w-full justify-center h-32 w-64 bg-slate-800 border-1 border-slate-900 shadow-2xl shadow-slate-900/50 hover:bg-slate-700/80 transition-all duration-200",
+				FullWidth: true,
+				Href:      url,
+				Target:    "_blank",
+			}) {
+				<div class="h-5 w-5"></div>
+				<span class="text-2xl font-extrabold tracking-wide text-white">
+					Login
+				</span>
+				<div class="h-5 w-5"></div>
+			}
 		</div>
 	</div>
 	<script>
