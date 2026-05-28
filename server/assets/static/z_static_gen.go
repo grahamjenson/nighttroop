@@ -36,6 +36,30 @@ var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
 var StaticHtmxResponseTargetsJs []byte
 var StaticHtmxResponseTargetsJsETag = generateETag([]byte(StaticHtmxResponseTargetsJs))
 
+//go:embed input.js
+var StaticInputJs []byte
+var StaticInputJsETag = generateETag([]byte(StaticInputJs))
+
+//go:embed input.min.js
+var StaticInputMinJs []byte
+var StaticInputMinJsETag = generateETag([]byte(StaticInputMinJs))
+
+//go:embed inputotp.js
+var StaticInputotpJs []byte
+var StaticInputotpJsETag = generateETag([]byte(StaticInputotpJs))
+
+//go:embed inputotp.min.js
+var StaticInputotpMinJs []byte
+var StaticInputotpMinJsETag = generateETag([]byte(StaticInputotpMinJs))
+
+//go:embed label.js
+var StaticLabelJs []byte
+var StaticLabelJsETag = generateETag([]byte(StaticLabelJs))
+
+//go:embed label.min.js
+var StaticLabelMinJs []byte
+var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
+
 //go:embed logo.png
 var StaticLogoPng []byte
 var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
@@ -121,6 +145,72 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticHtmxResponseTargetsJs))
 		if err != nil {
 			slog.Error("Failed to write response for htmx_response_targets.js", "error", err)
+		}
+	})
+	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticInputJsETag)
+
+		_, err := w.Write([]byte(StaticInputJs))
+		if err != nil {
+			slog.Error("Failed to write response for input.js", "error", err)
+		}
+	})
+	r.Get("/input.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticInputMinJsETag)
+
+		_, err := w.Write([]byte(StaticInputMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for input.min.js", "error", err)
+		}
+	})
+	r.Get("/inputotp.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticInputotpJsETag)
+
+		_, err := w.Write([]byte(StaticInputotpJs))
+		if err != nil {
+			slog.Error("Failed to write response for inputotp.js", "error", err)
+		}
+	})
+	r.Get("/inputotp.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticInputotpMinJsETag)
+
+		_, err := w.Write([]byte(StaticInputotpMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for inputotp.min.js", "error", err)
+		}
+	})
+	r.Get("/label.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticLabelJsETag)
+
+		_, err := w.Write([]byte(StaticLabelJs))
+		if err != nil {
+			slog.Error("Failed to write response for label.js", "error", err)
+		}
+	})
+	r.Get("/label.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticLabelMinJsETag)
+
+		_, err := w.Write([]byte(StaticLabelMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for label.min.js", "error", err)
 		}
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
