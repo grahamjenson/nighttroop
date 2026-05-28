@@ -148,6 +148,9 @@ type UserCreateMaterial struct {
 
 func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
 	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
+	if db.UserExists(subdomain) {
+		return nil, "", "", "", fmt.Errorf("user already exists")
+	}
 
 	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain + ":")
 	if err != nil {
@@ -254,13 +257,15 @@ func createDefaultUsers(subdomain, hostname string, userDB *UserDB, security *se
 func (db *ControlDB) DeleteUsers(subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
 	bytes, _ := json.Marshal(subdomains)
-	err := db.Queries.DeleteUsers(context.TODO(), string(bytes))
+	deletedSubdomains, err := db.Queries.DeleteUsers(context.TODO(), string(bytes))
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 
+	fmt.Println("TRYING TO DELETE", subdomains, "DELETED", deletedSubdomains)
+
 	// Close the DB and remove from the map
-	for _, subdomain := range subdomains {
+	for _, subdomain := range deletedSubdomains {
 		db.usersRWLock.Lock()
 		user, ok := db.users[subdomain]
 		if !ok {

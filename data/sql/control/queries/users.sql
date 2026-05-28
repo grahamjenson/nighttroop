@@ -10,10 +10,11 @@ VALUES (?, ?) RETURNING *;
 SELECT * FROM users WHERE subdomain = ? AND deleted_at IS NULL;
 
 -- Pass a list of users as a string to delete
--- name: DeleteUsers :exec
+-- name: DeleteUsers :many
 UPDATE users
 SET deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE subdomain IN (SELECT value FROM json_each(?));
+WHERE subdomain IN (SELECT value FROM json_each(?))
+RETURNING subdomain;
 
 -- name: GetBatchUsers :many
 SELECT * FROM users 

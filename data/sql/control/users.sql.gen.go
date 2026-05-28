@@ -31,16 +31,35 @@ func (q *Queries) CreateUser(ctx context.Context, subdomain string, backupKeyHas
 	return &i, err
 }
 
-const deleteUsers = `-- name: DeleteUsers :exec
+const deleteUsers = `-- name: DeleteUsers :many
 UPDATE users
 SET deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE subdomain IN (SELECT value FROM json_each(?))
+RETURNING subdomain
 `
 
 // Pass a list of users as a string to delete
-func (q *Queries) DeleteUsers(ctx context.Context, jsonEach interface{}) error {
-	_, err := q.exec(ctx, q.deleteUsersStmt, deleteUsers, jsonEach)
-	return err
+func (q *Queries) DeleteUsers(ctx context.Context, jsonEach interface{}) ([]string, error) {
+	rows, err := q.query(ctx, q.deleteUsersStmt, deleteUsers, jsonEach)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var subdomain string
+		if err := rows.Scan(&subdomain); err != nil {
+			return nil, err
+		}
+		items = append(items, subdomain)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getAllUsers = `-- name: GetAllUsers :many

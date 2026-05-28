@@ -82,7 +82,7 @@ func main() {
 		log.Fatalf("Failed to build migration: %v", err)
 	}
 
-	err = gen.BuildSchema(*folder+"/schema.sql", migrationFiles)
+	err = gen.BuildSchema(*folder+"/schema_gen.sql", migrationFiles)
 	if err != nil {
 		log.Fatalf("Failed to build schema: %v", err)
 	}

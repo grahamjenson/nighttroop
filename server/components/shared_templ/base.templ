@@ -5,146 +5,18 @@ templ Base(title string) {
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
-			<meta
-				name="viewport"
-				content="width=device-width, initial-scale=1"
-			/>
-			<title>
-				{ title }
-			</title>
-			<link
-				rel="icon"
-				type="image/x-icon"
-				href="/favicon.ico"
-			/>
-			<link
-				rel="apple-touch-icon"
-				href="/logo.png"
-			/>
-			<!-- Bootstrap -->
-			<link
-				href="/bootstrap.css"
-				rel="stylesheet"
-			/>
-			<script src="/popper.min.js"></script>
-			<script src="/bootstrap.min.js"></script>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } </title>
+			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+			<link rel="apple-touch-icon" href="/logo.png"/>
+			<!-- Tailwind CSS -->
+			<link href="/style_gen.css" rel="stylesheet"/>
 			<script src="/d3.js"></script>
 			<script src="/htmx.js"></script>
 			<script src="/htmx_response_targets.js"></script>
-			@Style()
 		</head>
 		<body hx-ext="response-targets">
 			{ children... }
 		</body>
 	</html>
-}
-
-templ Style() {
-	<style>
-        body {
-            background:
-                linear-gradient(
-                    180deg,
-                    #f8fafc 0%,
-                    #eef2f7 100%
-                );
-
-            min-height: 100vh;
-        }
-
-        .navbar-brand {
-            letter-spacing: 0.08em;
-        }
-
-        .center-container {
-            min-height: calc(100vh - 180px);
-        }
-
-        .glass-nav {
-            backdrop-filter: blur(12px);
-            background:
-                rgba(33, 37, 41, 0.88) !important;
-        }
-
-        .profile-avatar {
-            width: 35px;
-            height: 35px;
-        }
-
-        .footer-link:hover {
-            color: #0d6efd !important;
-        }
-        body {
-            background: linear-gradient(135deg, #0d1b2a, #1b263b);
-            color: #e0e1dd;
-        }
-
-        .center-container {
-            min-height: 100vh;
-        }
-
-        .nighttroopz-panel {
-            width: 500px;
-            min-height: 500px;
-            background-color: #1b263b;
-            border: 1px solid #415a77;
-            border-radius: 1rem;
-        }
-
-        .panel-content {
-            min-height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-create {
-            font-size: 1.5rem;
-            padding: 0.9rem 2.2rem;
-        }
-
-        .app-title {
-            font-weight: 300;
-            letter-spacing: 0.08em;
-            color: #cbd5e1;
-        }
-
-        .brand-header {
-            gap: 12px;
-            /* space between icon and text */
-        }
-
-        .brand-logo {
-            width: 120px;
-            height: 120px;
-            margin-right: 12px;
-            border-radius: 8px;
-            /* subtle rounding */
-
-        }
-
-        .app-title {
-            font-family: Tahoma, sans-serif;
-            /* modern tech-style font */
-            font-weight: 700;
-            font-size: 1.8rem;
-            color: #b5b3f5;
-            /* dark but soft color */
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-            /* subtle depth */
-        }
-
-        .htmx-indicator {
-            display: none;
-        }
-
-        .htmx-request .htmx-indicator {
-            display: block;
-        }
-
-        .htmx-request #create-user-btn {
-            display: none;
-        }
-
-    </style>
 }

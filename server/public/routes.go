@@ -2,13 +2,12 @@ package public
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"runtime"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/templates"
+	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -22,7 +21,7 @@ type CreateUserResponse struct {
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := templates.PublicCreateUserHTML(w)
+		err := public_templ.CreateUser().Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -35,7 +34,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		allowed, remainingTime := httputils.CreateUserAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			templates.PublicCreateUserRateLimitedHTMX(w, fmt.Sprintf("%d", remainingTime))
+			public_templ.CreateUserRateLimited(remainingTime).Render(r.Context(), w)
 			return
 		}
 
@@ -71,7 +70,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = templates.PublicCreatedUserInfoHTMX(w, userDB.URL(), adminPassword, backupPassword, totpSecret)
+		err = public_templ.CreateUserInfo(userDB.URL(), adminPassword, totpSecret, backupPassword).Render(r.Context(), w)
 		if err != nil {
 			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)

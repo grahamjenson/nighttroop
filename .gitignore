@@ -1,4 +1,5 @@
 *.sqlite*
 /.dbs
 .env
+tmp
 master_key.bin

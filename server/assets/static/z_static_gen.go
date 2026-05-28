@@ -48,6 +48,10 @@ var StaticPopperMinJsETag = generateETag([]byte(StaticPopperMinJs))
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
 
+//go:embed style_gen.css
+var StaticStyleGenCss []byte
+var StaticStyleGenCssETag = generateETag([]byte(StaticStyleGenCss))
+
 //go:embed z_static_gen.go
 var StaticZStaticGenGo []byte
 var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
@@ -150,6 +154,17 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticRobotsTxt))
 		if err != nil {
 			slog.Error("Failed to write response for robots.txt", "error", err)
+		}
+	})
+	r.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticStyleGenCssETag)
+
+		_, err := w.Write([]byte(StaticStyleGenCss))
+		if err != nil {
+			slog.Error("Failed to write response for style_gen.css", "error", err)
 		}
 	})
 	r.Get("/z_static_gen.go", func(w http.ResponseWriter, r *http.Request) {

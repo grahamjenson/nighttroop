@@ -1,0 +1,14 @@
+package public_templ
+
+import "nighttroop.t1d.nz/server/components/shared_templ"
+
+templ PublicBase() {
+	@shared_templ.Base("Nighttroop") {
+		<div
+			id="main-content"
+			class=""
+		>
+			{ children... }
+		</div>
+	}
+}

@@ -20,6 +20,7 @@
 1. Nightscout reimplementation routes
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
 1. Write data sync logic and protections, punishing bad servers...
+1. Archive has a problem where they are deleting files from the db not removing from control
 
 # NightTroop
 
@@ -42,6 +43,7 @@ Docker runs our local test s3 server `minio` (the only external dependency)
 ```
 brew install sqlc
 brew install templ
+brew install tailwindcss
 brew install golang-migrate
 brew install docker colima docker-compose
 colima start

@@ -100,8 +100,10 @@ func getContentType(filename string) string {
 
 func main() {
 	var staticFiles utils.FlagFileList
+
 	// loop over the folder ../static and add all files to the StaticFiles list
 	err := filepath.Walk("static", func(path string, info os.FileInfo, err error) error {
+
 		if err != nil {
 			return err
 		}

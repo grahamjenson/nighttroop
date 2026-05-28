@@ -1,0 +1,146 @@
+package public_templ
+
+import "nighttroop.t1d.nz/server/components/ui/button"
+
+templ CreateUser() {
+	@PublicBase() {
+		<div class="flex min-h-screen flex-col items-center p-6">
+			<div class="w-full max-w-md rounded-3xl bg-slate-700 p-8 shadow-xl border border-white/5">
+				<!-- Header -->
+				<div class="mb-8 flex flex-col items-center border-b border-white/5 pb-6">
+					<!-- Logo Container Expanded to 160px (10rem) -->
+					<div class="flex h-64 w-64 items-center justify-center">
+						<img
+							src="/logo.png"
+							alt="NightTroop Logo"
+							class="object-contain"
+						/>
+					</div>
+				</div>
+				<!-- Main Content -->
+				<div id="panel-content" class="flex flex-col items-center justify-center">
+					<div class="w-full flex flex-col items-center justify-center">
+						<!-- Centered & Larger Templ Button -->
+						@button.Button(button.Props{
+							Size:  button.SizeLg,
+							Class: "w-full justify-center h-32 w-64",
+
+							Attributes: templ.Attributes{
+								"hx-post":         "/user",
+								"hx-target":       "#panel-content",
+								"hx-swap":         "innerHTML",
+								"hx-indicator":    "#loading",
+								"hx-target-error": "#error-container",
+							},
+						}) {
+							<div class="h-5 w-5"></div>
+							<span class="text-2xl font-extrabold uppercase tracking-wide text-white drop-shadow-md">
+								Create User
+							</span>
+							<div class="h-5 w-5"></div>
+						}
+						<!-- HTMX Loading Indicator -->
+						<div id="loading" class="htmx-indicator mt-6 flex flex-col items-center h-0">
+							<div class="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-400"></div>
+							<div class="mt-3 text-sm text-slate-400">
+								Creating secure identity...
+							</div>
+						</div>
+						<div id="error-container" class="h-0 mt-4 w-full"></div>
+					</div>
+				</div>
+				<!-- Footer -->
+				<div class="mt-8 border-t border-white/5 pt-5 text-center">
+					<div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/10 bg-emerald-500/5 px-4 py-2 text-xs font-medium tracking-wide text-emerald-300">
+						<span class="relative flex h-2 w-2">
+							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+							<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+						</span>
+						<span>Secure • Private • Free</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ CreateUserRateLimited(seconds int) {
+	<div id="rate-limit-alert" class="mt-3 rounded-xl bg-amber-500/10 p-4 text-amber-200 border border-amber-500/20 shadow-sm" role="alert">
+		<div class="flex items-center justify-center">
+			<!-- Animated Tailwind Spinner -->
+			<div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-400" role="status"></div>
+			<span class="text-sm font-medium">
+				Too many requests. Please wait
+				<strong id="countdownNum" class="mx-1 font-bold text-rose-400">{ seconds }</strong>
+				seconds.
+			</span>
+		</div>
+	</div>
+	<script>
+    document.span = document.getElementById('countdownNum');
+
+    clearInterval(document._timer);
+
+    document._timer = setInterval(() => {
+        let count = parseInt(document.span.innerText);
+        if (count <= 1) {
+            clearInterval(document._timer);
+            document.getElementById('rate-limit-alert').remove();
+        } else {
+            document.span.innerText = count - 1;
+        }
+    }, 1000);
+</script>
+}
+
+templ CreateUserInfo(url string, password string, totpSecret string, backupKey string) {
+	<div class="text-left w-full">
+		<!-- Warning Alert Box -->
+		<div class="mb-4">
+			<div class="rounded-2xl bg-amber-500/10 p-5 text-sm leading-relaxed text-amber-200/90 border border-amber-500/20 shadow-lg">
+				<span class="font-semibold text-amber-300">⚠️ Save this information in a secure location.</span>
+				<!-- A list of things -->
+				<ul class="mt-3 space-y-1.5 list-disc pl-5 text-amber-200/70">
+					<li><strong class="font-bold text-amber-200">URL</strong>: The URL to access your site.</li>
+					<li><strong class="font-bold text-amber-200">Token</strong>: The admin secret to manage your site.</li>
+					<li><strong class="font-bold text-amber-200">Backup Key</strong>: A key to prove ownership if you lose access.</li>
+				</ul>
+			</div>
+		</div>
+		<!-- Code / Credential Textarea Box -->
+		<div class="mb-4">
+			<textarea id="resultBox" class="w-full rounded-2xl border border-white/10 bg-slate-950 p-4 font-mono text-sm text-slate-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none shadow-inner" rows="6" readonly>
+				URL:  { url + "\n" }Username: { "admin\n" }Password: { password + "\n" }TOTP Secret: { totpSecret + "\n" }Backup Key: { backupKey + "\n" }
+			</textarea>
+		</div>
+		<!-- Action Button: Copy All -->
+		<div class="flex justify-end mb-6">
+			@button.Button(button.Props{
+				ID:   "copyBtn",
+				Size: button.SizeLg,
+			}) {
+				<span>Copy All </span>
+			}
+		</div>
+		<!-- Decorative Divider Line -->
+		<div class="border-b border-white/5 my-6"></div>
+		<!-- Action Button: Visit Generated Site -->
+		<div class="text-center">
+			<a href={ url } target="_blank" class="inline-flex items-center justify-center rounded-2xl border-4 border-cyan-400 bg-slate-950 px-8 py-4 text-2xl font-extrabold uppercase tracking-wide text-cyan-400 hover:bg-cyan-500/10 transition-all duration-200 shadow-2xl shadow-cyan-500/20">
+				Visit Your Generated Site →
+			</a>
+		</div>
+	</div>
+	<script>
+    // Copy to Clipboard Functionality
+    document.getElementById("copyBtn").addEventListener("click", function () {
+        const textarea = document.getElementById("resultBox");
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            this.innerText = "Copied!";
+            setTimeout(() => {
+                this.innerText = "Copy All";
+            }, 1500);
+        });
+    });
+</script>
+}
