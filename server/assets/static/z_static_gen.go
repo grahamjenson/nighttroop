@@ -12,13 +12,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-//go:embed bootstrap.css
-var StaticBootstrapCss []byte
-var StaticBootstrapCssETag = generateETag([]byte(StaticBootstrapCss))
+//go:embed copybutton.js
+var StaticCopybuttonJs []byte
+var StaticCopybuttonJsETag = generateETag([]byte(StaticCopybuttonJs))
 
-//go:embed bootstrap.min.js
-var StaticBootstrapMinJs []byte
-var StaticBootstrapMinJsETag = generateETag([]byte(StaticBootstrapMinJs))
+//go:embed copybutton.min.js
+var StaticCopybuttonMinJs []byte
+var StaticCopybuttonMinJsETag = generateETag([]byte(StaticCopybuttonMinJs))
 
 //go:embed d3.js
 var StaticD3Js []byte
@@ -64,10 +64,6 @@ var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
 var StaticLogoPng []byte
 var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 
-//go:embed popper.min.js
-var StaticPopperMinJs []byte
-var StaticPopperMinJsETag = generateETag([]byte(StaticPopperMinJs))
-
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
@@ -81,26 +77,26 @@ var StaticZStaticGenGo []byte
 var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
 
 func AddSatticRoutes(r chi.Router) error {
-	r.Get("/bootstrap.css", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/css; charset=utf-8")
-
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticBootstrapCssETag)
-
-		_, err := w.Write([]byte(StaticBootstrapCss))
-		if err != nil {
-			slog.Error("Failed to write response for bootstrap.css", "error", err)
-		}
-	})
-	r.Get("/bootstrap.min.js", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/copybutton.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticBootstrapMinJsETag)
+		w.Header().Set("ETag", StaticCopybuttonJsETag)
 
-		_, err := w.Write([]byte(StaticBootstrapMinJs))
+		_, err := w.Write([]byte(StaticCopybuttonJs))
 		if err != nil {
-			slog.Error("Failed to write response for bootstrap.min.js", "error", err)
+			slog.Error("Failed to write response for copybutton.js", "error", err)
+		}
+	})
+	r.Get("/copybutton.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticCopybuttonMinJsETag)
+
+		_, err := w.Write([]byte(StaticCopybuttonMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for copybutton.min.js", "error", err)
 		}
 	})
 	r.Get("/d3.js", func(w http.ResponseWriter, r *http.Request) {
@@ -222,17 +218,6 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticLogoPng))
 		if err != nil {
 			slog.Error("Failed to write response for logo.png", "error", err)
-		}
-	})
-	r.Get("/popper.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticPopperMinJsETag)
-
-		_, err := w.Write([]byte(StaticPopperMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for popper.min.js", "error", err)
 		}
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

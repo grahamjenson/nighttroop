@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
@@ -167,9 +168,14 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		}
 
 		totpToken := r.FormValue("totp")
+
+		totpToken, _ = strings.CutSuffix(totpToken, "]")
+		totpToken, _ = strings.CutPrefix(totpToken, "[")
+
 		err = validateIdentityTOTP(config, device, totpToken)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
@@ -177,6 +183,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
