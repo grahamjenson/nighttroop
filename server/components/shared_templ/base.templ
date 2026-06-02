@@ -15,12 +15,13 @@ templ Base(title string) {
 			<script src="/htmx.js"></script>
 			<script src="/htmx_response_targets.js"></script>
 			<script src="/copybutton.min.js"></script>
-			<script src="/inputotp.min.js"></script>
 			<script src="/input.min.js"></script>
 			<script src="/label.min.js"></script>
+			<script src="/qrcode.js"></script>
 		</head>
 		<body hx-ext="response-targets">
 			{ children... }
+			<script src="/inputotp.min.js"></script>
 		</body>
 	</html>
 }

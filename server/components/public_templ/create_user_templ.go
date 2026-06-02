@@ -45,7 +45,7 @@ func CreateUser() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl justify-center flex flex-col items-center w-xl\"><!-- Header --><div class=\"text-center mb-10\"><h2 class=\"font-bold text-4xl\">NightTroop</h2></div><!-- Main Content --><div id=\"panel-content\" class=\"flex flex-col items-center justify-center\"><div class=\"w-full flex flex-col items-center justify-center\"><!-- Centered & Larger Templ Button -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><!-- Header --><div class=\"text-center mb-4\"><h2 class=\"text-4xl font-extrabold tracking-tight text-gray-900\">NightTroop</h2><p class=\"mt-2 text-sm text-slate-500\">Your T1D Host</p></div><!-- Main Content --><div id=\"panel-content\" class=\"flex flex-col items-center justify-center mt-4\"><div class=\"w-full flex flex-col items-center justify-center\"><!-- Centered & Larger Templ Button -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -61,7 +61,7 @@ func CreateUser() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"h-5 w-5\"></div><span class=\"text-2xl font-extrabold tracking-wide text-white\">Create User</span><div class=\"h-5 w-5\"></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"h-2 w-5\"></div><span class=\"text-2xl font-extrabold tracking-wide text-white\">Get Started</span><div class=\"h-2 w-5\"></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -70,7 +70,7 @@ func CreateUser() templ.Component {
 			templ_7745c5c3_Err = button.Button(button.Props{
 				Size:      button.SizeLg,
 				Variant:   button.VariantSecondary,
-				Class:     "h-32 w-64 bg-blue-600  shadow-2xl hover:bg-blue-900 transition-all duration-200",
+				Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 				FullWidth: true,
 				Attributes: templ.Attributes{
 					"hx-post":         "/user",
@@ -82,7 +82,7 @@ func CreateUser() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<!-- HTMX Loading Indicator --><div id=\"error-container\" class=\"h-min w-full\"></div></div></div><!-- Footer --><div class=\"mt-8 border-t border-white/5 pt-5 text-center\"><div class=\"inline-flex items-center gap-2 rounded-full border border-emerald-500/10 bg-emerald-200/20 px-4 py-2 text-xs font-medium tracking-wide text-emerald-600\"><span class=\"relative flex h-2 w-2\"><span class=\"animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75\"></span> <span class=\"relative inline-flex rounded-full h-2 w-2 bg-emerald-500\"></span></span> <span>Secure • Private • Free</span></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<!-- HTMX Loading Indicator --><div id=\"error-container\" class=\"h-8 w-full\"></div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -124,7 +124,7 @@ func CreateUserRateLimited(seconds int) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(seconds)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 64, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 55, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -159,82 +159,82 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"text-left w-full\"><!-- Warning Alert Box --><div class=\"mb-4\"><div class=\"rounded-2xl bg-amber-500/10 p-5 text-sm leading-relaxed text-amber-500 border border-amber-500/20 shadow-lg\"><span class=\"font-semibold text-amber-800\">⚠️ Save this information in a secure location.</span><!-- A list of things --><ul class=\"mt-3 space-y-1.5 list-disc pl-5 text-amber-500\"><li><strong class=\"font-bold text-amber-600\">URL</strong>: The URL to access your site.</li><li><strong class=\"font-bold text-amber-600\">Token</strong>: The admin secret to manage your site.</li><li><strong class=\"font-bold text-amber-600\">Backup Key</strong>: A key to prove ownership if you lose access.</li></ul></div></div><!-- Code / Credential Textarea Box --><div class=\"mb-4\"><div id=\"resultBox\"><div><span>URL: </span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"text-left w-full\"><div class=\"border-b border-slate-200/60 my-6\"></div><div id=\"Step1\" class=\"max-w-2xl mx-auto space-y-6\"><!-- Credentials Display Box --><div class=\"rounded-xl bg-amber-500/10 p-4 text-sm leading-relaxed text-amber-600 border border-amber-500/20 shadow-sm\"><div class=\"flex items-start gap-2\"><span class=\"text-amber-700\">1.</span><p class=\"font-semibold text-amber-900\">Save this information in a secure location.</p></div></div><div class=\"relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden\"><!-- Header bar with Action Button --><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your Credentials</span> <textarea id=\"textToCopy\" hidden>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(url)
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("URL: " + url + "\nUsername: admin\nPassword: " + password + "\nTOTP Secret: " + totpSecret + "\nBackup Key: " + backupKey)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 103, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 92, Col: 162}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div><span>UserName: </span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</textarea><!-- Clear, High-Visibility Copy Button --><div class=\"inline-flex shadow-sm rounded-lg\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = copybutton.CopyButton(copybutton.Props{
+			TargetID: "textToCopy",
+			Class:    "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div><!-- Monospace Content Area --><div class=\"p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white\"><div class=\"flex\"><span class=\"w-28 shrink-0 font-medium text-slate-400 select-none\">URL:</span><span class=\"break-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs("admin")
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(url)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 104, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 103, Col: 130}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><div><span>Password: </span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span></div><div class=\"flex\"><span class=\"w-28 shrink-0 font-medium text-slate-400 select-none\">Username:</span><span>admin</span></div><div class=\"flex\"><span class=\"w-28 shrink-0 font-medium text-slate-400 select-none\">Password:</span><span class=\"break-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(password)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 105, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 105, Col: 140}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div><span>TOTP Secret: </span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span></div><div class=\"flex\"><div class=\"flex items-start gap-6\"><!-- Left: label + secret --><div class=\"flex\"><span class=\"w-28 shrink-0 font-medium text-slate-400 select-none\">TOTP Secret:</span></div><!-- Right: QR block --><div class=\"flex flex-col items-center gap-2\"><div id=\"qrcode\" class=\"p-2 bg-white rounded-lg shadow-sm border border-slate-200\"></div><span class=\"text-xs text-slate-400\">Scan with authenticator</span></div></div><script type=\"text/javascript\">\n\t\t\t\t\t\t\tvar qrcode = new QRCode(document.getElementById(\"qrcode\"), {\n\t\t\t\t\t\t\t\ttext: \"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(totpSecret)
+		templ_7745c5c3_Var10, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(totpSecret)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 106, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 122, Col: 28}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><div><span>Backup Key: </span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\",\n\t\t\t\t\t\t\t\twidth: 128,\n\t\t\t\t\t\t\t\theight: 128,\n\t\t\t\t\t\t\t\tcolorDark : \"#000000\",\n\t\t\t\t\t\t\t\tcolorLight : \"#ffffff\",\n\t\t\t\t\t\t\t\tcorrectLevel : QRCode.CorrectLevel.H\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t</script></div><div class=\"flex\"><span class=\"w-28 shrink-0 font-medium text-slate-400 select-none\">Backup Key:</span><span class=\"break-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(backupKey)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 107, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 131, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = copybutton.CopyButton(copybutton.Props{
-			TargetID: "resultBox",
-		}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<!-- Decorative Divider Line --><div class=\"border-b border-white/5 my-6\"></div><div class=\"justify-center flex w-full\"><!-- Action Button: Visit Generated Site -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></div></div></div></div><div class=\"border-b border-slate-200/60 my-6\"></div><div id=\"Step2\"><div class=\"rounded-xl bg-amber-500/10 p-4 text-sm leading-relaxed text-amber-600 border border-amber-500/20 shadow-sm mb-4\"><div class=\"flex items-start gap-2\"><span class=\"text-amber-700\">2.</span><p class=\"font-semibold text-amber-900\">Visit the Generated Site to Login.</p></div></div><div class=\"justify-center flex w-full\"><!-- Action Button: Visit Generated Site -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -258,7 +258,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Size:      button.SizeLg,
-			Class:     "w-full justify-center h-32 w-64 bg-slate-800 border-1 border-slate-900 shadow-2xl shadow-slate-900/50 hover:bg-slate-700/80 transition-all duration-200",
+			Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 			FullWidth: true,
 			Href:      url,
 			Target:    "_blank",
@@ -266,7 +266,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></div><script>\n    // Copy to Clipboard Functionality\n    document.getElementById(\"copyBtn\").addEventListener(\"click\", function () {\n        const textarea = document.getElementById(\"resultBox\");\n        navigator.clipboard.writeText(textarea.value).then(() => {\n            this.innerText = \"Copied!\";\n            setTimeout(() => {\n                this.innerText = \"Copy All\";\n            }, 1500);\n        });\n    });\n</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

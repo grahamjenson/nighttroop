@@ -43,6 +43,7 @@ Docker runs our local test s3 server `minio` (the only external dependency)
 ```
 brew install sqlc
 brew install templ
+brew install go-air
 brew install tailwindcss
 brew install golang-migrate
 brew install docker colima docker-compose
@@ -171,3 +172,8 @@ go run utils/keysets/decrypt_admin_bundle.go "<base64 encoded admin info>"
 
 This will add the new key and make it primary, so then all new values will be encrypted with that new primary value
 TODO as encrypted values are read, if they are on an old key they will be moved over.
+
+
+# GoTHSS Framework. (Go + Templ + HTMx + SQLite + SQLc + Tailwind)
+
+The "framework" that Nighttrrop uses uses Go and relies heavily on generated code tools like SQLc, Templ and Tailwind.

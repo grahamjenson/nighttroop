@@ -47,6 +47,9 @@ var firstUserSubdomains = []string{
 	"alicezzz",
 	"bobzzzzz",
 	"charliez",
+	"davezzzz",
+	"evezzzzz",
+	"frankzzz",
 }
 
 func NextUserID(usePrecomputedList bool) string {

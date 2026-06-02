@@ -64,6 +64,10 @@ var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
 var StaticLogoPng []byte
 var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 
+//go:embed qrcode.js
+var StaticQrcodeJs []byte
+var StaticQrcodeJsETag = generateETag([]byte(StaticQrcodeJs))
+
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
@@ -218,6 +222,17 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticLogoPng))
 		if err != nil {
 			slog.Error("Failed to write response for logo.png", "error", err)
+		}
+	})
+	r.Get("/qrcode.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticQrcodeJsETag)
+
+		_, err := w.Write([]byte(StaticQrcodeJs))
+		if err != nil {
+			slog.Error("Failed to write response for qrcode.js", "error", err)
 		}
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

@@ -149,7 +149,11 @@ type UserCreateMaterial struct {
 func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
 	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
 	if db.UserExists(subdomain) {
-		return nil, "", "", "", fmt.Errorf("user already exists")
+		// Try Again with an actual random ID
+		subdomain = utils.NextUserID(false)
+		if db.UserExists(subdomain) {
+			return nil, "", "", "", fmt.Errorf("user already exists")
+		}
 	}
 
 	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain + ":")
