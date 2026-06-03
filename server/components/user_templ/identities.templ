@@ -1,0 +1,153 @@
+package user_templ
+
+import (
+	"nighttroop.t1d.nz/data/sql/user"
+	"strconv"
+	"time"
+)
+
+type UserIdentity struct {
+	ID              string
+	Name            string
+	Created         string
+	LastSeen        string
+	Role            string
+	CurrentIdentity bool
+	HasTotpSecret   bool
+	NightscoutToken string
+	Enabled         bool
+}
+
+func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName string, nightscoutToken string) *UserIdentity {
+	lastSeen := "Never"
+	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
+		lastSeen = time.UnixMilli(*identity.LastSeenAt).Format("2006-01-02 15:04:05")
+	}
+
+	return &UserIdentity{
+		ID:              strconv.Itoa(int(identity.ID)),
+		Name:            identity.Name,
+		Created:         time.UnixMilli(identity.CreatedAt).Format("2006-01-02 15:04:05"),
+		LastSeen:        lastSeen,
+		Role:            string(identity.Role),
+		CurrentIdentity: identity.Name == currentIdentityName,
+		HasTotpSecret:   identity.TotpSecret != "",
+		NightscoutToken: nightscoutToken,
+		Enabled:         identity.Enabled,
+	}
+}
+
+templ Identities(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
+	@UserBase(UserContext{Subdomain: "example.com"}) {
+		IdentitesForm(admins, users, devices, syncs)
+	}
+}
+
+templ IdentitesForm(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
+	<div id="mainForm" class="card shadow-sm border-0">
+		<div class="card-body p-4">
+			<div class="mb-3 border-bottom pb-2">
+				<h3 class="mb-1">Identity Settings</h3>
+				<div class="text-muted small">
+					An Identity is a user or device that that can write or read your data.
+					This is where you can manage different identities, we recommend a different identity per device you
+					connect to nighttroop.
+					All passwords are randomly generated and can be copied with the "Copy Password" button.
+					For TOTP passwords, we press button to display the TOTP secret as a QR code.
+					On identities that can access the Nightscout API, the button "Copy Nightscout Token"
+				</div>
+			</div>
+			<!-- Alerts -->
+			<div id="deviceAlerts"></div>
+			<!-- Admins -->
+			<div class="table-responsive">
+				<table class="table align-middle table-hover">
+					<thead class="table-light">
+						<tr>
+							<th>Name</th>
+							<th>Role</th>
+							<th>Created</th>
+							<th>Last Seen</th>
+							<th class="text-end">Actions</th>
+						</tr>
+					</thead>
+					<tbody id="deviceTableBody">
+						for _, identity := range admins {
+							<tr id="device-{ identity.ID }">
+								<td>
+									<div class="fw-semibold">{ identity.Name }</div>
+								</td>
+								<td>
+									<span class="badge bg-primary-subtle text-primary border">
+										{ identity.Role }
+									</span>
+								</td>
+								<td>
+									<span class="text-muted">
+										{ identity.Created }
+									</span>
+								</td>
+								<td>
+									{ identity.LastSeen }
+								</td>
+								<td class="text-end"></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<!-- Add Identity -->
+			<div id="error-container" class="mt-3"></div>
+			<div class="border-top pt-4 mt-3">
+				<h5 class="mb-3">Add Admin</h5>
+				<form
+					class="row g-3 align-items-end"
+					hx-post="/identities"
+					hx-target="#deviceTableBody"
+					hx-swap="beforeend"
+					hx-on::after-request="
+                            if(event.detail.successful) {
+                                this.reset();
+                            }
+                        "
+					hx-target-error="#error-container"
+				>
+					<div class="col-md-5">
+						<label class="form-label">Identity Name</label>
+						<input
+							type="text"
+							name="name"
+							class="form-control"
+							placeholder="e.g. Graham's Phone"
+							required
+							disabled
+						/>
+					</div>
+					<div class="col-md-4">
+						<label class="form-label">Role</label>
+						<select name="role" class="form-select" disabled>
+							<option value="admin">admin</option>
+							<option value="read">read</option>
+							<option value="pwd_phone">pwd_phone</option>
+							<option value="read+write">read+write</option>
+						</select>
+					</div>
+					<div class="col-md-3">
+						<button
+							type="submit"
+							class="btn btn-primary w-100"
+							disabled
+							data-bs-toggle="tooltip"
+							title="Only admins can add identities"
+						>
+							Add Identity
+						</button>
+					</div>
+				</form>
+				<div class="text-muted small mt-2">
+					Only administrators can add or remove identities.
+				</div>
+			</div>
+		</div>
+	</div>
+}

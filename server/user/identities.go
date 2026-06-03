@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/templates"
+	"nighttroop.t1d.nz/server/components/user_templ"
+
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -19,21 +20,21 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 
 		identities, err := userContext.UserDB.Queries.AllIdentities(r.Context())
 
-		adminIdentities := []*templates.UserIdentity{}
-		userIdentities := []*templates.UserIdentity{}
-		deviceIdentities := []*templates.UserIdentity{}
-		syncIdentities := []*templates.UserIdentity{}
+		adminIdentities := []*user_templ.UserIdentity{}
+		userIdentities := []*user_templ.UserIdentity{}
+		deviceIdentities := []*user_templ.UserIdentity{}
+		syncIdentities := []*user_templ.UserIdentity{}
 
 		for _, identity := range identities {
 			switch identity.Role.GetType() {
 			case consts.IdentityTypeAdmin:
-				adminIdentities = append(adminIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+				adminIdentities = append(adminIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
 			case consts.IdentityTypeUser:
-				userIdentities = append(userIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+				userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
 			case consts.IdentityTypeDevice:
-				deviceIdentities = append(deviceIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+				deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
 			case consts.IdentityTypeSync:
-				syncIdentities = append(syncIdentities, templates.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+				syncIdentities = append(syncIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
 			}
 		}
 
@@ -44,7 +45,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 
 		if acceptType == httputils.AcceptTypeHTML {
 
-			err = templates.UserSettingsIdentitiesHTML(w, userContext, adminIdentities, userIdentities, deviceIdentities, syncIdentities)
+			err = user_templ.Identities(adminIdentities, userIdentities, deviceIdentities, syncIdentities).Render(r.Context(), w)
 			if err != nil {
 				fmt.Println("Error rendering identities template:", err)
 				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", userContext.Subdomain)
@@ -54,7 +55,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = templates.UserSettingsIdentitiesHTMX(w, userContext, adminIdentities, userIdentities, deviceIdentities, syncIdentities)
+			err = user_templ.IdentitesForm(adminIdentities, userIdentities, deviceIdentities, syncIdentities).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return

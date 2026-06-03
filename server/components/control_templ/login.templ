@@ -1,0 +1,108 @@
+package control_templ
+
+import (
+	"nighttroop.t1d.nz/server/components/shared_templ"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/inputotp"
+)
+
+templ Login() {
+	@shared_templ.Base("NightTroop Login") {
+		<div class="flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50">
+			<div class="p-8 login-form-target rounded-lg shadow-2xl w-96">
+				<!-- Form updated with POST method -->
+				<form
+					hx-post="/login"
+					hx-target="closest .login-form-target"
+					hx-swap="outerHTML"
+					hx-target-error="#error-container"
+				>
+					<div class="text-center mb-6">
+						<h2 class="font-bold text-2xl">NightTroop Login</h2>
+					</div>
+					<!-- Username -->
+					@form.Item(form.ItemProps{}) {
+						@form.Label(form.LabelProps{
+							For: "name",
+						}) {
+							Name
+						}
+						@input.Input(input.Props{
+							ID:          "name",
+							Type:        "text",
+							Name:        "name",
+							Placeholder: "admin",
+							Required:    true,
+						})
+					}
+					<div class="mt-4"></div>
+					<!-- Password -->
+					@form.Item(form.ItemProps{}) {
+						@form.Label(form.LabelProps{
+							For: "password",
+						}) {
+							Password
+						}
+						@input.Input(input.Props{
+							ID:          "password",
+							Type:        "password",
+							Name:        "password",
+							Placeholder: "••••••••",
+							Required:    true,
+						})
+					}
+					<div class="mt-4"></div>
+					@form.Item() {
+						@form.Label(form.LabelProps{
+							For: "otp-form",
+						}) {
+							Verification Code
+						}
+						@inputotp.InputOTP(inputotp.Props{
+							ID:       "otp-form",
+							HasError: true,
+							Form:     "otp",
+							Name:     "totp",
+						}) {
+							@inputotp.Group() {
+								@inputotp.Slot(inputotp.SlotProps{
+									Index: 0,
+								})
+								@inputotp.Slot(inputotp.SlotProps{
+									Index: 1,
+								})
+								@inputotp.Slot(inputotp.SlotProps{
+									Index: 2,
+								})
+								@inputotp.Separator()
+								@inputotp.Slot(inputotp.SlotProps{
+									Index: 3,
+								})
+								@inputotp.Slot(inputotp.SlotProps{
+									Index: 4,
+								})
+								@inputotp.Slot(inputotp.SlotProps{
+									Index: 5,
+								})
+							}
+						}
+						@form.Description() {
+							Enter the 6-digit TOTP code
+						}
+					}
+					<div class="mt-4"></div>
+					<!-- Submit Button -->
+					@button.Button(button.Props{
+						Type:  button.TypeSubmit,
+						Class: "w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
+					}) {
+						Log In
+					}
+					<div id="error-container" class="mt-3"></div>
+				</form>
+			</div>
+		</div>
+	}
+}

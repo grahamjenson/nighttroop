@@ -10,7 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/server/templates"
+	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -34,9 +34,8 @@ func POSTLogoutHandler(config config.ServerConfig) http.HandlerFunc {
 
 func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		controlContext := httputils.GetControlContext(r.Context())
 		w.Header().Set("Content-Type", "text/html")
-		err := templates.ControlLoginHTML(w, controlContext)
+		err := control_templ.Login().Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
