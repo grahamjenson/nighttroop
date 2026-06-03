@@ -2,6 +2,10 @@ package user_templ
 
 import (
 	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
 	"strconv"
 	"time"
 )
@@ -39,115 +43,127 @@ func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName st
 
 templ Identities(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
 	@UserBase(UserContext{Subdomain: "example.com"}) {
-		IdentitesForm(admins, users, devices, syncs)
+		@IdentitesForm(admins, users, devices, syncs)
 	}
 }
 
 templ IdentitesForm(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
-	<div id="mainForm" class="card shadow-sm border-0">
-		<div class="card-body p-4">
-			<div class="mb-3 border-bottom pb-2">
-				<h3 class="mb-1">Identity Settings</h3>
-				<div class="text-muted small">
-					An Identity is a user or device that that can write or read your data.
-					This is where you can manage different identities, we recommend a different identity per device you
-					connect to nighttroop.
-					All passwords are randomly generated and can be copied with the "Copy Password" button.
-					For TOTP passwords, we press button to display the TOTP secret as a QR code.
-					On identities that can access the Nightscout API, the button "Copy Nightscout Token"
-				</div>
-			</div>
-			<!-- Alerts -->
-			<div id="deviceAlerts"></div>
-			<!-- Admins -->
-			<div class="table-responsive">
-				<table class="table align-middle table-hover">
-					<thead class="table-light">
-						<tr>
-							<th>Name</th>
-							<th>Role</th>
-							<th>Created</th>
-							<th>Last Seen</th>
-							<th class="text-end">Actions</th>
-						</tr>
-					</thead>
-					<tbody id="deviceTableBody">
-						for _, identity := range admins {
-							<tr id="device-{ identity.ID }">
-								<td>
-									<div class="fw-semibold">{ identity.Name }</div>
-								</td>
-								<td>
-									<span class="badge bg-primary-subtle text-primary border">
-										{ identity.Role }
-									</span>
-								</td>
-								<td>
-									<span class="text-muted">
-										{ identity.Created }
-									</span>
-								</td>
-								<td>
-									{ identity.LastSeen }
-								</td>
-								<td class="text-end"></td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
-			<!-- Add Identity -->
-			<div id="error-container" class="mt-3"></div>
-			<div class="border-top pt-4 mt-3">
-				<h5 class="mb-3">Add Admin</h5>
-				<form
-					class="row g-3 align-items-end"
-					hx-post="/identities"
-					hx-target="#deviceTableBody"
-					hx-swap="beforeend"
-					hx-on::after-request="
-                            if(event.detail.successful) {
-                                this.reset();
-                            }
-                        "
-					hx-target-error="#error-container"
-				>
-					<div class="col-md-5">
-						<label class="form-label">Identity Name</label>
-						<input
-							type="text"
-							name="name"
-							class="form-control"
-							placeholder="e.g. Graham's Phone"
-							required
-							disabled
-						/>
-					</div>
-					<div class="col-md-4">
-						<label class="form-label">Role</label>
-						<select name="role" class="form-select" disabled>
-							<option value="admin">admin</option>
-							<option value="read">read</option>
-							<option value="pwd_phone">pwd_phone</option>
-							<option value="read+write">read+write</option>
-						</select>
-					</div>
-					<div class="col-md-3">
-						<button
-							type="submit"
-							class="btn btn-primary w-100"
-							disabled
-							data-bs-toggle="tooltip"
-							title="Only admins can add identities"
-						>
-							Add Identity
-						</button>
-					</div>
-				</form>
-				<div class="text-muted small mt-2">
-					Only administrators can add or remove identities.
-				</div>
-			</div>
+	<div id="mainForm">
+		<div class="mb-4 border-b border-white/10 pb-3">
+			<h3 class="text-lg font-semibold">
+				Identity Settings
+			</h3>
+			<p class="mt-2 text-sm text-gray-400 leading-relaxed">
+				An Identity is a user or device that can write or read your data.
+				This is where you can manage different identities. We recommend a different identity per device you
+				connect to NightTroop. All passwords are randomly generated and can be copied with the "Copy Password" button.
+				For TOTP passwords, use the button to display the TOTP secret as a QR code. On identities that can access the
+				Nightscout API, use "Copy Nightscout Token".
+			</p>
 		</div>
+		<div id="adminsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
+			<div>Admins</div>
+			@buildIdentityTable(admins)
+			@formCreateIdentity("Admin", "admin")
+		</div>
+		<div id="usersTable" class="border border-gray-300 rounded-lg mb-6 p-4">
+			<div>Users</div>
+			@buildIdentityTable(users)
+			@formCreateIdentity("Read User", "read")
+			@formCreateIdentity("Read+Write User", "read+write")
+		</div>
+		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
+			<div>Devices</div>
+			@buildIdentityTable(devices)
+			@formCreateIdentity("Read Device", "read")
+			@formCreateIdentity("Read+Write Device", "read+write")
+		</div>
+		<div id="syncsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
+			<div>Syncs</div>
+			@buildIdentityTable(syncs)
+		</div>
+		<!-- Error -->
+		<div id="error-container" class="mt-4"></div>
+	</div>
+}
+
+templ buildIdentityTable(identities []*UserIdentity) {
+	@table.Table() {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					Name 
+				}
+				@table.Head() {
+					Role 
+				}
+				@table.Head() {
+					Created at 
+				}
+				@table.Head() {
+					Last Seen 
+				}
+				@table.Head() {
+					Actions
+				}
+			}
+		}
+		@table.Body() {
+			for _, identity := range identities {
+				@table.Row() {
+					@table.Cell() {
+						{ identity.Name }
+					}
+					@table.Cell() {
+						{ identity.Role }
+					}
+					@table.Cell() {
+						{ identity.Created }
+					}
+					@table.Cell() {
+						{ identity.LastSeen }
+					}
+					@table.Cell() {
+						<!-- actions go here -->
+					}
+				}
+			}
+		}
+	}
+}
+
+templ formCreateIdentity(name, role string) {
+	<div class="flex justify-end mt-4">
+		<form
+			hx-post="/identities"
+			hx-target="#deviceTableBody"
+			hx-swap="beforeend"
+			hx-on::after-request="if(event.detail.successful) { this.reset(); }"
+			hx-target-error="#error-container"
+		>
+			<input type="hidden" name="role" value={ role }/>
+			<div class="flex w-80 items-end gap-2">
+				@form.Item(form.ItemProps{
+					Class: "w-32",
+				}) {
+					@input.Input(input.Props{
+						ID:          "name",
+						Type:        "text",
+						Name:        "name",
+						Placeholder: "admin",
+						Required:    true,
+					})
+				}
+				@form.Item(form.ItemProps{
+					Class: "w-32 items-end",
+				}) {
+					@button.Button(button.Props{
+						Type: "submit",
+					}) {
+						Add { name }
+					}
+				}
+			</div>
+		</form>
 	</div>
 }

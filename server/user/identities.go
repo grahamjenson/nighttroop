@@ -34,7 +34,12 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 			case consts.IdentityTypeDevice:
 				deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
 			case consts.IdentityTypeSync:
+				if identity.LastSeenAt == nil {
+					continue // skip sync identities that have never been seen
+				}
 				syncIdentities = append(syncIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+				// remove sync users that have not been seen before
+
 			}
 		}
 

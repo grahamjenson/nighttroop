@@ -12,6 +12,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+//go:embed checkbox.js
+var StaticCheckboxJs []byte
+var StaticCheckboxJsETag = generateETag([]byte(StaticCheckboxJs))
+
+//go:embed checkbox.min.js
+var StaticCheckboxMinJs []byte
+var StaticCheckboxMinJsETag = generateETag([]byte(StaticCheckboxMinJs))
+
 //go:embed copybutton.js
 var StaticCopybuttonJs []byte
 var StaticCopybuttonJsETag = generateETag([]byte(StaticCopybuttonJs))
@@ -101,6 +109,28 @@ var StaticZStaticGenGo []byte
 var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
 
 func AddSatticRoutes(r chi.Router) error {
+	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticCheckboxJsETag)
+
+		_, err := w.Write([]byte(StaticCheckboxJs))
+		if err != nil {
+			slog.Error("Failed to write response for checkbox.js", "error", err)
+		}
+	})
+	r.Get("/checkbox.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticCheckboxMinJsETag)
+
+		_, err := w.Write([]byte(StaticCheckboxMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for checkbox.min.js", "error", err)
+		}
+	})
 	r.Get("/copybutton.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
