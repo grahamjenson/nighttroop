@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -26,6 +27,20 @@ type SyncJobManager struct {
 type SyncJobParams struct {
 	UniqueHash string
 	Type       string
+}
+
+type SyncJobInfo struct {
+	UniqueHash      string
+	Type            string
+	userSyncSources []*SyncUserInfo
+	urlOrUsername   string
+	password        string
+	region          consts.DexcomRegion
+}
+
+type SyncUserInfo struct {
+	userModel *control.User
+	userDB    *db.UserDB
 }
 
 func SetupSyncJobManager(config config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -44,6 +59,8 @@ func (b *SyncJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerSuper
 	return liteq.NewConsumerSupervisor(queue, SYNC_JOB, b.BackgroundSyncWorkers, b.workerFunc())
 }
 
+// There is no filtering at this level,
+// Once a job has been scheduled, it will be run.
 func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) error {
 
 	return func(ctx context.Context, j *control.Job) error {
@@ -58,12 +75,75 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			slog.Error("Error getting user sync sources", "error", err, "unique_hash", syncJob.UniqueHash)
 			return err
 		}
+
 		if len(syncSources) == 0 {
 			slog.Error("No user sync sources found for unique hash", "unique_hash", syncJob.UniqueHash)
 			return nil
 		}
-		return b.SyncUserData(&syncJob, syncSources)
+
+		userInfoSyncSources := []*SyncUserInfo{}
+		for _, syncSource := range syncSources {
+			userInfo, err := b.AttachSyncSourceWithUserInfo(syncSource)
+			if err != nil {
+				slog.Error("Error attaching sync source with user info", "error", err, "unique_hash", syncJob.UniqueHash, "sync_source_id", syncSource.ID)
+				continue
+			}
+
+			if userInfo == nil {
+				slog.Error("No user info found for sync source", "unique_hash", syncJob.UniqueHash, "sync_source_id", syncSource.ID)
+				continue
+			}
+			userInfoSyncSources = append(userInfoSyncSources, userInfo)
+		}
+
+		username, password, region, err := b.getUsernamePasswordRegion(syncSources[0])
+		if err != nil {
+			slog.Error("Error getting username, password, and region", "error", err, "unique_hash", syncJob.UniqueHash)
+			return nil
+		}
+		syncInfo := &SyncJobInfo{
+			UniqueHash: syncJob.UniqueHash,
+			Type:       syncJob.Type,
+
+			userSyncSources: userInfoSyncSources,
+			urlOrUsername:   username,
+			password:        password,
+			region:          region,
+		}
+		return b.SyncUserData(syncInfo)
 	}
+}
+
+func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.UserSyncSource) (string, string, consts.DexcomRegion, error) {
+
+	encUrlOrUserName := syncSource.UrlOrUsername
+	encPassword := syncSource.Password
+	dexcomRegion := syncSource.DexcomRegion
+
+	unencUsername, err := b.security.Decrypt(encUrlOrUserName)
+	if err != nil {
+		return "", "", "", fmt.Errorf("error decrypting username: %w", err)
+	}
+	unencPassword, err := b.security.Decrypt(encPassword)
+	if err != nil {
+		return "", "", "", fmt.Errorf("error decrypting password: %w", err)
+	}
+	return unencUsername, unencPassword, dexcomRegion, nil
+}
+
+func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.UserSyncSource) (*SyncUserInfo, error) {
+	userDb, userModel, err := b.controlDB.GetUser(syncSource.Subdomain, false)
+	if err != nil {
+		return nil, err
+	}
+	if userModel == nil || userDb == nil {
+		return nil, nil
+	}
+
+	return &SyncUserInfo{
+		userDB:    userDb,
+		userModel: userModel,
+	}, nil
 }
 
 func (b *SyncJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
