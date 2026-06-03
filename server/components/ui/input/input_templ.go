@@ -12,9 +12,9 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/templui/templui/utils"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	utils "nighttroop.t1d.nz/utils/templui_utils"
 )
 
 type Type string

@@ -1,5 +1,13 @@
 package shared_templ
 
+import (
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
+	"nighttroop.t1d.nz/server/components/ui/dropdown"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/label"
+)
+
 templ Base(title string) {
 	<!DOCTYPE html>
 	<html lang="en">
@@ -14,14 +22,15 @@ templ Base(title string) {
 			<script src="/d3.js"></script>
 			<script src="/htmx.js"></script>
 			<script src="/htmx_response_targets.js"></script>
-			<script src="/copybutton.min.js"></script>
-			<script src="/input.min.js"></script>
-			<script src="/label.min.js"></script>
+			@copybutton.Script()
+			@input.Script()
+			@label.Script()
+			@dropdown.Script()
+			@inputotp.Script()
 			<script src="/qrcode.js"></script>
 		</head>
 		<body hx-ext="response-targets">
 			{ children... }
-			<script src="/inputotp.min.js"></script>
 		</body>
 	</html>
 }

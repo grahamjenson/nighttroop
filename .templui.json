@@ -3,5 +3,5 @@
   "utilsDir": "utils/templui_utils",
   "moduleName": "nighttroop.t1d.nz",
   "jsDir": "server/assets/static",
-  "jsPublicPath": "."
+  "jsPublicPath": "/"
 }

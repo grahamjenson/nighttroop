@@ -24,9 +24,25 @@ var StaticCopybuttonMinJsETag = generateETag([]byte(StaticCopybuttonMinJs))
 var StaticD3Js []byte
 var StaticD3JsETag = generateETag([]byte(StaticD3Js))
 
+//go:embed dropdown.js
+var StaticDropdownJs []byte
+var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
+
+//go:embed dropdown.min.js
+var StaticDropdownMinJs []byte
+var StaticDropdownMinJsETag = generateETag([]byte(StaticDropdownMinJs))
+
 //go:embed favicon.ico
 var StaticFaviconIco []byte
 var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
+
+//go:embed floating_ui_core.js
+var StaticFloatingUiCoreJs []byte
+var StaticFloatingUiCoreJsETag = generateETag([]byte(StaticFloatingUiCoreJs))
+
+//go:embed floating_ui_dom.js
+var StaticFloatingUiDomJs []byte
+var StaticFloatingUiDomJsETag = generateETag([]byte(StaticFloatingUiDomJs))
 
 //go:embed htmx.js
 var StaticHtmxJs []byte
@@ -60,9 +76,13 @@ var StaticLabelJsETag = generateETag([]byte(StaticLabelJs))
 var StaticLabelMinJs []byte
 var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
 
-//go:embed logo.png
-var StaticLogoPng []byte
-var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
+//go:embed popover.js
+var StaticPopoverJs []byte
+var StaticPopoverJsETag = generateETag([]byte(StaticPopoverJs))
+
+//go:embed popover.min.js
+var StaticPopoverMinJs []byte
+var StaticPopoverMinJsETag = generateETag([]byte(StaticPopoverMinJs))
 
 //go:embed qrcode.js
 var StaticQrcodeJs []byte
@@ -114,6 +134,28 @@ func AddSatticRoutes(r chi.Router) error {
 			slog.Error("Failed to write response for d3.js", "error", err)
 		}
 	})
+	r.Get("/dropdown.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticDropdownJsETag)
+
+		_, err := w.Write([]byte(StaticDropdownJs))
+		if err != nil {
+			slog.Error("Failed to write response for dropdown.js", "error", err)
+		}
+	})
+	r.Get("/dropdown.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticDropdownMinJsETag)
+
+		_, err := w.Write([]byte(StaticDropdownMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for dropdown.min.js", "error", err)
+		}
+	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/x-icon")
 
@@ -123,6 +165,28 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticFaviconIco))
 		if err != nil {
 			slog.Error("Failed to write response for favicon.ico", "error", err)
+		}
+	})
+	r.Get("/floating_ui_core.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticFloatingUiCoreJsETag)
+
+		_, err := w.Write([]byte(StaticFloatingUiCoreJs))
+		if err != nil {
+			slog.Error("Failed to write response for floating_ui_core.js", "error", err)
+		}
+	})
+	r.Get("/floating_ui_dom.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticFloatingUiDomJsETag)
+
+		_, err := w.Write([]byte(StaticFloatingUiDomJs))
+		if err != nil {
+			slog.Error("Failed to write response for floating_ui_dom.js", "error", err)
 		}
 	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
@@ -213,15 +277,26 @@ func AddSatticRoutes(r chi.Router) error {
 			slog.Error("Failed to write response for label.min.js", "error", err)
 		}
 	})
-	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/png")
+	r.Get("/popover.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticLogoPngETag)
+		w.Header().Set("ETag", StaticPopoverJsETag)
 
-		_, err := w.Write([]byte(StaticLogoPng))
+		_, err := w.Write([]byte(StaticPopoverJs))
 		if err != nil {
-			slog.Error("Failed to write response for logo.png", "error", err)
+			slog.Error("Failed to write response for popover.js", "error", err)
+		}
+	})
+	r.Get("/popover.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticPopoverMinJsETag)
+
+		_, err := w.Write([]byte(StaticPopoverMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for popover.min.js", "error", err)
 		}
 	})
 	r.Get("/qrcode.js", func(w http.ResponseWriter, r *http.Request) {
