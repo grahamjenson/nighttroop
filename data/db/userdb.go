@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/user"
 
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -82,6 +83,10 @@ func (db *UserDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }
 
+// ////
+// Identities
+// ////
+
 func (db *UserDB) GetIdentitySplat(ctx context.Context, name string) (identityName string, password string, totpSecret string, role consts.IdentityRole, err error) {
 	identity, err := db.Queries.GetIdentity(ctx, name)
 	if err != nil {
@@ -89,4 +94,70 @@ func (db *UserDB) GetIdentitySplat(ctx context.Context, name string) (identityNa
 	}
 
 	return identity.Name, identity.Password, identity.TotpSecret, identity.Role, nil
+}
+
+func (db *UserDB) createDefaultUsers() (string, string, error) {
+
+	adminPassword, totpSecretPtr, err := db.CreateIdentity(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	if err != nil {
+		return "", "", fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
+	}
+	if totpSecretPtr == nil {
+		return "", "", fmt.Errorf("Failed to Create Default Admin User: TOTP Secret is nil")
+	}
+	totpSecret := *totpSecretPtr
+
+	_, _, err = db.CreateIdentity(consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create dexcom sync identity: %w", err)
+	}
+
+	_, _, err = db.CreateIdentity(consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create nightscout sync identity: %w", err)
+	}
+
+	_, _, err = db.CreateIdentity(consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot create libre sync identity: %w", err)
+	}
+
+	return adminPassword, totpSecret, nil
+}
+
+func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string, *string, error) {
+
+	security := db.serverConfig.Security
+	hostname := db.serverConfig.HostName
+	password, hashedPassword, err := security.GeneratePassword()
+
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot generate user password: %w", err)
+	}
+
+	var totpSecretPtr *string
+	encTOTPSecret := ""
+	if can.MustLoginWithTotp(role, false) {
+
+		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, db.Subdomain, hostname))
+		if err != nil {
+			return "", nil, fmt.Errorf("cannot generate user TOTP: %w", err)
+		}
+
+		totpSecretPtr = &totpSecret
+		encTOTPSecret = encTOTPSecretRet
+	}
+
+	err = db.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
+		Name:       name,
+		Password:   hashedPassword,
+		TotpSecret: encTOTPSecret,
+		Role:       role,
+	})
+
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot create user identity: %w", err)
+	}
+
+	return password, totpSecretPtr, nil
 }

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -187,7 +186,7 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	// Setup the new UserDB
 	////
 
-	adminPassword, totpSecret, err = createDefaultUsers(subdomain, db.serverConfig.HostName, userDB, db.serverConfig.Security)
+	adminPassword, totpSecret, err = userDB.createDefaultUsers()
 
 	if err != nil {
 		userDB.TryCloseAndDelete()
@@ -197,60 +196,6 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 	db.users[subdomain] = userDB
 
 	return userDB, adminPassword, backupPassword, totpSecret, nil
-}
-
-func createDefaultUsers(subdomain, hostname string, userDB *UserDB, security *security.SecurityConfig) (adminPassword, totpSecret string, err error) {
-	adminPassword, hashedPassword, err := security.GeneratePassword()
-	if err != nil {
-		return "", "", fmt.Errorf("cannot generate admin password: %w", err)
-	}
-
-	totpSecret, encTOTPSecret, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", consts.FIRST_ADMIN_NAME, subdomain, hostname))
-	if err != nil {
-		return "", "", fmt.Errorf("cannot generate admin TOTP: %w", err)
-	}
-
-	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
-		Name:       consts.FIRST_ADMIN_NAME,
-		Password:   hashedPassword,
-		TotpSecret: encTOTPSecret,
-		Role:       consts.IdentityRoleAdmin,
-	})
-
-	if err != nil {
-		return "", "", fmt.Errorf("cannot create admin identity: %w", err)
-	}
-
-	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
-		Name:       consts.DEXCOM_SYNC_IDENTITY_NAME,
-		Password:   "",
-		TotpSecret: "",
-		Role:       consts.IdentityRoleSync,
-	})
-	if err != nil {
-		return "", "", fmt.Errorf("cannot create dexcom sync identity: %w", err)
-	}
-
-	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
-		Name:       consts.NIGHTSCOUT_SYNC_IDENTITY_NAME,
-		Password:   "",
-		TotpSecret: "",
-		Role:       consts.IdentityRoleSync,
-	})
-	if err != nil {
-		return "", "", fmt.Errorf("cannot create nightscout sync identity: %w", err)
-	}
-
-	err = userDB.Queries.CreateIdentity(context.TODO(), user.CreateIdentityParams{
-		Name:       consts.LIBRE_SYNC_IDENTITY_NAME,
-		Password:   "",
-		TotpSecret: "",
-		Role:       consts.IdentityRoleSync,
-	})
-	if err != nil {
-		return "", "", fmt.Errorf("cannot create libre sync identity: %w", err)
-	}
-	return adminPassword, totpSecret, nil
 }
 
 ////

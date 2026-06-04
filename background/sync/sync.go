@@ -17,6 +17,7 @@ import (
 // 1. having it point at Nighttroop (syncing to itself)
 // 1. Pointing at a server that takes a long time to respond or never responds
 // 1. Pointing to a server that sometimes responds and sometimes doesn't, causing timeouts and retries
+// 1. Returning more legit data than requested and causing massive times spent processing data
 //
 // They could DDOS another site by:
 // 1. pointing many users at the same site.

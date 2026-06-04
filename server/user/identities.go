@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/server/components/user_templ"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -101,32 +100,26 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 		name := r.FormValue("name")
 		role := r.FormValue("role")
 
-		Password := "password123"
-		TotpSecret := "secret123"
-
 		if name == "" || role == "" {
 			errors.HandleInternalError(w, r, http.StatusBadRequest, "Name and role are required", nil)
 			return
 		}
 
-		err = userContext.UserDB.Queries.CreateIdentity(r.Context(), user.CreateIdentityParams{
-			Name:       name,
-			Role:       consts.IdentityRole(role),
-			Password:   Password,
-			TotpSecret: TotpSecret,
-		})
+		password, totopSecret, err := userContext.UserDB.CreateIdentity(name, consts.IdentityRole(role))
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to create identity", err)
 			return
 		}
+
 		identity := &user_templ.UserIdentity{
-			ID:      "asd",
+			ID:      "",
 			Name:    name,
 			Role:    role,
 			Created: time.Now().Format(time.RFC3339),
 		}
+
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.CreateIdentityResponse(userContext.UserDB.URL(), identity, Password, &TotpSecret).Render(r.Context(), w)
+			err = user_templ.CreateIdentityResponse(userContext.UserDB.URL(), identity, password, totopSecret).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return

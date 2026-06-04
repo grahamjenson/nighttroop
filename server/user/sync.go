@@ -236,7 +236,7 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 	}
 
 	if errMsg != "" {
-		return fmt.Errorf(errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	encPassword, err := security.Encrypt(nsPassword)
@@ -325,7 +325,7 @@ func nsURLNormalizeValidate(rawUrl string, config config.ServerConfig) (string, 
 	}
 
 	if errMsg != "" {
-		return "", fmt.Errorf(errMsg)
+		return "", fmt.Errorf("%s", errMsg)
 	}
 
 	// Normalize the URL by removing default Ports
@@ -350,7 +350,7 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 	}
 
 	if errMsg != "" {
-		return fmt.Errorf(errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	encPassword, err := security.Encrypt(dexPassword)

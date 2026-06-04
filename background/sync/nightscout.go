@@ -25,6 +25,11 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		return fmt.Errorf("Nightscout Error: %w", err)
 	}
 
+	// Limit the total egvs to the number requested
+	if len(egvs) > 3 {
+		egvs = egvs[:3]
+	}
+
 	totalAddedColumns := 0
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
