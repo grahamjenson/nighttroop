@@ -10,7 +10,7 @@ import (
 )
 
 const allProfiles = `-- name: AllProfiles :many
-SELECT id, eid, storeid, name, created_at, start, timestamp, duration, "end", starttime, endtime, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json FROM profile ORDER BY created_at DESC
+SELECT id, eid, storeid, name, created_at, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json FROM profile ORDER BY created_at DESC
 `
 
 func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
@@ -29,11 +29,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 			&i.Name,
 			&i.CreatedAt,
 			&i.Start,
-			&i.Timestamp,
 			&i.Duration,
-			&i.End,
-			&i.Starttime,
-			&i.Endtime,
 			&i.Source,
 			&i.Percent,
 			&i.Dia,
@@ -41,6 +37,8 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 			&i.Timezone,
 			&i.CarbRatiosJson,
 			&i.InsulinSensitivitiesJson,
+			&i.BasalRatesJson,
+			&i.TargetsJson,
 		); err != nil {
 			return nil, err
 		}

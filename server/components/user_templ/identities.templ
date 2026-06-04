@@ -3,6 +3,7 @@ package user_templ
 import (
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
@@ -73,19 +74,19 @@ templ IdentitesTable(admins []*UserIdentity, users []*UserIdentity, devices []*U
 			<div>Admins</div>
 			@buildIdentityTable("adminsTable", admins)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("Admin", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}})
+			@formCreateIdentity("adminsTable", "Admin", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}})
 		</div>
 		<div id="usersTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Users</div>
 			@buildIdentityTable("usersTable", users)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("User", []RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read", Value: consts.IdentityRoleUserReadOnly}})
+			@formCreateIdentity("usersTable", "User", []RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read", Value: consts.IdentityRoleUserReadOnly}})
 		</div>
 		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Devices</div>
 			@buildIdentityTable("devicesTable", devices)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("Device", []RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
+			@formCreateIdentity("devicesTable", "Device", []RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
 		</div>
 		<div id="syncsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Syncs</div>
@@ -149,12 +150,13 @@ templ createTableRowForIdentity(identity *UserIdentity) {
 	}
 }
 
-templ formCreateIdentity(name string, roles []RoleOption) {
+templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
+	{{ formID := "createIdentityForm" + tableid }}
 	<div class="flex justify-end items-end mt-4">
 		<form
-			id="createIdentityForm"
+			id={ formID }
 			hx-post="/identities"
-			hx-target="#adminsTable tbody"
+			hx-target={ "#" + tableid + " tbody" }
 			hx-swap="beforeend"
 			hx-target-error="#error-container"
 		>
@@ -163,7 +165,7 @@ templ formCreateIdentity(name string, roles []RoleOption) {
 					Class: "w-32",
 				}) {
 					@input.Input(input.Props{
-						ID:          "name",
+						ID:          "name-" + formID,
 						Type:        "text",
 						Name:        "name",
 						Placeholder: "Name",
@@ -178,9 +180,9 @@ templ formCreateIdentity(name string, roles []RoleOption) {
 					}) {
 						@selectbox.SelectBox() {
 							@selectbox.Trigger(selectbox.TriggerProps{
-								ID:   "select-form",
+								ID:   "select-form-" + formID,
 								Name: "role",
-								Form: "createIdentityForm",
+								Form: formID,
 							}) {
 								@selectbox.Value(selectbox.ValueProps{
 									Placeholder: "Role",
@@ -215,43 +217,86 @@ templ formCreateIdentity(name string, roles []RoleOption) {
 	</div>
 }
 
-templ CreateIdentityResponse(identity *UserIdentity, password string, totpSecret string) {
+templ CreateIdentityResponse(url string, identity *UserIdentity, password string, totpSecret *string) {
 	@createTableRowForIdentity(identity)
-	<div id="modal-container" hx-swap-oob="innerHTML">
-		@NewIdentityModal(identity, password, totpSecret)
+	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
+		@newIdentityModal(url, identity, password, totpSecret)
 	</div>
 }
 
-templ NewIdentityModal(identity *UserIdentity, password string, totpSecret string) {
-	<div
-		class="fixed inset-0 bg-black/50 flex items-center justify-center"
-	>
-		<div class="bg-white rounded-lg p-6 w-full max-w-lg">
-			<h2 class="text-lg font-semibold">
-				Identity Created
-			</h2>
-			<div class="mt-4">
-				<div>
-					Name:
-					<code>{ identity.Name }</code>
-				</div>
-				<div class="mt-2">
-					Password:
-					<code>{ password }</code>
-				</div>
-				<div class="mt-2">
-					TOTP Secret:
-					<code>{ totpSecret }</code>
+templ newIdentityModal(url string, identity *UserIdentity, password string, totpSecret *string) {
+	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
+		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md flex flex-col items-center justify-center">
+			@createdUserInfo(url, identity.Name, password, totpSecret)
+			@button.Button(button.Props{
+				Class:   "mt-4",
+				Variant: button.VariantDestructive,
+				Attributes: templ.Attributes{
+					"hx-get":    "/empty",
+					"hx-target": "#modal-container",
+					"hx-swap":   "innerHTML",
+				},
+			}) {
+				I Have Saved These
+			}
+		</div>
+	</div>
+}
+
+templ createdUserInfo(url string, username string, password string, totpSecret *string) {
+	<div class="text-left w-full max-w-2xl mx-auto space-y-2">
+		<div class="flex items-start gap-2 mb-4">
+			<p class="font-bold text-green-800">Save this information in a secure place</p>
+		</div>
+		<div class="relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
+			<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
+				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
+				if totpSecret != nil {
+					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret }</textarea>
+				} else {
+					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password }</textarea>
+				}
+				<!-- Clear, High-Visibility Copy Button -->
+				<div class="inline-flex shadow-sm rounded-lg">
+					@copybutton.CopyButton(copybutton.Props{
+						TargetID: "textToCopy",
+						Class:    "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
+					})
 				</div>
 			</div>
-			<button
-				class="mt-4 btn btn-primary"
-				hx-get="/empty"
-				hx-target="#modal-container"
-				hx-swap="innerHTML"
-			>
-				I've saved these
-			</button>
+			<!-- Monospace Content Area -->
+			<div class="p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white">
+				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span class="break-all">{ url }</span></div>
+				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>{ username }</span></div>
+				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ password }</span></div>
+				if totpSecret != nil {
+					<div class="flex">
+						<div class="flex items-start gap-6">
+							<!-- Left: label + secret -->
+							<div class="flex">
+								<span class="w-28 shrink-0 font-medium text-slate-400 select-none">
+									TOTP Secret:
+								</span>
+							</div>
+							<!-- Right: QR block -->
+							<div class="flex flex-col items-center gap-2">
+								<div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm border border-slate-200"></div>
+								<span class="text-xs text-slate-400">Scan with authenticator</span>
+							</div>
+						</div>
+						<script type="text/javascript">
+							var qrcode = new QRCode(document.getElementById("qrcode"), {
+								text: "{{ totpSecret }}",
+								width: 128,
+								height: 128,
+								colorDark : "#000000",
+								colorLight : "#ffffff",
+								correctLevel : QRCode.CorrectLevel.H
+							});
+							</script>
+					</div>
+				}
+			</div>
 		</div>
 	</div>
 }

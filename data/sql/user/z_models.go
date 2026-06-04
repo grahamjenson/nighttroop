@@ -63,18 +63,16 @@ type Profile struct {
 	Name                     *string
 	CreatedAt                int64
 	Start                    *int64
-	Timestamp                *int64
 	Duration                 *int64
-	End                      *int64
-	Starttime                *string
-	Endtime                  *string
 	Source                   *string
 	Percent                  *int64
 	Dia                      *int64
 	Units                    *string
 	Timezone                 *string
 	CarbRatiosJson           *string
-	InsulinSensitivitiesJson interface{}
+	InsulinSensitivitiesJson *string
+	BasalRatesJson           *string
+	TargetsJson              *string
 }
 
 type Sgv struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/user"
@@ -119,12 +120,13 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 			return
 		}
 		identity := &user_templ.UserIdentity{
-			ID:   "asd",
-			Name: name,
-			Role: role,
+			ID:      "asd",
+			Name:    name,
+			Role:    role,
+			Created: time.Now().Format(time.RFC3339),
 		}
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.CreateIdentityResponse(identity, Password, TotpSecret).Render(r.Context(), w)
+			err = user_templ.CreateIdentityResponse(userContext.UserDB.URL(), identity, Password, &TotpSecret).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return

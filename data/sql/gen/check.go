@@ -55,8 +55,14 @@ func checkUsers() error {
 	_, err = user.Prepare(context.TODO(), db)
 	if err != nil {
 		return fmt.Errorf("failed to prepare user queries: %w", err)
+	} else {
+		fmt.Println("USER DB Prepared successfully")
 	}
 
+	err = user.MigrateDown("dummy", db)
+	if err != nil {
+		return fmt.Errorf("failed to migrate down user db: %w", err)
+	}
 	return nil
 }
 
@@ -81,14 +87,28 @@ func checkControl() error {
 	}
 	defer db.Close()
 
+	////
+	// MIGTATE UP THE DB
+	////
 	err = control.MigrateUp("dummy", db)
 	if err != nil {
 		return fmt.Errorf("failed to migrate control db: %w", err)
 	}
 
+	//// PREPARE THE QUERIES
 	_, err = control.Prepare(context.TODO(), db)
 	if err != nil {
 		return fmt.Errorf("failed to prepare control queries: %w", err)
+	} else {
+		fmt.Println("Control DB Prepared successfully")
+	}
+
+	////
+	// MIGRATE DOWN THE DB
+	////
+	err = control.MigrateDown("dummy", db)
+	if err != nil {
+		return fmt.Errorf("failed to migrate down control db: %w", err)
 	}
 
 	return nil
