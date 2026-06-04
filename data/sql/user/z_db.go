@@ -60,6 +60,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createEntryStmt, err = db.PrepareContext(ctx, createEntry); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEntry: %w", err)
 	}
+	if q.createEntryIgnoreEIDConstraintStmt, err = db.PrepareContext(ctx, createEntryIgnoreEIDConstraint); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateEntryIgnoreEIDConstraint: %w", err)
+	}
 	if q.createEventStmt, err = db.PrepareContext(ctx, createEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEvent: %w", err)
 	}
@@ -137,6 +140,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createEntryStmt: %w", cerr)
 		}
 	}
+	if q.createEntryIgnoreEIDConstraintStmt != nil {
+		if cerr := q.createEntryIgnoreEIDConstraintStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createEntryIgnoreEIDConstraintStmt: %w", cerr)
+		}
+	}
 	if q.createEventStmt != nil {
 		if cerr := q.createEventStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createEventStmt: %w", cerr)
@@ -194,45 +202,47 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                           DBTX
-	tx                           *sql.Tx
-	allBolusesStmt               *sql.Stmt
-	allCarbsStmt                 *sql.Stmt
-	allEntriesStmt               *sql.Stmt
-	allEventsStmt                *sql.Stmt
-	allIdentitiesStmt            *sql.Stmt
-	allIdentityStatusStmt        *sql.Stmt
-	allProfilesStmt              *sql.Stmt
-	allTempBasalsStmt            *sql.Stmt
-	allTempTargetsStmt           *sql.Stmt
-	createBolusStmt              *sql.Stmt
-	createCarbStmt               *sql.Stmt
-	createEntryStmt              *sql.Stmt
-	createEventStmt              *sql.Stmt
-	createIdentityStmt           *sql.Stmt
-	getIdentityStmt              *sql.Stmt
-	updateIdentityLastSeenAtStmt *sql.Stmt
+	db                                 DBTX
+	tx                                 *sql.Tx
+	allBolusesStmt                     *sql.Stmt
+	allCarbsStmt                       *sql.Stmt
+	allEntriesStmt                     *sql.Stmt
+	allEventsStmt                      *sql.Stmt
+	allIdentitiesStmt                  *sql.Stmt
+	allIdentityStatusStmt              *sql.Stmt
+	allProfilesStmt                    *sql.Stmt
+	allTempBasalsStmt                  *sql.Stmt
+	allTempTargetsStmt                 *sql.Stmt
+	createBolusStmt                    *sql.Stmt
+	createCarbStmt                     *sql.Stmt
+	createEntryStmt                    *sql.Stmt
+	createEntryIgnoreEIDConstraintStmt *sql.Stmt
+	createEventStmt                    *sql.Stmt
+	createIdentityStmt                 *sql.Stmt
+	getIdentityStmt                    *sql.Stmt
+	updateIdentityLastSeenAtStmt       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                           tx,
-		tx:                           tx,
-		allBolusesStmt:               q.allBolusesStmt,
-		allCarbsStmt:                 q.allCarbsStmt,
-		allEntriesStmt:               q.allEntriesStmt,
-		allEventsStmt:                q.allEventsStmt,
-		allIdentitiesStmt:            q.allIdentitiesStmt,
-		allIdentityStatusStmt:        q.allIdentityStatusStmt,
-		allProfilesStmt:              q.allProfilesStmt,
-		allTempBasalsStmt:            q.allTempBasalsStmt,
-		allTempTargetsStmt:           q.allTempTargetsStmt,
-		createBolusStmt:              q.createBolusStmt,
-		createCarbStmt:               q.createCarbStmt,
-		createEntryStmt:              q.createEntryStmt,
-		createEventStmt:              q.createEventStmt,
-		createIdentityStmt:           q.createIdentityStmt,
-		getIdentityStmt:              q.getIdentityStmt,
-		updateIdentityLastSeenAtStmt: q.updateIdentityLastSeenAtStmt,
+		db:                                 tx,
+		tx:                                 tx,
+		allBolusesStmt:                     q.allBolusesStmt,
+		allCarbsStmt:                       q.allCarbsStmt,
+		allEntriesStmt:                     q.allEntriesStmt,
+		allEventsStmt:                      q.allEventsStmt,
+		allIdentitiesStmt:                  q.allIdentitiesStmt,
+		allIdentityStatusStmt:              q.allIdentityStatusStmt,
+		allProfilesStmt:                    q.allProfilesStmt,
+		allTempBasalsStmt:                  q.allTempBasalsStmt,
+		allTempTargetsStmt:                 q.allTempTargetsStmt,
+		createBolusStmt:                    q.createBolusStmt,
+		createCarbStmt:                     q.createCarbStmt,
+		createEntryStmt:                    q.createEntryStmt,
+		createEntryIgnoreEIDConstraintStmt: q.createEntryIgnoreEIDConstraintStmt,
+		createEventStmt:                    q.createEventStmt,
+		createIdentityStmt:                 q.createIdentityStmt,
+		getIdentityStmt:                    q.getIdentityStmt,
+		updateIdentityLastSeenAtStmt:       q.updateIdentityLastSeenAtStmt,
 	}
 }

@@ -7,10 +7,11 @@ package user
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allEntries = `-- name: AllEntries :many
-SELECT id, eid, created_by_type, created_by_id, value, created_at, updated_at FROM sgvs ORDER BY created_at DESC
+SELECT id, eid, value, created_at, created_by_identity_id FROM sgvs ORDER BY created_at DESC
 `
 
 func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
@@ -25,11 +26,9 @@ func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Eid,
-			&i.CreatedByType,
-			&i.CreatedByID,
 			&i.Value,
 			&i.CreatedAt,
-			&i.UpdatedAt,
+			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -45,22 +44,49 @@ func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
 }
 
 const createEntry = `-- name: CreateEntry :exec
-INSERT INTO sgvs (eid, created_by_type, created_by_id, value) VALUES ( ?, ?, ?, ?)
+INSERT INTO sgvs (eid, created_at, value, created_by_identity_id) VALUES (?, ?, ?, ?)
 `
 
 type CreateEntryParams struct {
-	Eid           *string
-	CreatedByType *string
-	CreatedByID   *int64
-	Value         float64
+	Eid                 string
+	CreatedAt           int64
+	Value               float64
+	CreatedByIdentityID int64
 }
 
 func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) error {
 	_, err := q.exec(ctx, q.createEntryStmt, createEntry,
 		arg.Eid,
-		arg.CreatedByType,
-		arg.CreatedByID,
+		arg.CreatedAt,
 		arg.Value,
+		arg.CreatedByIdentityID,
 	)
 	return err
+}
+
+const createEntryIgnoreEIDConstraint = `-- name: CreateEntryIgnoreEIDConstraint :execresult
+INSERT INTO sgvs (
+    eid,
+    created_at,
+    value,
+    created_by_identity_id
+)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(eid) DO NOTHING
+`
+
+type CreateEntryIgnoreEIDConstraintParams struct {
+	Eid                 string
+	CreatedAt           int64
+	Value               float64
+	CreatedByIdentityID int64
+}
+
+func (q *Queries) CreateEntryIgnoreEIDConstraint(ctx context.Context, arg CreateEntryIgnoreEIDConstraintParams) (sql.Result, error) {
+	return q.exec(ctx, q.createEntryIgnoreEIDConstraintStmt, createEntryIgnoreEIDConstraint,
+		arg.Eid,
+		arg.CreatedAt,
+		arg.Value,
+		arg.CreatedByIdentityID,
+	)
 }

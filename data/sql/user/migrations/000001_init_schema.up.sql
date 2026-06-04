@@ -44,20 +44,13 @@ CREATE TABLE events (
 
 CREATE TABLE sgvs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    -- The id used extenally to this system (like remote NS id, dexcom id) maybe preceeded by the source like (dexcom-123) to make unique
-    eid TEXT, 
-
-    created_by_type TEXT, -- "device", "data_source"
-    created_by_id INTEGER, -- id of either device or data_source that created this entry
-    
+    -- The id used extenally to this system (like remote NS id, dexcom id, Loop id), a means to not duplicate records from a source
+    eid TEXT UNIQUE NOT NULL, 
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    -- CONTRAINTS
-    UNIQUE(eid)
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 
 CREATE TABLE bolus (

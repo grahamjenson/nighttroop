@@ -78,13 +78,11 @@ type Profile struct {
 }
 
 type Sgv struct {
-	ID            int64
-	Eid           *string
-	CreatedByType *string
-	CreatedByID   *int64
-	Value         float64
-	CreatedAt     int64
-	UpdatedAt     int64
+	ID                  int64
+	Eid                 string
+	Value               float64
+	CreatedAt           int64
+	CreatedByIdentityID int64
 }
 
 type SqliteSequence struct {

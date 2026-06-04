@@ -5,6 +5,8 @@ import (
 	"log/slog"
 )
 
+const MMOL_L_TO_MG_DL = 18.018
+
 type ServerMode int
 
 const (

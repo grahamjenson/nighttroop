@@ -11,7 +11,7 @@ func DBEntryToNSEntry(dbEntry user.Sgv) *model.Record {
 		ID:          string(dbEntry.ID),
 		Data:        map[string]any{},
 		SrvCreated:  dbEntry.CreatedAt,
-		SrvModified: dbEntry.UpdatedAt,
+		SrvModified: dbEntry.CreatedAt,
 		IsValid:     true,
 	}
 }

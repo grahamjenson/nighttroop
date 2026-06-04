@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -39,8 +40,9 @@ type SyncJobInfo struct {
 }
 
 type SyncUserInfo struct {
-	userModel *control.User
-	userDB    *db.UserDB
+	userModel    *control.User
+	userDB       *db.UserDB
+	syncIdentity *user.Identity
 }
 
 func SetupSyncJobManager(config config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -101,6 +103,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			slog.Error("Error getting username, password, and region", "error", err, "unique_hash", syncJob.UniqueHash)
 			return nil
 		}
+
 		syncInfo := &SyncJobInfo{
 			UniqueHash: syncJob.UniqueHash,
 			Type:       syncJob.Type,
@@ -139,10 +142,25 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.UserSy
 	if userModel == nil || userDb == nil {
 		return nil, nil
 	}
+	identityName := ""
+	switch syncSource.Type {
+	case consts.SyncSourceTypeNightscout:
+		identityName = consts.NIGHTSCOUT_SYNC_IDENTITY_NAME
+	case consts.SyncSourceTypeDexcom:
+		identityName = consts.DEXCOM_SYNC_IDENTITY_NAME
+	}
 
+	if identityName == "" {
+		return nil, fmt.Errorf("invalid sync source type: %s", syncSource.Type)
+	}
+	identity, err := userDb.Queries.GetIdentity(context.TODO(), identityName)
+	if err != nil {
+		return nil, err
+	}
 	return &SyncUserInfo{
-		userDB:    userDb,
-		userModel: userModel,
+		userDB:       userDb,
+		userModel:    userModel,
+		syncIdentity: identity,
 	}, nil
 }
 

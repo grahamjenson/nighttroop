@@ -45,7 +45,7 @@ func CreateUser() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><!-- Header --><div class=\"text-center mb-4\"><h2 class=\"text-4xl font-extrabold tracking-tight text-gray-900\">NightTroop</h2><p class=\"mt-2 text-sm text-slate-500\">Your T1D Host</p></div><!-- Main Content --><div id=\"panel-content\" class=\"flex flex-col items-center justify-center mt-4\"><div class=\"w-full flex flex-col items-center justify-center\"><!-- Centered & Larger Templ Button -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><!-- Header --><div class=\"text-center mb-4\"><h2 class=\"text-4xl font-extrabold tracking-tight text-gray-900\">NightTroop</h2><p class=\"mt-2 text-sm text-slate-500\">Your T1D Host</p></div><!-- Main Content --><div id=\"panel-content\" class=\"flex flex-col items-center justify-center\"><div class=\"w-full flex flex-col items-center justify-center\"><!-- Centered & Larger Templ Button -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -159,14 +159,14 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"text-left w-full\"><div class=\"border-b border-slate-200/60 my-6\"></div><div id=\"Step1\" class=\"max-w-2xl mx-auto space-y-6\"><!-- Credentials Display Box --><div class=\"rounded-xl bg-green-500/10 p-4 text-sm leading-relaxed text-green-600 border border-green-500/20 shadow-sm\"><div class=\"flex items-start gap-2 mb-4\"><span class=\"font-semibold text-green-900\">1.</span><p class=\"text-green-800\">Save this information in a secure location.</p></div><div class=\"relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden\"><!-- Header bar with Action Button --><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your Credentials</span> <textarea id=\"textToCopy\" hidden>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"text-left w-full\"><div id=\"Step1\" class=\"max-w-2xl mx-auto space-y-6\"><!-- Credentials Display Box --><div class=\"rounded-xl bg-green-500/10 p-4 text-sm leading-relaxed text-green-600 border border-green-500/20 shadow-sm\"><div class=\"flex items-start gap-2 mb-4\"><span class=\"font-semibold text-green-900\">1.</span><p class=\"text-green-800\">Save this information in a secure location.</p></div><div class=\"relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden\"><!-- Header bar with Action Button --><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your Credentials</span> <textarea id=\"textToCopy\" hidden>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("URL: " + url + "\nUsername: admin\nPassword: " + password + "\nTOTP Secret: " + totpSecret + "\nBackup Key: " + backupKey)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 91, Col: 163}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 90, Col: 163}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -190,7 +190,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(url)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 102, Col: 131}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 101, Col: 131}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -203,7 +203,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(password)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 104, Col: 141}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 103, Col: 141}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -215,7 +215,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		}
 		templ_7745c5c3_Var10, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(totpSecret)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 121, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 120, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(backupKey)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 130, Col: 144}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_user.templ`, Line: 129, Col: 144}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {

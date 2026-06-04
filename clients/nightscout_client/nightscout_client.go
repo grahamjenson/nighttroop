@@ -18,6 +18,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 type Client struct {
@@ -68,18 +70,42 @@ func (c *Client) newRequest(
 // ENTRIES
 //
 
-type Entry struct {
-	ID         string    `json:"_id"`
-	DateString time.Time `json:"dateString"`
-	Date       int64     `json:"date"`
-	SGV        float32   `json:"sgv"`
-	Direction  string    `json:"direction"`
+type SGVEntry struct {
+	Date  time.Time `json:"-"`
+	SGV   float64   `json:"-"`
+	Units string    `json:"units"`
+}
+
+func (e *SGVEntry) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Date      int64   `json:"date"`
+		SGV       float64 `json:"sgv"`
+		Units     string  `json:"units"`
+		CreatedAt string  `json:"created_at"`
+	}
+
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	e.Date = time.UnixMilli(raw.Date).UTC()
+
+	e.Units = raw.Units
+	e.SGV = raw.SGV
+
+	// Normalize to mg/dL
+	if strings.EqualFold(raw.Units, "mmol") ||
+		strings.EqualFold(raw.Units, "mmol/l") {
+		e.SGV *= consts.MMOL_L_TO_MG_DL
+	}
+
+	return nil
 }
 
 func (c *Client) GetEntries(
 	ctx context.Context,
 	count int,
-) ([]Entry, error) {
+) ([]SGVEntry, error) {
 	q := url.Values{}
 	q.Set("count", fmt.Sprintf("%d", count))
 
@@ -106,7 +132,7 @@ func (c *Client) GetEntries(
 		)
 	}
 
-	var entries []Entry
+	var entries []SGVEntry
 
 	if err := json.NewDecoder(resp.Body).Decode(&entries); err != nil {
 		return nil, err

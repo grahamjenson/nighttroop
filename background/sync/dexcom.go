@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
+	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -22,19 +23,40 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	egvs, err := client.FetchLastHourEGVs(ctx)
+	egvs, err := client.FetchEGVs(ctx, 15)
 	if err != nil {
 		return fmt.Errorf("Dexcom Error: %w", err)
 	}
+	totalAddedColumns := 0
+	for _, userSyncSource := range syncInfo.userSyncSources {
+		addedColumns := false
+		for _, e := range egvs {
+			eid := fmt.Sprintf("dexcom_%s", e.SystemTime.Format(time.RFC3339))
+			res, err := userSyncSource.userDB.Queries.CreateEntryIgnoreEIDConstraint(context.TODO(), user.CreateEntryIgnoreEIDConstraintParams{
+				Eid:                 eid,
+				CreatedAt:           e.SystemTime.UnixMilli(),
+				Value:               float64(e.Value),
+				CreatedByIdentityID: userSyncSource.syncIdentity.ID,
+			})
+			if err != nil {
+				// Probably just non-unique eid
+				slog.Error("Error creating entry in database", "error", err, "eid", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
+				continue
+			}
+			count, _ := res.RowsAffected()
+			if count > 0 {
+				addedColumns = true
+			}
 
-	for _, e := range egvs {
-		fmt.Printf(
-			"Dexcom %s %d mg/dL %s (%s)\n",
-			e.DisplayTime.Format(time.RFC3339),
-			e.Value,
-			e.TrendArrow,
-			e.Trend,
-		)
+		}
+
+		// Update that it has been seen and used recently
+		if addedColumns {
+			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.userModel.Subdomain)
+			userSyncSource.userDB.Queries.UpdateIdentityLastSeenAt(context.TODO(), userSyncSource.syncIdentity.Name)
+			totalAddedColumns += 1
+		}
 	}
+
 	return nil
 }

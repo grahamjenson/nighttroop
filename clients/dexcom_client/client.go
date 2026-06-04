@@ -20,8 +20,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -187,26 +189,23 @@ func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string
 
 // EGV represents a Dexcom glucose reading.
 type EGV struct {
-	Value         int
-	Trend         string
-	TrendArrow    string
-	SystemTime    time.Time
-	DisplayTime   time.Time
-	RealtimeValue int
+	Value       int
+	SystemTime  time.Time
+	DisplayTime time.Time
 }
 
-// FetchLastHourEGVs fetches the last hour of EGV readings.
-func (c *Client) FetchLastHourEGVs(ctx context.Context) ([]EGV, error) {
+// FetchEGVs fetches the last specified minutes of EGV readings.
+func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
 	if c.sessionID == "" {
 		if err := c.Login(ctx); err != nil {
-			return nil, fmt.Errorf("Dexcom Login Error")
+			return nil, fmt.Errorf("Dexcom Login Error: %w", err)
 		}
 	}
 
 	values := url.Values{}
 	values.Set("sessionId", c.sessionID)
-	values.Set("minutes", "60")
-	values.Set("maxCount", "12")
+	values.Set("minutes", fmt.Sprintf("%d", minutes))
+	values.Set("maxCount", fmt.Sprintf("%d", minutes/5))
 
 	endpoint := c.baseURL +
 		"/ShareWebServices/Services/Publisher/ReadPublisherLatestGlucoseValues?" +
@@ -240,22 +239,25 @@ func (c *Client) FetchLastHourEGVs(ctx context.Context) ([]EGV, error) {
 	var raw []dexcomEGVResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		return nil, fmt.Errorf("error decoding Dexcom response: %w %s", err, resp.Body)
+		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
 	}
 
 	out := make([]EGV, 0, len(raw))
 
 	for _, r := range raw {
-		systemTime, _ := parseDexcomTime(r.ST)
-		displayTime, _ := parseDexcomTime(r.DT)
+		systemTime, err := parseDexcomTime(r.ST)
+		if err != nil {
+			slog.Error("Error parsing Dexcom system time", "error", err, "raw_time", r.ST)
+		}
+		displayTime, err := parseDexcomTime(r.DT)
+		if err != nil {
+			slog.Error("Error parsing Dexcom display time", "error", err, "raw_time", r.DT)
+		}
 
 		out = append(out, EGV{
-			Value:         r.Value,
-			Trend:         r.Trend,
-			TrendArrow:    trendArrow(r.Trend),
-			SystemTime:    systemTime,
-			DisplayTime:   displayTime,
-			RealtimeValue: r.RealtimeValue,
+			Value:       r.Value,
+			SystemTime:  systemTime,
+			DisplayTime: displayTime,
 		})
 	}
 
@@ -263,48 +265,59 @@ func (c *Client) FetchLastHourEGVs(ctx context.Context) ([]EGV, error) {
 }
 
 type dexcomEGVResponse struct {
-	WT            string `json:"WT"`
-	ST            string `json:"ST"`
-	DT            string `json:"DT"`
-	Value         int    `json:"Value"`
-	Trend         string `json:"Trend"`
-	RealtimeValue int    `json:"RealtimeValue"`
+	WT    string `json:"WT"`
+	ST    string `json:"ST"`
+	DT    string `json:"DT"`
+	Value int    `json:"Value"`
 }
 
 // parseDexcomTime parses Dexcom's weird /Date(1234567890)/ format.
-func parseDexcomTime(s string) (time.Time, error) {
-	s = strings.TrimPrefix(s, "/Date(")
-	s = strings.TrimSuffix(s, ")/")
+var dateRe = regexp.MustCompile(`^Date\((\d+)(?:([+-]\d{4}))?\)$`)
 
-	if idx := strings.IndexAny(s, "+-"); idx != -1 {
-		s = s[:idx]
+// ParseDate parses:
+//
+//	Date(1780533499468)
+//	Date(1780533499468+1200)
+//	Date(1780533499468-0500)
+func parseDexcomTime(s string) (time.Time, error) {
+	matches := dateRe.FindStringSubmatch(s)
+	if matches == nil {
+		return time.Time{}, fmt.Errorf("invalid date format: %q", s)
 	}
 
-	ms, err := strconv.ParseInt(s, 10, 64)
+	ms, err := strconv.ParseInt(matches[1], 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid timestamp: %w", err)
+	}
+
+	t := time.UnixMilli(ms)
+
+	// No timezone offset supplied.
+	if matches[2] == "" {
+		return t.UTC(), nil
+	}
+
+	offsetStr := matches[2]
+
+	sign := 1
+	if offsetStr[0] == '-' {
+		sign = -1
+	}
+
+	hours, err := strconv.Atoi(offsetStr[1:3])
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	return time.UnixMilli(ms), nil
-}
-
-func trendArrow(trend string) string {
-	switch trend {
-	case "DoubleUp":
-		return "↑↑"
-	case "SingleUp":
-		return "↑"
-	case "FortyFiveUp":
-		return "↗"
-	case "Flat":
-		return "→"
-	case "FortyFiveDown":
-		return "↘"
-	case "SingleDown":
-		return "↓"
-	case "DoubleDown":
-		return "↓↓"
-	default:
-		return "?"
+	minutes, err := strconv.Atoi(offsetStr[3:5])
+	if err != nil {
+		return time.Time{}, err
 	}
+
+	offsetSeconds := sign * ((hours * 3600) + (minutes * 60))
+
+	loc := time.FixedZone(offsetStr, offsetSeconds)
+
+	// Interpret the epoch instant in the supplied timezone.
+	return t.In(loc), nil
 }

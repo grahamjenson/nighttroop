@@ -3,9 +3,11 @@ package sync
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
+	"nighttroop.t1d.nz/data/sql/user"
 )
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
@@ -18,19 +20,41 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	egvs, err := nsc.GetEntries(ctx, 10)
+	egvs, err := nsc.GetEntries(ctx, 3)
 	if err != nil {
 		return fmt.Errorf("Nightscout Error: %w", err)
 	}
 
-	for _, e := range egvs {
-		fmt.Printf(
-			"NS %s %f mg/dL %s\n",
-			e.DateString.Format(time.RFC3339),
-			e.SGV,
-			e.Direction,
-		)
-	}
-	return nil
+	totalAddedColumns := 0
+	for _, userSyncSource := range syncInfo.userSyncSources {
+		addedColumns := false
+		for _, e := range egvs {
+			eid := fmt.Sprintf("nightscout_%s", e.Date.Format(time.RFC3339))
+			res, err := userSyncSource.userDB.Queries.CreateEntryIgnoreEIDConstraint(context.TODO(), user.CreateEntryIgnoreEIDConstraintParams{
+				Eid:                 eid,
+				CreatedAt:           e.Date.UnixMilli(),
+				Value:               float64(e.SGV),
+				CreatedByIdentityID: userSyncSource.syncIdentity.ID,
+			})
+			if err != nil {
+				// Probably just non-unique eid
+				slog.Error("Error creating entry in database", "error", err, "eid", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
+				continue
+			}
+			count, _ := res.RowsAffected()
+			if count > 0 {
+				addedColumns = true
+			}
 
+		}
+
+		// Update that it has been seen and used recently
+		if addedColumns {
+			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.userModel.Subdomain)
+			userSyncSource.userDB.Queries.UpdateIdentityLastSeenAt(context.TODO(), userSyncSource.syncIdentity.Name)
+			totalAddedColumns += 1
+		}
+	}
+
+	return nil
 }
