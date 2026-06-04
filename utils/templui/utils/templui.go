@@ -1,5 +1,5 @@
 // templui util templui.go - version: v1.11.2 installed by templui v1.11.2
-package templui_utils
+package utils // HAS TO BE THIS NAME ANNOYING
 
 import (
 	"context"
@@ -81,7 +81,7 @@ var ScriptURL = func(path string) string {
 
 // componentScriptBasePath is the base public path for component JavaScript files.
 // In the import workflow this stays "/templui/js". The CLI rewrites it to the user's local jsPublicPath.
-var componentScriptBasePath = "."
+var componentScriptBasePath = ""
 
 // UseUnminifiedScripts switches component script loading to the unminified files.
 // Leave this false in normal use and set it to true during app startup for debugging.

@@ -8,12 +8,13 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/templui/templui/components/checkbox"
+	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
 	"nighttroop.t1d.nz/server/components/ui/label"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
 )
 
 func Base(title string) templ.Component {
@@ -44,7 +45,7 @@ func Base(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `shared_templ/base.templ`, Line: 18, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `shared_templ/base.templ`, Line: 19, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -75,6 +76,10 @@ func Base(title string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = checkbox.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = selectbox.Script().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

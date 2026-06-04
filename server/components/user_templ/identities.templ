@@ -5,7 +5,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
 	"strconv"
 	"time"
 )
@@ -20,6 +22,11 @@ type UserIdentity struct {
 	HasTotpSecret   bool
 	NightscoutToken string
 	Enabled         bool
+}
+
+type RoleOption struct {
+	Label string
+	Value consts.IdentityRole
 }
 
 func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName string, nightscoutToken string) *UserIdentity {
@@ -43,52 +50,58 @@ func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName st
 
 templ Identities(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
 	@UserBase(UserContext{Subdomain: "example.com"}) {
-		@IdentitesForm(admins, users, devices, syncs)
+		@IdentitesTable(admins, users, devices, syncs)
 	}
 }
 
-templ IdentitesForm(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
-	<div id="mainForm">
+templ IdentitesTable(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
+	<div id="identities_table">
 		<div class="mb-4 border-b border-white/10 pb-3">
 			<h3 class="text-lg font-semibold">
 				Identity Settings
 			</h3>
 			<p class="mt-2 text-sm text-gray-400 leading-relaxed">
-				An Identity is a user or device that can write or read your data.
-				This is where you can manage different identities. We recommend a different identity per device you
-				connect to NightTroop. All passwords are randomly generated and can be copied with the "Copy Password" button.
+				An identity can write or read your data, like an admin, a user, a device or automation like the sync idetities.
+				Each request and piece of data is tagged with the identity so it is important you don't share them.
+				All passwords are randomly generated and once displayed here can only be reset by an admin.
+				Users and 
 				For TOTP passwords, use the button to display the TOTP secret as a QR code. On identities that can access the
 				Nightscout API, use "Copy Nightscout Token".
 			</p>
 		</div>
 		<div id="adminsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Admins</div>
-			@buildIdentityTable(admins)
-			@formCreateIdentity("Admin", "admin")
+			@buildIdentityTable("adminsTable", admins)
+			<div class="border border-black-900"></div>
+			@formCreateIdentity("Admin", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}})
 		</div>
 		<div id="usersTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Users</div>
-			@buildIdentityTable(users)
-			@formCreateIdentity("Read User", "read")
-			@formCreateIdentity("Read+Write User", "read+write")
+			@buildIdentityTable("usersTable", users)
+			<div class="border border-black-900"></div>
+			@formCreateIdentity("User", []RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read", Value: consts.IdentityRoleUserReadOnly}})
 		</div>
 		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Devices</div>
-			@buildIdentityTable(devices)
-			@formCreateIdentity("Read Device", "read")
-			@formCreateIdentity("Read+Write Device", "read+write")
+			@buildIdentityTable("devicesTable", devices)
+			<div class="border border-black-900"></div>
+			@formCreateIdentity("Device", []RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
 		</div>
 		<div id="syncsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Syncs</div>
-			@buildIdentityTable(syncs)
+			@buildIdentityTable("syncsTable", syncs)
 		</div>
 		<!-- Error -->
 		<div id="error-container" class="mt-4"></div>
+		<div id="modal-container"></div>
 	</div>
 }
 
-templ buildIdentityTable(identities []*UserIdentity) {
-	@table.Table() {
+templ buildIdentityTable(id string, identities []*UserIdentity) {
+	@table.Table(table.Props{
+		ID:    id,
+		Class: "border border-gray-300 rounded-lg mb-6",
+	}) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {
@@ -110,39 +123,42 @@ templ buildIdentityTable(identities []*UserIdentity) {
 		}
 		@table.Body() {
 			for _, identity := range identities {
-				@table.Row() {
-					@table.Cell() {
-						{ identity.Name }
-					}
-					@table.Cell() {
-						{ identity.Role }
-					}
-					@table.Cell() {
-						{ identity.Created }
-					}
-					@table.Cell() {
-						{ identity.LastSeen }
-					}
-					@table.Cell() {
-						<!-- actions go here -->
-					}
-				}
+				@createTableRowForIdentity(identity)
 			}
 		}
 	}
 }
 
-templ formCreateIdentity(name, role string) {
-	<div class="flex justify-end mt-4">
+templ createTableRowForIdentity(identity *UserIdentity) {
+	@table.Row() {
+		@table.Cell() {
+			{ identity.Name }
+		}
+		@table.Cell() {
+			{ identity.Role }
+		}
+		@table.Cell() {
+			{ identity.Created }
+		}
+		@table.Cell() {
+			{ identity.LastSeen }
+		}
+		@table.Cell() {
+			<!-- actions go here -->
+		}
+	}
+}
+
+templ formCreateIdentity(name string, roles []RoleOption) {
+	<div class="flex justify-end items-end mt-4">
 		<form
+			id="createIdentityForm"
 			hx-post="/identities"
-			hx-target="#deviceTableBody"
+			hx-target="#adminsTable tbody"
 			hx-swap="beforeend"
-			hx-on::after-request="if(event.detail.successful) { this.reset(); }"
 			hx-target-error="#error-container"
 		>
-			<input type="hidden" name="role" value={ role }/>
-			<div class="flex w-80 items-end gap-2">
+			<div class="flex w-96 justify-end items-end gap-2">
 				@form.Item(form.ItemProps{
 					Class: "w-32",
 				}) {
@@ -150,9 +166,40 @@ templ formCreateIdentity(name, role string) {
 						ID:          "name",
 						Type:        "text",
 						Name:        "name",
-						Placeholder: "admin",
+						Placeholder: "Name",
 						Required:    true,
 					})
+				}
+				if (len(roles) == 1) {
+					<input type="hidden" name="role" value={ string(roles[0].Value) }/>
+				} else {
+					@form.Item(form.ItemProps{
+						Class: "w-32",
+					}) {
+						@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{
+								ID:   "select-form",
+								Name: "role",
+								Form: "createIdentityForm",
+							}) {
+								@selectbox.Value(selectbox.ValueProps{
+									Placeholder: "Role",
+								})
+							}
+							@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+								@selectbox.Group() {
+									for i, role := range roles {
+										@selectbox.Item(selectbox.ItemProps{
+											Value:    string(role.Value),
+											Selected: i == 0,
+										}) {
+											{ role.Label }
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 				@form.Item(form.ItemProps{
 					Class: "w-32 items-end",
@@ -165,5 +212,46 @@ templ formCreateIdentity(name, role string) {
 				}
 			</div>
 		</form>
+	</div>
+}
+
+templ CreateIdentityResponse(identity *UserIdentity, password string, totpSecret string) {
+	@createTableRowForIdentity(identity)
+	<div id="modal-container" hx-swap-oob="innerHTML">
+		@NewIdentityModal(identity, password, totpSecret)
+	</div>
+}
+
+templ NewIdentityModal(identity *UserIdentity, password string, totpSecret string) {
+	<div
+		class="fixed inset-0 bg-black/50 flex items-center justify-center"
+	>
+		<div class="bg-white rounded-lg p-6 w-full max-w-lg">
+			<h2 class="text-lg font-semibold">
+				Identity Created
+			</h2>
+			<div class="mt-4">
+				<div>
+					Name:
+					<code>{ identity.Name }</code>
+				</div>
+				<div class="mt-2">
+					Password:
+					<code>{ password }</code>
+				</div>
+				<div class="mt-2">
+					TOTP Secret:
+					<code>{ totpSecret }</code>
+				</div>
+			</div>
+			<button
+				class="mt-4 btn btn-primary"
+				hx-get="/empty"
+				hx-target="#modal-container"
+				hx-swap="innerHTML"
+			>
+				I've saved these
+			</button>
+		</div>
 	</div>
 }

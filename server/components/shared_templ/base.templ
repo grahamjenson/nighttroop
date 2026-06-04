@@ -1,12 +1,13 @@
 package shared_templ
 
 import (
-	"github.com/templui/templui/components/checkbox"
+	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
 	"nighttroop.t1d.nz/server/components/ui/label"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
 )
 
 templ Base(title string) {
@@ -29,6 +30,7 @@ templ Base(title string) {
 			@dropdown.Script()
 			@inputotp.Script()
 			@checkbox.Script()
+			@selectbox.Script()
 			<script src="/qrcode.js"></script>
 		</head>
 		<body hx-ext="response-targets">

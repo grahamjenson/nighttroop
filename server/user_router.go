@@ -41,9 +41,7 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 
 		// Identities
 		r.Get("/identities", user.GETIdentitiesHandler(controlDB, config))
-		r.Post("/identities/admin", user.POSTIdentityAdminHandler(controlDB, config))
-		r.Post("/identities/user", user.POSTIdentityUserHandler(controlDB, config))
-		r.Post("/identities/device", user.POSTIdentityDeviceHandler(controlDB, config))
+		r.Post("/identities", user.POSTIdentityHandler(controlDB, config))
 
 		// Actions
 		r.Post("/logout", user.POSTLogoutHandler(config))

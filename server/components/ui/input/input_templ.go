@@ -14,7 +14,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
-	utils "nighttroop.t1d.nz/utils/templui_utils"
+	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
 type Type string

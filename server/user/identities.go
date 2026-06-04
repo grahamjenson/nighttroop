@@ -1,10 +1,12 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/server/components/user_templ"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -18,31 +20,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 		acceptType := httputils.GetAcceptType(r)
 		userContext := httputils.GetUserContext(r.Context())
 
-		identities, err := userContext.UserDB.Queries.AllIdentities(r.Context())
-
-		adminIdentities := []*user_templ.UserIdentity{}
-		userIdentities := []*user_templ.UserIdentity{}
-		deviceIdentities := []*user_templ.UserIdentity{}
-		syncIdentities := []*user_templ.UserIdentity{}
-
-		for _, identity := range identities {
-			switch identity.Role.GetType() {
-			case consts.IdentityTypeAdmin:
-				adminIdentities = append(adminIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
-			case consts.IdentityTypeUser:
-				userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
-			case consts.IdentityTypeDevice:
-				deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
-			case consts.IdentityTypeSync:
-				if identity.LastSeenAt == nil {
-					continue // skip sync identities that have never been seen
-				}
-				syncIdentities = append(syncIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
-				// remove sync users that have not been seen before
-
-			}
-		}
-
+		adminIdentities, userIdentities, deviceIdentities, syncIdentities, err := extractAndGetIdentities(&userContext, r.Context())
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to get identities", err)
 			return
@@ -60,7 +38,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.IdentitesForm(adminIdentities, userIdentities, deviceIdentities, syncIdentities).Render(r.Context(), w)
+			err = user_templ.IdentitesTable(adminIdentities, userIdentities, deviceIdentities, syncIdentities).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return
@@ -76,23 +54,82 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 	}
 }
 
+func extractAndGetIdentities(userContext *httputils.UserContext, context context.Context) ([]*user_templ.UserIdentity, []*user_templ.UserIdentity, []*user_templ.UserIdentity, []*user_templ.UserIdentity, error) {
+	identities, err := userContext.UserDB.Queries.AllIdentities(context)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	adminIdentities := []*user_templ.UserIdentity{}
+	userIdentities := []*user_templ.UserIdentity{}
+	deviceIdentities := []*user_templ.UserIdentity{}
+	syncIdentities := []*user_templ.UserIdentity{}
+
+	for _, identity := range identities {
+		switch identity.Role.GetType() {
+		case consts.IdentityTypeAdmin:
+			adminIdentities = append(adminIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+		case consts.IdentityTypeUser:
+			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+		case consts.IdentityTypeDevice:
+			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+		case consts.IdentityTypeSync:
+			if identity.LastSeenAt == nil {
+				continue // skip sync identities that have never been seen
+			}
+			syncIdentities = append(syncIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			// remove sync users that have not been seen before
+
+		}
+	}
+	return adminIdentities, userIdentities, deviceIdentities, syncIdentities, nil
+}
+
 // Create Admin
-func POSTIdentityAdminHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Handler logic here
-	}
-}
+		acceptType := httputils.GetAcceptType(r)
+		userContext := httputils.GetUserContext(r.Context())
 
-// Create User
-func POSTIdentityUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Handler logic here
-	}
-}
+		// Input is a form that has a name and role
+		err := r.ParseForm()
+		if err != nil {
+			errors.HandleInternalError(w, r, http.StatusBadRequest, "Failed to parse form", err)
+			return
+		}
 
-// Create Device
-func POSTIdentityDeviceHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Handler logic here
+		name := r.FormValue("name")
+		role := r.FormValue("role")
+
+		Password := "password123"
+		TotpSecret := "secret123"
+
+		if name == "" || role == "" {
+			errors.HandleInternalError(w, r, http.StatusBadRequest, "Name and role are required", nil)
+			return
+		}
+
+		err = userContext.UserDB.Queries.CreateIdentity(r.Context(), user.CreateIdentityParams{
+			Name:       name,
+			Role:       consts.IdentityRole(role),
+			Password:   Password,
+			TotpSecret: TotpSecret,
+		})
+		if err != nil {
+			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to create identity", err)
+			return
+		}
+		identity := &user_templ.UserIdentity{
+			ID:   "asd",
+			Name: name,
+			Role: role,
+		}
+		if acceptType == httputils.AcceptTypeHTMX {
+			err = user_templ.CreateIdentityResponse(identity, Password, TotpSecret).Render(r.Context(), w)
+			if err != nil {
+				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
+				return
+			}
+			return
+		}
 	}
 }

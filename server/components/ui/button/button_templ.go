@@ -12,7 +12,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	utils "nighttroop.t1d.nz/utils/templui_utils"
+	"nighttroop.t1d.nz/utils/templui/utils"
 	"strings"
 )
 

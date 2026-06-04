@@ -12,7 +12,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
 	"strconv"
 	"time"
 )
@@ -27,6 +29,11 @@ type UserIdentity struct {
 	HasTotpSecret   bool
 	NightscoutToken string
 	Enabled         bool
+}
+
+type RoleOption struct {
+	Label string
+	Value consts.IdentityRole
 }
 
 func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName string, nightscoutToken string) *UserIdentity {
@@ -81,7 +88,7 @@ func Identities(admins []*UserIdentity, users []*UserIdentity, devices []*UserId
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = IdentitesForm(admins, users, devices, syncs).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = IdentitesTable(admins, users, devices, syncs).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -95,7 +102,7 @@ func Identities(admins []*UserIdentity, users []*UserIdentity, devices []*UserId
 	})
 }
 
-func IdentitesForm(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) templ.Component {
+func IdentitesTable(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -116,59 +123,63 @@ func IdentitesForm(admins []*UserIdentity, users []*UserIdentity, devices []*Use
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"mainForm\"><div class=\"mb-4 border-b border-white/10 pb-3\"><h3 class=\"text-lg font-semibold\">Identity Settings</h3><p class=\"mt-2 text-sm text-gray-400 leading-relaxed\">An Identity is a user or device that can write or read your data. This is where you can manage different identities. We recommend a different identity per device you connect to NightTroop. All passwords are randomly generated and can be copied with the \"Copy Password\" button. For TOTP passwords, use the button to display the TOTP secret as a QR code. On identities that can access the Nightscout API, use \"Copy Nightscout Token\".</p></div><div id=\"adminsTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Admins</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"identities_table\"><div class=\"mb-4 border-b border-white/10 pb-3\"><h3 class=\"text-lg font-semibold\">Identity Settings</h3><p class=\"mt-2 text-sm text-gray-400 leading-relaxed\">An identity can write or read your data, like an admin, a user, a device or automation like the sync idetities. Each request and piece of data is tagged with the identity so it is important you don't share them. All passwords are randomly generated and once displayed here can only be reset by an admin. Users and  For TOTP passwords, use the button to display the TOTP secret as a QR code. On identities that can access the Nightscout API, use \"Copy Nightscout Token\".</p></div><div id=\"adminsTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Admins</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = buildIdentityTable(admins).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = buildIdentityTable("adminsTable", admins).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("Admin", "admin").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"border border-black-900\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div id=\"usersTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Users</div>")
+		templ_7745c5c3_Err = formCreateIdentity("Admin", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = buildIdentityTable(users).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div id=\"usersTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Users</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("Read User", "read").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = buildIdentityTable("usersTable", users).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("Read+Write User", "read+write").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"border border-black-900\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div id=\"devicesTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Devices</div>")
+		templ_7745c5c3_Err = formCreateIdentity("User", []RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read", Value: consts.IdentityRoleUserReadOnly}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = buildIdentityTable(devices).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div id=\"devicesTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Devices</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("Read Device", "read").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = buildIdentityTable("devicesTable", devices).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("Read+Write Device", "read+write").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"border border-black-900\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><div id=\"syncsTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Syncs</div>")
+		templ_7745c5c3_Err = formCreateIdentity("Device", []RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = buildIdentityTable(syncs).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div id=\"syncsTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Syncs</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><!-- Error --><div id=\"error-container\" class=\"mt-4\"></div></div>")
+		templ_7745c5c3_Err = buildIdentityTable("syncsTable", syncs).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><!-- Error --><div id=\"error-container\" class=\"mt-4\"></div><div id=\"modal-container\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -176,7 +187,7 @@ func IdentitesForm(admins []*UserIdentity, users []*UserIdentity, devices []*Use
 	})
 }
 
-func buildIdentityTable(identities []*UserIdentity) templ.Component {
+func buildIdentityTable(id string, identities []*UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -245,7 +256,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "Name ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Name ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -255,7 +266,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -271,7 +282,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "Role ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Role ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -281,7 +292,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -297,7 +308,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "Created at ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "Created at ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -307,7 +318,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -323,7 +334,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "Last Seen ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "Last Seen ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -333,7 +344,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -349,7 +360,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "Actions")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "Actions")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -371,7 +382,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, " ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -388,167 +399,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				for _, identity := range identities {
-					templ_7745c5c3_Var14 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-						if !templ_7745c5c3_IsBuffer {
-							defer func() {
-								templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err == nil {
-									templ_7745c5c3_Err = templ_7745c5c3_BufErr
-								}
-							}()
-						}
-						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Var15 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-							if !templ_7745c5c3_IsBuffer {
-								defer func() {
-									templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err == nil {
-										templ_7745c5c3_Err = templ_7745c5c3_BufErr
-									}
-								}()
-							}
-							ctx = templ.InitializeContext(ctx)
-							var templ_7745c5c3_Var16 string
-							templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 115, Col: 21}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							return nil
-						})
-						templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, " ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-							if !templ_7745c5c3_IsBuffer {
-								defer func() {
-									templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err == nil {
-										templ_7745c5c3_Err = templ_7745c5c3_BufErr
-									}
-								}()
-							}
-							ctx = templ.InitializeContext(ctx)
-							var templ_7745c5c3_Var18 string
-							templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Role)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 118, Col: 21}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							return nil
-						})
-						templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-							if !templ_7745c5c3_IsBuffer {
-								defer func() {
-									templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err == nil {
-										templ_7745c5c3_Err = templ_7745c5c3_BufErr
-									}
-								}()
-							}
-							ctx = templ.InitializeContext(ctx)
-							var templ_7745c5c3_Var20 string
-							templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Created)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 121, Col: 24}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							return nil
-						})
-						templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, " ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Var21 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-							if !templ_7745c5c3_IsBuffer {
-								defer func() {
-									templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err == nil {
-										templ_7745c5c3_Err = templ_7745c5c3_BufErr
-									}
-								}()
-							}
-							ctx = templ.InitializeContext(ctx)
-							var templ_7745c5c3_Var22 string
-							templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(identity.LastSeen)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 124, Col: 25}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							return nil
-						})
-						templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Var23 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-							if !templ_7745c5c3_IsBuffer {
-								defer func() {
-									templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err == nil {
-										templ_7745c5c3_Err = templ_7745c5c3_BufErr
-									}
-								}()
-							}
-							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<!-- actions go here -->")
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							return nil
-						})
-						templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						return nil
-					})
-					templ_7745c5c3_Err = table.Row().Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = createTableRowForIdentity(identity).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -561,7 +412,10 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = table.Table().Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = table.Table(table.Props{
+			ID:    id,
+			Class: "border border-gray-300 rounded-lg mb-6",
+		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -569,7 +423,7 @@ func buildIdentityTable(identities []*UserIdentity) templ.Component {
 	})
 }
 
-func formCreateIdentity(name, role string) templ.Component {
+func createTableRowForIdentity(identity *UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -585,25 +439,201 @@ func formCreateIdentity(name, role string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var24 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var24 == nil {
-			templ_7745c5c3_Var24 = templ.NopComponent
+		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var14 == nil {
+			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div class=\"flex justify-end mt-4\"><form hx-post=\"/identities\" hx-target=\"#deviceTableBody\" hx-swap=\"beforeend\" hx-on::after-request=\"if(event.detail.successful) { this.reset(); }\" hx-target-error=\"#error-container\"><input type=\"hidden\" name=\"role\" value=\"")
+		templ_7745c5c3_Var15 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Var16 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
+				}
+				ctx = templ.InitializeContext(ctx)
+				var templ_7745c5c3_Var17 string
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 135, Col: 18}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				return nil
+			})
+			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
+				}
+				ctx = templ.InitializeContext(ctx)
+				var templ_7745c5c3_Var19 string
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Role)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 138, Col: 18}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				return nil
+			})
+			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var20 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
+				}
+				ctx = templ.InitializeContext(ctx)
+				var templ_7745c5c3_Var21 string
+				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Created)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 141, Col: 21}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				return nil
+			})
+			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var22 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
+				}
+				ctx = templ.InitializeContext(ctx)
+				var templ_7745c5c3_Var23 string
+				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(identity.LastSeen)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 144, Col: 22}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				return nil
+			})
+			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var22), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var24 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
+				}
+				ctx = templ.InitializeContext(ctx)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<!-- actions go here -->")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				return nil
+			})
+			templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = table.Row().Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(role)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 144, Col: 48}
+		return nil
+	})
+}
+
+func formCreateIdentity(name string, roles []RoleOption) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\"><div class=\"flex w-80 items-end gap-2\">")
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var25 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var25 == nil {
+			templ_7745c5c3_Var25 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<div class=\"flex justify-end items-end mt-4\"><form id=\"createIdentityForm\" hx-post=\"/identities\" hx-target=\"#adminsTable tbody\" hx-swap=\"beforeend\" hx-target-error=\"#error-container\"><div class=\"flex w-96 justify-end items-end gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -623,7 +653,7 @@ func formCreateIdentity(name, role string) templ.Component {
 				ID:          "name",
 				Type:        "text",
 				Name:        "name",
-				Placeholder: "admin",
+				Placeholder: "Name",
 				Required:    true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -637,18 +667,25 @@ func formCreateIdentity(name, role string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
+		if len(roles) == 1 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<input type=\"hidden\" name=\"role\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
-			ctx = templ.InitializeContext(ctx)
+			var templ_7745c5c3_Var27 string
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(string(roles[0].Value))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 174, Col: 68}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
 			templ_7745c5c3_Var28 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -661,16 +698,167 @@ func formCreateIdentity(name, role string) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "Add ")
+				templ_7745c5c3_Var29 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+					if !templ_7745c5c3_IsBuffer {
+						defer func() {
+							templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+							if templ_7745c5c3_Err == nil {
+								templ_7745c5c3_Err = templ_7745c5c3_BufErr
+							}
+						}()
+					}
+					ctx = templ.InitializeContext(ctx)
+					templ_7745c5c3_Var30 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+						if !templ_7745c5c3_IsBuffer {
+							defer func() {
+								templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err == nil {
+									templ_7745c5c3_Err = templ_7745c5c3_BufErr
+								}
+							}()
+						}
+						ctx = templ.InitializeContext(ctx)
+						templ_7745c5c3_Err = selectbox.Value(selectbox.ValueProps{
+							Placeholder: "Role",
+						}).Render(ctx, templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						return nil
+					})
+					templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{
+						ID:   "select-form",
+						Name: "role",
+						Form: "createIdentityForm",
+					}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Var31 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+						if !templ_7745c5c3_IsBuffer {
+							defer func() {
+								templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err == nil {
+									templ_7745c5c3_Err = templ_7745c5c3_BufErr
+								}
+							}()
+						}
+						ctx = templ.InitializeContext(ctx)
+						templ_7745c5c3_Var32 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+							if !templ_7745c5c3_IsBuffer {
+								defer func() {
+									templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+									if templ_7745c5c3_Err == nil {
+										templ_7745c5c3_Err = templ_7745c5c3_BufErr
+									}
+								}()
+							}
+							ctx = templ.InitializeContext(ctx)
+							for i, role := range roles {
+								templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+									if !templ_7745c5c3_IsBuffer {
+										defer func() {
+											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err == nil {
+												templ_7745c5c3_Err = templ_7745c5c3_BufErr
+											}
+										}()
+									}
+									ctx = templ.InitializeContext(ctx)
+									var templ_7745c5c3_Var34 string
+									templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(role.Label)
+									if templ_7745c5c3_Err != nil {
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 196, Col: 23}
+									}
+									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									return nil
+								})
+								templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{
+									Value:    string(role.Value),
+									Selected: i == 0,
+								}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+							}
+							return nil
+						})
+						templ_7745c5c3_Err = selectbox.Group().Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						return nil
+					})
+					templ_7745c5c3_Err = selectbox.Content(selectbox.ContentProps{NoSearch: true}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					return nil
+				})
+				templ_7745c5c3_Err = selectbox.SelectBox().Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var29 string
-				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 163, Col: 16}
+				return nil
+			})
+			templ_7745c5c3_Err = form.Item(form.ItemProps{
+				Class: "w-32",
+			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Var35 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Var36 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+				if !templ_7745c5c3_IsBuffer {
+					defer func() {
+						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+						if templ_7745c5c3_Err == nil {
+							templ_7745c5c3_Err = templ_7745c5c3_BufErr
+						}
+					}()
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
+				ctx = templ.InitializeContext(ctx)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "Add ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var37 string
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 210, Col: 16}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -678,7 +866,7 @@ func formCreateIdentity(name, role string) templ.Component {
 			})
 			templ_7745c5c3_Err = button.Button(button.Props{
 				Type: "submit",
-			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
+			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -686,11 +874,120 @@ func formCreateIdentity(name, role string) templ.Component {
 		})
 		templ_7745c5c3_Err = form.Item(form.ItemProps{
 			Class: "w-32 items-end",
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var35), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div></form></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func CreateIdentityResponse(identity *UserIdentity, password string, totpSecret string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var38 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var38 == nil {
+			templ_7745c5c3_Var38 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = createTableRowForIdentity(identity).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div id=\"modal-container\" hx-swap-oob=\"innerHTML\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = NewIdentityModal(identity, password, totpSecret).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func NewIdentityModal(identity *UserIdentity, password string, totpSecret string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var39 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var39 == nil {
+			templ_7745c5c3_Var39 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div class=\"fixed inset-0 bg-black/50 flex items-center justify-center\"><div class=\"bg-white rounded-lg p-6 w-full max-w-lg\"><h2 class=\"text-lg font-semibold\">Identity Created</h2><div class=\"mt-4\"><div>Name: <code>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var40 string
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 236, Col: 26}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</code></div><div class=\"mt-2\">Password: <code>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var41 string
+		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(password)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 240, Col: 21}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</code></div><div class=\"mt-2\">TOTP Secret: <code>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var42 string
+		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(totpSecret)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `user_templ/identities.templ`, Line: 244, Col: 23}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</code></div></div><button class=\"mt-4 btn btn-primary\" hx-get=\"/empty\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\">I've saved these</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

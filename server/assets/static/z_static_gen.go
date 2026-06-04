@@ -40,6 +40,10 @@ var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
 var StaticDropdownMinJs []byte
 var StaticDropdownMinJsETag = generateETag([]byte(StaticDropdownMinJs))
 
+//go:embed empty
+var StaticEmpty []byte
+var StaticEmptyETag = generateETag([]byte(StaticEmpty))
+
 //go:embed favicon.ico
 var StaticFaviconIco []byte
 var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
@@ -99,6 +103,14 @@ var StaticQrcodeJsETag = generateETag([]byte(StaticQrcodeJs))
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
+
+//go:embed selectbox.js
+var StaticSelectboxJs []byte
+var StaticSelectboxJsETag = generateETag([]byte(StaticSelectboxJs))
+
+//go:embed selectbox.min.js
+var StaticSelectboxMinJs []byte
+var StaticSelectboxMinJsETag = generateETag([]byte(StaticSelectboxMinJs))
 
 //go:embed style_gen.css
 var StaticStyleGenCss []byte
@@ -184,6 +196,17 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticDropdownMinJs))
 		if err != nil {
 			slog.Error("Failed to write response for dropdown.min.js", "error", err)
+		}
+	})
+	r.Get("/empty", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticEmptyETag)
+
+		_, err := w.Write([]byte(StaticEmpty))
+		if err != nil {
+			slog.Error("Failed to write response for empty", "error", err)
 		}
 	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -349,6 +372,28 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticRobotsTxt))
 		if err != nil {
 			slog.Error("Failed to write response for robots.txt", "error", err)
+		}
+	})
+	r.Get("/selectbox.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticSelectboxJsETag)
+
+		_, err := w.Write([]byte(StaticSelectboxJs))
+		if err != nil {
+			slog.Error("Failed to write response for selectbox.js", "error", err)
+		}
+	})
+	r.Get("/selectbox.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticSelectboxMinJsETag)
+
+		_, err := w.Write([]byte(StaticSelectboxMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for selectbox.min.js", "error", err)
 		}
 	})
 	r.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {

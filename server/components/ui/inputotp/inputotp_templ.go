@@ -13,7 +13,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"nighttroop.t1d.nz/server/components/ui/input"
-	utils "nighttroop.t1d.nz/utils/templui_utils"
+	"nighttroop.t1d.nz/utils/templui/utils"
 	"strconv"
 )
 
