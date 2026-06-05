@@ -21,11 +21,11 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection string, da
 }
 
 func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier string) (model.Record, error) {
-	return model.Record{}, nil
+	return model.Record{ID: "asdasd"}, nil
 }
 
 func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, query store.Query) ([]model.Record, error) {
-	return nil, nil
+	return []model.Record{{ID: "asdasd"}}, nil
 }
 
 func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection, identifier string, data map[string]any, subject string) (model.Record, bool, error) {
@@ -79,13 +79,13 @@ func (nta *NightTroopAPIAuth) AuthenticateRequest(r *http.Request) (*auth.Identi
 
 func (nta *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *auth.Identity)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		next(w, r, nil)
 	}
 }
 
 func (nta *NightTroopAPIAuth) RequireV1Write(permission string, next func(http.ResponseWriter, *http.Request, *auth.Identity)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		next(w, r, nil)
 	}
 }
 
