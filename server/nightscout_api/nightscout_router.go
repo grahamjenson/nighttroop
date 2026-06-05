@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/assets/static"
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
 	vendorConfig "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/config"
@@ -24,8 +23,6 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 	r.Use(user.UserRateLimitMiddleware(config))
-
-	static.AddSatticRoutes(r)
 
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
@@ -68,7 +65,7 @@ func getAuthRoute(controlDB *db.ControlDB, config config.ServerConfig) http.Hand
 			return
 		}
 
-		responce := map[string]any{
+		response := map[string]any{
 			"token":            token,
 			"sub":              "read",
 			"permissionGroups": [][]string{{"*"}, {"*:*:read"}},
@@ -76,14 +73,14 @@ func getAuthRoute(controlDB *db.ControlDB, config config.ServerConfig) http.Hand
 			"exp":              expiresAt.Unix(),
 		}
 
-		jsonResponce, err := json.Marshal(responce)
+		jsonResponse, err := json.Marshal(response)
 		if err != nil {
 			http.Error(w, "Internal Server Error: Failed to marshal JSON", http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponce)
+		w.Write(jsonResponse)
 	}
 
 }
@@ -93,12 +90,15 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			identityName, identityRole, keepGoing, err := user.TryLoginWithJWTToken(cfg, r)
+			identityName, identityRole, keepGoing, err := user.TryAuthWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityNameInUserContext(ctx, identityName)
 				ctx = httputils.SetIdentityRoleInUserContext(ctx, identityRole)
 				next.ServeHTTP(w, r.WithContext(ctx))
+
 				return
+			} else {
+				slog.Info("JWT Auth Failed for Nightscout API", "error", err.Error())
 			}
 
 			// If the JWT token is present but incorrect we need to stop
@@ -108,12 +108,15 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			}
 
 			// Last Chance
-			identityName, identityRole, err = tryLoginWithLegacyToken(controlDB, cfg, r)
+			identityName, identityRole, err = tryAuthWithLegacyToken(controlDB, cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityNameInUserContext(ctx, identityName)
 				ctx = httputils.SetIdentityRoleInUserContext(ctx, identityRole)
+
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
+			} else {
+				slog.Info("Legacy Token Auth Failed for Nightscout API", "error", err.Error())
 			}
 
 			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
@@ -121,9 +124,13 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 	}
 }
 
-func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, error) {
+func tryAuthWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, error) {
 
 	tokenParam := r.URL.Query().Get("token")
+	if tokenParam == "" {
+		tokenParam = chi.URLParam(r, "token")
+	}
+
 	if tokenParam == "" {
 		return "", "", fmt.Errorf("no token provided")
 	}
@@ -134,7 +141,7 @@ func tryLoginWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig
 		return "", "", fmt.Errorf("user not found: %w", err)
 	}
 
-	identityName, role, err := config.Security.VerifyLegacyTokenForIdentity(tokenParam, userContext.Subdomain, userDB.GetIdentitySplat)
+	identityName, role, err := config.Security.VerifyNightscoutTokenForIdentity(tokenParam, userContext.Subdomain, userDB.GetIdentitySplat)
 	if err != nil {
 		return "", "", fmt.Errorf("bad token: %w", err)
 	}

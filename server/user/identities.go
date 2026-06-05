@@ -105,7 +105,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 			return
 		}
 
-		password, totopSecret, err := userContext.UserDB.CreateIdentity(name, consts.IdentityRole(role))
+		password, totopSecret, nsToken, err := userContext.UserDB.CreateIdentity(name, consts.IdentityRole(role))
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to create identity", err)
 			return
@@ -119,7 +119,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.CreateIdentityResponse(userContext.UserDB.URL(), identity, password, totopSecret).Render(r.Context(), w)
+			err = user_templ.CreateIdentityResponse(userContext.UserDB.URL(), identity, password, totopSecret, nsToken).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return

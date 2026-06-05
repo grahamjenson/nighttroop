@@ -69,7 +69,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 			ctx := r.Context()
 			acceptType := httputils.GetAcceptType(r)
 
-			deviceName, deviceRole, _, err := TryLoginWithJWTToken(cfg, r)
+			deviceName, deviceRole, _, err := TryAuthWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityNameInUserContext(ctx, deviceName)
 				ctx = httputils.SetIdentityRoleInUserContext(ctx, deviceRole)
@@ -91,7 +91,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 // Try get the Auth Header
 // Then try get the cookie
-func TryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, bool, error) {
+func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")

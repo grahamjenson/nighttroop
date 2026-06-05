@@ -13,6 +13,7 @@
     1. Enable turning off s3 (or making it local for testing)
     1. Deploy to a fly.io dev/staging environment
     1. Connect actual data and do some fun perf testing
+    1. Cleanup overloaded terms User/Device/Identity
 
 2. Logging with contexts to DBs, 
 1. error reporting with sentry, 

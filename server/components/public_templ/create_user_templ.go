@@ -234,7 +234,7 @@ func CreateUserInfo(url string, password string, totpSecret string, backupKey st
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></div></div></div></div></div><div class=\"border-b border-slate-200/60 my-6\"></div><div id=\"Step2\"><div class=\"rounded-xl bg-green-500/10 p-4 text-sm leading-relaxed text-green-600 border border-green-500/20 shadow-sm mb-4\"><div class=\"flex items-start gap-2 mb-4\"><span class=\"font-semibold text-green-900\">2.</span><p class=\"text-green-800\">Visit the Generated Site to Login.</p></div><div class=\"justify-center flex w-full\"><!-- Action Button: Visit Generated Site -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></div></div></div></div></div><div class=\"border-b border-slate-200/60 my-6\"></div><div id=\"Step2\"><div class=\"rounded-xl bg-green-500/10 p-4 text-sm leading-relaxed text-green-600 border border-green-500/20 shadow-sm mb-4\"><div class=\"flex items-start gap-2 mb-4\"><span class=\"font-semibold text-green-900\">2.</span><p class=\"text-green-800\">Login to your new site</p></div><div class=\"justify-center flex w-full\"><!-- Action Button: Visit Generated Site -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

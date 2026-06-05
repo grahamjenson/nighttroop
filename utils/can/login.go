@@ -28,3 +28,12 @@ func MustLoginWithTotp(role consts.IdentityRole, hasTotpSecret bool) bool {
 		return false
 	}
 }
+
+func HaveNightscoutToken(role consts.IdentityRole) bool {
+	switch role {
+	case consts.IdentityRoleAdmin:
+		return false
+	default:
+		return true
+	}
+}

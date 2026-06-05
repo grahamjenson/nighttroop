@@ -217,17 +217,17 @@ templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
 	</div>
 }
 
-templ CreateIdentityResponse(url string, identity *UserIdentity, password string, totpSecret *string) {
+templ CreateIdentityResponse(url string, identity *UserIdentity, password string, totpSecret *string, nsToken *string) {
 	@createTableRowForIdentity(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
-		@newIdentityModal(url, identity, password, totpSecret)
+		@newIdentityModal(url, identity, password, totpSecret, nsToken)
 	</div>
 }
 
-templ newIdentityModal(url string, identity *UserIdentity, password string, totpSecret *string) {
+templ newIdentityModal(url string, identity *UserIdentity, password string, totpSecret *string, nsToken *string) {
 	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
 		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md flex flex-col items-center justify-center">
-			@createdUserInfo(url, identity.Name, password, totpSecret)
+			@createdUserInfo(url, identity.Name, password, totpSecret, nsToken)
 			@button.Button(button.Props{
 				Class:   "mt-4",
 				Variant: button.VariantDestructive,
@@ -243,7 +243,7 @@ templ newIdentityModal(url string, identity *UserIdentity, password string, totp
 	</div>
 }
 
-templ createdUserInfo(url string, username string, password string, totpSecret *string) {
+templ createdUserInfo(url string, username string, password string, totpSecret *string, nsToken *string) {
 	<div class="text-left w-full max-w-2xl mx-auto space-y-2">
 		<div class="flex items-start gap-2 mb-4">
 			<p class="font-bold text-green-800">Save this information in a secure place</p>
@@ -251,8 +251,12 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 		<div class="relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
 			<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
 				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
-				if totpSecret != nil {
+				if totpSecret != nil && nsToken != nil {
+					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret + "\nNightscout Token: " + *nsToken }</textarea>
+				} else if totpSecret != nil {
 					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret }</textarea>
+				} else if nsToken != nil {
+					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nNightscout Token: " + *nsToken }</textarea>
 				} else {
 					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password }</textarea>
 				}
@@ -269,6 +273,9 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span class="break-all">{ url }</span></div>
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>{ username }</span></div>
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ password }</span></div>
+				if nsToken != nil {
+					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Nightscout Token:</span><span class="break-all">{ *nsToken }</span></div>
+				}
 				if totpSecret != nil {
 					<div class="flex">
 						<div class="flex items-start gap-6">
