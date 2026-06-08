@@ -285,6 +285,17 @@ func (q *Queries) GetUser(ctx context.Context, subdomain string) (*User, error) 
 	return &i, err
 }
 
+const subdomainExists = `-- name: SubdomainExists :one
+SELECT CAST(COUNT(*) > 0 AS BOOLEAN) FROM users WHERE subdomain = ?
+`
+
+func (q *Queries) SubdomainExists(ctx context.Context, subdomain string) (bool, error) {
+	row := q.queryRow(ctx, q.subdomainExistsStmt, subdomainExists, subdomain)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const tESTTruncateUsers = `-- name: TESTTruncateUsers :exec
 
 DELETE FROM users
@@ -298,24 +309,15 @@ func (q *Queries) TESTTruncateUsers(ctx context.Context) error {
 	return err
 }
 
-const updateUserLastSeenAt = `-- name: UpdateUserLastSeenAt :exec
+const updateUserDateFlags = `-- name: UpdateUserDateFlags :exec
 UPDATE users
-SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+SET
+    last_seen_at = COALESCE(?, last_seen_at),
+    last_write_at = COALESCE(?, last_write_at)
 WHERE subdomain = ?
 `
 
-func (q *Queries) UpdateUserLastSeenAt(ctx context.Context, subdomain string) error {
-	_, err := q.exec(ctx, q.updateUserLastSeenAtStmt, updateUserLastSeenAt, subdomain)
-	return err
-}
-
-const updateUserLastWriteAt = `-- name: UpdateUserLastWriteAt :exec
-UPDATE users
-SET last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE subdomain = ?
-`
-
-func (q *Queries) UpdateUserLastWriteAt(ctx context.Context, subdomain string) error {
-	_, err := q.exec(ctx, q.updateUserLastWriteAtStmt, updateUserLastWriteAt, subdomain)
+func (q *Queries) UpdateUserDateFlags(ctx context.Context, lastSeenAt *int64, lastWriteAt *int64, subdomain string) error {
+	_, err := q.exec(ctx, q.updateUserDateFlagsStmt, updateUserDateFlags, lastSeenAt, lastWriteAt, subdomain)
 	return err
 }

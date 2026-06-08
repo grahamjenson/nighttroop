@@ -2,6 +2,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -43,7 +44,6 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 		}
 
 		subdomain, err := GetSubdomainFromHeader(r.Host, config.HostName)
-		ctx = httputils.SetSubdomainInUserContext(ctx, subdomain)
 		if err != nil {
 			slog.Error("Main router 404 for host header", "host", r.Host, "error", err)
 			http.NotFound(w, r)
@@ -55,12 +55,17 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			controlRouter.ServeHTTP(w, r.WithContext(ctx))
 		case subdomain == "www" || subdomain == "public" || subdomain == "":
 			public.ServeHTTP(w, r.WithContext(ctx))
-		case strings.HasSuffix(subdomain, ".ns"):
+		case strings.HasSuffix(subdomain, ".ns") || strings.HasPrefix(subdomain, "ns."):
 			userSubdomain := strings.TrimSuffix(subdomain, ".ns")
+			userSubdomain = strings.TrimPrefix(userSubdomain, "ns.")
+
+			if !utils.SyntacticallyValidateUserID(userSubdomain) {
+				slog.Error("Main router 404 for nightscout subdomain with invalid user id format", "subdomain", subdomain)
+				http.NotFound(w, r)
+				return
+			}
 			// so <userid>.ns.domain routes to the nightscout compatible API
-			if utils.SyntacticallyValidateUserID(userSubdomain) && controlDB.UserExists(userSubdomain) {
-				// Reset subdomain without the .ns suffix
-				ctx = httputils.SetSubdomainInUserContext(ctx, userSubdomain)
+			if exists, ctx := UserExistsAndWriteToContext(controlDB, userSubdomain, r); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for nightscout subdomain", "subdomain", subdomain)
@@ -68,7 +73,9 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			}
 		case utils.SyntacticallyValidateUserID(subdomain):
 			// Check to see if in memory map
-			if controlDB.UserExists(subdomain) {
+			// SHOULD ATTACH USER DB AND MODEL TO THE CONTEXT AT THIS POINT
+
+			if exists, ctx := UserExistsAndWriteToContext(controlDB, subdomain, r); exists {
 				userRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for subdomain", "subdomain", subdomain)
@@ -80,6 +87,19 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 		}
 	})
 
+}
+
+func UserExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *http.Request) (bool, context.Context) {
+	userDB, userGetModel, err := controlDB.GetUser(subdomain)
+	if err != nil {
+		slog.Error("Error getting user for subdomain", "subdomain", subdomain, "error", err)
+		return false, nil
+	}
+
+	ctx := httputils.SetUserDBAndModelAndCreateUserContext(r.Context(), userDB, userGetModel)
+	ctx = httputils.SetSubdomainInUserContext(ctx, subdomain)
+
+	return true, ctx
 }
 
 // This is a bit annoying but for subdomain routing we need to get the subdomain from the host header

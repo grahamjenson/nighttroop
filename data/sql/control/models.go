@@ -10,6 +10,14 @@ func (u *User) LastSeenAtDate() *time.Time {
 	return &t
 }
 
+func (u *User) LastWriteAtDate() *time.Time {
+	if u.LastWriteAt == nil {
+		return nil
+	}
+	t := time.UnixMilli(*u.LastWriteAt)
+	return &t
+}
+
 func (j *Job) DayQueueJob() string {
 	// calculates the "YYYY-MM-DD::queue::job" string for the job based on the CreatedAt timestamp
 	t := time.UnixMilli(j.CreatedAt)

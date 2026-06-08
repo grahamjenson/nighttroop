@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
 
@@ -87,15 +88,6 @@ func (db *UserDB) URL() string {
 // Identities
 // ////
 
-func (db *UserDB) GetIdentitySplat(ctx context.Context, name string) (identityName string, password string, totpSecret string, role consts.IdentityRole, err error) {
-	identity, err := db.Queries.GetIdentity(ctx, name)
-	if err != nil {
-		return "", "", "", "", fmt.Errorf("identity not found: %w", err)
-	}
-
-	return identity.Name, identity.Password, identity.TotpSecret, identity.Role, nil
-}
-
 func (db *UserDB) createDefaultUsers() (string, string, error) {
 
 	adminPassword, totpSecretPtr, _, err := db.CreateIdentity(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
@@ -160,7 +152,7 @@ func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string,
 	}
 	var nsToken *string
 	if can.HaveNightscoutToken(role) {
-		token, err := security.CreateNightscoutTokenForIdentity(db.Subdomain, name, password)
+		token, err := security.CreateNightscoutTokenForIdentity(db.Subdomain, name, string(role), password)
 		if err != nil {
 			return "", nil, nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
 		}
@@ -168,4 +160,24 @@ func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string,
 	}
 
 	return password, totpSecretPtr, nsToken, nil
+}
+
+func (db *UserDB) UpdateIdentityDateFlags(identity *user.Identity, updateLastSeen bool, updateLastWrite bool) error {
+
+	// Only update if not seen in 10 minutes
+	lastWriteMoreThan10MinutesAgo := identity.LastWriteAt == nil || time.Now().After(identity.LastWriteAtDate().Add(-10*time.Minute))
+	lastSeenMoreThan10MinutesAgo := identity.LastSeenAt == nil || time.Now().After(identity.LastSeenAtDate().Add(-10*time.Minute))
+
+	now := time.Now().UnixMilli()
+	var lastSeenAt *int64
+	var lastWriteAt *int64
+	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
+		lastSeenAt = &now
+	}
+	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
+		lastWriteAt = &now
+	}
+	db.Queries.UpdateIdentityDateFlags(context.TODO(), lastSeenAt, lastWriteAt, identity.ID)
+
+	return nil
 }

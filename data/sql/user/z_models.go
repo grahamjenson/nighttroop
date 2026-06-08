@@ -32,14 +32,15 @@ type Event struct {
 }
 
 type Identity struct {
-	ID         int64
-	Name       string
-	Password   string
-	TotpSecret string
-	Role       consts.IdentityRole
-	CreatedAt  int64
-	LastSeenAt *int64
-	Enabled    bool
+	ID          int64
+	Name        string
+	Password    string
+	TotpSecret  string
+	Role        consts.IdentityRole
+	CreatedAt   int64
+	LastSeenAt  *int64
+	LastWriteAt *int64
+	Enabled     bool
 }
 
 type IdentityStatus struct {

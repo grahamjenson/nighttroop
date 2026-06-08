@@ -12,7 +12,7 @@ import (
 )
 
 const allIdentities = `-- name: AllIdentities :many
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, enabled FROM identities ORDER BY created_at DESC
+SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, enabled FROM identities ORDER BY created_at DESC
 `
 
 func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
@@ -32,6 +32,7 @@ func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 			&i.Role,
 			&i.CreatedAt,
 			&i.LastSeenAt,
+			&i.LastWriteAt,
 			&i.Enabled,
 		); err != nil {
 			return nil, err
@@ -112,7 +113,7 @@ func (q *Queries) CreateIdentity(ctx context.Context, arg CreateIdentityParams) 
 }
 
 const getIdentity = `-- name: GetIdentity :one
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, enabled FROM identities where name = ? LIMIT 1
+SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, enabled FROM identities where name = ? LIMIT 1
 `
 
 func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, error) {
@@ -126,16 +127,21 @@ func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, erro
 		&i.Role,
 		&i.CreatedAt,
 		&i.LastSeenAt,
+		&i.LastWriteAt,
 		&i.Enabled,
 	)
 	return &i, err
 }
 
-const updateIdentityLastSeenAt = `-- name: UpdateIdentityLastSeenAt :exec
-UPDATE identities SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE name = ?
+const updateIdentityDateFlags = `-- name: UpdateIdentityDateFlags :exec
+UPDATE identities
+SET
+    last_seen_at = COALESCE(?, last_seen_at),
+    last_write_at = COALESCE(?, last_write_at)
+WHERE id = ?
 `
 
-func (q *Queries) UpdateIdentityLastSeenAt(ctx context.Context, name string) error {
-	_, err := q.exec(ctx, q.updateIdentityLastSeenAtStmt, updateIdentityLastSeenAt, name)
+func (q *Queries) UpdateIdentityDateFlags(ctx context.Context, lastSeenAt *int64, lastWriteAt *int64, iD int64) error {
+	_, err := q.exec(ctx, q.updateIdentityDateFlagsStmt, updateIdentityDateFlags, lastSeenAt, lastWriteAt, iD)
 	return err
 }

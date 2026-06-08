@@ -32,7 +32,11 @@ CREATE TABLE identities (
     totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
     role TEXT NOT NULL CHECK(length(role) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
     last_seen_at INTEGER,
+    last_write_at INTEGER,
+
+
     enabled INTEGER NOT NULL DEFAULT 1
 );
 

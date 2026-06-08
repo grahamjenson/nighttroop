@@ -5,17 +5,27 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/data/sql/user"
+)
+
+type UserAction string
+
+const (
+	UserActionRead  UserAction = "read"
+	UserActionWrite UserAction = "write"
 )
 
 const UserContextKey = "user_context"
 
 type UserContext struct {
-	UserDB       *db.UserDB
-	UserModel    *control.User
-	Subdomain    string
-	IdentityName string
-	IdentityRole consts.IdentityRole
+	UserDB    *db.UserDB
+	UserModel *control.User
+
+	IdentityModel *user.Identity
+
+	Subdomain string
+
+	UserAction UserAction
 }
 
 func GetUserContext(ctx context.Context) *UserContext {
@@ -28,19 +38,20 @@ func GetUserContext(ctx context.Context) *UserContext {
 	return nil
 }
 
-func GetUserContextWithDefault(ctx context.Context) *UserContext {
-	userCtx := GetUserContext(ctx)
-	if userCtx == nil {
-		return &UserContext{}
-	}
-	return userCtx
+// //
+// Action
+// //
+func SetUserActionInUserContext(ctx context.Context, action UserAction) context.Context {
+	userContext := GetUserContext(ctx)
+	userContext.UserAction = action
+	return context.WithValue(ctx, UserContextKey, userContext)
 }
 
 // //
 // Subdomain
 // //
 func SetSubdomainInUserContext(ctx context.Context, subdomain string) context.Context {
-	userContext := GetUserContextWithDefault(ctx)
+	userContext := GetUserContext(ctx)
 	userContext.Subdomain = subdomain
 	return context.WithValue(ctx, UserContextKey, userContext)
 }
@@ -49,8 +60,8 @@ func SetSubdomainInUserContext(ctx context.Context, subdomain string) context.Co
 // UserDB
 ////
 
-func SetUserDBAndModelInUserContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.User) context.Context {
-	userContext := GetUserContextWithDefault(ctx)
+func SetUserDBAndModelAndCreateUserContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.User) context.Context {
+	userContext := &UserContext{}
 	userContext.UserDB = userDB
 	userContext.UserModel = userGetModel
 
@@ -58,16 +69,10 @@ func SetUserDBAndModelInUserContext(ctx context.Context, userDB *db.UserDB, user
 }
 
 // //
-// IdentityName
+// IdentityModel
 // //
-func SetIdentityNameInUserContext(ctx context.Context, identityName string) context.Context {
-	userContext := GetUserContextWithDefault(ctx)
-	userContext.IdentityName = identityName
-	return context.WithValue(ctx, UserContextKey, userContext)
-}
-
-func SetIdentityRoleInUserContext(ctx context.Context, role consts.IdentityRole) context.Context {
-	userContext := GetUserContextWithDefault(ctx)
-	userContext.IdentityRole = role
+func SetIdentityModelInUserContext(ctx context.Context, identityModel *user.Identity) context.Context {
+	userContext := GetUserContext(ctx)
+	userContext.IdentityModel = identityModel
 	return context.WithValue(ctx, UserContextKey, userContext)
 }

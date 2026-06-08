@@ -72,8 +72,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
 	}
-	if q.updateIdentityLastSeenAtStmt, err = db.PrepareContext(ctx, updateIdentityLastSeenAt); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateIdentityLastSeenAt: %w", err)
+	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
 	}
 	return &q, nil
 }
@@ -160,9 +160,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
 		}
 	}
-	if q.updateIdentityLastSeenAtStmt != nil {
-		if cerr := q.updateIdentityLastSeenAtStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateIdentityLastSeenAtStmt: %w", cerr)
+	if q.updateIdentityDateFlagsStmt != nil {
+		if cerr := q.updateIdentityDateFlagsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
 		}
 	}
 	return err
@@ -220,7 +220,7 @@ type Queries struct {
 	createEventStmt                    *sql.Stmt
 	createIdentityStmt                 *sql.Stmt
 	getIdentityStmt                    *sql.Stmt
-	updateIdentityLastSeenAtStmt       *sql.Stmt
+	updateIdentityDateFlagsStmt        *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -243,6 +243,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createEventStmt:                    q.createEventStmt,
 		createIdentityStmt:                 q.createIdentityStmt,
 		getIdentityStmt:                    q.getIdentityStmt,
-		updateIdentityLastSeenAtStmt:       q.updateIdentityLastSeenAtStmt,
+		updateIdentityDateFlagsStmt:        q.updateIdentityDateFlagsStmt,
 	}
 }

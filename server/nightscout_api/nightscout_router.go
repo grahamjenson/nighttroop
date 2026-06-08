@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
+	userSQL "nighttroop.t1d.nz/data/sql/user"
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
 	v2 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v2"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
@@ -17,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
@@ -26,7 +28,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
-		r.Use(user.UserDBMiddleware(controlDB))
+		r.Use(user.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
+
 		r.Get("/api/v2/authorization/request/token={token}", getAuthRoute(controlDB, config))
 
 		ntDeps := di.Dependencies{
@@ -91,12 +94,12 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			identityName, identityRole, keepGoing, err := user.TryAuthWithJWTToken(cfg, r)
+			identityModel, keepGoing, err := user.TryAuthWithJWTToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetIdentityNameInUserContext(ctx, identityName)
-				ctx = httputils.SetIdentityRoleInUserContext(ctx, identityRole)
-				next.ServeHTTP(w, r.WithContext(ctx))
 
+				ctx = httputils.SetIdentityModelInUserContext(ctx, identityModel)
+
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
@@ -108,11 +111,9 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			}
 
 			// Last Chance
-			identityName, identityRole, err = tryAuthWithLegacyToken(controlDB, cfg, r)
+			identityModel, err = tryAuthWithLegacyToken(controlDB, cfg, r)
 			if err == nil {
-				ctx = httputils.SetIdentityNameInUserContext(ctx, identityName)
-				ctx = httputils.SetIdentityRoleInUserContext(ctx, identityRole)
-
+				ctx = httputils.SetIdentityModelInUserContext(ctx, identityModel)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -123,7 +124,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 	}
 }
 
-func tryAuthWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, error) {
+func tryAuthWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (*userSQL.Identity, error) {
 
 	tokenParam := r.URL.Query().Get("token")
 	if tokenParam == "" {
@@ -131,19 +132,37 @@ func tryAuthWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig,
 	}
 
 	if tokenParam == "" {
-		return "", "", fmt.Errorf("no token provided")
+		return nil, fmt.Errorf("no token provided")
 	}
 
 	userContext := httputils.GetUserContext(r.Context())
-	userDB, _, err := controlDB.GetUser(userContext.Subdomain, false)
+
+	tokenParamSubdomain, tokenParamName, tokenRole, tokenParamPassword, err := config.Security.SplitNightscoutTokenForIdentity(tokenParam)
 	if err != nil {
-		return "", "", fmt.Errorf("user not found: %w", err)
+		return nil, fmt.Errorf("invalid token format: %w", err)
 	}
 
-	identityName, role, err := config.Security.VerifyNightscoutTokenForIdentity(tokenParam, userContext.Subdomain, userDB.GetIdentitySplat)
-	if err != nil {
-		return "", "", fmt.Errorf("bad token: %w", err)
+	if tokenParamSubdomain != userContext.Subdomain {
+		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 
-	return identityName, consts.IdentityRole(role), nil
+	identity, err := user.GetIdentity(r.Context(), tokenParamName, consts.IdentityRole(tokenRole))
+	if err != nil {
+		return nil, fmt.Errorf("identity not found: %w", err)
+	}
+
+	if identity.TotpSecret != "" {
+		return nil, fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
+	}
+
+	// Constraint: Not allowed to be admin and use legacy token
+	if identity.Role == consts.IdentityRoleAdmin {
+		return nil, fmt.Errorf("legacy token cannot be used for admin identities")
+	}
+
+	if !security.VerifyPassword(tokenParamPassword, identity.Password) {
+		return nil, fmt.Errorf("invalid password")
+	}
+
+	return identity, nil
 }

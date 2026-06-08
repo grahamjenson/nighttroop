@@ -7,8 +7,12 @@ INSERT INTO identities (name, password, totp_secret, role) VALUES (?, ?, ?, ?);
 -- name: GetIdentity :one
 SELECT * FROM identities where name = ? LIMIT 1;
 
--- name: UpdateIdentityLastSeenAt :exec
-UPDATE identities SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE name = ?;
+-- name: UpdateIdentityDateFlags :exec
+UPDATE identities
+SET
+    last_seen_at = COALESCE(?, last_seen_at),
+    last_write_at = COALESCE(?, last_write_at)
+WHERE id = ?;
 
 ------
 -- Identity Status

@@ -147,10 +147,10 @@ type UserCreateMaterial struct {
 
 func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
 	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
-	if db.UserExists(subdomain) {
+	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
 		subdomain = utils.NextUserID(false)
-		if db.UserExists(subdomain) {
+		if db.SubdomainUsed(subdomain) {
 			return nil, "", "", "", fmt.Errorf("user already exists")
 		}
 	}
@@ -205,6 +205,9 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 // TODO think through implications of errors at different places in this method
 func (db *ControlDB) DeleteUsers(subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
+	if len(subdomains) == 0 {
+		return nil
+	}
 	bytes, _ := json.Marshal(subdomains)
 	deletedSubdomains, err := db.Queries.DeleteUsers(context.TODO(), string(bytes))
 	if err != nil {
@@ -266,14 +269,36 @@ func (db *ControlDB) AllUsers() []*UserDB {
 	return users
 }
 
-func (db *ControlDB) UserExists(subdomain string) bool {
-	db.usersRWLock.RLock()
-	_, ok := db.users[subdomain]
-	db.usersRWLock.RUnlock()
-	return ok
+func (db *ControlDB) SubdomainUsed(subdomain string) bool {
+	exists, err := db.Queries.SubdomainExists(context.TODO(), subdomain)
+	if err != nil {
+		return false
+	}
+	return exists
 }
 
-func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *control.User, error) {
+func (db *ControlDB) UpdateUserDateFlags(userModel *control.User, updateLastSeen bool, updateLastWrite bool) error {
+	subdomain := userModel.Subdomain
+
+	// Only update if not seen in 10 minutes
+	lastWriteMoreThan10MinutesAgo := userModel.LastWriteAt == nil || time.Now().After(userModel.LastWriteAtDate().Add(-10*time.Minute))
+	lastSeenMoreThan10MinutesAgo := userModel.LastSeenAt == nil || time.Now().After(userModel.LastSeenAtDate().Add(-10*time.Minute))
+
+	now := time.Now().UnixMilli()
+	var lastSeenAt *int64
+	var lastWriteAt *int64
+	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
+		lastSeenAt = &now
+	}
+	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
+		lastWriteAt = &now
+	}
+	db.Queries.UpdateUserDateFlags(context.TODO(), lastSeenAt, lastWriteAt, subdomain)
+
+	return nil
+}
+
+func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.User, error) {
 	// Check if user exists in the db
 	model, err := db.Queries.GetUser(context.TODO(), subdomain)
 	if err != nil {
@@ -283,20 +308,23 @@ func (db *ControlDB) GetUser(subdomain string, updateLastSeen bool) (*UserDB, *c
 		return nil, nil, fmt.Errorf("user not found")
 	}
 
-	lastSeenMoreThan10MinutesAgo := model.LastSeenAt == nil || time.Now().After(model.LastSeenAtDate().Add(-10*time.Minute))
-	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
-		db.Queries.UpdateUserLastSeenAt(context.TODO(), subdomain)
+	userDb, err := db.getUserDBFromMap(subdomain)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot get user db: %w", err)
 	}
+	return userDb, model, nil
+}
 
+func (db *ControlDB) getUserDBFromMap(subdomain string) (*UserDB, error) {
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
 
-	user := db.users[subdomain]
-	if user == nil {
-		return nil, nil, fmt.Errorf("user not found in memory")
+	userdb := db.users[subdomain]
+	if userdb == nil {
+		return nil, fmt.Errorf("user not found in memory")
 	}
 
-	return user, model, nil
+	return userdb, nil
 }
 
 func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {

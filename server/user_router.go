@@ -29,8 +29,8 @@ func NewUserRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Rout
 
 	r.Group(func(r chi.Router) {
 		// Checks read and write rates and makes sure not over limit
-		r.Use(user.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
-		r.Use(user.UserDBMiddleware(controlDB))          // Adds User DB and model to the context
+		r.Use(user.JWTAuthMiddleware(controlDB, config))             // Checks for JWT Login and Token to Auth
+		r.Use(user.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
 		r.Get("/", user.GetDashboardHandler(controlDB, config))
 

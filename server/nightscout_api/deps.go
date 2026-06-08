@@ -124,7 +124,7 @@ func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*di.Identity,
 		return nil, di.ErrMissingCredentials
 	}
 
-	ntIdentity := NighttrropIdentityToNightscoutIdentity(userContext.IdentityName, userContext.IdentityRole)
+	ntIdentity := NighttrropIdentityToNightscoutIdentity(userContext.IdentityModel.Name, userContext.IdentityModel.Role)
 	return ntIdentity, nil
 }
 

@@ -72,11 +72,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		userContext := httputils.GetUserContext(r.Context())
 		subdomain := userContext.Subdomain
-		userDB, _, err := controlDB.GetUser(subdomain, false)
-		if err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
-			return
-		}
+		userDB := userContext.UserDB
 
 		if err := r.ParseForm(); err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
@@ -202,11 +198,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*user.Identity, error) {
 	// First try the JWT token (either header or cookie)
 	userContext := httputils.GetUserContext(r.Context())
-	userDB, _, err := controlDB.GetUser(userContext.Subdomain, false)
-	if err != nil {
-
-		return nil, err
-	}
+	userDB := userContext.UserDB
 
 	device, err := userDB.Queries.GetIdentity(context.TODO(), deviceNameFromToken)
 	if err != nil {
@@ -272,11 +264,7 @@ func fetchVerifyPreAuthToken(config config.ServerConfig, r *http.Request) (strin
 // ///
 func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
 	userContext := httputils.GetUserContext(r.Context())
-	userDB, _, err := controlDB.GetUser(userContext.Subdomain, false)
-	if err != nil {
-		errors.GenericIdentityLoginError(w, r, err)
-		return
-	}
+	userDB := userContext.UserDB
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {

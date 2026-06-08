@@ -135,7 +135,7 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.UserSyncS
 }
 
 func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.UserSyncSource) (*SyncUserInfo, error) {
-	userDb, userModel, err := b.controlDB.GetUser(syncSource.Subdomain, false)
+	userDb, userModel, err := b.controlDB.GetUser(syncSource.Subdomain)
 	if err != nil {
 		return nil, err
 	}

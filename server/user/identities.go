@@ -65,11 +65,11 @@ func extractAndGetIdentities(userContext *httputils.UserContext, context context
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			userIdentities = append([]*user_templ.UserIdentity{user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName)}, userIdentities...)
+			userIdentities = append([]*user_templ.UserIdentity{user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityModel.Name)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName))
+			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityModel.Name))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName))
+			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityModel.Name))
 		default:
 			continue
 		}

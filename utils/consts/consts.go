@@ -129,3 +129,5 @@ func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
 }
 
 const PASSWORD_GARBAGE_VALUE = "********"
+
+const DEFAULT_RATE_LIMITING_IDENTITY_NAME = "defaultIdentity"

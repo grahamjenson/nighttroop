@@ -111,6 +111,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.resetJobsStmt, err = db.PrepareContext(ctx, resetJobs); err != nil {
 		return nil, fmt.Errorf("error preparing query ResetJobs: %w", err)
 	}
+	if q.subdomainExistsStmt, err = db.PrepareContext(ctx, subdomainExists); err != nil {
+		return nil, fmt.Errorf("error preparing query SubdomainExists: %w", err)
+	}
 	if q.tESTTruncateUsersStmt, err = db.PrepareContext(ctx, tESTTruncateUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query TESTTruncateUsers: %w", err)
 	}
@@ -141,11 +144,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSyncSourceReportsSuccessStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsSuccess); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsSuccess: %w", err)
 	}
-	if q.updateUserLastSeenAtStmt, err = db.PrepareContext(ctx, updateUserLastSeenAt); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUserLastSeenAt: %w", err)
-	}
-	if q.updateUserLastWriteAtStmt, err = db.PrepareContext(ctx, updateUserLastWriteAt); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUserLastWriteAt: %w", err)
+	if q.updateUserDateFlagsStmt, err = db.PrepareContext(ctx, updateUserDateFlags); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserDateFlags: %w", err)
 	}
 	return &q, nil
 }
@@ -297,6 +297,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing resetJobsStmt: %w", cerr)
 		}
 	}
+	if q.subdomainExistsStmt != nil {
+		if cerr := q.subdomainExistsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing subdomainExistsStmt: %w", cerr)
+		}
+	}
 	if q.tESTTruncateUsersStmt != nil {
 		if cerr := q.tESTTruncateUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing tESTTruncateUsersStmt: %w", cerr)
@@ -347,14 +352,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSyncSourceReportsSuccessStmt: %w", cerr)
 		}
 	}
-	if q.updateUserLastSeenAtStmt != nil {
-		if cerr := q.updateUserLastSeenAtStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserLastSeenAtStmt: %w", cerr)
-		}
-	}
-	if q.updateUserLastWriteAtStmt != nil {
-		if cerr := q.updateUserLastWriteAtStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserLastWriteAtStmt: %w", cerr)
+	if q.updateUserDateFlagsStmt != nil {
+		if cerr := q.updateUserDateFlagsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserDateFlagsStmt: %w", cerr)
 		}
 	}
 	return err
@@ -425,6 +425,7 @@ type Queries struct {
 	queueJobIgnoreDupeStmt                        *sql.Stmt
 	queueJobReplaceDupeStmt                       *sql.Stmt
 	resetJobsStmt                                 *sql.Stmt
+	subdomainExistsStmt                           *sql.Stmt
 	tESTTruncateUsersStmt                         *sql.Stmt
 	truncateEventsStmt                            *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
@@ -435,8 +436,7 @@ type Queries struct {
 	updateSyncReportAttemptStmt                   *sql.Stmt
 	updateSyncSourceReportsFailureStmt            *sql.Stmt
 	updateSyncSourceReportsSuccessStmt            *sql.Stmt
-	updateUserLastSeenAtStmt                      *sql.Stmt
-	updateUserLastWriteAtStmt                     *sql.Stmt
+	updateUserDateFlagsStmt                       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -472,6 +472,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		queueJobIgnoreDupeStmt:                        q.queueJobIgnoreDupeStmt,
 		queueJobReplaceDupeStmt:                       q.queueJobReplaceDupeStmt,
 		resetJobsStmt:                                 q.resetJobsStmt,
+		subdomainExistsStmt:                           q.subdomainExistsStmt,
 		tESTTruncateUsersStmt:                         q.tESTTruncateUsersStmt,
 		truncateEventsStmt:                            q.truncateEventsStmt,
 		updateDexcomSyncSourceStmt:                    q.updateDexcomSyncSourceStmt,
@@ -482,7 +483,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
 		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
 		updateSyncSourceReportsSuccessStmt:            q.updateSyncSourceReportsSuccessStmt,
-		updateUserLastSeenAtStmt:                      q.updateUserLastSeenAtStmt,
-		updateUserLastWriteAtStmt:                     q.updateUserLastWriteAtStmt,
+		updateUserDateFlagsStmt:                       q.updateUserDateFlagsStmt,
 	}
 }

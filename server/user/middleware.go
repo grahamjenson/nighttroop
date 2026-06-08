@@ -1,11 +1,13 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -14,8 +16,10 @@ import (
 )
 
 func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http.Handler {
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userAction := httputils.UserActionRead
 			method := strings.ToUpper(r.Method)
 			if method == http.MethodGet || method == http.MethodHead {
 				// For GET and HEAD requests, we can use a more permissive rate limit
@@ -29,32 +33,48 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 			} else {
 				// For POST, PUT, DELETE, etc., we should enforce a stricter rate limit
 				allowed, remainingTime := httputils.UserPOSTAllowed(config, r)
+				userAction = httputils.UserActionWrite
 				if !allowed {
 					w.WriteHeader(http.StatusTooManyRequests)
 					fmt.Fprintf(w, "Too many requests, write rate limit exceeded. Try again in %d seconds.", remainingTime)
 					return
 				}
 			}
-
-			next.ServeHTTP(w, r)
+			ctx := httputils.SetUserActionInUserContext(r.Context(), userAction)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// This middleware happens after auth
-func UserDBMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
+// THIS IS SO STUPID THAT I HAVE TO DO THIS TO CHECK THE STATUS OF THE RETURNED RESPONSE.
+type statusResponseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *statusResponseWriter) WriteHeader(code int) {
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			subdomain := httputils.GetUserContext(r.Context()).Subdomain
-			userDB, userGetModel, err := controlDB.GetUser(subdomain, true)
 
-			if err != nil {
-				errors.GenericIdentityLoginError(w, r, fmt.Errorf("User not found: %w", err))
-				return
+			userContext := httputils.GetUserContext(r.Context())
+
+			sw := &statusResponseWriter{
+				ResponseWriter: w,
+				status:         http.StatusOK, // default if WriteHeader is never called
 			}
-			ctx := httputils.SetUserDBAndModelInUserContext(r.Context(), userDB, userGetModel)
 
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(sw, r)
+
+			if sw.status == 200 {
+				controlDB.UpdateUserDateFlags(userContext.UserModel)
+				userContext.UpdateIdentityFlags(r.Context())
+			}
 		})
 	}
 }
@@ -69,10 +89,9 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 			ctx := r.Context()
 			acceptType := httputils.GetAcceptType(r)
 
-			deviceName, deviceRole, _, err := TryAuthWithJWTToken(cfg, r)
+			identity, _, err := TryAuthWithJWTToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetIdentityNameInUserContext(ctx, deviceName)
-				ctx = httputils.SetIdentityRoleInUserContext(ctx, deviceRole)
+				ctx = httputils.SetIdentityModelInUserContext(ctx, identity)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -91,31 +110,58 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 // Try get the Auth Header
 // Then try get the cookie
-func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.IdentityRole, bool, error) {
+func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Identity, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
-			return "", "", false, fmt.Errorf("bad JWT token: %w", err)
+			return nil, false, fmt.Errorf("bad JWT token: %w", err)
 		}
-		return deviceName, consts.IdentityRole(role), true, nil
+		identity, err := GetIdentity(r.Context(), identityName, consts.IdentityRole(role))
+		if err != nil {
+			return nil, false, fmt.Errorf("identity not found: %w", err)
+		}
+		return identity, false, nil
 	}
 
 	if authHeader != "" {
-		return "", "", false, fmt.Errorf("Auth Header exists but is not Bearer token")
+		return nil, false, fmt.Errorf("Auth Header exists but is not Bearer token")
 	}
 
 	// Check for Cookie
 	cookieToken, err := security.GetUserTokenFromRequest(r)
 	if err == nil {
 		jwttokenStr := cookieToken
-		deviceName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
-			return "", "", false, fmt.Errorf("Bad Cookie JWT token: %w", err)
+			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		return deviceName, consts.IdentityRole(role), true, nil
+		identity, err := GetIdentity(r.Context(), identityName, consts.IdentityRole(role))
+		if err != nil {
+			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
+		}
+		return identity, false, nil
 	}
 
-	return "", "", true, fmt.Errorf("No JWT token found")
+	return nil, true, fmt.Errorf("No JWT token found")
+}
+
+func GetIdentity(ctx context.Context, identityName string, role consts.IdentityRole) (*user.Identity, error) {
+	userContext := httputils.GetUserContext(ctx)
+	identity, err := userContext.UserDB.Queries.GetIdentity(ctx, identityName)
+	if err != nil {
+
+		return nil, err
+	}
+
+	if !identity.Enabled {
+		return nil, fmt.Errorf("identity disabled")
+	}
+
+	if consts.IdentityRole(identity.Role) != role {
+		return nil, fmt.Errorf("role mismatch")
+	}
+
+	return identity, nil
 }

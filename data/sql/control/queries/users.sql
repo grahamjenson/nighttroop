@@ -1,4 +1,7 @@
 
+-- name: SubdomainExists :one
+SELECT CAST(COUNT(*) > 0 AS BOOLEAN) FROM users WHERE subdomain = ?;
+
 -- name: GetAllUsers :many
 SELECT * FROM users;
 
@@ -45,16 +48,12 @@ SELECT * FROM users WHERE deleted_at IS NULL
 -- name: GetNotDeletedUsers :many
 SELECT * FROM users WHERE deleted_at IS NULL;
 
--- name: UpdateUserLastSeenAt :exec
+-- name: UpdateUserDateFlags :exec
 UPDATE users
-SET last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+SET
+    last_seen_at = COALESCE(?, last_seen_at),
+    last_write_at = COALESCE(?, last_write_at)
 WHERE subdomain = ?;
-
--- name: UpdateUserLastWriteAt :exec
-UPDATE users
-SET last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE subdomain = ?;
-
 
 
 ------------------

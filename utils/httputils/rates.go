@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/time/rate"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
@@ -17,8 +18,12 @@ func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool,
 
 func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userContext := GetUserContext(r.Context())
-	userSubdomain := userContext.IdentityName
-	identityName := userContext.IdentityName
+	userSubdomain := userContext.Subdomain
+	// If no identity then associate with default to ensure blocking
+	identityName := consts.DEFAULT_RATE_LIMITING_IDENTITY_NAME
+	if userContext.IdentityModel != nil {
+		identityName = userContext.IdentityModel.Name
+	}
 
 	readLimiter := serverConfig.RateLimiters.UserGETLimiter(userSubdomain)
 	identityLimiter := serverConfig.RateLimiters.IdentityGETLimiter(identityName)
@@ -28,8 +33,12 @@ func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, in
 
 func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userContext := GetUserContext(r.Context())
-	userSubdomain := userContext.IdentityName
-	identityName := userContext.IdentityName
+	userSubdomain := userContext.Subdomain
+	// If no identity then associate with default to ensure blocking
+	identityName := consts.DEFAULT_RATE_LIMITING_IDENTITY_NAME
+	if userContext.IdentityModel != nil {
+		identityName = userContext.IdentityModel.Name
+	}
 
 	writeLimiter := serverConfig.RateLimiters.UserPOSTLimiter(userSubdomain)
 	identityLimiter := serverConfig.RateLimiters.IdentityPOSTLimiter(identityName)
@@ -39,7 +48,7 @@ func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, i
 
 func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	userContext := GetUserContext(r.Context())
-	userSubdomain := userContext.IdentityName
+	userSubdomain := userContext.Subdomain
 
 	writeLimiter := serverConfig.RateLimiters.UserUpdateSyncLimiter(userSubdomain)
 
