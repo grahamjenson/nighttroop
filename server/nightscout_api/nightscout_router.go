@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
+	v2 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v2"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/user"
@@ -40,9 +41,11 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 		}
 
 		v1Router := v1.NewNightscoutV1Router(ntDeps)
+		v2Router := v2.NewNightscoutV2Router(ntDeps)
 		v3Router := v3.NewNightscoutV3Router(ntDeps)
 
 		r.Mount("/api/v1", v1Router)
+		r.Mount("/api/v2", v2Router)
 		r.Mount("/api/v3", v3Router)
 	})
 

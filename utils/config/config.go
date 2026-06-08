@@ -300,14 +300,14 @@ func (config *ServerConfig) ValidateClean(mode string) error {
 func configStringSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue string) string {
 	returnval := defaultValue
 
-	if val, ok := dotenv[envVar]; ok {
-		returnval = val
-		delete(dotenv, envVar) // delete so we can find unknown keys later
-	}
-
 	if val, ok := dotenvdev[envVar]; ok {
 		returnval = val
 		delete(dotenvdev, envVar) // delete so we can find unknown keys later
+	}
+
+	if val, ok := dotenv[envVar]; ok {
+		returnval = val
+		delete(dotenv, envVar) // delete so we can find unknown keys later
 	}
 
 	if val, ok := os.LookupEnv(envVar); ok {

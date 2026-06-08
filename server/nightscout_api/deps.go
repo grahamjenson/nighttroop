@@ -178,6 +178,7 @@ func NighttrropIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	// 'profile'
 	// 'settings'
 	// 'food'
+	// 'properties'
 
 	// Possible Permissions
 	// 'api:*:read',
