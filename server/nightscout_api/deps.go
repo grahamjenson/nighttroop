@@ -28,19 +28,21 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier s
 }
 
 func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, query di.Query) ([]model.Record, error) {
-	// TODO: I am going to ignore the query here and just return the last 100 records because I can
 	userContext := httputils.GetUserContext(ctx)
+	collection = model.NormalizeCollection(collection)
+	query = withDefaultQuery(query)
+	models := []model.Record{}
 	switch collection {
 	case "entries":
 		entries, err := userContext.UserDB.Queries.AllEntries(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return CreateRecordSlice(entries, SGVToModel), nil
-	}
 
-	fmt.Println("UserContext in Search:", userContext)
-	return []model.Record{{ID: "asdasd"}}, nil
+		models = CreateRecordSlice(entries, SGVToModel)
+	}
+	models = di.ApplyQuery(models, query)
+	return models, nil
 }
 
 func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection, identifier string, data map[string]any, subject string) (model.Record, bool, error) {
@@ -59,12 +61,24 @@ func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection st
 	return 0, nil
 }
 
+// TODO history should just use a query so that we can generalize
 func (nts *NightTroopAPIStore) History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error) {
 	return nil, nil
 }
 
 func (nts *NightTroopAPIStore) LastModified(ctx context.Context, collections []string) (map[string]int64, error) {
 	return nil, nil
+}
+
+func withDefaultQuery(query di.Query) di.Query {
+	defaults := di.DefaultQuery()
+	if query.SortField == "" {
+		query.SortField = defaults.SortField
+	}
+	if query.Limit == 0 {
+		query.Limit = defaults.Limit
+	}
+	return query
 }
 
 //
@@ -81,13 +95,13 @@ func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next f
 	return func(w http.ResponseWriter, r *http.Request) {
 		identity, err := m.AuthenticateExplicit(r)
 		if err != nil {
-			fmt.Println("WRITING UNAUTH")
+
 			writeUnauthorized(w, err)
 			return
 		}
 
 		if !m.HasPermission(*identity, permission) {
-			fmt.Println("WRITING FORBIDDEN")
+
 			writeForbidden(w, permission)
 			return
 		}

@@ -155,7 +155,7 @@ func CalculateIdentifier(data map[string]any) string {
 // DefaultQuery returns the default query shape used by list-style endpoints.
 func DefaultQuery() Query {
 	return Query{
-		Limit:          10,
+		Limit:          5,
 		SortField:      "date",
 		SortDesc:       true,
 		IncludeDeleted: false,

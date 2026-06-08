@@ -3,7 +3,6 @@ package dexcom_oauth_client
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log/slog"
 	"math"
@@ -94,13 +93,13 @@ func (client *DexcomClient) getRange(request rangeRequest, resultChan chan *EGVR
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		errChan <- err
-		panic(err)
+		return
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		fmt.Println(string(body))
-		panic(errors.New("Code " + strconv.FormatInt(int64(resp.StatusCode), 10)))
+		errChan <- errors.New("Received non 200 response: " + strconv.FormatInt(int64(resp.StatusCode), 10))
+		return
 	}
 
 	var jsonResponse EGVResponse
@@ -109,7 +108,7 @@ func (client *DexcomClient) getRange(request rangeRequest, resultChan chan *EGVR
 	// deal with json parse error
 	if jsonErr != nil {
 		errChan <- jsonErr
-		panic(jsonErr)
+		return
 	}
 	jsonResponse.index = request.index
 	resultChan <- &jsonResponse

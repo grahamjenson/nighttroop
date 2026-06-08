@@ -256,7 +256,7 @@ func parseMongoFindJSON(raw string) []di.Filter {
 
 func isReservedV3Key(key string) bool {
 	switch key {
-	case "limit", "skip", "sort", "sort$desc", "fields":
+	case "limit", "skip", "sort", "sort$desc", "fields", "token":
 		return true
 	default:
 		return false

@@ -89,9 +89,7 @@ func Search(dep di.Dependencies) http.HandlerFunc {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Parameter limit out of tolerance"})
 				return
 			}
-			if parsed.Limit == 0 {
-				parsed.Limit = maxLimit
-			}
+
 			records, err := dep.Store.Search(r.Context(), collection, parsed)
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})

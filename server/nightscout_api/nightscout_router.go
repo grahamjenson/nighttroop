@@ -95,12 +95,11 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 				next.ServeHTTP(w, r.WithContext(ctx))
 
 				return
-			} else {
-				slog.Info("JWT Auth Failed for Nightscout API", "error", err.Error())
 			}
 
 			// If the JWT token is present but incorrect we need to stop
 			if !keepGoing {
+				slog.Info("JWT Auth Failed for Nightscout API", "error", err.Error())
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
 				return
 			}
@@ -113,10 +112,9 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
-			} else {
-				slog.Info("Legacy Token Auth Failed for Nightscout API", "error", err.Error())
 			}
 
+			slog.Info("JWT and Legacy Token Auth Failed for Nightscout API", "error", err.Error())
 			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
 		})
 	}
