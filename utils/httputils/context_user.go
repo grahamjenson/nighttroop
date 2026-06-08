@@ -18,23 +18,31 @@ type UserContext struct {
 	IdentityRole consts.IdentityRole
 }
 
-func GetUserContext(ctx context.Context) UserContext {
+func GetUserContext(ctx context.Context) *UserContext {
 	if ctx == nil {
-		return UserContext{}
+		return nil
 	}
 	if userCtx, ok := ctx.Value(UserContextKey).(*UserContext); ok {
-		return *userCtx
+		return userCtx
 	}
-	return UserContext{}
+	return nil
+}
+
+func GetUserContextWithDefault(ctx context.Context) *UserContext {
+	userCtx := GetUserContext(ctx)
+	if userCtx == nil {
+		return &UserContext{}
+	}
+	return userCtx
 }
 
 // //
 // Subdomain
 // //
 func SetSubdomainInUserContext(ctx context.Context, subdomain string) context.Context {
-	userContext := GetUserContext(ctx)
+	userContext := GetUserContextWithDefault(ctx)
 	userContext.Subdomain = subdomain
-	return context.WithValue(ctx, UserContextKey, &userContext)
+	return context.WithValue(ctx, UserContextKey, userContext)
 }
 
 ////
@@ -42,24 +50,24 @@ func SetSubdomainInUserContext(ctx context.Context, subdomain string) context.Co
 ////
 
 func SetUserDBAndModelInUserContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.User) context.Context {
-	userContext := GetUserContext(ctx)
+	userContext := GetUserContextWithDefault(ctx)
 	userContext.UserDB = userDB
 	userContext.UserModel = userGetModel
 
-	return context.WithValue(ctx, UserContextKey, &userContext)
+	return context.WithValue(ctx, UserContextKey, userContext)
 }
 
 // //
 // IdentityName
 // //
 func SetIdentityNameInUserContext(ctx context.Context, identityName string) context.Context {
-	userContext := GetUserContext(ctx)
+	userContext := GetUserContextWithDefault(ctx)
 	userContext.IdentityName = identityName
-	return context.WithValue(ctx, UserContextKey, &userContext)
+	return context.WithValue(ctx, UserContextKey, userContext)
 }
 
 func SetIdentityRoleInUserContext(ctx context.Context, role consts.IdentityRole) context.Context {
-	userContext := GetUserContext(ctx)
+	userContext := GetUserContextWithDefault(ctx)
 	userContext.IdentityRole = role
-	return context.WithValue(ctx, UserContextKey, &userContext)
+	return context.WithValue(ctx, UserContextKey, userContext)
 }

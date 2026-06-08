@@ -21,8 +21,8 @@ type UserIdentity struct {
 	Role            string
 	CurrentIdentity bool
 	HasTotpSecret   bool
-	NightscoutToken string
-	Enabled         bool
+
+	Enabled bool
 }
 
 type RoleOption struct {
@@ -30,7 +30,7 @@ type RoleOption struct {
 	Value consts.IdentityRole
 }
 
-func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName string, nightscoutToken string) *UserIdentity {
+func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName string) *UserIdentity {
 	lastSeen := "Never"
 	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
 		lastSeen = time.UnixMilli(*identity.LastSeenAt).Format("2006-01-02 15:04:05")
@@ -44,53 +44,74 @@ func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName st
 		Role:            string(identity.Role),
 		CurrentIdentity: identity.Name == currentIdentityName,
 		HasTotpSecret:   identity.TotpSecret != "",
-		NightscoutToken: nightscoutToken,
 		Enabled:         identity.Enabled,
 	}
 }
 
-templ Identities(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
+templ Identities(users []*UserIdentity, devices []*UserIdentity) {
 	@UserBase(UserContext{Subdomain: "example.com"}) {
-		@IdentitesTable(admins, users, devices, syncs)
+		@IdentitesTable(users, devices)
 	}
 }
 
-templ IdentitesTable(admins []*UserIdentity, users []*UserIdentity, devices []*UserIdentity, syncs []*UserIdentity) {
+templ IdentitesTable(users []*UserIdentity, devices []*UserIdentity) {
 	<div id="identities_table">
 		<div class="mb-4 border-b border-white/10 pb-3">
-			<h3 class="text-lg font-semibold">
-				Identity Settings
-			</h3>
-			<p class="mt-2 text-sm text-gray-400 leading-relaxed">
-				An identity can write or read your data, like an admin, a user, a device or automation like the sync idetities.
-				Each request and piece of data is tagged with the identity so it is important you don't share them.
-				All passwords are randomly generated and once displayed here can only be reset by an admin.
-				Users and 
-				For TOTP passwords, use the button to display the TOTP secret as a QR code. On identities that can access the
-				Nightscout API, use "Copy Nightscout Token".
-			</p>
-		</div>
-		<div id="adminsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
-			<div>Admins</div>
-			@buildIdentityTable("adminsTable", admins)
-			<div class="border border-black-900"></div>
-			@formCreateIdentity("adminsTable", "Admin", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}})
+			<div class="max-w-4xl mx-auto p-6 space-y-6">
+				<div class="text-center">
+					<h1 class="text-2xl font-bold">Users & Devices </h1>
+					<p class="text-gray-500 mt-2">
+						Nighttroop uses strict role separation to improve security and reduce credential risk.
+					</p>
+				</div>
+				<!-- Admin -->
+				<div class="border rounded-xl p-5 bg-red-50 border-red-200">
+					<h2 class="text-lg font-semibold text-red-700">Admin</h2>
+					<p class="mt-2 text-gray-700">
+						Admins manage the system: they can create and manage users, configure site settings, and maintain the platform.
+						For security reasons, admin accounts cannot access the Nightscout API.
+					</p>
+					<ul class="mt-3 list-disc list-inside text-gray-700 space-y-1">
+						<li>Protected with TOTP-based two-factor authentication</li>
+						<li>No direct Nightscout API access</li>
+						<li>Recovery only via initial backup key</li>
+					</ul>
+				</div>
+				<!-- User -->
+				<div class="border rounded-xl p-5 bg-blue-50 border-blue-200">
+					<h2 class="text-lg font-semibold text-blue-700">User</h2>
+					<p class="mt-2 text-gray-700">
+						A user represents a person using the system.
+						Users can log in, generate reports, interact with Nighttroop, and use Nightscout features.
+					</p>
+				</div>
+				<!-- Device -->
+				<div class="border rounded-xl p-5 bg-green-50 border-green-200">
+					<h2 class="text-lg font-semibold text-green-700">Device</h2>
+					<p class="mt-2 text-gray-700">
+						A device is a connected endpoint such as a phone, SugarPixel, or display.
+						It can communicate with the Nightscout API but cannot log into the website.
+						It can also have a status, like battery level, to alert on, and recieve notifications once registered.
+						The Person With Diabetes (PWD) phone is a special device whose credentials you put into the loop (AAPS, Trio...).
+					</p>
+				</div>
+				<!-- Footer note -->
+				<div class="text-sm text-gray-500 text-center pt-2">
+					These distinctions enforce strong security boundaries. Each user and device should use separate credentials.
+				</div>
+			</div>
 		</div>
 		<div id="usersTable" class="border border-gray-300 rounded-lg mb-6 p-4">
-			<div>Users</div>
+			<div>Admins & Users</div>
 			@buildIdentityTable("usersTable", users)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("usersTable", "User", []RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read", Value: consts.IdentityRoleUserReadOnly}})
+			@formCreateIdentity("usersTable", "User", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
 		</div>
 		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Devices</div>
 			@buildIdentityTable("devicesTable", devices)
 			<div class="border border-black-900"></div>
 			@formCreateIdentity("devicesTable", "Device", []RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
-		</div>
-		<div id="syncsTable" class="border border-gray-300 rounded-lg mb-6 p-4">
-			<div>Syncs</div>
-			@buildIdentityTable("syncsTable", syncs)
 		</div>
 		<!-- Error -->
 		<div id="error-container" class="mt-4"></div>
@@ -160,9 +181,9 @@ templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
 			hx-swap="beforeend"
 			hx-target-error="#error-container"
 		>
-			<div class="flex w-96 justify-end items-end gap-2">
+			<div class="flex w-x1 justify-end items-end gap-2">
 				@form.Item(form.ItemProps{
-					Class: "w-32",
+					Class: "w-24",
 				}) {
 					@input.Input(input.Props{
 						ID:          "name-" + formID,
@@ -176,7 +197,7 @@ templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
 					<input type="hidden" name="role" value={ string(roles[0].Value) }/>
 				} else {
 					@form.Item(form.ItemProps{
-						Class: "w-32",
+						Class: "w-40",
 					}) {
 						@selectbox.SelectBox() {
 							@selectbox.Trigger(selectbox.TriggerProps{
@@ -204,7 +225,7 @@ templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
 					}
 				}
 				@form.Item(form.ItemProps{
-					Class: "w-32 items-end",
+					Class: " items-end",
 				}) {
 					@button.Button(button.Props{
 						Type: "submit",

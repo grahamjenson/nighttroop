@@ -51,14 +51,6 @@ CREATE TABLE job_stats_daily (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
 
-    -- Virtual columns for metrics
-    mean_duration REAL GENERATED ALWAYS AS (
-        CASE WHEN total_jobs > 0 
-             THEN duration_sum / total_jobs 
-             ELSE 0 
-        END
-    ) VIRTUAL,
-
     PRIMARY KEY (day_queue_job)
 );
 

@@ -1,3 +1,5 @@
+
+
 -- name: QueueJobIgnoreDupe :exec
 INSERT INTO
     jobs (
@@ -188,7 +190,8 @@ SET
     )
 WHERE
     day_queue_job = sqlc.arg(day_queue_job)
+;
 
-
-
+-- name: AllJobStatsDaily :many
+SELECT * FROM job_stats_daily;
 

@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -131,29 +130,6 @@ func readBody(t *testing.T, res *http.Response) string {
 func apiSecretHash(secret string) string {
 	sum := sha1.Sum([]byte(secret))
 	return hex.EncodeToString(sum[:])
-}
-
-func (a *testApp) issueCollectionJWTs(t *testing.T, baseName, collection string, actions ...string) map[string]string {
-	t.Helper()
-
-	result := make(map[string]string, len(actions))
-	for _, action := range actions {
-		roleName := fmt.Sprintf("%s-%s-%s", baseName, collection, action)
-		permission := fmt.Sprintf("api:%s:%s", collection, action)
-		if action == "all" {
-			permission = fmt.Sprintf("api:%s:*", collection)
-		}
-		if err := a.auth.CreateRole(roleName, permission); err != nil {
-			t.Fatalf("create role: %v", err)
-		}
-		subject := a.auth.CreateSubject(roleName, []string{roleName})
-		token, err := a.auth.IssueJWT(subject.AccessToken)
-		if err != nil {
-			t.Fatalf("issue jwt: %v", err)
-		}
-		result[action] = token
-	}
-	return result
 }
 
 func mustStatus(t *testing.T, got, want int) {

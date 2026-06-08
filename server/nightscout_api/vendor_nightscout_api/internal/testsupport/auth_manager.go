@@ -43,53 +43,6 @@ func NewAuthManager(apiSecret string, defaultRoles []string) *AuthManager {
 	return manager
 }
 
-func (m *AuthManager) CreateRole(name string, permissions ...string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.roles[name] = auth.Role{Name: name, Permissions: append([]string(nil), permissions...)}
-	return nil
-}
-
-func (m *AuthManager) CreateSubject(name string, roles []string) auth.Subject {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	subject := auth.Subject{
-		Name:        name,
-		Roles:       append([]string(nil), roles...),
-		AccessToken: "token:" + name,
-	}
-	m.subjects[name] = subject
-	m.tokenIndex[subject.AccessToken] = name
-	return subject
-}
-
-func (m *AuthManager) UpdateAPISecret(apiSecret string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.apiSecret = apiSecret
-}
-
-func (m *AuthManager) IssueJWT(accessToken string) (string, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	if _, ok := m.tokenIndex[accessToken]; !ok {
-		return "", auth.ErrBadToken
-	}
-	return "jwt:" + accessToken, nil
-}
-
-func (m *AuthManager) AuthenticateRequest(r *http.Request) (*auth.Identity, error) {
-	identity, err := m.AuthenticateExplicit(r)
-	if err == nil {
-		return identity, nil
-	}
-	if len(m.defaultRoles) == 0 {
-		return nil, err
-	}
-	fallback := m.identityForRoles("default", m.defaultRoles, true)
-	return &fallback, nil
-}
-
 func (m *AuthManager) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *auth.Identity)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		identity, err := m.AuthenticateExplicit(r)
@@ -115,21 +68,6 @@ func (m *AuthManager) Require(permission string, allowDefault bool, next func(ht
 	}
 }
 
-func (m *AuthManager) RequireV1Write(permission string, next func(http.ResponseWriter, *http.Request, *auth.Identity)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		identity, err := m.AuthenticateExplicit(r)
-		if err != nil {
-			writeUnauthorized(w, err)
-			return
-		}
-		if !m.HasPermission(*identity, permission) {
-			writeForbidden(w, permission)
-			return
-		}
-		next(w, r, identity)
-	}
-}
-
 func (m *AuthManager) HasPermission(identity auth.Identity, permission string) bool {
 	for _, granted := range identity.Permissions {
 		if permissionMatch(granted, permission) {
@@ -140,24 +78,8 @@ func (m *AuthManager) HasPermission(identity auth.Identity, permission string) b
 }
 
 func (m *AuthManager) AuthenticateExplicit(r *http.Request) (*auth.Identity, error) {
-	if token := bearerToken(r); token != "" {
-		if strings.HasPrefix(token, "jwt:") {
-			return m.authenticateJWT(token)
-		}
-		return m.authenticateToken(token)
-	}
-	if header := strings.TrimSpace(r.Header.Get("api-secret")); header != "" {
-		if m.matchesAPISecret(header) {
-			identity := auth.Identity{
-				Name:        "api-secret",
-				Roles:       []string{"admin"},
-				Permissions: []string{"api:*:*"},
-			}
-			return &identity, nil
-		}
-		return nil, auth.ErrBadToken
-	}
-	return nil, auth.ErrMissingCredentials
+
+	return nil, nil
 }
 
 func (m *AuthManager) authenticateToken(token string) (*auth.Identity, error) {

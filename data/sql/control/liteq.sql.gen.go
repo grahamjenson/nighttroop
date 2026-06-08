@@ -12,6 +12,45 @@ import (
 	"nighttroop.t1d.nz/utils/errors"
 )
 
+const allJobStatsDaily = `-- name: AllJobStatsDaily :many
+;
+
+SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at FROM job_stats_daily
+`
+
+func (q *Queries) AllJobStatsDaily(ctx context.Context) ([]*JobStatsDaily, error) {
+	rows, err := q.query(ctx, q.allJobStatsDailyStmt, allJobStatsDaily)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*JobStatsDaily
+	for rows.Next() {
+		var i JobStatsDaily
+		if err := rows.Scan(
+			&i.DayQueueJob,
+			&i.TotalJobs,
+			&i.TotalSuccess,
+			&i.TotalFailed,
+			&i.DurationSum,
+			&i.DurationSquaredSum,
+			&i.Errors,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const completeJob = `-- name: CompleteJob :exec
 UPDATE
     jobs
@@ -61,7 +100,7 @@ INSERT INTO job_stats_daily (day_queue_job, errors, updated_at)
 VALUES (?, '[]', CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ON CONFLICT(day_queue_job) DO UPDATE SET
     day_queue_job = day_queue_job -- Forces NOOP assignment to return conflicting row
-RETURNING day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at, mean_duration
+RETURNING day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at
 `
 
 // jobs created at more than 1 minute ago
@@ -78,7 +117,6 @@ func (q *Queries) EnsureJobStatsDailyForGroup(ctx context.Context, dayQueueJob s
 		&i.Errors,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.MeanDuration,
 	)
 	return &i, err
 }

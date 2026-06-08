@@ -20,7 +20,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 		acceptType := httputils.GetAcceptType(r)
 		userContext := httputils.GetUserContext(r.Context())
 
-		adminIdentities, userIdentities, deviceIdentities, syncIdentities, err := extractAndGetIdentities(&userContext, r.Context())
+		userIdentities, deviceIdentities, err := extractAndGetIdentities(userContext, r.Context())
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to get identities", err)
 			return
@@ -28,7 +28,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 
 		if acceptType == httputils.AcceptTypeHTML {
 
-			err = user_templ.Identities(adminIdentities, userIdentities, deviceIdentities, syncIdentities).Render(r.Context(), w)
+			err = user_templ.Identities(userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
 				fmt.Println("Error rendering identities template:", err)
 				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", userContext.Subdomain)
@@ -38,7 +38,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.IdentitesTable(adminIdentities, userIdentities, deviceIdentities, syncIdentities).Render(r.Context(), w)
+			err = user_templ.IdentitesTable(userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return
@@ -54,34 +54,27 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 	}
 }
 
-func extractAndGetIdentities(userContext *httputils.UserContext, context context.Context) ([]*user_templ.UserIdentity, []*user_templ.UserIdentity, []*user_templ.UserIdentity, []*user_templ.UserIdentity, error) {
+func extractAndGetIdentities(userContext *httputils.UserContext, context context.Context) ([]*user_templ.UserIdentity, []*user_templ.UserIdentity, error) {
 	identities, err := userContext.UserDB.Queries.AllIdentities(context)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	adminIdentities := []*user_templ.UserIdentity{}
 	userIdentities := []*user_templ.UserIdentity{}
 	deviceIdentities := []*user_templ.UserIdentity{}
-	syncIdentities := []*user_templ.UserIdentity{}
 
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			adminIdentities = append(adminIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			userIdentities = append([]*user_templ.UserIdentity{user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
+			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
-		case consts.IdentityTypeSync:
-			if identity.LastSeenAt == nil {
-				continue // skip sync identities that have never been seen
-			}
-			syncIdentities = append(syncIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName, ""))
-			// remove sync users that have not been seen before
-
+			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityName))
+		default:
+			continue
 		}
 	}
-	return adminIdentities, userIdentities, deviceIdentities, syncIdentities, nil
+	return userIdentities, deviceIdentities, nil
 }
 
 // Create Admin

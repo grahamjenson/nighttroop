@@ -45,7 +45,7 @@ func CreateUser() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><!-- Header --><div class=\"text-center mb-4\"><h2 class=\"text-4xl font-extrabold tracking-tight text-gray-900\">NightTroop</h2><p class=\"mt-2 text-sm text-slate-500\">Your T1D Host</p></div><!-- Main Content --><div id=\"panel-content\" class=\"flex flex-col items-center justify-center\"><div class=\"w-full flex flex-col items-center justify-center\"><!-- Centered & Larger Templ Button -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><!-- Header --><div class=\"text-center mb-4\"><h2 class=\"text-4xl font-extrabold tracking-tight text-gray-900\">NightTroop</h2><p class=\"mt-2 text-sm text-slate-500\">⚠️ Alpha software: expect bugs, missing features, and breaking changes. Use at your own risk.</p></div><!-- Main Content --><div id=\"panel-content\" class=\"flex flex-col items-center justify-center\"><div class=\"w-full flex flex-col items-center justify-center\"><!-- Centered & Larger Templ Button -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

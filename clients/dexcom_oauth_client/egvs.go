@@ -110,7 +110,6 @@ func (client *DexcomClient) getRange(request rangeRequest, resultChan chan *EGVR
 	if jsonErr != nil {
 		errChan <- jsonErr
 		panic(jsonErr)
-		return
 	}
 	jsonResponse.index = request.index
 	resultChan <- &jsonResponse

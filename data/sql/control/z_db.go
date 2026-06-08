@@ -24,6 +24,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.allJobStatsDailyStmt, err = db.PrepareContext(ctx, allJobStatsDaily); err != nil {
+		return nil, fmt.Errorf("error preparing query AllJobStatsDaily: %w", err)
+	}
 	if q.completeJobStmt, err = db.PrepareContext(ctx, completeJob); err != nil {
 		return nil, fmt.Errorf("error preparing query CompleteJob: %w", err)
 	}
@@ -149,6 +152,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.allJobStatsDailyStmt != nil {
+		if cerr := q.allJobStatsDailyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allJobStatsDailyStmt: %w", cerr)
+		}
+	}
 	if q.completeJobStmt != nil {
 		if cerr := q.completeJobStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing completeJobStmt: %w", cerr)
@@ -388,6 +396,7 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                            DBTX
 	tx                                            *sql.Tx
+	allJobStatsDailyStmt                          *sql.Stmt
 	completeJobStmt                               *sql.Stmt
 	createAdminStmt                               *sql.Stmt
 	createDexcomSyncSourceStmt                    *sql.Stmt
@@ -434,6 +443,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                            tx,
 		tx:                                            tx,
+		allJobStatsDailyStmt:                          q.allJobStatsDailyStmt,
 		completeJobStmt:                               q.completeJobStmt,
 		createAdminStmt:                               q.createAdminStmt,
 		createDexcomSyncSourceStmt:                    q.createDexcomSyncSourceStmt,

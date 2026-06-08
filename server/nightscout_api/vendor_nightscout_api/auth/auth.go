@@ -49,13 +49,7 @@ type Identity struct {
 // production auth implementation, so applications can map it to their own
 // user, token, and permission model.
 type Manager interface {
-	CreateRole(name string, permissions ...string) error
-	CreateSubject(name string, roles []string) Subject
-	UpdateAPISecret(apiSecret string)
-	IssueJWT(accessToken string) (string, error)
-	AuthenticateRequest(r *http.Request) (*Identity, error)
 	Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *Identity)) http.HandlerFunc
-	RequireV1Write(permission string, next func(http.ResponseWriter, *http.Request, *Identity)) http.HandlerFunc
 	HasPermission(identity Identity, permission string) bool
 	AuthenticateExplicit(r *http.Request) (*Identity, error)
 }

@@ -42,13 +42,13 @@ func registerEntryRoutes(r *chi.Mux, dep deps.Dependencies) {
 	r.Get("/entries/current.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesCurrent(dep)))
 	r.Get("/entries.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesList(dep)))
 	r.Get("/entries/{spec}.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesSpec(dep)))
-	r.Post("/entries", dep.Auth.RequireV1Write("api:entries:create", handlers.EntriesCreate(dep, true)))
-	r.Post("/entries/", dep.Auth.RequireV1Write("api:entries:create", handlers.EntriesCreate(dep, true)))
-	r.Post("/entries.json", dep.Auth.RequireV1Write("api:entries:create", handlers.EntriesCreate(dep, true)))
-	r.Post("/entries/preview.json", dep.Auth.RequireV1Write("api:entries:create", handlers.EntriesCreate(dep, false)))
-	r.Delete("/entries.json", dep.Auth.RequireV1Write("api:entries:delete", handlers.EntriesDelete(dep)))
-	r.Delete("/entries", dep.Auth.RequireV1Write("api:entries:delete", handlers.EntriesDelete(dep)))
-	r.Delete("/entries/{spec}", dep.Auth.RequireV1Write("api:entries:delete", handlers.EntriesDelete(dep)))
+	r.Post("/entries", dep.Auth.Require("api:entries:create", false, handlers.EntriesCreate(dep, true)))
+	r.Post("/entries/", dep.Auth.Require("api:entries:create", false, handlers.EntriesCreate(dep, true)))
+	r.Post("/entries.json", dep.Auth.Require("api:entries:create", false, handlers.EntriesCreate(dep, true)))
+	r.Post("/entries/preview.json", dep.Auth.Require("api:entries:create", false, handlers.EntriesCreate(dep, false)))
+	r.Delete("/entries.json", dep.Auth.Require("api:entries:delete", false, handlers.EntriesDelete(dep)))
+	r.Delete("/entries", dep.Auth.Require("api:entries:delete", false, handlers.EntriesDelete(dep)))
+	r.Delete("/entries/{spec}", dep.Auth.Require("api:entries:delete", false, handlers.EntriesDelete(dep)))
 }
 
 func registerTreatmentRoutes(r *chi.Mux, dep deps.Dependencies) {
