@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
 )
 
 func sampleRecord(date int64, dateString string, extra map[string]any) model.Record {
@@ -97,7 +97,7 @@ func TestExpandAndParseHelpers(t *testing.T) {
 	if !isReservedV3Key("limit") || isReservedV3Key("sgv") {
 		t.Fatalf("isReservedV3Key mismatch")
 	}
-	if !hasDateFilter([]store.Filter{{Field: "created_at"}}) || !hasIDFilter([]store.Filter{{Field: "_id"}}) {
+	if !hasDateFilter([]di.Filter{{Field: "created_at"}}) || !hasIDFilter([]di.Filter{{Field: "_id"}}) {
 		t.Fatalf("date/id helper mismatch")
 	}
 	if got := expandBody("01..03"); len(got) != 3 || got[2] != "03" {

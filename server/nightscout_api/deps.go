@@ -7,9 +7,8 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/auth"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -28,8 +27,18 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier s
 	return model.Record{ID: "asdasd"}, nil
 }
 
-func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, query store.Query) ([]model.Record, error) {
+func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, query di.Query) ([]model.Record, error) {
+	// TODO: I am going to ignore the query here and just return the last 100 records because I can
 	userContext := httputils.GetUserContext(ctx)
+	switch collection {
+	case "entries":
+		entries, err := userContext.UserDB.Queries.AllEntries(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return CreateRecordSlice(entries, SGVToModel), nil
+	}
+
 	fmt.Println("UserContext in Search:", userContext)
 	return []model.Record{{ID: "asdasd"}}, nil
 }
@@ -46,7 +55,7 @@ func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection, identifie
 	return nil
 }
 
-func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection string, query store.Query, permanent bool, subject string) (int, error) {
+func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool, subject string) (int, error) {
 	return 0, nil
 }
 
@@ -58,12 +67,96 @@ func (nts *NightTroopAPIStore) LastModified(ctx context.Context, collections []s
 	return nil, nil
 }
 
+//
+// AUTH
+//
+
 type NightTroopAPIAuth struct {
 	controlDB *db.ControlDB
 	config    config.ServerConfig
 }
 
-func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *auth.Identity)) http.HandlerFunc {
+func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *di.Identity)) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		identity, err := m.AuthenticateExplicit(r)
+		if err != nil {
+			fmt.Println("WRITING UNAUTH")
+			writeUnauthorized(w, err)
+			return
+		}
+
+		if !m.HasPermission(*identity, permission) {
+			fmt.Println("WRITING FORBIDDEN")
+			writeForbidden(w, permission)
+			return
+		}
+		next(w, r, identity)
+	}
+}
+
+func (m *NightTroopAPIAuth) HasPermission(identity di.Identity, permission string) bool {
+	for _, granted := range identity.Permissions {
+		if permissionMatch(granted, permission) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*di.Identity, error) {
+	userContext := httputils.GetUserContext(r.Context())
+	if userContext == nil {
+		return nil, di.ErrMissingCredentials
+	}
+
+	ntIdentity := NighttrropIdentityToNightscoutIdentity(userContext.IdentityName, userContext.IdentityRole)
+	return ntIdentity, nil
+}
+
+func permissionMatch(granted, wanted string) bool {
+	if granted == "*" || granted == "api:*:*" {
+		return true
+	}
+	gotParts := strings.Split(granted, ":")
+	wantParts := strings.Split(wanted, ":")
+	if len(gotParts) != len(wantParts) {
+		return granted == wanted
+	}
+	for i := range gotParts {
+		if gotParts[i] == "*" || gotParts[i] == "all" {
+			continue
+		}
+		if gotParts[i] != wantParts[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func writeUnauthorized(w http.ResponseWriter, err error) {
+	message := "Unauthorized"
+	if err == di.ErrBadToken || err == di.ErrBadJWT {
+		message = "Bad access token or JWT"
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	_, _ = fmt.Fprintf(w, `{"description":%q,"message":%q,"status":401}`, err.Error(), message)
+}
+
+func writeForbidden(w http.ResponseWriter, permission string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusForbidden)
+	_, _ = fmt.Fprintf(w, `{"message":%q,"status":403}`, "Missing permission "+permission)
+}
+
+func writeError(w http.ResponseWriter, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	_, _ = fmt.Fprintf(w, `{"description":%q,"message":%q,"status":500}`, err.Error(), "Internal Server Error")
+}
+
+func NighttrropIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *di.Identity {
 	// Collections
 	// 'entries'
 	// 'treatments'
@@ -93,79 +186,7 @@ func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next f
 	// "api:food:read",
 	// "api:food:create",
 	// "api:food:delete",
-	return func(w http.ResponseWriter, r *http.Request) {
-		identity, err := m.AuthenticateExplicit(r)
-		if err != nil {
-			fmt.Println("WRITING UNAUTH")
-			writeUnauthorized(w, err)
-			return
-		}
 
-		if !m.HasPermission(*identity, permission) {
-			fmt.Println("WRITING FORBIDDEN")
-			writeForbidden(w, permission)
-			return
-		}
-		next(w, r, identity)
-	}
-}
-
-func (m *NightTroopAPIAuth) HasPermission(identity auth.Identity, permission string) bool {
-	for _, granted := range identity.Permissions {
-		if permissionMatch(granted, permission) {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*auth.Identity, error) {
-	userContext := httputils.GetUserContext(r.Context())
-	if userContext == nil {
-		return nil, auth.ErrMissingCredentials
-	}
-
-	ntIdentity := NighttrropIdentityToNightscoutIdentity(userContext.IdentityName, userContext.IdentityRole)
-	return ntIdentity, nil
-}
-
-func permissionMatch(granted, wanted string) bool {
-	if granted == "*" || granted == "api:*:*" {
-		return true
-	}
-	gotParts := strings.Split(granted, ":")
-	wantParts := strings.Split(wanted, ":")
-	if len(gotParts) != len(wantParts) {
-		return granted == wanted
-	}
-	for i := range gotParts {
-		if gotParts[i] == "*" || gotParts[i] == "all" {
-			continue
-		}
-		if gotParts[i] != wantParts[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func writeUnauthorized(w http.ResponseWriter, err error) {
-	message := "Unauthorized"
-	if err == auth.ErrBadToken || err == auth.ErrBadJWT {
-		message = "Bad access token or JWT"
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
-	_, _ = fmt.Fprintf(w, `{"description":%q,"message":%q,"status":401}`, err.Error(), message)
-}
-
-func writeForbidden(w http.ResponseWriter, permission string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusForbidden)
-	_, _ = fmt.Fprintf(w, `{"message":%q,"status":403}`, "Missing permission "+permission)
-}
-
-func NighttrropIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *auth.Identity {
 	permissions := []string{}
 	switch ntid {
 	case consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead:
@@ -175,7 +196,7 @@ func NighttrropIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	default:
 		return nil
 	}
-	return &auth.Identity{
+	return &di.Identity{
 		Name:        identityName,
 		Permissions: permissions,
 	}

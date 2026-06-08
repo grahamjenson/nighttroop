@@ -5,12 +5,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1/handlers"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 )
 
 // NewNightscoutV1Router constructs a router that serves the supported
 // Nightscout API v1 endpoints.
-func NewNightscoutV1Router(dep deps.Dependencies) http.Handler {
+func NewNightscoutV1Router(dep di.Dependencies) http.Handler {
 	r := chi.NewRouter()
 
 	registerStatusRoutes(r, dep)
@@ -25,11 +25,11 @@ func NewNightscoutV1Router(dep deps.Dependencies) http.Handler {
 	return r
 }
 
-func registerStatusRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerStatusRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/status.json", handlers.StatusJSON(dep))
 }
 
-func registerSearchRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerSearchRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/verifyauth", handlers.VerifyAuth(dep))
 	r.Get("/versions", handlers.Versions())
 	r.Get("/echo/{collection}/{spec}.json", dep.Auth.Require("api:entries:read", true, handlers.EchoRoute(dep)))
@@ -38,7 +38,7 @@ func registerSearchRoutes(r *chi.Mux, dep deps.Dependencies) {
 	r.Get("/times/*", dep.Auth.Require("api:entries:read", true, handlers.TimesRoute(dep)))
 }
 
-func registerEntryRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerEntryRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/entries/current.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesCurrent(dep)))
 	r.Get("/entries.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesList(dep)))
 	r.Get("/entries/{spec}.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesSpec(dep)))
@@ -51,7 +51,7 @@ func registerEntryRoutes(r *chi.Mux, dep deps.Dependencies) {
 	r.Delete("/entries/{spec}", dep.Auth.Require("api:entries:delete", false, handlers.EntriesDelete(dep)))
 }
 
-func registerTreatmentRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerTreatmentRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/treatments", dep.Auth.Require("api:treatments:read", true, handlers.TreatmentsList(dep)))
 	r.Get("/treatments.json", dep.Auth.Require("api:treatments:read", true, handlers.TreatmentsList(dep)))
 	create := dep.Auth.Require("api:treatments:create", false, handlers.TreatmentsCreate(dep))
@@ -64,7 +64,7 @@ func registerTreatmentRoutes(r *chi.Mux, dep deps.Dependencies) {
 	r.Delete("/treatments.json", dep.Auth.Require("api:treatments:delete", false, handlers.TreatmentsDelete(dep)))
 }
 
-func registerDeviceStatusRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerDeviceStatusRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/devicestatus", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, "devicestatus", "created_at")))
 	r.Get("/devicestatus.json", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, "devicestatus", "created_at")))
 	create := dep.Auth.Require("api:devicestatus:create", false, handlers.GenericCollectionCreate(dep, "devicestatus"))
@@ -77,7 +77,7 @@ func registerDeviceStatusRoutes(r *chi.Mux, dep deps.Dependencies) {
 	r.Delete("/devicestatus.json", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, "devicestatus", "created_at")))
 }
 
-func registerProfileRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerProfileRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/profile", dep.Auth.Require("api:profile:read", true, handlers.ProfileList(dep)))
 	r.Get("/profile.json", dep.Auth.Require("api:profile:read", true, handlers.ProfileList(dep)))
 	r.Get("/profile/current.json", dep.Auth.Require("api:profile:read", true, handlers.ProfileCurrent(dep)))
@@ -94,7 +94,7 @@ func registerProfileRoutes(r *chi.Mux, dep deps.Dependencies) {
 	}
 }
 
-func registerSettingRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerSettingRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/settings", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, "settings", "created_at")))
 	r.Get("/settings.json", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, "settings", "created_at")))
 
@@ -110,7 +110,7 @@ func registerSettingRoutes(r *chi.Mux, dep deps.Dependencies) {
 	}
 }
 
-func registerFoodRoutes(r *chi.Mux, dep deps.Dependencies) {
+func registerFoodRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/food", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, "food", "created_at")))
 	r.Get("/food.json", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, "food", "created_at")))
 

@@ -6,15 +6,15 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/httpx"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
 )
 
 // StripImplicitDateFilters removes the default rolling-window filters injected
 // by ParseV1 so slice/times style endpoints can search across larger ranges.
-func StripImplicitDateFilters(filters []store.Filter) []store.Filter {
-	out := make([]store.Filter, 0, len(filters))
+func StripImplicitDateFilters(filters []di.Filter) []di.Filter {
+	out := make([]di.Filter, 0, len(filters))
 	for _, filter := range filters {
 		if filter.Field == "date" && filter.Op == "gte" && strings.Contains(filter.Value, "T") {
 			continue
@@ -34,7 +34,7 @@ func WriteRecords(w http.ResponseWriter, records []model.Record, fields []string
 		if len(fields) == 0 {
 			response = append(response, record.ToMap(false))
 		} else {
-			response = append(response, store.SelectFields(record, fields))
+			response = append(response, di.SelectFields(record, fields))
 		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, response)

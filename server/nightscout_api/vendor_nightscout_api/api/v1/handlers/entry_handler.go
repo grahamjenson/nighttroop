@@ -4,19 +4,18 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/auth"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/httpx"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/query"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
+
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/util"
 )
 
 // EntriesCurrent returns the newest entry.
-func EntriesCurrent(dep deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
-		query := store.DefaultQuery()
+func EntriesCurrent(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
+		query := di.DefaultQuery()
 		query.Limit = 1
 		records, err := dep.Store.Search(r.Context(), "entries", query)
 		if err != nil {
@@ -28,8 +27,8 @@ func EntriesCurrent(dep deps.Dependencies) func(http.ResponseWriter, *http.Reque
 }
 
 // EntriesList lists entries using the Nightscout v1 query format.
-func EntriesList(dep deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func EntriesList(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		query := query.ParseV1(r.URL.Query(), "date")
 		records, err := dep.Store.Search(r.Context(), "entries", query)
 		if err != nil {
@@ -42,8 +41,8 @@ func EntriesList(dep deps.Dependencies) func(http.ResponseWriter, *http.Request,
 
 // EntriesSpec resolves entry sub-routes such as current, sgv, mbg, or a
 // specific identifier.
-func EntriesSpec(dep deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func EntriesSpec(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		spec := chi.URLParam(r, "spec")
 		switch spec {
 		case "current":
@@ -51,7 +50,7 @@ func EntriesSpec(dep deps.Dependencies) func(http.ResponseWriter, *http.Request,
 			return
 		case "sgv", "mbg":
 			query := query.ParseV1(r.URL.Query(), "date")
-			query.Filters = append(query.Filters, store.Filter{Field: "type", Op: "eq", Value: spec})
+			query.Filters = append(query.Filters, di.Filter{Field: "type", Op: "eq", Value: spec})
 			records, err := dep.Store.Search(r.Context(), "entries", query)
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
@@ -72,8 +71,8 @@ func EntriesSpec(dep deps.Dependencies) func(http.ResponseWriter, *http.Request,
 }
 
 // EntriesCreate creates entries or returns a preview when persist is false.
-func EntriesCreate(dep deps.Dependencies, persist bool) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func EntriesCreate(dep di.Dependencies, persist bool) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		var body any
 		if err := httpx.ReadJSON(r, &body); err != nil {
 			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -97,7 +96,7 @@ func EntriesCreate(dep deps.Dependencies, persist bool) func(http.ResponseWriter
 				return err
 			}
 			if _, ok := model.StringField(doc, "_id"); !ok {
-				doc["_id"] = store.GenerateIdentifier()
+				doc["_id"] = di.GenerateIdentifier()
 			}
 			if _, ok := model.StringField(doc, "identifier"); !ok {
 				doc["identifier"] = doc["_id"]
@@ -136,11 +135,11 @@ func EntriesCreate(dep deps.Dependencies, persist bool) func(http.ResponseWriter
 }
 
 // EntriesDelete deletes entries matching the supplied v1 query.
-func EntriesDelete(dep deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func EntriesDelete(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		query := query.ParseV1(r.URL.Query(), "date")
 		if spec := chi.URLParam(r, "spec"); spec != "" && spec != "json" {
-			query.Filters = append(query.Filters, store.Filter{Field: "type", Op: "eq", Value: spec})
+			query.Filters = append(query.Filters, di.Filter{Field: "type", Op: "eq", Value: spec})
 		}
 		deleted, err := dep.Store.DeleteMatching(r.Context(), "entries", query, true, identity.Name)
 		if err != nil {

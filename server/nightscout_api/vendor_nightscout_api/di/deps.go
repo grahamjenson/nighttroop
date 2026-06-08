@@ -1,9 +1,14 @@
-package auth
+package di
 
 import (
 	"errors"
 	"net/http"
 )
+
+type Dependencies struct {
+	Auth  Manager
+	Store Store
+}
 
 var (
 	// ErrMissingCredentials indicates that a request did not include any usable
@@ -17,29 +22,10 @@ var (
 	ErrBadJWT = errors.New("bad jwt")
 )
 
-// Role groups permissions that can later be assigned to subjects.
-type Role struct {
-	Name        string
-	Permissions []string
-}
-
-// Subject represents an actor known to the auth backend.
-//
-// Subjects usually map to users, service accounts, or API clients and are
-// resolved into an Identity during request authentication.
-type Subject struct {
-	Name        string
-	Roles       []string
-	AccessToken string
-}
-
 // Identity is the resolved authorization context for a request.
 type Identity struct {
 	Name        string
-	Roles       []string
 	Permissions []string
-	AccessToken string
-	FromDefault bool
 }
 
 // Manager defines the authentication and authorization hooks required by the

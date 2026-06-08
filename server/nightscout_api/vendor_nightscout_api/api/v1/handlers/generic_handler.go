@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/auth"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/httpx"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/query"
@@ -36,8 +35,8 @@ func ensureV1Timestamp(doc map[string]any) {
 
 // GenericCollectionList lists records for a collection that follows the common
 // Nightscout list conventions.
-func GenericCollectionList(dep deps.Dependencies, collection, defaultDateField string) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func GenericCollectionList(dep di.Dependencies, collection, defaultDateField string) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		query := query.ParseV1(r.URL.Query(), defaultDateField)
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
@@ -49,8 +48,8 @@ func GenericCollectionList(dep deps.Dependencies, collection, defaultDateField s
 }
 
 // GenericCollectionCreate creates one or more records in a generic collection.
-func GenericCollectionCreate(dep deps.Dependencies, collection string) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func GenericCollectionCreate(dep di.Dependencies, collection string) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		var body any
 		if err := httpx.ReadJSON(r, &body); err != nil {
 			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -91,8 +90,8 @@ func GenericCollectionCreate(dep deps.Dependencies, collection string) func(http
 
 // GenericCollectionDelete deletes records from a generic collection using the
 // v1 query syntax.
-func GenericCollectionDelete(dep deps.Dependencies, collection, defaultDateField string) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func GenericCollectionDelete(dep di.Dependencies, collection, defaultDateField string) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		query := query.ParseV1(r.URL.Query(), defaultDateField)
 		deleted, err := dep.Store.DeleteMatching(r.Context(), collection, query, true, identity.Name)
 		if err != nil {

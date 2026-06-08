@@ -9,21 +9,19 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/auth"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/httpx"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/query"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
 )
 
 // Version reports the application and API version metadata for API v3.
-func Version(dep deps.Dependencies) http.HandlerFunc {
+func Version(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
-				"version":    dep.Config.AppVersion,
+				"version":    "3.0.4",
 				"apiVersion": "3.0.4",
 				"srvDate":    time.Now().UnixMilli(),
 			},
@@ -32,8 +30,8 @@ func Version(dep deps.Dependencies) http.HandlerFunc {
 }
 
 // Status returns a lightweight authenticated health payload for API v3.
-func Status(_ deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func Status(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
@@ -44,16 +42,16 @@ func Status(_ deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.
 }
 
 // Test is a minimal authenticated endpoint used for API v3 connectivity checks.
-func Test(_ deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func Test(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": "ok"})
 	}
 }
 
 // LastModified returns the newest modification timestamp for each known
 // collection.
-func LastModified(dep deps.Dependencies) func(http.ResponseWriter, *http.Request, *auth.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+func LastModified(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		collections := []string{"entries", "treatments", "devicestatus", "profile", "food", "settings"}
 		lastModified, err := dep.Store.LastModified(r.Context(), collections)
 		if err != nil {
@@ -71,7 +69,7 @@ func LastModified(dep deps.Dependencies) func(http.ResponseWriter, *http.Request
 }
 
 // Search implements collection search for API v3.
-func Search(dep deps.Dependencies) http.HandlerFunc {
+func Search(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -79,16 +77,14 @@ func Search(dep deps.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:read", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			parsed, err := query.ParseV3(r.URL.Query())
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
-			maxLimit := dep.Config.API3MaxLimit
-			if maxLimit <= 0 {
-				maxLimit = 1000
-			}
+			maxLimit := 1000
+
 			if parsed.Limit > maxLimit {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Parameter limit out of tolerance"})
 				return
@@ -111,7 +107,7 @@ func Search(dep deps.Dependencies) http.HandlerFunc {
 }
 
 // Create creates a document in an API v3 collection.
-func Create(dep deps.Dependencies) http.HandlerFunc {
+func Create(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -172,7 +168,7 @@ func Create(dep deps.Dependencies) http.HandlerFunc {
 }
 
 // Read returns a single document from an API v3 collection.
-func Read(dep deps.Dependencies) http.HandlerFunc {
+func Read(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -180,7 +176,7 @@ func Read(dep deps.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:read", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			record, err := dep.Store.Get(r.Context(), collection, chi.URLParam(r, "identifier"))
 			if err != nil {
 				status, body := httpx.RequireRecord(err)
@@ -201,7 +197,7 @@ func Read(dep deps.Dependencies) http.HandlerFunc {
 
 // Update replaces a document in an API v3 collection and supports upsert
 // semantics when allowed by the caller's permissions.
-func Update(dep deps.Dependencies) http.HandlerFunc {
+func Update(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -209,7 +205,7 @@ func Update(dep deps.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:update", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			var doc map[string]any
 			if err := httpx.ReadJSON(r, &doc); err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -217,16 +213,16 @@ func Update(dep deps.Dependencies) http.HandlerFunc {
 			}
 			identifier := chi.URLParam(r, "identifier")
 			existing, err := dep.Store.Get(r.Context(), collection, identifier)
-			if err == store.ErrGone {
+			if err == di.ErrGone {
 				httpx.WriteJSON(w, http.StatusGone, map[string]any{"status": http.StatusGone})
 				return
 			}
-			if err != nil && err != store.ErrNotFound {
+			if err != nil && err != di.ErrNotFound {
 				status, body := httpx.RequireRecord(err)
 				httpx.WriteJSON(w, status, body)
 				return
 			}
-			if err == store.ErrNotFound && !dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection)) {
+			if err == di.ErrNotFound && !dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection)) {
 				httpx.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission api:%s:create", collection)})
 				return
 			}
@@ -265,7 +261,7 @@ func Update(dep deps.Dependencies) http.HandlerFunc {
 }
 
 // Patch applies a partial update to an API v3 document.
-func Patch(dep deps.Dependencies) http.HandlerFunc {
+func Patch(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -273,7 +269,7 @@ func Patch(dep deps.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:update", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			var doc map[string]any
 			if err := httpx.ReadJSON(r, &doc); err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -306,7 +302,7 @@ func Patch(dep deps.Dependencies) http.HandlerFunc {
 }
 
 // Remove soft-deletes or permanently deletes an API v3 document.
-func Remove(dep deps.Dependencies) http.HandlerFunc {
+func Remove(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -314,7 +310,7 @@ func Remove(dep deps.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:delete", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			permanent := r.URL.Query().Get("permanent") == "true"
 			err := dep.Store.Delete(r.Context(), collection, chi.URLParam(r, "identifier"), permanent, identity.Name)
 			if err != nil {
@@ -328,7 +324,7 @@ func Remove(dep deps.Dependencies) http.HandlerFunc {
 }
 
 // History returns document revisions modified since the supplied timestamp.
-func History(dep deps.Dependencies) http.HandlerFunc {
+func History(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
 		if !validCollection(collection) {
@@ -336,7 +332,7 @@ func History(dep deps.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:read", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *auth.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			since, err := strconv.ParseInt(chi.URLParam(r, "since"), 10, 64)
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -420,7 +416,7 @@ func validatePatchDoc(existing model.Record, doc map[string]any) error {
 }
 
 func normalizeV3Document(collection string, doc map[string]any) (map[string]any, error) {
-	clean, err := store.NormalizeData(collection, doc)
+	clean, err := di.NormalizeData(collection, doc)
 	if err != nil {
 		switch err.Error() {
 		case "bad or missing date field":
@@ -434,7 +430,7 @@ func normalizeV3Document(collection string, doc map[string]any) (map[string]any,
 		}
 	}
 	if identifier, ok := model.StringField(clean, "identifier"); !ok || strings.TrimSpace(identifier) == "" {
-		if calculated := store.CalculateIdentifier(clean); calculated != "" {
+		if calculated := di.CalculateIdentifier(clean); calculated != "" {
 			clean["identifier"] = calculated
 			clean["_id"] = calculated
 		}
@@ -445,39 +441,39 @@ func normalizeV3Document(collection string, doc map[string]any) (map[string]any,
 	return clean, nil
 }
 
-func findCreateDuplicate(r *http.Request, dep deps.Dependencies, collection string, doc map[string]any) (model.Record, bool, error) {
+func findCreateDuplicate(r *http.Request, dep di.Dependencies, collection string, doc map[string]any) (model.Record, bool, error) {
 	if identifier, ok := model.StringField(doc, "identifier"); ok && strings.TrimSpace(identifier) != "" {
-		record, found, err := searchDuplicateByFilters(r, dep, collection, []store.Filter{{Field: "identifier", Op: "eq", Value: identifier}})
+		record, found, err := searchDuplicateByFilters(r, dep, collection, []di.Filter{{Field: "identifier", Op: "eq", Value: identifier}})
 		if err != nil || found {
 			return record, found, err
 		}
 	}
-	var filters []store.Filter
+	var filters []di.Filter
 	switch model.NormalizeCollection(collection) {
 	case "entries":
 		date, _ := model.Int64Field(doc, "date")
 		kind, _ := model.StringField(doc, "type")
 		filters = append(filters,
-			store.Filter{Field: "date", Op: "eq", Value: strconv.FormatInt(date, 10)},
-			store.Filter{Field: "type", Op: "eq", Value: kind},
+			di.Filter{Field: "date", Op: "eq", Value: strconv.FormatInt(date, 10)},
+			di.Filter{Field: "type", Op: "eq", Value: kind},
 		)
 	case "treatments":
 		createdAt, _ := model.StringField(doc, "created_at")
 		eventType, _ := model.StringField(doc, "eventType")
 		filters = append(filters,
-			store.Filter{Field: "created_at", Op: "eq", Value: createdAt},
-			store.Filter{Field: "eventType", Op: "eq", Value: eventType},
+			di.Filter{Field: "created_at", Op: "eq", Value: createdAt},
+			di.Filter{Field: "eventType", Op: "eq", Value: eventType},
 		)
 	case "devicestatus":
 		createdAt, _ := model.StringField(doc, "created_at")
 		device, _ := model.StringField(doc, "device")
 		filters = append(filters,
-			store.Filter{Field: "created_at", Op: "eq", Value: createdAt},
-			store.Filter{Field: "device", Op: "eq", Value: device},
+			di.Filter{Field: "created_at", Op: "eq", Value: createdAt},
+			di.Filter{Field: "device", Op: "eq", Value: device},
 		)
 	case "food", "profile":
 		createdAt, _ := model.StringField(doc, "created_at")
-		filters = append(filters, store.Filter{Field: "created_at", Op: "eq", Value: createdAt})
+		filters = append(filters, di.Filter{Field: "created_at", Op: "eq", Value: createdAt})
 	}
 	if len(filters) == 0 {
 		return model.Record{}, false, nil
@@ -485,8 +481,8 @@ func findCreateDuplicate(r *http.Request, dep deps.Dependencies, collection stri
 	return searchDuplicateByFilters(r, dep, collection, filters)
 }
 
-func searchDuplicateByFilters(r *http.Request, dep deps.Dependencies, collection string, filters []store.Filter) (model.Record, bool, error) {
-	records, err := dep.Store.Search(r.Context(), collection, store.Query{
+func searchDuplicateByFilters(r *http.Request, dep di.Dependencies, collection string, filters []di.Filter) (model.Record, bool, error) {
+	records, err := dep.Store.Search(r.Context(), collection, di.Query{
 		Filters:        filters,
 		Limit:          1,
 		SortField:      "date",
@@ -504,7 +500,7 @@ func searchDuplicateByFilters(r *http.Request, dep deps.Dependencies, collection
 
 func authErrorMessage(err error) string {
 	switch {
-	case err == auth.ErrBadToken, err == auth.ErrBadJWT:
+	case err == di.ErrBadToken, err == di.ErrBadJWT:
 		return "Bad access token or JWT"
 	default:
 		return "Missing or bad access token or JWT"
@@ -512,7 +508,7 @@ func authErrorMessage(err error) string {
 }
 
 func selectV3Fields(record model.Record, fields []string) map[string]any {
-	selected := store.SelectFields(record, fields)
+	selected := di.SelectFields(record, fields)
 	delete(selected, "_id")
 	return selected
 }

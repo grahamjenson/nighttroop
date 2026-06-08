@@ -3,12 +3,12 @@ package handlers
 import (
 	"net/http"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/httpx"
 )
 
 // VerifyAuth implements the v1 verifyauth endpoint.
-func VerifyAuth(dep deps.Dependencies) http.HandlerFunc {
+func VerifyAuth(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		identity, err := dep.Auth.AuthenticateExplicit(r)
 		if err != nil {

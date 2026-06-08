@@ -10,16 +10,16 @@ import (
 	"strings"
 	"time"
 
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
 )
 
 var bracePattern = regexp.MustCompile(`\{([^{}]+)\}`)
 
 // ParseV1 translates Nightscout v1 query parameters into the storage query
 // model used by this library.
-func ParseV1(values url.Values, defaultDateField string) store.Query {
-	query := store.DefaultQuery()
+func ParseV1(values url.Values, defaultDateField string) di.Query {
+	query := di.DefaultQuery()
 	if defaultDateField == "" {
 		defaultDateField = "date"
 	}
@@ -37,13 +37,13 @@ func ParseV1(values url.Values, defaultDateField string) store.Query {
 		if field == "" {
 			continue
 		}
-		query.Filters = append(query.Filters, store.Filter{Field: field, Op: op, Value: vals[0]})
+		query.Filters = append(query.Filters, di.Filter{Field: field, Op: op, Value: vals[0]})
 	}
 	if rawFind := values.Get("find"); rawFind != "" {
 		query.Filters = append(query.Filters, parseMongoFindJSON(rawFind)...)
 	}
 	if !hasIDFilter(query.Filters) && !hasDateFilter(query.Filters) {
-		query.Filters = append(query.Filters, store.Filter{
+		query.Filters = append(query.Filters, di.Filter{
 			Field: defaultDateField,
 			Op:    "gte",
 			Value: time.Now().UTC().Add(-96 * time.Hour).Format(time.RFC3339),
@@ -53,8 +53,8 @@ func ParseV1(values url.Values, defaultDateField string) store.Query {
 }
 
 // ParseV3 translates Nightscout API v3 query parameters into a storage query.
-func ParseV3(values url.Values) (store.Query, error) {
-	query := store.DefaultQuery()
+func ParseV3(values url.Values) (di.Query, error) {
+	query := di.DefaultQuery()
 	query.Limit = 0
 	query.SortField = "date"
 	query.IncludeDeleted = false
@@ -99,7 +99,7 @@ func ParseV3(values url.Values) (store.Query, error) {
 		if field == "" {
 			continue
 		}
-		query.Filters = append(query.Filters, store.Filter{Field: field, Op: op, Value: vals[0]})
+		query.Filters = append(query.Filters, di.Filter{Field: field, Op: op, Value: vals[0]})
 	}
 	return query, nil
 }
@@ -136,7 +136,7 @@ func Slice(records []model.Record, field, fieldType, prefix string, limit int) [
 	sort.SliceStable(filtered, func(i, j int) bool {
 		left := model.PathValue(filtered[i].ToMap(true), "date")
 		right := model.PathValue(filtered[j].ToMap(true), "date")
-		return store.CompareValues(left, right, true)
+		return di.CompareValues(left, right, true)
 	})
 	if limit > 0 && limit < len(filtered) {
 		filtered = filtered[:limit]
@@ -180,7 +180,7 @@ func Times(records []model.Record, prefix, expr string, limit int) ([]model.Reco
 	sort.SliceStable(filtered, func(i, j int) bool {
 		left := model.PathValue(filtered[i].ToMap(true), "date")
 		right := model.PathValue(filtered[j].ToMap(true), "date")
-		return store.CompareValues(left, right, true)
+		return di.CompareValues(left, right, true)
 	})
 	if limit > 0 && limit < len(filtered) {
 		filtered = filtered[:limit]
@@ -236,20 +236,20 @@ func parseV3Filter(key string) (field, op string) {
 	return key, "eq"
 }
 
-func parseMongoFindJSON(raw string) []store.Filter {
+func parseMongoFindJSON(raw string) []di.Filter {
 	var doc map[string]any
 	if err := json.Unmarshal([]byte(raw), &doc); err != nil {
 		return nil
 	}
-	var filters []store.Filter
+	var filters []di.Filter
 	for field, value := range doc {
 		if nested, ok := value.(map[string]any); ok {
 			for op, subValue := range nested {
-				filters = append(filters, store.Filter{Field: field, Op: strings.TrimPrefix(op, "$"), Value: fmt.Sprint(subValue)})
+				filters = append(filters, di.Filter{Field: field, Op: strings.TrimPrefix(op, "$"), Value: fmt.Sprint(subValue)})
 			}
 			continue
 		}
-		filters = append(filters, store.Filter{Field: field, Op: "eq", Value: fmt.Sprint(value)})
+		filters = append(filters, di.Filter{Field: field, Op: "eq", Value: fmt.Sprint(value)})
 	}
 	return filters
 }
@@ -263,7 +263,7 @@ func isReservedV3Key(key string) bool {
 	}
 }
 
-func hasDateFilter(filters []store.Filter) bool {
+func hasDateFilter(filters []di.Filter) bool {
 	for _, filter := range filters {
 		if filter.Field == "date" || filter.Field == "dateString" || filter.Field == "created_at" {
 			return true
@@ -272,7 +272,7 @@ func hasDateFilter(filters []store.Filter) bool {
 	return false
 }
 
-func hasIDFilter(filters []store.Filter) bool {
+func hasIDFilter(filters []di.Filter) bool {
 	for _, filter := range filters {
 		if filter.Field == "_id" || filter.Field == "identifier" {
 			return true

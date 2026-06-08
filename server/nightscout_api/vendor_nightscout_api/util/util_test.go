@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
 )
 
 func TestStripImplicitDateFilters(t *testing.T) {
-	filters := []store.Filter{
+	filters := []di.Filter{
 		{Field: "date", Op: "gte", Value: "2024-01-01T00:00:00Z"},
 		{Field: "created_at", Op: "gte", Value: "2024-01-01T00:00:00Z"},
 		{Field: "sgv", Op: "gte", Value: "100"},

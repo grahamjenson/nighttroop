@@ -11,8 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
-	vendorConfig "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/config"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/deps"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -29,8 +28,7 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 		r.Use(user.UserDBMiddleware(controlDB))
 		r.Get("/api/v2/authorization/request/token={token}", getAuthRoute(controlDB, config))
 
-		ntDeps := deps.Dependencies{
-			Config: vendorConfig.Config{}.WithDefaults(),
+		ntDeps := di.Dependencies{
 			Store: &NightTroopAPIStore{
 				controlDB: controlDB,
 				config:    config,

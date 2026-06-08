@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/store"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 )
 
 func TestWriteAndReadJSON(t *testing.T) {
@@ -29,11 +29,11 @@ func TestWriteAndReadJSON(t *testing.T) {
 }
 
 func TestRequireRecord(t *testing.T) {
-	status, _ := RequireRecord(store.ErrGone)
+	status, _ := RequireRecord(di.ErrGone)
 	if status != http.StatusGone {
 		t.Fatalf("expected 410, got %d", status)
 	}
-	status, _ = RequireRecord(store.ErrNotFound)
+	status, _ = RequireRecord(di.ErrNotFound)
 	if status != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", status)
 	}
