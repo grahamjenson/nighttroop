@@ -14,65 +14,140 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
+type NSCollection string
+
+const (
+	EntriesCollection      NSCollection = "entries"
+	TreatmentsCollection   NSCollection = "treatments"
+	ProfileCollection      NSCollection = "profile"
+	DeviceStatusCollection NSCollection = "devicestatus"
+	SettingsCollection     NSCollection = "settings"
+	FoodCollection         NSCollection = "food"
+	PropertiesCollection   NSCollection = "properties"
+)
+
+type CollectionStore interface {
+	Create(ctx context.Context, data map[string]any) (model.Record, bool, error)
+	Get(ctx context.Context, identifier string) (model.Record, error)
+	Search(ctx context.Context, query di.Query) ([]model.Record, error)
+	Replace(ctx context.Context, collection, identifier string, data map[string]any) (model.Record, bool, error)
+	Patch(ctx context.Context, collection, identifier string, patch map[string]any) (model.Record, error)
+	Delete(ctx context.Context, collection, identifier string, permanent bool) error
+	DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error)
+	History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error)
+	LastModified(ctx context.Context) (int64, error)
+}
+
 type NightTroopAPIStore struct {
 	controlDB *db.ControlDB
 	config    config.ServerConfig
+
+	stores map[NSCollection]CollectionStore
 }
 
+// Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
 func (nts *NightTroopAPIStore) Create(ctx context.Context, collection string, data map[string]any, subject string) (model.Record, bool, error) {
-	return model.Record{}, false, nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return model.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.Create(ctx, data)
+
 }
 
 func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier string) (model.Record, error) {
-	return model.Record{ID: "asdasd"}, nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return model.Record{}, fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.Get(ctx, identifier)
 }
 
 func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, query di.Query) ([]model.Record, error) {
-	userContext := httputils.GetUserContext(ctx)
-	collection = model.NormalizeCollection(collection)
+	nsCollection := normalizeCollection(collection)
 	query = withDefaultQuery(query)
-	models := []model.Record{}
-	switch collection {
-	case "entries":
-		entries, err := userContext.UserDB.Queries.AllEntries(ctx)
-		if err != nil {
-			return nil, err
-		}
 
-		models = CreateRecordSlice(entries, SGVToModel)
-	case "treatments":
-		models = []model.Record{}
-
-	default:
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
 		return nil, fmt.Errorf("unknown collection: %s", collection)
 	}
-	models = di.ApplyQuery(models, query)
-	return models, nil
+	records, err := collectionsStore.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	records = di.ApplyQuery(records, query)
+	return records, nil
+
 }
 
 func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection, identifier string, data map[string]any, subject string) (model.Record, bool, error) {
-	return model.Record{}, false, nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return model.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.Replace(ctx, collection, identifier, data)
 }
 
 func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection, identifier string, patch map[string]any, subject string) (model.Record, error) {
-	return model.Record{}, nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return model.Record{}, fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.Patch(ctx, collection, identifier, patch)
 }
 
 func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection, identifier string, permanent bool, subject string) error {
-	return nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.Delete(ctx, collection, identifier, permanent)
 }
 
 func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool, subject string) (int, error) {
-	return 0, nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return 0, fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.DeleteMatching(ctx, collection, query, permanent)
 }
 
 // TODO history should just use a query so that we can generalize
 func (nts *NightTroopAPIStore) History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error) {
-	return nil, nil
+	nsCollection := normalizeCollection(collection)
+	collectionsStore, ok := nts.stores[nsCollection]
+	if !ok {
+		return nil, fmt.Errorf("unknown collection: %s", collection)
+	}
+	return collectionsStore.History(ctx, collection, since, limit)
 }
 
 func (nts *NightTroopAPIStore) LastModified(ctx context.Context, collections []string) (map[string]int64, error) {
-	return nil, nil
+	out := make(map[string]int64)
+	for _, collection := range collections {
+		nsCollection := normalizeCollection(collection)
+		collectionsStore, ok := nts.stores[nsCollection]
+		if !ok {
+			return nil, fmt.Errorf("unknown collection: %s", collection)
+		}
+		lastModified, err := collectionsStore.LastModified(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get last modified for collection %s: %w", collection, err)
+		}
+		out[string(nsCollection)] = lastModified
+	}
+	return out, nil
+}
+
+func normalizeCollection(collection string) NSCollection {
+	collection = model.NormalizeCollection(collection)
+	return NSCollection(collection)
 }
 
 func withDefaultQuery(query di.Query) di.Query {

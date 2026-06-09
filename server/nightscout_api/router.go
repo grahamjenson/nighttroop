@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/nightscout_api/collections"
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
 	v2 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v2"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
@@ -32,7 +33,13 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 		Store: &NightTroopAPIStore{
 			controlDB: controlDB,
 			config:    config,
+			stores: map[NSCollection]CollectionStore{
+				EntriesCollection:      collections.EntriesCollection{},
+				TreatmentsCollection:   collections.TreatmentCollection{},
+				DeviceStatusCollection: collections.DeviceStatusCollection{},
+			},
 		},
+
 		Auth: &NightTroopAPIAuth{
 			controlDB: controlDB,
 			config:    config,

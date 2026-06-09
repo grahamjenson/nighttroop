@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -121,6 +122,7 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 		}
 		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
+			slog.Error("Bad JWT token cant find identity", "error", err)
 			return nil, false, fmt.Errorf("identity not found: %w", err)
 		}
 		return identity, false, nil
@@ -136,10 +138,12 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 		jwttokenStr := cookieToken
 		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
+			slog.Error("Bad Cookie JWT token", "error", err)
 			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
+			slog.Error("Bad Cookie JWT token cant find identity", "error", err)
 			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		return identity, false, nil

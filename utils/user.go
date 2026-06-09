@@ -71,3 +71,7 @@ func SyntacticallyValidateUserID(userID string) bool {
 	re := regexp.MustCompile("^[a-z]+$")
 	return re.MatchString(userID)
 }
+
+func NextEID(prefix string) string {
+	return fmt.Sprintf("%s_%s", prefix, security.SecureRandomString(USER_ID_LENGTH*2, USER_CHAR_SET))
+}

@@ -11,7 +11,7 @@ import (
 
 const allBoluses = `-- name: AllBoluses :many
 
-SELECT id, eid, value, type, raw_json_data, created_at, updated_at, created_by_identity_id FROM bolus ORDER BY created_at DESC
+SELECT id, eid, value, type, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus ORDER BY created_at DESC
 `
 
 // -----
@@ -34,6 +34,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
@@ -51,7 +52,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 
 const allCarbs = `-- name: AllCarbs :many
 
-SELECT id, eid, amount, raw_json_data, created_at, updated_at, created_by_identity_id FROM carbs ORDER BY created_at DESC
+SELECT id, eid, amount, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY created_at DESC
 `
 
 // -----
@@ -73,6 +74,7 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
@@ -90,7 +92,7 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, eid, start, duration, value, raw_json_data, created_at, updated_at, created_by_identity_id FROM temp_basals ORDER BY created_at DESC
+SELECT id, eid, start, duration, value, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY created_at DESC
 `
 
 // ----
@@ -114,6 +116,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
@@ -131,7 +134,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 
 const allTempTargets = `-- name: AllTempTargets :many
 
-SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, created_at, updated_at, created_by_identity_id FROM temp_targets ORDER BY created_at DESC
+SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY created_at DESC
 `
 
 // ----
@@ -156,6 +159,7 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
@@ -175,17 +179,31 @@ const createBolus = `-- name: CreateBolus :exec
 INSERT INTO bolus (eid, value, type) VALUES ( ?, ?, ?)
 `
 
-func (q *Queries) CreateBolus(ctx context.Context, eid *string, value *float64, type_ *string) error {
+func (q *Queries) CreateBolus(ctx context.Context, eid string, value *float64, type_ *string) error {
 	_, err := q.exec(ctx, q.createBolusStmt, createBolus, eid, value, type_)
 	return err
 }
 
 const createCarb = `-- name: CreateCarb :exec
-INSERT INTO carbs (eid, amount) VALUES ( ?, ?)
+INSERT INTO carbs (eid, amount, raw_json_data, created_by_identity_name, created_by_identity_id) VALUES ( ?, ?, ?, ?, ?)
 `
 
-func (q *Queries) CreateCarb(ctx context.Context, eid *string, amount float64) error {
-	_, err := q.exec(ctx, q.createCarbStmt, createCarb, eid, amount)
+type CreateCarbParams struct {
+	Eid                   string
+	Amount                float64
+	RawJsonData           *string
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
+}
+
+func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
+	_, err := q.exec(ctx, q.createCarbStmt, createCarb,
+		arg.Eid,
+		arg.Amount,
+		arg.RawJsonData,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
 	return err
 }
 
@@ -194,7 +212,7 @@ INSERT INTO temp_basals (eid, start, duration, value) VALUES ( ?, ?, ?, ?)
 `
 
 type CreateTempBasalParams struct {
-	Eid      *string
+	Eid      string
 	Start    *int64
 	Duration *int64
 	Value    *float64
@@ -215,7 +233,7 @@ INSERT INTO temp_targets (eid, start, duration, highTarget, lowTarget) VALUES ( 
 `
 
 type CreateTempTargetParams struct {
-	Eid        *string
+	Eid        string
 	Start      *int64
 	Duration   *int64
 	Hightarget *int64

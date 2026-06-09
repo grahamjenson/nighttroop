@@ -12,7 +12,7 @@ CREATE TABLE identities (
     
     last_seen_at INTEGER,
     last_write_at INTEGER,
-
+    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
 
     enabled INTEGER NOT NULL DEFAULT 1
 );
@@ -62,7 +62,8 @@ CREATE TABLE device_status (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
 );
 
 CREATE TABLE sgvs (
@@ -77,6 +78,7 @@ CREATE TABLE sgvs (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
 
@@ -84,7 +86,7 @@ CREATE TABLE sgvs (
 
 CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT UNIQUE CHECK(length(eid) <= 32),
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     value REAL,
     type TEXT CHECK(length(type) <= 32),
 
@@ -92,19 +94,21 @@ CREATE TABLE bolus (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
 );
 
 CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT UNIQUE CHECK(length(eid) <= 32),
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     amount REAL NOT NULL,
     
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
 );
@@ -112,7 +116,7 @@ CREATE TABLE carbs (
 CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     
-    eid TEXT UNIQUE CHECK(length(eid) <= 32),
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     start INTEGER,
     duration INTEGER,
     value REAL,
@@ -121,6 +125,7 @@ CREATE TABLE temp_basals (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
 );
@@ -128,7 +133,7 @@ CREATE TABLE temp_basals (
 CREATE TABLE temp_targets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     
-    eid TEXT UNIQUE CHECK(length(eid) <= 32),
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     start INTEGER,
     duration INTEGER,
     highTarget INTEGER,
@@ -138,6 +143,7 @@ CREATE TABLE temp_targets (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 
@@ -145,7 +151,7 @@ CREATE TABLE temp_targets (
 
 CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT UNIQUE CHECK(length(eid) <= 32),
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     storeid TEXT CHECK(length(storeid) <= 64),
     name TEXT CHECK(length(name) <= 64),
     
@@ -169,6 +175,7 @@ CREATE TABLE profile (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 

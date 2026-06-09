@@ -9,7 +9,8 @@ INSERT INTO sgvs (
     eid,
     created_at,
     value,
-    created_by_identity_id
+    created_by_identity_id,
+    created_by_identity_name
 )
-VALUES (?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?)
 ON CONFLICT(eid) DO NOTHING;

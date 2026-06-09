@@ -19,7 +19,7 @@ SELECT * FROM carbs ORDER BY created_at DESC;
 
 
 -- name: CreateCarb :exec
-INSERT INTO carbs (eid, amount) VALUES ( ?, ?);
+INSERT INTO carbs (eid, amount, raw_json_data, created_by_identity_name, created_by_identity_id) VALUES ( ?, ?, ?, ?, ?);
 
 ------
 -- Temp Targets

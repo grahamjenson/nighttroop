@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/tink-crypto/tink-go/v2/jwt"
@@ -32,6 +33,7 @@ func (config *SecurityConfig) createJWTPrimitives() error {
 	controlValidator, err := jwt.NewValidator(&jwt.ValidatorOpts{
 		ExpectIssuedInThePast: true,
 		ExpectedAudience:      &ControlAudience,
+		IgnoreIssuer:          true, // Control tokens can be issued by any subdomain
 	})
 
 	if err != nil {
@@ -41,6 +43,7 @@ func (config *SecurityConfig) createJWTPrimitives() error {
 	userValidator, err := jwt.NewValidator(&jwt.ValidatorOpts{
 		ExpectIssuedInThePast: true,
 		ExpectedAudience:      &UserAudience,
+		IgnoreIssuer:          true, // We validate the subdomain externally
 	})
 
 	if err != nil {
@@ -160,6 +163,7 @@ func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, strin
 
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtUserValidator)
 	if err != nil {
+		slog.Error("Failed to VerifyMACAndDecode user JWT token ", "error", err)
 		return "", "", "", err
 	}
 

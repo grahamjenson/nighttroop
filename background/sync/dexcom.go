@@ -33,10 +33,11 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 		for _, e := range egvs {
 			eid := fmt.Sprintf("dexcom_%s", e.SystemTime.Format(time.RFC3339))
 			res, err := userSyncSource.userDB.Queries.CreateEntryIgnoreEIDConstraint(context.TODO(), user.CreateEntryIgnoreEIDConstraintParams{
-				Eid:                 eid,
-				CreatedAt:           e.SystemTime.UnixMilli(),
-				Value:               float64(e.Value),
-				CreatedByIdentityID: userSyncSource.syncIdentity.ID,
+				Eid:                   eid,
+				CreatedAt:             e.SystemTime.UnixMilli(),
+				Value:                 float64(e.Value),
+				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
+				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
 			})
 			if err != nil {
 				// Probably just non-unique eid

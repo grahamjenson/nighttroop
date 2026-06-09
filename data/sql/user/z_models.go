@@ -9,44 +9,47 @@ import (
 )
 
 type Bolus struct {
-	ID                  int64
-	Eid                 *string
-	Value               *float64
-	Type                *string
-	RawJsonData         *string
-	CreatedAt           int64
-	UpdatedAt           int64
-	CreatedByIdentityID int64
+	ID                    int64
+	Eid                   string
+	Value                 *float64
+	Type                  *string
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }
 
 type Carb struct {
-	ID                  int64
-	Eid                 *string
-	Amount              float64
-	RawJsonData         *string
-	CreatedAt           int64
-	UpdatedAt           int64
-	CreatedByIdentityID int64
+	ID                    int64
+	Eid                   string
+	Amount                float64
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }
 
 type DeviceStatus struct {
-	ID                  int64
-	Eid                 string
-	IdentityID          int64
-	BatteryLevel        *int64
-	ChargingState       *string
-	PumpBattery         *int64
-	PumpStatus          *string
-	PumpReservoir       *float64
-	PumpInsertionTime   *int64
-	LoopStatus          *string
-	LoopTimestamp       *int64
-	CgmStatus           *string
-	CgmInsertionTime    *int64
-	RawJsonData         *string
-	CreatedAt           int64
-	UpdatedAt           int64
-	CreatedByIdentityID int64
+	ID                    int64
+	Eid                   string
+	IdentityID            int64
+	BatteryLevel          *int64
+	ChargingState         *string
+	PumpBattery           *int64
+	PumpStatus            *string
+	PumpReservoir         *float64
+	PumpInsertionTime     *int64
+	LoopStatus            *string
+	LoopTimestamp         *int64
+	CgmStatus             *string
+	CgmInsertionTime      *int64
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }
 
 type Event struct {
@@ -66,12 +69,13 @@ type Identity struct {
 	CreatedAt   int64
 	LastSeenAt  *int64
 	LastWriteAt *int64
+	DeletedAt   *int64
 	Enabled     bool
 }
 
 type Profile struct {
 	ID                       int64
-	Eid                      *string
+	Eid                      string
 	Storeid                  *string
 	Name                     *string
 	Start                    *int64
@@ -88,17 +92,19 @@ type Profile struct {
 	RawJsonData              *string
 	CreatedAt                int64
 	UpdatedAt                int64
+	CreatedByIdentityName    string
 	CreatedByIdentityID      int64
 }
 
 type Sgv struct {
-	ID                  int64
-	Eid                 string
-	Value               float64
-	RawJsonData         *string
-	CreatedAt           int64
-	UpdatedAt           int64
-	CreatedByIdentityID int64
+	ID                    int64
+	Eid                   string
+	Value                 float64
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }
 
 type SqliteSequence struct {
@@ -107,26 +113,28 @@ type SqliteSequence struct {
 }
 
 type TempBasal struct {
-	ID                  int64
-	Eid                 *string
-	Start               *int64
-	Duration            *int64
-	Value               *float64
-	RawJsonData         *string
-	CreatedAt           int64
-	UpdatedAt           int64
-	CreatedByIdentityID int64
+	ID                    int64
+	Eid                   string
+	Start                 *int64
+	Duration              *int64
+	Value                 *float64
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }
 
 type TempTarget struct {
-	ID                  int64
-	Eid                 *string
-	Start               *int64
-	Duration            *int64
-	Hightarget          *int64
-	Lowtarget           *int64
-	RawJsonData         *string
-	CreatedAt           int64
-	UpdatedAt           int64
-	CreatedByIdentityID int64
+	ID                    int64
+	Eid                   string
+	Start                 *int64
+	Duration              *int64
+	Hightarget            *int64
+	Lowtarget             *int64
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }

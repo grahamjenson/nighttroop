@@ -13,7 +13,7 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, created_at, updated_at, created_by_identity_id FROM device_status ORDER BY created_at DESC
+SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY created_at DESC
 `
 
 // ----
@@ -45,6 +45,7 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
@@ -61,7 +62,7 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 }
 
 const allIdentities = `-- name: AllIdentities :many
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, enabled FROM identities ORDER BY created_at DESC
+SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, deleted_at, enabled FROM identities ORDER BY created_at DESC
 `
 
 func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
@@ -82,6 +83,7 @@ func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 			&i.CreatedAt,
 			&i.LastSeenAt,
 			&i.LastWriteAt,
+			&i.DeletedAt,
 			&i.Enabled,
 		); err != nil {
 			return nil, err
@@ -119,7 +121,7 @@ func (q *Queries) CreateIdentity(ctx context.Context, arg CreateIdentityParams) 
 }
 
 const getIdentity = `-- name: GetIdentity :one
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, enabled FROM identities where name = ? LIMIT 1
+SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, deleted_at, enabled FROM identities where name = ? LIMIT 1
 `
 
 func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, error) {
@@ -134,6 +136,7 @@ func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, erro
 		&i.CreatedAt,
 		&i.LastSeenAt,
 		&i.LastWriteAt,
+		&i.DeletedAt,
 		&i.Enabled,
 	)
 	return &i, err

@@ -11,7 +11,7 @@ import (
 )
 
 const allEntries = `-- name: AllEntries :many
-SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_id FROM sgvs ORDER BY created_at DESC
+SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs ORDER BY created_at DESC
 `
 
 func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
@@ -30,6 +30,7 @@ func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
@@ -71,17 +72,19 @@ INSERT INTO sgvs (
     eid,
     created_at,
     value,
-    created_by_identity_id
+    created_by_identity_id,
+    created_by_identity_name
 )
-VALUES (?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?)
 ON CONFLICT(eid) DO NOTHING
 `
 
 type CreateEntryIgnoreEIDConstraintParams struct {
-	Eid                 string
-	CreatedAt           int64
-	Value               float64
-	CreatedByIdentityID int64
+	Eid                   string
+	CreatedAt             int64
+	Value                 float64
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
 }
 
 func (q *Queries) CreateEntryIgnoreEIDConstraint(ctx context.Context, arg CreateEntryIgnoreEIDConstraintParams) (sql.Result, error) {
@@ -90,5 +93,6 @@ func (q *Queries) CreateEntryIgnoreEIDConstraint(ctx context.Context, arg Create
 		arg.CreatedAt,
 		arg.Value,
 		arg.CreatedByIdentityID,
+		arg.CreatedByIdentityName,
 	)
 }

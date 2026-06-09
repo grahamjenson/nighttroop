@@ -36,10 +36,11 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		for _, e := range egvs {
 			eid := fmt.Sprintf("nightscout_%s", e.Date.Format(time.RFC3339))
 			res, err := userSyncSource.userDB.Queries.CreateEntryIgnoreEIDConstraint(context.TODO(), user.CreateEntryIgnoreEIDConstraintParams{
-				Eid:                 eid,
-				CreatedAt:           e.Date.UnixMilli(),
-				Value:               float64(e.SGV),
-				CreatedByIdentityID: userSyncSource.syncIdentity.ID,
+				Eid:                   eid,
+				CreatedAt:             e.Date.UnixMilli(),
+				Value:                 float64(e.SGV),
+				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
+				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
 			})
 			if err != nil {
 				// Probably just non-unique eid
