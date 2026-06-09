@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -10,7 +11,7 @@ import (
 
 // NewNightscoutV1Router constructs a router that serves the supported
 // Nightscout API v1 endpoints.
-func NewNightscoutV1Router(dep di.Dependencies) http.Handler {
+func NewNightscoutV1Router(dep di.Dependencies) *chi.Mux {
 	r := chi.NewRouter()
 
 	registerStatusRoutes(r, dep)
@@ -22,6 +23,10 @@ func NewNightscoutV1Router(dep di.Dependencies) http.Handler {
 	registerSettingRoutes(r, dep)
 	registerFoodRoutes(r, dep)
 
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
+		http.Error(w, "Not Found", http.StatusNotFound)
+	})
 	return r
 }
 

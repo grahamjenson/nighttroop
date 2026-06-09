@@ -98,6 +98,11 @@ func Login() templ.Component {
 					Name:        "name",
 					Placeholder: "admin",
 					Required:    true,
+					Attributes: templ.Attributes{
+						"autocapitalize": "none",
+						"autocorrect":    "off",
+						"autofocus":      "true",
+					},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -302,6 +307,7 @@ func LoginTOTP() templ.Component {
 					ctx = templ.InitializeContext(ctx)
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
 						Index: 0,
+						Focus: true,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err

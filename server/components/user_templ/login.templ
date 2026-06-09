@@ -35,6 +35,11 @@ templ Login() {
 							Name:        "name",
 							Placeholder: "admin",
 							Required:    true,
+							Attributes: templ.Attributes{
+								"autocapitalize": "none",
+								"autocorrect":    "off",
+								"autofocus":      "true",
+							},
 						})
 					}
 					<div class="mt-4"></div>
@@ -92,6 +97,7 @@ templ LoginTOTP() {
 						@inputotp.Group() {
 							@inputotp.Slot(inputotp.SlotProps{
 								Index: 0,
+								Focus: true,
 							})
 							@inputotp.Slot(inputotp.SlotProps{
 								Index: 1,

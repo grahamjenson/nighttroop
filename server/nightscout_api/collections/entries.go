@@ -77,8 +77,10 @@ func SGVToRecord(sgv *user.Sgv) model.Record {
 	if sgv == nil {
 		return model.Record{}
 	}
+	// This id needs to be unique across time and different records
+	id := fmt.Sprintf("%d_%d", sgv.ID, sgv.CreatedAt)
 	entryModel := Entry{
-		Identifier: fmt.Sprintf("%d", sgv.ID),
+		Identifier: id,
 		Type:       "sgv",
 		SGV:        FlexibleFloat64(sgv.Value),
 		Date:       sgv.CreatedAt,
@@ -88,7 +90,7 @@ func SGVToRecord(sgv *user.Sgv) model.Record {
 
 	return model.Record{
 		Collection:  "entries",
-		ID:          fmt.Sprintf("%d", sgv.ID),
+		ID:          id,
 		Data:        StructToMap(entryModel),
 		SrvCreated:  sgv.CreatedAt,
 		SrvModified: sgv.CreatedAt,

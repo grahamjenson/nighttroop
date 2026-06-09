@@ -19,16 +19,6 @@ import (
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
-	r := chi.NewRouter()
-	httputils.AddStandardMiddleware(r, config)
-	// make sure to continue rate limiting
-	r.Use(user.UserRateLimitMiddleware(config))
-	// make sure to check auth for JWT/token param/token URL param
-	r.Use(NightscoutAuthMiddleware(controlDB, config))
-	r.Use(user.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
-
-	r.Get("/api/v2/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
-
 	ntDeps := di.Dependencies{
 		Store: &NightTroopAPIStore{
 			controlDB: controlDB,
@@ -46,19 +36,38 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 		},
 	}
 
-	v1Router := v1.NewNightscoutV1Router(ntDeps)
-	v2Router := v2.NewNightscoutV2Router(ntDeps)
-	v3Router := v3.NewNightscoutV3Router(ntDeps)
+	r := chi.NewRouter()
+	httputils.AddStandardMiddleware(r, config)
+	// make sure to continue rate limiting
+	r.Use(user.UserRateLimitMiddleware(config))
+	// make sure to check auth for JWT/token param/token URL param
 
-	r.Mount("/api/v1", v1Router)
-	r.Mount("/api/v2", v2Router)
-	r.Mount("/api/v3", v3Router)
+	r.Group(func(r chi.Router) {
+		r.Use(NightscoutAuthMiddleware(controlDB, config))
+		r.Use(user.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
+		r.Get("/api/v2/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
+		r.Get("/api/v2/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))
+		r.Get("/api/v3/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
+		r.Get("/api/v3/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))
+
+		v1Router := v1.NewNightscoutV1Router(ntDeps)
+		v2Router := v2.NewNightscoutV2Router(ntDeps)
+		v3Router := v3.NewNightscoutV3Router(ntDeps)
+
+		r.Mount("/api/v1", v1Router)
+		r.Mount("/api/v2", v2Router)
+		r.Mount("/api/v3", v3Router)
+
+		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+			slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
+			http.Error(w, "Not Found", http.StatusNotFound)
+		})
+	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
-
 	return r
 }
 

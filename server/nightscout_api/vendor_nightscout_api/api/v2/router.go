@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -14,6 +15,11 @@ func NewNightscoutV2Router(dep di.Dependencies) http.Handler {
 	r := chi.NewRouter()
 
 	registerPropertiesRoutes(r, dep)
+
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
+		http.Error(w, "Not Found", http.StatusNotFound)
+	})
 
 	return r
 }

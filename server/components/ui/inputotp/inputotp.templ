@@ -32,6 +32,7 @@ type SlotProps struct {
 	Type        string
 	Placeholder string
 	Disabled    bool
+	Focus       bool
 	HasError    bool
 }
 
@@ -146,6 +147,7 @@ templ Slot(props ...SlotProps) {
 				),
 			}
 			disabled?={ p.Disabled }
+			autofocus?={ p.Focus }
 			if p.HasError {
 				aria-invalid="true"
 			}
