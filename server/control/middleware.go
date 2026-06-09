@@ -45,11 +45,11 @@ func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		deviceName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
+		adminName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
 		if err != nil {
 			return "", "", fmt.Errorf("bad JWT token: %w", err)
 		}
-		return deviceName, consts.AdminRole(role), nil
+		return adminName, consts.AdminRole(role), nil
 	}
 
 	if authHeader != "" {
@@ -60,11 +60,11 @@ func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, 
 	cookieToken, err := security.GetControlTokenFromRequest(r)
 	if err == nil {
 		jwttokenStr := cookieToken
-		deviceName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
+		adminName, role, err := config.Security.VerifyControlJWTToken(jwttokenStr)
 		if err != nil {
 			return "", "", fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		return deviceName, consts.AdminRole(role), nil
+		return adminName, consts.AdminRole(role), nil
 	}
 
 	return "", "", fmt.Errorf("No JWT token found")

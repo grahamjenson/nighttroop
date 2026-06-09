@@ -90,20 +90,20 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		}
 
 		// First thing validate the password
-		device, err := loginTheUserPasswordOnly(userDB, formName, formPassword)
+		identity, err := loginTheUserPasswordOnly(userDB, formName, formPassword)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			return
 		}
 
-		if !can.LoginToWebsite(device.Role) {
+		if !can.LoginToWebsite(identity.Role) {
 			errors.GenericIdentityLoginError(w, r, fmt.Errorf("identity does not have permission to login to website"))
 			return
 		}
 
-		if can.MustLoginWithTotp(device.Role, device.TotpSecret != "") {
+		if can.MustLoginWithTotp(identity.Role, identity.TotpSecret != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
-			err = config.Security.SetUserPreAuthCookie(w, device.Name)
+			err = config.Security.SetUserPreAuthCookie(w, identity.Name)
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, err)
 				return
@@ -117,7 +117,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 			return
 		} else {
-			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
+			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, identity.Name, string(identity.Role))
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, err)
 				return
@@ -126,7 +126,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			// Set proper cookie and redirect to dashboard
 			config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
-			slog.Info("User logged in", "device", device.Name, "role", device.Role)
+			slog.Info("User logged in", "device", identity.Name, "role", identity.Role)
 			w.Header().Set("HX-Redirect", "/")
 			w.WriteHeader(http.StatusOK)
 		}
@@ -141,9 +141,10 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 			errors.GenericIdentityLoginError(w, r, fmt.Errorf("API login not supported for TOTP endpoint"))
 			return
 		}
+		userContext := httputils.GetUserContext(r.Context())
 
 		// 1. Fetch And Validate Pre-Auth Token
-		deviceNameFromToken, err := fetchVerifyPreAuthToken(config, r)
+		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			return
@@ -151,7 +152,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 
 		// 2. Grab the user db and identity
 
-		device, err := getTheIdentityeModel(controlDB, r, deviceNameFromToken)
+		identity, err := getTheIdentityeModel(controlDB, r, identityNameFromToken)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			return
@@ -168,7 +169,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		totpToken, _ = strings.CutSuffix(totpToken, "]")
 		totpToken, _ = strings.CutPrefix(totpToken, "[")
 
-		err = validateIdentityTOTP(config, device, totpToken)
+		err = validateIdentityTOTP(config, identity, totpToken)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -176,7 +177,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		}
 
 		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, identity.Name, string(identity.Role))
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -189,22 +190,22 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		// Set proper cookie and redirect to dashboard
 		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
-		slog.Info("User logged in", "device", device.Name, "role", device.Role)
+		slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
-func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, deviceNameFromToken string) (*user.Identity, error) {
+func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*user.Identity, error) {
 	// First try the JWT token (either header or cookie)
 	userContext := httputils.GetUserContext(r.Context())
 	userDB := userContext.UserDB
 
-	device, err := userDB.Queries.GetIdentity(context.TODO(), deviceNameFromToken)
+	identity, err := userDB.Queries.GetIdentity(context.TODO(), identityNameFromToken)
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
-	return device, nil
+	return identity, nil
 }
 
 func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*user.Identity, error) {
@@ -212,28 +213,28 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	device, err := userDB.Queries.GetIdentity(context.TODO(), formName)
+	identity, err := userDB.Queries.GetIdentity(context.TODO(), formName)
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
-	if !security.VerifyPassword(formPassword, device.Password) {
+	if !security.VerifyPassword(formPassword, identity.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
 
-	return device, nil
+	return identity, nil
 }
 
-func validateIdentityTOTP(config config.ServerConfig, device *user.Identity, totpToken string) error {
+func validateIdentityTOTP(config config.ServerConfig, identity *user.Identity, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
 
-	if device.TotpSecret == "" {
-		return fmt.Errorf("device does not have a TOTP secret set")
+	if identity.TotpSecret == "" {
+		return fmt.Errorf("identity does not have a TOTP secret set")
 	}
 
-	totpSecret, err := config.Security.Decrypt(device.TotpSecret)
+	totpSecret, err := config.Security.Decrypt(identity.TotpSecret)
 	if err != nil {
 		return err
 	}
@@ -279,13 +280,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		return
 	}
 
-	device, err := loginTheUserAPI(userDB, config, creds.Name, creds.Password, creds.TOTP)
+	identity, err := loginTheUserAPI(userDB, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
 		errors.GenericIdentityLoginError(w, r, err)
 		return
 	}
 
-	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(device.Name, string(device.Role))
+	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, identity.Name, string(identity.Role))
 	if err != nil {
 		errors.GenericIdentityLoginError(w, r, err)
 		return
@@ -301,7 +302,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		return
 	}
 
-	slog.Info("User logged in", "device", device.Name, "role", device.Role)
+	slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
 
 }
 

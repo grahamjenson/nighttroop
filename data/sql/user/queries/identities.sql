@@ -18,5 +18,5 @@ WHERE id = ?;
 -- Identity Status
 -------
 
--- name: AllIdentityStatus :many
-SELECT * FROM identity_status ORDER BY created_at DESC;
+-- name: AllDeviceStatus :many
+SELECT * FROM device_status ORDER BY created_at DESC;

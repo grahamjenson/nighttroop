@@ -11,6 +11,53 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+const allDeviceStatus = `-- name: AllDeviceStatus :many
+
+SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, raw_json_data, created_at, updated_at, created_by_identity_id FROM device_status ORDER BY created_at DESC
+`
+
+// ----
+// Identity Status
+// -----
+func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) {
+	rows, err := q.query(ctx, q.allDeviceStatusStmt, allDeviceStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*DeviceStatus
+	for rows.Next() {
+		var i DeviceStatus
+		if err := rows.Scan(
+			&i.ID,
+			&i.Eid,
+			&i.IdentityID,
+			&i.BatteryLevel,
+			&i.ChargingState,
+			&i.PumpBattery,
+			&i.PumpStatus,
+			&i.PumpReservoir,
+			&i.PumpInsertionTime,
+			&i.LoopStatus,
+			&i.LoopTimestamp,
+			&i.RawJsonData,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const allIdentities = `-- name: AllIdentities :many
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, enabled FROM identities ORDER BY created_at DESC
 `
@@ -34,49 +81,6 @@ func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 			&i.LastSeenAt,
 			&i.LastWriteAt,
 			&i.Enabled,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const allIdentityStatus = `-- name: AllIdentityStatus :many
-
-SELECT id, eid, timestamp, identity_id, battery_level, pump_battery, pump_status, pump_reservoir, loop_status, loop_timestamp, created_at FROM identity_status ORDER BY created_at DESC
-`
-
-// ----
-// Identity Status
-// -----
-func (q *Queries) AllIdentityStatus(ctx context.Context) ([]*IdentityStatus, error) {
-	rows, err := q.query(ctx, q.allIdentityStatusStmt, allIdentityStatus)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*IdentityStatus
-	for rows.Next() {
-		var i IdentityStatus
-		if err := rows.Scan(
-			&i.ID,
-			&i.Eid,
-			&i.Timestamp,
-			&i.IdentityID,
-			&i.BatteryLevel,
-			&i.PumpBattery,
-			&i.PumpStatus,
-			&i.PumpReservoir,
-			&i.LoopStatus,
-			&i.LoopTimestamp,
-			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

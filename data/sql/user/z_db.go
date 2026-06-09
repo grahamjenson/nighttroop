@@ -30,6 +30,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allCarbsStmt, err = db.PrepareContext(ctx, allCarbs); err != nil {
 		return nil, fmt.Errorf("error preparing query AllCarbs: %w", err)
 	}
+	if q.allDeviceStatusStmt, err = db.PrepareContext(ctx, allDeviceStatus); err != nil {
+		return nil, fmt.Errorf("error preparing query AllDeviceStatus: %w", err)
+	}
 	if q.allEntriesStmt, err = db.PrepareContext(ctx, allEntries); err != nil {
 		return nil, fmt.Errorf("error preparing query AllEntries: %w", err)
 	}
@@ -38,9 +41,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.allIdentitiesStmt, err = db.PrepareContext(ctx, allIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllIdentities: %w", err)
-	}
-	if q.allIdentityStatusStmt, err = db.PrepareContext(ctx, allIdentityStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query AllIdentityStatus: %w", err)
 	}
 	if q.allProfilesStmt, err = db.PrepareContext(ctx, allProfiles); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfiles: %w", err)
@@ -96,6 +96,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allCarbsStmt: %w", cerr)
 		}
 	}
+	if q.allDeviceStatusStmt != nil {
+		if cerr := q.allDeviceStatusStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allDeviceStatusStmt: %w", cerr)
+		}
+	}
 	if q.allEntriesStmt != nil {
 		if cerr := q.allEntriesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allEntriesStmt: %w", cerr)
@@ -109,11 +114,6 @@ func (q *Queries) Close() error {
 	if q.allIdentitiesStmt != nil {
 		if cerr := q.allIdentitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allIdentitiesStmt: %w", cerr)
-		}
-	}
-	if q.allIdentityStatusStmt != nil {
-		if cerr := q.allIdentityStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allIdentityStatusStmt: %w", cerr)
 		}
 	}
 	if q.allProfilesStmt != nil {
@@ -222,10 +222,10 @@ type Queries struct {
 	tx                                 *sql.Tx
 	allBolusesStmt                     *sql.Stmt
 	allCarbsStmt                       *sql.Stmt
+	allDeviceStatusStmt                *sql.Stmt
 	allEntriesStmt                     *sql.Stmt
 	allEventsStmt                      *sql.Stmt
 	allIdentitiesStmt                  *sql.Stmt
-	allIdentityStatusStmt              *sql.Stmt
 	allProfilesStmt                    *sql.Stmt
 	allTempBasalsStmt                  *sql.Stmt
 	allTempTargetsStmt                 *sql.Stmt
@@ -247,10 +247,10 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                                 tx,
 		allBolusesStmt:                     q.allBolusesStmt,
 		allCarbsStmt:                       q.allCarbsStmt,
+		allDeviceStatusStmt:                q.allDeviceStatusStmt,
 		allEntriesStmt:                     q.allEntriesStmt,
 		allEventsStmt:                      q.allEventsStmt,
 		allIdentitiesStmt:                  q.allIdentitiesStmt,
-		allIdentityStatusStmt:              q.allIdentityStatusStmt,
 		allProfilesStmt:                    q.allProfilesStmt,
 		allTempBasalsStmt:                  q.allTempBasalsStmt,
 		allTempTargetsStmt:                 q.allTempTargetsStmt,

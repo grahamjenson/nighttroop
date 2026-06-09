@@ -115,11 +115,11 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
 			return nil, false, fmt.Errorf("bad JWT token: %w", err)
 		}
-		identity, err := GetIdentity(r.Context(), identityName, consts.IdentityRole(role))
+		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			return nil, false, fmt.Errorf("identity not found: %w", err)
 		}
@@ -134,11 +134,11 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 	cookieToken, err := security.GetUserTokenFromRequest(r)
 	if err == nil {
 		jwttokenStr := cookieToken
-		identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
 			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		identity, err := GetIdentity(r.Context(), identityName, consts.IdentityRole(role))
+		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
@@ -148,11 +148,14 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 	return nil, true, fmt.Errorf("No JWT token found")
 }
 
-func GetIdentity(ctx context.Context, identityName string, role consts.IdentityRole) (*user.Identity, error) {
+func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*user.Identity, error) {
 	userContext := httputils.GetUserContext(ctx)
+	if subdomain != userContext.Subdomain {
+		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", userContext.Subdomain, subdomain)
+	}
+
 	identity, err := userContext.UserDB.Queries.GetIdentity(ctx, identityName)
 	if err != nil {
-
 		return nil, err
 	}
 

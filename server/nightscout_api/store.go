@@ -40,6 +40,11 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, qu
 		}
 
 		models = CreateRecordSlice(entries, SGVToModel)
+	case "treatments":
+		models = []model.Record{}
+
+	default:
+		return nil, fmt.Errorf("unknown collection: %s", collection)
 	}
 	models = di.ApplyQuery(models, query)
 	return models, nil
@@ -124,7 +129,7 @@ func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*di.Identity,
 		return nil, di.ErrMissingCredentials
 	}
 
-	ntIdentity := NighttrropIdentityToNightscoutIdentity(userContext.IdentityModel.Name, userContext.IdentityModel.Role)
+	ntIdentity := NighttroopIdentityToNightscoutIdentity(userContext.IdentityModel.Name, userContext.IdentityModel.Role)
 	return ntIdentity, nil
 }
 
@@ -170,7 +175,7 @@ func writeError(w http.ResponseWriter, err error) {
 	_, _ = fmt.Fprintf(w, `{"description":%q,"message":%q,"status":500}`, err.Error(), "Internal Server Error")
 }
 
-func NighttrropIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *di.Identity {
+func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *di.Identity {
 	// Collections
 	// 'entries'
 	// 'treatments'

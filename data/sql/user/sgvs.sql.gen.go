@@ -11,7 +11,7 @@ import (
 )
 
 const allEntries = `-- name: AllEntries :many
-SELECT id, eid, value, created_at, created_by_identity_id FROM sgvs ORDER BY created_at DESC
+SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_id FROM sgvs ORDER BY created_at DESC
 `
 
 func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
@@ -27,7 +27,9 @@ func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
 			&i.ID,
 			&i.Eid,
 			&i.Value,
+			&i.RawJsonData,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err

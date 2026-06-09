@@ -9,18 +9,42 @@ import (
 )
 
 type Bolus struct {
-	ID        int64
-	Eid       *string
-	Value     *float64
-	Type      *string
-	CreatedAt int64
+	ID                  int64
+	Eid                 *string
+	Value               *float64
+	Type                *string
+	RawJsonData         *string
+	CreatedAt           int64
+	UpdatedAt           int64
+	CreatedByIdentityID int64
 }
 
 type Carb struct {
-	ID        int64
-	Eid       *string
-	Amount    float64
-	CreatedAt int64
+	ID                  int64
+	Eid                 *string
+	Amount              float64
+	RawJsonData         *string
+	CreatedAt           int64
+	UpdatedAt           int64
+	CreatedByIdentityID int64
+}
+
+type DeviceStatus struct {
+	ID                  int64
+	Eid                 string
+	IdentityID          int64
+	BatteryLevel        *int64
+	ChargingState       *string
+	PumpBattery         *int64
+	PumpStatus          *string
+	PumpReservoir       *float64
+	PumpInsertionTime   *int64
+	LoopStatus          *string
+	LoopTimestamp       *int64
+	RawJsonData         *string
+	CreatedAt           int64
+	UpdatedAt           int64
+	CreatedByIdentityID int64
 }
 
 type Event struct {
@@ -43,26 +67,11 @@ type Identity struct {
 	Enabled     bool
 }
 
-type IdentityStatus struct {
-	ID            int64
-	Eid           *string
-	Timestamp     int64
-	IdentityID    int64
-	BatteryLevel  *int64
-	PumpBattery   *int64
-	PumpStatus    *string
-	PumpReservoir *float64
-	LoopStatus    *string
-	LoopTimestamp *int64
-	CreatedAt     int64
-}
-
 type Profile struct {
 	ID                       int64
 	Eid                      *string
 	Storeid                  *string
 	Name                     *string
-	CreatedAt                int64
 	Start                    *int64
 	Duration                 *int64
 	Source                   *string
@@ -74,13 +83,19 @@ type Profile struct {
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
 	TargetsJson              *string
+	RawJsonData              *string
+	CreatedAt                int64
+	UpdatedAt                int64
+	CreatedByIdentityID      int64
 }
 
 type Sgv struct {
 	ID                  int64
 	Eid                 string
 	Value               float64
+	RawJsonData         *string
 	CreatedAt           int64
+	UpdatedAt           int64
 	CreatedByIdentityID int64
 }
 
@@ -90,20 +105,26 @@ type SqliteSequence struct {
 }
 
 type TempBasal struct {
-	ID        int64
-	CreatedAt int64
-	Eid       *string
-	Start     *int64
-	Duration  *int64
-	Value     *float64
+	ID                  int64
+	Eid                 *string
+	Start               *int64
+	Duration            *int64
+	Value               *float64
+	RawJsonData         *string
+	CreatedAt           int64
+	UpdatedAt           int64
+	CreatedByIdentityID int64
 }
 
 type TempTarget struct {
-	ID         int64
-	CreatedAt  int64
-	Eid        *string
-	Start      *int64
-	Duration   *int64
-	Hightarget *int64
-	Lowtarget  *int64
+	ID                  int64
+	Eid                 *string
+	Start               *int64
+	Duration            *int64
+	Hightarget          *int64
+	Lowtarget           *int64
+	RawJsonData         *string
+	CreatedAt           int64
+	UpdatedAt           int64
+	CreatedByIdentityID int64
 }

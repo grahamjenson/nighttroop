@@ -1,20 +1,59 @@
 CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT CHECK(length(eid) <= 32),
+    eid TEXT UNIQUE CHECK(length(eid) <= 32),
     value REAL,
     type TEXT CHECK(length(type) <= 32),
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    -- CONTRAINTS
-    UNIQUE(eid)
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+
 );
 
 CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT CHECK(length(eid) <= 32),
+    eid TEXT UNIQUE CHECK(length(eid) <= 32),
     amount REAL NOT NULL,
+    
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    -- CONTRAINTS
-    UNIQUE(eid)
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+
+);
+
+CREATE TABLE device_status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT UNIQUE NOT NULL CHECK(length(eid) <= 32), 
+
+    
+    identity_id INTEGER NOT NULL,
+    
+
+    -- Specific Details about the device, especially the PWD device
+    battery_level INTEGER,
+    charging_state TEXT CHECK(length(charging_state) <= 32),
+
+    -- pump
+    pump_battery INTEGER,
+    pump_status TEXT CHECK(length(pump_status) <= 32),
+    pump_reservoir REAL,
+    pump_insertion_time INTEGER, -- This is sometimes recorded as an event which is stuper annoying
+
+    -- loop
+    loop_status TEXT CHECK(length(loop_status) <= 32),
+    loop_timestamp INTEGER,
+
+    
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 
 CREATE TABLE events (
@@ -40,26 +79,12 @@ CREATE TABLE identities (
     enabled INTEGER NOT NULL DEFAULT 1
 );
 
-CREATE TABLE identity_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT CHECK(length(eid) <= 32),
-    timestamp INTEGER NOT NULL,
-    identity_id INTEGER NOT NULL,
-    battery_level INTEGER,
-    pump_battery INTEGER,
-    pump_status TEXT CHECK(length(pump_status) <= 32),
-    pump_reservoir REAL,
-    loop_status TEXT CHECK(length(loop_status) <= 32),
-    loop_timestamp INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
-);
-
 CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT CHECK(length(eid) <= 32),
+    eid TEXT UNIQUE CHECK(length(eid) <= 32),
     storeid TEXT CHECK(length(storeid) <= 64),
     name TEXT CHECK(length(name) <= 64),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
 
     -- Date stuff
     START INTEGER,
@@ -75,8 +100,12 @@ CREATE TABLE profile (
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
     basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {[1,2]},
     targets_json TEXT CHECK(length(targets_json) <= 1024), -- { [high, low] }
-    -- CONTRAINTS
-    UNIQUE(eid)
+    
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 
 CREATE TABLE sgvs (
@@ -86,32 +115,47 @@ CREATE TABLE sgvs (
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+
+
 );
 
 CREATE TABLE sqlite_sequence(name,seq);
 
 CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    eid TEXT CHECK(length(eid) <= 32),
+    
+    eid TEXT UNIQUE CHECK(length(eid) <= 32),
     start INTEGER,
     duration INTEGER,
     value REAL,
-    -- CONTRAINTS
-    UNIQUE(eid)
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+
 );
 
 CREATE TABLE temp_targets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    eid TEXT CHECK(length(eid) <= 32),
+    
+    eid TEXT UNIQUE CHECK(length(eid) <= 32),
     start INTEGER,
     duration INTEGER,
     highTarget INTEGER,
     lowTarget INTEGER,
-    -- CONTRAINTS
-    UNIQUE(eid)
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 

@@ -11,7 +11,7 @@ import (
 
 const allBoluses = `-- name: AllBoluses :many
 
-SELECT id, eid, value, type, created_at FROM bolus ORDER BY created_at DESC
+SELECT id, eid, value, type, raw_json_data, created_at, updated_at, created_by_identity_id FROM bolus ORDER BY created_at DESC
 `
 
 // -----
@@ -31,7 +31,10 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 			&i.Eid,
 			&i.Value,
 			&i.Type,
+			&i.RawJsonData,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -48,7 +51,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 
 const allCarbs = `-- name: AllCarbs :many
 
-SELECT id, eid, amount, created_at FROM carbs ORDER BY created_at DESC
+SELECT id, eid, amount, raw_json_data, created_at, updated_at, created_by_identity_id FROM carbs ORDER BY created_at DESC
 `
 
 // -----
@@ -67,7 +70,10 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 			&i.ID,
 			&i.Eid,
 			&i.Amount,
+			&i.RawJsonData,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -84,7 +90,7 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, created_at, eid, start, duration, value FROM temp_basals ORDER BY created_at DESC
+SELECT id, eid, start, duration, value, raw_json_data, created_at, updated_at, created_by_identity_id FROM temp_basals ORDER BY created_at DESC
 `
 
 // ----
@@ -101,11 +107,14 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 		var i TempBasal
 		if err := rows.Scan(
 			&i.ID,
-			&i.CreatedAt,
 			&i.Eid,
 			&i.Start,
 			&i.Duration,
 			&i.Value,
+			&i.RawJsonData,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -122,7 +131,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 
 const allTempTargets = `-- name: AllTempTargets :many
 
-SELECT id, created_at, eid, start, duration, hightarget, lowtarget FROM temp_targets ORDER BY created_at DESC
+SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, created_at, updated_at, created_by_identity_id FROM temp_targets ORDER BY created_at DESC
 `
 
 // ----
@@ -139,12 +148,15 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 		var i TempTarget
 		if err := rows.Scan(
 			&i.ID,
-			&i.CreatedAt,
 			&i.Eid,
 			&i.Start,
 			&i.Duration,
 			&i.Hightarget,
 			&i.Lowtarget,
+			&i.RawJsonData,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
