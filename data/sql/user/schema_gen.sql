@@ -37,7 +37,7 @@ CREATE TABLE device_status (
     battery_level INTEGER,
     charging_state TEXT CHECK(length(charging_state) <= 32),
 
-    -- pump
+    -- pump sub device
     pump_battery INTEGER,
     pump_status TEXT CHECK(length(pump_status) <= 32),
     pump_reservoir REAL,
@@ -47,7 +47,9 @@ CREATE TABLE device_status (
     loop_status TEXT CHECK(length(loop_status) <= 32),
     loop_timestamp INTEGER,
 
-    
+    -- cgm
+    cgm_status TEXT CHECK(length(cgm_status) <= 32),
+    cgm_insertion_time INTEGER, -- This is sometimes recorded as an event which is stuper annoying
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly

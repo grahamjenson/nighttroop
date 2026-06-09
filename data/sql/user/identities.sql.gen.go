@@ -13,7 +13,7 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, raw_json_data, created_at, updated_at, created_by_identity_id FROM device_status ORDER BY created_at DESC
+SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, created_at, updated_at, created_by_identity_id FROM device_status ORDER BY created_at DESC
 `
 
 // ----
@@ -40,6 +40,8 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 			&i.PumpInsertionTime,
 			&i.LoopStatus,
 			&i.LoopTimestamp,
+			&i.CgmStatus,
+			&i.CgmInsertionTime,
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,

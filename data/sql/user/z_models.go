@@ -41,6 +41,8 @@ type DeviceStatus struct {
 	PumpInsertionTime   *int64
 	LoopStatus          *string
 	LoopTimestamp       *int64
+	CgmStatus           *string
+	CgmInsertionTime    *int64
 	RawJsonData         *string
 	CreatedAt           int64
 	UpdatedAt           int64
