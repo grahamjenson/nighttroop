@@ -69,6 +69,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createIdentityStmt, err = db.PrepareContext(ctx, createIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateIdentity: %w", err)
 	}
+	if q.createTempBasalStmt, err = db.PrepareContext(ctx, createTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateTempBasal: %w", err)
+	}
+	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
+	}
 	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
 	}
@@ -155,6 +161,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createIdentityStmt: %w", cerr)
 		}
 	}
+	if q.createTempBasalStmt != nil {
+		if cerr := q.createTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createTempBasalStmt: %w", cerr)
+		}
+	}
+	if q.createTempTargetStmt != nil {
+		if cerr := q.createTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
+		}
+	}
 	if q.getIdentityStmt != nil {
 		if cerr := q.getIdentityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
@@ -219,6 +235,8 @@ type Queries struct {
 	createEntryIgnoreEIDConstraintStmt *sql.Stmt
 	createEventStmt                    *sql.Stmt
 	createIdentityStmt                 *sql.Stmt
+	createTempBasalStmt                *sql.Stmt
+	createTempTargetStmt               *sql.Stmt
 	getIdentityStmt                    *sql.Stmt
 	updateIdentityDateFlagsStmt        *sql.Stmt
 }
@@ -242,6 +260,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createEntryIgnoreEIDConstraintStmt: q.createEntryIgnoreEIDConstraintStmt,
 		createEventStmt:                    q.createEventStmt,
 		createIdentityStmt:                 q.createIdentityStmt,
+		createTempBasalStmt:                q.createTempBasalStmt,
+		createTempTargetStmt:               q.createTempTargetStmt,
 		getIdentityStmt:                    q.getIdentityStmt,
 		updateIdentityDateFlagsStmt:        q.updateIdentityDateFlagsStmt,
 	}

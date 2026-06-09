@@ -80,7 +80,7 @@ CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     eid TEXT CHECK(length(eid) <= 32),
-    START INTEGER,
+    start INTEGER,
     duration INTEGER,
     value REAL,
     -- CONTRAINTS
@@ -91,7 +91,7 @@ CREATE TABLE temp_targets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     eid TEXT CHECK(length(eid) <= 32),
-    START INTEGER,
+    start INTEGER,
     duration INTEGER,
     highTarget INTEGER,
     lowTarget INTEGER,

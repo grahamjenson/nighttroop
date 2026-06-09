@@ -160,23 +160,11 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 }
 
 const createBolus = `-- name: CreateBolus :exec
-INSERT INTO bolus (eid, value, type, created_at) VALUES ( ?, ?, ?, ?)
+INSERT INTO bolus (eid, value, type) VALUES ( ?, ?, ?)
 `
 
-type CreateBolusParams struct {
-	Eid       *string
-	Value     *float64
-	Type      *string
-	CreatedAt int64
-}
-
-func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error {
-	_, err := q.exec(ctx, q.createBolusStmt, createBolus,
-		arg.Eid,
-		arg.Value,
-		arg.Type,
-		arg.CreatedAt,
-	)
+func (q *Queries) CreateBolus(ctx context.Context, eid *string, value *float64, type_ *string) error {
+	_, err := q.exec(ctx, q.createBolusStmt, createBolus, eid, value, type_)
 	return err
 }
 
@@ -186,5 +174,49 @@ INSERT INTO carbs (eid, amount) VALUES ( ?, ?)
 
 func (q *Queries) CreateCarb(ctx context.Context, eid *string, amount float64) error {
 	_, err := q.exec(ctx, q.createCarbStmt, createCarb, eid, amount)
+	return err
+}
+
+const createTempBasal = `-- name: CreateTempBasal :exec
+INSERT INTO temp_basals (eid, start, duration, value) VALUES ( ?, ?, ?, ?)
+`
+
+type CreateTempBasalParams struct {
+	Eid      *string
+	Start    *int64
+	Duration *int64
+	Value    *float64
+}
+
+func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams) error {
+	_, err := q.exec(ctx, q.createTempBasalStmt, createTempBasal,
+		arg.Eid,
+		arg.Start,
+		arg.Duration,
+		arg.Value,
+	)
+	return err
+}
+
+const createTempTarget = `-- name: CreateTempTarget :exec
+INSERT INTO temp_targets (eid, start, duration, highTarget, lowTarget) VALUES ( ?, ?, ?, ?, ?)
+`
+
+type CreateTempTargetParams struct {
+	Eid        *string
+	Start      *int64
+	Duration   *int64
+	Hightarget *int64
+	Lowtarget  *int64
+}
+
+func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetParams) error {
+	_, err := q.exec(ctx, q.createTempTargetStmt, createTempTarget,
+		arg.Eid,
+		arg.Start,
+		arg.Duration,
+		arg.Hightarget,
+		arg.Lowtarget,
+	)
 	return err
 }
