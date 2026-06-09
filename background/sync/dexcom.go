@@ -53,7 +53,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 		// Update that it has been seen and used recently
 		if addedColumns {
 			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.userModel.Subdomain)
-			userSyncSource.userDB.Queries.UpdateIdentityLastSeenAt(context.TODO(), userSyncSource.syncIdentity.Name)
+			userSyncSource.userDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
 			totalAddedColumns += 1
 		}
 	}

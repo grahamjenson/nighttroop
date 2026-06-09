@@ -18,6 +18,7 @@ type UserIdentity struct {
 	Name            string
 	Created         string
 	LastSeen        string
+	LastWrite       string
 	Role            string
 	CurrentIdentity bool
 	HasTotpSecret   bool
@@ -36,11 +37,16 @@ func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName st
 		lastSeen = time.UnixMilli(*identity.LastSeenAt).Format("2006-01-02 15:04:05")
 	}
 
+	lastWrite := "Never"
+	if identity.LastWriteAt != nil && *identity.LastWriteAt != 0 {
+		lastWrite = time.UnixMilli(*identity.LastWriteAt).Format("2006-01-02 15:04:05")
+	}
 	return &UserIdentity{
 		ID:              strconv.Itoa(int(identity.ID)),
 		Name:            identity.Name,
 		Created:         time.UnixMilli(identity.CreatedAt).Format("2006-01-02 15:04:05"),
 		LastSeen:        lastSeen,
+		LastWrite:       lastWrite,
 		Role:            string(identity.Role),
 		CurrentIdentity: identity.Name == currentIdentityName,
 		HasTotpSecret:   identity.TotpSecret != "",
@@ -139,6 +145,9 @@ templ buildIdentityTable(id string, identities []*UserIdentity) {
 					Last Seen 
 				}
 				@table.Head() {
+					Last Write 
+				}
+				@table.Head() {
 					Actions
 				}
 			}
@@ -164,6 +173,9 @@ templ createTableRowForIdentity(identity *UserIdentity) {
 		}
 		@table.Cell() {
 			{ identity.LastSeen }
+		}
+		@table.Cell() {
+			{ identity.LastWrite }
 		}
 		@table.Cell() {
 			<!-- actions go here -->
