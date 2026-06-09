@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -20,7 +21,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			identityModel, keepGoing, err := user.TryAuthWithJWTToken(cfg, r)
+			identityModel, keepGoing, err := tryAuthWithJWTToken(cfg, r)
 			if err == nil {
 
 				ctx = httputils.SetIdentityModelInUserContext(ctx, identityModel)
@@ -48,6 +49,34 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
 		})
 	}
+}
+
+// Try get the Auth Header
+// Then try get the cookie
+const BearerPrefix = "bearer "
+
+func tryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*userSQL.Identity, bool, error) {
+	authHeader := r.Header.Get("Authorization")
+	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
+	if hasBearer {
+		jwttokenStr := authHeader[len(BearerPrefix):]
+		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		if err != nil {
+			return nil, false, fmt.Errorf("bad JWT token: %w", err)
+		}
+		identity, err := user.GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		if err != nil {
+			slog.Error("Bad JWT token cant find identity", "error", err)
+			return nil, false, fmt.Errorf("identity not found: %w", err)
+		}
+		return identity, false, nil
+	}
+
+	if authHeader != "" {
+		return nil, false, fmt.Errorf("Auth Header exists but is not Bearer token")
+	}
+
+	return nil, true, fmt.Errorf("No JWT token found")
 }
 
 func tryAuthWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (*userSQL.Identity, error) {

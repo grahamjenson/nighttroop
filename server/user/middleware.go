@@ -91,7 +91,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 			ctx := r.Context()
 			acceptType := httputils.GetAcceptType(r)
 
-			identity, _, err := TryAuthWithJWTToken(cfg, r)
+			identity, err := TryAuthWithJWTToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityModelInUserContext(ctx, identity)
 				next.ServeHTTP(w, r.WithContext(ctx))
@@ -112,24 +112,27 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 // Try get the Auth Header
 // Then try get the cookie
-func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Identity, bool, error) {
+const BearerPrefix = "bearer "
+
+func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Identity, error) {
 	authHeader := r.Header.Get("Authorization")
-	if strings.HasPrefix(authHeader, "Bearer ") {
-		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
+	if hasBearer {
+		jwttokenStr := authHeader[len(BearerPrefix):]
 		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
-			return nil, false, fmt.Errorf("bad JWT token: %w", err)
+			return nil, fmt.Errorf("bad JWT token: %w", err)
 		}
 		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Error("Bad JWT token cant find identity", "error", err)
-			return nil, false, fmt.Errorf("identity not found: %w", err)
+			return nil, fmt.Errorf("identity not found: %w", err)
 		}
-		return identity, false, nil
+		return identity, nil
 	}
 
 	if authHeader != "" {
-		return nil, false, fmt.Errorf("Auth Header exists but is not Bearer token")
+		return nil, fmt.Errorf("Auth Header exists but is not Bearer token")
 	}
 
 	// Check for Cookie
@@ -139,17 +142,17 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
 			slog.Error("Bad Cookie JWT token", "error", err)
-			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
+			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Error("Bad Cookie JWT token cant find identity", "error", err)
-			return nil, false, fmt.Errorf("Bad Cookie JWT token: %w", err)
+			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		return identity, false, nil
+		return identity, nil
 	}
 
-	return nil, true, fmt.Errorf("No JWT token found")
+	return nil, fmt.Errorf("No JWT token found")
 }
 
 func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*user.Identity, error) {
