@@ -5,6 +5,8 @@
 package user
 
 import (
+	"encoding/json"
+
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -12,9 +14,10 @@ type Bolus struct {
 	ID                    int64
 	Eid                   string
 	Value                 *float64
-	Type                  *string
+	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -26,8 +29,10 @@ type Carb struct {
 	ID                    int64
 	Eid                   string
 	Amount                float64
+	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -51,6 +56,7 @@ type DeviceStatus struct {
 	CgmInsertionTime      *int64
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -70,9 +76,10 @@ type GlucoseReading struct {
 	ID                    int64
 	Eid                   string
 	Value                 float64
-	Type                  *string
+	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -111,11 +118,17 @@ type Profile struct {
 	TargetsJson              *string
 	RawJsonData              *string
 	DeletedAt                *int64
+	UtcOffsetMinutes         int64
 	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
 	CreatedByIdentityName    string
 	CreatedByIdentityID      int64
+}
+
+type Setting struct {
+	Key   string
+	Value json.RawMessage
 }
 
 type SqliteSequence struct {
@@ -131,6 +144,7 @@ type TempBasal struct {
 	Value                 *float64
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -147,6 +161,7 @@ type TempTarget struct {
 	Lowtarget             *int64
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64

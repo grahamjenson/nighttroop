@@ -67,7 +67,7 @@ func (c EntriesCollection) Get(ctx context.Context, identifier string) (*model.R
 
 func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
-	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx)
+	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit))
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func GlucoseReadingToRecord(sgv *user.GlucoseReading) model.Record {
 
 	entryModel := Entry{
 		Identifier: ptr(sgv.Eid),
-		Type:       ptr("sgv"),
+		Type:       ptr(sgv.Type),
 		SGV:        ptr(FlexibleFloat64(sgv.Value)),
 		Date:       ptr(sgv.OccurredAt),
 		DateString: ptr(dateString(sgv.OccurredAt)),

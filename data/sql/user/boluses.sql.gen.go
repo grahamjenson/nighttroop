@@ -11,7 +11,7 @@ import (
 
 const allBoluses = `-- name: AllBoluses :many
 
-SELECT id, eid, value, type, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus ORDER BY occurred_at DESC
+SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus ORDER BY occurred_at DESC
 `
 
 // ------
@@ -33,6 +33,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 			&i.Type,
 			&i.RawJsonData,
 			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -68,7 +69,7 @@ type CreateBolusParams struct {
 	Eid                   string
 	OccurredAt            int64
 	Value                 *float64
-	Type                  *string
+	Type                  string
 	RawJsonData           *string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
@@ -91,7 +92,7 @@ func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error 
 }
 
 const getBolusByEID = `-- name: GetBolusByEID :one
-SELECT id, eid, value, type, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus WHERE eid = ?
+SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus WHERE eid = ?
 `
 
 func (q *Queries) GetBolusByEID(ctx context.Context, eid string) (*Bolus, error) {
@@ -104,6 +105,7 @@ func (q *Queries) GetBolusByEID(ctx context.Context, eid string) (*Bolus, error)
 		&i.Type,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

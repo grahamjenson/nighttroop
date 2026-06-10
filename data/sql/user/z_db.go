@@ -117,6 +117,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
 	}
+	if q.getSettingFromDBStmt, err = db.PrepareContext(ctx, getSettingFromDB); err != nil {
+		return nil, fmt.Errorf("error preparing query getSettingFromDB: %w", err)
+	}
+	if q.upsertSettingToDBStmt, err = db.PrepareContext(ctx, upsertSettingToDB); err != nil {
+		return nil, fmt.Errorf("error preparing query upsertSettingToDB: %w", err)
+	}
 	return &q, nil
 }
 
@@ -277,6 +283,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
 		}
 	}
+	if q.getSettingFromDBStmt != nil {
+		if cerr := q.getSettingFromDBStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSettingFromDBStmt: %w", cerr)
+		}
+	}
+	if q.upsertSettingToDBStmt != nil {
+		if cerr := q.upsertSettingToDBStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertSettingToDBStmt: %w", cerr)
+		}
+	}
 	return err
 }
 
@@ -347,6 +363,8 @@ type Queries struct {
 	getTempTargetByEIDStmt                      *sql.Stmt
 	updateGlucoseReadingByEIDStmt               *sql.Stmt
 	updateIdentityDateFlagsStmt                 *sql.Stmt
+	getSettingFromDBStmt                        *sql.Stmt
+	upsertSettingToDBStmt                       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -384,5 +402,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTempTargetByEIDStmt:                      q.getTempTargetByEIDStmt,
 		updateGlucoseReadingByEIDStmt:               q.updateGlucoseReadingByEIDStmt,
 		updateIdentityDateFlagsStmt:                 q.updateIdentityDateFlagsStmt,
+		getSettingFromDBStmt:                        q.getSettingFromDBStmt,
+		upsertSettingToDBStmt:                       q.upsertSettingToDBStmt,
 	}
 }

@@ -12,7 +12,7 @@ import (
 const allTempTargets = `-- name: AllTempTargets :many
 
 
-SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY occurred_at DESC
+SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY occurred_at DESC
 `
 
 // ------
@@ -36,6 +36,7 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 			&i.Lowtarget,
 			&i.RawJsonData,
 			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -103,7 +104,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 }
 
 const getTempTargetByEID = `-- name: GetTempTargetByEID :one
-SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE eid = ?
+SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE eid = ?
 `
 
 func (q *Queries) GetTempTargetByEID(ctx context.Context, eid string) (*TempTarget, error) {
@@ -118,6 +119,7 @@ func (q *Queries) GetTempTargetByEID(ctx context.Context, eid string) (*TempTarg
 		&i.Lowtarget,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

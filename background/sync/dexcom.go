@@ -40,6 +40,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
 				RawJsonData:           &e.RawJson,
 				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
+				UtcOffsetMinutes:      int64(e.UTCOffsetInMinutes()),
 			})
 			if err != nil {
 				// Probably just non-unique eid

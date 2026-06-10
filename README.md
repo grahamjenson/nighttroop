@@ -15,6 +15,7 @@
     1. Connect actual data and do some fun perf testing
     1. Cleanup overloaded terms User/Device/Identity
 
+1. Timezones for profiles, user settings, just to make sure that when a treatment is logged we know whne against the profile it actually happened
 2. Logging with contexts to DBs, 
 1. error reporting with sentry, 
 1. check that users dont get error responses traces

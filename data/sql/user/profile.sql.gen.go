@@ -14,7 +14,7 @@ const allProfiles = `-- name: AllProfiles :many
 
 
 
-SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
+SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
 `
 
 // -----
@@ -50,6 +50,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 			&i.TargetsJson,
 			&i.RawJsonData,
 			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -70,7 +71,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 }
 
 const getProfileByEID = `-- name: GetProfileByEID :one
-SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE eid = ?
+SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE eid = ?
 `
 
 func (q *Queries) GetProfileByEID(ctx context.Context, eid string) (*Profile, error) {
@@ -94,6 +95,7 @@ func (q *Queries) GetProfileByEID(ctx context.Context, eid string) (*Profile, er
 		&i.TargetsJson,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

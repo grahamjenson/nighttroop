@@ -1,6 +1,11 @@
 ---------------------------------------------------
 -- TABLES FOR USING NIGHTTROOP
 ---------------------------------------------------
+CREATE TABLE settings (
+    key TEXT PRIMARY KEY,
+    value JSON NOT NULL
+);
+
 -- This table is like users and devices, as like a sugarpixel isnt a user, it is a device.
 CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,7 +18,6 @@ CREATE TABLE identities (
     last_seen_at INTEGER,
     last_write_at INTEGER,
     deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
-
     enabled INTEGER NOT NULL DEFAULT 1
 );
 
@@ -61,6 +65,7 @@ CREATE TABLE device_status (
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -75,11 +80,12 @@ CREATE TABLE glucose_readings (
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
-    type TEXT CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
+    type TEXT NOT NULL  CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -93,11 +99,12 @@ CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     value REAL,
-    type TEXT CHECK(length(type) <= 32),
+    type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'bolus',
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -110,10 +117,12 @@ CREATE TABLE carbs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     amount REAL NOT NULL,
-    
+    type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'carbs',
+
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -133,6 +142,7 @@ CREATE TABLE temp_basals (
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -153,6 +163,7 @@ CREATE TABLE temp_targets (
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -187,6 +198,7 @@ CREATE TABLE profile (
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

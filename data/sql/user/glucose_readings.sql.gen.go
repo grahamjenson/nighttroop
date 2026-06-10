@@ -12,11 +12,11 @@ import (
 )
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
-SELECT id, eid, value, type, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings ORDER BY occurred_at DESC
+SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?
 `
 
-func (q *Queries) AllGlucoseReadings(ctx context.Context) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings)
+func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +31,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context) ([]*GlucoseReading, er
 			&i.Type,
 			&i.RawJsonData,
 			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -55,11 +56,12 @@ INSERT INTO glucose_readings (
     eid,
     occurred_at,
     value,
-    raw_json_data, 
+    raw_json_data,
+    utc_offset_minutes,
     created_by_identity_id,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateGlucoseReadingParams struct {
@@ -67,6 +69,7 @@ type CreateGlucoseReadingParams struct {
 	OccurredAt            int64
 	Value                 float64
 	RawJsonData           *string
+	UtcOffsetMinutes      int64
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
@@ -77,6 +80,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
+		arg.UtcOffsetMinutes,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
@@ -89,10 +93,11 @@ INSERT INTO glucose_readings (
     occurred_at,
     value,
     raw_json_data, 
+    utc_offset_minutes,
     created_by_identity_id,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(eid) DO NOTHING
 `
 
@@ -101,6 +106,7 @@ type CreateGlucoseReadingIgnoreEIDConstraintParams struct {
 	OccurredAt            int64
 	Value                 float64
 	RawJsonData           *string
+	UtcOffsetMinutes      int64
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
@@ -114,6 +120,7 @@ func (q *Queries) CreateGlucoseReadingIgnoreEIDConstraint(ctx context.Context, a
 		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
+		arg.UtcOffsetMinutes,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
@@ -184,7 +191,7 @@ func (q *Queries) DeletePermanentGlucoseReadingsByEIDs(ctx context.Context, eids
 
 const getGlucoseReadingByEID = `-- name: GetGlucoseReadingByEID :one
 
-SELECT id, eid, value, type, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE eid = ?
+SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE eid = ?
 `
 
 // ------
@@ -200,6 +207,7 @@ func (q *Queries) GetGlucoseReadingByEID(ctx context.Context, eid string) (*Gluc
 		&i.Type,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -215,17 +223,19 @@ UPDATE glucose_readings SET
     occurred_at = COALESCE(?2, occurred_at),
     value = COALESCE(?3, value),
     raw_json_data = COALESCE(?4, raw_json_data),
-    created_by_identity_id = COALESCE(?5, created_by_identity_id),
-    created_by_identity_name = COALESCE(?6, created_by_identity_name),
+    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
+    created_by_identity_id = COALESCE(?6, created_by_identity_id),
+    created_by_identity_name = COALESCE(?7, created_by_identity_name),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE eid = ?
-RETURNING id, eid, value, type, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateGlucoseReadingByEIDParams struct {
 	OccurredAt            *int64
 	Value                 *float64
 	RawJsonData           *string
+	UtcOffsetMinutes      *int64
 	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 	Eid                   string
@@ -239,6 +249,7 @@ func (q *Queries) UpdateGlucoseReadingByEID(ctx context.Context, arg UpdateGluco
 		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
+		arg.UtcOffsetMinutes,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 		arg.Eid,
@@ -251,6 +262,7 @@ func (q *Queries) UpdateGlucoseReadingByEID(ctx context.Context, arg UpdateGluco
 		&i.Type,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

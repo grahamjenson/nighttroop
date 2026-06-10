@@ -11,7 +11,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, eid, start, duration, value, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY occurred_at DESC
+SELECT id, eid, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY occurred_at DESC
 `
 
 // ------
@@ -34,6 +34,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 			&i.Value,
 			&i.RawJsonData,
 			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -97,7 +98,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasalByEID = `-- name: GetTempBasalByEID :one
-SELECT id, eid, start, duration, value, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE eid = ?
+SELECT id, eid, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE eid = ?
 `
 
 func (q *Queries) GetTempBasalByEID(ctx context.Context, eid string) (*TempBasal, error) {
@@ -111,6 +112,7 @@ func (q *Queries) GetTempBasalByEID(ctx context.Context, eid string) (*TempBasal
 		&i.Value,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

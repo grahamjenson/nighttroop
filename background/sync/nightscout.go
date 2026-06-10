@@ -43,6 +43,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 				RawJsonData:           &e.RawJSON,
 				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
 				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
+				UtcOffsetMinutes:      int64(e.UTCOffset),
 			})
 			if err != nil {
 				// Probably just non-unique eid

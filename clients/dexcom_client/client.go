@@ -195,6 +195,11 @@ type EGV struct {
 	RawJson     string
 }
 
+func (e EGV) UTCOffsetInMinutes() int {
+	_, offset := e.DisplayTime.Zone()
+	return offset / 60
+}
+
 // FetchEGVs fetches the last specified minutes of EGV readings.
 func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
 	if c.sessionID == "" {

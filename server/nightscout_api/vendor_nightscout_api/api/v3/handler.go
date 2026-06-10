@@ -165,10 +165,7 @@ func Read(dep di.Dependencies) http.HandlerFunc {
 		permission := fmt.Sprintf("api:%s:read", collection)
 		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			record, err := dep.Store.Get(r.Context(), collection, chi.URLParam(r, "identifier"))
-			if err == nil && record == nil {
-				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
-				return
-			}
+
 			if err != nil {
 				status, body := httpx.RequireRecord(err)
 				httpx.WriteJSON(w, status, body)
@@ -181,7 +178,7 @@ func Read(dep di.Dependencies) http.HandlerFunc {
 			httpx.LastModifiedHeader(w, record.SrvModified)
 			parsed, _ := query.ParseV3(r.URL.Query())
 			fields := parsed.Fields
-			httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": selectV3Fields(*record, fields)})
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": selectV3Fields(record, fields)})
 		}).ServeHTTP(w, r)
 	}
 }
@@ -204,11 +201,9 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 			identifier := chi.URLParam(r, "identifier")
 			// TODO cleanup folling logic make it understandable
 			existing, err := dep.Store.Get(r.Context(), collection, identifier)
-			if err == nil && existing == nil {
-				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
-				return
-			}
+
 			if err == di.ErrGone {
+				// Deleted Soft
 				httpx.WriteJSON(w, http.StatusGone, map[string]any{"status": http.StatusGone})
 				return
 			}
@@ -217,6 +212,7 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 				httpx.WriteJSON(w, status, body)
 				return
 			}
+
 			if err == di.ErrNotFound && !dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection)) {
 				httpx.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission api:%s:create", collection)})
 				return
@@ -226,7 +222,7 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 					httpx.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
 					return
 				}
-				if err := validateReplaceDoc(collection, *existing, doc); err != nil {
+				if err := validateReplaceDoc(collection, existing, doc); err != nil {
 					httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
@@ -238,9 +234,9 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 			}
 
 			created := false
-			var record *model.Record
-
-			if existing == nil {
+			var record model.Record
+			// TODO this is just checking if the record actually exists
+			if existing.Identifier() == "" {
 				// Double check permissions here
 				if !dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection)) {
 					httpx.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission api:%s:create", collection)})
@@ -252,10 +248,7 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 				// Update otherwise
 				record, err = dep.Store.Update(r.Context(), collection, identifier, doc, identity.Name)
 			}
-			if err == nil && record == nil {
-				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
-				return
-			}
+
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
@@ -263,7 +256,7 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 
 			httpx.LastModifiedHeader(w, record.SrvModified)
 			status := http.StatusOK
-			body := map[string]any{"status": http.StatusOK, "result": selectV3Fields(*record, nil)}
+			body := map[string]any{"status": http.StatusOK, "result": selectV3Fields(record, nil)}
 			if created {
 				status = http.StatusCreated
 				body["status"] = status
@@ -279,6 +272,7 @@ func Update(dep di.Dependencies) http.HandlerFunc {
 func Patch(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection := chi.URLParam(r, "collection")
+		identifier := chi.URLParam(r, "identifier")
 		if !validCollection(collection) {
 			httpx.WriteJSON(w, http.StatusNotFound, map[string]any{"status": http.StatusNotFound})
 			return
@@ -290,11 +284,7 @@ func Patch(dep di.Dependencies) http.HandlerFunc {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 				return
 			}
-			existing, err := dep.Store.Get(r.Context(), collection, chi.URLParam(r, "identifier"))
-			if err == nil && existing == nil {
-				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
-				return
-			}
+			existing, err := dep.Store.Get(r.Context(), collection, identifier)
 			if err != nil {
 				status, body := httpx.RequireRecord(err)
 				httpx.WriteJSON(w, status, body)
@@ -304,22 +294,19 @@ func Patch(dep di.Dependencies) http.HandlerFunc {
 				httpx.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
 				return
 			}
-			if err := validatePatchDoc(*existing, doc); err != nil {
+			if err := validatePatchDoc(existing, doc); err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
-			record, err := dep.Store.Update(r.Context(), collection, chi.URLParam(r, "identifier"), doc, identity.Name)
-			if err == nil && record == nil {
-				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
-				return
-			}
+			record, err := dep.Store.Update(r.Context(), collection, identifier, doc, identity.Name)
+
 			if err != nil {
 				status, body := httpx.RequireRecord(err)
 				httpx.WriteJSON(w, status, body)
 				return
 			}
 			httpx.LastModifiedHeader(w, record.SrvModified)
-			httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": selectV3Fields(*record, nil)})
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": selectV3Fields(record, nil)})
 		}).ServeHTTP(w, r)
 	}
 }

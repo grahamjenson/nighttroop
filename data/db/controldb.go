@@ -193,6 +193,11 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 		return nil, "", "", "", fmt.Errorf("cannot create admin identity: %w", err)
 	}
 
+	err = userDB.createDefaultSettings()
+	if err != nil {
+		userDB.TryCloseAndDelete()
+		return nil, "", "", "", fmt.Errorf("cannot create default settings: %w", err)
+	}
 	db.users[subdomain] = userDB
 
 	return userDB, adminPassword, backupPassword, totpSecret, nil

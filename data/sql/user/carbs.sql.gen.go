@@ -11,7 +11,7 @@ import (
 
 const allCarbs = `-- name: AllCarbs :many
 
-SELECT id, eid, amount, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
+SELECT id, eid, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
 `
 
 // ------
@@ -30,8 +30,10 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 			&i.ID,
 			&i.Eid,
 			&i.Amount,
+			&i.Type,
 			&i.RawJsonData,
 			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -87,7 +89,7 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
 }
 
 const getCarbByEID = `-- name: GetCarbByEID :one
-SELECT id, eid, amount, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs WHERE eid = ?
+SELECT id, eid, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs WHERE eid = ?
 `
 
 func (q *Queries) GetCarbByEID(ctx context.Context, eid string) (*Carb, error) {
@@ -97,8 +99,10 @@ func (q *Queries) GetCarbByEID(ctx context.Context, eid string) (*Carb, error) {
 		&i.ID,
 		&i.Eid,
 		&i.Amount,
+		&i.Type,
 		&i.RawJsonData,
 		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

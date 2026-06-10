@@ -117,6 +117,18 @@ func (db *UserDB) createDefaultUsers() (string, string, error) {
 	return adminPassword, totpSecret, nil
 }
 
+func (db *UserDB) createDefaultSettings() error {
+	err := user.SetSetting(context.TODO(), db.Queries, user.UnitsSetting, user.Units{Units: consts.UNITS_MG_DL})
+	if err != nil {
+		return fmt.Errorf("cannot set default units setting: %w", err)
+	}
+	err = user.SetSetting(context.TODO(), db.Queries, user.TimezoneSetting, user.Timezone{TZ: *time.UTC})
+	if err != nil {
+		return fmt.Errorf("cannot set default timezone setting: %w", err)
+	}
+	return nil
+}
+
 func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string, *string, *string, error) {
 
 	security := db.serverConfig.Security

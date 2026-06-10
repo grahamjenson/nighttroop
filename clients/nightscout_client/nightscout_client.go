@@ -71,10 +71,11 @@ func (c *Client) newRequest(
 //
 
 type SGVEntry struct {
-	Date    time.Time `json:"-"`
-	SGV     float64   `json:"-"`
-	Units   string    `json:"units"`
-	RawJSON string    `json:"-"`
+	Date      time.Time `json:"-"`
+	SGV       float64   `json:"-"`
+	Units     string    `json:"units"`
+	UTCOffset int       `json:"utcOffset"`
+	RawJSON   string    `json:"-"`
 }
 
 func (e *SGVEntry) UnmarshalJSON(data []byte) error {
