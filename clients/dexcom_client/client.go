@@ -192,6 +192,7 @@ type EGV struct {
 	Value       int
 	SystemTime  time.Time
 	DisplayTime time.Time
+	RawJson     string
 }
 
 // FetchEGVs fetches the last specified minutes of EGV readings.
@@ -236,15 +237,21 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
 		)
 	}
 
-	var raw []dexcomEGVResponse
+	var items []json.RawMessage
 
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
 		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
 	}
 
-	out := make([]EGV, 0, len(raw))
+	out := make([]EGV, 0, len(items))
 
-	for _, r := range raw {
+	for _, raw := range items {
+		var r dexcomEGVResponse
+		if err := json.Unmarshal(raw, &r); err != nil {
+			slog.Error("Error unmarshalling Dexcom response", "error", err, "raw", string(raw))
+			continue
+		}
+
 		systemTime, err := parseDexcomTime(r.ST)
 		if err != nil {
 			slog.Error("Error parsing Dexcom system time", "error", err, "raw_time", r.ST)
@@ -258,6 +265,7 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
 			Value:       r.Value,
 			SystemTime:  systemTime,
 			DisplayTime: displayTime,
+			RawJson:     string(raw),
 		})
 	}
 

@@ -33,9 +33,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allDeviceStatusStmt, err = db.PrepareContext(ctx, allDeviceStatus); err != nil {
 		return nil, fmt.Errorf("error preparing query AllDeviceStatus: %w", err)
 	}
-	if q.allEntriesStmt, err = db.PrepareContext(ctx, allEntries); err != nil {
-		return nil, fmt.Errorf("error preparing query AllEntries: %w", err)
-	}
 	if q.allEventsStmt, err = db.PrepareContext(ctx, allEvents); err != nil {
 		return nil, fmt.Errorf("error preparing query AllEvents: %w", err)
 	}
@@ -44,6 +41,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.allProfilesStmt, err = db.PrepareContext(ctx, allProfiles); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfiles: %w", err)
+	}
+	if q.allSGVsStmt, err = db.PrepareContext(ctx, allSGVs); err != nil {
+		return nil, fmt.Errorf("error preparing query AllSGVs: %w", err)
 	}
 	if q.allTempBasalsStmt, err = db.PrepareContext(ctx, allTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempBasals: %w", err)
@@ -57,17 +57,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createCarbStmt, err = db.PrepareContext(ctx, createCarb); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateCarb: %w", err)
 	}
-	if q.createEntryStmt, err = db.PrepareContext(ctx, createEntry); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateEntry: %w", err)
-	}
-	if q.createEntryIgnoreEIDConstraintStmt, err = db.PrepareContext(ctx, createEntryIgnoreEIDConstraint); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateEntryIgnoreEIDConstraint: %w", err)
-	}
 	if q.createEventStmt, err = db.PrepareContext(ctx, createEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEvent: %w", err)
 	}
 	if q.createIdentityStmt, err = db.PrepareContext(ctx, createIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateIdentity: %w", err)
+	}
+	if q.createSGVStmt, err = db.PrepareContext(ctx, createSGV); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSGV: %w", err)
+	}
+	if q.createSGVIgnoreEIDConstraintStmt, err = db.PrepareContext(ctx, createSGVIgnoreEIDConstraint); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSGVIgnoreEIDConstraint: %w", err)
 	}
 	if q.createTempBasalStmt, err = db.PrepareContext(ctx, createTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempBasal: %w", err)
@@ -77,6 +77,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
+	}
+	if q.getSGVByEIDStmt, err = db.PrepareContext(ctx, getSGVByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSGVByEID: %w", err)
 	}
 	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
@@ -101,11 +104,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allDeviceStatusStmt: %w", cerr)
 		}
 	}
-	if q.allEntriesStmt != nil {
-		if cerr := q.allEntriesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allEntriesStmt: %w", cerr)
-		}
-	}
 	if q.allEventsStmt != nil {
 		if cerr := q.allEventsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allEventsStmt: %w", cerr)
@@ -119,6 +117,11 @@ func (q *Queries) Close() error {
 	if q.allProfilesStmt != nil {
 		if cerr := q.allProfilesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allProfilesStmt: %w", cerr)
+		}
+	}
+	if q.allSGVsStmt != nil {
+		if cerr := q.allSGVsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allSGVsStmt: %w", cerr)
 		}
 	}
 	if q.allTempBasalsStmt != nil {
@@ -141,16 +144,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createCarbStmt: %w", cerr)
 		}
 	}
-	if q.createEntryStmt != nil {
-		if cerr := q.createEntryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createEntryStmt: %w", cerr)
-		}
-	}
-	if q.createEntryIgnoreEIDConstraintStmt != nil {
-		if cerr := q.createEntryIgnoreEIDConstraintStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createEntryIgnoreEIDConstraintStmt: %w", cerr)
-		}
-	}
 	if q.createEventStmt != nil {
 		if cerr := q.createEventStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createEventStmt: %w", cerr)
@@ -159,6 +152,16 @@ func (q *Queries) Close() error {
 	if q.createIdentityStmt != nil {
 		if cerr := q.createIdentityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createIdentityStmt: %w", cerr)
+		}
+	}
+	if q.createSGVStmt != nil {
+		if cerr := q.createSGVStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSGVStmt: %w", cerr)
+		}
+	}
+	if q.createSGVIgnoreEIDConstraintStmt != nil {
+		if cerr := q.createSGVIgnoreEIDConstraintStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSGVIgnoreEIDConstraintStmt: %w", cerr)
 		}
 	}
 	if q.createTempBasalStmt != nil {
@@ -174,6 +177,11 @@ func (q *Queries) Close() error {
 	if q.getIdentityStmt != nil {
 		if cerr := q.getIdentityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
+		}
+	}
+	if q.getSGVByEIDStmt != nil {
+		if cerr := q.getSGVByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSGVByEIDStmt: %w", cerr)
 		}
 	}
 	if q.updateIdentityDateFlagsStmt != nil {
@@ -218,51 +226,53 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                 DBTX
-	tx                                 *sql.Tx
-	allBolusesStmt                     *sql.Stmt
-	allCarbsStmt                       *sql.Stmt
-	allDeviceStatusStmt                *sql.Stmt
-	allEntriesStmt                     *sql.Stmt
-	allEventsStmt                      *sql.Stmt
-	allIdentitiesStmt                  *sql.Stmt
-	allProfilesStmt                    *sql.Stmt
-	allTempBasalsStmt                  *sql.Stmt
-	allTempTargetsStmt                 *sql.Stmt
-	createBolusStmt                    *sql.Stmt
-	createCarbStmt                     *sql.Stmt
-	createEntryStmt                    *sql.Stmt
-	createEntryIgnoreEIDConstraintStmt *sql.Stmt
-	createEventStmt                    *sql.Stmt
-	createIdentityStmt                 *sql.Stmt
-	createTempBasalStmt                *sql.Stmt
-	createTempTargetStmt               *sql.Stmt
-	getIdentityStmt                    *sql.Stmt
-	updateIdentityDateFlagsStmt        *sql.Stmt
+	db                               DBTX
+	tx                               *sql.Tx
+	allBolusesStmt                   *sql.Stmt
+	allCarbsStmt                     *sql.Stmt
+	allDeviceStatusStmt              *sql.Stmt
+	allEventsStmt                    *sql.Stmt
+	allIdentitiesStmt                *sql.Stmt
+	allProfilesStmt                  *sql.Stmt
+	allSGVsStmt                      *sql.Stmt
+	allTempBasalsStmt                *sql.Stmt
+	allTempTargetsStmt               *sql.Stmt
+	createBolusStmt                  *sql.Stmt
+	createCarbStmt                   *sql.Stmt
+	createEventStmt                  *sql.Stmt
+	createIdentityStmt               *sql.Stmt
+	createSGVStmt                    *sql.Stmt
+	createSGVIgnoreEIDConstraintStmt *sql.Stmt
+	createTempBasalStmt              *sql.Stmt
+	createTempTargetStmt             *sql.Stmt
+	getIdentityStmt                  *sql.Stmt
+	getSGVByEIDStmt                  *sql.Stmt
+	updateIdentityDateFlagsStmt      *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                 tx,
-		tx:                                 tx,
-		allBolusesStmt:                     q.allBolusesStmt,
-		allCarbsStmt:                       q.allCarbsStmt,
-		allDeviceStatusStmt:                q.allDeviceStatusStmt,
-		allEntriesStmt:                     q.allEntriesStmt,
-		allEventsStmt:                      q.allEventsStmt,
-		allIdentitiesStmt:                  q.allIdentitiesStmt,
-		allProfilesStmt:                    q.allProfilesStmt,
-		allTempBasalsStmt:                  q.allTempBasalsStmt,
-		allTempTargetsStmt:                 q.allTempTargetsStmt,
-		createBolusStmt:                    q.createBolusStmt,
-		createCarbStmt:                     q.createCarbStmt,
-		createEntryStmt:                    q.createEntryStmt,
-		createEntryIgnoreEIDConstraintStmt: q.createEntryIgnoreEIDConstraintStmt,
-		createEventStmt:                    q.createEventStmt,
-		createIdentityStmt:                 q.createIdentityStmt,
-		createTempBasalStmt:                q.createTempBasalStmt,
-		createTempTargetStmt:               q.createTempTargetStmt,
-		getIdentityStmt:                    q.getIdentityStmt,
-		updateIdentityDateFlagsStmt:        q.updateIdentityDateFlagsStmt,
+		db:                               tx,
+		tx:                               tx,
+		allBolusesStmt:                   q.allBolusesStmt,
+		allCarbsStmt:                     q.allCarbsStmt,
+		allDeviceStatusStmt:              q.allDeviceStatusStmt,
+		allEventsStmt:                    q.allEventsStmt,
+		allIdentitiesStmt:                q.allIdentitiesStmt,
+		allProfilesStmt:                  q.allProfilesStmt,
+		allSGVsStmt:                      q.allSGVsStmt,
+		allTempBasalsStmt:                q.allTempBasalsStmt,
+		allTempTargetsStmt:               q.allTempTargetsStmt,
+		createBolusStmt:                  q.createBolusStmt,
+		createCarbStmt:                   q.createCarbStmt,
+		createEventStmt:                  q.createEventStmt,
+		createIdentityStmt:               q.createIdentityStmt,
+		createSGVStmt:                    q.createSGVStmt,
+		createSGVIgnoreEIDConstraintStmt: q.createSGVIgnoreEIDConstraintStmt,
+		createTempBasalStmt:              q.createTempBasalStmt,
+		createTempTargetStmt:             q.createTempTargetStmt,
+		getIdentityStmt:                  q.getIdentityStmt,
+		getSGVByEIDStmt:                  q.getSGVByEIDStmt,
+		updateIdentityDateFlagsStmt:      q.updateIdentityDateFlagsStmt,
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/utils"
 )
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
@@ -34,11 +35,12 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			eid := fmt.Sprintf("nightscout_%s", e.Date.Format(time.RFC3339))
-			res, err := userSyncSource.userDB.Queries.CreateEntryIgnoreEIDConstraint(context.TODO(), user.CreateEntryIgnoreEIDConstraintParams{
+			eid := utils.NextEID("nightscout")
+			res, err := userSyncSource.userDB.Queries.CreateSGVIgnoreEIDConstraint(context.TODO(), user.CreateSGVIgnoreEIDConstraintParams{
 				Eid:                   eid,
 				CreatedAt:             e.Date.UnixMilli(),
 				Value:                 float64(e.SGV),
+				RawJsonData:           &e.RawJSON,
 				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
 				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
 			})

@@ -3,26 +3,57 @@ package collections
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type EntriesCollection struct{}
 
 func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (model.Record, bool, error) {
-	return model.Record{}, false, nil
+	userContext := httputils.GetUserContext(ctx)
+	var entryModel Entry
+	raw_json, err := MapToStruct(data, &entryModel)
+	if err != nil {
+		return model.Record{}, false, fmt.Errorf("failed to map data to entry model: %w", err)
+	}
+	if entryModel.Date == 0 {
+		entryModel.Date = time.Now().UnixMilli()
+	}
+	userContext.UserDB.Queries.CreateSGV(ctx, user.CreateSGVParams{
+		Eid:                   utils.NextEID("ns"),
+		CreatedAt:             entryModel.Date,
+		Value:                 float64(entryModel.SGV),
+		RawJsonData:           &raw_json,
+		CreatedByIdentityID:   userContext.IdentityModel.ID,
+		CreatedByIdentityName: userContext.IdentityModel.Name,
+	})
+
+	return model.Record{
+		Collection:  "entries",
+		ID:          entryModel.Identifier,
+		Data:        data,
+		SrvModified: entryModel.Date,
+	}, true, nil
 }
 
 func (c EntriesCollection) Get(ctx context.Context, identifier string) (model.Record, error) {
-	return model.Record{}, nil
+	userContext := httputils.GetUserContext(ctx)
+
+	sgv, err := userContext.UserDB.Queries.GetSGVByEID(ctx, identifier)
+	if err != nil {
+		return model.Record{}, fmt.Errorf("failed to get SGV by ID: %w", err)
+	}
+	return SGVToRecord(sgv), nil
 }
 
 func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
-	entries, err := userContext.UserDB.Queries.AllEntries(ctx)
+	entries, err := userContext.UserDB.Queries.AllSGVs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,10 +108,9 @@ func SGVToRecord(sgv *user.Sgv) model.Record {
 	if sgv == nil {
 		return model.Record{}
 	}
-	// This id needs to be unique across time and different records
-	id := fmt.Sprintf("%d_%d", sgv.ID, sgv.CreatedAt)
+
 	entryModel := Entry{
-		Identifier: id,
+		Identifier: sgv.Eid,
 		Type:       "sgv",
 		SGV:        FlexibleFloat64(sgv.Value),
 		Date:       sgv.CreatedAt,
@@ -90,7 +120,7 @@ func SGVToRecord(sgv *user.Sgv) model.Record {
 
 	return model.Record{
 		Collection:  "entries",
-		ID:          id,
+		ID:          sgv.Eid,
 		Data:        StructToMap(entryModel),
 		SrvCreated:  sgv.CreatedAt,
 		SrvModified: sgv.CreatedAt,

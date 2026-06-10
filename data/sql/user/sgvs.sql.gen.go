@@ -10,12 +10,12 @@ import (
 	"database/sql"
 )
 
-const allEntries = `-- name: AllEntries :many
+const allSGVs = `-- name: AllSGVs :many
 SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs ORDER BY created_at DESC
 `
 
-func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
-	rows, err := q.query(ctx, q.allEntriesStmt, allEntries)
+func (q *Queries) AllSGVs(ctx context.Context) ([]*Sgv, error) {
+	rows, err := q.query(ctx, q.allSGVsStmt, allSGVs)
 	if err != nil {
 		return nil, err
 	}
@@ -46,53 +46,95 @@ func (q *Queries) AllEntries(ctx context.Context) ([]*Sgv, error) {
 	return items, nil
 }
 
-const createEntry = `-- name: CreateEntry :exec
-INSERT INTO sgvs (eid, created_at, value, created_by_identity_id) VALUES (?, ?, ?, ?)
-`
-
-type CreateEntryParams struct {
-	Eid                 string
-	CreatedAt           int64
-	Value               float64
-	CreatedByIdentityID int64
-}
-
-func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) error {
-	_, err := q.exec(ctx, q.createEntryStmt, createEntry,
-		arg.Eid,
-		arg.CreatedAt,
-		arg.Value,
-		arg.CreatedByIdentityID,
-	)
-	return err
-}
-
-const createEntryIgnoreEIDConstraint = `-- name: CreateEntryIgnoreEIDConstraint :execresult
+const createSGV = `-- name: CreateSGV :execresult
 INSERT INTO sgvs (
     eid,
     created_at,
     value,
+    raw_json_data, 
     created_by_identity_id,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?)
-ON CONFLICT(eid) DO NOTHING
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
-type CreateEntryIgnoreEIDConstraintParams struct {
+type CreateSGVParams struct {
 	Eid                   string
 	CreatedAt             int64
 	Value                 float64
+	RawJsonData           *string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
 
-func (q *Queries) CreateEntryIgnoreEIDConstraint(ctx context.Context, arg CreateEntryIgnoreEIDConstraintParams) (sql.Result, error) {
-	return q.exec(ctx, q.createEntryIgnoreEIDConstraintStmt, createEntryIgnoreEIDConstraint,
+func (q *Queries) CreateSGV(ctx context.Context, arg CreateSGVParams) (sql.Result, error) {
+	return q.exec(ctx, q.createSGVStmt, createSGV,
 		arg.Eid,
 		arg.CreatedAt,
 		arg.Value,
+		arg.RawJsonData,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
+}
+
+const createSGVIgnoreEIDConstraint = `-- name: CreateSGVIgnoreEIDConstraint :execresult
+
+INSERT INTO sgvs (
+    eid,
+    created_at,
+    value,
+    raw_json_data, 
+    created_by_identity_id,
+    created_by_identity_name
+)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT(eid) DO NOTHING
+`
+
+type CreateSGVIgnoreEIDConstraintParams struct {
+	Eid                   string
+	CreatedAt             int64
+	Value                 float64
+	RawJsonData           *string
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
+}
+
+// -----
+// CREATE
+// ------
+func (q *Queries) CreateSGVIgnoreEIDConstraint(ctx context.Context, arg CreateSGVIgnoreEIDConstraintParams) (sql.Result, error) {
+	return q.exec(ctx, q.createSGVIgnoreEIDConstraintStmt, createSGVIgnoreEIDConstraint,
+		arg.Eid,
+		arg.CreatedAt,
+		arg.Value,
+		arg.RawJsonData,
+		arg.CreatedByIdentityID,
+		arg.CreatedByIdentityName,
+	)
+}
+
+const getSGVByEID = `-- name: GetSGVByEID :one
+
+SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs WHERE eid = ?
+`
+
+// ------
+// READ
+// ------
+func (q *Queries) GetSGVByEID(ctx context.Context, eid string) (*Sgv, error) {
+	row := q.queryRow(ctx, q.getSGVByEIDStmt, getSGVByEID, eid)
+	var i Sgv
+	err := row.Scan(
+		&i.ID,
+		&i.Eid,
+		&i.Value,
+		&i.RawJsonData,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }

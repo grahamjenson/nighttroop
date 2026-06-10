@@ -28,20 +28,12 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (m
 	created := false
 	switch treatmentModel.EventType {
 	case "Carb Correction":
-		carbs := &user.Carb{
-			Amount:                treatmentModel.Carbs.Float64(), // TODO this is a bit sad but the JSON unmarshal will always unmarshal numbers to float64
-			CreatedAt:             treatmentModel.Date,
-			UpdatedAt:             treatmentModel.Date,
-			CreatedByIdentityID:   userContext.IdentityModel.ID,
-			CreatedByIdentityName: userContext.IdentityModel.Name,
-		}
-
 		err = userContext.UserDB.Queries.CreateCarb(ctx, user.CreateCarbParams{
 			Eid:                   externalID,
-			Amount:                carbs.Amount,
+			Amount:                treatmentModel.Carbs.Float64(),
 			RawJsonData:           &raw_json,
-			CreatedByIdentityName: carbs.CreatedByIdentityName,
-			CreatedByIdentityID:   carbs.CreatedByIdentityID,
+			CreatedByIdentityName: userContext.IdentityModel.Name,
+			CreatedByIdentityID:   userContext.IdentityModel.ID,
 		})
 		if err != nil {
 			return model.Record{}, false, fmt.Errorf("failed to create carb in database: %w", err)

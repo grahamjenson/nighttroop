@@ -71,9 +71,10 @@ func (c *Client) newRequest(
 //
 
 type SGVEntry struct {
-	Date  time.Time `json:"-"`
-	SGV   float64   `json:"-"`
-	Units string    `json:"units"`
+	Date    time.Time `json:"-"`
+	SGV     float64   `json:"-"`
+	Units   string    `json:"units"`
+	RawJSON string    `json:"-"`
 }
 
 func (e *SGVEntry) UnmarshalJSON(data []byte) error {
@@ -132,10 +133,20 @@ func (c *Client) GetEntries(
 		)
 	}
 
-	var entries []SGVEntry
+	var items []json.RawMessage
 
-	if err := json.NewDecoder(resp.Body).Decode(&entries); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
 		return nil, err
+	}
+
+	var entries []SGVEntry
+	for _, raw := range items {
+		var entry SGVEntry
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			return nil, err
+		}
+		entry.RawJSON = string(raw)
+		entries = append(entries, entry)
 	}
 
 	return entries, nil

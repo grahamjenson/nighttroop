@@ -38,7 +38,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			}
 
 			// Last Chance
-			identityModel, err = tryAuthWithLegacyToken(controlDB, cfg, r)
+			identityModel, err = tryAuthWithLegacyToken(cfg, r)
 			if err == nil {
 				ctx = httputils.SetIdentityModelInUserContext(ctx, identityModel)
 				next.ServeHTTP(w, r.WithContext(ctx))
@@ -79,7 +79,7 @@ func tryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*userSQL.
 	return nil, true, fmt.Errorf("No JWT token found")
 }
 
-func tryAuthWithLegacyToken(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request) (*userSQL.Identity, error) {
+func tryAuthWithLegacyToken(config config.ServerConfig, r *http.Request) (*userSQL.Identity, error) {
 
 	tokenParam := r.URL.Query().Get("token")
 	if tokenParam == "" {
