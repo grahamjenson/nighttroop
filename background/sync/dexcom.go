@@ -32,10 +32,10 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			eid := utils.NextEID("dexcom")
+			eid := utils.CreateEID("dexcom", e.SystemTime.UnixMilli())
 			res, err := userSyncSource.userDB.Queries.CreateSGVIgnoreEIDConstraint(context.TODO(), user.CreateSGVIgnoreEIDConstraintParams{
 				Eid:                   eid,
-				CreatedAt:             e.SystemTime.UnixMilli(),
+				OccurredAt:            e.SystemTime.UnixMilli(),
 				Value:                 float64(e.Value),
 				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
 				RawJsonData:           &e.RawJson,

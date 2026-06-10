@@ -1,11 +1,27 @@
--- name: AllIdentities :many
-SELECT * FROM identities ORDER BY created_at DESC;
+-------
+-- CREATE 
+--------
 
 -- name: CreateIdentity :exec
 INSERT INTO identities (name, password, totp_secret, role) VALUES (?, ?, ?, ?);
 
+
+--------
+-- READ
+--------
+
+
+-- name: AllIdentities :many
+SELECT * FROM identities ORDER BY created_at DESC;
+
+
 -- name: GetIdentity :one
 SELECT * FROM identities where name = ? LIMIT 1;
+
+
+--------
+-- UPDATE
+--------
 
 -- name: UpdateIdentityDateFlags :exec
 UPDATE identities
@@ -14,9 +30,6 @@ SET
     last_write_at = COALESCE(?, last_write_at)
 WHERE id = ?;
 
-------
--- Identity Status
--------
-
--- name: AllDeviceStatus :many
-SELECT * FROM device_status ORDER BY created_at DESC;
+--------
+-- DELETE
+--------

@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -14,41 +15,53 @@ import (
 
 type EntriesCollection struct{}
 
-func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (model.Record, bool, error) {
+func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*model.Record, bool, error) {
 	userContext := httputils.GetUserContext(ctx)
 	var entryModel Entry
 	raw_json, err := MapToStruct(data, &entryModel)
 	if err != nil {
-		return model.Record{}, false, fmt.Errorf("failed to map data to entry model: %w", err)
+		return nil, false, fmt.Errorf("failed to map data to entry model: %w", err)
 	}
-	if entryModel.Date == 0 {
-		entryModel.Date = time.Now().UnixMilli()
+	occurredAt := time.Now().UnixMilli()
+	if entryModel.Date != nil {
+		occurredAt = *entryModel.Date
 	}
+	if entryModel.SGV == nil {
+		return nil, false, fmt.Errorf("SGV value is required for entries collection")
+	}
+	eid := utils.NextEID("ns")
 	userContext.UserDB.Queries.CreateSGV(ctx, user.CreateSGVParams{
-		Eid:                   utils.NextEID("ns"),
-		CreatedAt:             entryModel.Date,
-		Value:                 float64(entryModel.SGV),
+		Eid:                   eid,
+		OccurredAt:            occurredAt,
+		Value:                 float64(*entryModel.SGV),
 		RawJsonData:           &raw_json,
 		CreatedByIdentityID:   userContext.IdentityModel.ID,
 		CreatedByIdentityName: userContext.IdentityModel.Name,
 	})
 
-	return model.Record{
+	return &model.Record{
 		Collection:  "entries",
-		ID:          entryModel.Identifier,
+		ID:          eid,
 		Data:        data,
-		SrvModified: entryModel.Date,
+		SrvModified: time.Now().UnixMilli(),
 	}, true, nil
 }
 
-func (c EntriesCollection) Get(ctx context.Context, identifier string) (model.Record, error) {
+func (c EntriesCollection) Get(ctx context.Context, identifier string) (*model.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 
 	sgv, err := userContext.UserDB.Queries.GetSGVByEID(ctx, identifier)
-	if err != nil {
-		return model.Record{}, fmt.Errorf("failed to get SGV by ID: %w", err)
+	if err == sql.ErrNoRows {
+		return nil, di.ErrNotFound
 	}
-	return SGVToRecord(sgv), nil
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SGV by ID: %w", err)
+	}
+	if sgv == nil {
+		return nil, di.ErrNotFound
+	}
+	record := SGVToRecord(sgv)
+	return &record, nil
 }
 
 func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
@@ -60,12 +73,30 @@ func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.
 
 	return CreateRecordSlice(entries, SGVToRecord), nil
 }
-func (c EntriesCollection) Replace(ctx context.Context, collection, identifier string, data map[string]any) (model.Record, bool, error) {
-	return model.Record{}, false, nil
-}
 
-func (c EntriesCollection) Patch(ctx context.Context, collection, identifier string, patch map[string]any) (model.Record, error) {
-	return model.Record{}, nil
+func (c EntriesCollection) Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error) {
+	userContext := httputils.GetUserContext(ctx)
+	var entryModel Entry
+	raw_json, err := MapToStruct(patch, &entryModel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map data to entry model: %w", err)
+	}
+
+	var value *float64
+	if entryModel.SGV != nil {
+		value = (*float64)(entryModel.SGV)
+	}
+	sgv, err := userContext.UserDB.Queries.UpdateSGVByEID(ctx, user.UpdateSGVByEIDParams{
+		Eid:                   identifier,
+		OccurredAt:            entryModel.Date,
+		Value:                 value,
+		RawJsonData:           &raw_json,
+		CreatedByIdentityID:   ptr(userContext.IdentityModel.ID),
+		CreatedByIdentityName: ptr(userContext.IdentityModel.Name),
+	})
+
+	record := SGVToRecord(sgv)
+	return &record, nil
 }
 
 func (c EntriesCollection) Delete(ctx context.Context, collection, identifier string, permanent bool) error {
@@ -76,28 +107,20 @@ func (c EntriesCollection) DeleteMatching(ctx context.Context, collection string
 	return 0, nil
 }
 
-func (c EntriesCollection) History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error) {
-	return nil, nil
-}
-
-func (c EntriesCollection) LastModified(ctx context.Context) (int64, error) {
-	return 0, nil
-}
-
 ////
 // Models
 ////
 
 type Entry struct {
-	Identifier string          `json:"identifier,omitempty"`
-	Type       string          `json:"type,omitempty"`
-	SGV        FlexibleFloat64 `json:"sgv,omitempty"`
-	MBG        FlexibleFloat64 `json:"mbg,omitempty"`
-	Date       int64           `json:"date,omitempty"`
-	DateString string          `json:"dateString,omitempty"`
-	Device     string          `json:"device,omitempty"`
-	Direction  string          `json:"direction,omitempty"`
-	Payload    map[string]any  `json:"payload,omitempty"`
+	Identifier *string          `json:"identifier,omitempty"`
+	Type       *string          `json:"type,omitempty"`
+	SGV        *FlexibleFloat64 `json:"sgv,omitempty"`
+	MBG        *FlexibleFloat64 `json:"mbg,omitempty"`
+	Date       *int64           `json:"date,omitempty"`
+	DateString *string          `json:"dateString,omitempty"`
+	Device     *string          `json:"device,omitempty"`
+	Direction  *string          `json:"direction,omitempty"`
+	Payload    map[string]any   `json:"payload,omitempty"`
 }
 
 ////
@@ -110,20 +133,20 @@ func SGVToRecord(sgv *user.Sgv) model.Record {
 	}
 
 	entryModel := Entry{
-		Identifier: sgv.Eid,
-		Type:       "sgv",
-		SGV:        FlexibleFloat64(sgv.Value),
-		Date:       sgv.CreatedAt,
-		DateString: dateString(sgv.CreatedAt),
-		Device:     fmt.Sprintf("%d", sgv.CreatedByIdentityID),
+		Identifier: ptr(sgv.Eid),
+		Type:       ptr("sgv"),
+		SGV:        ptr(FlexibleFloat64(sgv.Value)),
+		Date:       ptr(sgv.OccurredAt),
+		DateString: ptr(dateString(sgv.OccurredAt)),
+		Device:     ptr(fmt.Sprintf("%d", sgv.CreatedByIdentityID)),
 	}
 
 	return model.Record{
 		Collection:  "entries",
 		ID:          sgv.Eid,
 		Data:        StructToMap(entryModel),
-		SrvCreated:  sgv.CreatedAt,
-		SrvModified: sgv.CreatedAt,
+		SrvCreated:  sgv.OccurredAt,
+		SrvModified: sgv.OccurredAt,
 		Subject:     "",
 		IsValid:     true,
 		DeletedAt:   nil,

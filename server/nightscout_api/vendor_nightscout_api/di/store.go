@@ -45,15 +45,12 @@ type Query struct {
 //
 // Applications are expected to provide their own implementation.
 type Store interface {
-	Create(ctx context.Context, collection string, data map[string]any, subject string) (model.Record, bool, error)
-	Get(ctx context.Context, collection, identifier string) (model.Record, error)
+	Create(ctx context.Context, collection string, data map[string]any, subject string) (*model.Record, bool, error)
+	Get(ctx context.Context, collection, identifier string) (*model.Record, error)
 	Search(ctx context.Context, collection string, query Query) ([]model.Record, error)
-	Replace(ctx context.Context, collection, identifier string, data map[string]any, subject string) (model.Record, bool, error)
-	Patch(ctx context.Context, collection, identifier string, patch map[string]any, subject string) (model.Record, error)
+	Update(ctx context.Context, collection, identifier string, patch map[string]any, subject string) (*model.Record, error)
 	Delete(ctx context.Context, collection, identifier string, permanent bool, subject string) error
 	DeleteMatching(ctx context.Context, collection string, query Query, permanent bool, subject string) (int, error)
-	History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error)
-	LastModified(ctx context.Context, collections []string) (map[string]int64, error)
 }
 
 // NormalizeData normalizes incoming Nightscout payloads into a consistent shape

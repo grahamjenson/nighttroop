@@ -27,15 +27,12 @@ const (
 )
 
 type CollectionStore interface {
-	Create(ctx context.Context, data map[string]any) (model.Record, bool, error)
-	Get(ctx context.Context, identifier string) (model.Record, error)
+	Create(ctx context.Context, data map[string]any) (*model.Record, bool, error)
+	Get(ctx context.Context, identifier string) (*model.Record, error)
 	Search(ctx context.Context, query di.Query) ([]model.Record, error)
-	Replace(ctx context.Context, collection, identifier string, data map[string]any) (model.Record, bool, error)
-	Patch(ctx context.Context, collection, identifier string, patch map[string]any) (model.Record, error)
+	Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error)
 	Delete(ctx context.Context, collection, identifier string, permanent bool) error
 	DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error)
-	History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error)
-	LastModified(ctx context.Context) (int64, error)
 }
 
 type NightTroopAPIStore struct {
@@ -46,21 +43,21 @@ type NightTroopAPIStore struct {
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection string, data map[string]any, subject string) (model.Record, bool, error) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection string, data map[string]any, subject string) (*model.Record, bool, error) {
 	nsCollection := normalizeCollection(collection)
 	collectionsStore, ok := nts.stores[nsCollection]
 	if !ok {
-		return model.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
+		return nil, false, fmt.Errorf("unknown collection: %s", collection)
 	}
 	return collectionsStore.Create(ctx, data)
 
 }
 
-func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier string) (model.Record, error) {
+func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier string) (*model.Record, error) {
 	nsCollection := normalizeCollection(collection)
 	collectionsStore, ok := nts.stores[nsCollection]
 	if !ok {
-		return model.Record{}, fmt.Errorf("unknown collection: %s", collection)
+		return nil, fmt.Errorf("unknown collection: %s", collection)
 	}
 	return collectionsStore.Get(ctx, identifier)
 }
@@ -82,22 +79,13 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, qu
 
 }
 
-func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection, identifier string, data map[string]any, subject string) (model.Record, bool, error) {
+func (nts *NightTroopAPIStore) Update(ctx context.Context, collection, identifier string, patch map[string]any, subject string) (*model.Record, error) {
 	nsCollection := normalizeCollection(collection)
 	collectionsStore, ok := nts.stores[nsCollection]
 	if !ok {
-		return model.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
+		return nil, fmt.Errorf("unknown collection: %s", collection)
 	}
-	return collectionsStore.Replace(ctx, collection, identifier, data)
-}
-
-func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection, identifier string, patch map[string]any, subject string) (model.Record, error) {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
-	if !ok {
-		return model.Record{}, fmt.Errorf("unknown collection: %s", collection)
-	}
-	return collectionsStore.Patch(ctx, collection, identifier, patch)
+	return collectionsStore.Update(ctx, collection, identifier, patch)
 }
 
 func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection, identifier string, permanent bool, subject string) error {
@@ -116,33 +104,6 @@ func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection st
 		return 0, fmt.Errorf("unknown collection: %s", collection)
 	}
 	return collectionsStore.DeleteMatching(ctx, collection, query, permanent)
-}
-
-// TODO history should just use a query so that we can generalize
-func (nts *NightTroopAPIStore) History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error) {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
-	if !ok {
-		return nil, fmt.Errorf("unknown collection: %s", collection)
-	}
-	return collectionsStore.History(ctx, collection, since, limit)
-}
-
-func (nts *NightTroopAPIStore) LastModified(ctx context.Context, collections []string) (map[string]int64, error) {
-	out := make(map[string]int64)
-	for _, collection := range collections {
-		nsCollection := normalizeCollection(collection)
-		collectionsStore, ok := nts.stores[nsCollection]
-		if !ok {
-			return nil, fmt.Errorf("unknown collection: %s", collection)
-		}
-		lastModified, err := collectionsStore.LastModified(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get last modified for collection %s: %w", collection, err)
-		}
-		out[string(nsCollection)] = lastModified
-	}
-	return out, nil
 }
 
 func normalizeCollection(collection string) NSCollection {

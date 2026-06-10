@@ -60,11 +60,15 @@ func GenericCollectionCreate(dep di.Dependencies, collection string) func(http.R
 		case map[string]any:
 			ensureV1Timestamp(typed)
 			record, _, err := dep.Store.Create(r.Context(), collection, typed, identity.Name)
+			if err == nil && record == nil {
+				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
+				return
+			}
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
-			created = append(created, record)
+			created = append(created, *record)
 		case []any:
 			for _, item := range typed {
 				doc, ok := item.(map[string]any)
@@ -74,11 +78,15 @@ func GenericCollectionCreate(dep di.Dependencies, collection string) func(http.R
 				}
 				ensureV1Timestamp(doc)
 				record, _, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
+				if err == nil && record == nil {
+					httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
+					return
+				}
 				if err != nil {
 					httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
-				created = append(created, record)
+				created = append(created, *record)
 			}
 		default:
 			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})

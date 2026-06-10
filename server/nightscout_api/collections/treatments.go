@@ -16,13 +16,13 @@ import (
 
 type TreatmentCollection struct{}
 
-func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (model.Record, bool, error) {
+func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*model.Record, bool, error) {
 	userContext := httputils.GetUserContext(ctx)
 
 	var treatmentModel Treatment
 	raw_json, err := MapToStruct(data, &treatmentModel)
 	if err != nil {
-		return model.Record{}, false, fmt.Errorf("failed to map data to treatment model: %w", err)
+		return nil, false, fmt.Errorf("failed to map data to treatment model: %w", err)
 	}
 	externalID := utils.NextEID("ns")
 	created := false
@@ -36,14 +36,14 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (m
 			CreatedByIdentityID:   userContext.IdentityModel.ID,
 		})
 		if err != nil {
-			return model.Record{}, false, fmt.Errorf("failed to create carb in database: %w", err)
+			return nil, false, fmt.Errorf("failed to create carb in database: %w", err)
 		}
 		created = true
 	}
 	if !created {
-		return model.Record{}, false, fmt.Errorf("unsupported treatment event type: %s", treatmentModel.EventType)
+		return nil, false, fmt.Errorf("unsupported treatment event type: %s", treatmentModel.EventType)
 	}
-	return model.Record{
+	return &model.Record{
 		Collection:  "treatments",
 		ID:          externalID,
 		Data:        data,
@@ -51,8 +51,8 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (m
 	}, true, nil
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, identifier string) (model.Record, error) {
-	return model.Record{}, nil
+func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*model.Record, error) {
+	return nil, nil
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
@@ -66,12 +66,9 @@ func (c TreatmentCollection) Search(ctx context.Context, query di.Query) ([]mode
 
 	return records, nil
 }
-func (c TreatmentCollection) Replace(ctx context.Context, collection, identifier string, data map[string]any) (model.Record, bool, error) {
-	return model.Record{}, false, nil
-}
 
-func (c TreatmentCollection) Patch(ctx context.Context, collection, identifier string, patch map[string]any) (model.Record, error) {
-	return model.Record{}, nil
+func (c TreatmentCollection) Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error) {
+	return nil, nil
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, collection, identifier string, permanent bool) error {
@@ -79,14 +76,6 @@ func (c TreatmentCollection) Delete(ctx context.Context, collection, identifier 
 }
 
 func (c TreatmentCollection) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error) {
-	return 0, nil
-}
-
-func (c TreatmentCollection) History(ctx context.Context, collection string, since int64, limit int) ([]model.Record, error) {
-	return nil, nil
-}
-
-func (c TreatmentCollection) LastModified(ctx context.Context) (int64, error) {
 	return 0, nil
 }
 

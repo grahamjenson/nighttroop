@@ -10,9 +10,19 @@ import (
 )
 
 const allProfiles = `-- name: AllProfiles :many
-SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY created_at DESC
+
+
+
+
+SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
 `
 
+// -----
+// CREATE
+// ------
+// ------
+// READ
+// ------
 func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 	rows, err := q.query(ctx, q.allProfilesStmt, allProfiles)
 	if err != nil {
@@ -39,6 +49,8 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 			&i.BasalRatesJson,
 			&i.TargetsJson,
 			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
@@ -55,4 +67,38 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getProfileByEID = `-- name: GetProfileByEID :one
+SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE eid = ?
+`
+
+func (q *Queries) GetProfileByEID(ctx context.Context, eid string) (*Profile, error) {
+	row := q.queryRow(ctx, q.getProfileByEIDStmt, getProfileByEID, eid)
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.Eid,
+		&i.Storeid,
+		&i.Name,
+		&i.Start,
+		&i.Duration,
+		&i.Source,
+		&i.Percent,
+		&i.Dia,
+		&i.Units,
+		&i.Timezone,
+		&i.CarbRatiosJson,
+		&i.InsulinSensitivitiesJson,
+		&i.BasalRatesJson,
+		&i.TargetsJson,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }

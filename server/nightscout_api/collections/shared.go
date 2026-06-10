@@ -74,3 +74,7 @@ func (f *FlexibleFloat64) UnmarshalJSON(data []byte) error {
 func (f FlexibleFloat64) Float64() float64 {
 	return float64(f)
 }
+
+func ptr[T any](v T) *T {
+	return &v
+}

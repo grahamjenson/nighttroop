@@ -60,12 +60,16 @@ func EntriesSpec(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *
 			return
 		default:
 			record, err := dep.Store.Get(r.Context(), "entries", spec)
+			if err == nil && record == nil {
+				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError})
+				return
+			}
 			if err != nil {
 				status, body := httpx.RequireRecord(err)
 				httpx.WriteJSON(w, status, body)
 				return
 			}
-			util.WriteRecords(w, []model.Record{record}, nil)
+			util.WriteRecords(w, []model.Record{*record}, nil)
 		}
 	}
 }

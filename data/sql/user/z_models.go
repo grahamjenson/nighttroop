@@ -14,6 +14,8 @@ type Bolus struct {
 	Value                 *float64
 	Type                  *string
 	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -25,6 +27,8 @@ type Carb struct {
 	Eid                   string
 	Amount                float64
 	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -46,6 +50,8 @@ type DeviceStatus struct {
 	CgmStatus             *string
 	CgmInsertionTime      *int64
 	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -90,6 +96,8 @@ type Profile struct {
 	BasalRatesJson           *string
 	TargetsJson              *string
 	RawJsonData              *string
+	DeletedAt                *int64
+	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
 	CreatedByIdentityName    string
@@ -101,6 +109,8 @@ type Sgv struct {
 	Eid                   string
 	Value                 float64
 	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -119,6 +129,8 @@ type TempBasal struct {
 	Duration              *int64
 	Value                 *float64
 	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -133,6 +145,8 @@ type TempTarget struct {
 	Hightarget            *int64
 	Lowtarget             *int64
 	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string

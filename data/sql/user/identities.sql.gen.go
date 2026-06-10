@@ -11,60 +11,15 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-const allDeviceStatus = `-- name: AllDeviceStatus :many
-
-SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY created_at DESC
-`
-
-// ----
-// Identity Status
-// -----
-func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) {
-	rows, err := q.query(ctx, q.allDeviceStatusStmt, allDeviceStatus)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*DeviceStatus
-	for rows.Next() {
-		var i DeviceStatus
-		if err := rows.Scan(
-			&i.ID,
-			&i.Eid,
-			&i.IdentityID,
-			&i.BatteryLevel,
-			&i.ChargingState,
-			&i.PumpBattery,
-			&i.PumpStatus,
-			&i.PumpReservoir,
-			&i.PumpInsertionTime,
-			&i.LoopStatus,
-			&i.LoopTimestamp,
-			&i.CgmStatus,
-			&i.CgmInsertionTime,
-			&i.RawJsonData,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.CreatedByIdentityName,
-			&i.CreatedByIdentityID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const allIdentities = `-- name: AllIdentities :many
+
+
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, deleted_at, enabled FROM identities ORDER BY created_at DESC
 `
 
+// ------
+// READ
+// ------
 func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 	rows, err := q.query(ctx, q.allIdentitiesStmt, allIdentities)
 	if err != nil {
@@ -100,6 +55,7 @@ func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 }
 
 const createIdentity = `-- name: CreateIdentity :exec
+
 INSERT INTO identities (name, password, totp_secret, role) VALUES (?, ?, ?, ?)
 `
 
@@ -110,6 +66,9 @@ type CreateIdentityParams struct {
 	Role       consts.IdentityRole
 }
 
+// -----
+// CREATE
+// ------
 func (q *Queries) CreateIdentity(ctx context.Context, arg CreateIdentityParams) error {
 	_, err := q.exec(ctx, q.createIdentityStmt, createIdentity,
 		arg.Name,
@@ -143,6 +102,7 @@ func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, erro
 }
 
 const updateIdentityDateFlags = `-- name: UpdateIdentityDateFlags :exec
+
 UPDATE identities
 SET
     last_seen_at = COALESCE(?, last_seen_at),
@@ -150,6 +110,9 @@ SET
 WHERE id = ?
 `
 
+// ------
+// UPDATE
+// ------
 func (q *Queries) UpdateIdentityDateFlags(ctx context.Context, lastSeenAt *int64, lastWriteAt *int64, iD int64) error {
 	_, err := q.exec(ctx, q.updateIdentityDateFlagsStmt, updateIdentityDateFlags, lastSeenAt, lastWriteAt, iD)
 	return err

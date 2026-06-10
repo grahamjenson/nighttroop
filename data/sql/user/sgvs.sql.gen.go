@@ -11,7 +11,7 @@ import (
 )
 
 const allSGVs = `-- name: AllSGVs :many
-SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs ORDER BY created_at DESC
+SELECT id, eid, value, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs ORDER BY occurred_at DESC
 `
 
 func (q *Queries) AllSGVs(ctx context.Context) ([]*Sgv, error) {
@@ -28,6 +28,8 @@ func (q *Queries) AllSGVs(ctx context.Context) ([]*Sgv, error) {
 			&i.Eid,
 			&i.Value,
 			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
@@ -49,7 +51,7 @@ func (q *Queries) AllSGVs(ctx context.Context) ([]*Sgv, error) {
 const createSGV = `-- name: CreateSGV :execresult
 INSERT INTO sgvs (
     eid,
-    created_at,
+    occurred_at,
     value,
     raw_json_data, 
     created_by_identity_id,
@@ -60,7 +62,7 @@ VALUES (?, ?, ?, ?, ?, ?)
 
 type CreateSGVParams struct {
 	Eid                   string
-	CreatedAt             int64
+	OccurredAt            int64
 	Value                 float64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
@@ -70,7 +72,7 @@ type CreateSGVParams struct {
 func (q *Queries) CreateSGV(ctx context.Context, arg CreateSGVParams) (sql.Result, error) {
 	return q.exec(ctx, q.createSGVStmt, createSGV,
 		arg.Eid,
-		arg.CreatedAt,
+		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
 		arg.CreatedByIdentityID,
@@ -82,7 +84,7 @@ const createSGVIgnoreEIDConstraint = `-- name: CreateSGVIgnoreEIDConstraint :exe
 
 INSERT INTO sgvs (
     eid,
-    created_at,
+    occurred_at,
     value,
     raw_json_data, 
     created_by_identity_id,
@@ -94,7 +96,7 @@ ON CONFLICT(eid) DO NOTHING
 
 type CreateSGVIgnoreEIDConstraintParams struct {
 	Eid                   string
-	CreatedAt             int64
+	OccurredAt            int64
 	Value                 float64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
@@ -107,7 +109,7 @@ type CreateSGVIgnoreEIDConstraintParams struct {
 func (q *Queries) CreateSGVIgnoreEIDConstraint(ctx context.Context, arg CreateSGVIgnoreEIDConstraintParams) (sql.Result, error) {
 	return q.exec(ctx, q.createSGVIgnoreEIDConstraintStmt, createSGVIgnoreEIDConstraint,
 		arg.Eid,
-		arg.CreatedAt,
+		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
 		arg.CreatedByIdentityID,
@@ -115,9 +117,44 @@ func (q *Queries) CreateSGVIgnoreEIDConstraint(ctx context.Context, arg CreateSG
 	)
 }
 
+const deleteMatchingSGVs = `-- name: DeleteMatchingSGVs :execresult
+DELETE FROM sgvs
+WHERE
+    (? IS NULL OR occurred_at >= ?) AND
+    (? IS NULL OR occurred_at <= ?)
+`
+
+type DeleteMatchingSGVsParams struct {
+	Column1      interface{}
+	OccurredAt   int64
+	Column3      interface{}
+	OccurredAt_2 int64
+}
+
+func (q *Queries) DeleteMatchingSGVs(ctx context.Context, arg DeleteMatchingSGVsParams) (sql.Result, error) {
+	return q.exec(ctx, q.deleteMatchingSGVsStmt, deleteMatchingSGVs,
+		arg.Column1,
+		arg.OccurredAt,
+		arg.Column3,
+		arg.OccurredAt_2,
+	)
+}
+
+const deleteSGVByEID = `-- name: DeleteSGVByEID :execresult
+
+DELETE FROM sgvs WHERE eid = ?
+`
+
+// ------
+// DELETE
+// ------
+func (q *Queries) DeleteSGVByEID(ctx context.Context, eid string) (sql.Result, error) {
+	return q.exec(ctx, q.deleteSGVByEIDStmt, deleteSGVByEID, eid)
+}
+
 const getSGVByEID = `-- name: GetSGVByEID :one
 
-SELECT id, eid, value, raw_json_data, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs WHERE eid = ?
+SELECT id, eid, value, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM sgvs WHERE eid = ?
 `
 
 // ------
@@ -131,6 +168,58 @@ func (q *Queries) GetSGVByEID(ctx context.Context, eid string) (*Sgv, error) {
 		&i.Eid,
 		&i.Value,
 		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
+}
+
+const updateSGVByEID = `-- name: UpdateSGVByEID :one
+
+UPDATE sgvs SET
+    occurred_at = COALESCE(?2, occurred_at),
+    value = COALESCE(?3, value),
+    raw_json_data = COALESCE(?4, raw_json_data),
+    created_by_identity_id = COALESCE(?5, created_by_identity_id),
+    created_by_identity_name = COALESCE(?6, created_by_identity_name),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE eid = ?
+RETURNING id, eid, value, raw_json_data, deleted_at, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+`
+
+type UpdateSGVByEIDParams struct {
+	OccurredAt            *int64
+	Value                 *float64
+	RawJsonData           *string
+	CreatedByIdentityID   *int64
+	CreatedByIdentityName *string
+	Eid                   string
+}
+
+// ------
+// UPDATE
+// ------
+func (q *Queries) UpdateSGVByEID(ctx context.Context, arg UpdateSGVByEIDParams) (*Sgv, error) {
+	row := q.queryRow(ctx, q.updateSGVByEIDStmt, updateSGVByEID,
+		arg.OccurredAt,
+		arg.Value,
+		arg.RawJsonData,
+		arg.CreatedByIdentityID,
+		arg.CreatedByIdentityName,
+		arg.Eid,
+	)
+	var i Sgv
+	err := row.Scan(
+		&i.ID,
+		&i.Eid,
+		&i.Value,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,

@@ -75,14 +75,41 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
+	if q.deleteMatchingSGVsStmt, err = db.PrepareContext(ctx, deleteMatchingSGVs); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteMatchingSGVs: %w", err)
+	}
+	if q.deleteSGVByEIDStmt, err = db.PrepareContext(ctx, deleteSGVByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSGVByEID: %w", err)
+	}
+	if q.getBolusByEIDStmt, err = db.PrepareContext(ctx, getBolusByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBolusByEID: %w", err)
+	}
+	if q.getCarbByEIDStmt, err = db.PrepareContext(ctx, getCarbByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCarbByEID: %w", err)
+	}
+	if q.getDeviceStatusByEIDStmt, err = db.PrepareContext(ctx, getDeviceStatusByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDeviceStatusByEID: %w", err)
+	}
 	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
+	}
+	if q.getProfileByEIDStmt, err = db.PrepareContext(ctx, getProfileByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfileByEID: %w", err)
 	}
 	if q.getSGVByEIDStmt, err = db.PrepareContext(ctx, getSGVByEID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSGVByEID: %w", err)
 	}
+	if q.getTempBasalByEIDStmt, err = db.PrepareContext(ctx, getTempBasalByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetTempBasalByEID: %w", err)
+	}
+	if q.getTempTargetByEIDStmt, err = db.PrepareContext(ctx, getTempTargetByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetTempTargetByEID: %w", err)
+	}
 	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
+	}
+	if q.updateSGVByEIDStmt, err = db.PrepareContext(ctx, updateSGVByEID); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSGVByEID: %w", err)
 	}
 	return &q, nil
 }
@@ -174,9 +201,39 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.deleteMatchingSGVsStmt != nil {
+		if cerr := q.deleteMatchingSGVsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteMatchingSGVsStmt: %w", cerr)
+		}
+	}
+	if q.deleteSGVByEIDStmt != nil {
+		if cerr := q.deleteSGVByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSGVByEIDStmt: %w", cerr)
+		}
+	}
+	if q.getBolusByEIDStmt != nil {
+		if cerr := q.getBolusByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBolusByEIDStmt: %w", cerr)
+		}
+	}
+	if q.getCarbByEIDStmt != nil {
+		if cerr := q.getCarbByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCarbByEIDStmt: %w", cerr)
+		}
+	}
+	if q.getDeviceStatusByEIDStmt != nil {
+		if cerr := q.getDeviceStatusByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDeviceStatusByEIDStmt: %w", cerr)
+		}
+	}
 	if q.getIdentityStmt != nil {
 		if cerr := q.getIdentityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
+		}
+	}
+	if q.getProfileByEIDStmt != nil {
+		if cerr := q.getProfileByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfileByEIDStmt: %w", cerr)
 		}
 	}
 	if q.getSGVByEIDStmt != nil {
@@ -184,9 +241,24 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSGVByEIDStmt: %w", cerr)
 		}
 	}
+	if q.getTempBasalByEIDStmt != nil {
+		if cerr := q.getTempBasalByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getTempBasalByEIDStmt: %w", cerr)
+		}
+	}
+	if q.getTempTargetByEIDStmt != nil {
+		if cerr := q.getTempTargetByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getTempTargetByEIDStmt: %w", cerr)
+		}
+	}
 	if q.updateIdentityDateFlagsStmt != nil {
 		if cerr := q.updateIdentityDateFlagsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
+		}
+	}
+	if q.updateSGVByEIDStmt != nil {
+		if cerr := q.updateSGVByEIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSGVByEIDStmt: %w", cerr)
 		}
 	}
 	return err
@@ -245,9 +317,18 @@ type Queries struct {
 	createSGVIgnoreEIDConstraintStmt *sql.Stmt
 	createTempBasalStmt              *sql.Stmt
 	createTempTargetStmt             *sql.Stmt
+	deleteMatchingSGVsStmt           *sql.Stmt
+	deleteSGVByEIDStmt               *sql.Stmt
+	getBolusByEIDStmt                *sql.Stmt
+	getCarbByEIDStmt                 *sql.Stmt
+	getDeviceStatusByEIDStmt         *sql.Stmt
 	getIdentityStmt                  *sql.Stmt
+	getProfileByEIDStmt              *sql.Stmt
 	getSGVByEIDStmt                  *sql.Stmt
+	getTempBasalByEIDStmt            *sql.Stmt
+	getTempTargetByEIDStmt           *sql.Stmt
 	updateIdentityDateFlagsStmt      *sql.Stmt
+	updateSGVByEIDStmt               *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -271,8 +352,17 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createSGVIgnoreEIDConstraintStmt: q.createSGVIgnoreEIDConstraintStmt,
 		createTempBasalStmt:              q.createTempBasalStmt,
 		createTempTargetStmt:             q.createTempTargetStmt,
+		deleteMatchingSGVsStmt:           q.deleteMatchingSGVsStmt,
+		deleteSGVByEIDStmt:               q.deleteSGVByEIDStmt,
+		getBolusByEIDStmt:                q.getBolusByEIDStmt,
+		getCarbByEIDStmt:                 q.getCarbByEIDStmt,
+		getDeviceStatusByEIDStmt:         q.getDeviceStatusByEIDStmt,
 		getIdentityStmt:                  q.getIdentityStmt,
+		getProfileByEIDStmt:              q.getProfileByEIDStmt,
 		getSGVByEIDStmt:                  q.getSGVByEIDStmt,
+		getTempBasalByEIDStmt:            q.getTempBasalByEIDStmt,
+		getTempTargetByEIDStmt:           q.getTempTargetByEIDStmt,
 		updateIdentityDateFlagsStmt:      q.updateIdentityDateFlagsStmt,
+		updateSGVByEIDStmt:               q.updateSGVByEIDStmt,
 	}
 }
