@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -65,13 +64,4 @@ func LastModifiedHeader(w http.ResponseWriter, millis int64) {
 		return
 	}
 	w.Header().Set("Last-Modified", time.UnixMilli(millis).UTC().Format(http.TimeFormat))
-}
-
-// ParsePositiveInt parses a non-negative integer and falls back when parsing
-// fails.
-func ParsePositiveInt(value string, fallback int) int {
-	if parsed, err := strconv.Atoi(value); err == nil && parsed >= 0 {
-		return parsed
-	}
-	return fallback
 }

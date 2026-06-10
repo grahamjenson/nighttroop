@@ -131,24 +131,6 @@ func NormalizeData(collection string, data map[string]any) (map[string]any, erro
 	return clean, nil
 }
 
-// CalculateIdentifier derives a deterministic identifier from fields commonly
-// used by Nightscout documents.
-func CalculateIdentifier(data map[string]any) string {
-	device, ok := model.StringField(data, "device")
-	if !ok || strings.TrimSpace(device) == "" {
-		return ""
-	}
-	date, ok := model.Int64Field(data, "date")
-	if !ok || date <= 0 {
-		return ""
-	}
-	key := fmt.Sprintf("%s_%d", device, date)
-	if eventType, ok := model.StringField(data, "eventType"); ok && strings.TrimSpace(eventType) != "" {
-		key += "_" + eventType
-	}
-	return uuid.NewSHA1(nightscoutIdentifierNamespace, []byte(key)).String()
-}
-
 // DefaultQuery returns the default query shape used by list-style endpoints.
 func DefaultQuery() Query {
 	return Query{

@@ -87,12 +87,6 @@ func Search(dep di.Dependencies) http.HandlerFunc {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
-			maxLimit := 1000
-
-			if parsed.Limit > maxLimit {
-				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Parameter limit out of tolerance"})
-				return
-			}
 
 			records, err := dep.Store.Search(r.Context(), collection, parsed)
 			if err != nil {
@@ -131,15 +125,9 @@ func Create(dep di.Dependencies) http.HandlerFunc {
 			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
 		}
-		duplicate, found, err := findCreateDuplicate(r, dep, collection, doc)
-		if err != nil {
-			httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
-			return
-		}
+
 		permission := fmt.Sprintf("api:%s:create", collection)
-		if found {
-			permission = fmt.Sprintf("api:%s:update", collection)
-		}
+
 		if !dep.Auth.HasPermission(*identity, permission) {
 			httpx.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission %s", permission)})
 			return
@@ -159,9 +147,6 @@ func Create(dep di.Dependencies) http.HandlerFunc {
 			status = http.StatusOK
 			body["status"] = status
 			body["isDeduplication"] = true
-			if found && duplicate.Identifier() != "" && duplicate.Identifier() != record.Identifier() {
-				body["deduplicatedIdentifier"] = duplicate.Identifier()
-			}
 		}
 		httpx.LastModifiedHeader(w, record.SrvModified)
 		w.Header().Set("Location", fmt.Sprintf("/api/v3/%s/%s", model.NormalizeCollection(collection), record.Identifier()))
@@ -371,13 +356,16 @@ func History(dep di.Dependencies) http.HandlerFunc {
 		}
 		permission := fmt.Sprintf("api:%s:read", collection)
 		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
+			parsed, err := query.ParseV3(r.URL.Query())
+
 			since, err := strconv.ParseInt(chi.URLParam(r, "since"), 10, 64)
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 				return
 			}
-			limit := httpx.ParsePositiveInt(r.URL.Query().Get("limit"), 1000)
-			records, err := dep.Store.Search(r.Context(), collection, di.Query{Filters: []di.Filter{{Field: "date", Op: "gte", Value: strconv.FormatInt(since, 10)}}, Limit: limit})
+			parsed.Filters = append(parsed.Filters, di.Filter{Field: "srvModified", Op: "gte", Value: strconv.FormatInt(since, 10)})
+
+			records, err := dep.Store.Search(r.Context(), collection, parsed)
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 				return
@@ -467,73 +455,11 @@ func normalizeV3Document(collection string, doc map[string]any) (map[string]any,
 			return nil, err
 		}
 	}
-	if identifier, ok := model.StringField(clean, "identifier"); !ok || strings.TrimSpace(identifier) == "" {
-		if calculated := di.CalculateIdentifier(clean); calculated != "" {
-			clean["identifier"] = calculated
-			clean["_id"] = calculated
-		}
-	}
+
 	if err := validateCreateDoc(collection, clean); err != nil {
 		return nil, err
 	}
 	return clean, nil
-}
-
-func findCreateDuplicate(r *http.Request, dep di.Dependencies, collection string, doc map[string]any) (model.Record, bool, error) {
-	if identifier, ok := model.StringField(doc, "identifier"); ok && strings.TrimSpace(identifier) != "" {
-		record, found, err := searchDuplicateByFilters(r, dep, collection, []di.Filter{{Field: "identifier", Op: "eq", Value: identifier}})
-		if err != nil || found {
-			return record, found, err
-		}
-	}
-	var filters []di.Filter
-	switch model.NormalizeCollection(collection) {
-	case "entries":
-		date, _ := model.Int64Field(doc, "date")
-		kind, _ := model.StringField(doc, "type")
-		filters = append(filters,
-			di.Filter{Field: "date", Op: "eq", Value: strconv.FormatInt(date, 10)},
-			di.Filter{Field: "type", Op: "eq", Value: kind},
-		)
-	case "treatments":
-		createdAt, _ := model.StringField(doc, "created_at")
-		eventType, _ := model.StringField(doc, "eventType")
-		filters = append(filters,
-			di.Filter{Field: "created_at", Op: "eq", Value: createdAt},
-			di.Filter{Field: "eventType", Op: "eq", Value: eventType},
-		)
-	case "devicestatus":
-		createdAt, _ := model.StringField(doc, "created_at")
-		device, _ := model.StringField(doc, "device")
-		filters = append(filters,
-			di.Filter{Field: "created_at", Op: "eq", Value: createdAt},
-			di.Filter{Field: "device", Op: "eq", Value: device},
-		)
-	case "food", "profile":
-		createdAt, _ := model.StringField(doc, "created_at")
-		filters = append(filters, di.Filter{Field: "created_at", Op: "eq", Value: createdAt})
-	}
-	if len(filters) == 0 {
-		return model.Record{}, false, nil
-	}
-	return searchDuplicateByFilters(r, dep, collection, filters)
-}
-
-func searchDuplicateByFilters(r *http.Request, dep di.Dependencies, collection string, filters []di.Filter) (model.Record, bool, error) {
-	records, err := dep.Store.Search(r.Context(), collection, di.Query{
-		Filters:        filters,
-		Limit:          1,
-		SortField:      "date",
-		SortDesc:       true,
-		IncludeDeleted: true,
-	})
-	if err != nil {
-		return model.Record{}, false, err
-	}
-	if len(records) == 0 {
-		return model.Record{}, false, nil
-	}
-	return records[0], true, nil
 }
 
 func authErrorMessage(err error) string {

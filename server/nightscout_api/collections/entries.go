@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -30,7 +31,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*mo
 		return nil, false, fmt.Errorf("SGV value is required for entries collection")
 	}
 	eid := utils.NextEID("ns")
-	userContext.UserDB.Queries.CreateSGV(ctx, user.CreateSGVParams{
+	userContext.UserDB.Queries.CreateGlucoseReading(ctx, user.CreateGlucoseReadingParams{
 		Eid:                   eid,
 		OccurredAt:            occurredAt,
 		Value:                 float64(*entryModel.SGV),
@@ -50,28 +51,28 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*mo
 func (c EntriesCollection) Get(ctx context.Context, identifier string) (*model.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 
-	sgv, err := userContext.UserDB.Queries.GetSGVByEID(ctx, identifier)
+	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReadingByEID(ctx, identifier)
 	if err == sql.ErrNoRows {
 		return nil, di.ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get SGV by ID: %w", err)
+		return nil, fmt.Errorf("failed to get glucose reading by ID: %w", err)
 	}
-	if sgv == nil {
+	if glucoseReading == nil {
 		return nil, di.ErrNotFound
 	}
-	record := SGVToRecord(sgv)
+	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
 }
 
 func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
-	entries, err := userContext.UserDB.Queries.AllSGVs(ctx)
+	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return CreateRecordSlice(entries, SGVToRecord), nil
+	return CreateRecordSlice(entries, GlucoseReadingToRecord), nil
 }
 
 func (c EntriesCollection) Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error) {
@@ -86,7 +87,7 @@ func (c EntriesCollection) Update(ctx context.Context, collection, identifier st
 	if entryModel.SGV != nil {
 		value = (*float64)(entryModel.SGV)
 	}
-	sgv, err := userContext.UserDB.Queries.UpdateSGVByEID(ctx, user.UpdateSGVByEIDParams{
+	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReadingByEID(ctx, user.UpdateGlucoseReadingByEIDParams{
 		Eid:                   identifier,
 		OccurredAt:            entryModel.Date,
 		Value:                 value,
@@ -95,16 +96,79 @@ func (c EntriesCollection) Update(ctx context.Context, collection, identifier st
 		CreatedByIdentityName: ptr(userContext.IdentityModel.Name),
 	})
 
-	record := SGVToRecord(sgv)
+	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
 }
 
 func (c EntriesCollection) Delete(ctx context.Context, collection, identifier string, permanent bool) error {
+	userContext := httputils.GetUserContext(ctx)
+	if permanent {
+		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingByEID(ctx, identifier)
+		if err != nil {
+			return fmt.Errorf("failed to permanently delete glucose reading by ID: %w", err)
+		}
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
+		}
+		if rowsAffected == 0 {
+			return di.ErrNotFound
+		}
+		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
+
+	} else {
+		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingByEID(ctx, identifier)
+		if err != nil {
+			return fmt.Errorf("failed to soft delete glucose reading by ID: %w", err)
+		}
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
+		}
+		if rowsAffected == 0 {
+			return di.ErrNotFound
+		}
+		slog.Info("Soft Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
+
+	}
 	return nil
 }
 
 func (c EntriesCollection) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error) {
-	return 0, nil
+	userContext := httputils.GetUserContext(ctx)
+	records, err := c.Search(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+	if len(records) == 0 {
+		return 0, nil
+	}
+	recordIDs := make([]string, len(records))
+	for i, record := range records {
+		recordIDs[i] = record.Identifier()
+	}
+
+	if permanent {
+		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByEIDs(ctx, recordIDs)
+		if err != nil {
+			return 0, fmt.Errorf("failed to permanently delete glucose readings by IDs: %w", err)
+		}
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return 0, fmt.Errorf("failed to get rows affected for glucose readings delete: %w", err)
+		}
+		return int(rowsAffected), nil
+	} else {
+		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingsByEIDs(ctx, recordIDs)
+		if err != nil {
+			return 0, fmt.Errorf("failed to soft delete glucose readings by IDs: %w", err)
+		}
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return 0, fmt.Errorf("failed to get rows affected for glucose readings delete: %w", err)
+		}
+		return int(rowsAffected), nil
+	}
 }
 
 ////
@@ -127,7 +191,7 @@ type Entry struct {
 // Mappers
 ////
 
-func SGVToRecord(sgv *user.Sgv) model.Record {
+func GlucoseReadingToRecord(sgv *user.GlucoseReading) model.Record {
 	if sgv == nil {
 		return model.Record{}
 	}

@@ -66,6 +66,20 @@ type Event struct {
 	EndAt   *int64
 }
 
+type GlucoseReading struct {
+	ID                    int64
+	Eid                   string
+	Value                 float64
+	Type                  *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
+}
+
 type Identity struct {
 	ID          int64
 	Name        string
@@ -102,19 +116,6 @@ type Profile struct {
 	UpdatedAt                int64
 	CreatedByIdentityName    string
 	CreatedByIdentityID      int64
-}
-
-type Sgv struct {
-	ID                    int64
-	Eid                   string
-	Value                 float64
-	RawJsonData           *string
-	DeletedAt             *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type SqliteSequence struct {

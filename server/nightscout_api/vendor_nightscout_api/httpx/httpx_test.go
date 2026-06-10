@@ -67,7 +67,4 @@ func TestConditionalHeadersAndParsing(t *testing.T) {
 		t.Fatalf("expected no Last-Modified header for zero millis")
 	}
 
-	if ParsePositiveInt("12", 5) != 12 || ParsePositiveInt("-1", 5) != 5 {
-		t.Fatalf("ParsePositiveInt mismatch")
-	}
 }

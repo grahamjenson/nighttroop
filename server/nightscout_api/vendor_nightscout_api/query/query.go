@@ -66,6 +66,9 @@ func ParseV3(values url.Values) (di.Query, error) {
 		if err != nil || limit <= 0 {
 			return query, fmt.Errorf("Parameter limit out of tolerance")
 		}
+		if limit > 1000 {
+			return query, fmt.Errorf("Parameter limit out of tolerance")
+		}
 		query.Limit = limit
 	}
 	if skipRaw := values.Get("skip"); skipRaw != "" {

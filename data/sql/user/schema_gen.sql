@@ -75,6 +75,27 @@ CREATE TABLE events (
     end_at INTEGER
 );
 
+CREATE TABLE glucose_readings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- The id used extenally to this system (like remote NS id, dexcom id, Loop id), a means to not duplicate records from a source
+    eid TEXT UNIQUE NOT NULL CHECK(length(eid) <= 32), 
+    
+    -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
+    value REAL NOT NULL,
+    type TEXT CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    deleted_at INTEGER,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+
+
+);
+
 CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
@@ -120,26 +141,6 @@ CREATE TABLE profile (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-);
-
-CREATE TABLE sgvs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    -- The id used extenally to this system (like remote NS id, dexcom id, Loop id), a means to not duplicate records from a source
-    eid TEXT UNIQUE NOT NULL CHECK(length(eid) <= 32), 
-    
-    -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    value REAL NOT NULL,
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
-    deleted_at INTEGER,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-
-
 );
 
 CREATE TABLE sqlite_sequence(name,seq);

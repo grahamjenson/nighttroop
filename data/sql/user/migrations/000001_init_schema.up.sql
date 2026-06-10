@@ -68,13 +68,14 @@ CREATE TABLE device_status (
     created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
 );
 
-CREATE TABLE sgvs (
+CREATE TABLE glucose_readings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- The id used extenally to this system (like remote NS id, dexcom id, Loop id), a means to not duplicate records from a source
     eid TEXT UNIQUE NOT NULL CHECK(length(eid) <= 32), 
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
+    type TEXT CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
