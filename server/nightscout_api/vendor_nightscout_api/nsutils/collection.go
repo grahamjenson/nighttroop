@@ -46,7 +46,7 @@ func ParseCollection(s string) (Collection, error) {
 
 func (c Collection) DefaultDateField() string {
 	switch c {
-	case Entries, Treatments:
+	case Entries:
 		return "date"
 	default:
 		return "created_at"
