@@ -1,4 +1,4 @@
-package query
+package nsutils
 
 import (
 	"encoding/json"
@@ -9,17 +9,32 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
 )
+
+// Filter represents a single field predicate in a storage query.
+type Filter struct {
+	Field string
+	Op    string
+	Value string
+}
+
+// Query describes the storage-level query contract used by the handlers.
+type Query struct {
+	Filters        []Filter
+	Limit          int
+	Skip           int
+	SortField      string
+	SortDesc       bool
+	Fields         []string
+	IncludeDeleted bool
+}
 
 var bracePattern = regexp.MustCompile(`\{([^{}]+)\}`)
 
 // ParseV1 translates Nightscout v1 query parameters into the storage query
 // model used by this library.
-func ParseV1(values url.Values, defaultDateField string) di.Query {
-	query := di.DefaultQuery()
+func ParseV1(values url.Values, defaultDateField string) Query {
+	query := DefaultQuery()
 	if defaultDateField == "" {
 		defaultDateField = "date"
 	}
@@ -37,13 +52,13 @@ func ParseV1(values url.Values, defaultDateField string) di.Query {
 		if field == "" {
 			continue
 		}
-		query.Filters = append(query.Filters, di.Filter{Field: field, Op: op, Value: vals[0]})
+		query.Filters = append(query.Filters, Filter{Field: field, Op: op, Value: vals[0]})
 	}
 	if rawFind := values.Get("find"); rawFind != "" {
 		query.Filters = append(query.Filters, parseMongoFindJSON(rawFind)...)
 	}
 	if !hasIDFilter(query.Filters) && !hasDateFilter(query.Filters) {
-		query.Filters = append(query.Filters, di.Filter{
+		query.Filters = append(query.Filters, Filter{
 			Field: defaultDateField,
 			Op:    "gte",
 			Value: time.Now().UTC().Add(-96 * time.Hour).Format(time.RFC3339),
@@ -53,8 +68,8 @@ func ParseV1(values url.Values, defaultDateField string) di.Query {
 }
 
 // ParseV3 translates Nightscout API v3 query parameters into a storage query.
-func ParseV3(values url.Values) (di.Query, error) {
-	query := di.DefaultQuery()
+func ParseV3(values url.Values) (Query, error) {
+	query := DefaultQuery()
 	query.Limit = 0
 	query.SortField = "date"
 	query.IncludeDeleted = false
@@ -102,34 +117,22 @@ func ParseV3(values url.Values) (di.Query, error) {
 		if field == "" {
 			continue
 		}
-		query.Filters = append(query.Filters, di.Filter{Field: field, Op: op, Value: vals[0]})
+		query.Filters = append(query.Filters, Filter{Field: field, Op: op, Value: vals[0]})
 	}
 	return query, nil
 }
 
-// EchoV1 returns a diagnostic view of the parsed v1 query.
-func EchoV1(collection string, values url.Values) map[string]any {
-	query := ParseV1(values, "date")
-	return map[string]any{
-		"storage": collection,
-		"query":   query,
-		"input": map[string]any{
-			"find": values,
-		},
-	}
-}
-
 // Slice filters records by prefix matching on a selected field and optionally a
 // Nightscout entry type.
-func Slice(records []model.Record, field, fieldType, prefix string, limit int) []model.Record {
+func Slice(records []Record, field, fieldType, prefix string, limit int) []Record {
 	if prefix == "" {
 		return records
 	}
 	patterns := ExpandBraces(prefix)
-	filtered := make([]model.Record, 0, len(records))
+	filtered := make([]Record, 0, len(records))
 	for _, record := range records {
-		value := fmt.Sprint(model.PathValue(record.ToMap(true), field))
-		if fieldType != "" && fmt.Sprint(model.PathValue(record.ToMap(true), "type")) != fieldType {
+		value := fmt.Sprint(PathValue(record.ToMap(true), field))
+		if fieldType != "" && fmt.Sprint(PathValue(record.ToMap(true), "type")) != fieldType {
 			continue
 		}
 		if matchesAnyPrefix(value, patterns) {
@@ -137,9 +140,9 @@ func Slice(records []model.Record, field, fieldType, prefix string, limit int) [
 		}
 	}
 	sort.SliceStable(filtered, func(i, j int) bool {
-		left := model.PathValue(filtered[i].ToMap(true), "date")
-		right := model.PathValue(filtered[j].ToMap(true), "date")
-		return di.CompareValues(left, right, true)
+		left := PathValue(filtered[i].ToMap(true), "date")
+		right := PathValue(filtered[j].ToMap(true), "date")
+		return CompareValues(left, right, true)
 	})
 	if limit > 0 && limit < len(filtered) {
 		filtered = filtered[:limit]
@@ -149,7 +152,7 @@ func Slice(records []model.Record, field, fieldType, prefix string, limit int) [
 
 // Times filters records by modal time patterns built from a prefix and
 // expression and returns both the filtered records and the generated patterns.
-func Times(records []model.Record, prefix, expr string, limit int) ([]model.Record, []string) {
+func Times(records []Record, prefix, expr string, limit int) ([]Record, []string) {
 	prefixes := ExpandBraces(prefix)
 	expressions := ExpandBraces(expr)
 	patterns := make([]string, 0, len(prefixes)*max(1, len(expressions)))
@@ -170,9 +173,9 @@ func Times(records []model.Record, prefix, expr string, limit int) ([]model.Reco
 			}
 		}
 	}
-	filtered := make([]model.Record, 0, len(records))
+	filtered := make([]Record, 0, len(records))
 	for _, record := range records {
-		dateString := fmt.Sprint(model.PathValue(record.ToMap(true), "dateString"))
+		dateString := fmt.Sprint(PathValue(record.ToMap(true), "dateString"))
 		if dateString == "" {
 			continue
 		}
@@ -181,9 +184,9 @@ func Times(records []model.Record, prefix, expr string, limit int) ([]model.Reco
 		}
 	}
 	sort.SliceStable(filtered, func(i, j int) bool {
-		left := model.PathValue(filtered[i].ToMap(true), "date")
-		right := model.PathValue(filtered[j].ToMap(true), "date")
-		return di.CompareValues(left, right, true)
+		left := PathValue(filtered[i].ToMap(true), "date")
+		right := PathValue(filtered[j].ToMap(true), "date")
+		return CompareValues(left, right, true)
 	})
 	if limit > 0 && limit < len(filtered) {
 		filtered = filtered[:limit]
@@ -239,20 +242,20 @@ func parseV3Filter(key string) (field, op string) {
 	return key, "eq"
 }
 
-func parseMongoFindJSON(raw string) []di.Filter {
+func parseMongoFindJSON(raw string) []Filter {
 	var doc map[string]any
 	if err := json.Unmarshal([]byte(raw), &doc); err != nil {
 		return nil
 	}
-	var filters []di.Filter
+	var filters []Filter
 	for field, value := range doc {
 		if nested, ok := value.(map[string]any); ok {
 			for op, subValue := range nested {
-				filters = append(filters, di.Filter{Field: field, Op: strings.TrimPrefix(op, "$"), Value: fmt.Sprint(subValue)})
+				filters = append(filters, Filter{Field: field, Op: strings.TrimPrefix(op, "$"), Value: fmt.Sprint(subValue)})
 			}
 			continue
 		}
-		filters = append(filters, di.Filter{Field: field, Op: "eq", Value: fmt.Sprint(value)})
+		filters = append(filters, Filter{Field: field, Op: "eq", Value: fmt.Sprint(value)})
 	}
 	return filters
 }
@@ -266,7 +269,7 @@ func isReservedV3Key(key string) bool {
 	}
 }
 
-func hasDateFilter(filters []di.Filter) bool {
+func hasDateFilter(filters []Filter) bool {
 	for _, filter := range filters {
 		if filter.Field == "date" || filter.Field == "dateString" || filter.Field == "created_at" {
 			return true
@@ -275,7 +278,7 @@ func hasDateFilter(filters []di.Filter) bool {
 	return false
 }
 
-func hasIDFilter(filters []di.Filter) bool {
+func hasIDFilter(filters []Filter) bool {
 	for _, filter := range filters {
 		if filter.Field == "_id" || filter.Field == "identifier" {
 			return true
@@ -318,11 +321,4 @@ func prefixPatternToRegexp(pattern string) *regexp.Regexp {
 	quoted = strings.ReplaceAll(quoted, `\.\*`, ".*")
 	regex := "^" + quoted
 	return regexp.MustCompile(regex)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }

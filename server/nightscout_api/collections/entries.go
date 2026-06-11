@@ -8,15 +8,14 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type EntriesCollection struct{}
 
-func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*model.Record, bool, error) {
+func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error) {
 	userContext := httputils.GetUserContext(ctx)
 	var entryModel Entry
 	raw_json, err := MapToStruct(data, &entryModel)
@@ -40,7 +39,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*mo
 		CreatedByIdentityName: userContext.IdentityModel.Name,
 	})
 
-	return &model.Record{
+	return &nsutils.Record{
 		Collection:  "entries",
 		ID:          eid,
 		Data:        data,
@@ -48,24 +47,24 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*mo
 	}, true, nil
 }
 
-func (c EntriesCollection) Get(ctx context.Context, identifier string) (*model.Record, error) {
+func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 
 	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReadingByEID(ctx, identifier)
 	if err == sql.ErrNoRows {
-		return nil, di.ErrNotFound
+		return nil, nsutils.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get glucose reading by ID: %w", err)
 	}
 	if glucoseReading == nil {
-		return nil, di.ErrNotFound
+		return nil, nsutils.ErrNotFound
 	}
 	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
+func (c EntriesCollection) Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit))
 	if err != nil {
@@ -75,7 +74,7 @@ func (c EntriesCollection) Search(ctx context.Context, query di.Query) ([]model.
 	return CreateRecordSlice(entries, GlucoseReadingToRecord), nil
 }
 
-func (c EntriesCollection) Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error) {
+func (c EntriesCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 	var entryModel Entry
 	raw_json, err := MapToStruct(patch, &entryModel)
@@ -100,7 +99,7 @@ func (c EntriesCollection) Update(ctx context.Context, collection, identifier st
 	return &record, nil
 }
 
-func (c EntriesCollection) Delete(ctx context.Context, collection, identifier string, permanent bool) error {
+func (c EntriesCollection) Delete(ctx context.Context, identifier string, permanent bool) error {
 	userContext := httputils.GetUserContext(ctx)
 	if permanent {
 		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingByEID(ctx, identifier)
@@ -112,7 +111,7 @@ func (c EntriesCollection) Delete(ctx context.Context, collection, identifier st
 			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
 		}
 		if rowsAffected == 0 {
-			return di.ErrNotFound
+			return nsutils.ErrNotFound
 		}
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
@@ -126,7 +125,7 @@ func (c EntriesCollection) Delete(ctx context.Context, collection, identifier st
 			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
 		}
 		if rowsAffected == 0 {
-			return di.ErrNotFound
+			return nsutils.ErrNotFound
 		}
 		slog.Info("Soft Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
@@ -134,7 +133,7 @@ func (c EntriesCollection) Delete(ctx context.Context, collection, identifier st
 	return nil
 }
 
-func (c EntriesCollection) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error) {
+func (c EntriesCollection) DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error) {
 	userContext := httputils.GetUserContext(ctx)
 	records, err := c.Search(ctx, query)
 	if err != nil {
@@ -191,9 +190,9 @@ type Entry struct {
 // Mappers
 ////
 
-func GlucoseReadingToRecord(sgv *user.GlucoseReading) model.Record {
+func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
 	if sgv == nil {
-		return model.Record{}
+		return nsutils.Record{}
 	}
 
 	entryModel := Entry{
@@ -205,7 +204,7 @@ func GlucoseReadingToRecord(sgv *user.GlucoseReading) model.Record {
 		Device:     ptr(fmt.Sprintf("%d", sgv.CreatedByIdentityID)),
 	}
 
-	return model.Record{
+	return nsutils.Record{
 		Collection:  "entries",
 		ID:          sgv.Eid,
 		Data:        StructToMap(entryModel),

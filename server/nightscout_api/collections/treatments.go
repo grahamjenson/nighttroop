@@ -8,15 +8,14 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type TreatmentCollection struct{}
 
-func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*model.Record, bool, error) {
+func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error) {
 	userContext := httputils.GetUserContext(ctx)
 
 	var treatmentModel Treatment
@@ -43,7 +42,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	if !created {
 		return nil, false, fmt.Errorf("unsupported treatment event type: %s", treatmentModel.EventType)
 	}
-	return &model.Record{
+	return &nsutils.Record{
 		Collection:  "treatments",
 		ID:          externalID,
 		Data:        data,
@@ -51,13 +50,13 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	}, true, nil
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*model.Record, error) {
+func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {
 	return nil, nil
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, query di.Query) ([]model.Record, error) {
+func (c TreatmentCollection) Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
-	records := []model.Record{}
+	records := []nsutils.Record{}
 	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
 	if err != nil {
 		return nil, err
@@ -67,15 +66,15 @@ func (c TreatmentCollection) Search(ctx context.Context, query di.Query) ([]mode
 	return records, nil
 }
 
-func (c TreatmentCollection) Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error) {
+func (c TreatmentCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error) {
 	return nil, nil
 }
 
-func (c TreatmentCollection) Delete(ctx context.Context, collection, identifier string, permanent bool) error {
+func (c TreatmentCollection) Delete(ctx context.Context, identifier string, permanent bool) error {
 	return nil
 }
 
-func (c TreatmentCollection) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error) {
+func (c TreatmentCollection) DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error) {
 	return 0, nil
 }
 
@@ -153,9 +152,9 @@ type Treatment struct {
 // "eventType": "Profile Switch",
 // "eventType": "Carb Correction",
 
-func CarbsToRecord(carbs *user.Carb) model.Record {
+func CarbsToRecord(carbs *user.Carb) nsutils.Record {
 	if carbs == nil {
-		return model.Record{}
+		return nsutils.Record{}
 	}
 
 	treatmentModel := Treatment{
@@ -167,7 +166,7 @@ func CarbsToRecord(carbs *user.Carb) model.Record {
 		EnteredBy:  fmt.Sprintf("%d", carbs.CreatedByIdentityID),
 	}
 
-	return model.Record{
+	return nsutils.Record{
 		Collection:  "treatments",
 		ID:          fmt.Sprintf("%d", carbs.ID),
 		Data:        StructToMap(treatmentModel),

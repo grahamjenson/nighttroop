@@ -5,79 +5,64 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+
 	"nighttroop.t1d.nz/utils/config"
 )
 
-type NSCollection string
-
-const (
-	EntriesCollection      NSCollection = "entries"
-	TreatmentsCollection   NSCollection = "treatments"
-	ProfileCollection      NSCollection = "profile"
-	DeviceStatusCollection NSCollection = "devicestatus"
-	SettingsCollection     NSCollection = "settings"
-	FoodCollection         NSCollection = "food"
-	PropertiesCollection   NSCollection = "properties"
-)
-
 type CollectionStore interface {
-	Create(ctx context.Context, data map[string]any) (*model.Record, bool, error)
-	Get(ctx context.Context, identifier string) (*model.Record, error)
-	Search(ctx context.Context, query di.Query) ([]model.Record, error)
-	Update(ctx context.Context, collection, identifier string, patch map[string]any) (*model.Record, error)
-	Delete(ctx context.Context, collection, identifier string, permanent bool) error
-	DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool) (int, error)
+	Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error)
+	Get(ctx context.Context, identifier string) (*nsutils.Record, error)
+	Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error)
+	Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error)
+	Delete(ctx context.Context, identifier string, permanent bool) error
+	DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error)
 }
 
 type NightTroopAPIStore struct {
 	controlDB *db.ControlDB
 	config    config.ServerConfig
 
-	stores map[NSCollection]CollectionStore
+	stores map[nsutils.Collection]CollectionStore
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection string, data map[string]any, subject string) (model.Record, bool, error) {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, subject string) (nsutils.Record, bool, error) {
+	collectionsStore, ok := nts.stores[collection]
 	if !ok {
-		return model.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
+		return nsutils.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
 	}
 	record, created, err := collectionsStore.Create(ctx, data)
 
 	if err != nil {
-		return model.Record{}, false, err
+		return nsutils.Record{}, false, err
 	}
 	if record == nil {
-		return model.Record{}, false, di.ErrNotFound
+		return nsutils.Record{}, false, nsutils.ErrNotFound
 	}
 	return *record, created, nil
 
 }
 
-func (nts *NightTroopAPIStore) Get(ctx context.Context, collection, identifier string) (model.Record, error) {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
+func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string) (nsutils.Record, error) {
+	collectionsStore, ok := nts.stores[collection]
 	if !ok {
-		return model.Record{}, fmt.Errorf("unknown collection: %s", collection)
+		return nsutils.Record{}, fmt.Errorf("unknown collection: %s", collection)
 	}
 	record, err := collectionsStore.Get(ctx, identifier)
 	if err != nil {
-		return model.Record{}, err
+		return nsutils.Record{}, err
 	}
 	if record == nil {
-		return model.Record{}, di.ErrNotFound
+		return nsutils.Record{}, nsutils.ErrNotFound
 	}
 	return *record, nil
 }
 
-func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, query di.Query) ([]model.Record, error) {
-	nsCollection := normalizeCollection(collection)
+func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query nsutils.Query) ([]nsutils.Record, error) {
+	collectionsStore, ok := nts.stores[collection]
 	query = withDefaultQuery(query)
 
-	collectionsStore, ok := nts.stores[nsCollection]
 	if !ok {
 		return nil, fmt.Errorf("unknown collection: %s", collection)
 	}
@@ -85,52 +70,44 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection string, qu
 	if err != nil {
 		return nil, err
 	}
-	records = di.ApplyQuery(records, query)
+	records = nsutils.ApplyQuery(records, query)
 	return records, nil
 
 }
 
-func (nts *NightTroopAPIStore) Update(ctx context.Context, collection, identifier string, patch map[string]any, subject string) (model.Record, error) {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
+func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, subject string) (nsutils.Record, error) {
+	collectionsStore, ok := nts.stores[collection]
 	if !ok {
-		return model.Record{}, fmt.Errorf("unknown collection: %s", collection)
+		return nsutils.Record{}, fmt.Errorf("unknown collection: %s", collection)
 	}
-	record, err := collectionsStore.Update(ctx, collection, identifier, patch)
+	record, err := collectionsStore.Update(ctx, identifier, patch)
 	if err != nil {
-		return model.Record{}, err
+		return nsutils.Record{}, err
 	}
 	if record == nil {
-		return model.Record{}, di.ErrNotFound
+		return nsutils.Record{}, nsutils.ErrNotFound
 	}
 	return *record, nil
 }
 
-func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection, identifier string, permanent bool, subject string) error {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
+func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool, subject string) error {
+	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return fmt.Errorf("unknown collection: %s", collection)
 	}
-	return collectionsStore.Delete(ctx, collection, identifier, permanent)
+	return collectionsStore.Delete(ctx, identifier, permanent)
 }
 
-func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection string, query di.Query, permanent bool, subject string) (int, error) {
-	nsCollection := normalizeCollection(collection)
-	collectionsStore, ok := nts.stores[nsCollection]
+func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection nsutils.Collection, query nsutils.Query, permanent bool, subject string) (int, error) {
+	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return 0, fmt.Errorf("unknown collection: %s", collection)
 	}
-	return collectionsStore.DeleteMatching(ctx, collection, query, permanent)
+	return collectionsStore.DeleteMatching(ctx, query, permanent)
 }
 
-func normalizeCollection(collection string) NSCollection {
-	collection = model.NormalizeCollection(collection)
-	return NSCollection(collection)
-}
-
-func withDefaultQuery(query di.Query) di.Query {
-	defaults := di.DefaultQuery()
+func withDefaultQuery(query nsutils.Query) nsutils.Query {
+	defaults := nsutils.DefaultQuery()
 	if query.SortField == "" {
 		query.SortField = defaults.SortField
 	}

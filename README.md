@@ -36,8 +36,6 @@ You can sync data from Dexcom and/or Nightscout instance (exactly one of each pe
 so you can fill out your dexcom username/password + 
 
 
-
-
 # Testing locally
 
 Docker runs our local test s3 server `minio` (the only external dependency)

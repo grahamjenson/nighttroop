@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"time"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/model"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
-func CreateRecordSlice[T any](in []T, fn func(T) model.Record) []model.Record {
-	out := make([]model.Record, len(in))
+func CreateRecordSlice[T any](in []T, fn func(T) nsutils.Record) []nsutils.Record {
+	out := make([]nsutils.Record, len(in))
 	for i, v := range in {
 		out[i] = fn(v)
 	}

@@ -4,16 +4,13 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/httpx"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/query"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/util"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // Versions reports the API versions exposed by this server.
 func Versions() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, []map[string]string{
+		nsutils.WriteJSON(w, http.StatusOK, []map[string]string{
 			{"url": "/api/v1", "version": "1.0.0"},
 			{"url": "/api/v2", "version": "2.0.0"},
 			{"url": "/api/v3", "version": "3.0.4"},
@@ -22,40 +19,54 @@ func Versions() http.HandlerFunc {
 }
 
 // EchoRoute returns the parsed v1 query for debugging client requests.
-func EchoRoute(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
-		httpx.WriteJSON(w, http.StatusOK, query.EchoV1(chi.URLParam(r, "collection"), r.URL.Query()))
+func EchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		values := r.URL.Query()
+		query := nsutils.ParseV1(values, "date")
+		collection := chi.URLParam(r, "collection")
+
+		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+			"storage": collection,
+			"query":   query,
+			"input": map[string]any{
+				"find": values,
+			},
+		})
 	}
 }
 
 // SliceRoute implements the v1 prefix-slice endpoint.
-func SliceRoute(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
-		collection := chi.URLParam(r, "collection")
-		q := query.ParseV1(r.URL.Query(), "date")
-		q.Filters = util.StripImplicitDateFilters(q.Filters)
+func SliceRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
+		if err != nil {
+			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid collection"})
+			return
+		}
+		q := nsutils.ParseV1(r.URL.Query(), "date")
+		q.Filters = nsutils.StripImplicitDateFilters(q.Filters)
 		searchQuery := q
 		searchQuery.Limit = 1000
 		records, err := dep.Store.Search(r.Context(), collection, searchQuery)
 		if err != nil {
-			httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		filtered := query.Slice(records, chi.URLParam(r, "field"), chi.URLParam(r, "type"), chi.URLParam(r, "prefix"), q.Limit)
-		util.WriteRecords(w, filtered, nil)
+		filtered := nsutils.Slice(records, chi.URLParam(r, "field"), chi.URLParam(r, "type"), chi.URLParam(r, "prefix"), q.Limit)
+		nsutils.WriteRecords(w, filtered, nil)
 	}
 }
 
 // TimesEchoRoute returns the expanded modal-time patterns used by TimesRoute.
-func TimesEchoRoute(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
-		prefix, expr, ok := util.ParseTimesWildcard(r)
+func TimesEchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		prefix, expr, ok := nsutils.ParseTimesWildcard(r)
 		if !ok {
 			http.NotFound(w, r)
 			return
 		}
-		_, patterns := query.Times(nil, prefix, expr, 0)
-		httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		_, patterns := nsutils.Times(nil, prefix, expr, 0)
+		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"req":     map[string]any{"query": r.URL.Query()},
 			"pattern": patterns,
 		})
@@ -63,23 +74,23 @@ func TimesEchoRoute(_ di.Dependencies) func(http.ResponseWriter, *http.Request, 
 }
 
 // TimesRoute implements the v1 modal-time query endpoint.
-func TimesRoute(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
-		prefix, expr, ok := util.ParseTimesWildcard(r)
+func TimesRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		prefix, expr, ok := nsutils.ParseTimesWildcard(r)
 		if !ok {
 			http.NotFound(w, r)
 			return
 		}
-		q := query.ParseV1(r.URL.Query(), "date")
-		q.Filters = util.StripImplicitDateFilters(q.Filters)
+		q := nsutils.ParseV1(r.URL.Query(), "date")
+		q.Filters = nsutils.StripImplicitDateFilters(q.Filters)
 		searchQuery := q
 		searchQuery.Limit = 1000
 		records, err := dep.Store.Search(r.Context(), "entries", searchQuery)
 		if err != nil {
-			httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		filtered, _ := query.Times(records, prefix, expr, q.Limit)
-		util.WriteRecords(w, filtered, nil)
+		filtered, _ := nsutils.Times(records, prefix, expr, q.Limit)
+		nsutils.WriteRecords(w, filtered, nil)
 	}
 }

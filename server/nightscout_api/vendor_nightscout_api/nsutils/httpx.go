@@ -1,4 +1,4 @@
-package httpx
+package nsutils
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 )
 
 // WriteJSON writes a JSON response with the provided HTTP status code.
@@ -28,9 +26,9 @@ func ReadJSON(r *http.Request, dst any) error {
 // RequireRecord maps store lookup errors to the corresponding HTTP response.
 func RequireRecord(storeErr error) (status int, body map[string]any) {
 	switch {
-	case errors.Is(storeErr, di.ErrGone):
+	case errors.Is(storeErr, ErrGone):
 		return http.StatusGone, map[string]any{"status": http.StatusGone}
-	case errors.Is(storeErr, di.ErrNotFound):
+	case errors.Is(storeErr, ErrNotFound):
 		return http.StatusNotFound, map[string]any{"status": http.StatusNotFound}
 	default:
 		return http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": storeErr.Error()}

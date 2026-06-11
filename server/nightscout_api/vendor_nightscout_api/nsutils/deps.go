@@ -1,4 +1,4 @@
-package di
+package nsutils
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 )
 
 type Dependencies struct {
-	Auth  Manager
+	Auth  AuthManager
 	Store Store
 }
 
@@ -34,7 +34,7 @@ type Identity struct {
 // The library intentionally depends on this interface instead of shipping a
 // production auth implementation, so applications can map it to their own
 // user, token, and permission model.
-type Manager interface {
+type AuthManager interface {
 	Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *Identity)) http.HandlerFunc
 	HasPermission(identity Identity, permission string) bool
 	AuthenticateExplicit(r *http.Request) (*Identity, error)

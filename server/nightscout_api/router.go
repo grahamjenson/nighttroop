@@ -12,21 +12,21 @@ import (
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
 	v2 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v2"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
-	ntDeps := di.Dependencies{
+	ntDeps := nsutils.Dependencies{
 		Store: &NightTroopAPIStore{
 			controlDB: controlDB,
 			config:    config,
-			stores: map[NSCollection]CollectionStore{
-				EntriesCollection:      collections.EntriesCollection{},
-				TreatmentsCollection:   collections.TreatmentCollection{},
-				DeviceStatusCollection: collections.DeviceStatusCollection{},
+			stores: map[nsutils.Collection]CollectionStore{
+				nsutils.Entries:      collections.EntriesCollection{},
+				nsutils.Treatments:   collections.TreatmentCollection{},
+				nsutils.Devicestatus: collections.DeviceStatusCollection{},
 			},
 		},
 

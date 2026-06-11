@@ -83,6 +83,7 @@ func (e *SGVEntry) UnmarshalJSON(data []byte) error {
 		Date      int64   `json:"date"`
 		SGV       float64 `json:"sgv"`
 		Units     string  `json:"units"`
+		UTCOffset int     `json:"utcOffset"`
 		CreatedAt string  `json:"created_at"`
 	}
 
@@ -94,6 +95,7 @@ func (e *SGVEntry) UnmarshalJSON(data []byte) error {
 
 	e.Units = raw.Units
 	e.SGV = raw.SGV
+	e.UTCOffset = raw.UTCOffset
 
 	// Normalize to mg/dL
 	if strings.EqualFold(raw.Units, "mmol") ||
