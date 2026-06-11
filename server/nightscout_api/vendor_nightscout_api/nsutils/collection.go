@@ -43,3 +43,12 @@ func ParseCollection(s string) (Collection, error) {
 		return "", fmt.Errorf("unknown collection %q", s)
 	}
 }
+
+func (c Collection) DefaultDateField() string {
+	switch c {
+	case Entries, Treatments:
+		return "date"
+	default:
+		return "created_at"
+	}
+}

@@ -70,16 +70,16 @@ func registerTreatmentRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 }
 
 func registerDeviceStatusRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/devicestatus", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, nsutils.Devicestatus, "created_at")))
-	r.Get("/devicestatus.json", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, nsutils.Devicestatus, "created_at")))
+	r.Get("/devicestatus", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, nsutils.Devicestatus)))
+	r.Get("/devicestatus.json", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, nsutils.Devicestatus)))
 	create := dep.Auth.Require("api:devicestatus:create", false, handlers.GenericCollectionCreate(dep, nsutils.Devicestatus))
 	for _, path := range []string{"/devicestatus", "/devicestatus/", "/devicestatus.json"} {
 		r.Post(path, create)
 		r.Put(path, create)
 	}
-	r.Delete("/devicestatus", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus, "created_at")))
-	r.Delete("/devicestatus/", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus, "created_at")))
-	r.Delete("/devicestatus.json", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus, "created_at")))
+	r.Delete("/devicestatus", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus)))
+	r.Delete("/devicestatus/", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus)))
+	r.Delete("/devicestatus.json", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus)))
 }
 
 func registerProfileRoutes(r *chi.Mux, dep nsutils.Dependencies) {
@@ -93,15 +93,15 @@ func registerProfileRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 		r.Put(path, create)
 	}
 
-	del := dep.Auth.Require("api:profile:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Profile, "created_at"))
+	del := dep.Auth.Require("api:profile:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Profile))
 	for _, path := range []string{"/profile", "/profile/", "/profile.json"} {
 		r.Delete(path, del)
 	}
 }
 
 func registerSettingRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/settings", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, nsutils.Settings, "created_at")))
-	r.Get("/settings.json", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, nsutils.Settings, "created_at")))
+	r.Get("/settings", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, nsutils.Settings)))
+	r.Get("/settings.json", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, nsutils.Settings)))
 
 	create := dep.Auth.Require("api:settings:create", false, handlers.GenericCollectionCreate(dep, nsutils.Settings))
 	for _, path := range []string{"/settings", "/settings/", "/settings.json"} {
@@ -109,15 +109,15 @@ func registerSettingRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 		r.Put(path, create)
 	}
 
-	del := dep.Auth.Require("api:settings:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Settings, "created_at"))
+	del := dep.Auth.Require("api:settings:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Settings))
 	for _, path := range []string{"/settings", "/settings/", "/settings.json"} {
 		r.Delete(path, del)
 	}
 }
 
 func registerFoodRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/food", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, nsutils.Food, "created_at")))
-	r.Get("/food.json", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, nsutils.Food, "created_at")))
+	r.Get("/food", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, nsutils.Food)))
+	r.Get("/food.json", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, nsutils.Food)))
 
 	create := dep.Auth.Require("api:food:create", false, handlers.GenericCollectionCreate(dep, nsutils.Food))
 	for _, path := range []string{"/food", "/food/", "/food.json"} {
@@ -125,7 +125,7 @@ func registerFoodRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 		r.Put(path, create)
 	}
 
-	del := dep.Auth.Require("api:food:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Food, "created_at"))
+	del := dep.Auth.Require("api:food:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Food))
 	for _, path := range []string{"/food", "/food/", "/food.json"} {
 		r.Delete(path, del)
 	}
