@@ -307,7 +307,7 @@ func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.User, error) {
 	// Check if user exists in the db
 	model, err := db.Queries.GetUser(context.TODO(), subdomain)
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot get user: %w", err)
+		return nil, nil, fmt.Errorf("Cannot get user from db: %w", err)
 	}
 	if model.Subdomain == "" {
 		return nil, nil, fmt.Errorf("user not found")
@@ -315,7 +315,7 @@ func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.User, error) {
 
 	userDb, err := db.getUserDBFromMap(subdomain)
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot get user db: %w", err)
+		return nil, nil, fmt.Errorf("Cannot get UserDB from memory: %w", err)
 	}
 	return userDb, model, nil
 }

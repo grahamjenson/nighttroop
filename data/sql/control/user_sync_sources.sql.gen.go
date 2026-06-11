@@ -88,7 +88,7 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, subdomain str
 }
 
 const getAllUserSyncSourcesForUniqueHash = `-- name: GetAllUserSyncSourcesForUniqueHash :many
-SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM user_sync_sources where unique_hash = ?
+SELECT uss.id, uss.subdomain, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM user_sync_sources uss JOIN users u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
 `
 
 func (q *Queries) GetAllUserSyncSourcesForUniqueHash(ctx context.Context, uniqueHash string) ([]*UserSyncSource, error) {

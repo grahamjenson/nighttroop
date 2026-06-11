@@ -14,7 +14,7 @@ import (
 
 func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	if len(syncInfo.userSyncSources) == 0 {
-		return fmt.Errorf("No user sync sources found for unique hash: %s", syncInfo.UniqueHash)
+		return fmt.Errorf("Dexcom, no user sync sources found for unique hash: %s", syncInfo.UniqueHash)
 	}
 
 	slog.Info("Syncing Dexcom", "unique_hash", syncInfo.UniqueHash)

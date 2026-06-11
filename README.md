@@ -23,6 +23,7 @@
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
 1. Write data sync logic and protections, punishing bad servers...
 1. Archive has a problem where they are deleting files from the db not removing from control
+1. archivied_at in the user table in control.db
 
 # NightTroop
 

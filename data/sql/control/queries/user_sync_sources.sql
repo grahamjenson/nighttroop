@@ -3,7 +3,7 @@
 SELECT * FROM user_sync_sources where subdomain = ?;
 
 -- name: GetAllUserSyncSourcesForUniqueHash :many
-SELECT * FROM user_sync_sources where unique_hash = ?;
+SELECT uss.* FROM user_sync_sources uss JOIN users u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL;
 
 -----
 -- Nighscout

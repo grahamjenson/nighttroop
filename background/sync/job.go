@@ -72,6 +72,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			slog.Error("Error unmarshalling sync job params", "error", err, "job", j.Job)
 			return nil
 		}
+		// This will filter out
 		syncSources, err := b.controlDB.Queries.GetAllUserSyncSourcesForUniqueHash(ctx, syncJob.UniqueHash)
 		if err != nil {
 			slog.Error("Error getting user sync sources", "error", err, "unique_hash", syncJob.UniqueHash)
@@ -79,7 +80,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 		}
 
 		if len(syncSources) == 0 {
-			slog.Error("No user sync sources found for unique hash", "unique_hash", syncJob.UniqueHash)
+			slog.Error("workerFunc: No user sync sources found for unique hash", "unique_hash", syncJob.UniqueHash, "sync_type", syncJob.Type)
 			return nil
 		}
 
@@ -96,6 +97,11 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 				continue
 			}
 			userInfoSyncSources = append(userInfoSyncSources, userInfo)
+		}
+
+		if len(userInfoSyncSources) == 0 {
+			slog.Error("No user info sync sources found for unique hash", "unique_hash", syncJob.UniqueHash)
+			return nil
 		}
 
 		username, password, region, err := b.getUsernamePasswordRegion(syncSources[0])
@@ -186,6 +192,7 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 		// 1. Have a user with an Enabled sync_source
 		// 2. Are due to run because last attempt is null or was more than the sync interval ago
 		// 3. The User has been seen in the last day
+		// 4. The User is not deleted
 		syncReports, err := b.controlDB.Queries.GetSyncReportsToRun(context.TODO())
 		if err != nil {
 			slog.Error("error getting sync reports to run", "error", err)
