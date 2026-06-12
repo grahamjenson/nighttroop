@@ -1,9 +1,7 @@
 package nsutils
 
 import (
-	"maps"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -32,30 +30,6 @@ func CloneMap(in map[string]any) map[string]any {
 		}
 	}
 	return out
-}
-
-// Merge returns a shallow field merge of src into dst.
-func Merge(dst, src map[string]any) map[string]any {
-	out := CloneMap(dst)
-	maps.Copy(out, src)
-	return out
-}
-
-// BoolField reads a field as a bool when possible.
-func BoolField(data map[string]any, key string) (bool, bool) {
-	val, ok := data[key]
-	if !ok || val == nil {
-		return false, false
-	}
-	switch typed := val.(type) {
-	case bool:
-		return typed, true
-	case string:
-		parsed, err := strconv.ParseBool(typed)
-		return parsed, err == nil
-	default:
-		return false, false
-	}
 }
 
 // PathValue returns a nested value from a JSON-like object using dot or bracket

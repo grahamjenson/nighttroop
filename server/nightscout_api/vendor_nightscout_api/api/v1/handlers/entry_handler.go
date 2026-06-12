@@ -17,7 +17,7 @@ func EntriesCurrent(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Re
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecords(w, records, nil)
+		nsutils.WriteRecordsV1(w, records, nil)
 	}
 }
 
@@ -30,7 +30,7 @@ func EntriesList(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reque
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecords(w, records, nil)
+		nsutils.WriteRecordsV1(w, records, nil)
 	}
 }
 
@@ -51,7 +51,7 @@ func EntriesSpec(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reque
 				nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 				return
 			}
-			nsutils.WriteRecords(w, records, nil)
+			nsutils.WriteRecordsV1(w, records, nil)
 			return
 		default:
 			record, err := dep.Store.Get(r.Context(), "entries", spec)
@@ -60,7 +60,7 @@ func EntriesSpec(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reque
 				nsutils.WriteJSON(w, status, body)
 				return
 			}
-			nsutils.WriteRecords(w, []nsutils.Record{record}, nil)
+			nsutils.WriteRecordsV1(w, []nsutils.Record{record}, nil)
 		}
 	}
 }
@@ -74,17 +74,18 @@ func EntriesCreate(dep nsutils.Dependencies, persist bool) func(http.ResponseWri
 			return
 		}
 		preview := make([]map[string]any, 0)
+		persisted := make([]nsutils.Record, 0)
 		apply := func(doc map[string]any) error {
 			doc, err := nsutils.Entries.DefaultNormalizeValidateCreateDoc(doc)
 			if err != nil {
 				return err
 			}
 			if persist {
-				record, _, err := dep.Store.Create(r.Context(), "entries", doc, identity.Name)
+				record, err := dep.Store.Create(r.Context(), "entries", doc, identity.Name)
 				if err != nil {
 					return err
 				}
-				preview = append(preview, record.ToMap(false))
+				persisted = append(persisted, record)
 			} else {
 				// Return id as empty, because it is not a real record
 				doc["_id"] = ""
@@ -115,11 +116,12 @@ func EntriesCreate(dep nsutils.Dependencies, persist bool) func(http.ResponseWri
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
-		status := http.StatusOK
-		if !persist {
-			status = http.StatusCreated
+
+		if persist {
+			nsutils.WriteRecordsV1(w, persisted, nil)
+		} else {
+			nsutils.WriteJSON(w, http.StatusCreated, preview)
 		}
-		nsutils.WriteJSON(w, status, preview)
 	}
 }
 

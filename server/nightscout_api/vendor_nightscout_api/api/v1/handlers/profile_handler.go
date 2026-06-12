@@ -14,7 +14,7 @@ func ProfileList(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reque
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecords(w, records, nil)
+		nsutils.WriteRecordsV1(w, records, nil)
 	}
 }
 

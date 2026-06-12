@@ -41,6 +41,7 @@ JOIN users u
     ON u.subdomain = us.subdomain
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
+  AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- seen in the last day
   AND (
       ssr.last_attempted_sync IS NULL
       OR ssr.last_attempted_sync <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (ssr.sync_interval_seconds * 1000)

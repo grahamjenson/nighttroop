@@ -8,8 +8,8 @@ import (
 
 type DeviceStatusCollection struct{}
 
-func (c DeviceStatusCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error) {
-	return nil, false, nil
+func (c DeviceStatusCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, error) {
+	return nil, nil
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {

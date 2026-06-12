@@ -65,3 +65,21 @@ func (r Record) ToMap(includeMeta bool) map[string]any {
 	}
 	return out
 }
+
+// SelectFields projects a record to the requested fields.
+func (record Record) SelectFields(fields []string) map[string]any {
+	full := record.ToMap(true)
+	if len(fields) == 0 {
+		return full
+	}
+	out := make(map[string]any, len(fields))
+	for _, field := range fields {
+		if value, ok := full[field]; ok {
+			out[field] = value
+		}
+	}
+	if len(fields) > 0 {
+		delete(out, "_id")
+	}
+	return out
+}

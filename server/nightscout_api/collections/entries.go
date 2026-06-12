@@ -15,19 +15,19 @@ import (
 
 type EntriesCollection struct{}
 
-func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error) {
+func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 	var entryModel Entry
 	raw_json, err := MapToStruct(data, &entryModel)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to map data to entry model: %w", err)
+		return nil, fmt.Errorf("failed to map data to entry model: %w", err)
 	}
 	occurredAt := time.Now().UnixMilli()
 	if entryModel.Date != nil {
 		occurredAt = *entryModel.Date
 	}
 	if entryModel.SGV == nil {
-		return nil, false, fmt.Errorf("SGV value is required for entries collection")
+		return nil, fmt.Errorf("SGV value is required for entries collection")
 	}
 	offset := int64(0)
 	if entryModel.UTCOffset != nil {
@@ -49,7 +49,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 		ID:          eid,
 		Data:        data,
 		SrvModified: time.Now().UnixMilli(),
-	}, true, nil
+	}, nil
 }
 
 func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {

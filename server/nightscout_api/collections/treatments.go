@@ -15,13 +15,13 @@ import (
 
 type TreatmentCollection struct{}
 
-func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error) {
+func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 
 	var treatmentModel Treatment
 	raw_json, err := MapToStruct(data, &treatmentModel)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to map data to treatment model: %w", err)
+		return nil, fmt.Errorf("failed to map data to treatment model: %w", err)
 	}
 	externalID := utils.NextEID("ns")
 	created := false
@@ -35,19 +35,19 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 			CreatedByIdentityID:   userContext.IdentityModel.ID,
 		})
 		if err != nil {
-			return nil, false, fmt.Errorf("failed to create carb in database: %w", err)
+			return nil, fmt.Errorf("failed to create carb in database: %w", err)
 		}
 		created = true
 	}
 	if !created {
-		return nil, false, fmt.Errorf("unsupported treatment event type: %s", treatmentModel.EventType)
+		return nil, fmt.Errorf("unsupported treatment event type: %s", treatmentModel.EventType)
 	}
 	return &nsutils.Record{
 		Collection:  "treatments",
 		ID:          externalID,
 		Data:        data,
 		SrvModified: time.Now().UnixMilli(),
-	}, true, nil
+	}, nil
 }
 
 func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {

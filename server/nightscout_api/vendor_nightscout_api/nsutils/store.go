@@ -14,7 +14,7 @@ var (
 //
 // Applications are expected to provide their own implementation.
 type Store interface {
-	Create(ctx context.Context, collection Collection, data map[string]any, subject string) (Record, bool, error)
+	Create(ctx context.Context, collection Collection, data map[string]any, subject string) (Record, error)
 	Get(ctx context.Context, collection Collection, identifier string) (Record, error)
 	Search(ctx context.Context, collection Collection, query *Query) ([]Record, error)
 	Update(ctx context.Context, collection Collection, identifier string, patch map[string]any, subject string) (Record, error)

@@ -15,7 +15,7 @@ func TreatmentsList(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Re
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecords(w, records, nil)
+		nsutils.WriteRecordsV1(w, records, nil)
 	}
 }
 
@@ -35,7 +35,7 @@ func TreatmentsCreate(dep nsutils.Dependencies) func(http.ResponseWriter, *http.
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
-			if _, _, err := dep.Store.Create(r.Context(), "treatments", doc, identity.Name); err != nil {
+			if _, err := dep.Store.Create(r.Context(), "treatments", doc, identity.Name); err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
@@ -51,7 +51,7 @@ func TreatmentsCreate(dep nsutils.Dependencies) func(http.ResponseWriter, *http.
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
-				if _, _, err := dep.Store.Create(r.Context(), "treatments", doc, identity.Name); err != nil {
+				if _, err := dep.Store.Create(r.Context(), "treatments", doc, identity.Name); err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
@@ -61,7 +61,7 @@ func TreatmentsCreate(dep nsutils.Dependencies) func(http.ResponseWriter, *http.
 			return
 		}
 		records, _ := dep.Store.Search(r.Context(), "treatments", nsutils.DefaultQuery())
-		nsutils.WriteRecords(w, records, nil)
+		nsutils.WriteRecordsV1(w, records, nil)
 	}
 }
 

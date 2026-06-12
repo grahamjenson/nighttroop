@@ -129,6 +129,25 @@ func ParseV3(values url.Values) (*Query, error) {
 	return query, nil
 }
 
+// SelectFields projects a record to the requested fields.
+func (q *Query) SelectFields(record Record) map[string]any {
+	fields := q.Fields
+	full := record.ToMap(true)
+	if len(fields) == 0 {
+		return full
+	}
+	out := make(map[string]any, len(fields))
+	for _, field := range fields {
+		if value, ok := full[field]; ok {
+			out[field] = value
+		}
+	}
+	if len(fields) > 0 {
+		delete(out, "_id")
+	}
+	return out
+}
+
 // StripImplicitDateFilters removes the default rolling-window filters injected
 // by ParseV1 so slice/times style endpoints can search across larger ranges.
 func (q *Query) StripImplicitDateFilters() {
@@ -370,24 +389,6 @@ func ApplyQuery(records []Record, query *Query) []Record {
 		filtered = filtered[:query.Limit]
 	}
 	return filtered
-}
-
-// SelectFields projects a record to the requested fields.
-func SelectFields(record Record, fields []string) map[string]any {
-	full := record.ToMap(true)
-	if len(fields) == 0 {
-		return full
-	}
-	out := make(map[string]any, len(fields))
-	for _, field := range fields {
-		if value, ok := full[field]; ok {
-			out[field] = value
-		}
-	}
-	if len(fields) > 0 {
-		delete(out, "_id")
-	}
-	return out
 }
 
 func matchesAll(record Record, filters []Filter) bool {

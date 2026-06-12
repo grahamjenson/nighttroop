@@ -31,11 +31,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 				nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 				return
 			}
-			result := make([]map[string]any, 0, len(records))
-			for _, record := range records {
-				result = append(result, selectV3Fields(record, query.Fields))
-			}
-			nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
+			nsutils.WriteRecordsV3(w, records, query.Fields)
 		}).ServeHTTP(w, r)
 	}
 }
@@ -50,7 +46,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		identity, err := dep.Auth.AuthenticateExplicit(r)
 		if err != nil {
-			nsutils.WriteJSON(w, http.StatusUnauthorized, map[string]any{"status": http.StatusUnauthorized, "message": authErrorMessage(err)})
+			nsutils.WriteJSON(w, http.StatusUnauthorized, map[string]any{"status": http.StatusUnauthorized, "message": "Missing or bad access token or JWT"})
 			return
 		}
 		var doc map[string]any
@@ -71,25 +67,15 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission %s", permission)})
 			return
 		}
-		record, created, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
+		record, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
 		}
-		status := http.StatusCreated
-		body := map[string]any{
-			"status":       status,
-			"identifier":   record.Identifier(),
-			"lastModified": record.SrvModified,
-		}
-		if !created {
-			status = http.StatusOK
-			body["status"] = status
-			body["isDeduplication"] = true
-		}
-		nsutils.LastModifiedHeader(w, record.SrvModified)
+
 		w.Header().Set("Location", fmt.Sprintf("/api/v3/%s/%s", collection, record.Identifier()))
-		nsutils.WriteJSON(w, status, body)
+		nsutils.WriteRecordV3(w, record, nil)
+
 	}
 }
 
@@ -115,10 +101,9 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 				w.WriteHeader(http.StatusNotModified)
 				return
 			}
-			nsutils.LastModifiedHeader(w, record.SrvModified)
 			query, _ := nsutils.ParseV3(r.URL.Query())
-			fields := query.Fields
-			nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": selectV3Fields(record, fields)})
+
+			nsutils.WriteRecordV3(w, record, query.Fields)
 		}).ServeHTTP(w, r)
 	}
 }
@@ -173,7 +158,7 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 			}
 
 			// Set default values, normalize incoming values, and validate everything is good, then Create or Update
-			created := false
+
 			var record nsutils.Record
 			if createNewRecord {
 				doc, err = collection.DefaultNormalizeValidateCreateDoc(doc)
@@ -181,14 +166,12 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
-				record, created, err = dep.Store.Create(r.Context(), collection, doc, identity.Name)
+				record, err = dep.Store.Create(r.Context(), collection, doc, identity.Name)
 			} else {
-
 				if err := validateReplaceDoc(existing, doc); err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
-
 				record, err = dep.Store.Update(r.Context(), collection, identifier, doc, identity.Name)
 			}
 
@@ -197,16 +180,7 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 				return
 			}
 
-			nsutils.LastModifiedHeader(w, record.SrvModified)
-			status := http.StatusOK
-			body := map[string]any{"status": http.StatusOK, "result": selectV3Fields(record, nil)}
-			if created {
-				status = http.StatusCreated
-				body["status"] = status
-				body["identifier"] = record.Identifier()
-				body["lastModified"] = record.SrvModified
-			}
-			nsutils.WriteJSON(w, status, body)
+			nsutils.WriteRecordV3(w, record, nil)
 		}).ServeHTTP(w, r)
 	}
 }
@@ -250,8 +224,8 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 				nsutils.WriteJSON(w, status, body)
 				return
 			}
-			nsutils.LastModifiedHeader(w, record.SrvModified)
-			nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": selectV3Fields(record, nil)})
+
+			nsutils.WriteRecordV3(w, record, nil)
 		}).ServeHTTP(w, r)
 	}
 }
@@ -302,11 +276,7 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 				nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 				return
 			}
-			result := make([]map[string]any, 0, len(records))
-			for _, record := range records {
-				result = append(result, selectV3Fields(record, nil))
-			}
-			nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
+			nsutils.WriteRecordsV3(w, records, query.Fields)
 		}).ServeHTTP(w, r)
 	}
 }

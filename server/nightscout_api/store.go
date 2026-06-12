@@ -11,7 +11,7 @@ import (
 )
 
 type CollectionStore interface {
-	Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error)
+	Create(ctx context.Context, data map[string]any) (*nsutils.Record, error)
 	Get(ctx context.Context, identifier string) (*nsutils.Record, error)
 	Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error)
 	Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error)
@@ -27,20 +27,20 @@ type NightTroopAPIStore struct {
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, subject string) (nsutils.Record, bool, error) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, subject string) (nsutils.Record, error) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
-		return nsutils.Record{}, false, fmt.Errorf("unknown collection: %s", collection)
+		return nsutils.Record{}, fmt.Errorf("unknown collection: %s", collection)
 	}
-	record, created, err := collectionsStore.Create(ctx, data)
+	record, err := collectionsStore.Create(ctx, data)
 
 	if err != nil {
-		return nsutils.Record{}, false, err
+		return nsutils.Record{}, err
 	}
 	if record == nil {
-		return nsutils.Record{}, false, nsutils.ErrNotFound
+		return nsutils.Record{}, nsutils.ErrNotFound
 	}
-	return *record, created, nil
+	return *record, nil
 
 }
 

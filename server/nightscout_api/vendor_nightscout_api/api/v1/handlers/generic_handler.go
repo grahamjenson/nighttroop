@@ -17,7 +17,7 @@ func GenericCollectionList(dep nsutils.Dependencies, collection nsutils.Collecti
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecords(w, records, nil)
+		nsutils.WriteRecordsV1(w, records, nil)
 	}
 }
 
@@ -38,7 +38,7 @@ func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collec
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
-			record, _, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
+			record, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
 			if err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
@@ -56,7 +56,7 @@ func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collec
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
-				record, _, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
+				record, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
 				if err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
@@ -67,7 +67,7 @@ func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collec
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
-		nsutils.WriteRecords(w, created, nil)
+		nsutils.WriteRecordsV1(w, created, nil)
 	}
 }
 

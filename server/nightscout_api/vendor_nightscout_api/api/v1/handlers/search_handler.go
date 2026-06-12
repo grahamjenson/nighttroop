@@ -55,7 +55,7 @@ func SliceRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reques
 			return
 		}
 		filtered := nsutils.Slice(records, chi.URLParam(r, "field"), chi.URLParam(r, "type"), chi.URLParam(r, "prefix"), q.Limit)
-		nsutils.WriteRecords(w, filtered, nil)
+		nsutils.WriteRecordsV1(w, filtered, nil)
 	}
 }
 
@@ -93,7 +93,7 @@ func TimesRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reques
 			return
 		}
 		filtered, _ := nsutils.Times(records, prefix, expr, q.Limit)
-		nsutils.WriteRecords(w, filtered, nil)
+		nsutils.WriteRecordsV1(w, filtered, nil)
 	}
 }
 
