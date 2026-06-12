@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 )
 
 func WriteRecordV3(w http.ResponseWriter, record Record, fields []string) {
@@ -54,9 +56,9 @@ func ReadJSON(r *http.Request, dst any) error {
 // RequireRecord maps store lookup errors to the corresponding HTTP response.
 func RequireRecord(storeErr error) (status int, body map[string]any) {
 	switch {
-	case errors.Is(storeErr, ErrGone):
+	case errors.Is(storeErr, nserrors.ErrGone):
 		return http.StatusGone, map[string]any{"status": http.StatusGone}
-	case errors.Is(storeErr, ErrNotFound):
+	case errors.Is(storeErr, nserrors.ErrNotFound):
 		return http.StatusNotFound, map[string]any{"status": http.StatusNotFound}
 	default:
 		return http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": storeErr.Error()}

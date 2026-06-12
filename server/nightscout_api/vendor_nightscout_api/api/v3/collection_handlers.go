@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // Search implements collection search for API v3.
-func Search(dep nsutils.Dependencies) http.HandlerFunc {
+func Search(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -19,7 +21,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:read", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			query, err := nsutils.ParseV3(r.URL.Query())
 			if err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
@@ -37,7 +39,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Create creates a document in an API v3 collection.
-func Create(dep nsutils.Dependencies) http.HandlerFunc {
+func Create(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -80,7 +82,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Read returns a single document from an API v3 collection.
-func Read(dep nsutils.Dependencies) http.HandlerFunc {
+func Read(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -89,7 +91,7 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		permission := fmt.Sprintf("api:%s:read", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			record, err := dep.Store.Get(r.Context(), collection, chi.URLParam(r, "identifier"))
 
 			if err != nil {
@@ -109,7 +111,7 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Update replaces a document in an API v3 collection and supports upsert semantics when allowed by the caller's permissions.
-func Update(dep nsutils.Dependencies) http.HandlerFunc {
+func Update(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -117,7 +119,7 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:update", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			canCreate := dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection))
 			var doc map[string]any
 			if err := nsutils.ReadJSON(r, &doc); err != nil {
@@ -127,8 +129,8 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 			identifier := chi.URLParam(r, "identifier")
 			// TODO cleanup folling logic make it understandable
 			existing, err := dep.Store.Get(r.Context(), collection, identifier)
-			existingNotFound := err == nsutils.ErrNotFound
-			if err == nsutils.ErrGone {
+			existingNotFound := err == nserrors.ErrNotFound
+			if err == nserrors.ErrGone {
 				// Deleted Soft
 				nsutils.WriteJSON(w, http.StatusGone, map[string]any{"status": http.StatusGone})
 				return
@@ -168,14 +170,15 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 				}
 				record, err = dep.Store.Create(r.Context(), collection, doc, identity.Name)
 			} else {
-				if err := validateReplaceDoc(existing, doc); err != nil {
+				doc, err = collection.DefaultNormalizeValidateUpdateDoc(existing, doc)
+				if err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
 				record, err = dep.Store.Update(r.Context(), collection, identifier, doc, identity.Name)
 			}
 
-			if err != nil {
+			if err != nil || record.Identifier() == "" {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
@@ -186,7 +189,7 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Patch applies a partial update to an API v3 document.
-func Patch(dep nsutils.Dependencies) http.HandlerFunc {
+func Patch(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -197,7 +200,7 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 		identifier := chi.URLParam(r, "identifier")
 
 		permission := fmt.Sprintf("api:%s:update", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			var doc map[string]any
 			if err := nsutils.ReadJSON(r, &doc); err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -213,7 +216,8 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 				nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
 				return
 			}
-			if err := validatePatchDoc(existing, doc); err != nil {
+			doc, err = collection.DefaultNormalizeValidateUpdateDoc(existing, doc)
+			if err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
@@ -231,7 +235,7 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Remove soft-deletes or permanently deletes an API v3 document.
-func Remove(dep nsutils.Dependencies) http.HandlerFunc {
+func Remove(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -239,7 +243,7 @@ func Remove(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:delete", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			permanent := r.URL.Query().Get("permanent") == "true"
 			err := dep.Store.Delete(r.Context(), collection, chi.URLParam(r, "identifier"), permanent, identity.Name)
 			if err != nil {
@@ -253,7 +257,7 @@ func Remove(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // History returns document revisions modified since the supplied timestamp.
-func History(dep nsutils.Dependencies) http.HandlerFunc {
+func History(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
@@ -261,7 +265,7 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		permission := fmt.Sprintf("api:%s:read", collection)
-		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 			query, err := nsutils.ParseV3(r.URL.Query())
 
 			since, err := strconv.ParseInt(chi.URLParam(r, "since"), 10, 64)

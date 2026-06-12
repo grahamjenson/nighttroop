@@ -3,14 +3,15 @@ package handlers
 import (
 	"net/http"
 
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // GenericCollectionList lists records for a collection that follows the common
 // Nightscout list conventions.
-func GenericCollectionList(dep nsutils.Dependencies, collection nsutils.Collection) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+func GenericCollectionList(dep di.Dependencies, collection nsutils.Collection) func(http.ResponseWriter, *http.Request, *di.Identity) {
 
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		query := nsutils.ParseV1(r.URL.Query(), collection.DefaultDateField())
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
@@ -22,8 +23,8 @@ func GenericCollectionList(dep nsutils.Dependencies, collection nsutils.Collecti
 }
 
 // GenericCollectionCreate creates one or more records in a generic collection.
-func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collection) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+func GenericCollectionCreate(dep di.Dependencies, collection nsutils.Collection) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		var body any
 		if err := nsutils.ReadJSON(r, &body); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -73,8 +74,8 @@ func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collec
 
 // GenericCollectionDelete deletes records from a generic collection using the
 // v1 query syntax.
-func GenericCollectionDelete(dep nsutils.Dependencies, collection nsutils.Collection) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+func GenericCollectionDelete(dep di.Dependencies, collection nsutils.Collection) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		query := nsutils.ParseV1(r.URL.Query(), collection.DefaultDateField())
 		deleted, err := dep.Store.DeleteMatching(r.Context(), collection, query, true, identity.Name)
 		if err != nil {

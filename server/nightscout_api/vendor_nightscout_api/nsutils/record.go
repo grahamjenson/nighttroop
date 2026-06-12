@@ -23,6 +23,9 @@ func (r Record) Clone() Record {
 
 // Identifier returns the stable public identifier for the record.
 func (r Record) Identifier() string {
+	if r.Data == nil {
+		return r.ID
+	}
 	keys := []string{"identifier", "_id"}
 	// Just checking these values first
 	for _, k := range keys {

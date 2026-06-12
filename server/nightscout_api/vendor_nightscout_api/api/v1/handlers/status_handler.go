@@ -3,11 +3,12 @@ package handlers
 import (
 	"net/http"
 
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // StatusJSON serves the v1 JSON status payload.
-func StatusJSON(dep nsutils.Dependencies) http.HandlerFunc {
+func StatusJSON(dep di.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"apiEnabled":        true,

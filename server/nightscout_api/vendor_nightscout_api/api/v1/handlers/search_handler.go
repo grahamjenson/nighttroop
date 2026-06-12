@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
@@ -21,8 +22,8 @@ func Versions() http.HandlerFunc {
 }
 
 // EchoRoute returns the parsed v1 query for debugging client requests.
-func EchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+func EchoRoute(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		values := r.URL.Query()
 		query := nsutils.ParseV1(values, "date")
 		collection := chi.URLParam(r, "collection")
@@ -38,8 +39,8 @@ func EchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, 
 }
 
 // SliceRoute implements the v1 prefix-slice endpoint.
-func SliceRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+func SliceRoute(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		collection, err := nsutils.ParseCollection(chi.URLParam(r, "collection"))
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid collection"})
@@ -60,8 +61,8 @@ func SliceRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reques
 }
 
 // TimesEchoRoute returns the expanded modal-time patterns used by TimesRoute.
-func TimesEchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+func TimesEchoRoute(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		prefix, expr, ok := ParseTimesWildcard(r)
 		if !ok {
 			http.NotFound(w, r)
@@ -76,8 +77,8 @@ func TimesEchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Requ
 }
 
 // TimesRoute implements the v1 modal-time query endpoint.
-func TimesRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+func TimesRoute(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
 		prefix, expr, ok := ParseTimesWildcard(r)
 		if !ok {
 			http.NotFound(w, r)

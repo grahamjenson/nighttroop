@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -17,7 +18,7 @@ type NightTroopAPIAuth struct {
 	config    config.ServerConfig
 }
 
-func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *nsutils.Identity)) http.HandlerFunc {
+func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *di.Identity)) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		identity, err := m.AuthenticateExplicit(r)
@@ -36,7 +37,7 @@ func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next f
 	}
 }
 
-func (m *NightTroopAPIAuth) HasPermission(identity nsutils.Identity, permission string) bool {
+func (m *NightTroopAPIAuth) HasPermission(identity di.Identity, permission string) bool {
 	for _, granted := range identity.Permissions {
 		if permissionMatch(granted, permission) {
 			return true
@@ -45,10 +46,10 @@ func (m *NightTroopAPIAuth) HasPermission(identity nsutils.Identity, permission 
 	return false
 }
 
-func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*nsutils.Identity, error) {
+func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*di.Identity, error) {
 	userContext := httputils.GetUserContext(r.Context())
 	if userContext == nil {
-		return nil, nsutils.ErrMissingCredentials
+		return nil, nserrors.ErrMissingCredentials
 	}
 
 	ntIdentity := NighttroopIdentityToNightscoutIdentity(userContext.IdentityModel.Name, userContext.IdentityModel.Role)
@@ -77,7 +78,7 @@ func permissionMatch(granted, wanted string) bool {
 
 func writeUnauthorized(w http.ResponseWriter, err error) {
 	message := "Unauthorized"
-	if err == nsutils.ErrBadToken || err == nsutils.ErrBadJWT {
+	if err == nserrors.ErrBadToken || err == nserrors.ErrBadJWT {
 		message = "Bad access token or JWT"
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -97,7 +98,7 @@ func writeError(w http.ResponseWriter, err error) {
 	_, _ = fmt.Fprintf(w, `{"description":%q,"message":%q,"status":500}`, err.Error(), "Internal Server Error")
 }
 
-func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *nsutils.Identity {
+func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *di.Identity {
 	// Collections
 	// 'entries'
 	// 'treatments'
@@ -138,7 +139,7 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	default:
 		return nil
 	}
-	return &nsutils.Identity{
+	return &di.Identity{
 		Name:        identityName,
 		Permissions: permissions,
 	}

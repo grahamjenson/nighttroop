@@ -6,12 +6,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1/handlers"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // NewNightscoutV1Router constructs a router that serves the supported
 // Nightscout API v1 endpoints.
-func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
+func NewNightscoutV1Router(dep di.Dependencies) *chi.Mux {
 	r := chi.NewRouter()
 
 	registerStatusRoutes(r, dep)
@@ -30,11 +31,11 @@ func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
 	return r
 }
 
-func registerStatusRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerStatusRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/status.json", handlers.StatusJSON(dep))
 }
 
-func registerSearchRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerSearchRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/verifyauth", handlers.VerifyAuth(dep))
 	r.Get("/versions", handlers.Versions())
 	r.Get("/echo/{collection}/{spec}.json", dep.Auth.Require("api:entries:read", true, handlers.EchoRoute(dep)))
@@ -43,7 +44,7 @@ func registerSearchRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Get("/times/*", dep.Auth.Require("api:entries:read", true, handlers.TimesRoute(dep)))
 }
 
-func registerEntryRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerEntryRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/entries/current.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesCurrent(dep)))
 	r.Get("/entries.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesList(dep)))
 	r.Get("/entries/{spec}.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesSpec(dep)))
@@ -56,7 +57,7 @@ func registerEntryRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Delete("/entries/{spec}", dep.Auth.Require("api:entries:delete", false, handlers.EntriesDelete(dep)))
 }
 
-func registerTreatmentRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerTreatmentRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/treatments", dep.Auth.Require("api:treatments:read", true, handlers.TreatmentsList(dep)))
 	r.Get("/treatments.json", dep.Auth.Require("api:treatments:read", true, handlers.TreatmentsList(dep)))
 	create := dep.Auth.Require("api:treatments:create", false, handlers.TreatmentsCreate(dep))
@@ -69,7 +70,7 @@ func registerTreatmentRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Delete("/treatments.json", dep.Auth.Require("api:treatments:delete", false, handlers.TreatmentsDelete(dep)))
 }
 
-func registerDeviceStatusRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerDeviceStatusRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/devicestatus", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, nsutils.Devicestatus)))
 	r.Get("/devicestatus.json", dep.Auth.Require("api:devicestatus:read", true, handlers.GenericCollectionList(dep, nsutils.Devicestatus)))
 	create := dep.Auth.Require("api:devicestatus:create", false, handlers.GenericCollectionCreate(dep, nsutils.Devicestatus))
@@ -82,7 +83,7 @@ func registerDeviceStatusRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Delete("/devicestatus.json", dep.Auth.Require("api:devicestatus:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Devicestatus)))
 }
 
-func registerProfileRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerProfileRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/profile", dep.Auth.Require("api:profile:read", true, handlers.ProfileList(dep)))
 	r.Get("/profile.json", dep.Auth.Require("api:profile:read", true, handlers.ProfileList(dep)))
 	r.Get("/profile/current.json", dep.Auth.Require("api:profile:read", true, handlers.ProfileCurrent(dep)))
@@ -99,11 +100,11 @@ func registerProfileRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	}
 }
 
-func registerSettingRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerSettingRoutes(r *chi.Mux, dep di.Dependencies) {
 	// not supporting any settings changes via API, only logged in Admins can alter settings
 }
 
-func registerFoodRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerFoodRoutes(r *chi.Mux, dep di.Dependencies) {
 	r.Get("/food", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, nsutils.Food)))
 	r.Get("/food.json", dep.Auth.Require("api:food:read", true, handlers.GenericCollectionList(dep, nsutils.Food)))
 

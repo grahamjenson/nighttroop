@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -38,7 +39,7 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 		return nsutils.Record{}, err
 	}
 	if record == nil {
-		return nsutils.Record{}, nsutils.ErrNotFound
+		return nsutils.Record{}, nserrors.ErrNotFound
 	}
 	return *record, nil
 
@@ -54,7 +55,7 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 		return nsutils.Record{}, err
 	}
 	if record == nil {
-		return nsutils.Record{}, nsutils.ErrNotFound
+		return nsutils.Record{}, nserrors.ErrNotFound
 	}
 	return *record, nil
 }
@@ -85,7 +86,7 @@ func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Co
 		return nsutils.Record{}, err
 	}
 	if record == nil {
-		return nsutils.Record{}, nsutils.ErrNotFound
+		return nsutils.Record{}, nserrors.ErrNotFound
 	}
 	return *record, nil
 }

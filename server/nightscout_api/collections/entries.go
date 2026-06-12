@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -57,13 +58,13 @@ func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils
 
 	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReadingByEID(ctx, identifier)
 	if err == sql.ErrNoRows {
-		return nil, nsutils.ErrNotFound
+		return nil, nserrors.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get glucose reading by ID: %w", err)
 	}
 	if glucoseReading == nil {
-		return nil, nsutils.ErrNotFound
+		return nil, nserrors.ErrNotFound
 	}
 	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
@@ -116,7 +117,7 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
 		}
 		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
+			return nserrors.ErrNotFound
 		}
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
@@ -130,7 +131,7 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
 		}
 		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
+			return nserrors.ErrNotFound
 		}
 		slog.Info("Soft Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 

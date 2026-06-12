@@ -6,15 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
 
-var (
-	BadDataBodyError   = fmt.Errorf("Bad or missing body")
-	BadDateFieldError  = fmt.Errorf("Bad or missing date field")
-	BadUTCTOffsetError = fmt.Errorf("Bad or missing utcOffset field")
-	BadCreatedAtError  = fmt.Errorf("Bad or missing created_at field")
-	BadDateStringError = fmt.Errorf("Bad or missing dateString field")
-	BadOffsetError     = fmt.Errorf("Bad or missing utcOffset field")
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 )
 
 type Collection string
@@ -69,7 +62,7 @@ func (c Collection) DefaultDateField() string {
 // before persistence.
 func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any) (map[string]any, error) {
 	if dontUseData == nil {
-		return nil, BadDataBodyError
+		return nil, nserrors.BadDataBodyError
 	}
 	clean := CloneMap(dontUseData)
 
@@ -132,7 +125,7 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if value, ok := StringField(clean, "created_at"); ok && value != "" {
 		normalized, _, err := toUTCString(value)
 		if err != nil {
-			return nil, BadCreatedAtError
+			return nil, nserrors.BadCreatedAtError
 		}
 		clean["created_at"] = normalized
 	}
@@ -141,7 +134,7 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if rawDate, exists := clean["date"]; exists && rawDate != nil {
 		millis, _, err := parseDateValue(rawDate)
 		if err != nil {
-			return nil, BadDateFieldError
+			return nil, nserrors.BadDateFieldError
 		}
 		clean["date"] = millis
 	}
@@ -150,7 +143,7 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if dateString, ok := StringField(clean, "dateString"); ok && dateString != "" {
 		normalized, _, err := toUTCString(dateString)
 		if err != nil {
-			return nil, BadDateStringError
+			return nil, nserrors.BadDateStringError
 		}
 		clean["dateString"] = normalized
 	}
@@ -165,27 +158,27 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	// validate [utcOffset]
 	offset, ok, err := Int64Field(clean, "utcOffset")
 	if err != nil || !ok {
-		return nil, BadUTCTOffsetError
+		return nil, nserrors.BadUTCTOffsetError
 	}
 
 	if ok && (offset < -1440 || offset > 1440) {
-		return nil, BadUTCTOffsetError
+		return nil, nserrors.BadUTCTOffsetError
 	}
 
 	// validate [date]
 	date, ok, err := Int64Field(clean, "date")
 	if err != nil || !ok {
-		return nil, BadDateFieldError
+		return nil, nserrors.BadDateFieldError
 	}
 	if ok && date <= 100000000000 {
-		return nil, BadDateFieldError
+		return nil, nserrors.BadDateFieldError
 	}
 
 	// validate [created_at]
 	if value, ok := StringField(clean, "created_at"); ok {
 		// Make sure the time is the correct time format
 		if _, err := time.Parse(DATE_FORMAT_STRING, value); err != nil {
-			return nil, BadCreatedAtError
+			return nil, nserrors.BadCreatedAtError
 		}
 	}
 
@@ -193,12 +186,39 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if value, ok := StringField(clean, "dateString"); ok {
 		// Make sure the time is the correct time format
 		if _, err := time.Parse(DATE_FORMAT_STRING, value); err != nil {
-			return nil, BadDateStringError
+			return nil, nserrors.BadDateStringError
 		}
 	}
 
 	if app, ok := StringField(clean, "app"); !ok || app == "" {
 		return nil, fmt.Errorf("Bad or missing app field")
+	}
+
+	return clean, nil
+}
+
+func (c Collection) DefaultNormalizeValidateUpdateDoc(existing Record, dontUseData map[string]any) (map[string]any, error) {
+	if dontUseData == nil {
+		return nil, nserrors.BadDataBodyError
+	}
+	clean := CloneMap(dontUseData)
+
+	// Ignore the identifier if it is different from the existing record
+	if identifier, ok := StringField(clean, "identifier"); ok && identifier != "" && identifier != existing.Identifier() {
+		delete(clean, "identifier")
+	}
+
+	immutable := []string{"identifier", "date", "utcOffset", "eventType", "device", "app", "srvCreated", "subject", "srvModified", "modifiedBy", "isValid"}
+	for _, field := range immutable {
+		if proposed, exists := clean[field]; exists {
+			current := PathValue(existing.ToMap(true), field)
+			if field == "identifier" {
+				continue
+			}
+			if fmt.Sprint(proposed) != fmt.Sprint(current) {
+				return nil, fmt.Errorf("Field %s cannot be modified by the client", field)
+			}
+		}
 	}
 
 	return clean, nil
@@ -267,15 +287,15 @@ func Int64Field(data map[string]any, key string) (int64, bool, error) {
 		return num, err == nil, nil
 	case string:
 		if typed == "" {
-			return 0, false, BadOffsetError
+			return 0, false, nserrors.BadOffsetError
 		}
 		num, err := strconv.ParseInt(typed, 10, 64)
 		if err != nil {
-			return 0, false, BadOffsetError
+			return 0, false, nserrors.BadOffsetError
 		}
 		return num, true, nil
 	default:
-		return 0, false, BadOffsetError
+		return 0, false, nserrors.BadOffsetError
 	}
 }
 
