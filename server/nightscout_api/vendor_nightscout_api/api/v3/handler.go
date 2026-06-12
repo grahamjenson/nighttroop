@@ -44,10 +44,10 @@ func Test(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsut
 // collection.
 func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food, nsutils.Settings}
+		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food}
 		lastModifiedMap := make(map[nsutils.Collection]int64)
 		for _, collection := range collections {
-			record, err := dep.Store.Search(r.Context(), collection, nsutils.Query{Limit: 1, SortDesc: true, SortField: "srv_modified"})
+			record, err := dep.Store.Search(r.Context(), collection, &nsutils.Query{Limit: 1, SortDesc: true, SortField: "srv_modified"})
 			if err != nil || record == nil || len(record) == 0 {
 				continue
 			}

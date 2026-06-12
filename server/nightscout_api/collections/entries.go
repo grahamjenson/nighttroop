@@ -29,12 +29,17 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 	if entryModel.SGV == nil {
 		return nil, false, fmt.Errorf("SGV value is required for entries collection")
 	}
+	offset := int64(0)
+	if entryModel.UTCOffset != nil {
+		offset = int64(*entryModel.UTCOffset)
+	}
 	eid := utils.NextEID("ns")
 	userContext.UserDB.Queries.CreateGlucoseReading(ctx, user.CreateGlucoseReadingParams{
 		Eid:                   eid,
 		OccurredAt:            occurredAt,
 		Value:                 float64(*entryModel.SGV),
 		RawJsonData:           &raw_json,
+		UtcOffsetMinutes:      offset,
 		CreatedByIdentityID:   userContext.IdentityModel.ID,
 		CreatedByIdentityName: userContext.IdentityModel.Name,
 	})
@@ -64,7 +69,7 @@ func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error) {
+func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit))
 	if err != nil {
@@ -133,7 +138,7 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 	return nil
 }
 
-func (c EntriesCollection) DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error) {
+func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, error) {
 	userContext := httputils.GetUserContext(ctx)
 	records, err := c.Search(ctx, query)
 	if err != nil {
@@ -180,6 +185,7 @@ type Entry struct {
 	SGV        *FlexibleFloat64 `json:"sgv,omitempty"`
 	MBG        *FlexibleFloat64 `json:"mbg,omitempty"`
 	Date       *int64           `json:"date,omitempty"`
+	UTCOffset  *int64           `json:"utcOffset,omitempty"`
 	DateString *string          `json:"dateString,omitempty"`
 	Device     *string          `json:"device,omitempty"`
 	Direction  *string          `json:"direction,omitempty"`

@@ -54,7 +54,7 @@ func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*nsuti
 	return nil, nil
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error) {
+func (c TreatmentCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
 	records := []nsutils.Record{}
 	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
@@ -74,7 +74,7 @@ func (c TreatmentCollection) Delete(ctx context.Context, identifier string, perm
 	return nil
 }
 
-func (c TreatmentCollection) DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error) {
+func (c TreatmentCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, error) {
 	return 0, nil
 }
 

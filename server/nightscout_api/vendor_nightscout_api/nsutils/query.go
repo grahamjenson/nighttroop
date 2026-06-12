@@ -30,8 +30,8 @@ type Query struct {
 }
 
 // DefaultQuery returns the default query shape used by list-style endpoints.
-func DefaultQuery() Query {
-	return Query{
+func DefaultQuery() *Query {
+	return &Query{
 		Limit:          5,
 		SortField:      "date",
 		SortDesc:       true,
@@ -43,7 +43,7 @@ var bracePattern = regexp.MustCompile(`\{([^{}]+)\}`)
 
 // ParseV1 translates Nightscout v1 query parameters into the storage query
 // model used by this library.
-func ParseV1(values url.Values, defaultDateField string) Query {
+func ParseV1(values url.Values, defaultDateField string) *Query {
 	query := DefaultQuery()
 	if defaultDateField == "" {
 		defaultDateField = "date"
@@ -78,11 +78,8 @@ func ParseV1(values url.Values, defaultDateField string) Query {
 }
 
 // ParseV3 translates Nightscout API v3 query parameters into a storage query.
-func ParseV3(values url.Values) (Query, error) {
+func ParseV3(values url.Values) (*Query, error) {
 	query := DefaultQuery()
-	query.Limit = 0
-	query.SortField = "date"
-	query.IncludeDeleted = false
 	if values.Has("sort") && values.Has("sort$desc") {
 		return query, fmt.Errorf("Parameters sort and sort_desc cannot be combined")
 	}
@@ -130,6 +127,24 @@ func ParseV3(values url.Values) (Query, error) {
 		query.Filters = append(query.Filters, Filter{Field: field, Op: op, Value: vals[0]})
 	}
 	return query, nil
+}
+
+// StripImplicitDateFilters removes the default rolling-window filters injected
+// by ParseV1 so slice/times style endpoints can search across larger ranges.
+func (q *Query) StripImplicitDateFilters() {
+	filters := q.Filters
+	out := make([]Filter, 0, len(filters))
+	for _, filter := range filters {
+		if filter.Field == "date" && filter.Op == "gte" && strings.Contains(filter.Value, "T") {
+			continue
+		}
+		if filter.Field == "created_at" && filter.Op == "gte" && strings.Contains(filter.Value, "T") {
+			continue
+		}
+		out = append(out, filter)
+	}
+
+	q.Filters = out
 }
 
 // Slice filters records by prefix matching on a selected field and optionally a
@@ -334,7 +349,7 @@ func prefixPatternToRegexp(pattern string) *regexp.Regexp {
 }
 
 // ApplyQuery filters, sorts, skips, and limits a record set in memory.
-func ApplyQuery(records []Record, query Query) []Record {
+func ApplyQuery(records []Record, query *Query) []Record {
 	filtered := make([]Record, 0, len(records))
 	for _, record := range records {
 		if !query.IncludeDeleted && !record.IsValid {

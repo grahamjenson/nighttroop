@@ -13,10 +13,10 @@ import (
 type CollectionStore interface {
 	Create(ctx context.Context, data map[string]any) (*nsutils.Record, bool, error)
 	Get(ctx context.Context, identifier string) (*nsutils.Record, error)
-	Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error)
+	Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error)
 	Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error)
 	Delete(ctx context.Context, identifier string, permanent bool) error
-	DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error)
+	DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, error)
 }
 
 type NightTroopAPIStore struct {
@@ -59,7 +59,7 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 	return *record, nil
 }
 
-func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query nsutils.Query) ([]nsutils.Record, error) {
+func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query *nsutils.Query) ([]nsutils.Record, error) {
 	collectionsStore, ok := nts.stores[collection]
 	query = withDefaultQuery(query)
 
@@ -98,7 +98,7 @@ func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Co
 	return collectionsStore.Delete(ctx, identifier, permanent)
 }
 
-func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection nsutils.Collection, query nsutils.Query, permanent bool, subject string) (int, error) {
+func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection nsutils.Collection, query *nsutils.Query, permanent bool, subject string) (int, error) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return 0, fmt.Errorf("unknown collection: %s", collection)
@@ -106,7 +106,7 @@ func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection ns
 	return collectionsStore.DeleteMatching(ctx, query, permanent)
 }
 
-func withDefaultQuery(query nsutils.Query) nsutils.Query {
+func withDefaultQuery(query *nsutils.Query) *nsutils.Query {
 	defaults := nsutils.DefaultQuery()
 	if query.SortField == "" {
 		query.SortField = defaults.SortField

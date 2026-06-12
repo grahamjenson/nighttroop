@@ -75,25 +75,20 @@ func EntriesCreate(dep nsutils.Dependencies, persist bool) func(http.ResponseWri
 		}
 		preview := make([]map[string]any, 0)
 		apply := func(doc map[string]any) error {
-			doc = nsutils.CloneMap(doc)
-			if dateString, ok := nsutils.StringField(doc, "dateString"); ok && dateString != "" {
-				normalized, offset, err := nsutils.ToUTCString(dateString)
-				if err == nil {
-					doc["dateString"] = normalized
-					doc["utcOffset"] = offset
-				}
+			doc, err := nsutils.Entries.DefaultNormalizeValidateCreateDoc(doc)
+			if err != nil {
+				return err
 			}
 			if persist {
 				record, _, err := dep.Store.Create(r.Context(), "entries", doc, identity.Name)
-				if err == nil {
-					preview = append(preview, record.ToMap(false))
+				if err != nil {
+					return err
 				}
-				return err
+				preview = append(preview, record.ToMap(false))
 			} else {
-				if _, ok := nsutils.StringField(doc, "_id"); !ok {
-					doc["_id"] = ""
-					doc["identifier"] = ""
-				}
+				// Return id as empty, because it is not a real record
+				doc["_id"] = ""
+				doc["identifier"] = ""
 				preview = append(preview, doc)
 			}
 			return nil

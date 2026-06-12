@@ -29,8 +29,13 @@ func TreatmentsCreate(dep nsutils.Dependencies) func(http.ResponseWriter, *http.
 		}
 		switch typed := body.(type) {
 		case map[string]any:
-			ensureV1Timestamp(typed)
-			if _, _, err := dep.Store.Create(r.Context(), "treatments", typed, identity.Name); err != nil {
+			doc := typed
+			doc, err := nsutils.Treatments.DefaultNormalizeValidateCreateDoc(doc)
+			if err != nil {
+				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
+				return
+			}
+			if _, _, err := dep.Store.Create(r.Context(), "treatments", doc, identity.Name); err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
 			}
@@ -41,7 +46,11 @@ func TreatmentsCreate(dep nsutils.Dependencies) func(http.ResponseWriter, *http.
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 					return
 				}
-				ensureV1Timestamp(doc)
+				doc, err := nsutils.Treatments.DefaultNormalizeValidateCreateDoc(doc)
+				if err != nil {
+					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
+					return
+				}
 				if _, _, err := dep.Store.Create(r.Context(), "treatments", doc, identity.Name); err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return

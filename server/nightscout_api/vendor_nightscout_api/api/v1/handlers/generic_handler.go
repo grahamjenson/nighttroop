@@ -32,8 +32,13 @@ func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collec
 		var created []nsutils.Record
 		switch typed := body.(type) {
 		case map[string]any:
-			ensureV1Timestamp(typed)
-			record, _, err := dep.Store.Create(r.Context(), collection, typed, identity.Name)
+			doc := typed
+			doc, err := collection.DefaultNormalizeValidateCreateDoc(doc)
+			if err != nil {
+				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
+				return
+			}
+			record, _, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
 			if err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 				return
@@ -46,7 +51,11 @@ func GenericCollectionCreate(dep nsutils.Dependencies, collection nsutils.Collec
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 					return
 				}
-				ensureV1Timestamp(doc)
+				doc, err := collection.DefaultNormalizeValidateCreateDoc(doc)
+				if err != nil {
+					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
+					return
+				}
 				record, _, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
 				if err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})

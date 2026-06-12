@@ -1,13 +1,10 @@
 package nsutils
 
 import (
-	"encoding/json"
-	"fmt"
 	"maps"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // CloneMap deep-copies a JSON-like map structure.
@@ -44,55 +41,6 @@ func Merge(dst, src map[string]any) map[string]any {
 	return out
 }
 
-// StringField reads a field as a string when possible.
-func StringField(data map[string]any, key string) (string, bool) {
-	val, ok := data[key]
-	if !ok || val == nil {
-		return "", false
-	}
-	switch typed := val.(type) {
-	case string:
-		return typed, true
-	case json.Number:
-		return typed.String(), true
-	case fmt.Stringer:
-		return typed.String(), true
-	default:
-		return fmt.Sprint(typed), true
-	}
-}
-
-// Int64Field reads a field as an int64 when possible.
-func Int64Field(data map[string]any, key string) (int64, bool) {
-	val, ok := data[key]
-	if !ok || val == nil {
-		return 0, false
-	}
-	switch typed := val.(type) {
-	case int:
-		return int64(typed), true
-	case int32:
-		return int64(typed), true
-	case int64:
-		return typed, true
-	case float32:
-		return int64(typed), true
-	case float64:
-		return int64(typed), true
-	case json.Number:
-		num, err := typed.Int64()
-		return num, err == nil
-	case string:
-		if typed == "" {
-			return 0, false
-		}
-		num, err := strconv.ParseInt(typed, 10, 64)
-		return num, err == nil
-	default:
-		return 0, false
-	}
-}
-
 // BoolField reads a field as a bool when possible.
 func BoolField(data map[string]any, key string) (bool, bool) {
 	val, ok := data[key]
@@ -108,31 +56,6 @@ func BoolField(data map[string]any, key string) (bool, bool) {
 	default:
 		return false, false
 	}
-}
-
-// ToUTCString normalizes a timestamp string into Nightscout's UTC format and
-// returns the original offset in minutes.
-func ToUTCString(value string) (string, int, error) {
-	parsed, err := time.Parse(time.RFC3339Nano, value)
-	if err != nil {
-		layouts := []string{
-			"2006-01-02T15:04:05.000-0700",
-			"2006-01-02T15:04:05-0700",
-			"2006-01-02T15:04:05.000Z07:00",
-			"2006-01-02T15:04:05Z07:00",
-		}
-		for _, layout := range layouts {
-			parsed, err = time.Parse(layout, value)
-			if err == nil {
-				break
-			}
-		}
-	}
-	if err != nil {
-		return "", 0, err
-	}
-	_, offsetSeconds := parsed.Zone()
-	return parsed.UTC().Format("2006-01-02T15:04:05.000Z"), offsetSeconds / 60, nil
 }
 
 // PathValue returns a nested value from a JSON-like object using dot or bracket

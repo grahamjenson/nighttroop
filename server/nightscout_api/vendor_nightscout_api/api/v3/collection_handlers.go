@@ -58,7 +58,8 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Bad or missing request body"})
 			return
 		}
-		doc, err = normalizeV3Document(collection, doc)
+
+		doc, err = collection.DefaultNormalizeValidateCreateDoc(doc)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
@@ -132,6 +133,7 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		permission := fmt.Sprintf("api:%s:update", collection)
 		dep.Auth.Require(permission, false, func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
+			canCreate := dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection))
 			var doc map[string]any
 			if err := nsutils.ReadJSON(r, &doc); err != nil {
 				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -140,51 +142,53 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 			identifier := chi.URLParam(r, "identifier")
 			// TODO cleanup folling logic make it understandable
 			existing, err := dep.Store.Get(r.Context(), collection, identifier)
-
+			existingNotFound := err == nsutils.ErrNotFound
 			if err == nsutils.ErrGone {
 				// Deleted Soft
 				nsutils.WriteJSON(w, http.StatusGone, map[string]any{"status": http.StatusGone})
 				return
 			}
-			if err != nil && err != nsutils.ErrNotFound {
+			if err != nil && !existingNotFound {
 				status, body := nsutils.RequireRecord(err)
 				nsutils.WriteJSON(w, status, body)
 				return
 			}
 
-			if err == nsutils.ErrNotFound && !dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection)) {
+			// Cant find existing record, and user cant create a new one that is an error
+			if existingNotFound && !canCreate {
 				nsutils.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission api:%s:create", collection)})
 				return
 			}
-			if err == nil {
+
+			createNewRecord := existingNotFound && canCreate
+			updateRecord := !existingNotFound
+
+			if updateRecord {
+				// We just check if the user has sent a header to not update if unmodified since
 				if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
 					nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
 					return
 				}
+
+			}
+
+			// Set default values, normalize incoming values, and validate everything is good, then Create or Update
+			created := false
+			var record nsutils.Record
+			if createNewRecord {
+				doc, err = collection.DefaultNormalizeValidateCreateDoc(doc)
+				if err != nil {
+					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
+					return
+				}
+				record, created, err = dep.Store.Create(r.Context(), collection, doc, identity.Name)
+			} else {
+
 				if err := validateReplaceDoc(existing, doc); err != nil {
 					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 					return
 				}
-			} else {
-				if err := validateCreateDoc(collection, doc); err != nil {
-					nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
-					return
-				}
-			}
 
-			created := false
-			var record nsutils.Record
-			// TODO this is just checking if the record actually exists
-			if existing.Identifier() == "" {
-				// Double check permissions here
-				if !dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection)) {
-					nsutils.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission api:%s:create", collection)})
-					return
-				}
-				// Create if Existing is nil
-				record, created, err = dep.Store.Create(r.Context(), collection, doc, identity.Name)
-			} else {
-				// Update otherwise
 				record, err = dep.Store.Update(r.Context(), collection, identifier, doc, identity.Name)
 			}
 

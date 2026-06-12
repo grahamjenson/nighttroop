@@ -1,5 +1,7 @@
 package nsutils
 
+import "fmt"
+
 // Record is the normalized internal representation used by the storage layer.
 type Record struct {
 	Collection  string
@@ -21,12 +23,17 @@ func (r Record) Clone() Record {
 
 // Identifier returns the stable public identifier for the record.
 func (r Record) Identifier() string {
-	if id, ok := StringField(r.Data, "identifier"); ok && id != "" {
-		return id
+	keys := []string{"identifier", "_id"}
+	// Just checking these values first
+	for _, k := range keys {
+		if v, ok := r.Data[k]; ok && v != nil {
+			s := fmt.Sprintf("%v", v)
+			if s != "" && s != "<nil>" {
+				return s
+			}
+		}
 	}
-	if id, ok := StringField(r.Data, "_id"); ok && id != "" {
-		return id
-	}
+
 	return r.ID
 }
 

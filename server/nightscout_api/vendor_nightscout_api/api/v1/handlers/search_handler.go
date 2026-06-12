@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
@@ -44,7 +46,7 @@ func SliceRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reques
 			return
 		}
 		q := nsutils.ParseV1(r.URL.Query(), "date")
-		q.Filters = nsutils.StripImplicitDateFilters(q.Filters)
+		q.StripImplicitDateFilters()
 		searchQuery := q
 		searchQuery.Limit = 1000
 		records, err := dep.Store.Search(r.Context(), collection, searchQuery)
@@ -60,7 +62,7 @@ func SliceRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reques
 // TimesEchoRoute returns the expanded modal-time patterns used by TimesRoute.
 func TimesEchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		prefix, expr, ok := nsutils.ParseTimesWildcard(r)
+		prefix, expr, ok := ParseTimesWildcard(r)
 		if !ok {
 			http.NotFound(w, r)
 			return
@@ -76,13 +78,13 @@ func TimesEchoRoute(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Requ
 // TimesRoute implements the v1 modal-time query endpoint.
 func TimesRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		prefix, expr, ok := nsutils.ParseTimesWildcard(r)
+		prefix, expr, ok := ParseTimesWildcard(r)
 		if !ok {
 			http.NotFound(w, r)
 			return
 		}
 		q := nsutils.ParseV1(r.URL.Query(), "date")
-		q.Filters = nsutils.StripImplicitDateFilters(q.Filters)
+		q.StripImplicitDateFilters()
 		searchQuery := q
 		searchQuery.Limit = 1000
 		records, err := dep.Store.Search(r.Context(), "entries", searchQuery)
@@ -93,4 +95,24 @@ func TimesRoute(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Reques
 		filtered, _ := nsutils.Times(records, prefix, expr, q.Limit)
 		nsutils.WriteRecords(w, filtered, nil)
 	}
+}
+
+func ParseTimesWildcard(r *http.Request) (prefix, expr string, ok bool) {
+	wild := chi.URLParam(r, "*")
+	parts := strings.SplitN(wild, "/", 2)
+	if len(parts) != 2 {
+		return "", "", false
+	}
+	prefix = parts[0]
+	expr = strings.TrimSuffix(parts[1], ".json")
+	if decoded, err := url.PathUnescape(prefix); err == nil {
+		prefix = decoded
+	}
+	if decoded, err := url.PathUnescape(expr); err == nil {
+		expr = decoded
+	}
+	if prefix == "" || expr == "" {
+		return "", "", false
+	}
+	return prefix, expr, true
 }

@@ -100,19 +100,7 @@ func registerProfileRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 }
 
 func registerSettingRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/settings", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, nsutils.Settings)))
-	r.Get("/settings.json", dep.Auth.Require("api:settings:read", true, handlers.GenericCollectionList(dep, nsutils.Settings)))
-
-	create := dep.Auth.Require("api:settings:create", false, handlers.GenericCollectionCreate(dep, nsutils.Settings))
-	for _, path := range []string{"/settings", "/settings/", "/settings.json"} {
-		r.Post(path, create)
-		r.Put(path, create)
-	}
-
-	del := dep.Auth.Require("api:settings:delete", false, handlers.GenericCollectionDelete(dep, nsutils.Settings))
-	for _, path := range []string{"/settings", "/settings/", "/settings.json"} {
-		r.Delete(path, del)
-	}
+	// not supporting any settings changes via API, only logged in Admins can alter settings
 }
 
 func registerFoodRoutes(r *chi.Mux, dep nsutils.Dependencies) {

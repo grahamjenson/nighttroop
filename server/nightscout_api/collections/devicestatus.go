@@ -16,7 +16,7 @@ func (c DeviceStatusCollection) Get(ctx context.Context, identifier string) (*ns
 	return nil, nil
 }
 
-func (c DeviceStatusCollection) Search(ctx context.Context, query nsutils.Query) ([]nsutils.Record, error) {
+func (c DeviceStatusCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error) {
 	return nil, nil
 }
 
@@ -28,7 +28,7 @@ func (c DeviceStatusCollection) Delete(ctx context.Context, identifier string, p
 	return nil
 }
 
-func (c DeviceStatusCollection) DeleteMatching(ctx context.Context, query nsutils.Query, permanent bool) (int, error) {
+func (c DeviceStatusCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, error) {
 	return 0, nil
 }
 
