@@ -49,7 +49,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		UserCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.UserCreateGlobalPerMinuteLimit)/60.0), config.UserCreateGlobalPerMinuteBurst),
 		userCreateIpLimiter: lruMust(maxUsers * wiggle),
 
-		GlobalRateLimiter:    rate.NewLimiter(rate.Limit(float64(config.GlobalIPPerMinuteLimit)/60.0), config.GlobalIPPerMinuteBurst),
+		GlobalRateLimiter:    rate.NewLimiter(rate.Limit(float64(config.GlobalRateLimit)/60.0), config.GlobalRateBurst),
 		globalIPRateLimiters: lruMust(maxUsers * maxIdentities * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
 	}
 

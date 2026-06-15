@@ -29,17 +29,17 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 		allowed := config.RateLimiters.GlobalRateLimiter.Allow()
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			fmt.Fprint(w, "Too many requests, global rate limit exceeded")
+			slog.Info("Global rate limit exceeded")
 			return
 		}
 
 		// Global IP Address Rate Limit
 		ipAddress := httputils.GetIP(r)
 		ctx = httputils.SetIPInHTTPContext(ctx, ipAddress)
-		allowed = config.RateLimiters.GetGlobalIPRateLimiter(ipAddress).Allow()
+		allowed = httputils.GlobalIPRateLimitAllowed(config, ipAddress)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			fmt.Fprint(w, "Too many requests, IP rate limit exceeded")
+			slog.Info("Global IP rate limit exceeded", "ip", ipAddress)
 			return
 		}
 

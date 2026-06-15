@@ -1,6 +1,8 @@
 # TODO
 
-1. EPIC IS SYNCING SGVS FROM NS AND DEXCOM AND GETTING THAT DATA IN CARER
+1. EPIC NIGHTSCOUT CAMPATABILLITY
+    1. support ?secret= and Header api-secret for auth to NS.
+    1. support JWT auth endpoint in nightscout to create token
     1. Identities Page To retrieve NS token and information on communication
     1. Create non-admin device for care portal role
     1. generate and offer copy token button to call api

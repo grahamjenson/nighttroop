@@ -28,7 +28,7 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 				// TODO handle both html and json response types
 				if !allowed {
 					w.WriteHeader(http.StatusTooManyRequests)
-					fmt.Fprintf(w, "Too many requests, read rate limit exceeded. Try again in %d seconds.", remainingTime)
+					slog.Info("User GET rate limit exceeded", "remainingTime", remainingTime)
 					return
 				}
 			} else {
@@ -37,7 +37,7 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 				userAction = httputils.UserActionWrite
 				if !allowed {
 					w.WriteHeader(http.StatusTooManyRequests)
-					fmt.Fprintf(w, "Too many requests, write rate limit exceeded. Try again in %d seconds.", remainingTime)
+					slog.Info("User POST rate limit exceeded", "remainingTime", remainingTime)
 					return
 				}
 			}

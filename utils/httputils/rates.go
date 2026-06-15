@@ -9,6 +9,11 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+func GlobalIPRateLimitAllowed(serverConfig config.ServerConfig, ipAddress string) bool {
+	limiter := serverConfig.RateLimiters.GetGlobalIPRateLimiter(ipAddress)
+	return limiter.Allow()
+}
+
 func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	createLimiter := serverConfig.RateLimiters.UserCreateLimiter
 	ipLimiter := serverConfig.RateLimiters.GetUserCreateIPRateLimiter(GetIP(r))

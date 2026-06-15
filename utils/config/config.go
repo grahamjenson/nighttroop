@@ -100,8 +100,8 @@ type ServerConfig struct {
 	DexcomClientSecret string
 }
 
-const USER_GET_LIMIT = 60
-const USER_POST_LIMIT = 20
+const USER_GET_LIMIT = 180
+const USER_POST_LIMIT = 60
 
 // Priority is
 // 1. Args
@@ -153,8 +153,8 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		// Public RateLimits
 		GlobalRateLimit:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_LIMIT", 100000), // Stop DDOS doing downloads
 		GlobalRateBurst:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_BURST", 100000),
-		GlobalIPPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", 100), // Stop DOS
-		GlobalIPPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_BURST", 200),
+		GlobalIPPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", USER_GET_LIMIT*4), // Single IP can fully manage 4 users
+		GlobalIPPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_BURST", USER_GET_LIMIT*8),
 
 		UserLoginPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
 		UserLoginPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_BURST", 10),
