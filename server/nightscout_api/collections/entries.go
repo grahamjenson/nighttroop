@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
@@ -18,14 +19,14 @@ type EntriesCollection struct{}
 
 func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
-	var entryModel Entry
-	raw_json, err := MapToStruct(data, &entryModel)
+	entryModel := &nightscout.Entry{}
+	err := entryModel.FromMap(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map data to entry model: %w", err)
 	}
 	occurredAt := time.Now().UnixMilli()
 	if entryModel.Date != nil {
-		occurredAt = *entryModel.Date
+		occurredAt = entryModel.Date.Int64()
 	}
 	if entryModel.SGV == nil {
 		return nil, fmt.Errorf("SGV value is required for entries collection")
@@ -39,7 +40,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 		Eid:                   eid,
 		OccurredAt:            occurredAt,
 		Value:                 float64(*entryModel.SGV),
-		RawJsonData:           &raw_json,
+		RawJsonData:           &entryModel.RawJSON,
 		UtcOffsetMinutes:      offset,
 		CreatedByIdentityID:   userContext.IdentityModel.ID,
 		CreatedByIdentityName: userContext.IdentityModel.Name,
@@ -82,8 +83,8 @@ func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]
 
 func (c EntriesCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error) {
 	userContext := httputils.GetUserContext(ctx)
-	var entryModel Entry
-	raw_json, err := MapToStruct(patch, &entryModel)
+	entryModel := &nightscout.Entry{}
+	err := entryModel.FromMap(patch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map data to entry model: %w", err)
 	}
@@ -94,11 +95,11 @@ func (c EntriesCollection) Update(ctx context.Context, identifier string, patch 
 	}
 	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReadingByEID(ctx, user.UpdateGlucoseReadingByEIDParams{
 		Eid:                   identifier,
-		OccurredAt:            entryModel.Date,
+		OccurredAt:            entryModel.Date.Int64p(),
 		Value:                 value,
-		RawJsonData:           &raw_json,
-		CreatedByIdentityID:   ptr(userContext.IdentityModel.ID),
-		CreatedByIdentityName: ptr(userContext.IdentityModel.Name),
+		RawJsonData:           &entryModel.RawJSON,
+		CreatedByIdentityID:   &userContext.IdentityModel.ID,
+		CreatedByIdentityName: &userContext.IdentityModel.Name,
 	})
 
 	record := GlucoseReadingToRecord(glucoseReading)
@@ -176,47 +177,28 @@ func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Qu
 	}
 }
 
-////
-// Models
-////
-
-type Entry struct {
-	Identifier *string          `json:"identifier,omitempty"`
-	Type       *string          `json:"type,omitempty"`
-	SGV        *FlexibleFloat64 `json:"sgv,omitempty"`
-	MBG        *FlexibleFloat64 `json:"mbg,omitempty"`
-	Date       *int64           `json:"date,omitempty"`
-	UTCOffset  *int64           `json:"utcOffset,omitempty"`
-	DateString *string          `json:"dateString,omitempty"`
-	Device     *string          `json:"device,omitempty"`
-	Direction  *string          `json:"direction,omitempty"`
-	Payload    map[string]any   `json:"payload,omitempty"`
-}
-
-////
-// Mappers
-////
-
 func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
 	if sgv == nil {
 		return nsutils.Record{}
 	}
 
-	entryModel := Entry{
-		Identifier: ptr(sgv.Eid),
-		Type:       ptr(sgv.Type),
-		SGV:        ptr(FlexibleFloat64(sgv.Value)),
-		Date:       ptr(sgv.OccurredAt),
-		DateString: ptr(dateString(sgv.OccurredAt)),
-		Device:     ptr(fmt.Sprintf("%d", sgv.CreatedByIdentityID)),
+	entryModel := &nightscout.Entry{}
+	err := entryModel.FromDBModel(sgv)
+	if err != nil {
+		return nsutils.Record{}
+	}
+
+	entryMap, err := entryModel.ToMap()
+	if err != nil {
+		return nsutils.Record{}
 	}
 
 	return nsutils.Record{
 		Collection:  "entries",
-		ID:          sgv.Eid,
-		Data:        StructToMap(entryModel),
-		SrvCreated:  sgv.OccurredAt,
-		SrvModified: sgv.OccurredAt,
+		ID:          *entryModel.Identifier,
+		Data:        entryMap,
+		SrvCreated:  entryModel.Date.Int64(),
+		SrvModified: entryModel.Date.Int64(),
 		Subject:     "",
 		IsValid:     true,
 		DeletedAt:   nil,

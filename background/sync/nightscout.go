@@ -35,11 +35,11 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			eid := utils.CreateEID("nightscout", e.Date.UnixMilli())
+			eid := utils.CreateEID("nightscout", e.Date.Int64())
 			res, err := userSyncSource.userDB.Queries.CreateGlucoseReadingIgnoreEIDConstraint(context.TODO(), user.CreateGlucoseReadingIgnoreEIDConstraintParams{
 				Eid:                   eid,
-				OccurredAt:            e.Date.UnixMilli(),
-				Value:                 float64(e.SGV),
+				OccurredAt:            e.Date.Int64(),
+				Value:                 e.SGV.Float64(),
 				RawJsonData:           &e.RawJSON,
 				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
 				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
