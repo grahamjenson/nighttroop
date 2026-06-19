@@ -98,7 +98,7 @@ CREATE TABLE glucose_readings (
 CREATE TABLE bolus (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
-    value REAL,
+    value REAL NOT NULL,
     type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'bolus',
 
     -- Default Stuff
@@ -135,9 +135,9 @@ CREATE TABLE temp_basals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
-    start INTEGER,
-    duration INTEGER,
-    value REAL,
+    start INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    value REAL NOT NULL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
@@ -155,10 +155,10 @@ CREATE TABLE temp_targets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
-    start INTEGER,
-    duration INTEGER,
-    highTarget INTEGER,
-    lowTarget INTEGER,
+    start INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    highTarget REAL NOT NULL,
+    lowTarget REAL NOT NULL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly

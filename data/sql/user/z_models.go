@@ -13,7 +13,7 @@ import (
 type Bolus struct {
 	ID                    int64
 	Eid                   string
-	Value                 *float64
+	Value                 float64
 	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
@@ -139,9 +139,9 @@ type SqliteSequence struct {
 type TempBasal struct {
 	ID                    int64
 	Eid                   string
-	Start                 *int64
-	Duration              *int64
-	Value                 *float64
+	Start                 int64
+	Duration              int64
+	Value                 float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64
@@ -155,10 +155,10 @@ type TempBasal struct {
 type TempTarget struct {
 	ID                    int64
 	Eid                   string
-	Start                 *int64
-	Duration              *int64
-	Hightarget            *int64
-	Lowtarget             *int64
+	Start                 int64
+	Duration              int64
+	Hightarget            float64
+	Lowtarget             float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64

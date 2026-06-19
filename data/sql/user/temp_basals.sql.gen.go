@@ -71,9 +71,9 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 
 type CreateTempBasalParams struct {
 	Eid                   string
-	Start                 *int64
-	Duration              *int64
-	Value                 *float64
+	Start                 int64
+	Duration              int64
+	Value                 float64
 	OccurredAt            int64
 	RawJsonData           *string
 	CreatedByIdentityID   int64

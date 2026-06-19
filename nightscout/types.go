@@ -89,6 +89,14 @@ func (d *DateString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (d *DateString) Time() time.Time {
+	if d == nil {
+		return time.Time{}
+	}
+	// This should have errored on unmarshal or assignment
+	t, _ := time.Parse(time.RFC3339Nano, string(*d))
+	return t
+}
 func DateStringFromTime(t time.Time) DateString {
 	return DateString(t.Format(time.RFC3339Nano))
 }

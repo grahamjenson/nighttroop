@@ -75,10 +75,10 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
 type CreateTempTargetParams struct {
 	Eid                   string
-	Start                 *int64
-	Duration              *int64
-	Hightarget            *int64
-	Lowtarget             *int64
+	Start                 int64
+	Duration              int64
+	Hightarget            float64
+	Lowtarget             float64
 	OccurredAt            int64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
