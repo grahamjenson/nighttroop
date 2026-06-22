@@ -40,10 +40,8 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 	entryModel.UTCOffset = ptr(nightscout.FlexibleInt64(offset))
 	entryModel.Date = ptr(nightscout.DateInt(occurredAt))
 
-	dbModel, err := entryModel.ToDBModel()
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert entry model to DB model: %w", err)
-	}
+	dbModel := entryModel.ToDBModel()
+	dbModel.Eid = eid
 	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
 	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
 

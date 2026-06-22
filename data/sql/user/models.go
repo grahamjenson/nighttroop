@@ -1,6 +1,7 @@
 package user
 
 import (
+	"strings"
 	"time"
 )
 
@@ -35,4 +36,9 @@ func (g *GlucoseReading) ToDBCreateParams() CreateGlucoseReadingParams {
 		CreatedByIdentityID:   g.CreatedByIdentityID,
 		CreatedByIdentityName: g.CreatedByIdentityName,
 	}
+}
+
+func IsDuplicateEID(err error) bool {
+	return strings.Contains(err.Error(), "UNIQUE constraint failed") &&
+		strings.Contains(err.Error(), ".eid")
 }

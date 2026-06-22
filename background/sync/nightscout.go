@@ -36,16 +36,16 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		addedColumns := false
 		for _, e := range egvs {
 			eid := utils.CreateEID("nightscout", e.Date.Int64())
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReadingIgnoreEIDConstraint(context.TODO(), user.CreateGlucoseReadingIgnoreEIDConstraintParams{
-				Eid:                   eid,
-				OccurredAt:            e.Date.Int64(),
-				Value:                 e.SGV.Float64(),
-				RawJsonData:           &e.RawJSON,
-				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
-				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
-				UtcOffsetMinutes:      int64(e.UTCOffset),
-			})
+			dbModel := e.ToDBModel()
+			dbModel.Eid = eid
+			dbModel.CreatedByIdentityID = userSyncSource.syncIdentity.ID
+			dbModel.CreatedByIdentityName = userSyncSource.syncIdentity.Name
+
+			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), dbModel.ToDBCreateParams())
 			if err != nil {
+				if user.IsDuplicateEID(err) {
+					continue
+				}
 				// Probably just non-unique eid
 				slog.Error("Error creating entry in database", "error", err, "eid", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue

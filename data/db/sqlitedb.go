@@ -7,11 +7,22 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
+func OpenSqliteDB(path string, cacheSize int, inMemory bool) (*sql.DB, error) {
 	var err error
 
 	if cacheSize == 0 {
 		cacheSize = 2000
+	}
+
+	if inMemory {
+		path = ":memory:"
+
+		sqldb, err := sql.Open("sqlite3", "file::memory:?cache=shared")
+		if err != nil {
+			return nil, fmt.Errorf("cannot open sqlite db: %w", err)
+		}
+
+		return sqldb, nil
 	}
 
 	err = utils.MkParentDirs(path)

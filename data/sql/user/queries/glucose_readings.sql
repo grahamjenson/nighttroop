@@ -3,19 +3,6 @@
 -- CREATE 
 --------
 
--- name: CreateGlucoseReadingIgnoreEIDConstraint :execresult
-INSERT INTO glucose_readings (
-    eid,
-    occurred_at,
-    value,
-    raw_json_data, 
-    utc_offset_minutes,
-    created_by_identity_id,
-    created_by_identity_name
-)
-VALUES (?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT(eid) DO NOTHING;
-
 -- name: CreateGlucoseReading :execresult
 INSERT INTO glucose_readings (
     eid,

@@ -2,8 +2,11 @@
 -- TABLES FOR USING NIGHTTROOP
 ---------------------------------------------------
 CREATE TABLE settings (
-    key TEXT PRIMARY KEY,
-    value JSON NOT NULL
+    key TEXT PRIMARY KEY CHECK(length(key) <= 64),
+    value JSON NOT NULL CHECK(length(value) <= 8192),
+    type TEXT NOT NULL CHECK(length(type) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 );
 
 -- This table is like users and devices, as like a sugarpixel isnt a user, it is a device.
@@ -205,6 +208,4 @@ CREATE TABLE profile (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
-
-
 

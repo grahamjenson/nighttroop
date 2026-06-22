@@ -52,6 +52,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*Gluco
 }
 
 const createGlucoseReading = `-- name: CreateGlucoseReading :execresult
+
 INSERT INTO glucose_readings (
     eid,
     occurred_at,
@@ -74,48 +75,11 @@ type CreateGlucoseReadingParams struct {
 	CreatedByIdentityName string
 }
 
-func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseReadingParams) (sql.Result, error) {
-	return q.exec(ctx, q.createGlucoseReadingStmt, createGlucoseReading,
-		arg.Eid,
-		arg.OccurredAt,
-		arg.Value,
-		arg.RawJsonData,
-		arg.UtcOffsetMinutes,
-		arg.CreatedByIdentityID,
-		arg.CreatedByIdentityName,
-	)
-}
-
-const createGlucoseReadingIgnoreEIDConstraint = `-- name: CreateGlucoseReadingIgnoreEIDConstraint :execresult
-
-INSERT INTO glucose_readings (
-    eid,
-    occurred_at,
-    value,
-    raw_json_data, 
-    utc_offset_minutes,
-    created_by_identity_id,
-    created_by_identity_name
-)
-VALUES (?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT(eid) DO NOTHING
-`
-
-type CreateGlucoseReadingIgnoreEIDConstraintParams struct {
-	Eid                   string
-	OccurredAt            int64
-	Value                 float64
-	RawJsonData           *string
-	UtcOffsetMinutes      int64
-	CreatedByIdentityID   int64
-	CreatedByIdentityName string
-}
-
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateGlucoseReadingIgnoreEIDConstraint(ctx context.Context, arg CreateGlucoseReadingIgnoreEIDConstraintParams) (sql.Result, error) {
-	return q.exec(ctx, q.createGlucoseReadingIgnoreEIDConstraintStmt, createGlucoseReadingIgnoreEIDConstraint,
+func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseReadingParams) (sql.Result, error) {
+	return q.exec(ctx, q.createGlucoseReadingStmt, createGlucoseReading,
 		arg.Eid,
 		arg.OccurredAt,
 		arg.Value,

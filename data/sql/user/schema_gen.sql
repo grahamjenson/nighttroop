@@ -149,8 +149,11 @@ CREATE TABLE profile (
 );
 
 CREATE TABLE settings (
-    key TEXT PRIMARY KEY,
-    value JSON NOT NULL
+    key TEXT PRIMARY KEY CHECK(length(key) <= 64),
+    value JSON NOT NULL CHECK(length(value) <= 8192),
+    type TEXT NOT NULL CHECK(length(type) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 );
 
 CREATE TABLE sqlite_sequence(name,seq);

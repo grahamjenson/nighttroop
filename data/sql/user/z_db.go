@@ -63,9 +63,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createGlucoseReadingStmt, err = db.PrepareContext(ctx, createGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateGlucoseReading: %w", err)
 	}
-	if q.createGlucoseReadingIgnoreEIDConstraintStmt, err = db.PrepareContext(ctx, createGlucoseReadingIgnoreEIDConstraint); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateGlucoseReadingIgnoreEIDConstraint: %w", err)
-	}
 	if q.createIdentityStmt, err = db.PrepareContext(ctx, createIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateIdentity: %w", err)
 	}
@@ -191,11 +188,6 @@ func (q *Queries) Close() error {
 	if q.createGlucoseReadingStmt != nil {
 		if cerr := q.createGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createGlucoseReadingStmt: %w", cerr)
-		}
-	}
-	if q.createGlucoseReadingIgnoreEIDConstraintStmt != nil {
-		if cerr := q.createGlucoseReadingIgnoreEIDConstraintStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createGlucoseReadingIgnoreEIDConstraintStmt: %w", cerr)
 		}
 	}
 	if q.createIdentityStmt != nil {
@@ -330,79 +322,77 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                          DBTX
-	tx                                          *sql.Tx
-	allBolusesStmt                              *sql.Stmt
-	allCarbsStmt                                *sql.Stmt
-	allDeviceStatusStmt                         *sql.Stmt
-	allEventsStmt                               *sql.Stmt
-	allGlucoseReadingsStmt                      *sql.Stmt
-	allIdentitiesStmt                           *sql.Stmt
-	allProfilesStmt                             *sql.Stmt
-	allTempBasalsStmt                           *sql.Stmt
-	allTempTargetsStmt                          *sql.Stmt
-	createBolusStmt                             *sql.Stmt
-	createCarbStmt                              *sql.Stmt
-	createEventStmt                             *sql.Stmt
-	createGlucoseReadingStmt                    *sql.Stmt
-	createGlucoseReadingIgnoreEIDConstraintStmt *sql.Stmt
-	createIdentityStmt                          *sql.Stmt
-	createTempBasalStmt                         *sql.Stmt
-	createTempTargetStmt                        *sql.Stmt
-	deleteGlucoseReadingByEIDStmt               *sql.Stmt
-	deleteGlucoseReadingsByEIDsStmt             *sql.Stmt
-	deletePermanentGlucoseReadingByEIDStmt      *sql.Stmt
-	deletePermanentGlucoseReadingsByEIDsStmt    *sql.Stmt
-	getBolusByEIDStmt                           *sql.Stmt
-	getCarbByEIDStmt                            *sql.Stmt
-	getDeviceStatusByEIDStmt                    *sql.Stmt
-	getGlucoseReadingByEIDStmt                  *sql.Stmt
-	getIdentityStmt                             *sql.Stmt
-	getProfileByEIDStmt                         *sql.Stmt
-	getTempBasalByEIDStmt                       *sql.Stmt
-	getTempTargetByEIDStmt                      *sql.Stmt
-	updateGlucoseReadingByEIDStmt               *sql.Stmt
-	updateIdentityDateFlagsStmt                 *sql.Stmt
-	getSettingFromDBStmt                        *sql.Stmt
-	upsertSettingToDBStmt                       *sql.Stmt
+	db                                       DBTX
+	tx                                       *sql.Tx
+	allBolusesStmt                           *sql.Stmt
+	allCarbsStmt                             *sql.Stmt
+	allDeviceStatusStmt                      *sql.Stmt
+	allEventsStmt                            *sql.Stmt
+	allGlucoseReadingsStmt                   *sql.Stmt
+	allIdentitiesStmt                        *sql.Stmt
+	allProfilesStmt                          *sql.Stmt
+	allTempBasalsStmt                        *sql.Stmt
+	allTempTargetsStmt                       *sql.Stmt
+	createBolusStmt                          *sql.Stmt
+	createCarbStmt                           *sql.Stmt
+	createEventStmt                          *sql.Stmt
+	createGlucoseReadingStmt                 *sql.Stmt
+	createIdentityStmt                       *sql.Stmt
+	createTempBasalStmt                      *sql.Stmt
+	createTempTargetStmt                     *sql.Stmt
+	deleteGlucoseReadingByEIDStmt            *sql.Stmt
+	deleteGlucoseReadingsByEIDsStmt          *sql.Stmt
+	deletePermanentGlucoseReadingByEIDStmt   *sql.Stmt
+	deletePermanentGlucoseReadingsByEIDsStmt *sql.Stmt
+	getBolusByEIDStmt                        *sql.Stmt
+	getCarbByEIDStmt                         *sql.Stmt
+	getDeviceStatusByEIDStmt                 *sql.Stmt
+	getGlucoseReadingByEIDStmt               *sql.Stmt
+	getIdentityStmt                          *sql.Stmt
+	getProfileByEIDStmt                      *sql.Stmt
+	getTempBasalByEIDStmt                    *sql.Stmt
+	getTempTargetByEIDStmt                   *sql.Stmt
+	updateGlucoseReadingByEIDStmt            *sql.Stmt
+	updateIdentityDateFlagsStmt              *sql.Stmt
+	getSettingFromDBStmt                     *sql.Stmt
+	upsertSettingToDBStmt                    *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                       tx,
-		tx:                       tx,
-		allBolusesStmt:           q.allBolusesStmt,
-		allCarbsStmt:             q.allCarbsStmt,
-		allDeviceStatusStmt:      q.allDeviceStatusStmt,
-		allEventsStmt:            q.allEventsStmt,
-		allGlucoseReadingsStmt:   q.allGlucoseReadingsStmt,
-		allIdentitiesStmt:        q.allIdentitiesStmt,
-		allProfilesStmt:          q.allProfilesStmt,
-		allTempBasalsStmt:        q.allTempBasalsStmt,
-		allTempTargetsStmt:       q.allTempTargetsStmt,
-		createBolusStmt:          q.createBolusStmt,
-		createCarbStmt:           q.createCarbStmt,
-		createEventStmt:          q.createEventStmt,
-		createGlucoseReadingStmt: q.createGlucoseReadingStmt,
-		createGlucoseReadingIgnoreEIDConstraintStmt: q.createGlucoseReadingIgnoreEIDConstraintStmt,
-		createIdentityStmt:                          q.createIdentityStmt,
-		createTempBasalStmt:                         q.createTempBasalStmt,
-		createTempTargetStmt:                        q.createTempTargetStmt,
-		deleteGlucoseReadingByEIDStmt:               q.deleteGlucoseReadingByEIDStmt,
-		deleteGlucoseReadingsByEIDsStmt:             q.deleteGlucoseReadingsByEIDsStmt,
-		deletePermanentGlucoseReadingByEIDStmt:      q.deletePermanentGlucoseReadingByEIDStmt,
-		deletePermanentGlucoseReadingsByEIDsStmt:    q.deletePermanentGlucoseReadingsByEIDsStmt,
-		getBolusByEIDStmt:                           q.getBolusByEIDStmt,
-		getCarbByEIDStmt:                            q.getCarbByEIDStmt,
-		getDeviceStatusByEIDStmt:                    q.getDeviceStatusByEIDStmt,
-		getGlucoseReadingByEIDStmt:                  q.getGlucoseReadingByEIDStmt,
-		getIdentityStmt:                             q.getIdentityStmt,
-		getProfileByEIDStmt:                         q.getProfileByEIDStmt,
-		getTempBasalByEIDStmt:                       q.getTempBasalByEIDStmt,
-		getTempTargetByEIDStmt:                      q.getTempTargetByEIDStmt,
-		updateGlucoseReadingByEIDStmt:               q.updateGlucoseReadingByEIDStmt,
-		updateIdentityDateFlagsStmt:                 q.updateIdentityDateFlagsStmt,
-		getSettingFromDBStmt:                        q.getSettingFromDBStmt,
-		upsertSettingToDBStmt:                       q.upsertSettingToDBStmt,
+		db:                                       tx,
+		tx:                                       tx,
+		allBolusesStmt:                           q.allBolusesStmt,
+		allCarbsStmt:                             q.allCarbsStmt,
+		allDeviceStatusStmt:                      q.allDeviceStatusStmt,
+		allEventsStmt:                            q.allEventsStmt,
+		allGlucoseReadingsStmt:                   q.allGlucoseReadingsStmt,
+		allIdentitiesStmt:                        q.allIdentitiesStmt,
+		allProfilesStmt:                          q.allProfilesStmt,
+		allTempBasalsStmt:                        q.allTempBasalsStmt,
+		allTempTargetsStmt:                       q.allTempTargetsStmt,
+		createBolusStmt:                          q.createBolusStmt,
+		createCarbStmt:                           q.createCarbStmt,
+		createEventStmt:                          q.createEventStmt,
+		createGlucoseReadingStmt:                 q.createGlucoseReadingStmt,
+		createIdentityStmt:                       q.createIdentityStmt,
+		createTempBasalStmt:                      q.createTempBasalStmt,
+		createTempTargetStmt:                     q.createTempTargetStmt,
+		deleteGlucoseReadingByEIDStmt:            q.deleteGlucoseReadingByEIDStmt,
+		deleteGlucoseReadingsByEIDsStmt:          q.deleteGlucoseReadingsByEIDsStmt,
+		deletePermanentGlucoseReadingByEIDStmt:   q.deletePermanentGlucoseReadingByEIDStmt,
+		deletePermanentGlucoseReadingsByEIDsStmt: q.deletePermanentGlucoseReadingsByEIDsStmt,
+		getBolusByEIDStmt:                        q.getBolusByEIDStmt,
+		getCarbByEIDStmt:                         q.getCarbByEIDStmt,
+		getDeviceStatusByEIDStmt:                 q.getDeviceStatusByEIDStmt,
+		getGlucoseReadingByEIDStmt:               q.getGlucoseReadingByEIDStmt,
+		getIdentityStmt:                          q.getIdentityStmt,
+		getProfileByEIDStmt:                      q.getProfileByEIDStmt,
+		getTempBasalByEIDStmt:                    q.getTempBasalByEIDStmt,
+		getTempTargetByEIDStmt:                   q.getTempTargetByEIDStmt,
+		updateGlucoseReadingByEIDStmt:            q.updateGlucoseReadingByEIDStmt,
+		updateIdentityDateFlagsStmt:              q.updateIdentityDateFlagsStmt,
+		getSettingFromDBStmt:                     q.getSettingFromDBStmt,
+		upsertSettingToDBStmt:                    q.upsertSettingToDBStmt,
 	}
 }

@@ -33,7 +33,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 		addedColumns := false
 		for _, e := range egvs {
 			eid := utils.CreateEID("dexcom", e.SystemTime.UnixMilli())
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReadingIgnoreEIDConstraint(context.TODO(), user.CreateGlucoseReadingIgnoreEIDConstraintParams{
+			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), user.CreateGlucoseReadingParams{
 				Eid:                   eid,
 				OccurredAt:            e.SystemTime.UnixMilli(),
 				Value:                 float64(e.Value),
@@ -43,6 +43,9 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 				UtcOffsetMinutes:      int64(e.UTCOffsetInMinutes()),
 			})
 			if err != nil {
+				if user.IsDuplicateEID(err) {
+					continue
+				}
 				// Probably just non-unique eid
 				slog.Error("Error creating entry in database", "error", err, "eid", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue

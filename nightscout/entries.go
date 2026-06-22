@@ -72,11 +72,7 @@ func (e *Entry) ToMap() (map[string]any, error) {
 	return m, err
 }
 
-func (e *Entry) ToDBModel() (*user.GlucoseReading, error) {
-	if e.Identifier == nil || e.SGV == nil || e.Date == nil {
-		return nil, fmt.Errorf("missing required fields for DB model")
-	}
-
+func (e *Entry) ToDBModel() *user.GlucoseReading {
 	return &user.GlucoseReading{
 		Eid:                   *e.Identifier,
 		Value:                 float64(*e.SGV),
@@ -86,7 +82,7 @@ func (e *Entry) ToDBModel() (*user.GlucoseReading, error) {
 		OccurredAt:            e.Date.Time().UnixMilli(),
 		CreatedByIdentityID:   0,  // This will need to be set by the caller based on the user context
 		CreatedByIdentityName: "", // This will need to be set by the caller based on the user context
-	}, nil
+	}
 }
 
 func (e *Entry) FromDBModel(sgv *user.GlucoseReading) error {

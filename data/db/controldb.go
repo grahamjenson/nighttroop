@@ -32,7 +32,7 @@ type ControlDB struct {
 func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	var err error
 
-	sqldb, err := OpenSqliteDB(utils.CONTROL_DB_PATH, 2000)
+	sqldb, err := OpenSqliteDB(utils.CONTROL_DB_PATH, 2000, serverConfig.IsTest())
 	if err != nil {
 		return nil, fmt.Errorf("cannot open control db: %w", err)
 	}

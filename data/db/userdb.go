@@ -34,7 +34,7 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 		return nil, fmt.Errorf("The User DB %s Must exist and doesnt", subdomain)
 	}
 
-	sqldb, err := OpenSqliteDB(path, 100)
+	sqldb, err := OpenSqliteDB(path, 100, cfg.IsTest())
 	if err != nil {
 		return nil, fmt.Errorf("cannot open user db: %s %w", subdomain, err)
 	}

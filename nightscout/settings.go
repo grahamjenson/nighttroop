@@ -1,7 +1,6 @@
 package nightscout
 
 type Setting struct {
-	ID         *string `json:"_id,omitempty"`
 	Identifier *string `json:"identifier,omitempty"`
 	Type       *string `json:"type,omitempty"`
 
