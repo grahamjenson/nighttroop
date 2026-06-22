@@ -61,8 +61,19 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 }
 
 func registerEntryRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/entries/current.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesCurrent(dep)))
+	r.Get("/entries/current.json", handlers.ReadWithExtraSteps(dep, func(q Query) Query {
+		q.Limit = 1
+		return q
+	}))
 
-	r.Get("/entries/{spec}.json", dep.Auth.Require("api:entries:read", true, handlers.EntriesSpec(dep)))
-	r.Delete("/entries/{spec}", dep.Auth.Require("api:entries:delete", false, handlers.EntriesDelete(dep)))
+	r.Get("/entries/{spec}.json", handlers.ReadWithExtraSteps(dep, func(r *http.Request, q Query) Query {
+		q.Limit = 1000
+		q.Type = chi.URLParam(r, "spec")
+		return q
+	}))
+
+	r.Delete("/entries/{spec}", handlers.DeleteWithExtraSteps(dep, func(r *http.Request, q Query) Query {
+		q.Type = chi.URLParam(r, "spec")
+		return q
+	}))
 }
