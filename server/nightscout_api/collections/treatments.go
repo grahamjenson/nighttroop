@@ -2,7 +2,7 @@ package collections
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -14,13 +14,14 @@ import (
 
 type TreatmentCollection struct{}
 
-func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, error) {
+func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 
 	treatmentModel := &nightscout.Treatment{}
 	err := treatmentModel.FromMap(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map data to treatment model: %w", err)
+		slog.Error("failed to map data to treatment model", "error", err)
+		return nil, nsutils.ErrInternal
 	}
 	externalID := utils.NextEID("ns")
 	created := false
@@ -34,12 +35,14 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 			CreatedByIdentityID:   userContext.IdentityModel.ID,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create carb in database: %w", err)
+			slog.Error("failed to create carb in database", "error", err)
+			return nil, nsutils.ErrInternal
 		}
 		created = true
 	}
 	if !created {
-		return nil, fmt.Errorf("unsupported treatment event type: %s", *treatmentModel.EventType)
+		slog.Error("unsupported treatment event type", "eventType", *treatmentModel.EventType)
+		return nil, nsutils.ErrInternal
 	}
 	return &nsutils.Record{
 		Collection:  "treatments",
@@ -49,31 +52,32 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	}, nil
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {
+func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nil
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error) {
+func (c TreatmentCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	records := []nsutils.Record{}
 	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
 	if err != nil {
-		return nil, err
+		slog.Error("failed to query carbs from database", "error", err)
+		return nil, nsutils.ErrInternal
 	}
 	records = append(records, CreateRecordSlice(carbs, CarbsToRecord)...)
 
 	return records, nil
 }
 
-func (c TreatmentCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error) {
+func (c TreatmentCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nil
 }
 
-func (c TreatmentCollection) Delete(ctx context.Context, identifier string, permanent bool) error {
+func (c TreatmentCollection) Delete(ctx context.Context, identifier string, permanent bool) *nsutils.HTTPError {
 	return nil
 }
 
-func (c TreatmentCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, error) {
+func (c TreatmentCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }
 

@@ -12,7 +12,6 @@ import (
 	v1 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1"
 	v2 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v2"
 	v3 "nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v3"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/server/user"
 	"nighttroop.t1d.nz/utils/config"
@@ -20,7 +19,7 @@ import (
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
-	ntDeps := di.Dependencies{
+	ntDeps := nsutils.Dependencies{
 		Store: &NightTroopAPIStore{
 			controlDB: controlDB,
 			config:    config,
@@ -28,6 +27,11 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 				nsutils.Entries:      collections.EntriesCollection{},
 				nsutils.Treatments:   collections.TreatmentCollection{},
 				nsutils.Devicestatus: collections.DeviceStatusCollection{},
+				nsutils.Profile:      collections.ProfileCollection{},
+				nsutils.Food:         collections.FoodCollection{},
+				nsutils.Settings:     collections.SettingsCollection{},
+				nsutils.Activity:     collections.ActivityCollection{},
+				// Add more collections as needed
 			},
 		},
 

@@ -4,12 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // Version reports the application and API version metadata for API v3.
-func Version(dep di.Dependencies) http.HandlerFunc {
+func Version(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
@@ -23,8 +22,8 @@ func Version(dep di.Dependencies) http.HandlerFunc {
 }
 
 // Status returns a lightweight authenticated health payload for API v3.
-func Status(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
+func Status(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
@@ -35,16 +34,16 @@ func Status(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Iden
 }
 
 // Test is a minimal authenticated endpoint used for API v3 connectivity checks.
-func Test(_ di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
+func Test(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": "ok"})
 	}
 }
 
 // LastModified returns the newest modification timestamp for each known
 // collection.
-func LastModified(dep di.Dependencies) func(http.ResponseWriter, *http.Request, *di.Identity) {
-	return func(w http.ResponseWriter, r *http.Request, identity *di.Identity) {
+func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food}
 		lastModifiedMap := make(map[nsutils.Collection]int64)
 		for _, collection := range collections {

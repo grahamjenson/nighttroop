@@ -2,12 +2,9 @@ package nsutils
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
-
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 )
 
 func WriteRecordV3(w http.ResponseWriter, record Record, fields []string) {
@@ -51,18 +48,6 @@ func ReadJSON(r *http.Request, dst any) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.UseNumber()
 	return decoder.Decode(dst)
-}
-
-// RequireRecord maps store lookup errors to the corresponding HTTP response.
-func RequireRecord(storeErr error) (status int, body map[string]any) {
-	switch {
-	case errors.Is(storeErr, nserrors.ErrGone):
-		return http.StatusGone, map[string]any{"status": http.StatusGone}
-	case errors.Is(storeErr, nserrors.ErrNotFound):
-		return http.StatusNotFound, map[string]any{"status": http.StatusNotFound}
-	default:
-		return http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": storeErr.Error()}
-	}
 }
 
 // ParseIfModifiedSince parses the If-Modified-Since header when present.

@@ -1,10 +1,8 @@
-package di
+package nsutils
 
 import (
 	"context"
 	"net/http"
-
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 type Dependencies struct {
@@ -27,17 +25,17 @@ type Identity struct {
 type AuthManager interface {
 	Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *Identity)) http.HandlerFunc
 	HasPermission(identity Identity, permission string) bool
-	AuthenticateExplicit(r *http.Request) (*Identity, error)
+	AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError)
 }
 
 // Store abstracts persistence for Nightscout collections.
 //
 // Applications are expected to provide their own implementation.
 type Store interface {
-	Create(ctx context.Context, collection nsutils.Collection, data map[string]any, subject string) (nsutils.Record, error)
-	Get(ctx context.Context, collection nsutils.Collection, identifier string) (nsutils.Record, error)
-	Search(ctx context.Context, collection nsutils.Collection, query *nsutils.Query) ([]nsutils.Record, error)
-	Update(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, subject string) (nsutils.Record, error)
-	Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool, subject string) error
-	DeleteMatching(ctx context.Context, collection nsutils.Collection, query *nsutils.Query, permanent bool, subject string) (int, error)
+	Create(ctx context.Context, collection Collection, data map[string]any, subject string) (Record, *HTTPError)
+	Get(ctx context.Context, collection Collection, identifier string) (Record, *HTTPError)
+	Search(ctx context.Context, collection Collection, query *Query) ([]Record, *HTTPError)
+	Update(ctx context.Context, collection Collection, identifier string, patch map[string]any, subject string) (Record, *HTTPError)
+	Delete(ctx context.Context, collection Collection, identifier string, permanent bool, subject string) *HTTPError
+	DeleteMatching(ctx context.Context, collection Collection, query *Query, permanent bool, subject string) (int, *HTTPError)
 }

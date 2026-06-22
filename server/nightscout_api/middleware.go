@@ -81,9 +81,17 @@ func tryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*userSQL.
 
 func tryAuthWithLegacyToken(config config.ServerConfig, r *http.Request) (*userSQL.Identity, error) {
 
+	// We first try to get the token, then the secret param, both equal in Nighttroop
 	tokenParam := r.URL.Query().Get("token")
 	if tokenParam == "" {
 		tokenParam = chi.URLParam(r, "token")
+		if tokenParam == "" {
+			tokenParam = r.URL.Query().Get("secret")
+			if tokenParam == "" {
+				// get api-secret header
+				tokenParam = r.Header.Get("api-secret")
+			}
+		}
 	}
 
 	if tokenParam == "" {

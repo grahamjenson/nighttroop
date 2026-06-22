@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/di"
+	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
 // NewNightscoutV3Router constructs a router that serves the supported
 // Nightscout API v3 endpoints.
-func NewNightscoutV3Router(dep di.Dependencies) http.Handler {
+func NewNightscoutV3Router(dep nsutils.Dependencies) http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/version", Version(dep))

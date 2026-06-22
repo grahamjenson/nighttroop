@@ -3,13 +3,11 @@ package collections
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/nightscout"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -17,19 +15,22 @@ import (
 
 type EntriesCollection struct{}
 
-func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, error) {
+func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	entryModel := &nightscout.Entry{}
 	err := entryModel.FromMap(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map data to entry model: %w", err)
+		slog.Error("failed to map data to entry model", "error", err)
+		return nil, nsutils.ErrInternal
 	}
 	occurredAt := time.Now().UnixMilli()
 	if entryModel.Date != nil {
 		occurredAt = entryModel.Date.Int64()
 	}
 	if entryModel.SGV == nil {
-		return nil, fmt.Errorf("SGV value is required for entries collection")
+		slog.Error("SGV value is required for entries collection")
+		return nil, nsutils.ErrBadRequest
+
 	}
 	offset := int64(0)
 	if entryModel.UTCOffset != nil {
@@ -55,39 +56,42 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 	}, nil
 }
 
-func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, error) {
+func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 
 	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReadingByEID(ctx, identifier)
 	if err == sql.ErrNoRows {
-		return nil, nserrors.ErrNotFound
+		return nil, nsutils.ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get glucose reading by ID: %w", err)
+		slog.Error("failed to get glucose reading by ID", "error", err)
+		return nil, nsutils.ErrInternal
 	}
 	if glucoseReading == nil {
-		return nil, nserrors.ErrNotFound
+		return nil, nsutils.ErrNotFound
 	}
 	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, error) {
+func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit))
 	if err != nil {
-		return nil, err
+		slog.Error("failed to query glucose readings from database", "error", err)
+		return nil, nsutils.ErrInternal
 	}
 
 	return CreateRecordSlice(entries, GlucoseReadingToRecord), nil
 }
 
-func (c EntriesCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, error) {
+func (c EntriesCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	entryModel := &nightscout.Entry{}
 	err := entryModel.FromMap(patch)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map data to entry model: %w", err)
+		slog.Error("failed to map data to entry model", "error", err)
+		return nil, nsutils.ErrInternal
 	}
 
 	var value *float64
@@ -107,33 +111,37 @@ func (c EntriesCollection) Update(ctx context.Context, identifier string, patch 
 	return &record, nil
 }
 
-func (c EntriesCollection) Delete(ctx context.Context, identifier string, permanent bool) error {
+func (c EntriesCollection) Delete(ctx context.Context, identifier string, permanent bool) *nsutils.HTTPError {
 	userContext := httputils.GetUserContext(ctx)
 	if permanent {
 		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingByEID(ctx, identifier)
 		if err != nil {
-			return fmt.Errorf("failed to permanently delete glucose reading by ID: %w", err)
+			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
+			return nsutils.ErrInternal
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
+			slog.Error("failed to get rows affected for glucose reading delete", "error", err)
+			return nsutils.ErrInternal
 		}
 		if rowsAffected == 0 {
-			return nserrors.ErrNotFound
+			return nsutils.ErrNotFound
 		}
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
 	} else {
 		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingByEID(ctx, identifier)
 		if err != nil {
-			return fmt.Errorf("failed to soft delete glucose reading by ID: %w", err)
+			slog.Error("failed to soft delete glucose reading by ID", "error", err)
+			return nsutils.ErrInternal
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("failed to get rows affected for glucose reading delete: %w", err)
+			slog.Error("failed to get rows affected for glucose reading delete", "error", err)
+			return nsutils.ErrInternal
 		}
 		if rowsAffected == 0 {
-			return nserrors.ErrNotFound
+			return nsutils.ErrNotFound
 		}
 		slog.Info("Soft Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
@@ -141,7 +149,7 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 	return nil
 }
 
-func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, error) {
+func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	records, err := c.Search(ctx, query)
 	if err != nil {
@@ -158,21 +166,25 @@ func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Qu
 	if permanent {
 		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByEIDs(ctx, recordIDs)
 		if err != nil {
-			return 0, fmt.Errorf("failed to permanently delete glucose readings by IDs: %w", err)
+			slog.Error("failed to permanently delete glucose readings by IDs", "error", err)
+			return 0, nsutils.ErrInternal
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return 0, fmt.Errorf("failed to get rows affected for glucose readings delete: %w", err)
+			slog.Error("failed to get rows affected for glucose readings delete", "error", err)
+			return 0, nsutils.ErrInternal
 		}
 		return int(rowsAffected), nil
 	} else {
 		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingsByEIDs(ctx, recordIDs)
 		if err != nil {
-			return 0, fmt.Errorf("failed to soft delete glucose readings by IDs: %w", err)
+			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
+			return 0, nsutils.ErrInternal
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return 0, fmt.Errorf("failed to get rows affected for glucose readings delete: %w", err)
+			slog.Error("failed to get rows affected for glucose readings delete", "error", err)
+			return 0, nsutils.ErrInternal
 		}
 		return int(rowsAffected), nil
 	}

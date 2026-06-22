@@ -3,11 +3,12 @@ package nsutils
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nserrors"
+	"github.com/go-chi/chi/v5"
 )
 
 type Collection string
@@ -19,6 +20,8 @@ const (
 	Profile      Collection = "profile"
 	Properties   Collection = "properties"
 	Food         Collection = "food"
+	Settings     Collection = "settings"
+	Activity     Collection = "activity"
 )
 
 const DATE_FORMAT_STRING = "2006-01-02T15:04:05.000Z"
@@ -42,7 +45,9 @@ func ParseCollection(s string) (Collection, error) {
 		Devicestatus,
 		Profile,
 		Properties,
-		Food:
+		Food,
+		Settings,
+		Activity:
 		return c, nil
 	default:
 		return "", fmt.Errorf("unknown collection %q", s)
@@ -60,9 +65,9 @@ func (c Collection) DefaultDateField() string {
 
 // NormalizeData normalizes incoming Nightscout payloads into a consistent shape
 // before persistence.
-func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any) (map[string]any, error) {
+func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any) (map[string]any, *HTTPError) {
 	if dontUseData == nil {
-		return nil, nserrors.BadDataBodyError
+		return nil, BadDataBodyError
 	}
 	clean := CloneMap(dontUseData)
 
@@ -125,7 +130,7 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if value, ok := StringField(clean, "created_at"); ok && value != "" {
 		normalized, _, err := toUTCString(value)
 		if err != nil {
-			return nil, nserrors.BadCreatedAtError
+			return nil, BadCreatedAtError
 		}
 		clean["created_at"] = normalized
 	}
@@ -134,7 +139,7 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if rawDate, exists := clean["date"]; exists && rawDate != nil {
 		millis, _, err := parseDateValue(rawDate)
 		if err != nil {
-			return nil, nserrors.BadDateFieldError
+			return nil, BadDateFieldError
 		}
 		clean["date"] = millis
 	}
@@ -143,7 +148,7 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if dateString, ok := StringField(clean, "dateString"); ok && dateString != "" {
 		normalized, _, err := toUTCString(dateString)
 		if err != nil {
-			return nil, nserrors.BadDateStringError
+			return nil, BadDateStringError
 		}
 		clean["dateString"] = normalized
 	}
@@ -158,27 +163,27 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	// validate [utcOffset]
 	offset, ok, err := Int64Field(clean, "utcOffset")
 	if err != nil || !ok {
-		return nil, nserrors.BadUTCTOffsetError
+		return nil, BadUTCTOffsetError
 	}
 
 	if ok && (offset < -1440 || offset > 1440) {
-		return nil, nserrors.BadUTCTOffsetError
+		return nil, BadUTCTOffsetError
 	}
 
 	// validate [date]
 	date, ok, err := Int64Field(clean, "date")
 	if err != nil || !ok {
-		return nil, nserrors.BadDateFieldError
+		return nil, BadDateFieldError
 	}
 	if ok && date <= 100000000000 {
-		return nil, nserrors.BadDateFieldError
+		return nil, BadDateFieldError
 	}
 
 	// validate [created_at]
 	if value, ok := StringField(clean, "created_at"); ok {
 		// Make sure the time is the correct time format
 		if _, err := time.Parse(DATE_FORMAT_STRING, value); err != nil {
-			return nil, nserrors.BadCreatedAtError
+			return nil, BadCreatedAtError
 		}
 	}
 
@@ -186,20 +191,20 @@ func (c Collection) DefaultNormalizeValidateCreateDoc(dontUseData map[string]any
 	if value, ok := StringField(clean, "dateString"); ok {
 		// Make sure the time is the correct time format
 		if _, err := time.Parse(DATE_FORMAT_STRING, value); err != nil {
-			return nil, nserrors.BadDateStringError
+			return nil, BadDateStringError
 		}
 	}
 
 	if app, ok := StringField(clean, "app"); !ok || app == "" {
-		return nil, fmt.Errorf("Bad or missing app field")
+		return nil, BadAppFieldError
 	}
 
 	return clean, nil
 }
 
-func (c Collection) DefaultNormalizeValidateUpdateDoc(existing Record, dontUseData map[string]any) (map[string]any, error) {
+func (c Collection) DefaultNormalizeValidateUpdateDoc(existing Record, dontUseData map[string]any) (map[string]any, *HTTPError) {
 	if dontUseData == nil {
-		return nil, nserrors.BadDataBodyError
+		return nil, BadDataBodyError
 	}
 	clean := CloneMap(dontUseData)
 
@@ -216,7 +221,7 @@ func (c Collection) DefaultNormalizeValidateUpdateDoc(existing Record, dontUseDa
 				continue
 			}
 			if fmt.Sprint(proposed) != fmt.Sprint(current) {
-				return nil, fmt.Errorf("Field %s cannot be modified by the client", field)
+				return nil, ErrCannotModify(field)
 			}
 		}
 	}
@@ -224,7 +229,7 @@ func (c Collection) DefaultNormalizeValidateUpdateDoc(existing Record, dontUseDa
 	return clean, nil
 }
 
-func normalizeNumericFields(data map[string]any, fields ...string) error {
+func normalizeNumericFields(data map[string]any, fields ...string) *HTTPError {
 	for _, field := range fields {
 		value, ok := data[field]
 		if !ok || value == nil {
@@ -232,7 +237,7 @@ func normalizeNumericFields(data map[string]any, fields ...string) error {
 		}
 		number, err := toFloat64(value)
 		if err != nil {
-			return fmt.Errorf("Bad numeric field %s", field)
+			return BadNumericFieldError(field)
 		}
 		if number == float64(int64(number)) {
 			data[field] = int64(number)
@@ -287,15 +292,15 @@ func Int64Field(data map[string]any, key string) (int64, bool, error) {
 		return num, err == nil, nil
 	case string:
 		if typed == "" {
-			return 0, false, nserrors.BadOffsetError
+			return 0, false, BadOffsetError
 		}
 		num, err := strconv.ParseInt(typed, 10, 64)
 		if err != nil {
-			return 0, false, nserrors.BadOffsetError
+			return 0, false, BadOffsetError
 		}
 		return num, true, nil
 	default:
-		return 0, false, nserrors.BadOffsetError
+		return 0, false, BadOffsetError
 	}
 }
 
@@ -384,4 +389,24 @@ func parseDateValue(value any) (int64, *int, error) {
 	default:
 		return 0, nil, fmt.Errorf("bad date")
 	}
+}
+
+func GetCollectionAndEnsurePermission(dep Dependencies, w http.ResponseWriter, r *http.Request) (Collection, *Identity, *HTTPError) {
+	collection, err := ParseCollection(chi.URLParam(r, "collection"))
+	if err != nil {
+
+		return "", nil, ErrInvalidCollection
+	}
+	identity, err := dep.Auth.AuthenticateExplicit(r)
+	if err != nil {
+
+		return "", nil, ErrMissingCredentials
+	}
+
+	permission := fmt.Sprintf("api:%s:create", collection)
+	if !dep.Auth.HasPermission(*identity, permission) {
+		return "", nil, ErrMissingPermission(permission)
+	}
+
+	return collection, identity, nil
 }
