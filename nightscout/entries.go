@@ -20,17 +20,32 @@ import (
 ////
 
 type Entry struct {
-	Identifier *string          `json:"identifier,omitempty"`
-	Type       *EntryType       `json:"type,omitempty"`
-	SGV        *FlexibleFloat64 `json:"sgv,omitempty"`
-	MBG        *FlexibleFloat64 `json:"mbg,omitempty"`
-	Date       *DateInt         `json:"date,omitempty"`
-	UTCOffset  *FlexibleInt64   `json:"utcOffset,omitempty"`
-	DateString *DateString      `json:"dateString,omitempty"`
-	Device     *string          `json:"device,omitempty"`
-	Direction  *string          `json:"direction,omitempty"`
-	Units      *Units           `json:"units,omitempty"`
-	RawJSON    string           `json:"-"`
+	Identifier *string    `json:"identifier,omitempty"`
+	Type       *EntryType `json:"type,omitempty"`
+
+	SGV       *FlexibleFloat64 `json:"sgv,omitempty"`
+	MBG       *FlexibleFloat64 `json:"mbg,omitempty"`
+	Direction *string          `json:"direction,omitempty"`
+	Trend     *FlexibleFloat64 `json:"trend,omitempty"`
+	Units     *Units           `json:"units,omitempty"`
+
+	Device *string `json:"device,omitempty"`
+
+	Date       *DateInt       `json:"date,omitempty"`
+	DateString *DateString    `json:"dateString,omitempty"`
+	Mills      *DateInt       `json:"mills,omitempty"`
+	UTCOffset  *FlexibleInt64 `json:"utcOffset,omitempty"`
+
+	Filtered   *FlexibleFloat64 `json:"filtered,omitempty"`
+	Unfiltered *FlexibleFloat64 `json:"unfiltered,omitempty"`
+	RSSI       *FlexibleFloat64 `json:"rssi,omitempty"`
+	Noise      *FlexibleFloat64 `json:"noise,omitempty"`
+	SysTime    *DateString      `json:"sysTime,omitempty"`
+
+	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
+	SrvModified *DateInt `json:"srvModified,omitempty"`
+
+	RawJSON string `json:"-"`
 }
 
 ////

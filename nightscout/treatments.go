@@ -39,9 +39,10 @@ type Treatment struct {
 	Reason       *string          `json:"reason"`
 	TargetTop    *FlexibleFloat64 `json:"targetTop"`
 	TargetBottom *FlexibleFloat64 `json:"targetBottom"`
+	Units        *Units           `json:"units,omitempty"`
 
-	SrvCreated  float64 `json:"srvCreated"`
-	SrvModified float64 `json:"srvModified"`
+	SrvCreated  *DateInt `json:"srvCreated"`
+	SrvModified *DateInt `json:"srvModified"`
 
 	RawJSON string `json:"-"`
 }

@@ -36,15 +36,18 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 		offset = int64(*entryModel.UTCOffset)
 	}
 	eid := utils.NextEID("ns")
-	userContext.UserDB.Queries.CreateGlucoseReading(ctx, user.CreateGlucoseReadingParams{
-		Eid:                   eid,
-		OccurredAt:            occurredAt,
-		Value:                 float64(*entryModel.SGV),
-		RawJsonData:           &entryModel.RawJSON,
-		UtcOffsetMinutes:      offset,
-		CreatedByIdentityID:   userContext.IdentityModel.ID,
-		CreatedByIdentityName: userContext.IdentityModel.Name,
-	})
+	entryModel.Identifier = &eid
+	entryModel.UTCOffset = ptr(nightscout.FlexibleInt64(offset))
+	entryModel.Date = ptr(nightscout.DateInt(occurredAt))
+
+	dbModel, err := entryModel.ToDBModel()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert entry model to DB model: %w", err)
+	}
+	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
+	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
+
+	userContext.UserDB.Queries.CreateGlucoseReading(ctx, dbModel.ToDBCreateParams())
 
 	return &nsutils.Record{
 		Collection:  "entries",
