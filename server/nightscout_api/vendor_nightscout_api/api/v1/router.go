@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v1/handlers"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
@@ -16,13 +15,6 @@ func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
 
 	registerMiscRoutes(r, dep)
 	registerCollectionRoutes(r, dep)
-	registerSearchRoutes(r, dep)
-	registerEntryRoutes(r, dep)
-	registerTreatmentRoutes(r, dep)
-	registerDeviceStatusRoutes(r, dep)
-	registerProfileRoutes(r, dep)
-	registerSettingRoutes(r, dep)
-	registerFoodRoutes(r, dep)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
@@ -32,48 +24,35 @@ func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
 }
 
 func registerMiscRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/status.json", handlers.StatusJSON(dep))
-	r.Get("/versions", handlers.Versions())
-	r.Get("/verifyauth", handlers.VerifyAuth(dep))
+	r.Get("/status.json", StatusJSON(dep))
+	r.Get("/versions", Versions())
+	r.Get("/verifyauth", VerifyAuth(dep))
 }
 
 func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	// Get And Search
-	r.Get("/{collection}", handlers.Search(dep))
-	r.Get("/{collection}.json", handlers.Search(dep))
-	r.Get("/{collection}/{identifier}", handlers.Read(dep))
+	r.Get("/{collection}", Search(dep))
+	r.Get("/{collection}/", Search(dep))
+	r.Get("/{collection}.json", Search(dep))
+	r.Get("/{collection}/{identifier_or_type}", Search(dep))
+	r.Get("/{collection}/{identifier_or_type}.json", Search(dep))
+	r.Get("/{collection}/current", Current(dep))
+	r.Get("/{collection}/current.json", Current(dep))
 
 	// Post And Put (Create/Update)
-	r.Post("/{collection}", handlers.Create(dep))
-	r.Post("/{collection}.json", handlers.Create(dep))
-	r.Post("/{collection}/", handlers.Create(dep))
+	r.Post("/{collection}", Create(dep))
+	r.Post("/{collection}.json", Create(dep))
+	r.Post("/{collection}/", Create(dep))
 
 	// DELETE
-	r.Delete("/{collection}", handlers.Delete(dep))
-	r.Delete("/{collection}.json", handlers.Delete(dep))
-	r.Delete("/{collection}/", handlers.Delete(dep))
+	r.Delete("/{collection}", Delete(dep))
+	r.Delete("/{collection}.json", Delete(dep))
+	r.Delete("/{collection}/{identifier_or_type}", Delete(dep))
+	r.Delete("/{collection}/{identifier_or_type}.json", Delete(dep))
 
 	// Weird V1 Ones
-	r.Get("/echo/{collection}/{spec}.json", handlers.Echo(dep))
-	r.Get("/slice/{collection}/{spec}.json", handlers.Slice(dep))
-	r.Get("/times/{collection}/{spec}.json", handlers.Times(dep))
+	r.Get("/echo/{collection}/{spec}.json", Echo(dep))
+	r.Get("/slice/{collection}/{spec}.json", Slice(dep))
+	r.Get("/times/{collection}/{spec}.json", Times(dep))
 
-}
-
-func registerEntryRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/entries/current.json", handlers.ReadWithExtraSteps(dep, func(q Query) Query {
-		q.Limit = 1
-		return q
-	}))
-
-	r.Get("/entries/{spec}.json", handlers.ReadWithExtraSteps(dep, func(r *http.Request, q Query) Query {
-		q.Limit = 1000
-		q.Type = chi.URLParam(r, "spec")
-		return q
-	}))
-
-	r.Delete("/entries/{spec}", handlers.DeleteWithExtraSteps(dep, func(r *http.Request, q Query) Query {
-		q.Type = chi.URLParam(r, "spec")
-		return q
-	}))
 }

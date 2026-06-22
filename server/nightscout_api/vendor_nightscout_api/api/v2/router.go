@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/api/v2/handlers"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
@@ -25,7 +24,7 @@ func NewNightscoutV2Router(dep nsutils.Dependencies) http.Handler {
 }
 
 func registerPropertiesRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/properties", dep.Auth.Require("api:properties:read", true, handlers.PropertiesList(dep)))
-	r.Get("/properties.json", dep.Auth.Require("api:properties:read", true, handlers.PropertiesList(dep)))
+	r.Get("/properties", dep.Auth.Require("api:properties:read", true, PropertiesList(dep)))
+	r.Get("/properties.json", dep.Auth.Require("api:properties:read", true, PropertiesList(dep)))
 
 }

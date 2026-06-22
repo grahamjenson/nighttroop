@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/nightscout"
 )
 
 type Collection string
@@ -60,6 +61,21 @@ func (c Collection) DefaultDateField() string {
 		return "date"
 	default:
 		return "created_at"
+	}
+}
+
+func (c Collection) IsTypeString(t string) bool {
+	switch c {
+	case Entries:
+		return t == string(nightscout.SGVType) || t == string(nightscout.MBGType)
+	case Treatments:
+		for _, et := range nightscout.TreatmentEventTypes {
+			if t == string(et) {
+				return true
+			}
+		}
+	default:
+		return false
 	}
 }
 
@@ -391,19 +407,27 @@ func parseDateValue(value any) (int64, *int, error) {
 	}
 }
 
-func GetCollectionAndEnsurePermission(dep Dependencies, w http.ResponseWriter, r *http.Request) (Collection, *Identity, *HTTPError) {
+type CollectionAction string
+
+const (
+	CollectionActionCreate CollectionAction = "create"
+	CollectionActionRead   CollectionAction = "read"
+	CollectionActionUpdate CollectionAction = "update"
+	CollectionActionDelete CollectionAction = "delete"
+)
+
+func GetCollectionAndEnsurePermission(dep Dependencies, r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
 	collection, err := ParseCollection(chi.URLParam(r, "collection"))
 	if err != nil {
-
 		return "", nil, ErrInvalidCollection
 	}
+
 	identity, err := dep.Auth.AuthenticateExplicit(r)
 	if err != nil {
-
 		return "", nil, ErrMissingCredentials
 	}
 
-	permission := fmt.Sprintf("api:%s:create", collection)
+	permission := fmt.Sprintf("api:%s:%s", collection, action)
 	if !dep.Auth.HasPermission(*identity, permission) {
 		return "", nil, ErrMissingPermission(permission)
 	}
