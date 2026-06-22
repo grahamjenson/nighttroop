@@ -96,8 +96,7 @@ func UserExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *h
 		return false, nil
 	}
 
-	ctx := httputils.SetUserDBAndModelAndCreateUserContext(r.Context(), userDB, userGetModel)
-	ctx = httputils.SetSubdomainInUserContext(ctx, subdomain)
+	ctx := httputils.SetUserDBAndModelAndCreateUserContext(r.Context(), userDB, userGetModel, subdomain)
 
 	return true, ctx
 }

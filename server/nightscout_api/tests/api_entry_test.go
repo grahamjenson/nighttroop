@@ -1,10 +1,11 @@
-package nightscout_api_tests
+package tests
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/server/nightscout_api"
+	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -53,14 +54,15 @@ var testAPIEntries = []testAPIEntry{
 	},
 }
 
-func test_api_entry(t *testing.T) {
+func TestAPIEntry(t *testing.T) {
 	cfg, controlDB, userDB := testutils.GetConfigControlDBAndUserDBForTest()
-	router := nightscout_api.NewNightscoutRouter()
+	path := fmt.Sprintf("%s://ns.%s.%s/api/v3/entries", cfg.HostProtocol, userDB.Subdomain, cfg.HostNameWithPort)
+	mainHandler := server.GetMainHandler(controlDB, cfg)
 	for _, entry := range testAPIEntries {
 		t.Run(entry.name, func(t *testing.T) {
 			for i, input := range entry.inputs {
 				expected := entry.expected[i]
-				statusCode, output, _ := testutils.JSONRequest[map[string]any](t, router, "POST", "/api/v3/entries", input)
+				statusCode, output, _ := testutils.JSONRequest[map[string]any](t, mainHandler, "POST", path, input)
 				require.Equal(t, expected.statusCode, statusCode, "Status code should match expected")
 				require.Equal(t, expected.output, output, "Response body should match expected")
 			}

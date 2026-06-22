@@ -26,7 +26,7 @@ func GetTestServerConfig() config.ServerConfig {
 	return *storedServerConfig
 }
 
-func GetConfigControlDBAndUserDBForTest(subdomain string) (config.ServerConfig, *db.ControlDB, *db.UserDB) {
+func GetConfigControlDBAndUserDBForTest() (config.ServerConfig, *db.ControlDB, *db.UserDB) {
 	cfg := GetTestServerConfig()
 
 	controlDB, err := db.NewControlDB(cfg)

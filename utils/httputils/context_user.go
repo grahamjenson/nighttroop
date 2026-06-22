@@ -47,23 +47,15 @@ func SetUserActionInUserContext(ctx context.Context, action UserAction) context.
 	return context.WithValue(ctx, UserContextKey, userContext)
 }
 
-// //
-// Subdomain
-// //
-func SetSubdomainInUserContext(ctx context.Context, subdomain string) context.Context {
-	userContext := GetUserContext(ctx)
-	userContext.Subdomain = subdomain
-	return context.WithValue(ctx, UserContextKey, userContext)
-}
-
 ////
 // UserDB
 ////
 
-func SetUserDBAndModelAndCreateUserContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.User) context.Context {
+func SetUserDBAndModelAndCreateUserContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.User, subdomain string) context.Context {
 	userContext := &UserContext{}
 	userContext.UserDB = userDB
 	userContext.UserModel = userGetModel
+	userContext.Subdomain = subdomain
 
 	return context.WithValue(ctx, UserContextKey, userContext)
 }
