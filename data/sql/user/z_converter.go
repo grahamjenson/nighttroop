@@ -3,9 +3,7 @@
 
 package user
 
-type ToCreateParamsImpl struct{}
-
-func (c *ToCreateParamsImpl) Activity(source Activity) CreateActivityParams {
+func ActivityToCreate(source Activity) CreateActivityParams {
 	var userCreateActivityParams CreateActivityParams
 	userCreateActivityParams.Eid = source.Eid
 	userCreateActivityParams.OccurredAt = source.OccurredAt
@@ -23,7 +21,7 @@ func (c *ToCreateParamsImpl) Activity(source Activity) CreateActivityParams {
 	userCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateActivityParams
 }
-func (c *ToCreateParamsImpl) Bolus(source Bolus) CreateBolusParams {
+func BolusToCreate(source Bolus) CreateBolusParams {
 	var userCreateBolusParams CreateBolusParams
 	userCreateBolusParams.Eid = source.Eid
 	userCreateBolusParams.OccurredAt = source.OccurredAt
@@ -37,7 +35,7 @@ func (c *ToCreateParamsImpl) Bolus(source Bolus) CreateBolusParams {
 	userCreateBolusParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateBolusParams
 }
-func (c *ToCreateParamsImpl) Carbs(source Carb) CreateCarbParams {
+func CarbsToCreate(source Carb) CreateCarbParams {
 	var userCreateCarbParams CreateCarbParams
 	userCreateCarbParams.Eid = source.Eid
 	userCreateCarbParams.OccurredAt = source.OccurredAt
@@ -50,7 +48,7 @@ func (c *ToCreateParamsImpl) Carbs(source Carb) CreateCarbParams {
 	userCreateCarbParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateCarbParams
 }
-func (c *ToCreateParamsImpl) DeviceStatus(source DeviceStatus) CreateDeviceStatusParams {
+func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 	var userCreateDeviceStatusParams CreateDeviceStatusParams
 	userCreateDeviceStatusParams.Eid = source.Eid
 	userCreateDeviceStatusParams.IdentityID = source.IdentityID
@@ -104,7 +102,7 @@ func (c *ToCreateParamsImpl) DeviceStatus(source DeviceStatus) CreateDeviceStatu
 	userCreateDeviceStatusParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateDeviceStatusParams
 }
-func (c *ToCreateParamsImpl) Food(source Food) CreateFoodParams {
+func FoodToCreate(source Food) CreateFoodParams {
 	var userCreateFoodParams CreateFoodParams
 	userCreateFoodParams.Eid = source.Eid
 	userCreateFoodParams.OccurredAt = source.OccurredAt
@@ -122,7 +120,7 @@ func (c *ToCreateParamsImpl) Food(source Food) CreateFoodParams {
 	userCreateFoodParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateFoodParams
 }
-func (c *ToCreateParamsImpl) GlucoseReading(source GlucoseReading) CreateGlucoseReadingParams {
+func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	var userCreateGlucoseReadingParams CreateGlucoseReadingParams
 	userCreateGlucoseReadingParams.Eid = source.Eid
 	userCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
@@ -136,7 +134,7 @@ func (c *ToCreateParamsImpl) GlucoseReading(source GlucoseReading) CreateGlucose
 	userCreateGlucoseReadingParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateGlucoseReadingParams
 }
-func (c *ToCreateParamsImpl) Note(source Note) CreateNoteParams {
+func NoteToCreate(source Note) CreateNoteParams {
 	var userCreateNoteParams CreateNoteParams
 	userCreateNoteParams.Eid = source.Eid
 	userCreateNoteParams.OccurredAt = source.OccurredAt
@@ -152,7 +150,7 @@ func (c *ToCreateParamsImpl) Note(source Note) CreateNoteParams {
 	userCreateNoteParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateNoteParams
 }
-func (c *ToCreateParamsImpl) Profile(source Profile) CreateProfileParams {
+func ProfileToCreate(source Profile) CreateProfileParams {
 	var userCreateProfileParams CreateProfileParams
 	userCreateProfileParams.Eid = source.Eid
 	if source.Name != nil {
@@ -212,7 +210,7 @@ func (c *ToCreateParamsImpl) Profile(source Profile) CreateProfileParams {
 	userCreateProfileParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateProfileParams
 }
-func (c *ToCreateParamsImpl) TempBasal(source TempBasal) CreateTempBasalParams {
+func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var userCreateTempBasalParams CreateTempBasalParams
 	userCreateTempBasalParams.Eid = source.Eid
 	userCreateTempBasalParams.Start = source.Start
@@ -227,7 +225,7 @@ func (c *ToCreateParamsImpl) TempBasal(source TempBasal) CreateTempBasalParams {
 	userCreateTempBasalParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateTempBasalParams
 }
-func (c *ToCreateParamsImpl) TempTarget(source TempTarget) CreateTempTargetParams {
+func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	var userCreateTempTargetParams CreateTempTargetParams
 	userCreateTempTargetParams.Eid = source.Eid
 	userCreateTempTargetParams.Start = source.Start

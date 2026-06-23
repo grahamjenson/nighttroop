@@ -41,7 +41,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 			dbModel.CreatedByIdentityID = userSyncSource.syncIdentity.ID
 			dbModel.CreatedByIdentityName = userSyncSource.syncIdentity.Name
 
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), dbModel.ToDBCreateParams())
+			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), user.GlucoseReadingToCreate(*dbModel))
 			if err != nil {
 				if user.IsDuplicateEID(err) {
 					continue

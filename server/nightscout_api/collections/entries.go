@@ -46,7 +46,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
 	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
 
-	userContext.UserDB.Queries.CreateGlucoseReading(ctx, dbModel.ToDBCreateParams())
+	userContext.UserDB.Queries.CreateGlucoseReading(ctx, user.GlucoseReadingToCreate(*dbModel))
 
 	return &nsutils.Record{
 		Collection:  "entries",
