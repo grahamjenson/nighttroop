@@ -11,15 +11,9 @@ import (
 
 const allProfiles = `-- name: AllProfiles :many
 
-
-
-
-SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
+SELECT id, eid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
 `
 
-// -----
-// CREATE
-// ------
 // ------
 // READ
 // ------
@@ -35,7 +29,6 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Eid,
-			&i.Storeid,
 			&i.Name,
 			&i.Start,
 			&i.Duration,
@@ -70,8 +63,77 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 	return items, nil
 }
 
+const createProfile = `-- name: CreateProfile :exec
+
+INSERT INTO profile (
+    eid,
+    name,
+    START,
+    duration,
+    source,
+    percent,
+    dia,
+    units,
+    timezone,
+    carb_ratios_json,
+    insulin_sensitivities_json,
+    basal_rates_json,
+    targets_json,
+    raw_json_data,
+    utc_offset_minutes,
+    created_by_identity_name,
+    created_by_identity_id
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`
+
+type CreateProfileParams struct {
+	Eid                      string
+	Name                     *string
+	Start                    *int64
+	Duration                 *int64
+	Source                   *string
+	Percent                  *int64
+	Dia                      *int64
+	Units                    *string
+	Timezone                 *string
+	CarbRatiosJson           *string
+	InsulinSensitivitiesJson *string
+	BasalRatesJson           *string
+	TargetsJson              *string
+	RawJsonData              *string
+	UtcOffsetMinutes         int64
+	CreatedByIdentityName    string
+	CreatedByIdentityID      int64
+}
+
+// -----
+// CREATE
+// ------
+func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) error {
+	_, err := q.exec(ctx, q.createProfileStmt, createProfile,
+		arg.Eid,
+		arg.Name,
+		arg.Start,
+		arg.Duration,
+		arg.Source,
+		arg.Percent,
+		arg.Dia,
+		arg.Units,
+		arg.Timezone,
+		arg.CarbRatiosJson,
+		arg.InsulinSensitivitiesJson,
+		arg.BasalRatesJson,
+		arg.TargetsJson,
+		arg.RawJsonData,
+		arg.UtcOffsetMinutes,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	return err
+}
+
 const getProfileByEID = `-- name: GetProfileByEID :one
-SELECT id, eid, storeid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE eid = ?
+SELECT id, eid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE eid = ?
 `
 
 func (q *Queries) GetProfileByEID(ctx context.Context, eid string) (*Profile, error) {
@@ -80,7 +142,6 @@ func (q *Queries) GetProfileByEID(ctx context.Context, eid string) (*Profile, er
 	err := row.Scan(
 		&i.ID,
 		&i.Eid,
-		&i.Storeid,
 		&i.Name,
 		&i.Start,
 		&i.Duration,

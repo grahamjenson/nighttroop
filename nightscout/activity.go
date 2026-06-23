@@ -14,4 +14,14 @@ type Activity struct {
 
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
+
+	RawJSON string `json:"-"`
+}
+
+func (e *Activity) FromMap(m map[string]any) error {
+	return FromMap(m, e)
+}
+
+func (e *Activity) ToMap() (map[string]any, error) {
+	return ToMap(e)
 }

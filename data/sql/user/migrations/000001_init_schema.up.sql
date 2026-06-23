@@ -179,10 +179,8 @@ CREATE TABLE temp_targets (
 CREATE TABLE profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
-    storeid TEXT CHECK(length(storeid) <= 64),
     name TEXT CHECK(length(name) <= 64),
     
-
     -- Date stuff
     START INTEGER,
     duration INTEGER,
@@ -209,3 +207,54 @@ CREATE TABLE profile (
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
 
+CREATE TABLE activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    name TEXT CHECK(length(name) <= 64),
+    duration INTEGER NOT NULL,
+    calories REAL NOT NULL,
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+);
+
+CREATE TABLE food (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    name TEXT CHECK(length(name) <= 64),
+    carbs REAL NOT NULL,
+    calories REAL NOT NULL,
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+);
+
+CREATE TABLE note (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    content TEXT CHECK(length(content) <= 1024),
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+);

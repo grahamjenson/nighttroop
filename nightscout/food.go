@@ -24,6 +24,14 @@ type Food struct {
 	RawJSON string `json:"-"`
 }
 
+func (e *Food) FromMap(m map[string]any) error {
+	return FromMap(m, e)
+}
+
+func (e *Food) ToMap() (map[string]any, error) {
+	return ToMap(e)
+}
+
 type FoodUnit string
 
 const (

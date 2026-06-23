@@ -11,3 +11,11 @@ type Setting struct {
 
 	RawJSON string `json:"-"`
 }
+
+func (e *Setting) FromMap(m map[string]any) error {
+	return FromMap(m, e)
+}
+
+func (e *Setting) ToMap() (map[string]any, error) {
+	return ToMap(e)
+}

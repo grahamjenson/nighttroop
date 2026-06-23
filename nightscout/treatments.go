@@ -48,23 +48,11 @@ type Treatment struct {
 }
 
 func (e *Treatment) FromMap(m map[string]any) error {
-	b, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(b, e)
-	e.RawJSON = string(b)
-	return err
+	return FromMap(m, e)
 }
 
 func (e *Treatment) ToMap() (map[string]any, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-	var m map[string]any
-	err = json.Unmarshal(b, &m)
-	return m, err
+	return ToMap(e)
 }
 
 func (e *Treatment) ToCarbDBModel() (*user.Carb, error) {
@@ -90,7 +78,7 @@ func (e *Treatment) ToBolusDBModel() (*user.Bolus, error) {
 	return &user.Bolus{
 		Eid:              *e.Identifier,
 		Value:            e.Insulin.Float64(),
-		Type:             string(CarbCorrection),
+		Type:             string(CorrectionBolus),
 		RawJsonData:      &e.RawJSON,
 		UtcOffsetMinutes: e.UTCOffset.Int64(),
 		OccurredAt:       e.Date.Time().UnixMilli(),

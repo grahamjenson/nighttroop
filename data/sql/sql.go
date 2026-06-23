@@ -7,4 +7,7 @@ package sql
 
 //go:generate go run ./gen/gensql.go  -folder control
 //go:generate go run ./gen/gensql.go  -folder user
+
+//go:generate goverter gen ./user
+
 //go:generate go run ./gen/check.go

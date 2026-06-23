@@ -43,6 +43,7 @@ Docker runs our local test s3 server `minio` (the only external dependency)
 
 ```
 brew install sqlc
+go install github.com/jmattheis/goverter/cmd/goverter@v1.9.3
 brew install templ
 brew install go-air
 brew install tailwindcss

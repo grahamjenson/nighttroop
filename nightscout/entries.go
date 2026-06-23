@@ -53,23 +53,11 @@ type Entry struct {
 ////
 
 func (e *Entry) FromMap(m map[string]any) error {
-	b, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(b, e)
-	e.RawJSON = string(b)
-	return err
+	return FromMap(m, e)
 }
 
 func (e *Entry) ToMap() (map[string]any, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-	var m map[string]any
-	err = json.Unmarshal(b, &m)
-	return m, err
+	return ToMap(e)
 }
 
 func (e *Entry) ToDBModel() *user.GlucoseReading {

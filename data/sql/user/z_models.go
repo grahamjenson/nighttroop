@@ -10,6 +10,22 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+type Activity struct {
+	ID                    int64
+	Eid                   string
+	Name                  *string
+	Duration              int64
+	Calories              float64
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
+}
+
 type Bolus struct {
 	ID                    int64
 	Eid                   string
@@ -72,6 +88,22 @@ type Event struct {
 	EndAt   *int64
 }
 
+type Food struct {
+	ID                    int64
+	Eid                   string
+	Name                  *string
+	Carbs                 float64
+	Calories              float64
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
+}
+
 type GlucoseReading struct {
 	ID                    int64
 	Eid                   string
@@ -100,10 +132,23 @@ type Identity struct {
 	Enabled     bool
 }
 
+type Note struct {
+	ID                    int64
+	Eid                   string
+	Content               *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
+}
+
 type Profile struct {
 	ID                       int64
 	Eid                      string
-	Storeid                  *string
 	Name                     *string
 	Start                    *int64
 	Duration                 *int64

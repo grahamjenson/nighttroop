@@ -22,6 +22,14 @@ type Profile struct {
 	RawJSON string `json:"-"`
 }
 
+func (e *Profile) FromMap(m map[string]any) error {
+	return FromMap(m, e)
+}
+
+func (e *Profile) ToMap() (map[string]any, error) {
+	return ToMap(e)
+}
+
 type ProfileSettings struct {
 	DIA        *FlexibleFloat64 `json:"dia,omitempty"`
 	CarbRatio  []*ScheduleValue `json:"carbratio,omitempty"`

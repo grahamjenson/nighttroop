@@ -49,7 +49,15 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Delete("/{collection}/{identifier_or_type}.json", Delete(dep))
 
 	// Weird V1 Ones
+	// No optional query params in chi
+	// Slice
+	// TODO: These routes should be really limited on input, and if someone wants some query then work it out otherwise ignore
 	r.Get("/slice/{collection}/{field}", Slice(dep))
+	r.Get("/slice/{collection}/{field}/{type}", Slice(dep))
+	r.Get("/slice/{collection}/{field}/{type}/{prefix}", Slice(dep))
+	r.Get("/slice/{collection}/{field}/{type}/{prefix}/{regex}", Slice(dep))
+
+	// Times
 	r.Get("/count/{collection}/where", Count(dep))
 
 }

@@ -25,6 +25,14 @@ type DeviceStatus struct {
 	RawJSON string `json:"-"`
 }
 
+func (e *DeviceStatus) FromMap(m map[string]any) error {
+	return FromMap(m, e)
+}
+
+func (e *DeviceStatus) ToMap() (map[string]any, error) {
+	return ToMap(e)
+}
+
 type UploaderStatus struct {
 	Battery        *FlexibleFloat64 `json:"battery,omitempty"`
 	BatteryVoltage *FlexibleFloat64 `json:"batteryVoltage,omitempty"`

@@ -11,14 +11,9 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-
-
 SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
 `
 
-// -----
-// CREATE
-// ------
 // ------
 // READ
 // ------
@@ -65,6 +60,75 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const createDeviceStatus = `-- name: CreateDeviceStatus :exec
+
+INSERT INTO device_status (
+    eid,
+    identity_id,
+    battery_level,
+    charging_state,
+    pump_battery,
+    pump_status,
+    pump_reservoir,
+    pump_insertion_time,
+    loop_status,
+    loop_timestamp,
+    cgm_status,
+    cgm_insertion_time,
+    raw_json_data,
+    utc_offset_minutes,
+    occurred_at,
+    created_by_identity_name,
+    created_by_identity_id
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`
+
+type CreateDeviceStatusParams struct {
+	Eid                   string
+	IdentityID            int64
+	BatteryLevel          *int64
+	ChargingState         *string
+	PumpBattery           *int64
+	PumpStatus            *string
+	PumpReservoir         *float64
+	PumpInsertionTime     *int64
+	LoopStatus            *string
+	LoopTimestamp         *int64
+	CgmStatus             *string
+	CgmInsertionTime      *int64
+	RawJsonData           *string
+	UtcOffsetMinutes      int64
+	OccurredAt            int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
+}
+
+// -----
+// CREATE
+// ------
+func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatusParams) error {
+	_, err := q.exec(ctx, q.createDeviceStatusStmt, createDeviceStatus,
+		arg.Eid,
+		arg.IdentityID,
+		arg.BatteryLevel,
+		arg.ChargingState,
+		arg.PumpBattery,
+		arg.PumpStatus,
+		arg.PumpReservoir,
+		arg.PumpInsertionTime,
+		arg.LoopStatus,
+		arg.LoopTimestamp,
+		arg.CgmStatus,
+		arg.CgmInsertionTime,
+		arg.RawJsonData,
+		arg.UtcOffsetMinutes,
+		arg.OccurredAt,
+		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
+	)
+	return err
 }
 
 const getDeviceStatusByEID = `-- name: GetDeviceStatusByEID :one
