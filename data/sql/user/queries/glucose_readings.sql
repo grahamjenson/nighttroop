@@ -54,12 +54,12 @@ WHERE eid = ?;
 -- name: DeletePermanentGlucoseReadingByEID :execresult
 DELETE FROM glucose_readings WHERE eid = ?;
 
--- name: DeleteGlucoseReadingsByEIDs :execresult
+-- name: DeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE eid IN (sqlc.slice('eids'));
+WHERE type = ?;
 
--- name: DeletePermanentGlucoseReadingsByEIDs :execresult
+-- name: DeletePermanentGlucoseReadingsByType :execresult
 DELETE FROM glucose_readings
-WHERE eid IN (sqlc.slice('eids'));
+WHERE type = ?;

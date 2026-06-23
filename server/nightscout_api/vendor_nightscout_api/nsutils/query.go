@@ -78,25 +78,25 @@ func ParseV1(values url.Values, defaultDateField string) *Query {
 }
 
 // ParseV3 translates Nightscout API v3 query parameters into a storage query.
-func ParseV3(values url.Values) (*Query, error) {
+func ParseV3(values url.Values) (*Query, *HTTPError) {
 	query := DefaultQuery()
 	if values.Has("sort") && values.Has("sort$desc") {
-		return query, fmt.Errorf("Parameters sort and sort_desc cannot be combined")
+		return query, ErrSortParamsConflict
 	}
 	if limitRaw := values.Get("limit"); limitRaw != "" {
 		limit, err := strconv.Atoi(limitRaw)
 		if err != nil || limit <= 0 {
-			return query, fmt.Errorf("Parameter limit out of tolerance")
+			return query, ErrLimitOutOfTolerance
 		}
 		if limit > 1000 {
-			return query, fmt.Errorf("Parameter limit out of tolerance")
+			return query, ErrLimitOutOfTolerance
 		}
 		query.Limit = limit
 	}
 	if skipRaw := values.Get("skip"); skipRaw != "" {
 		skip, err := strconv.Atoi(skipRaw)
 		if err != nil || skip < 0 {
-			return query, fmt.Errorf("Parameter skip out of tolerance")
+			return query, ErrSkipOutOfTolerance
 		}
 		query.Skip = skip
 	}

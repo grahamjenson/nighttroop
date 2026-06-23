@@ -28,6 +28,6 @@ func (c FoodCollection) Delete(ctx context.Context, identifier string, permanent
 	return nil
 }
 
-func (c FoodCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
+func (c FoodCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }

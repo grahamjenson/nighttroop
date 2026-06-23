@@ -32,10 +32,10 @@ type AuthManager interface {
 //
 // Applications are expected to provide their own implementation.
 type Store interface {
-	Create(ctx context.Context, collection Collection, data map[string]any, subject string) (Record, *HTTPError)
+	Create(ctx context.Context, collection Collection, data map[string]any) (Record, *HTTPError)
 	Get(ctx context.Context, collection Collection, identifier string) (Record, *HTTPError)
 	Search(ctx context.Context, collection Collection, query *Query) ([]Record, *HTTPError)
-	Update(ctx context.Context, collection Collection, identifier string, patch map[string]any, subject string) (Record, *HTTPError)
-	Delete(ctx context.Context, collection Collection, identifier string, permanent bool, subject string) *HTTPError
-	DeleteMatching(ctx context.Context, collection Collection, query *Query, permanent bool, subject string) (int, *HTTPError)
+	Update(ctx context.Context, collection Collection, identifier string, patch map[string]any) (Record, *HTTPError)
+	Delete(ctx context.Context, collection Collection, identifier string, permanent bool) *HTTPError
+	DeleteType(ctx context.Context, collection Collection, typeString string, permanent bool) (int, *HTTPError)
 }

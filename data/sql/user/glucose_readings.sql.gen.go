@@ -8,7 +8,6 @@ package user
 import (
 	"context"
 	"database/sql"
-	"strings"
 )
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
@@ -105,25 +104,15 @@ func (q *Queries) DeleteGlucoseReadingByEID(ctx context.Context, eid string) (sq
 	return q.exec(ctx, q.deleteGlucoseReadingByEIDStmt, deleteGlucoseReadingByEID, eid)
 }
 
-const deleteGlucoseReadingsByEIDs = `-- name: DeleteGlucoseReadingsByEIDs :execresult
+const deleteGlucoseReadingsByType = `-- name: DeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE eid IN (/*SLICE:eids*/?)
+WHERE type = ?
 `
 
-func (q *Queries) DeleteGlucoseReadingsByEIDs(ctx context.Context, eids []string) (sql.Result, error) {
-	query := deleteGlucoseReadingsByEIDs
-	var queryParams []interface{}
-	if len(eids) > 0 {
-		for _, v := range eids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:eids*/?", strings.Repeat(",?", len(eids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:eids*/?", "NULL", 1)
-	}
-	return q.exec(ctx, nil, query, queryParams...)
+func (q *Queries) DeleteGlucoseReadingsByType(ctx context.Context, type_ string) (sql.Result, error) {
+	return q.exec(ctx, q.deleteGlucoseReadingsByTypeStmt, deleteGlucoseReadingsByType, type_)
 }
 
 const deletePermanentGlucoseReadingByEID = `-- name: DeletePermanentGlucoseReadingByEID :execresult
@@ -134,23 +123,13 @@ func (q *Queries) DeletePermanentGlucoseReadingByEID(ctx context.Context, eid st
 	return q.exec(ctx, q.deletePermanentGlucoseReadingByEIDStmt, deletePermanentGlucoseReadingByEID, eid)
 }
 
-const deletePermanentGlucoseReadingsByEIDs = `-- name: DeletePermanentGlucoseReadingsByEIDs :execresult
+const deletePermanentGlucoseReadingsByType = `-- name: DeletePermanentGlucoseReadingsByType :execresult
 DELETE FROM glucose_readings
-WHERE eid IN (/*SLICE:eids*/?)
+WHERE type = ?
 `
 
-func (q *Queries) DeletePermanentGlucoseReadingsByEIDs(ctx context.Context, eids []string) (sql.Result, error) {
-	query := deletePermanentGlucoseReadingsByEIDs
-	var queryParams []interface{}
-	if len(eids) > 0 {
-		for _, v := range eids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:eids*/?", strings.Repeat(",?", len(eids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:eids*/?", "NULL", 1)
-	}
-	return q.exec(ctx, nil, query, queryParams...)
+func (q *Queries) DeletePermanentGlucoseReadingsByType(ctx context.Context, type_ string) (sql.Result, error) {
+	return q.exec(ctx, q.deletePermanentGlucoseReadingsByTypeStmt, deletePermanentGlucoseReadingsByType, type_)
 }
 
 const getGlucoseReadingByEID = `-- name: GetGlucoseReadingByEID :one

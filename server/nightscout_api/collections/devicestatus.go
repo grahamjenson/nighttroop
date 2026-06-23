@@ -28,6 +28,6 @@ func (c DeviceStatusCollection) Delete(ctx context.Context, identifier string, p
 	return nil
 }
 
-func (c DeviceStatusCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }

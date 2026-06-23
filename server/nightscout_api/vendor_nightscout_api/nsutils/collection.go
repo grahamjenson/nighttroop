@@ -74,9 +74,9 @@ func (c Collection) IsTypeString(t string) bool {
 				return true
 			}
 		}
-	default:
-		return false
 	}
+
+	return false
 }
 
 // NormalizeData normalizes incoming Nightscout payloads into a consistent shape

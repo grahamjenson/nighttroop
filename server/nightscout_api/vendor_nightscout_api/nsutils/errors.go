@@ -37,6 +37,13 @@ var (
 	ErrBadJWT   = &HTTPError{Status: http.StatusUnauthorized, Message: "bad jwt"}
 )
 
+// Query Errors
+var (
+	ErrSortParamsConflict  = &HTTPError{Status: http.StatusBadRequest, Message: "Parameters sort and sort_desc cannot be combined"}
+	ErrLimitOutOfTolerance = &HTTPError{Status: http.StatusBadRequest, Message: "Parameter limit out of tolerance"}
+	ErrSkipOutOfTolerance  = &HTTPError{Status: http.StatusBadRequest, Message: "Parameter skip out of tolerance"}
+)
+
 // General Errors
 
 var (

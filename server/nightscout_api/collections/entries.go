@@ -149,24 +149,13 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 	return nil
 }
 
-func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
+func (c EntriesCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
-	records, err := c.Search(ctx, query)
-	if err != nil {
-		return 0, err
-	}
-	if len(records) == 0 {
-		return 0, nil
-	}
-	recordIDs := make([]string, len(records))
-	for i, record := range records {
-		recordIDs[i] = record.Identifier()
-	}
 
 	if permanent {
-		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByEIDs(ctx, recordIDs)
+		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, typeString)
 		if err != nil {
-			slog.Error("failed to permanently delete glucose readings by IDs", "error", err)
+			slog.Error("failed to permanently delete glucose readings by type", "error", err)
 			return 0, nsutils.ErrInternal
 		}
 		rowsAffected, err := res.RowsAffected()
@@ -176,7 +165,7 @@ func (c EntriesCollection) DeleteMatching(ctx context.Context, query *nsutils.Qu
 		}
 		return int(rowsAffected), nil
 	} else {
-		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingsByEIDs(ctx, recordIDs)
+		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingsByType(ctx, typeString)
 		if err != nil {
 			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
 			return 0, nsutils.ErrInternal

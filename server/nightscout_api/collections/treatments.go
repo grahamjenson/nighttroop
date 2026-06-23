@@ -77,7 +77,7 @@ func (c TreatmentCollection) Delete(ctx context.Context, identifier string, perm
 	return nil
 }
 
-func (c TreatmentCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
+func (c TreatmentCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }
 

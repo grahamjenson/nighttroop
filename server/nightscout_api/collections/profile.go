@@ -28,6 +28,6 @@ func (c ProfileCollection) Delete(ctx context.Context, identifier string, perman
 	return nil
 }
 
-func (c ProfileCollection) DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError) {
+func (c ProfileCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }

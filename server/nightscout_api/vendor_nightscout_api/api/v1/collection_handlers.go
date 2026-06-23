@@ -26,6 +26,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 				query.Filters = append(query.Filters, nsutils.Filter{Field: "_id", Op: "eq", Value: identifier_or_type})
 			}
 		}
+
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -37,7 +38,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 
 func Create(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -57,7 +58,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 				nsutils.WriteError(w, err)
 				return
 			}
-			record, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
+			record, err := dep.Store.Create(r.Context(), collection, doc)
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -75,7 +76,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 					nsutils.WriteError(w, err)
 					return
 				}
-				record, err := dep.Store.Create(r.Context(), collection, doc, identity.Name)
+				record, err := dep.Store.Create(r.Context(), collection, doc)
 				if err != nil {
 					nsutils.WriteError(w, err)
 					return
@@ -116,15 +117,29 @@ func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 }
 
 func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionDelete)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+		permanent := r.URL.Query().Get("permanent") == "true"
 
-}
+		identifier_or_type := chi.URLParam(r, "identifier_or_type")
+		if identifier_or_type != "" {
+			if collection.IsTypeString(identifier_or_type) {
+				dep.Store.DeleteType(r.Context(), collection, identifier_or_type, permanent)
+				return
+			} else {
+				err = dep.Store.Delete(r.Context(), collection, identifier_or_type, permanent)
+				if err != nil {
+					nsutils.WriteError(w, err)
+					return
+				}
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+		}
 
-func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
-}
-
-func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
-
-}
-
-func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+	}
 }

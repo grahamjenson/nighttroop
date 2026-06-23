@@ -45,14 +45,11 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Post("/{collection}/", Create(dep))
 
 	// DELETE
-	r.Delete("/{collection}", Delete(dep))
-	r.Delete("/{collection}.json", Delete(dep))
 	r.Delete("/{collection}/{identifier_or_type}", Delete(dep))
 	r.Delete("/{collection}/{identifier_or_type}.json", Delete(dep))
 
 	// Weird V1 Ones
-	r.Get("/echo/{collection}/{spec}.json", Echo(dep))
-	r.Get("/slice/{collection}/{spec}.json", Slice(dep))
-	r.Get("/times/{collection}/{spec}.json", Times(dep))
+	r.Get("/slice/{collection}/{field}", Slice(dep))
+	r.Get("/count/{collection}/where", Count(dep))
 
 }

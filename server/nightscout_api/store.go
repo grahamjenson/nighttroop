@@ -15,7 +15,7 @@ type CollectionStore interface {
 	Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError)
 	Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 	Delete(ctx context.Context, identifier string, permanent bool) *nsutils.HTTPError
-	DeleteMatching(ctx context.Context, query *nsutils.Query, permanent bool) (int, *nsutils.HTTPError)
+	DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError)
 }
 
 type NightTroopAPIStore struct {
@@ -26,7 +26,7 @@ type NightTroopAPIStore struct {
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, subject string) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any) (nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
@@ -74,7 +74,7 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 
 }
 
-func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, subject string) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
@@ -89,7 +89,7 @@ func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Co
 	return *record, nil
 }
 
-func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool, subject string) *nsutils.HTTPError {
+func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool) *nsutils.HTTPError {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.ErrInvalidCollection
@@ -97,12 +97,13 @@ func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Co
 	return collectionsStore.Delete(ctx, identifier, permanent)
 }
 
-func (nts *NightTroopAPIStore) DeleteMatching(ctx context.Context, collection nsutils.Collection, query *nsutils.Query, permanent bool, subject string) (int, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutils.Collection, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return 0, nsutils.ErrInvalidCollection
 	}
-	return collectionsStore.DeleteMatching(ctx, query, permanent)
+	return collectionsStore.DeleteType(ctx, typeString, permanent)
+
 }
 
 func withDefaultQuery(query *nsutils.Query) *nsutils.Query {
