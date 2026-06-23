@@ -1,5 +1,7 @@
 package nightscout
 
+import "encoding/json"
+
 type Food struct {
 	Identifier *string `json:"identifier,omitempty"`
 
@@ -21,15 +23,15 @@ type Food struct {
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
 
-	RawJSON string `json:"-"`
+	RawJSONData string `json:"-"`
 }
 
-func (e *Food) FromMap(m map[string]any) error {
-	return FromMap(m, e)
-}
-
-func (e *Food) ToMap() (map[string]any, error) {
-	return ToMap(e)
+func (t *Food) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+	t.RawJSONData = string(data)
+	return nil
 }
 
 type FoodUnit string

@@ -14,8 +14,12 @@ type Activity struct {
 	ID                    int64
 	Eid                   string
 	Name                  *string
-	Duration              int64
-	Calories              float64
+	Type                  *string
+	Notes                 *string
+	DurationMinutes       *int64
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64
@@ -92,8 +96,8 @@ type Food struct {
 	ID                    int64
 	Eid                   string
 	Name                  *string
-	Carbs                 float64
-	Calories              float64
+	Carbs                 *float64
+	Calories              *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64
@@ -135,7 +139,7 @@ type Identity struct {
 type Note struct {
 	ID                    int64
 	Eid                   string
-	Content               *string
+	Content               string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64

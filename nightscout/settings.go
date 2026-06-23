@@ -1,5 +1,7 @@
 package nightscout
 
+import "encoding/json"
+
 type Setting struct {
 	Identifier *string `json:"identifier,omitempty"`
 	Type       *string `json:"type,omitempty"`
@@ -9,13 +11,13 @@ type Setting struct {
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
 
-	RawJSON string `json:"-"`
+	RawJSONData string `json:"-"`
 }
 
-func (e *Setting) FromMap(m map[string]any) error {
-	return FromMap(m, e)
-}
-
-func (e *Setting) ToMap() (map[string]any, error) {
-	return ToMap(e)
+func (t *Setting) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+	t.RawJSONData = string(data)
+	return nil
 }

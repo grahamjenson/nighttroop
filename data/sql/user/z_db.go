@@ -141,8 +141,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetByEIDStmt, err = db.PrepareContext(ctx, getTempTargetByEID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTargetByEID: %w", err)
 	}
-	if q.updateGlucoseReadingByEIDStmt, err = db.PrepareContext(ctx, updateGlucoseReadingByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateGlucoseReadingByEID: %w", err)
+	if q.updateGlucoseReadingStmt, err = db.PrepareContext(ctx, updateGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateGlucoseReading: %w", err)
 	}
 	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
@@ -353,9 +353,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetByEIDStmt: %w", cerr)
 		}
 	}
-	if q.updateGlucoseReadingByEIDStmt != nil {
-		if cerr := q.updateGlucoseReadingByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateGlucoseReadingByEIDStmt: %w", cerr)
+	if q.updateGlucoseReadingStmt != nil {
+		if cerr := q.updateGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateGlucoseReadingStmt: %w", cerr)
 		}
 	}
 	if q.updateIdentityDateFlagsStmt != nil {
@@ -451,7 +451,7 @@ type Queries struct {
 	getProfileByEIDStmt                      *sql.Stmt
 	getTempBasalByEIDStmt                    *sql.Stmt
 	getTempTargetByEIDStmt                   *sql.Stmt
-	updateGlucoseReadingByEIDStmt            *sql.Stmt
+	updateGlucoseReadingStmt                 *sql.Stmt
 	updateIdentityDateFlagsStmt              *sql.Stmt
 	getSettingFromDBStmt                     *sql.Stmt
 	upsertSettingToDBStmt                    *sql.Stmt
@@ -500,7 +500,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileByEIDStmt:                      q.getProfileByEIDStmt,
 		getTempBasalByEIDStmt:                    q.getTempBasalByEIDStmt,
 		getTempTargetByEIDStmt:                   q.getTempTargetByEIDStmt,
-		updateGlucoseReadingByEIDStmt:            q.updateGlucoseReadingByEIDStmt,
+		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
 		updateIdentityDateFlagsStmt:              q.updateIdentityDateFlagsStmt,
 		getSettingFromDBStmt:                     q.getSettingFromDBStmt,
 		upsertSettingToDBStmt:                    q.upsertSettingToDBStmt,

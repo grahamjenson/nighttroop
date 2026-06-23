@@ -7,15 +7,38 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 	var userCreateActivityParams CreateActivityParams
 	userCreateActivityParams.Eid = source.Eid
 	userCreateActivityParams.OccurredAt = source.OccurredAt
+	userCreateActivityParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	if source.Name != nil {
 		xstring := *source.Name
 		userCreateActivityParams.Name = &xstring
 	}
-	userCreateActivityParams.Duration = source.Duration
-	userCreateActivityParams.Calories = source.Calories
+	if source.Type != nil {
+		xstring2 := *source.Type
+		userCreateActivityParams.Type = &xstring2
+	}
+	if source.Notes != nil {
+		xstring3 := *source.Notes
+		userCreateActivityParams.Notes = &xstring3
+	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		userCreateActivityParams.DurationMinutes = &xint64
+	}
+	if source.Calories != nil {
+		xint642 := *source.Calories
+		userCreateActivityParams.Calories = &xint642
+	}
+	if source.Steps != nil {
+		xint643 := *source.Steps
+		userCreateActivityParams.Steps = &xint643
+	}
+	if source.HeartRate != nil {
+		xint644 := *source.HeartRate
+		userCreateActivityParams.HeartRate = &xint644
+	}
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		userCreateActivityParams.RawJsonData = &xstring2
+		xstring4 := *source.RawJsonData
+		userCreateActivityParams.RawJsonData = &xstring4
 	}
 	userCreateActivityParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
@@ -110,8 +133,14 @@ func FoodToCreate(source Food) CreateFoodParams {
 		xstring := *source.Name
 		userCreateFoodParams.Name = &xstring
 	}
-	userCreateFoodParams.Carbs = source.Carbs
-	userCreateFoodParams.Calories = source.Calories
+	if source.Carbs != nil {
+		xfloat64 := *source.Carbs
+		userCreateFoodParams.Carbs = &xfloat64
+	}
+	if source.Calories != nil {
+		xfloat642 := *source.Calories
+		userCreateFoodParams.Calories = &xfloat642
+	}
 	if source.RawJsonData != nil {
 		xstring2 := *source.RawJsonData
 		userCreateFoodParams.RawJsonData = &xstring2
@@ -134,17 +163,29 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	userCreateGlucoseReadingParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateGlucoseReadingParams
 }
+func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
+	var userUpdateGlucoseReadingParams UpdateGlucoseReadingParams
+	pInt64 := source.OccurredAt
+	userUpdateGlucoseReadingParams.OccurredAt = &pInt64
+	pFloat64 := source.Value
+	userUpdateGlucoseReadingParams.Value = &pFloat64
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		userUpdateGlucoseReadingParams.RawJsonData = &xstring
+	}
+	pInt642 := source.UtcOffsetMinutes
+	userUpdateGlucoseReadingParams.UtcOffsetMinutes = &pInt642
+	userUpdateGlucoseReadingParams.Eid = source.Eid
+	return userUpdateGlucoseReadingParams
+}
 func NoteToCreate(source Note) CreateNoteParams {
 	var userCreateNoteParams CreateNoteParams
 	userCreateNoteParams.Eid = source.Eid
 	userCreateNoteParams.OccurredAt = source.OccurredAt
-	if source.Content != nil {
-		xstring := *source.Content
-		userCreateNoteParams.Content = &xstring
-	}
+	userCreateNoteParams.Content = source.Content
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		userCreateNoteParams.RawJsonData = &xstring2
+		xstring := *source.RawJsonData
+		userCreateNoteParams.RawJsonData = &xstring
 	}
 	userCreateNoteParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateNoteParams.CreatedByIdentityName = source.CreatedByIdentityName

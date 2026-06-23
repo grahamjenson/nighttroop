@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"nighttroop.t1d.nz/data/sql/user"
 )
 
 ////
@@ -44,105 +42,16 @@ type Treatment struct {
 	SrvCreated  *DateInt `json:"srvCreated"`
 	SrvModified *DateInt `json:"srvModified"`
 
-	RawJSON string `json:"-"`
+	RawJSONData string `json:"-"`
 }
 
-func (e *Treatment) FromMap(m map[string]any) error {
-	return FromMap(m, e)
-}
-
-func (e *Treatment) ToMap() (map[string]any, error) {
-	return ToMap(e)
-}
-
-func (e *Treatment) ToCarbDBModel() (*user.Carb, error) {
-	if e.Identifier == nil || e.Carbs == nil || e.Date == nil {
-		return nil, fmt.Errorf("missing required fields for DB model")
+func (t *Treatment) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
 	}
-
-	return &user.Carb{
-		Eid:              *e.Identifier,
-		Amount:           float64(*e.Carbs),
-		Type:             string(CarbCorrection),
-		RawJsonData:      &e.RawJSON,
-		UtcOffsetMinutes: e.UTCOffset.Int64(),
-		OccurredAt:       e.CreatedAt.Time().UnixMilli(),
-	}, nil
-}
-
-func (e *Treatment) ToBolusDBModel() (*user.Bolus, error) {
-	if e.Identifier == nil || e.Insulin == nil || e.Date == nil {
-		return nil, fmt.Errorf("missing required fields for DB model")
-	}
-
-	return &user.Bolus{
-		Eid:              *e.Identifier,
-		Value:            e.Insulin.Float64(),
-		Type:             string(CorrectionBolus),
-		RawJsonData:      &e.RawJSON,
-		UtcOffsetMinutes: e.UTCOffset.Int64(),
-		OccurredAt:       e.Date.Time().UnixMilli(),
-	}, nil
-}
-
-func (e *Treatment) ToTempTargetDBModel() (*user.TempTarget, error) {
-	if e.Identifier == nil || e.Insulin == nil || e.Date == nil {
-		return nil, fmt.Errorf("missing required fields for DB model")
-	}
-
-	return &user.TempTarget{
-		Eid:              *e.Identifier,
-		Hightarget:       e.TargetTop.Float64(),
-		Lowtarget:        e.TargetBottom.Float64(),
-		Start:            e.CreatedAt.Time().UnixMilli(),
-		Duration:         e.Duration.Int64(),
-		RawJsonData:      &e.RawJSON,
-		UtcOffsetMinutes: e.UTCOffset.Int64(),
-	}, nil
-}
-func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
-	e.Identifier = ptr(sgv.Eid)
-	eventType := TemporaryTarget
-	e.EventType = &eventType
-	e.TargetTop = ptr(FlexibleFloat64(sgv.Hightarget))
-	e.TargetBottom = ptr(FlexibleFloat64(sgv.Lowtarget))
-	dateInt := DateStringFromInt64(sgv.Start)
-	e.CreatedAt = &dateInt
-
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
-
+	t.RawJSONData = string(data)
 	return nil
 }
-
-func (e *Treatment) FromCarbDBModel(sgv *user.Carb) error {
-	e.Identifier = ptr(sgv.Eid)
-	eventType := CarbCorrection
-	e.EventType = &eventType
-	e.Carbs = ptr(FlexibleFloat64(sgv.Amount))
-	dateInt := DateStringFromInt64(sgv.OccurredAt)
-	e.CreatedAt = &dateInt
-
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
-
-	return nil
-}
-
-func (e *Treatment) FromBolusDBModel(sgv *user.Bolus) error {
-	e.Identifier = ptr(sgv.Eid)
-	eventType := CorrectionBolus
-	e.EventType = &eventType
-	e.Insulin = ptr(FlexibleFloat64(sgv.Value))
-	dateInt := DateInt(sgv.OccurredAt)
-	e.Date = &dateInt
-
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
-
-	return nil
-}
-
-////
-// Mappers
-////
 
 //"eventType": "Correction Bolus",
 // "eventType": "Temporary Target",

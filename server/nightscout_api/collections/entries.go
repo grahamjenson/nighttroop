@@ -18,7 +18,9 @@ type EntriesCollection struct{}
 func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	entryModel := &nightscout.Entry{}
-	err := entryModel.FromMap(data)
+
+	err := utils.FromMap(data, entryModel)
+
 	if err != nil {
 		slog.Error("failed to map data to entry model", "error", err)
 		return nil, nsutils.ErrInternal
@@ -88,24 +90,21 @@ func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]
 func (c EntriesCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 	entryModel := &nightscout.Entry{}
-	err := entryModel.FromMap(patch)
+	err := utils.FromMap(patch, entryModel)
 	if err != nil {
 		slog.Error("failed to map data to entry model", "error", err)
 		return nil, nsutils.ErrInternal
 	}
 
-	var value *float64
+	dbModel := entryModel.ToDBModel()
+	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
+	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
+
 	if entryModel.SGV != nil {
-		value = (*float64)(entryModel.SGV)
+		dbModel.Value = (float64)(*entryModel.SGV)
 	}
-	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReadingByEID(ctx, user.UpdateGlucoseReadingByEIDParams{
-		Eid:                   identifier,
-		OccurredAt:            entryModel.Date.Int64p(),
-		Value:                 value,
-		RawJsonData:           &entryModel.RawJSON,
-		CreatedByIdentityID:   &userContext.IdentityModel.ID,
-		CreatedByIdentityName: &userContext.IdentityModel.Name,
-	})
+
+	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReading(ctx, user.GlucoseReadingToUpdate(*dbModel))
 
 	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
@@ -190,7 +189,7 @@ func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
 		return nsutils.Record{}
 	}
 
-	entryMap, err := entryModel.ToMap()
+	entryMap, err := utils.ToMap(entryModel)
 	if err != nil {
 		return nsutils.Record{}
 	}

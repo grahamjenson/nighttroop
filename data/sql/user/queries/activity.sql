@@ -5,13 +5,18 @@
 INSERT INTO activity (
         eid,
         occurred_at,
+        utc_offset_minutes,
         name,
-        duration,
+        type,
+        notes,
+        duration_minutes,
         calories,
+        steps,
+        heart_rate,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 --------
 -- READ

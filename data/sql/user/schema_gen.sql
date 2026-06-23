@@ -2,8 +2,12 @@ CREATE TABLE activity (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     name TEXT CHECK(length(name) <= 64),
-    duration INTEGER NOT NULL,
-    calories REAL NOT NULL,
+    type TEXT CHECK(length(type) <= 32),
+    notes TEXT CHECK(length(notes) <= 1024),
+    duration_minutes INTEGER,
+    calories INTEGER,
+    steps INTEGER,
+    heart_rate INTEGER,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
@@ -101,8 +105,8 @@ CREATE TABLE food (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
     name TEXT CHECK(length(name) <= 64),
-    carbs REAL NOT NULL,
-    calories REAL NOT NULL,
+    carbs REAL,
+    calories REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
@@ -154,7 +158,7 @@ CREATE TABLE identities (
 CREATE TABLE note (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
-    content TEXT CHECK(length(content) <= 1024),
+    content TEXT CHECK(length(content) <= 1024) NOT NULL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly

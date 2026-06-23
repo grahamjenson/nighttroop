@@ -11,7 +11,7 @@ import (
 
 const allActivities = `-- name: AllActivities :many
 
-SELECT id, eid, name, duration, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
+SELECT id, eid, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
 `
 
 // ------
@@ -30,8 +30,12 @@ func (q *Queries) AllActivities(ctx context.Context) ([]*Activity, error) {
 			&i.ID,
 			&i.Eid,
 			&i.Name,
-			&i.Duration,
+			&i.Type,
+			&i.Notes,
+			&i.DurationMinutes,
 			&i.Calories,
+			&i.Steps,
+			&i.HeartRate,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -58,21 +62,31 @@ const createActivity = `-- name: CreateActivity :exec
 INSERT INTO activity (
         eid,
         occurred_at,
+        utc_offset_minutes,
         name,
-        duration,
+        type,
+        notes,
+        duration_minutes,
         calories,
+        steps,
+        heart_rate,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateActivityParams struct {
 	Eid                   string
 	OccurredAt            int64
+	UtcOffsetMinutes      int64
 	Name                  *string
-	Duration              int64
-	Calories              float64
+	Type                  *string
+	Notes                 *string
+	DurationMinutes       *int64
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
@@ -85,9 +99,14 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 	_, err := q.exec(ctx, q.createActivityStmt, createActivity,
 		arg.Eid,
 		arg.OccurredAt,
+		arg.UtcOffsetMinutes,
 		arg.Name,
-		arg.Duration,
+		arg.Type,
+		arg.Notes,
+		arg.DurationMinutes,
 		arg.Calories,
+		arg.Steps,
+		arg.HeartRate,
 		arg.RawJsonData,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
@@ -96,7 +115,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 }
 
 const getActivityByEID = `-- name: GetActivityByEID :one
-SELECT id, eid, name, duration, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity WHERE eid = ?
+SELECT id, eid, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity WHERE eid = ?
 `
 
 func (q *Queries) GetActivityByEID(ctx context.Context, eid string) (*Activity, error) {
@@ -106,8 +125,12 @@ func (q *Queries) GetActivityByEID(ctx context.Context, eid string) (*Activity, 
 		&i.ID,
 		&i.Eid,
 		&i.Name,
-		&i.Duration,
+		&i.Type,
+		&i.Notes,
+		&i.DurationMinutes,
 		&i.Calories,
+		&i.Steps,
+		&i.HeartRate,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,

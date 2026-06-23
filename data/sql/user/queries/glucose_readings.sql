@@ -29,14 +29,12 @@ SELECT * FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?;
 -- UPDATE
 --------
 
--- name: UpdateGlucoseReadingByEID :one
+-- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
     occurred_at = COALESCE(sqlc.narg(occurred_at), occurred_at),
     value = COALESCE(sqlc.narg(value), value),
     raw_json_data = COALESCE(sqlc.narg(raw_json_data), raw_json_data),
     utc_offset_minutes = COALESCE(sqlc.narg(utc_offset_minutes), utc_offset_minutes),
-    created_by_identity_id = COALESCE(sqlc.narg(created_by_identity_id), created_by_identity_id),
-    created_by_identity_name = COALESCE(sqlc.narg(created_by_identity_name), created_by_identity_name),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE eid = ?
 RETURNING *; 

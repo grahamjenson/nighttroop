@@ -112,7 +112,6 @@ func (c *Client) GetEntries(
 		if err := json.Unmarshal(raw, &entry); err != nil {
 			return nil, err
 		}
-		entry.RawJSON = string(raw)
 		entries = append(entries, entry)
 	}
 

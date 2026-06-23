@@ -71,6 +71,13 @@ func (i *FlexibleInt64) Int64() int64 {
 	return int64(*i)
 }
 
+func (i *FlexibleInt64) Int() int {
+	if i == nil {
+		return 0
+	}
+	return int(*i)
+}
+
 // //
 // Dates
 // //
@@ -97,12 +104,32 @@ func (d *DateString) Time() time.Time {
 	t, _ := time.Parse(time.RFC3339Nano, string(*d))
 	return t
 }
+func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
+	t := d.Time()
+	_, offsetSeconds := t.Zone()
+	dateInt := DateInt(t.UnixMilli())
+	offset := FlexibleInt64(int64(offsetSeconds) / 60)
+	return &dateInt, &offset
+}
+
 func DateStringFromTime(t time.Time) DateString {
 	return DateString(t.Format(time.RFC3339Nano))
 }
 
 func DateStringFromInt64(millis int64) DateString {
 	return DateStringFromTime(time.UnixMilli(millis))
+}
+
+func DateStringFromDateIntAndUTCOffset(dateInt DateInt, offsetMinutes FlexibleInt64) DateString {
+	t := time.UnixMilli(dateInt.Int64()).In(LocationFromUTCOffsetMinutes(offsetMinutes.Int()))
+	return DateStringFromTime(t)
+}
+
+func LocationFromUTCOffsetMinutes(offsetMin int) *time.Location {
+	return time.FixedZone(
+		fmt.Sprintf("UTC%+d", offsetMin),
+		offsetMin*60,
+	)
 }
 
 type DateInt int64

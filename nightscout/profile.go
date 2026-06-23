@@ -19,15 +19,15 @@ type Profile struct {
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
 
-	RawJSON string `json:"-"`
+	RawJSONData string `json:"-"`
 }
 
-func (e *Profile) FromMap(m map[string]any) error {
-	return FromMap(m, e)
-}
-
-func (e *Profile) ToMap() (map[string]any, error) {
-	return ToMap(e)
+func (t *Profile) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+	t.RawJSONData = string(data)
+	return nil
 }
 
 type ProfileSettings struct {

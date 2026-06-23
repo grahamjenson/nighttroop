@@ -71,8 +71,8 @@ type CreateFoodParams struct {
 	Eid                   string
 	OccurredAt            int64
 	Name                  *string
-	Carbs                 float64
-	Calories              float64
+	Carbs                 *float64
+	Calories              *float64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string

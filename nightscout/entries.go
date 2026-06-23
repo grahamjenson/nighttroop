@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"nighttroop.t1d.nz/data/sql/user"
 )
 
 ////
@@ -45,47 +43,14 @@ type Entry struct {
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
 
-	RawJSON string `json:"-"`
+	RawJSONData string `json:"-"`
 }
 
-////
-// Mappers
-////
-
-func (e *Entry) FromMap(m map[string]any) error {
-	return FromMap(m, e)
-}
-
-func (e *Entry) ToMap() (map[string]any, error) {
-	return ToMap(e)
-}
-
-func (e *Entry) ToDBModel() *user.GlucoseReading {
-	return &user.GlucoseReading{
-		Eid:                   *e.Identifier,
-		Value:                 float64(*e.SGV),
-		Type:                  string(SGVType),
-		RawJsonData:           &e.RawJSON,
-		UtcOffsetMinutes:      e.UTCOffset.Int64(),
-		OccurredAt:            e.Date.Time().UnixMilli(),
-		CreatedByIdentityID:   0,  // This will need to be set by the caller based on the user context
-		CreatedByIdentityName: "", // This will need to be set by the caller based on the user context
+func (t *Entry) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
 	}
-}
-
-func (e *Entry) FromDBModel(sgv *user.GlucoseReading) error {
-	e.Identifier = ptr(sgv.Eid)
-	entryType := EntryType(sgv.Type)
-	e.Type = &entryType
-	e.SGV = ptr(FlexibleFloat64(sgv.Value))
-	dateInt := DateInt(sgv.OccurredAt)
-	e.Date = &dateInt
-	dateString := DateStringFromInt64(sgv.OccurredAt)
-	e.DateString = &dateString
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
-	device := fmt.Sprintf("%d", sgv.CreatedByIdentityID)
-	e.Device = &device
-
+	t.RawJSONData = string(data)
 	return nil
 }
 

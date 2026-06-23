@@ -3,4 +3,37 @@
 
 package nightscout
 
+import user "nighttroop.t1d.nz/data/sql/user"
+
 type MapConverterImpl struct{}
+
+func (c *MapConverterImpl) ActivityToCreate(source Activity) user.CreateActivityParams {
+	var userCreateActivityParams user.CreateActivityParams
+	if source.Identifier != nil {
+		userCreateActivityParams.Eid = *source.Identifier
+	}
+	if source.Date != nil {
+		userCreateActivityParams.OccurredAt = int64(*source.Date)
+	}
+	if source.UtcOffsetMinutes != nil {
+		userCreateActivityParams.UtcOffsetMinutes = c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+	}
+	if source.Name != nil {
+		xstring := *source.Name
+		userCreateActivityParams.Name = &xstring
+	}
+	if source.Duration != nil {
+		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		userCreateActivityParams.Duration = &xint64
+	}
+	if source.Calories != nil {
+		xfloat64 := float64(*source.Calories)
+		userCreateActivityParams.Calories = &xfloat64
+	}
+	pString := source.RawJsonData
+	userCreateActivityParams.RawJsonData = &pString
+	return userCreateActivityParams
+}
+func (c *MapConverterImpl) nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
+	return int64(source)
+}

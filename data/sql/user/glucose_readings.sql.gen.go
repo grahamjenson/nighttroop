@@ -160,41 +160,35 @@ func (q *Queries) GetGlucoseReadingByEID(ctx context.Context, eid string) (*Gluc
 	return &i, err
 }
 
-const updateGlucoseReadingByEID = `-- name: UpdateGlucoseReadingByEID :one
+const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
 
 UPDATE glucose_readings SET
     occurred_at = COALESCE(?2, occurred_at),
     value = COALESCE(?3, value),
     raw_json_data = COALESCE(?4, raw_json_data),
     utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
-    created_by_identity_id = COALESCE(?6, created_by_identity_id),
-    created_by_identity_name = COALESCE(?7, created_by_identity_name),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE eid = ?
 RETURNING id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
-type UpdateGlucoseReadingByEIDParams struct {
-	OccurredAt            *int64
-	Value                 *float64
-	RawJsonData           *string
-	UtcOffsetMinutes      *int64
-	CreatedByIdentityID   *int64
-	CreatedByIdentityName *string
-	Eid                   string
+type UpdateGlucoseReadingParams struct {
+	OccurredAt       *int64
+	Value            *float64
+	RawJsonData      *string
+	UtcOffsetMinutes *int64
+	Eid              string
 }
 
 // ------
 // UPDATE
 // ------
-func (q *Queries) UpdateGlucoseReadingByEID(ctx context.Context, arg UpdateGlucoseReadingByEIDParams) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.updateGlucoseReadingByEIDStmt, updateGlucoseReadingByEID,
+func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseReadingParams) (*GlucoseReading, error) {
+	row := q.queryRow(ctx, q.updateGlucoseReadingStmt, updateGlucoseReading,
 		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
 		arg.UtcOffsetMinutes,
-		arg.CreatedByIdentityID,
-		arg.CreatedByIdentityName,
 		arg.Eid,
 	)
 	var i GlucoseReading

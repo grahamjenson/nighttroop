@@ -1,27 +1,49 @@
 package nightscout
 
+import "encoding/json"
+
 type Activity struct {
 	Identifier *string `json:"identifier"`
 
-	CreatedAt    *DateString      `json:"created_at"`   // ISO 8601 string
-	ActivityType *string          `json:"activityType"` // Type of activity
-	Duration     *FlexibleFloat64 `json:"duration"`     // Duration in minutes
-	Steps        *FlexibleFloat64 `json:"steps"`        // Step count
-	HeartRate    *FlexibleFloat64 `json:"heartRate"`    // Heart rate
-	Notes        *string          `json:"notes"`        // Notes
+	Name *string `json:"name,omitempty"` // Name of the activity
 
-	// API v3 additions
+	ActivityType *string        `json:"activityType"` // Type of activity
+	Duration     *FlexibleInt64 `json:"duration"`     // Duration in minutes
+	Steps        *FlexibleInt64 `json:"steps"`        // Step count
+	Calories     *FlexibleInt64 `json:"calories"`     // Calories burned
+	HeartRate    *FlexibleInt64 `json:"heartRate"`    // Heart rate
+	Notes        *string        `json:"notes"`        // Notes
 
-	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
-	SrvModified *DateInt `json:"srvModified,omitempty"`
+	// Date fields
+	CreatedAt   *DateString `json:"created_at"` // ISO 8601 string
+	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
+	SrvModified *DateInt    `json:"srvModified,omitempty"`
 
-	RawJSON string `json:"-"`
+	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
+	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+
+	RawJsonData string `json:"-"`
 }
 
-func (e *Activity) FromMap(m map[string]any) error {
-	return FromMap(m, e)
+func (t *Activity) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+	t.RawJsonData = string(data)
+	if t.CreatedAt != nil {
+		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+	}
+
+	return nil
 }
 
-func (e *Activity) ToMap() (map[string]any, error) {
-	return ToMap(e)
+func (t *Activity) MarshalJSON() ([]byte, error) {
+
+	type Alias Activity
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	})
+
 }

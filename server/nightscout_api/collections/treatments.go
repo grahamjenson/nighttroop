@@ -18,7 +18,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	userContext := httputils.GetUserContext(ctx)
 
 	treatmentModel := &nightscout.Treatment{}
-	err := treatmentModel.FromMap(data)
+	err := utils.FromMap(data, treatmentModel)
 	if err != nil {
 		slog.Error("failed to map data to treatment model", "error", err)
 		return nil, nsutils.ErrInternal
@@ -30,7 +30,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 		err = userContext.UserDB.Queries.CreateCarb(ctx, user.CreateCarbParams{
 			Eid:                   externalID,
 			Amount:                treatmentModel.Carbs.Float64(),
-			RawJsonData:           &treatmentModel.RawJSON,
+			RawJsonData:           &treatmentModel.RawJSONData,
 			CreatedByIdentityName: userContext.IdentityModel.Name,
 			CreatedByIdentityID:   userContext.IdentityModel.ID,
 		})
@@ -92,7 +92,7 @@ func CarbsToRecord(carbs *user.Carb) nsutils.Record {
 		return nsutils.Record{}
 	}
 
-	treatmentMap, err := treatmentModel.ToMap()
+	treatmentMap, err := utils.ToMap(treatmentModel)
 	if err != nil {
 		return nsutils.Record{}
 	}

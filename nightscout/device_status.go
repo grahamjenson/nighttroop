@@ -1,9 +1,10 @@
 package nightscout
 
+import "encoding/json"
+
 type DeviceStatus struct {
-	Identifier *string     `json:"identifier,omitempty"`
-	Device     *string     `json:"device,omitempty"`
-	CreatedAt  *DateString `json:"created_at,omitempty"`
+	Identifier *string `json:"identifier,omitempty"`
+	Device     *string `json:"device,omitempty"`
 
 	// Uploader status
 	Uploader *UploaderStatus `json:"uploader,omitempty"`
@@ -17,20 +18,20 @@ type DeviceStatus struct {
 	// OpenAPS specific
 	OpenAPS *LoopStatus `json:"openaps,omitempty"`
 
-	// API v3 additions
+	// Date Fields
+	CreatedAt   *DateString `json:"created_at,omitempty"`
+	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
+	SrvModified *DateInt    `json:"srvModified,omitempty"`
 
-	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
-	SrvModified *DateInt `json:"srvModified,omitempty"`
-
-	RawJSON string `json:"-"`
+	RawJSONData string `json:"-"`
 }
 
-func (e *DeviceStatus) FromMap(m map[string]any) error {
-	return FromMap(m, e)
-}
-
-func (e *DeviceStatus) ToMap() (map[string]any, error) {
-	return ToMap(e)
+func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+	t.RawJSONData = string(data)
+	return nil
 }
 
 type UploaderStatus struct {
