@@ -14,6 +14,10 @@ import (
 // goverter:output:file ./z_converters.go
 type MapConverter interface {
 
+	///////
+	// ACTIVITIES
+	///////
+
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore CreatedByIdentityID CreatedByIdentityName
 	// goverter:map ActivityType Type
@@ -38,12 +42,16 @@ type MapConverter interface {
 	// goverter:map UpdatedAt SrvModified
 	DBModelToActivity(source user.Activity) Activity
 
+	///////
+	// ENTRIES
+	///////
+
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:map Date OccurredAt
 	// goverter:context idPrefix
 	// goverter:context createdByIdentityID
 	// goverter:context createdByIdentityName
 	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	EntryToCreate(source Entry, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateGlucoseReadingParams
@@ -65,7 +73,64 @@ type MapConverter interface {
 	// goverter:map UpdatedAt SrvModified
 	// goverter:map . DateString | GlucoseReadingDateStringFromDateIntAndUTCOffset
 	DBModelToEntry(source user.GlucoseReading) Entry
+
+	///////
+	// TREATMENTS
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
+	// goverter:map  Insulin Value
+	TreatmentToCreateBolus(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateBolusParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
+	// goverter:map  Carbs Amount
+	TreatmentToCreateCarb(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateCarbParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date Start
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  . Value | TempBasalValue
+	// goverter:map Duration DurationMinutes
+	TreatmentToCreateTempBasal(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempBasalParams
+
+	// TreatmentToCreateTempTarget(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempTargetParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  Notes Content
+	TreatmentToCreateNote(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateNoteParams
 }
+
+// //
+// Custom Converter Methods
+// //
 
 // goverter:context idPrefix
 func AssignID(date *DateInt, idPrefix string) string {
@@ -82,6 +147,7 @@ func AssignCreatedByID(createdByIdentityID int64) int64 {
 	return createdByIdentityID
 }
 
+// GlucoseReading
 func GlucoseReadingTypeToValue(gr user.GlucoseReading) *FlexibleFloat64 {
 	switch gr.Type {
 	case "sgv":
@@ -95,6 +161,47 @@ func GlucoseReadingTypeToValue(gr user.GlucoseReading) *FlexibleFloat64 {
 func GlucoseReadingDateStringFromDateIntAndUTCOffset(gr user.GlucoseReading) *DateString {
 	ds := DateStringFromDateIntAndUTCOffset(DateInt(gr.OccurredAt), FlexibleInt64(gr.UtcOffsetMinutes))
 	return &ds
+}
+
+// Treatments
+
+func TempBasalValue(t Treatment) float64 {
+	if t.Rate != nil {
+		return float64(*t.Rate)
+	}
+	if t.Absolute != nil {
+		return float64(*t.Absolute)
+	}
+	// TODO handle t.Percent
+	return 0
+}
+
+// /
+func TreatmentTypeToDBType(t *TreatmentEventType) string {
+	if t == nil {
+		return ""
+	}
+
+	switch *t {
+	case CorrectionBolus:
+		return "bolus"
+	case ComboBolus:
+		return "combo_bolus"
+	case TemporaryTarget:
+		return "temp_target"
+	case MealBolus:
+		return "meal_bolus"
+	case TempBasal:
+		return "temp_basal"
+	case Note:
+		return "note"
+	case ProfileSwitch:
+		return "profile_switch"
+	case CarbCorrection:
+		return "carb_correction"
+	default:
+		return "unknown"
+	}
 }
 
 // ///
@@ -138,10 +245,10 @@ func (e *Treatment) ToTempTargetDBModel() (*user.TempTarget, error) {
 
 	return &user.TempTarget{
 		ID:               *e.Identifier,
-		Hightarget:       e.TargetTop.Float64(),
-		Lowtarget:        e.TargetBottom.Float64(),
+		HighTarget:       e.TargetTop.Float64(),
+		LowTarget:        e.TargetBottom.Float64(),
 		Start:            e.CreatedAt.Time().UnixMilli(),
-		Duration:         e.Duration.Int64(),
+		DurationMinutes:  e.Duration.Int64(),
 		RawJsonData:      &e.RawJsonData,
 		UtcOffsetMinutes: e.UtcOffsetMinutes.Int64(),
 	}, nil
@@ -150,8 +257,8 @@ func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
 	e.Identifier = ptr(sgv.ID)
 	eventType := TemporaryTarget
 	e.EventType = &eventType
-	e.TargetTop = ptr(FlexibleFloat64(sgv.Hightarget))
-	e.TargetBottom = ptr(FlexibleFloat64(sgv.Lowtarget))
+	e.TargetTop = ptr(FlexibleFloat64(sgv.HighTarget))
+	e.TargetBottom = ptr(FlexibleFloat64(sgv.LowTarget))
 
 	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 

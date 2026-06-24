@@ -6,8 +6,8 @@
 INSERT INTO profile (
     id,
     name,
-    START,
-    duration,
+    start,
+    duration_minutes,
     source,
     percent,
     dia,
@@ -28,7 +28,7 @@ INSERT INTO profile (
 --------
 
 -- name: AllProfiles :many
-SELECT * FROM profile ORDER BY occurred_at DESC;
+SELECT * FROM profile ORDER BY start DESC;
 
 
 -- name: GetProfile :one

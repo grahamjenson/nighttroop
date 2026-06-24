@@ -145,7 +145,7 @@ type Profile struct {
 	ID                       string
 	Name                     *string
 	Start                    *int64
-	Duration                 *int64
+	DurationMinutes          *int64
 	Source                   *string
 	Percent                  *int64
 	Dia                      *int64
@@ -181,12 +181,11 @@ type SqliteSequence struct {
 type TempBasal struct {
 	ID                    string
 	Start                 int64
-	Duration              int64
+	DurationMinutes       int64
 	Value                 float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64
-	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -196,13 +195,12 @@ type TempBasal struct {
 type TempTarget struct {
 	ID                    string
 	Start                 int64
-	Duration              int64
-	Hightarget            float64
-	Lowtarget             float64
+	DurationMinutes       int64
+	HighTarget            float64
+	LowTarget             float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      int64
-	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string

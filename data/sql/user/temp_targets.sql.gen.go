@@ -12,7 +12,7 @@ import (
 const allTempTargets = `-- name: AllTempTargets :many
 
 
-SELECT id, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY occurred_at DESC
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY start DESC
 `
 
 // ------
@@ -30,13 +30,12 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Start,
-			&i.Duration,
-			&i.Hightarget,
-			&i.Lowtarget,
+			&i.DurationMinutes,
+			&i.HighTarget,
+			&i.LowTarget,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
-			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
@@ -61,24 +60,22 @@ const createTempTarget = `-- name: CreateTempTarget :exec
 INSERT INTO temp_targets (
     id, 
     start, 
-    duration, 
-    highTarget, 
-    lowTarget,
-    occurred_at,
+    duration_minutes, 
+    high_target, 
+    low_target,
     raw_json_data, 
     created_by_identity_id,
     created_by_identity_name
     ) 
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateTempTargetParams struct {
 	ID                    string
 	Start                 int64
-	Duration              int64
-	Hightarget            float64
-	Lowtarget             float64
-	OccurredAt            int64
+	DurationMinutes       int64
+	HighTarget            float64
+	LowTarget             float64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
@@ -91,10 +88,9 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 	_, err := q.exec(ctx, q.createTempTargetStmt, createTempTarget,
 		arg.ID,
 		arg.Start,
-		arg.Duration,
-		arg.Hightarget,
-		arg.Lowtarget,
-		arg.OccurredAt,
+		arg.DurationMinutes,
+		arg.HighTarget,
+		arg.LowTarget,
 		arg.RawJsonData,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
@@ -103,7 +99,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 }
 
 const getTempTarget = `-- name: GetTempTarget :one
-SELECT id, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
 `
 
 func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, error) {
@@ -112,13 +108,12 @@ func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, er
 	err := row.Scan(
 		&i.ID,
 		&i.Start,
-		&i.Duration,
-		&i.Hightarget,
-		&i.Lowtarget,
+		&i.DurationMinutes,
+		&i.HighTarget,
+		&i.LowTarget,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,

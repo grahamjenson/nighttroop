@@ -63,6 +63,7 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 	userCreateCarbParams.ID = source.ID
 	userCreateCarbParams.OccurredAt = source.OccurredAt
 	userCreateCarbParams.Amount = source.Amount
+	userCreateCarbParams.Type = source.Type
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
 		userCreateCarbParams.RawJsonData = &xstring
@@ -197,9 +198,9 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 		xint64 := *source.Start
 		userCreateProfileParams.Start = &xint64
 	}
-	if source.Duration != nil {
-		xint642 := *source.Duration
-		userCreateProfileParams.Duration = &xint642
+	if source.DurationMinutes != nil {
+		xint642 := *source.DurationMinutes
+		userCreateProfileParams.DurationMinutes = &xint642
 	}
 	if source.Source != nil {
 		xstring2 := *source.Source
@@ -250,9 +251,8 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var userCreateTempBasalParams CreateTempBasalParams
 	userCreateTempBasalParams.ID = source.ID
 	userCreateTempBasalParams.Start = source.Start
-	userCreateTempBasalParams.Duration = source.Duration
+	userCreateTempBasalParams.DurationMinutes = source.DurationMinutes
 	userCreateTempBasalParams.Value = source.Value
-	userCreateTempBasalParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
 		userCreateTempBasalParams.RawJsonData = &xstring
@@ -265,10 +265,9 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	var userCreateTempTargetParams CreateTempTargetParams
 	userCreateTempTargetParams.ID = source.ID
 	userCreateTempTargetParams.Start = source.Start
-	userCreateTempTargetParams.Duration = source.Duration
-	userCreateTempTargetParams.Hightarget = source.Hightarget
-	userCreateTempTargetParams.Lowtarget = source.Lowtarget
-	userCreateTempTargetParams.OccurredAt = source.OccurredAt
+	userCreateTempTargetParams.DurationMinutes = source.DurationMinutes
+	userCreateTempTargetParams.HighTarget = source.HighTarget
+	userCreateTempTargetParams.LowTarget = source.LowTarget
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
 		userCreateTempTargetParams.RawJsonData = &xstring

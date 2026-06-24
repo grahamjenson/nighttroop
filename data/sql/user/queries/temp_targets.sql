@@ -12,15 +12,14 @@
 INSERT INTO temp_targets (
     id, 
     start, 
-    duration, 
-    highTarget, 
-    lowTarget,
-    occurred_at,
+    duration_minutes, 
+    high_target, 
+    low_target,
     raw_json_data, 
     created_by_identity_id,
     created_by_identity_name
     ) 
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
 
 
 --------
@@ -29,7 +28,7 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 
 -- name: AllTempTargets :many
-SELECT * FROM temp_targets ORDER BY occurred_at DESC;
+SELECT * FROM temp_targets ORDER BY start DESC;
 
 -- name: GetTempTarget :one
 SELECT * FROM temp_targets WHERE id = ?;

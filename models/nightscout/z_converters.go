@@ -156,6 +156,69 @@ func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
 	}
 	return userUpdateGlucoseReadingParams
 }
+func TreatmentToCreateBolus(source Treatment, context string, context2 int64, context3 string) *user.CreateBolusParams {
+	var userCreateBolusParams user.CreateBolusParams
+	userCreateBolusParams.ID = AssignID(source.Date, context3)
+	if source.Date != nil {
+		userCreateBolusParams.OccurredAt = int64(*source.Date)
+	}
+	if source.Insulin != nil {
+		userCreateBolusParams.Value = float64(*source.Insulin)
+	}
+	userCreateBolusParams.Type = TreatmentTypeToDBType(source.EventType)
+	pString := source.RawJsonData
+	userCreateBolusParams.RawJsonData = &pString
+	userCreateBolusParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	userCreateBolusParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	return &userCreateBolusParams
+}
+func TreatmentToCreateCarb(source Treatment, context string, context2 int64, context3 string) *user.CreateCarbParams {
+	var userCreateCarbParams user.CreateCarbParams
+	userCreateCarbParams.ID = AssignID(source.Date, context3)
+	if source.Date != nil {
+		userCreateCarbParams.OccurredAt = int64(*source.Date)
+	}
+	if source.Carbs != nil {
+		userCreateCarbParams.Amount = float64(*source.Carbs)
+	}
+	userCreateCarbParams.Type = TreatmentTypeToDBType(source.EventType)
+	pString := source.RawJsonData
+	userCreateCarbParams.RawJsonData = &pString
+	userCreateCarbParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	userCreateCarbParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	return &userCreateCarbParams
+}
+func TreatmentToCreateNote(source Treatment, context string, context2 int64, context3 string) *user.CreateNoteParams {
+	var userCreateNoteParams user.CreateNoteParams
+	userCreateNoteParams.ID = AssignID(source.Date, context3)
+	if source.Date != nil {
+		userCreateNoteParams.OccurredAt = int64(*source.Date)
+	}
+	if source.Notes != nil {
+		userCreateNoteParams.Content = *source.Notes
+	}
+	pString := source.RawJsonData
+	userCreateNoteParams.RawJsonData = &pString
+	userCreateNoteParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	userCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	return &userCreateNoteParams
+}
+func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64, context3 string) *user.CreateTempBasalParams {
+	var userCreateTempBasalParams user.CreateTempBasalParams
+	userCreateTempBasalParams.ID = AssignID(source.Date, context3)
+	if source.Date != nil {
+		userCreateTempBasalParams.Start = int64(*source.Date)
+	}
+	if source.Duration != nil {
+		userCreateTempBasalParams.DurationMinutes = nightscoutFlexibleInt64ToInt64(*source.Duration)
+	}
+	userCreateTempBasalParams.Value = TempBasalValue(source)
+	pString := source.RawJsonData
+	userCreateTempBasalParams.RawJsonData = &pString
+	userCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	userCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	return &userCreateTempBasalParams
+}
 func nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
 	return int64(source)
 }

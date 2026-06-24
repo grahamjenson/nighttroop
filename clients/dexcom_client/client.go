@@ -23,8 +23,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -240,86 +238,14 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcom.EGV, erro
 	out := make([]dexcom.EGV, 0, len(items))
 
 	for _, raw := range items {
-		var r dexcomEGVResponse
+		var r dexcom.EGV
 		if err := json.Unmarshal(raw, &r); err != nil {
 			slog.Error("Error unmarshalling Dexcom response", "error", err, "raw", string(raw))
 			continue
 		}
 
-		systemTime, err := parseDexcomTime(r.ST)
-		if err != nil {
-			slog.Error("Error parsing Dexcom system time", "error", err, "raw_time", r.ST)
-		}
-		displayTime, err := parseDexcomTime(r.DT)
-		if err != nil {
-			slog.Error("Error parsing Dexcom display time", "error", err, "raw_time", r.DT)
-		}
-
-		out = append(out, dexcom.EGV{
-			Value:       r.Value,
-			SystemTime:  systemTime,
-			DisplayTime: displayTime,
-			RawJson:     string(raw),
-		})
+		out = append(out, r)
 	}
 
 	return out, nil
-}
-
-type dexcomEGVResponse struct {
-	WT    string `json:"WT"`
-	ST    string `json:"ST"`
-	DT    string `json:"DT"`
-	Value int    `json:"Value"`
-}
-
-// parseDexcomTime parses Dexcom's weird /Date(1234567890)/ format.
-var dateRe = regexp.MustCompile(`^Date\((\d+)(?:([+-]\d{4}))?\)$`)
-
-// ParseDate parses:
-//
-//	Date(1780533499468)
-//	Date(1780533499468+1200)
-//	Date(1780533499468-0500)
-func parseDexcomTime(s string) (time.Time, error) {
-	matches := dateRe.FindStringSubmatch(s)
-	if matches == nil {
-		return time.Time{}, fmt.Errorf("invalid date format: %q", s)
-	}
-
-	ms, err := strconv.ParseInt(matches[1], 10, 64)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid timestamp: %w", err)
-	}
-
-	t := time.UnixMilli(ms)
-
-	// No timezone offset supplied.
-	if matches[2] == "" {
-		return t.UTC(), nil
-	}
-
-	offsetStr := matches[2]
-
-	sign := 1
-	if offsetStr[0] == '-' {
-		sign = -1
-	}
-
-	hours, err := strconv.Atoi(offsetStr[1:3])
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	minutes, err := strconv.Atoi(offsetStr[3:5])
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	offsetSeconds := sign * ((hours * 3600) + (minutes * 60))
-
-	loc := time.FixedZone(offsetStr, offsetSeconds)
-
-	// Interpret the epoch instant in the supplied timezone.
-	return t.In(loc), nil
 }

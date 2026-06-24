@@ -6,21 +6,20 @@
 INSERT INTO temp_basals (
         id,
         start,
-        duration,
+        duration_minutes,
         value,
-        occurred_at,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
     )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?);
 
 --------
 -- READ
 --------
 
 -- name: AllTempBasals :many
-SELECT * FROM temp_basals ORDER BY occurred_at DESC;
+SELECT * FROM temp_basals ORDER BY start DESC;
 
 
 -- name: GetTempBasal :one

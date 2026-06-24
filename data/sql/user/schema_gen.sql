@@ -170,8 +170,8 @@ CREATE TABLE profile (
     name TEXT CHECK(length(name) <= 64),
     
     -- Date stuff
-    START INTEGER,
-    duration INTEGER,
+    start INTEGER,
+    duration_minutes INTEGER,
     
     source TEXT CHECK(length(source) <= 64),
     percent INTEGER,
@@ -209,14 +209,13 @@ CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     start INTEGER NOT NULL,
-    duration INTEGER NOT NULL,
+    duration_minutes INTEGER NOT NULL,
     value REAL NOT NULL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
     utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -228,15 +227,14 @@ CREATE TABLE temp_targets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     start INTEGER NOT NULL,
-    duration INTEGER NOT NULL,
-    highTarget REAL NOT NULL,
-    lowTarget REAL NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    high_target REAL NOT NULL,
+    low_target REAL NOT NULL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
     deleted_at INTEGER,
     utc_offset_minutes INTEGER NOT NULL DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)

@@ -29,6 +29,7 @@ type Treatment struct {
 	// Treatment-specific fields
 	Profile      *string          `json:"profile"`
 	Percentage   *FlexibleFloat64 `json:"percentage"`
+	Rate         *FlexibleFloat64 `json:"rate"`
 	Absolute     *FlexibleFloat64 `json:"absolute"`
 	Reason       *string          `json:"reason"`
 	TargetTop    *FlexibleFloat64 `json:"targetTop"`

@@ -11,7 +11,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY occurred_at DESC
+SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY start DESC
 `
 
 // ------
@@ -29,12 +29,11 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Start,
-			&i.Duration,
+			&i.DurationMinutes,
 			&i.Value,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
-			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
@@ -58,22 +57,20 @@ const createTempBasal = `-- name: CreateTempBasal :exec
 INSERT INTO temp_basals (
         id,
         start,
-        duration,
+        duration_minutes,
         value,
-        occurred_at,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
     )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateTempBasalParams struct {
 	ID                    string
 	Start                 int64
-	Duration              int64
+	DurationMinutes       int64
 	Value                 float64
-	OccurredAt            int64
 	RawJsonData           *string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
@@ -86,9 +83,8 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 	_, err := q.exec(ctx, q.createTempBasalStmt, createTempBasal,
 		arg.ID,
 		arg.Start,
-		arg.Duration,
+		arg.DurationMinutes,
 		arg.Value,
-		arg.OccurredAt,
 		arg.RawJsonData,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
@@ -97,7 +93,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasal = `-- name: GetTempBasal :one
-SELECT id, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
+SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
 `
 
 func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, error) {
@@ -106,12 +102,11 @@ func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, erro
 	err := row.Scan(
 		&i.ID,
 		&i.Start,
-		&i.Duration,
+		&i.DurationMinutes,
 		&i.Value,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,

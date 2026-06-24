@@ -11,7 +11,7 @@ import (
 
 const allProfiles = `-- name: AllProfiles :many
 
-SELECT id, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
+SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY start DESC
 `
 
 // ------
@@ -30,7 +30,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 			&i.ID,
 			&i.Name,
 			&i.Start,
-			&i.Duration,
+			&i.DurationMinutes,
 			&i.Source,
 			&i.Percent,
 			&i.Dia,
@@ -67,8 +67,8 @@ const createProfile = `-- name: CreateProfile :exec
 INSERT INTO profile (
     id,
     name,
-    START,
-    duration,
+    start,
+    duration_minutes,
     source,
     percent,
     dia,
@@ -89,7 +89,7 @@ type CreateProfileParams struct {
 	ID                       string
 	Name                     *string
 	Start                    *int64
-	Duration                 *int64
+	DurationMinutes          *int64
 	Source                   *string
 	Percent                  *int64
 	Dia                      *int64
@@ -113,7 +113,7 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) er
 		arg.ID,
 		arg.Name,
 		arg.Start,
-		arg.Duration,
+		arg.DurationMinutes,
 		arg.Source,
 		arg.Percent,
 		arg.Dia,
@@ -132,7 +132,7 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) er
 }
 
 const getProfile = `-- name: GetProfile :one
-SELECT id, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE id = ?
+SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE id = ?
 `
 
 func (q *Queries) GetProfile(ctx context.Context, id string) (*Profile, error) {
@@ -142,7 +142,7 @@ func (q *Queries) GetProfile(ctx context.Context, id string) (*Profile, error) {
 		&i.ID,
 		&i.Name,
 		&i.Start,
-		&i.Duration,
+		&i.DurationMinutes,
 		&i.Source,
 		&i.Percent,
 		&i.Dia,

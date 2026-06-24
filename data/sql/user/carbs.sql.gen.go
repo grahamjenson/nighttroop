@@ -57,16 +57,18 @@ INSERT INTO carbs (
     id,
     occurred_at,
     amount,
+    type,
     raw_json_data,
     created_by_identity_name,
     created_by_identity_id)
-VALUES ( ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateCarbParams struct {
 	ID                    string
 	OccurredAt            int64
 	Amount                float64
+	Type                  string
 	RawJsonData           *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
@@ -80,6 +82,7 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
 		arg.ID,
 		arg.OccurredAt,
 		arg.Amount,
+		arg.Type,
 		arg.RawJsonData,
 		arg.CreatedByIdentityName,
 		arg.CreatedByIdentityID,
