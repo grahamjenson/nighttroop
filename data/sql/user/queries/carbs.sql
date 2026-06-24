@@ -5,12 +5,13 @@
 INSERT INTO carbs (
     id,
     occurred_at,
+    utc_offset_minutes,
     amount,
     type,
     raw_json_data,
     created_by_identity_name,
     created_by_identity_id)
-VALUES ( ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
 
 --------
 -- READ

@@ -11,7 +11,8 @@
 -- name: CreateTempTarget :exec
 INSERT INTO temp_targets (
     id, 
-    start, 
+    start,
+    utc_offset_minutes, 
     duration_minutes, 
     high_target, 
     low_target,
@@ -19,7 +20,7 @@ INSERT INTO temp_targets (
     created_by_identity_id,
     created_by_identity_name
     ) 
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 
 --------

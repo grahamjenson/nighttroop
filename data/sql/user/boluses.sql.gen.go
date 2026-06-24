@@ -56,17 +56,19 @@ const createBolus = `-- name: CreateBolus :exec
 INSERT INTO bolus (
         id,
         occurred_at,
+        utc_offset_minutes,
         value,
         type,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?)
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateBolusParams struct {
 	ID                    string
 	OccurredAt            int64
+	UtcOffsetMinutes      int64
 	Value                 float64
 	Type                  string
 	RawJsonData           *string
@@ -81,6 +83,7 @@ func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error 
 	_, err := q.exec(ctx, q.createBolusStmt, createBolus,
 		arg.ID,
 		arg.OccurredAt,
+		arg.UtcOffsetMinutes,
 		arg.Value,
 		arg.Type,
 		arg.RawJsonData,
@@ -96,6 +99,51 @@ SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_
 
 func (q *Queries) GetBolus(ctx context.Context, id string) (*Bolus, error) {
 	row := q.queryRow(ctx, q.getBolusStmt, getBolus, id)
+	var i Bolus
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.Type,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
+}
+
+const updateBolus = `-- name: UpdateBolus :one
+
+UPDATE bolus SET
+    occurred_at = COALESCE(?2, occurred_at),
+    value = COALESCE(?3, value),
+    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+`
+
+type UpdateBolusParams struct {
+	OccurredAt       *int64
+	Value            *float64
+	UtcOffsetMinutes *int64
+	ID               string
+}
+
+// ------
+// UPDATE
+// ------
+func (q *Queries) UpdateBolus(ctx context.Context, arg UpdateBolusParams) (*Bolus, error) {
+	row := q.queryRow(ctx, q.updateBolusStmt, updateBolus,
+		arg.OccurredAt,
+		arg.Value,
+		arg.UtcOffsetMinutes,
+		arg.ID,
+	)
 	var i Bolus
 	err := row.Scan(
 		&i.ID,

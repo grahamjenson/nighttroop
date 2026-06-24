@@ -141,6 +141,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
+	if q.updateBolusStmt, err = db.PrepareContext(ctx, updateBolus); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateBolus: %w", err)
+	}
 	if q.updateGlucoseReadingStmt, err = db.PrepareContext(ctx, updateGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateGlucoseReading: %w", err)
 	}
@@ -353,6 +356,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.updateBolusStmt != nil {
+		if cerr := q.updateBolusStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateBolusStmt: %w", cerr)
+		}
+	}
 	if q.updateGlucoseReadingStmt != nil {
 		if cerr := q.updateGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateGlucoseReadingStmt: %w", cerr)
@@ -451,6 +459,7 @@ type Queries struct {
 	getProfileStmt                           *sql.Stmt
 	getTempBasalStmt                         *sql.Stmt
 	getTempTargetStmt                        *sql.Stmt
+	updateBolusStmt                          *sql.Stmt
 	updateGlucoseReadingStmt                 *sql.Stmt
 	updateIdentityDateFlagsStmt              *sql.Stmt
 	getSettingFromDBStmt                     *sql.Stmt
@@ -500,6 +509,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStmt:                           q.getProfileStmt,
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
+		updateBolusStmt:                          q.updateBolusStmt,
 		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
 		updateIdentityDateFlagsStmt:              q.updateIdentityDateFlagsStmt,
 		getSettingFromDBStmt:                     q.getSettingFromDBStmt,

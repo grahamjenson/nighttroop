@@ -56,17 +56,19 @@ const createCarb = `-- name: CreateCarb :exec
 INSERT INTO carbs (
     id,
     occurred_at,
+    utc_offset_minutes,
     amount,
     type,
     raw_json_data,
     created_by_identity_name,
     created_by_identity_id)
-VALUES ( ?, ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateCarbParams struct {
 	ID                    string
 	OccurredAt            int64
+	UtcOffsetMinutes      int64
 	Amount                float64
 	Type                  string
 	RawJsonData           *string
@@ -81,6 +83,7 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
 	_, err := q.exec(ctx, q.createCarbStmt, createCarb,
 		arg.ID,
 		arg.OccurredAt,
+		arg.UtcOffsetMinutes,
 		arg.Amount,
 		arg.Type,
 		arg.RawJsonData,

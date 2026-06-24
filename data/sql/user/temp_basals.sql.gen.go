@@ -57,18 +57,20 @@ const createTempBasal = `-- name: CreateTempBasal :exec
 INSERT INTO temp_basals (
         id,
         start,
+        utc_offset_minutes,
         duration_minutes,
         value,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
     )
-VALUES ( ?, ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateTempBasalParams struct {
 	ID                    string
 	Start                 int64
+	UtcOffsetMinutes      int64
 	DurationMinutes       int64
 	Value                 float64
 	RawJsonData           *string
@@ -83,6 +85,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 	_, err := q.exec(ctx, q.createTempBasalStmt, createTempBasal,
 		arg.ID,
 		arg.Start,
+		arg.UtcOffsetMinutes,
 		arg.DurationMinutes,
 		arg.Value,
 		arg.RawJsonData,

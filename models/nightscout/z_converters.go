@@ -162,6 +162,9 @@ func TreatmentToCreateBolus(source Treatment, context string, context2 int64, co
 	if source.Date != nil {
 		userCreateBolusParams.OccurredAt = int64(*source.Date)
 	}
+	if source.UtcOffsetMinutes != nil {
+		userCreateBolusParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+	}
 	if source.Insulin != nil {
 		userCreateBolusParams.Value = float64(*source.Insulin)
 	}
@@ -177,6 +180,9 @@ func TreatmentToCreateCarb(source Treatment, context string, context2 int64, con
 	userCreateCarbParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
 		userCreateCarbParams.OccurredAt = int64(*source.Date)
+	}
+	if source.UtcOffsetMinutes != nil {
+		userCreateCarbParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 	}
 	if source.Carbs != nil {
 		userCreateCarbParams.Amount = float64(*source.Carbs)
@@ -194,6 +200,9 @@ func TreatmentToCreateNote(source Treatment, context string, context2 int64, con
 	if source.Date != nil {
 		userCreateNoteParams.OccurredAt = int64(*source.Date)
 	}
+	if source.UtcOffsetMinutes != nil {
+		userCreateNoteParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+	}
 	if source.Notes != nil {
 		userCreateNoteParams.Content = *source.Notes
 	}
@@ -209,6 +218,9 @@ func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64
 	if source.Date != nil {
 		userCreateTempBasalParams.Start = int64(*source.Date)
 	}
+	if source.UtcOffsetMinutes != nil {
+		userCreateTempBasalParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+	}
 	if source.Duration != nil {
 		userCreateTempBasalParams.DurationMinutes = nightscoutFlexibleInt64ToInt64(*source.Duration)
 	}
@@ -218,6 +230,33 @@ func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64
 	userCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context2)
 	userCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context3)
 	return &userCreateTempBasalParams
+}
+func TreatmentToCreateTempTarget(source Treatment, context string, context2 int64, context3 string) *user.CreateTempTargetParams {
+	var userCreateTempTargetParams user.CreateTempTargetParams
+	userCreateTempTargetParams.ID = AssignID(source.Date, context3)
+	if source.Date != nil {
+		userCreateTempTargetParams.Start = int64(*source.Date)
+	}
+	if source.UtcOffsetMinutes != nil {
+		userCreateTempTargetParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+	}
+	if source.Duration != nil {
+		userCreateTempTargetParams.DurationMinutes = nightscoutFlexibleInt64ToInt64(*source.Duration)
+	}
+	if source.TargetTop != nil {
+		userCreateTempTargetParams.HighTarget = nightscoutFlexibleFloat64ToFloat64(*source.TargetTop)
+	}
+	if source.TargetBottom != nil {
+		userCreateTempTargetParams.LowTarget = nightscoutFlexibleFloat64ToFloat64(*source.TargetBottom)
+	}
+	pString := source.RawJsonData
+	userCreateTempTargetParams.RawJsonData = &pString
+	userCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	userCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	return &userCreateTempTargetParams
+}
+func nightscoutFlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {
+	return float64(source)
 }
 func nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
 	return int64(source)

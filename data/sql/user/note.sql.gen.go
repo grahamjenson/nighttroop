@@ -55,16 +55,18 @@ const createNote = `-- name: CreateNote :exec
 INSERT INTO note (
         id,
         occurred_at,
+        utc_offset_minutes,
         content,
         raw_json_data,
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?)
+) VALUES ( ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateNoteParams struct {
 	ID                    string
 	OccurredAt            int64
+	UtcOffsetMinutes      int64
 	Content               string
 	RawJsonData           *string
 	CreatedByIdentityID   int64
@@ -78,6 +80,7 @@ func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
 	_, err := q.exec(ctx, q.createNoteStmt, createNote,
 		arg.ID,
 		arg.OccurredAt,
+		arg.UtcOffsetMinutes,
 		arg.Content,
 		arg.RawJsonData,
 		arg.CreatedByIdentityID,

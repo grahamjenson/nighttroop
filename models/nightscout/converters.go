@@ -114,7 +114,18 @@ type MapConverter interface {
 	// goverter:map Duration DurationMinutes
 	TreatmentToCreateTempBasal(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempBasalParams
 
-	// TreatmentToCreateTempTarget(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempTargetParams
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date Start
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
+	TreatmentToCreateTempTarget(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempTargetParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context idPrefix

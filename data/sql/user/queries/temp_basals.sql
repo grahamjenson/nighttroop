@@ -6,13 +6,14 @@
 INSERT INTO temp_basals (
         id,
         start,
+        utc_offset_minutes,
         duration_minutes,
         value,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
     )
-VALUES ( ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
 
 --------
 -- READ

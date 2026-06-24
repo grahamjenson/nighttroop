@@ -48,6 +48,7 @@ func BolusToCreate(source Bolus) CreateBolusParams {
 	var userCreateBolusParams CreateBolusParams
 	userCreateBolusParams.ID = source.ID
 	userCreateBolusParams.OccurredAt = source.OccurredAt
+	userCreateBolusParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	userCreateBolusParams.Value = source.Value
 	userCreateBolusParams.Type = source.Type
 	if source.RawJsonData != nil {
@@ -62,6 +63,7 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 	var userCreateCarbParams CreateCarbParams
 	userCreateCarbParams.ID = source.ID
 	userCreateCarbParams.OccurredAt = source.OccurredAt
+	userCreateCarbParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	userCreateCarbParams.Amount = source.Amount
 	userCreateCarbParams.Type = source.Type
 	if source.RawJsonData != nil {
@@ -178,6 +180,7 @@ func NoteToCreate(source Note) CreateNoteParams {
 	var userCreateNoteParams CreateNoteParams
 	userCreateNoteParams.ID = source.ID
 	userCreateNoteParams.OccurredAt = source.OccurredAt
+	userCreateNoteParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	userCreateNoteParams.Content = source.Content
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
@@ -251,6 +254,7 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var userCreateTempBasalParams CreateTempBasalParams
 	userCreateTempBasalParams.ID = source.ID
 	userCreateTempBasalParams.Start = source.Start
+	userCreateTempBasalParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	userCreateTempBasalParams.DurationMinutes = source.DurationMinutes
 	userCreateTempBasalParams.Value = source.Value
 	if source.RawJsonData != nil {
@@ -265,6 +269,7 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	var userCreateTempTargetParams CreateTempTargetParams
 	userCreateTempTargetParams.ID = source.ID
 	userCreateTempTargetParams.Start = source.Start
+	userCreateTempTargetParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	userCreateTempTargetParams.DurationMinutes = source.DurationMinutes
 	userCreateTempTargetParams.HighTarget = source.HighTarget
 	userCreateTempTargetParams.LowTarget = source.LowTarget
