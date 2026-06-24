@@ -78,6 +78,10 @@ type MapConverter interface {
 	// TREATMENTS
 	///////
 
+	///////
+	// Bolus
+	///////
+
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context idPrefix
 	// goverter:context createdByIdentityID
@@ -89,6 +93,16 @@ type MapConverter interface {
 	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
 	// goverter:map  Insulin Value
 	TreatmentToCreateBolus(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateBolusParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Insulin Value
+	TreatmentToUpdateBolus(source Treatment) *user.UpdateBolusParams
+
+	///////
+	// Carbs
+	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context idPrefix
@@ -103,6 +117,16 @@ type MapConverter interface {
 	TreatmentToCreateCarb(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateCarbParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Carbs Amount
+	TreatmentToUpdateCarbs(source Treatment) *user.UpdateCarbParams
+
+	///////
+	// Temp Basal
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context idPrefix
 	// goverter:context createdByIdentityID
 	// goverter:context createdByIdentityName
@@ -114,6 +138,16 @@ type MapConverter interface {
 	// goverter:map Duration DurationMinutes
 	TreatmentToCreateTempBasal(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempBasalParams
 
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date Start
+	// goverter:map  . Value | TempBasalValuePtr
+	// goverter:map Duration DurationMinutes
+	TreatmentToUpdateTempBasal(source Treatment) *user.UpdateTempBasalParams
+
+	///////
+	// Temp Targets
+	///////
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context idPrefix
 	// goverter:context createdByIdentityID
@@ -128,6 +162,17 @@ type MapConverter interface {
 	TreatmentToCreateTempTarget(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateTempTargetParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date Start
+	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
+	TreatmentToUpdateTempTarget(source Treatment) *user.UpdateTempTargetParams
+
+	///////
+	// Notes
+	///////
+	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context idPrefix
 	// goverter:context createdByIdentityID
 	// goverter:context createdByIdentityName
@@ -137,6 +182,12 @@ type MapConverter interface {
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  Notes Content
 	TreatmentToCreateNote(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) *user.CreateNoteParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Notes Content
+	TreatmentToUpdateNote(source Treatment) *user.UpdateNoteParams
 }
 
 // //
@@ -177,14 +228,24 @@ func GlucoseReadingDateStringFromDateIntAndUTCOffset(gr user.GlucoseReading) *Da
 // Treatments
 
 func TempBasalValue(t Treatment) float64 {
+	v := TempBasalValuePtr(t)
+	if v == nil {
+		return 0
+	}
+	return *v
+}
+
+func TempBasalValuePtr(t Treatment) *float64 {
 	if t.Rate != nil {
-		return float64(*t.Rate)
+		x := float64(*t.Rate)
+		return &x
 	}
 	if t.Absolute != nil {
-		return float64(*t.Absolute)
+		x := float64(*t.Absolute)
+		return &x
 	}
 	// TODO handle t.Percent
-	return 0
+	return nil
 }
 
 // /

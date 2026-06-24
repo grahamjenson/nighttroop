@@ -117,3 +117,51 @@ func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, erro
 	)
 	return &i, err
 }
+
+const updateTempBasal = `-- name: UpdateTempBasal :one
+
+UPDATE temp_basals SET
+    start = COALESCE(?2, start),
+    duration_minutes = COALESCE(?3, duration_minutes),
+    value = COALESCE(?4, value),
+    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
+`
+
+type UpdateTempBasalParams struct {
+	Start            *int64
+	DurationMinutes  *int64
+	Value            *float64
+	UtcOffsetMinutes *int64
+	ID               string
+}
+
+// ------
+// UPDATE
+// ------
+func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams) (*TempBasal, error) {
+	row := q.queryRow(ctx, q.updateTempBasalStmt, updateTempBasal,
+		arg.Start,
+		arg.DurationMinutes,
+		arg.Value,
+		arg.UtcOffsetMinutes,
+		arg.ID,
+	)
+	var i TempBasal
+	err := row.Scan(
+		&i.ID,
+		&i.Start,
+		&i.DurationMinutes,
+		&i.Value,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
+}

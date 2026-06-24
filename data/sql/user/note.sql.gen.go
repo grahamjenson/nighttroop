@@ -110,3 +110,47 @@ func (q *Queries) GetNote(ctx context.Context, id string) (*Note, error) {
 	)
 	return &i, err
 }
+
+const updateNote = `-- name: UpdateNote :one
+
+UPDATE note SET
+    occurred_at = COALESCE(?2, occurred_at),
+    content = COALESCE(?3, content),
+    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+`
+
+type UpdateNoteParams struct {
+	OccurredAt       *int64
+	Content          *string
+	UtcOffsetMinutes *int64
+	ID               string
+}
+
+// ------
+// UPDATE
+// ------
+func (q *Queries) UpdateNote(ctx context.Context, arg UpdateNoteParams) (*Note, error) {
+	row := q.queryRow(ctx, q.updateNoteStmt, updateNote,
+		arg.OccurredAt,
+		arg.Content,
+		arg.UtcOffsetMinutes,
+		arg.ID,
+	)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
+}

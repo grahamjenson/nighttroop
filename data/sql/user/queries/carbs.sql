@@ -27,6 +27,14 @@ SELECT * FROM carbs WHERE id = ?;
 -- UPDATE
 --------
 
+-- name: UpdateCarb :one
+UPDATE carbs SET
+    occurred_at = COALESCE(sqlc.narg(occurred_at), occurred_at),
+    amount = COALESCE(sqlc.narg(amount), amount),
+    utc_offset_minutes = COALESCE(sqlc.narg(utc_offset_minutes), utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING *; 
 
 --------
 -- DELETE

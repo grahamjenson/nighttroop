@@ -30,6 +30,15 @@ SELECT * FROM temp_basals WHERE id = ?;
 -- UPDATE
 --------
 
+-- name: UpdateTempBasal :one
+UPDATE temp_basals SET
+    start = COALESCE(sqlc.narg(start), start),
+    duration_minutes = COALESCE(sqlc.narg(duration_minutes), duration_minutes),
+    value = COALESCE(sqlc.narg(value), value),
+    utc_offset_minutes = COALESCE(sqlc.narg(utc_offset_minutes), utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING *; 
 
 --------
 -- DELETE

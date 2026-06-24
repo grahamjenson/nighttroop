@@ -255,6 +255,110 @@ func TreatmentToCreateTempTarget(source Treatment, context string, context2 int6
 	userCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context3)
 	return &userCreateTempTargetParams
 }
+func TreatmentToUpdateBolus(source Treatment) *user.UpdateBolusParams {
+	var userUpdateBolusParams user.UpdateBolusParams
+	if source.Date != nil {
+		xint64 := int64(*source.Date)
+		userUpdateBolusParams.OccurredAt = &xint64
+	}
+	if source.Insulin != nil {
+		xfloat64 := nightscoutFlexibleFloat64ToFloat64(*source.Insulin)
+		userUpdateBolusParams.Value = &xfloat64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userUpdateBolusParams.UtcOffsetMinutes = &xint642
+	}
+	if source.Identifier != nil {
+		userUpdateBolusParams.ID = *source.Identifier
+	}
+	return &userUpdateBolusParams
+}
+func TreatmentToUpdateCarbs(source Treatment) *user.UpdateCarbParams {
+	var userUpdateCarbParams user.UpdateCarbParams
+	if source.Date != nil {
+		xint64 := int64(*source.Date)
+		userUpdateCarbParams.OccurredAt = &xint64
+	}
+	if source.Carbs != nil {
+		xfloat64 := nightscoutFlexibleFloat64ToFloat64(*source.Carbs)
+		userUpdateCarbParams.Amount = &xfloat64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userUpdateCarbParams.UtcOffsetMinutes = &xint642
+	}
+	if source.Identifier != nil {
+		userUpdateCarbParams.ID = *source.Identifier
+	}
+	return &userUpdateCarbParams
+}
+func TreatmentToUpdateNote(source Treatment) *user.UpdateNoteParams {
+	var userUpdateNoteParams user.UpdateNoteParams
+	if source.Date != nil {
+		xint64 := int64(*source.Date)
+		userUpdateNoteParams.OccurredAt = &xint64
+	}
+	if source.Notes != nil {
+		xstring := *source.Notes
+		userUpdateNoteParams.Content = &xstring
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userUpdateNoteParams.UtcOffsetMinutes = &xint642
+	}
+	if source.Identifier != nil {
+		userUpdateNoteParams.ID = *source.Identifier
+	}
+	return &userUpdateNoteParams
+}
+func TreatmentToUpdateTempBasal(source Treatment) *user.UpdateTempBasalParams {
+	var userUpdateTempBasalParams user.UpdateTempBasalParams
+	if source.Date != nil {
+		xint64 := int64(*source.Date)
+		userUpdateTempBasalParams.Start = &xint64
+	}
+	if source.Duration != nil {
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.Duration)
+		userUpdateTempBasalParams.DurationMinutes = &xint642
+	}
+	userUpdateTempBasalParams.Value = TempBasalValuePtr(source)
+	if source.UtcOffsetMinutes != nil {
+		xint643 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userUpdateTempBasalParams.UtcOffsetMinutes = &xint643
+	}
+	if source.Identifier != nil {
+		userUpdateTempBasalParams.ID = *source.Identifier
+	}
+	return &userUpdateTempBasalParams
+}
+func TreatmentToUpdateTempTarget(source Treatment) *user.UpdateTempTargetParams {
+	var userUpdateTempTargetParams user.UpdateTempTargetParams
+	if source.Date != nil {
+		xint64 := int64(*source.Date)
+		userUpdateTempTargetParams.Start = &xint64
+	}
+	if source.Duration != nil {
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.Duration)
+		userUpdateTempTargetParams.DurationMinutes = &xint642
+	}
+	if source.TargetTop != nil {
+		xfloat64 := nightscoutFlexibleFloat64ToFloat64(*source.TargetTop)
+		userUpdateTempTargetParams.HighTarget = &xfloat64
+	}
+	if source.TargetBottom != nil {
+		xfloat642 := nightscoutFlexibleFloat64ToFloat64(*source.TargetBottom)
+		userUpdateTempTargetParams.LowTarget = &xfloat642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userUpdateTempTargetParams.UtcOffsetMinutes = &xint643
+	}
+	if source.Identifier != nil {
+		userUpdateTempTargetParams.ID = *source.Identifier
+	}
+	return &userUpdateTempTargetParams
+}
 func nightscoutFlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {
 	return float64(source)
 }

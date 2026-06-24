@@ -124,3 +124,55 @@ func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, er
 	)
 	return &i, err
 }
+
+const updateTempTarget = `-- name: UpdateTempTarget :one
+
+UPDATE temp_targets SET
+    start = COALESCE(?2, start),
+    duration_minutes = COALESCE(?3, duration_minutes),
+    high_target = COALESCE(?4, high_target),
+    low_target = COALESCE(?5, low_target),
+    utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
+`
+
+type UpdateTempTargetParams struct {
+	Start            *int64
+	DurationMinutes  *int64
+	HighTarget       *float64
+	LowTarget        *float64
+	UtcOffsetMinutes *int64
+	ID               string
+}
+
+// ------
+// UPDATE
+// ------
+func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetParams) (*TempTarget, error) {
+	row := q.queryRow(ctx, q.updateTempTargetStmt, updateTempTarget,
+		arg.Start,
+		arg.DurationMinutes,
+		arg.HighTarget,
+		arg.LowTarget,
+		arg.UtcOffsetMinutes,
+		arg.ID,
+	)
+	var i TempTarget
+	err := row.Scan(
+		&i.ID,
+		&i.Start,
+		&i.DurationMinutes,
+		&i.HighTarget,
+		&i.LowTarget,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
+}

@@ -144,11 +144,23 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateBolusStmt, err = db.PrepareContext(ctx, updateBolus); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateBolus: %w", err)
 	}
+	if q.updateCarbStmt, err = db.PrepareContext(ctx, updateCarb); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateCarb: %w", err)
+	}
 	if q.updateGlucoseReadingStmt, err = db.PrepareContext(ctx, updateGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateGlucoseReading: %w", err)
 	}
 	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
+	}
+	if q.updateNoteStmt, err = db.PrepareContext(ctx, updateNote); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateNote: %w", err)
+	}
+	if q.updateTempBasalStmt, err = db.PrepareContext(ctx, updateTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateTempBasal: %w", err)
+	}
+	if q.updateTempTargetStmt, err = db.PrepareContext(ctx, updateTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateTempTarget: %w", err)
 	}
 	if q.getSettingFromDBStmt, err = db.PrepareContext(ctx, getSettingFromDB); err != nil {
 		return nil, fmt.Errorf("error preparing query getSettingFromDB: %w", err)
@@ -361,6 +373,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateBolusStmt: %w", cerr)
 		}
 	}
+	if q.updateCarbStmt != nil {
+		if cerr := q.updateCarbStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateCarbStmt: %w", cerr)
+		}
+	}
 	if q.updateGlucoseReadingStmt != nil {
 		if cerr := q.updateGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateGlucoseReadingStmt: %w", cerr)
@@ -369,6 +386,21 @@ func (q *Queries) Close() error {
 	if q.updateIdentityDateFlagsStmt != nil {
 		if cerr := q.updateIdentityDateFlagsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
+		}
+	}
+	if q.updateNoteStmt != nil {
+		if cerr := q.updateNoteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateNoteStmt: %w", cerr)
+		}
+	}
+	if q.updateTempBasalStmt != nil {
+		if cerr := q.updateTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateTempBasalStmt: %w", cerr)
+		}
+	}
+	if q.updateTempTargetStmt != nil {
+		if cerr := q.updateTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateTempTargetStmt: %w", cerr)
 		}
 	}
 	if q.getSettingFromDBStmt != nil {
@@ -460,8 +492,12 @@ type Queries struct {
 	getTempBasalStmt                         *sql.Stmt
 	getTempTargetStmt                        *sql.Stmt
 	updateBolusStmt                          *sql.Stmt
+	updateCarbStmt                           *sql.Stmt
 	updateGlucoseReadingStmt                 *sql.Stmt
 	updateIdentityDateFlagsStmt              *sql.Stmt
+	updateNoteStmt                           *sql.Stmt
+	updateTempBasalStmt                      *sql.Stmt
+	updateTempTargetStmt                     *sql.Stmt
 	getSettingFromDBStmt                     *sql.Stmt
 	upsertSettingToDBStmt                    *sql.Stmt
 }
@@ -510,8 +546,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
 		updateBolusStmt:                          q.updateBolusStmt,
+		updateCarbStmt:                           q.updateCarbStmt,
 		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
 		updateIdentityDateFlagsStmt:              q.updateIdentityDateFlagsStmt,
+		updateNoteStmt:                           q.updateNoteStmt,
+		updateTempBasalStmt:                      q.updateTempBasalStmt,
+		updateTempTargetStmt:                     q.updateTempTargetStmt,
 		getSettingFromDBStmt:                     q.getSettingFromDBStmt,
 		upsertSettingToDBStmt:                    q.upsertSettingToDBStmt,
 	}

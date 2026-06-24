@@ -115,3 +115,48 @@ func (q *Queries) GetCarb(ctx context.Context, id string) (*Carb, error) {
 	)
 	return &i, err
 }
+
+const updateCarb = `-- name: UpdateCarb :one
+
+UPDATE carbs SET
+    occurred_at = COALESCE(?2, occurred_at),
+    amount = COALESCE(?3, amount),
+    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?
+RETURNING id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+`
+
+type UpdateCarbParams struct {
+	OccurredAt       *int64
+	Amount           *float64
+	UtcOffsetMinutes *int64
+	ID               string
+}
+
+// ------
+// UPDATE
+// ------
+func (q *Queries) UpdateCarb(ctx context.Context, arg UpdateCarbParams) (*Carb, error) {
+	row := q.queryRow(ctx, q.updateCarbStmt, updateCarb,
+		arg.OccurredAt,
+		arg.Amount,
+		arg.UtcOffsetMinutes,
+		arg.ID,
+	)
+	var i Carb
+	err := row.Scan(
+		&i.ID,
+		&i.Amount,
+		&i.Type,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
+}
