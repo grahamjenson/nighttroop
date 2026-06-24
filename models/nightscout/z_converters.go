@@ -46,6 +46,52 @@ func ActivityToCreate(source Activity, context string, context2 int64, context3 
 	userCreateActivityParams.RawJsonData = &pString
 	return userCreateActivityParams
 }
+func BolusDBModelToTreatment(source user.Bolus) Treatment {
+	var nightscoutTreatment Treatment
+	pString := source.ID
+	nightscoutTreatment.Identifier = &pString
+	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
+	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Value)
+	nightscoutTreatment.Insulin = &pNightscoutFlexibleFloat64
+	pString2 := source.CreatedByIdentityName
+	nightscoutTreatment.EnteredBy = &pString2
+	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt := DateInt(source.OccurredAt)
+	nightscoutTreatment.Date = &pNightscoutDateInt
+	pNightscoutFlexibleInt64 := FlexibleInt64(source.UtcOffsetMinutes)
+	nightscoutTreatment.UtcOffsetMinutes = &pNightscoutFlexibleInt64
+	pNightscoutDateInt2 := DateInt(source.CreatedAt)
+	nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
+	nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+	if source.RawJsonData != nil {
+		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutTreatment
+}
+func CarbsDBModelToTreatment(source user.Carb) Treatment {
+	var nightscoutTreatment Treatment
+	pString := source.ID
+	nightscoutTreatment.Identifier = &pString
+	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
+	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Amount)
+	nightscoutTreatment.Carbs = &pNightscoutFlexibleFloat64
+	pString2 := source.CreatedByIdentityName
+	nightscoutTreatment.EnteredBy = &pString2
+	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt := DateInt(source.OccurredAt)
+	nightscoutTreatment.Date = &pNightscoutDateInt
+	pNightscoutFlexibleInt64 := FlexibleInt64(source.UtcOffsetMinutes)
+	nightscoutTreatment.UtcOffsetMinutes = &pNightscoutFlexibleInt64
+	pNightscoutDateInt2 := DateInt(source.CreatedAt)
+	nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
+	nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+	if source.RawJsonData != nil {
+		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutTreatment
+}
 func DBModelToActivity(source user.Activity) Activity {
 	var nightscoutActivity Activity
 	pString := source.ID
@@ -103,7 +149,7 @@ func DBModelToEntry(source user.GlucoseReading) Entry {
 	nightscoutEntry.Device = &pString2
 	pNightscoutDateInt := DateInt(source.OccurredAt)
 	nightscoutEntry.Date = &pNightscoutDateInt
-	nightscoutEntry.DateString = GlucoseReadingDateStringFromDateIntAndUTCOffset(source)
+	nightscoutEntry.DateString = ModelDateStringFromDateIntAndUTCOffset(source)
 	pNightscoutDateInt2 := DateInt(source.OccurredAt)
 	nightscoutEntry.Mills = &pNightscoutDateInt2
 	pNightscoutFlexibleInt64 := FlexibleInt64(source.UtcOffsetMinutes)
@@ -156,7 +202,28 @@ func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
 	}
 	return userUpdateGlucoseReadingParams
 }
-func TreatmentToCreateBolus(source Treatment, context string, context2 int64, context3 string) *user.CreateBolusParams {
+func TempBasalDBModelToTreatment(source user.TempBasal) Treatment {
+	var nightscoutTreatment Treatment
+	pString := source.ID
+	nightscoutTreatment.Identifier = &pString
+	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
+	pString2 := source.CreatedByIdentityName
+	nightscoutTreatment.EnteredBy = &pString2
+	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt := DateInt(source.Start)
+	nightscoutTreatment.Date = &pNightscoutDateInt
+	pNightscoutFlexibleInt64 := FlexibleInt64(source.UtcOffsetMinutes)
+	nightscoutTreatment.UtcOffsetMinutes = &pNightscoutFlexibleInt64
+	pNightscoutDateInt2 := DateInt(source.CreatedAt)
+	nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
+	nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+	if source.RawJsonData != nil {
+		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutTreatment
+}
+func TreatmentToCreateBolus(source Treatment, context string, context2 int64, context3 string) user.CreateBolusParams {
 	var userCreateBolusParams user.CreateBolusParams
 	userCreateBolusParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
@@ -173,9 +240,9 @@ func TreatmentToCreateBolus(source Treatment, context string, context2 int64, co
 	userCreateBolusParams.RawJsonData = &pString
 	userCreateBolusParams.CreatedByIdentityID = AssignCreatedByID(context2)
 	userCreateBolusParams.CreatedByIdentityName = AssignCreatedByName(context3)
-	return &userCreateBolusParams
+	return userCreateBolusParams
 }
-func TreatmentToCreateCarb(source Treatment, context string, context2 int64, context3 string) *user.CreateCarbParams {
+func TreatmentToCreateCarb(source Treatment, context string, context2 int64, context3 string) user.CreateCarbParams {
 	var userCreateCarbParams user.CreateCarbParams
 	userCreateCarbParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
@@ -192,9 +259,9 @@ func TreatmentToCreateCarb(source Treatment, context string, context2 int64, con
 	userCreateCarbParams.RawJsonData = &pString
 	userCreateCarbParams.CreatedByIdentityName = AssignCreatedByName(context3)
 	userCreateCarbParams.CreatedByIdentityID = AssignCreatedByID(context2)
-	return &userCreateCarbParams
+	return userCreateCarbParams
 }
-func TreatmentToCreateNote(source Treatment, context string, context2 int64, context3 string) *user.CreateNoteParams {
+func TreatmentToCreateNote(source Treatment, context string, context2 int64, context3 string) user.CreateNoteParams {
 	var userCreateNoteParams user.CreateNoteParams
 	userCreateNoteParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
@@ -210,9 +277,9 @@ func TreatmentToCreateNote(source Treatment, context string, context2 int64, con
 	userCreateNoteParams.RawJsonData = &pString
 	userCreateNoteParams.CreatedByIdentityID = AssignCreatedByID(context2)
 	userCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context3)
-	return &userCreateNoteParams
+	return userCreateNoteParams
 }
-func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64, context3 string) *user.CreateTempBasalParams {
+func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64, context3 string) user.CreateTempBasalParams {
 	var userCreateTempBasalParams user.CreateTempBasalParams
 	userCreateTempBasalParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
@@ -229,9 +296,9 @@ func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64
 	userCreateTempBasalParams.RawJsonData = &pString
 	userCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context2)
 	userCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context3)
-	return &userCreateTempBasalParams
+	return userCreateTempBasalParams
 }
-func TreatmentToCreateTempTarget(source Treatment, context string, context2 int64, context3 string) *user.CreateTempTargetParams {
+func TreatmentToCreateTempTarget(source Treatment, context string, context2 int64, context3 string) user.CreateTempTargetParams {
 	var userCreateTempTargetParams user.CreateTempTargetParams
 	userCreateTempTargetParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
@@ -253,9 +320,9 @@ func TreatmentToCreateTempTarget(source Treatment, context string, context2 int6
 	userCreateTempTargetParams.RawJsonData = &pString
 	userCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context2)
 	userCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context3)
-	return &userCreateTempTargetParams
+	return userCreateTempTargetParams
 }
-func TreatmentToUpdateBolus(source Treatment) *user.UpdateBolusParams {
+func TreatmentToUpdateBolus(source Treatment) user.UpdateBolusParams {
 	var userUpdateBolusParams user.UpdateBolusParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -272,9 +339,9 @@ func TreatmentToUpdateBolus(source Treatment) *user.UpdateBolusParams {
 	if source.Identifier != nil {
 		userUpdateBolusParams.ID = *source.Identifier
 	}
-	return &userUpdateBolusParams
+	return userUpdateBolusParams
 }
-func TreatmentToUpdateCarbs(source Treatment) *user.UpdateCarbParams {
+func TreatmentToUpdateCarbs(source Treatment) user.UpdateCarbParams {
 	var userUpdateCarbParams user.UpdateCarbParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -291,9 +358,9 @@ func TreatmentToUpdateCarbs(source Treatment) *user.UpdateCarbParams {
 	if source.Identifier != nil {
 		userUpdateCarbParams.ID = *source.Identifier
 	}
-	return &userUpdateCarbParams
+	return userUpdateCarbParams
 }
-func TreatmentToUpdateNote(source Treatment) *user.UpdateNoteParams {
+func TreatmentToUpdateNote(source Treatment) user.UpdateNoteParams {
 	var userUpdateNoteParams user.UpdateNoteParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -310,9 +377,9 @@ func TreatmentToUpdateNote(source Treatment) *user.UpdateNoteParams {
 	if source.Identifier != nil {
 		userUpdateNoteParams.ID = *source.Identifier
 	}
-	return &userUpdateNoteParams
+	return userUpdateNoteParams
 }
-func TreatmentToUpdateTempBasal(source Treatment) *user.UpdateTempBasalParams {
+func TreatmentToUpdateTempBasal(source Treatment) user.UpdateTempBasalParams {
 	var userUpdateTempBasalParams user.UpdateTempBasalParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -330,9 +397,9 @@ func TreatmentToUpdateTempBasal(source Treatment) *user.UpdateTempBasalParams {
 	if source.Identifier != nil {
 		userUpdateTempBasalParams.ID = *source.Identifier
 	}
-	return &userUpdateTempBasalParams
+	return userUpdateTempBasalParams
 }
-func TreatmentToUpdateTempTarget(source Treatment) *user.UpdateTempTargetParams {
+func TreatmentToUpdateTempTarget(source Treatment) user.UpdateTempTargetParams {
 	var userUpdateTempTargetParams user.UpdateTempTargetParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -357,7 +424,7 @@ func TreatmentToUpdateTempTarget(source Treatment) *user.UpdateTempTargetParams 
 	if source.Identifier != nil {
 		userUpdateTempTargetParams.ID = *source.Identifier
 	}
-	return &userUpdateTempTargetParams
+	return userUpdateTempTargetParams
 }
 func nightscoutFlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {
 	return float64(source)

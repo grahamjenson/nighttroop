@@ -102,6 +102,61 @@ const (
 	Unknown         TreatmentEventType = "Unknown"
 )
 
+func (t TreatmentEventType) ToLocalTypeString() string {
+	switch t {
+	case CorrectionBolus:
+		return "correction_bolus"
+	case ComboBolus:
+		return "combo_bolus"
+	case TemporaryTarget:
+		return "temporary_target"
+	case MealBolus:
+		return "meal_bolus"
+	case TempBasal:
+		return "temp_basal"
+	case Note:
+		return "note"
+	case ProfileSwitch:
+		return "profile_switch"
+	case CarbCorrection:
+		return "carb_correction"
+	default:
+		return "unknown"
+	}
+}
+
+func FromLocalTypeString(s string) *TreatmentEventType {
+	cb := CorrectionBolus
+	cob := ComboBolus
+	tt := TemporaryTarget
+	mb := MealBolus
+	tb := TempBasal
+	n := Note
+	ps := ProfileSwitch
+	cc := CarbCorrection
+
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "correction_bolus":
+		return &cb
+	case "combo_bolus":
+		return &cob
+	case "temporary_target":
+		return &tt
+	case "meal_bolus":
+		return &mb
+	case "temp_basal":
+		return &tb
+	case "note":
+		return &n
+	case "profile_switch":
+		return &ps
+	case "carb_correction":
+		return &cc
+	}
+
+	return nil
+}
+
 var TreatmentEventTypes = []TreatmentEventType{CorrectionBolus, ComboBolus, TemporaryTarget, MealBolus, TempBasal, Note, ProfileSwitch, CarbCorrection}
 
 func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {

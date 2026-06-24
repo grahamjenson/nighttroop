@@ -17,23 +17,17 @@ type TreatmentCollection struct{}
 func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 
-	treatmentModel := &nightscout.Treatment{}
-	err := utils.FromMap(data, treatmentModel)
+	treatmentModel := nightscout.Treatment{}
+	err := utils.FromMap(data, &treatmentModel)
 	if err != nil {
 		slog.Error("failed to map data to treatment model", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	externalID := utils.NextDateID("ns", treatmentModel.Date.Int64())
+
 	created := false
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
-		err = userContext.UserDB.Queries.CreateCarb(ctx, user.CreateCarbParams{
-			ID:                    externalID,
-			Amount:                treatmentModel.Carbs.Float64(),
-			RawJsonData:           &treatmentModel.RawJsonData,
-			CreatedByIdentityName: userContext.IdentityModel.Name,
-			CreatedByIdentityID:   userContext.IdentityModel.ID,
-		})
+		err = userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, "ns", userContext.IdentityModel.ID, userContext.IdentityModel.Name))
 		if err != nil {
 			slog.Error("failed to create carb in database", "error", err)
 			return nil, nsutils.ErrInternal
@@ -46,7 +40,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	}
 	return &nsutils.Record{
 		Collection:  "treatments",
-		ID:          externalID,
+		ID:          *treatmentModel.Identifier,
 		Data:        data,
 		SrvModified: time.Now().UnixMilli(),
 	}, nil
@@ -86,13 +80,9 @@ func CarbsToRecord(carbs *user.Carb) nsutils.Record {
 		return nsutils.Record{}
 	}
 
-	treatmentModel := &nightscout.Treatment{}
-	err := treatmentModel.FromCarbDBModel(carbs)
-	if err != nil {
-		return nsutils.Record{}
-	}
+	treatmentModel := nightscout.CarbsDBModelToTreatment(*carbs)
 
-	treatmentMap, err := utils.ToMap(treatmentModel)
+	treatmentMap, err := utils.ToMap(&treatmentModel)
 	if err != nil {
 		return nsutils.Record{}
 	}
