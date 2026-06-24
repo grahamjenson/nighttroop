@@ -4,21 +4,20 @@
 -- name: CreateFood :exec
 INSERT INTO food (
         id,
-        occurred_at,
         name,
         carbs,
         calories,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?,  ?, ?, ?, ?, ?, ?);
 
 --------
 -- READ
 --------
 
 -- name: AllFoods :many
-SELECT * FROM food ORDER BY occurred_at DESC; 
+SELECT * FROM food ORDER BY created_at DESC; 
 
 -- name: GetFood :one
 SELECT * FROM food WHERE id = ?;

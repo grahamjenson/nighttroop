@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"nighttroop.t1d.nz/nightscout"
+	"nighttroop.t1d.nz/models/nightscout"
 )
 
 type Client struct {

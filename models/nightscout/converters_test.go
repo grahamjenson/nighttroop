@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	fixtures_tests "nighttroop.t1d.nz/nightscout/fixtures"
+	fixtures_tests "nighttroop.t1d.nz/models/nightscout/fixtures"
 )
 
 func Test_ActivityToCreateParams(t *testing.T) {
@@ -14,7 +14,7 @@ func Test_ActivityToCreateParams(t *testing.T) {
 	err := json.Unmarshal(fixtures_tests.ActivityFixture, &activity)
 	assert.NoError(t, err)
 
-	createParams := ActivityToCreate(activity)
+	createParams := ActivityToCreate(activity, "prefix", 123, "identityName")
 
 	assert.NotNil(t, createParams)
 	assert.Equal(t, "walking", *createParams.Type)

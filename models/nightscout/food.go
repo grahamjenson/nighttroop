@@ -19,18 +19,34 @@ type Food struct {
 	GI      *FlexibleFloat64 `json:"gi,omitempty"`
 
 	// API v3 additions
-
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
 
-	RawJSONData string `json:"-"`
+	// Non-JSON values to make mapping easier
+	RawJsonData string `json:"-"`
 }
 
 func (t *Food) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, t); err != nil {
+	type Alias Food
+	aux := struct {
+		ID string `json:"_id"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	t.RawJSONData = string(data)
+
+	// Raw Value
+	t.RawJsonData = string(data)
+
+	// Identitfiers
+	if t.Identifier == nil {
+		t.Identifier = &aux.ID
+	}
+
 	return nil
 }
 

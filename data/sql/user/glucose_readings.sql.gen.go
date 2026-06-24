@@ -163,8 +163,7 @@ const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
     occurred_at = COALESCE(?2, occurred_at),
     value = COALESCE(?3, value),
-    raw_json_data = COALESCE(?4, raw_json_data),
-    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
+    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = ?
 RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
@@ -173,7 +172,6 @@ RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurr
 type UpdateGlucoseReadingParams struct {
 	OccurredAt       *int64
 	Value            *float64
-	RawJsonData      *string
 	UtcOffsetMinutes *int64
 	ID               string
 }
@@ -185,7 +183,6 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 	row := q.queryRow(ctx, q.updateGlucoseReadingStmt, updateGlucoseReading,
 		arg.OccurredAt,
 		arg.Value,
-		arg.RawJsonData,
 		arg.UtcOffsetMinutes,
 		arg.ID,
 	)

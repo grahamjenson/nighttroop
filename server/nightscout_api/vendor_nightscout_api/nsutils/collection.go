@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/nightscout"
+	"nighttroop.t1d.nz/models/nightscout"
 )
 
 type Collection string

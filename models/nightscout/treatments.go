@@ -15,10 +15,6 @@ type Treatment struct {
 
 	EventType *TreatmentEventType `json:"eventType,omitempty"`
 
-	CreatedAt *DateString    `json:"created_at"`     // ISO8601 -> time.Time
-	Date      *DateInt       `json:"date,omitempty"` // Unix timestamp in milliseconds, only used for some treatment types
-	UTCOffset *FlexibleInt64 `json:"utcOffset,omitempty"`
-
 	Glucose     *FlexibleFloat64 `json:"glucose"`
 	GlucoseType *GlucoseType     `json:"glucoseType"` // "Sensor" or "Finger"
 
@@ -39,17 +35,43 @@ type Treatment struct {
 	TargetBottom *FlexibleFloat64 `json:"targetBottom"`
 	Units        *Units           `json:"units,omitempty"`
 
-	SrvCreated  *DateInt `json:"srvCreated"`
-	SrvModified *DateInt `json:"srvModified"`
+	// Date Fields
+	CreatedAt        *DateString    `json:"created_at"`     // ISO8601 -> time.Time
+	Date             *DateInt       `json:"date,omitempty"` // Unix timestamp in milliseconds, only used for some treatment types
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
+	SrvCreated       *DateInt       `json:"srvCreated"`
+	SrvModified      *DateInt       `json:"srvModified"`
 
-	RawJSONData string `json:"-"`
+	// Non-JSON values to make mapping easier
+	RawJsonData string `json:"-"`
 }
 
 func (t *Treatment) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, t); err != nil {
+	type Alias Treatment
+	aux := struct {
+		ID string `json:"_id"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	t.RawJSONData = string(data)
+
+	// Raw Value
+	t.RawJsonData = string(data)
+
+	// Identitfiers
+	if t.Identifier == nil {
+		t.Identifier = &aux.ID
+	}
+
+	// Cleaning Updates
+	if t.CreatedAt != nil {
+		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+	}
+
 	return nil
 }
 

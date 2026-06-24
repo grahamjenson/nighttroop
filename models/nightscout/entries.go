@@ -29,28 +29,65 @@ type Entry struct {
 
 	Device *string `json:"device,omitempty"`
 
-	Date       *DateInt       `json:"date,omitempty"`
-	DateString *DateString    `json:"dateString,omitempty"`
-	Mills      *DateInt       `json:"mills,omitempty"`
-	UTCOffset  *FlexibleInt64 `json:"utcOffset,omitempty"`
-
 	Filtered   *FlexibleFloat64 `json:"filtered,omitempty"`
 	Unfiltered *FlexibleFloat64 `json:"unfiltered,omitempty"`
 	RSSI       *FlexibleFloat64 `json:"rssi,omitempty"`
 	Noise      *FlexibleFloat64 `json:"noise,omitempty"`
 	SysTime    *DateString      `json:"sysTime,omitempty"`
 
-	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
-	SrvModified *DateInt `json:"srvModified,omitempty"`
+	// Date fields
+	Date             *DateInt       `json:"date,omitempty"`
+	DateString       *DateString    `json:"dateString,omitempty"`
+	Mills            *DateInt       `json:"mills,omitempty"`
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
+	SrvCreated       *DateInt       `json:"srvCreated,omitempty"`
+	SrvModified      *DateInt       `json:"srvModified,omitempty"`
 
-	RawJSONData string `json:"-"`
+	// Non-JSON values to make mapping easier
+	Value       *FlexibleFloat64 `json:"-"`
+	RawJsonData string           `json:"-"`
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, t); err != nil {
+	type Alias Entry
+	aux := struct {
+		ID string `json:"_id"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	t.RawJSONData = string(data)
+
+	// Raw Value
+	t.RawJsonData = string(data)
+
+	// Identitfiers
+	if t.Identifier == nil {
+		t.Identifier = &aux.ID
+	}
+
+	// Setting the value
+	if t.Value == nil {
+		var res FlexibleFloat64
+		if t.SGV != nil {
+			res = *t.SGV
+		} else if t.MBG != nil {
+			res = *t.MBG
+		}
+		res = FlexibleFloat64(t.Units.ToMGDLMultiplier() * res.Float64())
+		t.Value = &res
+	}
+
+	// Cleaning Updates
+	if t.DateString != nil {
+		if t.Date == nil || t.UtcOffsetMinutes == nil {
+			t.Date, t.UtcOffsetMinutes = t.DateString.MillisUTCOffset()
+		}
+	}
+
 	return nil
 }
 

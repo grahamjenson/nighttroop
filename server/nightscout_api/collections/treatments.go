@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
-	"nighttroop.t1d.nz/nightscout"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -23,14 +23,14 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 		slog.Error("failed to map data to treatment model", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	externalID := utils.NextEID("ns")
+	externalID := utils.NextDateID("ns", treatmentModel.Date.Int64())
 	created := false
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
 		err = userContext.UserDB.Queries.CreateCarb(ctx, user.CreateCarbParams{
 			ID:                    externalID,
 			Amount:                treatmentModel.Carbs.Float64(),
-			RawJsonData:           &treatmentModel.RawJSONData,
+			RawJsonData:           &treatmentModel.RawJsonData,
 			CreatedByIdentityName: userContext.IdentityModel.Name,
 			CreatedByIdentityID:   userContext.IdentityModel.ID,
 		})

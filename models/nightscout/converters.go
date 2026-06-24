@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/utils"
 )
 
 //go:generate goverter gen .
@@ -19,7 +20,13 @@ type MapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
 	// goverter:map Duration DurationMinutes
-	ActivityToCreate(source Activity) user.CreateActivityParams
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	ActivityToCreate(source Activity, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateActivityParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore CreatedAt
@@ -30,24 +37,41 @@ type MapConverter interface {
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	DBModelToActivity(source user.Activity) Activity
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map Date OccurredAt
+	// goverter:context idPrefix
+	// goverter:context createdByIdentityID
+	// goverter:context createdByIdentityName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	EntryToCreate(source Entry, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateGlucoseReadingParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams
+}
+
+// goverter:context idPrefix
+func AssignID(date *DateInt, idPrefix string) string {
+	return utils.NextDateID(idPrefix, date.Int64())
+}
+
+// goverter:context createdByIdentityName
+func AssignCreatedByName(createdByIdentityName string) string {
+	return createdByIdentityName
+}
+
+// goverter:context createdByIdentityID
+func AssignCreatedByID(createdByIdentityID int64) int64 {
+	return createdByIdentityID
 }
 
 // ///
 // Custom Converters
 // ///
-
-func (e *Entry) ToDBModel() *user.GlucoseReading {
-	return &user.GlucoseReading{
-		ID:                    *e.Identifier,
-		Value:                 float64(*e.SGV),
-		Type:                  string(SGVType),
-		RawJsonData:           &e.RawJSONData,
-		UtcOffsetMinutes:      e.UTCOffset.Int64(),
-		OccurredAt:            e.Date.Time().UnixMilli(),
-		CreatedByIdentityID:   0,  // This will need to be set by the caller based on the user context
-		CreatedByIdentityName: "", // This will need to be set by the caller based on the user context
-	}
-}
 
 func (e *Entry) FromDBModel(sgv *user.GlucoseReading) error {
 	e.Identifier = ptr(sgv.ID)
@@ -58,7 +82,7 @@ func (e *Entry) FromDBModel(sgv *user.GlucoseReading) error {
 	e.Date = &dateInt
 	dateString := DateStringFromInt64(sgv.OccurredAt)
 	e.DateString = &dateString
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
+	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 	device := fmt.Sprintf("%d", sgv.CreatedByIdentityID)
 	e.Device = &device
 
@@ -74,8 +98,8 @@ func (e *Treatment) ToCarbDBModel() (*user.Carb, error) {
 		ID:               *e.Identifier,
 		Amount:           float64(*e.Carbs),
 		Type:             string(CarbCorrection),
-		RawJsonData:      &e.RawJSONData,
-		UtcOffsetMinutes: e.UTCOffset.Int64(),
+		RawJsonData:      &e.RawJsonData,
+		UtcOffsetMinutes: e.UtcOffsetMinutes.Int64(),
 		OccurredAt:       e.CreatedAt.Time().UnixMilli(),
 	}, nil
 }
@@ -89,8 +113,8 @@ func (e *Treatment) ToBolusDBModel() (*user.Bolus, error) {
 		ID:               *e.Identifier,
 		Value:            e.Insulin.Float64(),
 		Type:             string(CorrectionBolus),
-		RawJsonData:      &e.RawJSONData,
-		UtcOffsetMinutes: e.UTCOffset.Int64(),
+		RawJsonData:      &e.RawJsonData,
+		UtcOffsetMinutes: e.UtcOffsetMinutes.Int64(),
 		OccurredAt:       e.Date.Time().UnixMilli(),
 	}, nil
 }
@@ -106,8 +130,8 @@ func (e *Treatment) ToTempTargetDBModel() (*user.TempTarget, error) {
 		Lowtarget:        e.TargetBottom.Float64(),
 		Start:            e.CreatedAt.Time().UnixMilli(),
 		Duration:         e.Duration.Int64(),
-		RawJsonData:      &e.RawJSONData,
-		UtcOffsetMinutes: e.UTCOffset.Int64(),
+		RawJsonData:      &e.RawJsonData,
+		UtcOffsetMinutes: e.UtcOffsetMinutes.Int64(),
 	}, nil
 }
 func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
@@ -119,7 +143,7 @@ func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
 	dateInt := DateStringFromInt64(sgv.Start)
 	e.CreatedAt = &dateInt
 
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
+	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 
 	return nil
 }
@@ -132,7 +156,7 @@ func (e *Treatment) FromCarbDBModel(sgv *user.Carb) error {
 	dateInt := DateStringFromInt64(sgv.OccurredAt)
 	e.CreatedAt = &dateInt
 
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
+	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 
 	return nil
 }
@@ -145,7 +169,7 @@ func (e *Treatment) FromBolusDBModel(sgv *user.Bolus) error {
 	dateInt := DateInt(sgv.OccurredAt)
 	e.Date = &dateInt
 
-	e.UTCOffset = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
+	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 
 	return nil
 }

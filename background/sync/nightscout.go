@@ -8,7 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/user"
-	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/models/nightscout"
 )
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
@@ -35,19 +35,14 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			eid := utils.CreateEID("nightscout", e.Date.Int64())
-			dbModel := e.ToDBModel()
-			dbModel.ID = eid
-			dbModel.CreatedByIdentityID = userSyncSource.syncIdentity.ID
-			dbModel.CreatedByIdentityName = userSyncSource.syncIdentity.Name
-
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), user.GlucoseReadingToCreate(*dbModel))
+			createParams := nightscout.EntryToCreate(e, "nssync", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
+			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if user.IsDuplicateEID(err) {
 					continue
 				}
 				// Probably just non-unique eid
-				slog.Error("Error creating entry in database", "error", err, "eid", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
+				slog.Error("Error creating entry in database", "error", err, "eid", createParams.ID, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue
 			}
 			count, _ := res.RowsAffected()

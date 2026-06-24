@@ -128,7 +128,6 @@ func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 func FoodToCreate(source Food) CreateFoodParams {
 	var userCreateFoodParams CreateFoodParams
 	userCreateFoodParams.ID = source.ID
-	userCreateFoodParams.OccurredAt = source.OccurredAt
 	if source.Name != nil {
 		xstring := *source.Name
 		userCreateFoodParams.Name = &xstring
@@ -169,10 +168,6 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	userUpdateGlucoseReadingParams.OccurredAt = &pInt64
 	pFloat64 := source.Value
 	userUpdateGlucoseReadingParams.Value = &pFloat64
-	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		userUpdateGlucoseReadingParams.RawJsonData = &xstring
-	}
 	pInt642 := source.UtcOffsetMinutes
 	userUpdateGlucoseReadingParams.UtcOffsetMinutes = &pInt642
 	userUpdateGlucoseReadingParams.ID = source.ID

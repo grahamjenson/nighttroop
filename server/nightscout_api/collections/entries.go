@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
-	"nighttroop.t1d.nz/nightscout"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -25,34 +25,14 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 		slog.Error("failed to map data to entry model", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	occurredAt := time.Now().UnixMilli()
-	if entryModel.Date != nil {
-		occurredAt = entryModel.Date.Int64()
-	}
-	if entryModel.SGV == nil {
-		slog.Error("SGV value is required for entries collection")
-		return nil, nsutils.ErrBadRequest
 
-	}
-	offset := int64(0)
-	if entryModel.UTCOffset != nil {
-		offset = int64(*entryModel.UTCOffset)
-	}
-	eid := utils.NextEID("ns")
-	entryModel.Identifier = &eid
-	entryModel.UTCOffset = ptr(nightscout.FlexibleInt64(offset))
-	entryModel.Date = ptr(nightscout.DateInt(occurredAt))
+	createParams := nightscout.EntryToCreate(*entryModel, "ns", userContext.IdentityModel.ID, userContext.IdentityModel.Name)
 
-	dbModel := entryModel.ToDBModel()
-	dbModel.ID = eid
-	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
-	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
-
-	userContext.UserDB.Queries.CreateGlucoseReading(ctx, user.GlucoseReadingToCreate(*dbModel))
+	userContext.UserDB.Queries.CreateGlucoseReading(ctx, createParams)
 
 	return &nsutils.Record{
 		Collection:  "entries",
-		ID:          eid,
+		ID:          createParams.ID,
 		Data:        data,
 		SrvModified: time.Now().UnixMilli(),
 	}, nil
@@ -96,15 +76,8 @@ func (c EntriesCollection) Update(ctx context.Context, identifier string, patch 
 		return nil, nsutils.ErrInternal
 	}
 
-	dbModel := entryModel.ToDBModel()
-	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
-	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
-
-	if entryModel.SGV != nil {
-		dbModel.Value = (float64)(*entryModel.SGV)
-	}
-
-	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReading(ctx, user.GlucoseReadingToUpdate(*dbModel))
+	updateParams := nightscout.EntryToUpdate(*entryModel)
+	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReading(ctx, updateParams)
 
 	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil

@@ -11,22 +11,45 @@ type Profile struct {
 	Identifier     *string                    `json:"identifier,omitempty"`
 	DefaultProfile *string                    `json:"defaultProfile,omitempty"`
 	Store          map[string]ProfileSettings `json:"store,omitempty"`
-	StartDate      *DateString                `json:"startDate,omitempty"`
-	Mills          *DateInt                   `json:"mills,omitempty"`
 
-	// API v3 additions
+	// Date Feilds
+	StartDate   *DateString `json:"startDate,omitempty"`
+	Mills       *DateInt    `json:"mills,omitempty"`
+	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
+	SrvModified *DateInt    `json:"srvModified,omitempty"`
 
-	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
-	SrvModified *DateInt `json:"srvModified,omitempty"`
-
-	RawJSONData string `json:"-"`
+	// Non-JSON values to make mapping easier
+	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
+	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+	RawJsonData      string         `json:"-"`
 }
 
 func (t *Profile) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, t); err != nil {
+	type Alias Profile
+	aux := struct {
+		ID string `json:"_id"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	t.RawJSONData = string(data)
+
+	// Raw Value
+	t.RawJsonData = string(data)
+
+	// Identitfiers
+	if t.Identifier == nil {
+		t.Identifier = &aux.ID
+	}
+
+	// Cleaning Updates
+	if t.StartDate != nil {
+		t.Date, t.UtcOffsetMinutes = t.StartDate.MillisUTCOffset()
+	}
+
 	return nil
 }
 

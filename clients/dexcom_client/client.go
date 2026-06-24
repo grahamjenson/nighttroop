@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/models/dexcom"
 )
 
 const (
@@ -187,21 +189,8 @@ func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string
 	return sessionID, nil
 }
 
-// EGV represents a Dexcom glucose reading.
-type EGV struct {
-	Value       int
-	SystemTime  time.Time
-	DisplayTime time.Time
-	RawJson     string
-}
-
-func (e EGV) UTCOffsetInMinutes() int {
-	_, offset := e.DisplayTime.Zone()
-	return offset / 60
-}
-
 // FetchEGVs fetches the last specified minutes of EGV readings.
-func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
+func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcom.EGV, error) {
 	if c.sessionID == "" {
 		if err := c.Login(ctx); err != nil {
 			return nil, fmt.Errorf("Dexcom Login Error: %w", err)
@@ -248,7 +237,7 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
 		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
 	}
 
-	out := make([]EGV, 0, len(items))
+	out := make([]dexcom.EGV, 0, len(items))
 
 	for _, raw := range items {
 		var r dexcomEGVResponse
@@ -266,7 +255,7 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]EGV, error) {
 			slog.Error("Error parsing Dexcom display time", "error", err, "raw_time", r.DT)
 		}
 
-		out = append(out, EGV{
+		out = append(out, dexcom.EGV{
 			Value:       r.Value,
 			SystemTime:  systemTime,
 			DisplayTime: displayTime,

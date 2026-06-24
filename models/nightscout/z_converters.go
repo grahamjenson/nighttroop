@@ -5,11 +5,9 @@ package nightscout
 
 import user "nighttroop.t1d.nz/data/sql/user"
 
-func ActivityToCreate(source Activity) user.CreateActivityParams {
+func ActivityToCreate(source Activity, context string, context2 int64, context3 string) user.CreateActivityParams {
 	var userCreateActivityParams user.CreateActivityParams
-	if source.Identifier != nil {
-		userCreateActivityParams.ID = *source.Identifier
-	}
+	userCreateActivityParams.ID = AssignID(source.Date, context3)
 	if source.Date != nil {
 		userCreateActivityParams.OccurredAt = int64(*source.Date)
 	}
@@ -92,6 +90,43 @@ func DBModelToActivity(source user.Activity) Activity {
 		nightscoutActivity.RawJsonData = *source.RawJsonData
 	}
 	return nightscoutActivity
+}
+func EntryToCreate(source Entry, context string, context2 int64, context3 string) user.CreateGlucoseReadingParams {
+	var userCreateGlucoseReadingParams user.CreateGlucoseReadingParams
+	userCreateGlucoseReadingParams.ID = AssignID(source.Date, context3)
+	if source.Date != nil {
+		userCreateGlucoseReadingParams.OccurredAt = int64(*source.Date)
+	}
+	if source.Value != nil {
+		userCreateGlucoseReadingParams.Value = float64(*source.Value)
+	}
+	pString := source.RawJsonData
+	userCreateGlucoseReadingParams.RawJsonData = &pString
+	if source.UtcOffsetMinutes != nil {
+		userCreateGlucoseReadingParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+	}
+	userCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	userCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	return userCreateGlucoseReadingParams
+}
+func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
+	var userUpdateGlucoseReadingParams user.UpdateGlucoseReadingParams
+	if source.Date != nil {
+		xint64 := int64(*source.Date)
+		userUpdateGlucoseReadingParams.OccurredAt = &xint64
+	}
+	if source.Value != nil {
+		xfloat64 := float64(*source.Value)
+		userUpdateGlucoseReadingParams.Value = &xfloat64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
+	}
+	if source.Identifier != nil {
+		userUpdateGlucoseReadingParams.ID = *source.Identifier
+	}
+	return userUpdateGlucoseReadingParams
 }
 func nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
 	return int64(source)

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 // //
@@ -199,6 +201,20 @@ const (
 	UnitsMMOL Units = "mmol/L"
 )
 
+func (u *Units) ToMGDLMultiplier() float64 {
+	if u == nil {
+		return 1.0
+	}
+	switch *u {
+	case UnitsMGDL:
+		return 1.0
+	case UnitsMMOL:
+		return consts.MMOL_L_TO_MG_DL
+	default:
+		return 0.0
+	}
+}
+
 func (u *Units) UnmarshalJSON(data []byte) error {
 	var str string
 	if err := json.Unmarshal(data, &str); err != nil {
@@ -210,7 +226,9 @@ func (u *Units) UnmarshalJSON(data []byte) error {
 	case "mmol/l", "mmol", "mmoll":
 		*u = UnitsMMOL
 	default:
-		return fmt.Errorf("invalid units value %q", str)
+		// We Default to MGDL
+		// TODO maybe default to user setting, but that adds a ton of complexity
+		*u = UnitsMGDL
 	}
 	return nil
 }

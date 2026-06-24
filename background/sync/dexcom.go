@@ -8,7 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
 	"nighttroop.t1d.nz/data/sql/user"
-	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/models/dexcom"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -32,22 +32,14 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			eid := utils.CreateEID("dexcom", e.SystemTime.UnixMilli())
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), user.CreateGlucoseReadingParams{
-				ID:                    eid,
-				OccurredAt:            e.SystemTime.UnixMilli(),
-				Value:                 float64(e.Value),
-				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
-				RawJsonData:           &e.RawJson,
-				CreatedByIdentityName: userSyncSource.syncIdentity.Name,
-				UtcOffsetMinutes:      int64(e.UTCOffsetInMinutes()),
-			})
+			createParams := dexcom.EGVToCreate(e, "dexcom", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
+			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if user.IsDuplicateEID(err) {
 					continue
 				}
 				// Probably just non-unique ID
-				slog.Error("Error creating entry in database", "error", err, "id", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
+				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue
 			}
 			count, _ := res.RowsAffected()

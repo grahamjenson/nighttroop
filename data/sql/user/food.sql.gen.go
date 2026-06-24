@@ -11,7 +11,7 @@ import (
 
 const allFoods = `-- name: AllFoods :many
 
-SELECT id, name, carbs, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM food ORDER BY occurred_at DESC
+SELECT id, name, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM food ORDER BY created_at DESC
 `
 
 // ------
@@ -33,8 +33,6 @@ func (q *Queries) AllFoods(ctx context.Context) ([]*Food, error) {
 			&i.Calories,
 			&i.RawJsonData,
 			&i.DeletedAt,
-			&i.UtcOffsetMinutes,
-			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
@@ -56,19 +54,17 @@ func (q *Queries) AllFoods(ctx context.Context) ([]*Food, error) {
 const createFood = `-- name: CreateFood :exec
 INSERT INTO food (
         id,
-        occurred_at,
         name,
         carbs,
         calories,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES ( ?,  ?, ?, ?, ?, ?, ?)
 `
 
 type CreateFoodParams struct {
 	ID                    string
-	OccurredAt            int64
 	Name                  *string
 	Carbs                 *float64
 	Calories              *float64
@@ -83,7 +79,6 @@ type CreateFoodParams struct {
 func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) error {
 	_, err := q.exec(ctx, q.createFoodStmt, createFood,
 		arg.ID,
-		arg.OccurredAt,
 		arg.Name,
 		arg.Carbs,
 		arg.Calories,
@@ -95,7 +90,7 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) error {
 }
 
 const getFood = `-- name: GetFood :one
-SELECT id, name, carbs, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM food WHERE id = ?
+SELECT id, name, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM food WHERE id = ?
 `
 
 func (q *Queries) GetFood(ctx context.Context, id string) (*Food, error) {
@@ -108,8 +103,6 @@ func (q *Queries) GetFood(ctx context.Context, id string) (*Food, error) {
 		&i.Calories,
 		&i.RawJsonData,
 		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,

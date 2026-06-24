@@ -95,8 +95,6 @@ type Food struct {
 	Calories              *float64
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
-	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string

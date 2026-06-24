@@ -72,10 +72,6 @@ func SyntacticallyValidateUserID(userID string) bool {
 	return re.MatchString(userID)
 }
 
-func NextEID(prefix string) string {
-	return fmt.Sprintf("%s_%s", prefix, security.SecureRandomString(USER_ID_LENGTH*2, USER_CHAR_SET))
-}
-
-func CreateEID(prefix string, createdAt int64) string {
-	return fmt.Sprintf("%s_%d", prefix, createdAt)
+func NextDateID(prefix string, createdAt int64) string {
+	return fmt.Sprintf("%s:%d", prefix, createdAt)
 }

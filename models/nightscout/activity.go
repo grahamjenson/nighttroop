@@ -19,10 +19,10 @@ type Activity struct {
 	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
 	SrvModified *DateInt    `json:"srvModified,omitempty"`
 
+	// Non-JSON values to make mapping easier
 	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
 	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
-
-	RawJsonData string `json:"-"`
+	RawJsonData      string         `json:"-"`
 }
 
 func (t *Activity) UnmarshalJSON(data []byte) error {
@@ -38,12 +38,15 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// Raw Value
 	t.RawJsonData = string(data)
 
+	// Identitfiers
 	if t.Identifier == nil {
 		t.Identifier = &aux.ID
 	}
 
+	// Cleaning Updates
 	if t.CreatedAt != nil {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
@@ -52,13 +55,10 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 }
 
 func (t *Activity) MarshalJSON() ([]byte, error) {
-
 	type Alias Activity
-
 	return json.Marshal(&struct {
 		*Alias
 	}{
 		Alias: (*Alias)(t),
 	})
-
 }

@@ -23,14 +23,38 @@ type DeviceStatus struct {
 	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
 	SrvModified *DateInt    `json:"srvModified,omitempty"`
 
-	RawJSONData string `json:"-"`
+	// Non-JSON values to make mapping easier
+	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
+	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+	RawJsonData      string         `json:"-"`
 }
 
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, t); err != nil {
+	type Alias DeviceStatus
+	aux := struct {
+		ID string `json:"_id"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	t.RawJSONData = string(data)
+
+	// Raw Value
+	t.RawJsonData = string(data)
+
+	// Identitfiers
+	if t.Identifier == nil {
+		t.Identifier = &aux.ID
+	}
+
+	// Cleaning Updates
+	if t.CreatedAt != nil {
+		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+	}
+
 	return nil
 }
 
