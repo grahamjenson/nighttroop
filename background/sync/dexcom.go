@@ -34,7 +34,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 		for _, e := range egvs {
 			eid := utils.CreateEID("dexcom", e.SystemTime.UnixMilli())
 			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), user.CreateGlucoseReadingParams{
-				Eid:                   eid,
+				ID:                    eid,
 				OccurredAt:            e.SystemTime.UnixMilli(),
 				Value:                 float64(e.Value),
 				CreatedByIdentityID:   userSyncSource.syncIdentity.ID,
@@ -46,8 +46,8 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 				if user.IsDuplicateEID(err) {
 					continue
 				}
-				// Probably just non-unique eid
-				slog.Error("Error creating entry in database", "error", err, "eid", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
+				// Probably just non-unique ID
+				slog.Error("Error creating entry in database", "error", err, "id", eid, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue
 			}
 			count, _ := res.RowsAffected()

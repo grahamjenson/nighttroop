@@ -5,7 +5,7 @@
 
 -- name: CreateGlucoseReading :execresult
 INSERT INTO glucose_readings (
-    eid,
+    id,
     occurred_at,
     value,
     raw_json_data,
@@ -19,8 +19,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?);
 -- READ
 --------
 
--- name: GetGlucoseReadingByEID :one
-SELECT * FROM glucose_readings WHERE eid = ?;
+-- name: GetGlucoseReading :one
+SELECT * FROM glucose_readings WHERE id = ?;
 
 -- name: AllGlucoseReadings :many
 SELECT * FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?;
@@ -36,21 +36,21 @@ UPDATE glucose_readings SET
     raw_json_data = COALESCE(sqlc.narg(raw_json_data), raw_json_data),
     utc_offset_minutes = COALESCE(sqlc.narg(utc_offset_minutes), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE eid = ?
+WHERE id = ?
 RETURNING *; 
 
 --------
 -- DELETE
 --------
 
--- name: DeleteGlucoseReadingByEID :execresult
+-- name: DeleteGlucoseReading :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE eid = ?;
+WHERE id = ?;
 
--- name: DeletePermanentGlucoseReadingByEID :execresult
-DELETE FROM glucose_readings WHERE eid = ?;
+-- name: DeletePermanentGlucoseReading :execresult
+DELETE FROM glucose_readings WHERE id = ?;
 
 -- name: DeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 

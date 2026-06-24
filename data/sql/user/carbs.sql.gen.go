@@ -11,7 +11,7 @@ import (
 
 const allCarbs = `-- name: AllCarbs :many
 
-SELECT id, eid, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
+SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 		var i Carb
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Amount,
 			&i.Type,
 			&i.RawJsonData,
@@ -55,7 +54,7 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 
 const createCarb = `-- name: CreateCarb :exec
 INSERT INTO carbs (
-    eid,
+    id,
     occurred_at,
     amount,
     raw_json_data,
@@ -65,7 +64,7 @@ VALUES ( ?, ?, ?, ?, ?, ?)
 `
 
 type CreateCarbParams struct {
-	Eid                   string
+	ID                    string
 	OccurredAt            int64
 	Amount                float64
 	RawJsonData           *string
@@ -78,7 +77,7 @@ type CreateCarbParams struct {
 // ------
 func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
 	_, err := q.exec(ctx, q.createCarbStmt, createCarb,
-		arg.Eid,
+		arg.ID,
 		arg.OccurredAt,
 		arg.Amount,
 		arg.RawJsonData,
@@ -88,16 +87,15 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
 	return err
 }
 
-const getCarbByEID = `-- name: GetCarbByEID :one
-SELECT id, eid, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs WHERE eid = ?
+const getCarb = `-- name: GetCarb :one
+SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs WHERE id = ?
 `
 
-func (q *Queries) GetCarbByEID(ctx context.Context, eid string) (*Carb, error) {
-	row := q.queryRow(ctx, q.getCarbByEIDStmt, getCarbByEID, eid)
+func (q *Queries) GetCarb(ctx context.Context, id string) (*Carb, error) {
+	row := q.queryRow(ctx, q.getCarbStmt, getCarb, id)
 	var i Carb
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Amount,
 		&i.Type,
 		&i.RawJsonData,

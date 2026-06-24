@@ -3,7 +3,7 @@
 --------
 -- name: CreateFood :exec
 INSERT INTO food (
-        eid,
+        id,
         occurred_at,
         name,
         carbs,
@@ -20,8 +20,8 @@ INSERT INTO food (
 -- name: AllFoods :many
 SELECT * FROM food ORDER BY occurred_at DESC; 
 
--- name: GetFoodByEID :one
-SELECT * FROM food WHERE eid = ?;
+-- name: GetFood :one
+SELECT * FROM food WHERE id = ?;
 
 --------
 -- UPDATE

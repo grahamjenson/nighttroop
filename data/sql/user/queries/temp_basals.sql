@@ -4,7 +4,7 @@
 
 -- name: CreateTempBasal :exec
 INSERT INTO temp_basals (
-        eid,
+        id,
         start,
         duration,
         value,
@@ -23,8 +23,8 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
 SELECT * FROM temp_basals ORDER BY occurred_at DESC;
 
 
--- name: GetTempBasalByEID :one
-SELECT * FROM temp_basals WHERE eid = ?;
+-- name: GetTempBasal :one
+SELECT * FROM temp_basals WHERE id = ?;
 
 --------
 -- UPDATE

@@ -4,7 +4,7 @@
 
 -- name: CreateProfile :exec
 INSERT INTO profile (
-    eid,
+    id,
     name,
     START,
     duration,
@@ -31,8 +31,8 @@ INSERT INTO profile (
 SELECT * FROM profile ORDER BY occurred_at DESC;
 
 
--- name: GetProfileByEID :one
-SELECT * FROM profile WHERE eid = ?;
+-- name: GetProfile :one
+SELECT * FROM profile WHERE id = ?;
 --------
 -- UPDATE
 --------

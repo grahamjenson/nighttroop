@@ -11,7 +11,7 @@ import (
 
 const allProfiles = `-- name: AllProfiles :many
 
-SELECT id, eid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
+SELECT id, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 		var i Profile
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Name,
 			&i.Start,
 			&i.Duration,
@@ -66,7 +65,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 const createProfile = `-- name: CreateProfile :exec
 
 INSERT INTO profile (
-    eid,
+    id,
     name,
     START,
     duration,
@@ -87,7 +86,7 @@ INSERT INTO profile (
 `
 
 type CreateProfileParams struct {
-	Eid                      string
+	ID                       string
 	Name                     *string
 	Start                    *int64
 	Duration                 *int64
@@ -111,7 +110,7 @@ type CreateProfileParams struct {
 // ------
 func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) error {
 	_, err := q.exec(ctx, q.createProfileStmt, createProfile,
-		arg.Eid,
+		arg.ID,
 		arg.Name,
 		arg.Start,
 		arg.Duration,
@@ -132,16 +131,15 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) er
 	return err
 }
 
-const getProfileByEID = `-- name: GetProfileByEID :one
-SELECT id, eid, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE eid = ?
+const getProfile = `-- name: GetProfile :one
+SELECT id, name, start, duration, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM profile WHERE id = ?
 `
 
-func (q *Queries) GetProfileByEID(ctx context.Context, eid string) (*Profile, error) {
-	row := q.queryRow(ctx, q.getProfileByEIDStmt, getProfileByEID, eid)
+func (q *Queries) GetProfile(ctx context.Context, id string) (*Profile, error) {
+	row := q.queryRow(ctx, q.getProfileStmt, getProfile, id)
 	var i Profile
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Name,
 		&i.Start,
 		&i.Duration,

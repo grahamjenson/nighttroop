@@ -11,8 +11,7 @@ import (
 )
 
 type Activity struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Name                  *string
 	Type                  *string
 	Notes                 *string
@@ -31,8 +30,7 @@ type Activity struct {
 }
 
 type Bolus struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Value                 float64
 	Type                  string
 	RawJsonData           *string
@@ -46,8 +44,7 @@ type Bolus struct {
 }
 
 type Carb struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Amount                float64
 	Type                  string
 	RawJsonData           *string
@@ -61,8 +58,7 @@ type Carb struct {
 }
 
 type DeviceStatus struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	IdentityID            int64
 	BatteryLevel          *int64
 	ChargingState         *string
@@ -93,8 +89,7 @@ type Event struct {
 }
 
 type Food struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Name                  *string
 	Carbs                 *float64
 	Calories              *float64
@@ -109,8 +104,7 @@ type Food struct {
 }
 
 type GlucoseReading struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Value                 float64
 	Type                  string
 	RawJsonData           *string
@@ -137,8 +131,7 @@ type Identity struct {
 }
 
 type Note struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Content               string
 	RawJsonData           *string
 	DeletedAt             *int64
@@ -151,8 +144,7 @@ type Note struct {
 }
 
 type Profile struct {
-	ID                       int64
-	Eid                      string
+	ID                       string
 	Name                     *string
 	Start                    *int64
 	Duration                 *int64
@@ -189,8 +181,7 @@ type SqliteSequence struct {
 }
 
 type TempBasal struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Start                 int64
 	Duration              int64
 	Value                 float64
@@ -205,8 +196,7 @@ type TempBasal struct {
 }
 
 type TempTarget struct {
-	ID                    int64
-	Eid                   string
+	ID                    string
 	Start                 int64
 	Duration              int64
 	Hightarget            float64

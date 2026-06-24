@@ -4,7 +4,7 @@
 
 -- name: CreateDeviceStatus :exec
 INSERT INTO device_status (
-    eid,
+    id,
     identity_id,
     battery_level,
     charging_state,
@@ -30,8 +30,8 @@ INSERT INTO device_status (
 -- name: AllDeviceStatus :many
 SELECT * FROM device_status ORDER BY occurred_at DESC;
 
--- name: GetDeviceStatusByEID :one
-SELECT * FROM device_status WHERE eid = ?;
+-- name: GetDeviceStatus :one
+SELECT * FROM device_status WHERE id = ?;
 
 --------
 -- UPDATE

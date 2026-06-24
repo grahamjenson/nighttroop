@@ -12,7 +12,7 @@ import (
 const allTempTargets = `-- name: AllTempTargets :many
 
 
-SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY occurred_at DESC
+SELECT id, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY occurred_at DESC
 `
 
 // ------
@@ -29,7 +29,6 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 		var i TempTarget
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Start,
 			&i.Duration,
 			&i.Hightarget,
@@ -60,7 +59,7 @@ const createTempTarget = `-- name: CreateTempTarget :exec
 
 
 INSERT INTO temp_targets (
-    eid, 
+    id, 
     start, 
     duration, 
     highTarget, 
@@ -74,7 +73,7 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateTempTargetParams struct {
-	Eid                   string
+	ID                    string
 	Start                 int64
 	Duration              int64
 	Hightarget            float64
@@ -90,7 +89,7 @@ type CreateTempTargetParams struct {
 // ------
 func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetParams) error {
 	_, err := q.exec(ctx, q.createTempTargetStmt, createTempTarget,
-		arg.Eid,
+		arg.ID,
 		arg.Start,
 		arg.Duration,
 		arg.Hightarget,
@@ -103,16 +102,15 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 	return err
 }
 
-const getTempTargetByEID = `-- name: GetTempTargetByEID :one
-SELECT id, eid, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE eid = ?
+const getTempTarget = `-- name: GetTempTarget :one
+SELECT id, start, duration, hightarget, lowtarget, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
 `
 
-func (q *Queries) GetTempTargetByEID(ctx context.Context, eid string) (*TempTarget, error) {
-	row := q.queryRow(ctx, q.getTempTargetByEIDStmt, getTempTargetByEID, eid)
+func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, error) {
+	row := q.queryRow(ctx, q.getTempTargetStmt, getTempTarget, id)
 	var i TempTarget
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Start,
 		&i.Duration,
 		&i.Hightarget,

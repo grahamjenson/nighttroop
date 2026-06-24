@@ -3,7 +3,7 @@
 --------
 -- name: CreateNote :exec
 INSERT INTO note (
-        eid,
+        id,
         occurred_at,
         content,
         raw_json_data,
@@ -18,8 +18,8 @@ INSERT INTO note (
 -- name: AllNotes :many
 SELECT * FROM note ORDER BY occurred_at DESC; 
 
--- name: GetNoteByEID :one
-SELECT * FROM note WHERE eid = ?;
+-- name: GetNote :one
+SELECT * FROM note WHERE id = ?;
 
 --------
 -- UPDATE

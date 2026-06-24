@@ -9,21 +9,26 @@ import (
 //go:generate goverter gen .
 
 // goverter:converter
+// goverter:output:format function
 // goverter:output:file ./z_converters.go
 type MapConverter interface {
 
-	// goverter:ignore CreatedByIdentityID CreatedByIdentityName
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore CreatedByIdentityID CreatedByIdentityName
 	// goverter:map ActivityType Type
-	// goverter:map Identifier Eid
+	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
 	// goverter:map Duration DurationMinutes
 	ActivityToCreate(source Activity) user.CreateActivityParams
 
-	// goverter:map Eid Identifier
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore CreatedAt
+	// goverter:map ID Identifier
 	// goverter:map Type ActivityType
 	// goverter:map OccurredAt Date
-	// goverter:map DurationMinutes  Duration
+	// goverter:map DurationMinutes Duration
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
 	DBModelToActivity(source user.Activity) Activity
 }
 
@@ -33,7 +38,7 @@ type MapConverter interface {
 
 func (e *Entry) ToDBModel() *user.GlucoseReading {
 	return &user.GlucoseReading{
-		Eid:                   *e.Identifier,
+		ID:                    *e.Identifier,
 		Value:                 float64(*e.SGV),
 		Type:                  string(SGVType),
 		RawJsonData:           &e.RawJSONData,
@@ -45,7 +50,7 @@ func (e *Entry) ToDBModel() *user.GlucoseReading {
 }
 
 func (e *Entry) FromDBModel(sgv *user.GlucoseReading) error {
-	e.Identifier = ptr(sgv.Eid)
+	e.Identifier = ptr(sgv.ID)
 	entryType := EntryType(sgv.Type)
 	e.Type = &entryType
 	e.SGV = ptr(FlexibleFloat64(sgv.Value))
@@ -66,7 +71,7 @@ func (e *Treatment) ToCarbDBModel() (*user.Carb, error) {
 	}
 
 	return &user.Carb{
-		Eid:              *e.Identifier,
+		ID:               *e.Identifier,
 		Amount:           float64(*e.Carbs),
 		Type:             string(CarbCorrection),
 		RawJsonData:      &e.RawJSONData,
@@ -81,7 +86,7 @@ func (e *Treatment) ToBolusDBModel() (*user.Bolus, error) {
 	}
 
 	return &user.Bolus{
-		Eid:              *e.Identifier,
+		ID:               *e.Identifier,
 		Value:            e.Insulin.Float64(),
 		Type:             string(CorrectionBolus),
 		RawJsonData:      &e.RawJSONData,
@@ -96,7 +101,7 @@ func (e *Treatment) ToTempTargetDBModel() (*user.TempTarget, error) {
 	}
 
 	return &user.TempTarget{
-		Eid:              *e.Identifier,
+		ID:               *e.Identifier,
 		Hightarget:       e.TargetTop.Float64(),
 		Lowtarget:        e.TargetBottom.Float64(),
 		Start:            e.CreatedAt.Time().UnixMilli(),
@@ -106,7 +111,7 @@ func (e *Treatment) ToTempTargetDBModel() (*user.TempTarget, error) {
 	}, nil
 }
 func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
-	e.Identifier = ptr(sgv.Eid)
+	e.Identifier = ptr(sgv.ID)
 	eventType := TemporaryTarget
 	e.EventType = &eventType
 	e.TargetTop = ptr(FlexibleFloat64(sgv.Hightarget))
@@ -120,7 +125,7 @@ func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
 }
 
 func (e *Treatment) FromCarbDBModel(sgv *user.Carb) error {
-	e.Identifier = ptr(sgv.Eid)
+	e.Identifier = ptr(sgv.ID)
 	eventType := CarbCorrection
 	e.EventType = &eventType
 	e.Carbs = ptr(FlexibleFloat64(sgv.Amount))
@@ -133,7 +138,7 @@ func (e *Treatment) FromCarbDBModel(sgv *user.Carb) error {
 }
 
 func (e *Treatment) FromBolusDBModel(sgv *user.Bolus) error {
-	e.Identifier = ptr(sgv.Eid)
+	e.Identifier = ptr(sgv.ID)
 	eventType := CorrectionBolus
 	e.EventType = &eventType
 	e.Insulin = ptr(FlexibleFloat64(sgv.Value))

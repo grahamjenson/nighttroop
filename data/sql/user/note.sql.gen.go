@@ -11,7 +11,7 @@ import (
 
 const allNotes = `-- name: AllNotes :many
 
-SELECT id, eid, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM note ORDER BY occurred_at DESC
+SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM note ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllNotes(ctx context.Context) ([]*Note, error) {
 		var i Note
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Content,
 			&i.RawJsonData,
 			&i.DeletedAt,
@@ -54,7 +53,7 @@ func (q *Queries) AllNotes(ctx context.Context) ([]*Note, error) {
 
 const createNote = `-- name: CreateNote :exec
 INSERT INTO note (
-        eid,
+        id,
         occurred_at,
         content,
         raw_json_data,
@@ -64,7 +63,7 @@ INSERT INTO note (
 `
 
 type CreateNoteParams struct {
-	Eid                   string
+	ID                    string
 	OccurredAt            int64
 	Content               string
 	RawJsonData           *string
@@ -77,7 +76,7 @@ type CreateNoteParams struct {
 // ------
 func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
 	_, err := q.exec(ctx, q.createNoteStmt, createNote,
-		arg.Eid,
+		arg.ID,
 		arg.OccurredAt,
 		arg.Content,
 		arg.RawJsonData,
@@ -87,16 +86,15 @@ func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
 	return err
 }
 
-const getNoteByEID = `-- name: GetNoteByEID :one
-SELECT id, eid, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM note WHERE eid = ?
+const getNote = `-- name: GetNote :one
+SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM note WHERE id = ?
 `
 
-func (q *Queries) GetNoteByEID(ctx context.Context, eid string) (*Note, error) {
-	row := q.queryRow(ctx, q.getNoteByEIDStmt, getNoteByEID, eid)
+func (q *Queries) GetNote(ctx context.Context, id string) (*Note, error) {
+	row := q.queryRow(ctx, q.getNoteStmt, getNote, id)
 	var i Note
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Content,
 		&i.RawJsonData,
 		&i.DeletedAt,

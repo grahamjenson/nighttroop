@@ -11,7 +11,7 @@ import (
 
 const allActivities = `-- name: AllActivities :many
 
-SELECT id, eid, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
+SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllActivities(ctx context.Context) ([]*Activity, error) {
 		var i Activity
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Name,
 			&i.Type,
 			&i.Notes,
@@ -60,7 +59,7 @@ func (q *Queries) AllActivities(ctx context.Context) ([]*Activity, error) {
 
 const createActivity = `-- name: CreateActivity :exec
 INSERT INTO activity (
-        eid,
+        id,
         occurred_at,
         utc_offset_minutes,
         name,
@@ -77,7 +76,7 @@ INSERT INTO activity (
 `
 
 type CreateActivityParams struct {
-	Eid                   string
+	ID                    string
 	OccurredAt            int64
 	UtcOffsetMinutes      int64
 	Name                  *string
@@ -97,7 +96,7 @@ type CreateActivityParams struct {
 // ------
 func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) error {
 	_, err := q.exec(ctx, q.createActivityStmt, createActivity,
-		arg.Eid,
+		arg.ID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.Name,
@@ -114,16 +113,15 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 	return err
 }
 
-const getActivityByEID = `-- name: GetActivityByEID :one
-SELECT id, eid, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity WHERE eid = ?
+const getActivityByID = `-- name: GetActivityByID :one
+SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity WHERE id = ?
 `
 
-func (q *Queries) GetActivityByEID(ctx context.Context, eid string) (*Activity, error) {
-	row := q.queryRow(ctx, q.getActivityByEIDStmt, getActivityByEID, eid)
+func (q *Queries) GetActivityByID(ctx context.Context, id string) (*Activity, error) {
+	row := q.queryRow(ctx, q.getActivityByIDStmt, getActivityByID, id)
 	var i Activity
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Name,
 		&i.Type,
 		&i.Notes,

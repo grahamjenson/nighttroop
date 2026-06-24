@@ -11,7 +11,7 @@ import (
 
 const allBoluses = `-- name: AllBoluses :many
 
-SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus ORDER BY occurred_at DESC
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 		var i Bolus
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Value,
 			&i.Type,
 			&i.RawJsonData,
@@ -55,7 +54,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 
 const createBolus = `-- name: CreateBolus :exec
 INSERT INTO bolus (
-        eid,
+        id,
         occurred_at,
         value,
         type,
@@ -66,7 +65,7 @@ INSERT INTO bolus (
 `
 
 type CreateBolusParams struct {
-	Eid                   string
+	ID                    string
 	OccurredAt            int64
 	Value                 float64
 	Type                  string
@@ -80,7 +79,7 @@ type CreateBolusParams struct {
 // ------
 func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error {
 	_, err := q.exec(ctx, q.createBolusStmt, createBolus,
-		arg.Eid,
+		arg.ID,
 		arg.OccurredAt,
 		arg.Value,
 		arg.Type,
@@ -91,16 +90,15 @@ func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error 
 	return err
 }
 
-const getBolusByEID = `-- name: GetBolusByEID :one
-SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus WHERE eid = ?
+const getBolus = `-- name: GetBolus :one
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM bolus WHERE id = ?
 `
 
-func (q *Queries) GetBolusByEID(ctx context.Context, eid string) (*Bolus, error) {
-	row := q.queryRow(ctx, q.getBolusByEIDStmt, getBolusByEID, eid)
+func (q *Queries) GetBolus(ctx context.Context, id string) (*Bolus, error) {
+	row := q.queryRow(ctx, q.getBolusStmt, getBolus, id)
 	var i Bolus
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Value,
 		&i.Type,
 		&i.RawJsonData,

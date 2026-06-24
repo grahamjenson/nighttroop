@@ -44,7 +44,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 	entryModel.Date = ptr(nightscout.DateInt(occurredAt))
 
 	dbModel := entryModel.ToDBModel()
-	dbModel.Eid = eid
+	dbModel.ID = eid
 	dbModel.CreatedByIdentityID = userContext.IdentityModel.ID
 	dbModel.CreatedByIdentityName = userContext.IdentityModel.Name
 
@@ -61,7 +61,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	userContext := httputils.GetUserContext(ctx)
 
-	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReadingByEID(ctx, identifier)
+	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReading(ctx, identifier)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -113,7 +113,7 @@ func (c EntriesCollection) Update(ctx context.Context, identifier string, patch 
 func (c EntriesCollection) Delete(ctx context.Context, identifier string, permanent bool) *nsutils.HTTPError {
 	userContext := httputils.GetUserContext(ctx)
 	if permanent {
-		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingByEID(ctx, identifier)
+		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReading(ctx, identifier)
 		if err != nil {
 			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -129,7 +129,7 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
 	} else {
-		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingByEID(ctx, identifier)
+		res, err := userContext.UserDB.Queries.DeleteGlucoseReading(ctx, identifier)
 		if err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal

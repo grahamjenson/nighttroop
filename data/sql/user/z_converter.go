@@ -5,7 +5,7 @@ package user
 
 func ActivityToCreate(source Activity) CreateActivityParams {
 	var userCreateActivityParams CreateActivityParams
-	userCreateActivityParams.Eid = source.Eid
+	userCreateActivityParams.ID = source.ID
 	userCreateActivityParams.OccurredAt = source.OccurredAt
 	userCreateActivityParams.UtcOffsetMinutes = source.UtcOffsetMinutes
 	if source.Name != nil {
@@ -46,7 +46,7 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 }
 func BolusToCreate(source Bolus) CreateBolusParams {
 	var userCreateBolusParams CreateBolusParams
-	userCreateBolusParams.Eid = source.Eid
+	userCreateBolusParams.ID = source.ID
 	userCreateBolusParams.OccurredAt = source.OccurredAt
 	userCreateBolusParams.Value = source.Value
 	userCreateBolusParams.Type = source.Type
@@ -60,7 +60,7 @@ func BolusToCreate(source Bolus) CreateBolusParams {
 }
 func CarbsToCreate(source Carb) CreateCarbParams {
 	var userCreateCarbParams CreateCarbParams
-	userCreateCarbParams.Eid = source.Eid
+	userCreateCarbParams.ID = source.ID
 	userCreateCarbParams.OccurredAt = source.OccurredAt
 	userCreateCarbParams.Amount = source.Amount
 	if source.RawJsonData != nil {
@@ -73,7 +73,7 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 }
 func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 	var userCreateDeviceStatusParams CreateDeviceStatusParams
-	userCreateDeviceStatusParams.Eid = source.Eid
+	userCreateDeviceStatusParams.ID = source.ID
 	userCreateDeviceStatusParams.IdentityID = source.IdentityID
 	if source.BatteryLevel != nil {
 		xint64 := *source.BatteryLevel
@@ -127,7 +127,7 @@ func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 }
 func FoodToCreate(source Food) CreateFoodParams {
 	var userCreateFoodParams CreateFoodParams
-	userCreateFoodParams.Eid = source.Eid
+	userCreateFoodParams.ID = source.ID
 	userCreateFoodParams.OccurredAt = source.OccurredAt
 	if source.Name != nil {
 		xstring := *source.Name
@@ -151,7 +151,7 @@ func FoodToCreate(source Food) CreateFoodParams {
 }
 func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	var userCreateGlucoseReadingParams CreateGlucoseReadingParams
-	userCreateGlucoseReadingParams.Eid = source.Eid
+	userCreateGlucoseReadingParams.ID = source.ID
 	userCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	userCreateGlucoseReadingParams.Value = source.Value
 	if source.RawJsonData != nil {
@@ -175,12 +175,12 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	}
 	pInt642 := source.UtcOffsetMinutes
 	userUpdateGlucoseReadingParams.UtcOffsetMinutes = &pInt642
-	userUpdateGlucoseReadingParams.Eid = source.Eid
+	userUpdateGlucoseReadingParams.ID = source.ID
 	return userUpdateGlucoseReadingParams
 }
 func NoteToCreate(source Note) CreateNoteParams {
 	var userCreateNoteParams CreateNoteParams
-	userCreateNoteParams.Eid = source.Eid
+	userCreateNoteParams.ID = source.ID
 	userCreateNoteParams.OccurredAt = source.OccurredAt
 	userCreateNoteParams.Content = source.Content
 	if source.RawJsonData != nil {
@@ -193,7 +193,7 @@ func NoteToCreate(source Note) CreateNoteParams {
 }
 func ProfileToCreate(source Profile) CreateProfileParams {
 	var userCreateProfileParams CreateProfileParams
-	userCreateProfileParams.Eid = source.Eid
+	userCreateProfileParams.ID = source.ID
 	if source.Name != nil {
 		xstring := *source.Name
 		userCreateProfileParams.Name = &xstring
@@ -253,7 +253,7 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 }
 func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var userCreateTempBasalParams CreateTempBasalParams
-	userCreateTempBasalParams.Eid = source.Eid
+	userCreateTempBasalParams.ID = source.ID
 	userCreateTempBasalParams.Start = source.Start
 	userCreateTempBasalParams.Duration = source.Duration
 	userCreateTempBasalParams.Value = source.Value
@@ -268,7 +268,7 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 }
 func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	var userCreateTempTargetParams CreateTempTargetParams
-	userCreateTempTargetParams.Eid = source.Eid
+	userCreateTempTargetParams.ID = source.ID
 	userCreateTempTargetParams.Start = source.Start
 	userCreateTempTargetParams.Duration = source.Duration
 	userCreateTempTargetParams.Hightarget = source.Hightarget

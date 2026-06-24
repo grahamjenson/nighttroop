@@ -3,7 +3,7 @@
 --------
 -- name: CreateActivity :exec
 INSERT INTO activity (
-        eid,
+        id,
         occurred_at,
         utc_offset_minutes,
         name,
@@ -25,8 +25,8 @@ INSERT INTO activity (
 -- name: AllActivities :many
 SELECT * FROM activity ORDER BY occurred_at DESC; 
 
--- name: GetActivityByEID :one
-SELECT * FROM activity WHERE eid = ?;
+-- name: GetActivityByID :one
+SELECT * FROM activity WHERE id = ?;
 
 --------
 -- UPDATE

@@ -3,7 +3,7 @@
 --------
 -- name: CreateCarb :exec
 INSERT INTO carbs (
-    eid,
+    id,
     occurred_at,
     amount,
     raw_json_data,
@@ -18,8 +18,8 @@ VALUES ( ?, ?, ?, ?, ?, ?);
 -- name: AllCarbs :many
 SELECT * FROM carbs ORDER BY occurred_at DESC;
 
--- name: GetCarbByEID :one
-SELECT * FROM carbs WHERE eid = ?;
+-- name: GetCarb :one
+SELECT * FROM carbs WHERE id = ?;
 
 --------
 -- UPDATE

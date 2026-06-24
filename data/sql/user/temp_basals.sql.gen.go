@@ -11,7 +11,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, eid, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY occurred_at DESC
+SELECT id, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 		var i TempBasal
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Start,
 			&i.Duration,
 			&i.Value,
@@ -57,7 +56,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 const createTempBasal = `-- name: CreateTempBasal :exec
 
 INSERT INTO temp_basals (
-        eid,
+        id,
         start,
         duration,
         value,
@@ -70,7 +69,7 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateTempBasalParams struct {
-	Eid                   string
+	ID                    string
 	Start                 int64
 	Duration              int64
 	Value                 float64
@@ -85,7 +84,7 @@ type CreateTempBasalParams struct {
 // ------
 func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams) error {
 	_, err := q.exec(ctx, q.createTempBasalStmt, createTempBasal,
-		arg.Eid,
+		arg.ID,
 		arg.Start,
 		arg.Duration,
 		arg.Value,
@@ -97,16 +96,15 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 	return err
 }
 
-const getTempBasalByEID = `-- name: GetTempBasalByEID :one
-SELECT id, eid, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE eid = ?
+const getTempBasal = `-- name: GetTempBasal :one
+SELECT id, start, duration, value, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
 `
 
-func (q *Queries) GetTempBasalByEID(ctx context.Context, eid string) (*TempBasal, error) {
-	row := q.queryRow(ctx, q.getTempBasalByEIDStmt, getTempBasalByEID, eid)
+func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, error) {
+	row := q.queryRow(ctx, q.getTempBasalStmt, getTempBasal, id)
 	var i TempBasal
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Start,
 		&i.Duration,
 		&i.Value,

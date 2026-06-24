@@ -26,10 +26,24 @@ type Activity struct {
 }
 
 func (t *Activity) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, t); err != nil {
+	type Alias Activity
+	aux := struct {
+		ID string `json:"_id"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
+
 	t.RawJsonData = string(data)
+
+	if t.Identifier == nil {
+		t.Identifier = &aux.ID
+	}
+
 	if t.CreatedAt != nil {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
@@ -40,6 +54,7 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 func (t *Activity) MarshalJSON() ([]byte, error) {
 
 	type Alias Activity
+
 	return json.Marshal(&struct {
 		*Alias
 	}{

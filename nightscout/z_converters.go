@@ -5,35 +5,94 @@ package nightscout
 
 import user "nighttroop.t1d.nz/data/sql/user"
 
-type MapConverterImpl struct{}
-
-func (c *MapConverterImpl) ActivityToCreate(source Activity) user.CreateActivityParams {
+func ActivityToCreate(source Activity) user.CreateActivityParams {
 	var userCreateActivityParams user.CreateActivityParams
 	if source.Identifier != nil {
-		userCreateActivityParams.Eid = *source.Identifier
+		userCreateActivityParams.ID = *source.Identifier
 	}
 	if source.Date != nil {
 		userCreateActivityParams.OccurredAt = int64(*source.Date)
 	}
 	if source.UtcOffsetMinutes != nil {
-		userCreateActivityParams.UtcOffsetMinutes = c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userCreateActivityParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 	}
 	if source.Name != nil {
 		xstring := *source.Name
 		userCreateActivityParams.Name = &xstring
 	}
+	if source.ActivityType != nil {
+		xstring2 := *source.ActivityType
+		userCreateActivityParams.Type = &xstring2
+	}
+	if source.Notes != nil {
+		xstring3 := *source.Notes
+		userCreateActivityParams.Notes = &xstring3
+	}
 	if source.Duration != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.Duration)
-		userCreateActivityParams.Duration = &xint64
+		xint64 := nightscoutFlexibleInt64ToInt64(*source.Duration)
+		userCreateActivityParams.DurationMinutes = &xint64
 	}
 	if source.Calories != nil {
-		xfloat64 := float64(*source.Calories)
-		userCreateActivityParams.Calories = &xfloat64
+		xint642 := nightscoutFlexibleInt64ToInt64(*source.Calories)
+		userCreateActivityParams.Calories = &xint642
+	}
+	if source.Steps != nil {
+		xint643 := nightscoutFlexibleInt64ToInt64(*source.Steps)
+		userCreateActivityParams.Steps = &xint643
+	}
+	if source.HeartRate != nil {
+		xint644 := nightscoutFlexibleInt64ToInt64(*source.HeartRate)
+		userCreateActivityParams.HeartRate = &xint644
 	}
 	pString := source.RawJsonData
 	userCreateActivityParams.RawJsonData = &pString
 	return userCreateActivityParams
 }
-func (c *MapConverterImpl) nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
+func DBModelToActivity(source user.Activity) Activity {
+	var nightscoutActivity Activity
+	pString := source.ID
+	nightscoutActivity.Identifier = &pString
+	if source.Name != nil {
+		xstring := *source.Name
+		nightscoutActivity.Name = &xstring
+	}
+	if source.Type != nil {
+		xstring2 := *source.Type
+		nightscoutActivity.ActivityType = &xstring2
+	}
+	if source.DurationMinutes != nil {
+		nightscoutFlexibleInt64 := FlexibleInt64(*source.DurationMinutes)
+		nightscoutActivity.Duration = &nightscoutFlexibleInt64
+	}
+	if source.Steps != nil {
+		nightscoutFlexibleInt642 := FlexibleInt64(*source.Steps)
+		nightscoutActivity.Steps = &nightscoutFlexibleInt642
+	}
+	if source.Calories != nil {
+		nightscoutFlexibleInt643 := FlexibleInt64(*source.Calories)
+		nightscoutActivity.Calories = &nightscoutFlexibleInt643
+	}
+	if source.HeartRate != nil {
+		nightscoutFlexibleInt644 := FlexibleInt64(*source.HeartRate)
+		nightscoutActivity.HeartRate = &nightscoutFlexibleInt644
+	}
+	if source.Notes != nil {
+		xstring3 := *source.Notes
+		nightscoutActivity.Notes = &xstring3
+	}
+	pNightscoutDateInt := DateInt(source.CreatedAt)
+	nightscoutActivity.SrvCreated = &pNightscoutDateInt
+	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
+	nightscoutActivity.SrvModified = &pNightscoutDateInt2
+	pNightscoutDateInt3 := DateInt(source.OccurredAt)
+	nightscoutActivity.Date = &pNightscoutDateInt3
+	pNightscoutFlexibleInt64 := FlexibleInt64(source.UtcOffsetMinutes)
+	nightscoutActivity.UtcOffsetMinutes = &pNightscoutFlexibleInt64
+	if source.RawJsonData != nil {
+		nightscoutActivity.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutActivity
+}
+func nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
 	return int64(source)
 }

@@ -10,7 +10,7 @@
 
 -- name: CreateTempTarget :exec
 INSERT INTO temp_targets (
-    eid, 
+    id, 
     start, 
     duration, 
     highTarget, 
@@ -31,8 +31,8 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?);
 -- name: AllTempTargets :many
 SELECT * FROM temp_targets ORDER BY occurred_at DESC;
 
--- name: GetTempTargetByEID :one
-SELECT * FROM temp_targets WHERE eid = ?;
+-- name: GetTempTarget :one
+SELECT * FROM temp_targets WHERE id = ?;
 --------
 -- UPDATE
 --------

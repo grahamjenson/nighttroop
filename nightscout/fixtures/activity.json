@@ -1,0 +1,9 @@
+{
+    "_id": "6a334983c78f9ecb17543b64",
+    "activityType": "walking",
+    "created_at": "2026-06-18T13:27:31+12:00",
+    "duration": 3600,
+    "heartRate": 120,
+    "notes": "activity walking",
+    "steps": 1000
+}

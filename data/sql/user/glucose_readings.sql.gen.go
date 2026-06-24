@@ -11,7 +11,7 @@ import (
 )
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
-SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?
 `
 
 func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*GlucoseReading, error) {
@@ -25,7 +25,6 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*Gluco
 		var i GlucoseReading
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.Value,
 			&i.Type,
 			&i.RawJsonData,
@@ -53,7 +52,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*Gluco
 const createGlucoseReading = `-- name: CreateGlucoseReading :execresult
 
 INSERT INTO glucose_readings (
-    eid,
+    id,
     occurred_at,
     value,
     raw_json_data,
@@ -65,7 +64,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateGlucoseReadingParams struct {
-	Eid                   string
+	ID                    string
 	OccurredAt            int64
 	Value                 float64
 	RawJsonData           *string
@@ -79,7 +78,7 @@ type CreateGlucoseReadingParams struct {
 // ------
 func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseReadingParams) (sql.Result, error) {
 	return q.exec(ctx, q.createGlucoseReadingStmt, createGlucoseReading,
-		arg.Eid,
+		arg.ID,
 		arg.OccurredAt,
 		arg.Value,
 		arg.RawJsonData,
@@ -89,19 +88,19 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 	)
 }
 
-const deleteGlucoseReadingByEID = `-- name: DeleteGlucoseReadingByEID :execresult
+const deleteGlucoseReading = `-- name: DeleteGlucoseReading :execresult
 
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE eid = ?
+WHERE id = ?
 `
 
 // ------
 // DELETE
 // ------
-func (q *Queries) DeleteGlucoseReadingByEID(ctx context.Context, eid string) (sql.Result, error) {
-	return q.exec(ctx, q.deleteGlucoseReadingByEIDStmt, deleteGlucoseReadingByEID, eid)
+func (q *Queries) DeleteGlucoseReading(ctx context.Context, id string) (sql.Result, error) {
+	return q.exec(ctx, q.deleteGlucoseReadingStmt, deleteGlucoseReading, id)
 }
 
 const deleteGlucoseReadingsByType = `-- name: DeleteGlucoseReadingsByType :execresult
@@ -115,12 +114,12 @@ func (q *Queries) DeleteGlucoseReadingsByType(ctx context.Context, type_ string)
 	return q.exec(ctx, q.deleteGlucoseReadingsByTypeStmt, deleteGlucoseReadingsByType, type_)
 }
 
-const deletePermanentGlucoseReadingByEID = `-- name: DeletePermanentGlucoseReadingByEID :execresult
-DELETE FROM glucose_readings WHERE eid = ?
+const deletePermanentGlucoseReading = `-- name: DeletePermanentGlucoseReading :execresult
+DELETE FROM glucose_readings WHERE id = ?
 `
 
-func (q *Queries) DeletePermanentGlucoseReadingByEID(ctx context.Context, eid string) (sql.Result, error) {
-	return q.exec(ctx, q.deletePermanentGlucoseReadingByEIDStmt, deletePermanentGlucoseReadingByEID, eid)
+func (q *Queries) DeletePermanentGlucoseReading(ctx context.Context, id string) (sql.Result, error) {
+	return q.exec(ctx, q.deletePermanentGlucoseReadingStmt, deletePermanentGlucoseReading, id)
 }
 
 const deletePermanentGlucoseReadingsByType = `-- name: DeletePermanentGlucoseReadingsByType :execresult
@@ -132,20 +131,19 @@ func (q *Queries) DeletePermanentGlucoseReadingsByType(ctx context.Context, type
 	return q.exec(ctx, q.deletePermanentGlucoseReadingsByTypeStmt, deletePermanentGlucoseReadingsByType, type_)
 }
 
-const getGlucoseReadingByEID = `-- name: GetGlucoseReadingByEID :one
+const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE eid = ?
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE id = ?
 `
 
 // ------
 // READ
 // ------
-func (q *Queries) GetGlucoseReadingByEID(ctx context.Context, eid string) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.getGlucoseReadingByEIDStmt, getGlucoseReadingByEID, eid)
+func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseReading, error) {
+	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, id)
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Value,
 		&i.Type,
 		&i.RawJsonData,
@@ -168,8 +166,8 @@ UPDATE glucose_readings SET
     raw_json_data = COALESCE(?4, raw_json_data),
     utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE eid = ?
-RETURNING id, eid, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+WHERE id = ?
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateGlucoseReadingParams struct {
@@ -177,7 +175,7 @@ type UpdateGlucoseReadingParams struct {
 	Value            *float64
 	RawJsonData      *string
 	UtcOffsetMinutes *int64
-	Eid              string
+	ID               string
 }
 
 // ------
@@ -189,12 +187,11 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		arg.Value,
 		arg.RawJsonData,
 		arg.UtcOffsetMinutes,
-		arg.Eid,
+		arg.ID,
 	)
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.Value,
 		&i.Type,
 		&i.RawJsonData,

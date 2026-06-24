@@ -3,7 +3,7 @@
 --------
 -- name: CreateBolus :exec
 INSERT INTO bolus (
-        eid,
+        id,
         occurred_at,
         value,
         type,
@@ -19,8 +19,8 @@ INSERT INTO bolus (
 -- name: AllBoluses :many
 SELECT * FROM bolus ORDER BY occurred_at DESC; 
 
--- name: GetBolusByEID :one
-SELECT * FROM bolus WHERE eid = ?;
+-- name: GetBolus :one
+SELECT * FROM bolus WHERE id = ?;
 
 --------
 -- UPDATE

@@ -28,7 +28,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
 		err = userContext.UserDB.Queries.CreateCarb(ctx, user.CreateCarbParams{
-			Eid:                   externalID,
+			ID:                    externalID,
 			Amount:                treatmentModel.Carbs.Float64(),
 			RawJsonData:           &treatmentModel.RawJSONData,
 			CreatedByIdentityName: userContext.IdentityModel.Name,

@@ -96,50 +96,50 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
-	if q.deleteGlucoseReadingByEIDStmt, err = db.PrepareContext(ctx, deleteGlucoseReadingByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteGlucoseReadingByEID: %w", err)
+	if q.deleteGlucoseReadingStmt, err = db.PrepareContext(ctx, deleteGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteGlucoseReading: %w", err)
 	}
 	if q.deleteGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, deleteGlucoseReadingsByType); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteGlucoseReadingsByType: %w", err)
 	}
-	if q.deletePermanentGlucoseReadingByEIDStmt, err = db.PrepareContext(ctx, deletePermanentGlucoseReadingByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query DeletePermanentGlucoseReadingByEID: %w", err)
+	if q.deletePermanentGlucoseReadingStmt, err = db.PrepareContext(ctx, deletePermanentGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePermanentGlucoseReading: %w", err)
 	}
 	if q.deletePermanentGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, deletePermanentGlucoseReadingsByType); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePermanentGlucoseReadingsByType: %w", err)
 	}
-	if q.getActivityByEIDStmt, err = db.PrepareContext(ctx, getActivityByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetActivityByEID: %w", err)
+	if q.getActivityByIDStmt, err = db.PrepareContext(ctx, getActivityByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetActivityByID: %w", err)
 	}
-	if q.getBolusByEIDStmt, err = db.PrepareContext(ctx, getBolusByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBolusByEID: %w", err)
+	if q.getBolusStmt, err = db.PrepareContext(ctx, getBolus); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBolus: %w", err)
 	}
-	if q.getCarbByEIDStmt, err = db.PrepareContext(ctx, getCarbByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetCarbByEID: %w", err)
+	if q.getCarbStmt, err = db.PrepareContext(ctx, getCarb); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCarb: %w", err)
 	}
-	if q.getDeviceStatusByEIDStmt, err = db.PrepareContext(ctx, getDeviceStatusByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetDeviceStatusByEID: %w", err)
+	if q.getDeviceStatusStmt, err = db.PrepareContext(ctx, getDeviceStatus); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDeviceStatus: %w", err)
 	}
-	if q.getFoodByEIDStmt, err = db.PrepareContext(ctx, getFoodByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetFoodByEID: %w", err)
+	if q.getFoodStmt, err = db.PrepareContext(ctx, getFood); err != nil {
+		return nil, fmt.Errorf("error preparing query GetFood: %w", err)
 	}
-	if q.getGlucoseReadingByEIDStmt, err = db.PrepareContext(ctx, getGlucoseReadingByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetGlucoseReadingByEID: %w", err)
+	if q.getGlucoseReadingStmt, err = db.PrepareContext(ctx, getGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query GetGlucoseReading: %w", err)
 	}
 	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
 	}
-	if q.getNoteByEIDStmt, err = db.PrepareContext(ctx, getNoteByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetNoteByEID: %w", err)
+	if q.getNoteStmt, err = db.PrepareContext(ctx, getNote); err != nil {
+		return nil, fmt.Errorf("error preparing query GetNote: %w", err)
 	}
-	if q.getProfileByEIDStmt, err = db.PrepareContext(ctx, getProfileByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetProfileByEID: %w", err)
+	if q.getProfileStmt, err = db.PrepareContext(ctx, getProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfile: %w", err)
 	}
-	if q.getTempBasalByEIDStmt, err = db.PrepareContext(ctx, getTempBasalByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetTempBasalByEID: %w", err)
+	if q.getTempBasalStmt, err = db.PrepareContext(ctx, getTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query GetTempBasal: %w", err)
 	}
-	if q.getTempTargetByEIDStmt, err = db.PrepareContext(ctx, getTempTargetByEID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetTempTargetByEID: %w", err)
+	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
 	if q.updateGlucoseReadingStmt, err = db.PrepareContext(ctx, updateGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateGlucoseReading: %w", err)
@@ -278,9 +278,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.deleteGlucoseReadingByEIDStmt != nil {
-		if cerr := q.deleteGlucoseReadingByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteGlucoseReadingByEIDStmt: %w", cerr)
+	if q.deleteGlucoseReadingStmt != nil {
+		if cerr := q.deleteGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteGlucoseReadingStmt: %w", cerr)
 		}
 	}
 	if q.deleteGlucoseReadingsByTypeStmt != nil {
@@ -288,9 +288,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteGlucoseReadingsByTypeStmt: %w", cerr)
 		}
 	}
-	if q.deletePermanentGlucoseReadingByEIDStmt != nil {
-		if cerr := q.deletePermanentGlucoseReadingByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deletePermanentGlucoseReadingByEIDStmt: %w", cerr)
+	if q.deletePermanentGlucoseReadingStmt != nil {
+		if cerr := q.deletePermanentGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePermanentGlucoseReadingStmt: %w", cerr)
 		}
 	}
 	if q.deletePermanentGlucoseReadingsByTypeStmt != nil {
@@ -298,34 +298,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deletePermanentGlucoseReadingsByTypeStmt: %w", cerr)
 		}
 	}
-	if q.getActivityByEIDStmt != nil {
-		if cerr := q.getActivityByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getActivityByEIDStmt: %w", cerr)
+	if q.getActivityByIDStmt != nil {
+		if cerr := q.getActivityByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getActivityByIDStmt: %w", cerr)
 		}
 	}
-	if q.getBolusByEIDStmt != nil {
-		if cerr := q.getBolusByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBolusByEIDStmt: %w", cerr)
+	if q.getBolusStmt != nil {
+		if cerr := q.getBolusStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBolusStmt: %w", cerr)
 		}
 	}
-	if q.getCarbByEIDStmt != nil {
-		if cerr := q.getCarbByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getCarbByEIDStmt: %w", cerr)
+	if q.getCarbStmt != nil {
+		if cerr := q.getCarbStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCarbStmt: %w", cerr)
 		}
 	}
-	if q.getDeviceStatusByEIDStmt != nil {
-		if cerr := q.getDeviceStatusByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getDeviceStatusByEIDStmt: %w", cerr)
+	if q.getDeviceStatusStmt != nil {
+		if cerr := q.getDeviceStatusStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDeviceStatusStmt: %w", cerr)
 		}
 	}
-	if q.getFoodByEIDStmt != nil {
-		if cerr := q.getFoodByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getFoodByEIDStmt: %w", cerr)
+	if q.getFoodStmt != nil {
+		if cerr := q.getFoodStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getFoodStmt: %w", cerr)
 		}
 	}
-	if q.getGlucoseReadingByEIDStmt != nil {
-		if cerr := q.getGlucoseReadingByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getGlucoseReadingByEIDStmt: %w", cerr)
+	if q.getGlucoseReadingStmt != nil {
+		if cerr := q.getGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getGlucoseReadingStmt: %w", cerr)
 		}
 	}
 	if q.getIdentityStmt != nil {
@@ -333,24 +333,24 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
 		}
 	}
-	if q.getNoteByEIDStmt != nil {
-		if cerr := q.getNoteByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getNoteByEIDStmt: %w", cerr)
+	if q.getNoteStmt != nil {
+		if cerr := q.getNoteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getNoteStmt: %w", cerr)
 		}
 	}
-	if q.getProfileByEIDStmt != nil {
-		if cerr := q.getProfileByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getProfileByEIDStmt: %w", cerr)
+	if q.getProfileStmt != nil {
+		if cerr := q.getProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfileStmt: %w", cerr)
 		}
 	}
-	if q.getTempBasalByEIDStmt != nil {
-		if cerr := q.getTempBasalByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getTempBasalByEIDStmt: %w", cerr)
+	if q.getTempBasalStmt != nil {
+		if cerr := q.getTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getTempBasalStmt: %w", cerr)
 		}
 	}
-	if q.getTempTargetByEIDStmt != nil {
-		if cerr := q.getTempTargetByEIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getTempTargetByEIDStmt: %w", cerr)
+	if q.getTempTargetStmt != nil {
+		if cerr := q.getTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
 	if q.updateGlucoseReadingStmt != nil {
@@ -436,21 +436,21 @@ type Queries struct {
 	createProfileStmt                        *sql.Stmt
 	createTempBasalStmt                      *sql.Stmt
 	createTempTargetStmt                     *sql.Stmt
-	deleteGlucoseReadingByEIDStmt            *sql.Stmt
+	deleteGlucoseReadingStmt                 *sql.Stmt
 	deleteGlucoseReadingsByTypeStmt          *sql.Stmt
-	deletePermanentGlucoseReadingByEIDStmt   *sql.Stmt
+	deletePermanentGlucoseReadingStmt        *sql.Stmt
 	deletePermanentGlucoseReadingsByTypeStmt *sql.Stmt
-	getActivityByEIDStmt                     *sql.Stmt
-	getBolusByEIDStmt                        *sql.Stmt
-	getCarbByEIDStmt                         *sql.Stmt
-	getDeviceStatusByEIDStmt                 *sql.Stmt
-	getFoodByEIDStmt                         *sql.Stmt
-	getGlucoseReadingByEIDStmt               *sql.Stmt
+	getActivityByIDStmt                      *sql.Stmt
+	getBolusStmt                             *sql.Stmt
+	getCarbStmt                              *sql.Stmt
+	getDeviceStatusStmt                      *sql.Stmt
+	getFoodStmt                              *sql.Stmt
+	getGlucoseReadingStmt                    *sql.Stmt
 	getIdentityStmt                          *sql.Stmt
-	getNoteByEIDStmt                         *sql.Stmt
-	getProfileByEIDStmt                      *sql.Stmt
-	getTempBasalByEIDStmt                    *sql.Stmt
-	getTempTargetByEIDStmt                   *sql.Stmt
+	getNoteStmt                              *sql.Stmt
+	getProfileStmt                           *sql.Stmt
+	getTempBasalStmt                         *sql.Stmt
+	getTempTargetStmt                        *sql.Stmt
 	updateGlucoseReadingStmt                 *sql.Stmt
 	updateIdentityDateFlagsStmt              *sql.Stmt
 	getSettingFromDBStmt                     *sql.Stmt
@@ -485,21 +485,21 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileStmt:                        q.createProfileStmt,
 		createTempBasalStmt:                      q.createTempBasalStmt,
 		createTempTargetStmt:                     q.createTempTargetStmt,
-		deleteGlucoseReadingByEIDStmt:            q.deleteGlucoseReadingByEIDStmt,
+		deleteGlucoseReadingStmt:                 q.deleteGlucoseReadingStmt,
 		deleteGlucoseReadingsByTypeStmt:          q.deleteGlucoseReadingsByTypeStmt,
-		deletePermanentGlucoseReadingByEIDStmt:   q.deletePermanentGlucoseReadingByEIDStmt,
+		deletePermanentGlucoseReadingStmt:        q.deletePermanentGlucoseReadingStmt,
 		deletePermanentGlucoseReadingsByTypeStmt: q.deletePermanentGlucoseReadingsByTypeStmt,
-		getActivityByEIDStmt:                     q.getActivityByEIDStmt,
-		getBolusByEIDStmt:                        q.getBolusByEIDStmt,
-		getCarbByEIDStmt:                         q.getCarbByEIDStmt,
-		getDeviceStatusByEIDStmt:                 q.getDeviceStatusByEIDStmt,
-		getFoodByEIDStmt:                         q.getFoodByEIDStmt,
-		getGlucoseReadingByEIDStmt:               q.getGlucoseReadingByEIDStmt,
+		getActivityByIDStmt:                      q.getActivityByIDStmt,
+		getBolusStmt:                             q.getBolusStmt,
+		getCarbStmt:                              q.getCarbStmt,
+		getDeviceStatusStmt:                      q.getDeviceStatusStmt,
+		getFoodStmt:                              q.getFoodStmt,
+		getGlucoseReadingStmt:                    q.getGlucoseReadingStmt,
 		getIdentityStmt:                          q.getIdentityStmt,
-		getNoteByEIDStmt:                         q.getNoteByEIDStmt,
-		getProfileByEIDStmt:                      q.getProfileByEIDStmt,
-		getTempBasalByEIDStmt:                    q.getTempBasalByEIDStmt,
-		getTempTargetByEIDStmt:                   q.getTempTargetByEIDStmt,
+		getNoteStmt:                              q.getNoteStmt,
+		getProfileStmt:                           q.getProfileStmt,
+		getTempBasalStmt:                         q.getTempBasalStmt,
+		getTempTargetStmt:                        q.getTempTargetStmt,
 		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
 		updateIdentityDateFlagsStmt:              q.updateIdentityDateFlagsStmt,
 		getSettingFromDBStmt:                     q.getSettingFromDBStmt,

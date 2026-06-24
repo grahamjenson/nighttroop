@@ -11,7 +11,7 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
+SELECT id, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 		var i DeviceStatus
 		if err := rows.Scan(
 			&i.ID,
-			&i.Eid,
 			&i.IdentityID,
 			&i.BatteryLevel,
 			&i.ChargingState,
@@ -65,7 +64,7 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 const createDeviceStatus = `-- name: CreateDeviceStatus :exec
 
 INSERT INTO device_status (
-    eid,
+    id,
     identity_id,
     battery_level,
     charging_state,
@@ -86,7 +85,7 @@ INSERT INTO device_status (
 `
 
 type CreateDeviceStatusParams struct {
-	Eid                   string
+	ID                    string
 	IdentityID            int64
 	BatteryLevel          *int64
 	ChargingState         *string
@@ -110,7 +109,7 @@ type CreateDeviceStatusParams struct {
 // ------
 func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatusParams) error {
 	_, err := q.exec(ctx, q.createDeviceStatusStmt, createDeviceStatus,
-		arg.Eid,
+		arg.ID,
 		arg.IdentityID,
 		arg.BatteryLevel,
 		arg.ChargingState,
@@ -131,16 +130,15 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 	return err
 }
 
-const getDeviceStatusByEID = `-- name: GetDeviceStatusByEID :one
-SELECT id, eid, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status WHERE eid = ?
+const getDeviceStatus = `-- name: GetDeviceStatus :one
+SELECT id, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
 `
 
-func (q *Queries) GetDeviceStatusByEID(ctx context.Context, eid string) (*DeviceStatus, error) {
-	row := q.queryRow(ctx, q.getDeviceStatusByEIDStmt, getDeviceStatusByEID, eid)
+func (q *Queries) GetDeviceStatus(ctx context.Context, id string) (*DeviceStatus, error) {
+	row := q.queryRow(ctx, q.getDeviceStatusStmt, getDeviceStatus, id)
 	var i DeviceStatus
 	err := row.Scan(
 		&i.ID,
-		&i.Eid,
 		&i.IdentityID,
 		&i.BatteryLevel,
 		&i.ChargingState,

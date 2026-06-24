@@ -37,7 +37,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		for _, e := range egvs {
 			eid := utils.CreateEID("nightscout", e.Date.Int64())
 			dbModel := e.ToDBModel()
-			dbModel.Eid = eid
+			dbModel.ID = eid
 			dbModel.CreatedByIdentityID = userSyncSource.syncIdentity.ID
 			dbModel.CreatedByIdentityName = userSyncSource.syncIdentity.Name
 

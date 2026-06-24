@@ -40,9 +40,7 @@ CREATE TABLE events (
 
 -- This reports device status above
 CREATE TABLE device_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT UNIQUE NOT NULL CHECK(length(eid) <= 32), 
-
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     
     identity_id INTEGER NOT NULL,
     
@@ -77,9 +75,7 @@ CREATE TABLE device_status (
 );
 
 CREATE TABLE glucose_readings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    -- The id used extenally to this system (like remote NS id, dexcom id, Loop id), a means to not duplicate records from a source
-    eid TEXT UNIQUE NOT NULL CHECK(length(eid) <= 32), 
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
@@ -99,8 +95,8 @@ CREATE TABLE glucose_readings (
 );
 
 CREATE TABLE bolus (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     value REAL NOT NULL,
     type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'bolus',
 
@@ -117,8 +113,8 @@ CREATE TABLE bolus (
 );
 
 CREATE TABLE carbs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     amount REAL NOT NULL,
     type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'carbs',
 
@@ -135,9 +131,8 @@ CREATE TABLE carbs (
 );
 
 CREATE TABLE temp_basals (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     start INTEGER NOT NULL,
     duration INTEGER NOT NULL,
     value REAL NOT NULL,
@@ -155,9 +150,8 @@ CREATE TABLE temp_basals (
 );
 
 CREATE TABLE temp_targets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     start INTEGER NOT NULL,
     duration INTEGER NOT NULL,
     highTarget REAL NOT NULL,
@@ -177,8 +171,8 @@ CREATE TABLE temp_targets (
 
 
 CREATE TABLE profile (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     name TEXT CHECK(length(name) <= 64),
     
     -- Date stuff
@@ -209,12 +203,12 @@ CREATE TABLE profile (
 
 
 --
--- Stuff that is not great
+-- Stuff To make NS compatable (but not core)
 --
 
 CREATE TABLE activity (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     name TEXT CHECK(length(name) <= 64),
     type TEXT CHECK(length(type) <= 32),
     notes TEXT CHECK(length(notes) <= 1024),
@@ -235,8 +229,8 @@ CREATE TABLE activity (
 );
 
 CREATE TABLE food (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
     name TEXT CHECK(length(name) <= 64),
     carbs REAL,
     calories REAL,
@@ -253,8 +247,7 @@ CREATE TABLE food (
 );
 
 CREATE TABLE note (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    eid TEXT NOT NULL UNIQUE CHECK(length(eid) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     content TEXT CHECK(length(content) <= 1024) NOT NULL,
 
     -- Default Stuff

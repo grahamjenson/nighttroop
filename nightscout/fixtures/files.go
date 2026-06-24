@@ -2,6 +2,9 @@ package fixtures_tests
 
 import _ "embed"
 
+//go:embed activity.json
+var ActivityFixture []byte
+
 //go:embed current_profile_loop.json
 var CurrentProfileLoopFixture string
 
