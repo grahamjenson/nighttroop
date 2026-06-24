@@ -35,10 +35,10 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			createParams := nightscout.EntryToCreate(e, "nssync", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
+			createParams := nightscout.EntryToCreate(e, nightscout.CreateContext{IDPrefix: "nssync", CreatedByIdentityID: userSyncSource.syncIdentity.ID, CreatedByIdentityName: userSyncSource.syncIdentity.Name})
 			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
-				if user.IsDuplicateEID(err) {
+				if user.IsDuplicateID(err) {
 					continue
 				}
 				// Probably just non-unique eid

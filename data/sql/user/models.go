@@ -26,7 +26,8 @@ func (u *Identity) LastWriteAtDate() *time.Time {
 	return &t
 }
 
-func IsDuplicateEID(err error) bool {
-	return strings.Contains(err.Error(), "UNIQUE constraint failed") &&
-		strings.Contains(err.Error(), ".eid")
+func IsDuplicateID(err error) bool {
+	// Exmaple Error String is "UNIQUE constraint failed: glucose_readings.id"
+	// TODO: probably slow
+	return strings.Contains(err.Error(), "UNIQUE constraint failed") && strings.Contains(err.Error(), ".id")
 }

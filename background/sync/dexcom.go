@@ -35,7 +35,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 			createParams := dexcom.EGVToCreate(e, "dexcom", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
 			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
-				if user.IsDuplicateEID(err) {
+				if user.IsDuplicateID(err) {
 					continue
 				}
 				// Probably just non-unique ID

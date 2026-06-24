@@ -7,6 +7,12 @@ import (
 
 //go:generate goverter gen .
 
+type CreateContext struct {
+	IDPrefix              string
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
+}
+
 // goverter:converter
 // goverter:output:format function
 // goverter:output:file ./z_converters.go
@@ -22,13 +28,11 @@ type MapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
 	// goverter:map Duration DurationMinutes
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	ActivityToCreate(source Activity, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateActivityParams
+	ActivityToCreate(source Activity, ctx CreateContext) user.CreateActivityParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore CreatedAt
@@ -45,14 +49,12 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	EntryToCreate(source Entry, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateGlucoseReadingParams
+	EntryToCreate(source Entry, ctx CreateContext) user.CreateGlucoseReadingParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map Identifier ID
@@ -81,16 +83,14 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
 	// goverter:map  Insulin Value
-	TreatmentToCreateBolus(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateBolusParams
+	TreatmentToCreateBolus(source Treatment, ctx CreateContext) user.CreateBolusParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
@@ -115,16 +115,14 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
 	// goverter:map  Carbs Amount
-	TreatmentToCreateCarb(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateCarbParams
+	TreatmentToCreateCarb(source Treatment, ctx CreateContext) user.CreateCarbParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
@@ -149,16 +147,14 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date Start
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  . Value | TempBasalValue
 	// goverter:map Duration DurationMinutes
-	TreatmentToCreateTempBasal(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateTempBasalParams
+	TreatmentToCreateTempBasal(source Treatment, ctx CreateContext) user.CreateTempBasalParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
@@ -184,9 +180,7 @@ type MapConverter interface {
 	// Temp Targets
 	///////
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date Start
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
@@ -194,7 +188,7 @@ type MapConverter interface {
 	// goverter:map Duration DurationMinutes
 	// goverter:map TargetTop HighTarget
 	// goverter:map TargetBottom LowTarget
-	TreatmentToCreateTempTarget(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateTempTargetParams
+	TreatmentToCreateTempTarget(source Treatment, ctx CreateContext) user.CreateTempTargetParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
@@ -208,15 +202,13 @@ type MapConverter interface {
 	// Notes
 	///////
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context idPrefix
-	// goverter:context createdByIdentityID
-	// goverter:context createdByIdentityName
+	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
 	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  Notes Content
-	TreatmentToCreateNote(source Treatment, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateNoteParams
+	TreatmentToCreateNote(source Treatment, ctx CreateContext) user.CreateNoteParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
@@ -229,19 +221,19 @@ type MapConverter interface {
 // Custom Converter Methods
 // //
 
-// goverter:context idPrefix
-func AssignID(date *DateInt, idPrefix string) string {
-	return utils.NextDateID(idPrefix, date.Int64())
+// goverter:context ctx
+func AssignID(date *DateInt, ctx CreateContext) string {
+	return utils.NextDateID(ctx.IDPrefix, date.Int64())
 }
 
-// goverter:context createdByIdentityName
-func AssignCreatedByName(createdByIdentityName string) string {
-	return createdByIdentityName
+// goverter:context ctx
+func AssignCreatedByName(ctx CreateContext) string {
+	return ctx.CreatedByIdentityName
 }
 
-// goverter:context createdByIdentityID
-func AssignCreatedByID(createdByIdentityID int64) int64 {
-	return createdByIdentityID
+// goverter:context ctx
+func AssignCreatedByID(ctx CreateContext) int64 {
+	return ctx.CreatedByIdentityID
 }
 
 func ToDateInt(createdAt int64) *DateInt {

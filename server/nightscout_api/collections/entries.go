@@ -26,7 +26,7 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 		return nil, nsutils.ErrInternal
 	}
 
-	createParams := nightscout.EntryToCreate(*entryModel, "ns", userContext.IdentityModel.ID, userContext.IdentityModel.Name)
+	createParams := nightscout.EntryToCreate(*entryModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name})
 
 	userContext.UserDB.Queries.CreateGlucoseReading(ctx, createParams)
 

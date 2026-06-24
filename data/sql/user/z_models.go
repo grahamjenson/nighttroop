@@ -168,7 +168,6 @@ type Profile struct {
 type Setting struct {
 	Key       string
 	Value     json.RawMessage
-	Type      string
 	CreatedAt int64
 	UpdatedAt int64
 }

@@ -5,9 +5,9 @@ package nightscout
 
 import user "nighttroop.t1d.nz/data/sql/user"
 
-func ActivityToCreate(source Activity, context string, context2 int64, context3 string) user.CreateActivityParams {
+func ActivityToCreate(source Activity, context CreateContext) user.CreateActivityParams {
 	var userCreateActivityParams user.CreateActivityParams
-	userCreateActivityParams.ID = AssignID(source.Date, context3)
+	userCreateActivityParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateActivityParams.OccurredAt = int64(*source.Date)
 	}
@@ -165,9 +165,9 @@ func DBModelToEntry(source user.GlucoseReading) Entry {
 	}
 	return nightscoutEntry
 }
-func EntryToCreate(source Entry, context string, context2 int64, context3 string) user.CreateGlucoseReadingParams {
+func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadingParams {
 	var userCreateGlucoseReadingParams user.CreateGlucoseReadingParams
-	userCreateGlucoseReadingParams.ID = AssignID(source.Date, context3)
+	userCreateGlucoseReadingParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateGlucoseReadingParams.OccurredAt = int64(*source.Date)
 	}
@@ -179,8 +179,8 @@ func EntryToCreate(source Entry, context string, context2 int64, context3 string
 	if source.UtcOffsetMinutes != nil {
 		userCreateGlucoseReadingParams.UtcOffsetMinutes = nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 	}
-	userCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context2)
-	userCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	userCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
+	userCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateGlucoseReadingParams
 }
 func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
@@ -223,9 +223,9 @@ func TempBasalDBModelToTreatment(source user.TempBasal) Treatment {
 	}
 	return nightscoutTreatment
 }
-func TreatmentToCreateBolus(source Treatment, context string, context2 int64, context3 string) user.CreateBolusParams {
+func TreatmentToCreateBolus(source Treatment, context CreateContext) user.CreateBolusParams {
 	var userCreateBolusParams user.CreateBolusParams
-	userCreateBolusParams.ID = AssignID(source.Date, context3)
+	userCreateBolusParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateBolusParams.OccurredAt = int64(*source.Date)
 	}
@@ -238,13 +238,13 @@ func TreatmentToCreateBolus(source Treatment, context string, context2 int64, co
 	userCreateBolusParams.Type = TreatmentTypeToDBType(source.EventType)
 	pString := source.RawJsonData
 	userCreateBolusParams.RawJsonData = &pString
-	userCreateBolusParams.CreatedByIdentityID = AssignCreatedByID(context2)
-	userCreateBolusParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	userCreateBolusParams.CreatedByIdentityID = AssignCreatedByID(context)
+	userCreateBolusParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateBolusParams
 }
-func TreatmentToCreateCarb(source Treatment, context string, context2 int64, context3 string) user.CreateCarbParams {
+func TreatmentToCreateCarb(source Treatment, context CreateContext) user.CreateCarbParams {
 	var userCreateCarbParams user.CreateCarbParams
-	userCreateCarbParams.ID = AssignID(source.Date, context3)
+	userCreateCarbParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateCarbParams.OccurredAt = int64(*source.Date)
 	}
@@ -257,13 +257,13 @@ func TreatmentToCreateCarb(source Treatment, context string, context2 int64, con
 	userCreateCarbParams.Type = TreatmentTypeToDBType(source.EventType)
 	pString := source.RawJsonData
 	userCreateCarbParams.RawJsonData = &pString
-	userCreateCarbParams.CreatedByIdentityName = AssignCreatedByName(context3)
-	userCreateCarbParams.CreatedByIdentityID = AssignCreatedByID(context2)
+	userCreateCarbParams.CreatedByIdentityName = AssignCreatedByName(context)
+	userCreateCarbParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return userCreateCarbParams
 }
-func TreatmentToCreateNote(source Treatment, context string, context2 int64, context3 string) user.CreateNoteParams {
+func TreatmentToCreateNote(source Treatment, context CreateContext) user.CreateNoteParams {
 	var userCreateNoteParams user.CreateNoteParams
-	userCreateNoteParams.ID = AssignID(source.Date, context3)
+	userCreateNoteParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateNoteParams.OccurredAt = int64(*source.Date)
 	}
@@ -275,13 +275,13 @@ func TreatmentToCreateNote(source Treatment, context string, context2 int64, con
 	}
 	pString := source.RawJsonData
 	userCreateNoteParams.RawJsonData = &pString
-	userCreateNoteParams.CreatedByIdentityID = AssignCreatedByID(context2)
-	userCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	userCreateNoteParams.CreatedByIdentityID = AssignCreatedByID(context)
+	userCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateNoteParams
 }
-func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64, context3 string) user.CreateTempBasalParams {
+func TreatmentToCreateTempBasal(source Treatment, context CreateContext) user.CreateTempBasalParams {
 	var userCreateTempBasalParams user.CreateTempBasalParams
-	userCreateTempBasalParams.ID = AssignID(source.Date, context3)
+	userCreateTempBasalParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateTempBasalParams.Start = int64(*source.Date)
 	}
@@ -294,13 +294,13 @@ func TreatmentToCreateTempBasal(source Treatment, context string, context2 int64
 	userCreateTempBasalParams.Value = TempBasalValue(source)
 	pString := source.RawJsonData
 	userCreateTempBasalParams.RawJsonData = &pString
-	userCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context2)
-	userCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	userCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context)
+	userCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateTempBasalParams
 }
-func TreatmentToCreateTempTarget(source Treatment, context string, context2 int64, context3 string) user.CreateTempTargetParams {
+func TreatmentToCreateTempTarget(source Treatment, context CreateContext) user.CreateTempTargetParams {
 	var userCreateTempTargetParams user.CreateTempTargetParams
-	userCreateTempTargetParams.ID = AssignID(source.Date, context3)
+	userCreateTempTargetParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
 		userCreateTempTargetParams.Start = int64(*source.Date)
 	}
@@ -318,8 +318,8 @@ func TreatmentToCreateTempTarget(source Treatment, context string, context2 int6
 	}
 	pString := source.RawJsonData
 	userCreateTempTargetParams.RawJsonData = &pString
-	userCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context2)
-	userCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context3)
+	userCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context)
+	userCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateTempTargetParams
 }
 func TreatmentToUpdateBolus(source Treatment) user.UpdateBolusParams {

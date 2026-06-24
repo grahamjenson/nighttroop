@@ -14,7 +14,7 @@ func Test_ActivityToCreateParams(t *testing.T) {
 	err := json.Unmarshal(fixtures_tests.ActivityFixture, &activity)
 	assert.NoError(t, err)
 
-	createParams := ActivityToCreate(activity, "prefix", 123, "identityName")
+	createParams := ActivityToCreate(activity, CreateContext{"prefix", 123, "identityName"})
 
 	assert.NotNil(t, createParams)
 	assert.Equal(t, "walking", *createParams.Type)

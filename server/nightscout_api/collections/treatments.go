@@ -27,7 +27,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	created := false
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
-		err = userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, "ns", userContext.IdentityModel.ID, userContext.IdentityModel.Name))
+		err = userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))
 		if err != nil {
 			slog.Error("failed to create carb in database", "error", err)
 			return nil, nsutils.ErrInternal
