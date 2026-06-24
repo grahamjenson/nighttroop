@@ -52,6 +52,19 @@ type MapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
 	EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Direction Trend Units Filtered Unfiltered RSSI Noise SysTime
+	// goverter:map ID Identifier
+	// goverter:map . SGV | GlucoseReadingTypeToValue
+	// goverter:map . MBG | GlucoseReadingTypeToValue
+	// goverter:map CreatedByIdentityName Device
+	// goverter:map OccurredAt Date
+	// goverter:map OccurredAt Mills
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	// goverter:map . DateString | GlucoseReadingDateStringFromDateIntAndUTCOffset
+	DBModelToEntry(source user.GlucoseReading) Entry
 }
 
 // goverter:context idPrefix
@@ -69,25 +82,24 @@ func AssignCreatedByID(createdByIdentityID int64) int64 {
 	return createdByIdentityID
 }
 
+func GlucoseReadingTypeToValue(gr user.GlucoseReading) *FlexibleFloat64 {
+	switch gr.Type {
+	case "sgv":
+		return ptr(FlexibleFloat64(gr.Value))
+	case "mbg":
+		return ptr(FlexibleFloat64(gr.Value))
+	}
+	return nil
+}
+
+func GlucoseReadingDateStringFromDateIntAndUTCOffset(gr user.GlucoseReading) *DateString {
+	ds := DateStringFromDateIntAndUTCOffset(DateInt(gr.OccurredAt), FlexibleInt64(gr.UtcOffsetMinutes))
+	return &ds
+}
+
 // ///
 // Custom Converters
 // ///
-
-func (e *Entry) FromDBModel(sgv *user.GlucoseReading) error {
-	e.Identifier = ptr(sgv.ID)
-	entryType := EntryType(sgv.Type)
-	e.Type = &entryType
-	e.SGV = ptr(FlexibleFloat64(sgv.Value))
-	dateInt := DateInt(sgv.OccurredAt)
-	e.Date = &dateInt
-	dateString := DateStringFromInt64(sgv.OccurredAt)
-	e.DateString = &dateString
-	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
-	device := fmt.Sprintf("%d", sgv.CreatedByIdentityID)
-	e.Device = &device
-
-	return nil
-}
 
 func (e *Treatment) ToCarbDBModel() (*user.Carb, error) {
 	if e.Identifier == nil || e.Carbs == nil || e.Date == nil {
@@ -140,8 +152,6 @@ func (e *Treatment) FromTempTargetDBModel(sgv *user.TempTarget) error {
 	e.EventType = &eventType
 	e.TargetTop = ptr(FlexibleFloat64(sgv.Hightarget))
 	e.TargetBottom = ptr(FlexibleFloat64(sgv.Lowtarget))
-	dateInt := DateStringFromInt64(sgv.Start)
-	e.CreatedAt = &dateInt
 
 	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 
@@ -153,8 +163,6 @@ func (e *Treatment) FromCarbDBModel(sgv *user.Carb) error {
 	eventType := CarbCorrection
 	e.EventType = &eventType
 	e.Carbs = ptr(FlexibleFloat64(sgv.Amount))
-	dateInt := DateStringFromInt64(sgv.OccurredAt)
-	e.CreatedAt = &dateInt
 
 	e.UtcOffsetMinutes = ptr(FlexibleInt64(sgv.UtcOffsetMinutes))
 

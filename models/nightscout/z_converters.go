@@ -91,6 +91,34 @@ func DBModelToActivity(source user.Activity) Activity {
 	}
 	return nightscoutActivity
 }
+func DBModelToEntry(source user.GlucoseReading) Entry {
+	var nightscoutEntry Entry
+	pString := source.ID
+	nightscoutEntry.Identifier = &pString
+	pNightscoutEntryType := EntryType(source.Type)
+	nightscoutEntry.Type = &pNightscoutEntryType
+	nightscoutEntry.SGV = GlucoseReadingTypeToValue(source)
+	nightscoutEntry.MBG = GlucoseReadingTypeToValue(source)
+	pString2 := source.CreatedByIdentityName
+	nightscoutEntry.Device = &pString2
+	pNightscoutDateInt := DateInt(source.OccurredAt)
+	nightscoutEntry.Date = &pNightscoutDateInt
+	nightscoutEntry.DateString = GlucoseReadingDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt2 := DateInt(source.OccurredAt)
+	nightscoutEntry.Mills = &pNightscoutDateInt2
+	pNightscoutFlexibleInt64 := FlexibleInt64(source.UtcOffsetMinutes)
+	nightscoutEntry.UtcOffsetMinutes = &pNightscoutFlexibleInt64
+	pNightscoutDateInt3 := DateInt(source.CreatedAt)
+	nightscoutEntry.SrvCreated = &pNightscoutDateInt3
+	pNightscoutDateInt4 := DateInt(source.UpdatedAt)
+	nightscoutEntry.SrvModified = &pNightscoutDateInt4
+	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Value)
+	nightscoutEntry.Value = &pNightscoutFlexibleFloat64
+	if source.RawJsonData != nil {
+		nightscoutEntry.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutEntry
+}
 func EntryToCreate(source Entry, context string, context2 int64, context3 string) user.CreateGlucoseReadingParams {
 	var userCreateGlucoseReadingParams user.CreateGlucoseReadingParams
 	userCreateGlucoseReadingParams.ID = AssignID(source.Date, context3)

@@ -118,10 +118,6 @@ func DateStringFromTime(t time.Time) DateString {
 	return DateString(t.Format(time.RFC3339Nano))
 }
 
-func DateStringFromInt64(millis int64) DateString {
-	return DateStringFromTime(time.UnixMilli(millis))
-}
-
 func DateStringFromDateIntAndUTCOffset(dateInt DateInt, offsetMinutes FlexibleInt64) DateString {
 	t := time.UnixMilli(dateInt.Int64()).In(LocationFromUTCOffsetMinutes(offsetMinutes.Int()))
 	return DateStringFromTime(t)

@@ -156,13 +156,9 @@ func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
 		return nsutils.Record{}
 	}
 
-	entryModel := &nightscout.Entry{}
-	err := entryModel.FromDBModel(sgv)
-	if err != nil {
-		return nsutils.Record{}
-	}
+	entryModel := nightscout.DBModelToEntry(*sgv)
 
-	entryMap, err := utils.ToMap(entryModel)
+	entryMap, err := utils.ToMap(&entryModel)
 	if err != nil {
 		return nsutils.Record{}
 	}
@@ -171,8 +167,8 @@ func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
 		Collection:  "entries",
 		ID:          *entryModel.Identifier,
 		Data:        entryMap,
-		SrvCreated:  entryModel.Date.Int64(),
-		SrvModified: entryModel.Date.Int64(),
+		SrvCreated:  entryModel.SrvCreated.Int64(),
+		SrvModified: entryModel.SrvModified.Int64(),
 		Subject:     "",
 		IsValid:     true,
 		DeletedAt:   nil,
