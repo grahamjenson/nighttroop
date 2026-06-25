@@ -200,13 +200,8 @@ func (m *DeviceStatus) GetID() string {
 	return m.ID
 }
 
-// GetIdentityID returns the IdentityID value.
-func (m *DeviceStatus) GetIdentityID() int64 {
-	return m.IdentityID
-}
-
 // GetBatteryLevel returns the BatteryLevel value.
-func (m *DeviceStatus) GetBatteryLevel() *int64 {
+func (m *DeviceStatus) GetBatteryLevel() *float64 {
 	return m.BatteryLevel
 }
 
@@ -216,7 +211,7 @@ func (m *DeviceStatus) GetChargingState() *string {
 }
 
 // GetPumpBattery returns the PumpBattery value.
-func (m *DeviceStatus) GetPumpBattery() *int64 {
+func (m *DeviceStatus) GetPumpBattery() *float64 {
 	return m.PumpBattery
 }
 
@@ -326,7 +321,7 @@ func (m *Food) GetID() string {
 }
 
 // GetName returns the Name value.
-func (m *Food) GetName() *string {
+func (m *Food) GetName() string {
 	return m.Name
 }
 
@@ -531,7 +526,7 @@ func (m *Profile) GetID() string {
 }
 
 // GetName returns the Name value.
-func (m *Profile) GetName() *string {
+func (m *Profile) GetName() string {
 	return m.Name
 }
 

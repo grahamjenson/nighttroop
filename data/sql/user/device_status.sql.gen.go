@@ -11,7 +11,7 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-SELECT id, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
+SELECT id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
 `
 
 // ------
@@ -28,7 +28,6 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 		var i DeviceStatus
 		if err := rows.Scan(
 			&i.ID,
-			&i.IdentityID,
 			&i.BatteryLevel,
 			&i.ChargingState,
 			&i.PumpBattery,
@@ -65,7 +64,6 @@ const createDeviceStatus = `-- name: CreateDeviceStatus :one
 
 INSERT INTO device_status (
     id,
-    identity_id,
     battery_level,
     charging_state,
     pump_battery,
@@ -81,16 +79,15 @@ INSERT INTO device_status (
     occurred_at,
     created_by_identity_name,
     created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateDeviceStatusParams struct {
 	ID                    string
-	IdentityID            int64
-	BatteryLevel          *int64
+	BatteryLevel          *float64
 	ChargingState         *string
-	PumpBattery           *int64
+	PumpBattery           *float64
 	PumpStatus            *string
 	PumpReservoir         *float64
 	PumpInsertionTime     *int64
@@ -111,7 +108,6 @@ type CreateDeviceStatusParams struct {
 func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatusParams) (*DeviceStatus, error) {
 	row := q.queryRow(ctx, q.createDeviceStatusStmt, createDeviceStatus,
 		arg.ID,
-		arg.IdentityID,
 		arg.BatteryLevel,
 		arg.ChargingState,
 		arg.PumpBattery,
@@ -131,7 +127,6 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 	var i DeviceStatus
 	err := row.Scan(
 		&i.ID,
-		&i.IdentityID,
 		&i.BatteryLevel,
 		&i.ChargingState,
 		&i.PumpBattery,
@@ -155,7 +150,7 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 }
 
 const getDeviceStatus = `-- name: GetDeviceStatus :one
-SELECT id, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
+SELECT id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
 `
 
 func (q *Queries) GetDeviceStatus(ctx context.Context, id string) (*DeviceStatus, error) {
@@ -163,7 +158,6 @@ func (q *Queries) GetDeviceStatus(ctx context.Context, id string) (*DeviceStatus
 	var i DeviceStatus
 	err := row.Scan(
 		&i.ID,
-		&i.IdentityID,
 		&i.BatteryLevel,
 		&i.ChargingState,
 		&i.PumpBattery,

@@ -47,14 +47,26 @@ type MapConverter interface {
 	DBModelToActivity(source *user.Activity) Activity
 
 	///////
-	// DEVICE STATUS
+	// DEVICE STATUS TODO
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Uploader Loop Pump OpenAPS UploaderBattery
+	// goverter:ignore CreatedByIdentityID CreatedByIdentityName ChargingState PumpBattery PumpBattery PumpStatus PumpReservoir PumpInsertionTime LoopStatus LoopTimestamp CgmStatus CgmInsertionTime
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UploaderBattery BatteryLevel
+	// goverter:context ctx
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	DeviceStatusToCreate(source DeviceStatus, ctx CreateContext) user.CreateDeviceStatusParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Uploader Loop Pump OpenAPS
 	// goverter:map ID Identifier
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map OccurredAt Date
+	// goverter:map BatteryLevel UploaderBattery
 	// goverter:map CreatedByIdentityName Device
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
@@ -95,7 +107,15 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Category Subcategory Portion Unit Fat Protein Energy GI
+	// goverter:ignore Calories
+	// goverter:context ctx
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	FoodToCreate(source Food, ctx CreateContext) user.CreateFoodParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Category Subcategory Portion Unit Fat Protein Energy GI Date
 	// goverter:map ID Identifier
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
@@ -104,6 +124,15 @@ type MapConverter interface {
 	///////
 	// Profile TODO
 	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context ctx
+	// goverter:ignore  Start DurationMinutes Source Percent Dia Units Timezone CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  DefaultProfile Name
+	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	ProfileToCreate(source Profile, ctx CreateContext) user.CreateProfileParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore DefaultProfile Store

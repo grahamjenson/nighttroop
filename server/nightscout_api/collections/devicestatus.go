@@ -2,10 +2,12 @@ package collections
 
 import (
 	"context"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -20,7 +22,29 @@ func NewDeviceStatusCollection() DeviceStatusCollection {
 }
 
 func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	deviceStatusModel := &nightscout.DeviceStatus{}
+	err := utils.FromMap(data, deviceStatusModel)
+
+	if err != nil {
+		slog.Error("failed to map data to device status model", "error", err)
+		return nil, nsutils.BadDataBodyError
+	}
+
+	createParams := nightscout.DeviceStatusToCreate(
+		*deviceStatusModel,
+		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
+	)
+
+	dbModel, err := userContext.UserDB.Queries.CreateDeviceStatus(ctx, createParams)
+	if err != nil {
+		slog.Error("failed to create device status in database", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		slog.Error("failed to create device status in database, dbModel is nil")
+		return nil, nsutils.ErrInternal
+	}
+	return ptr(c.converter(dbModel)), nil
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {

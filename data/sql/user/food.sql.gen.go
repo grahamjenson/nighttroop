@@ -66,7 +66,7 @@ RETURNING id, name, carbs, calories, raw_json_data, deleted_at, created_at, upda
 
 type CreateFoodParams struct {
 	ID                    string
-	Name                  *string
+	Name                  string
 	Carbs                 *float64
 	Calories              *float64
 	RawJsonData           *string

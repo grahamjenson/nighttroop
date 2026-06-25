@@ -88,7 +88,7 @@ RETURNING id, name, start, duration_minutes, source, percent, dia, units, timezo
 
 type CreateProfileParams struct {
 	ID                       string
-	Name                     *string
+	Name                     string
 	Start                    *int64
 	DurationMinutes          *int64
 	Source                   *string

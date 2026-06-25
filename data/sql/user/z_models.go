@@ -59,10 +59,9 @@ type Carb struct {
 
 type DeviceStatus struct {
 	ID                    string
-	IdentityID            int64
-	BatteryLevel          *int64
+	BatteryLevel          *float64
 	ChargingState         *string
-	PumpBattery           *int64
+	PumpBattery           *float64
 	PumpStatus            *string
 	PumpReservoir         *float64
 	PumpInsertionTime     *int64
@@ -90,7 +89,7 @@ type Event struct {
 
 type Food struct {
 	ID                    string
-	Name                  *string
+	Name                  string
 	Carbs                 *float64
 	Calories              *float64
 	RawJsonData           *string
@@ -143,7 +142,7 @@ type Note struct {
 
 type Profile struct {
 	ID                       string
-	Name                     *string
+	Name                     string
 	Start                    *int64
 	DurationMinutes          *int64
 	Source                   *string

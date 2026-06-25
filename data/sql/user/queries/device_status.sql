@@ -5,7 +5,6 @@
 -- name: CreateDeviceStatus :one
 INSERT INTO device_status (
     id,
-    identity_id,
     battery_level,
     charging_state,
     pump_battery,
@@ -21,7 +20,7 @@ INSERT INTO device_status (
     occurred_at,
     created_by_identity_name,
     created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

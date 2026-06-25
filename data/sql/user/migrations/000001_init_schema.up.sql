@@ -43,15 +43,13 @@ CREATE TABLE events (
 CREATE TABLE device_status (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     
-    identity_id INTEGER NOT NULL,
-    
 
     -- Specific Details about the device, especially the PWD device
-    battery_level INTEGER,
+    battery_level REAL,
     charging_state TEXT CHECK(length(charging_state) <= 32),
 
     -- pump sub device
-    pump_battery INTEGER,
+    pump_battery REAL,
     pump_status TEXT CHECK(length(pump_status) <= 32),
     pump_reservoir REAL,
     pump_insertion_time INTEGER, -- This is sometimes recorded as an event which is stuper annoying
@@ -172,7 +170,7 @@ CREATE TABLE temp_targets (
 CREATE TABLE profile (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
-    name TEXT CHECK(length(name) <= 64),
+    name TEXT NOT NULL CHECK(length(name) <= 64),
     
     -- Date stuff
     start INTEGER,
@@ -230,7 +228,7 @@ CREATE TABLE activity (
 CREATE TABLE food (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
-    name TEXT CHECK(length(name) <= 64),
+    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
     carbs REAL,
     calories REAL,
 

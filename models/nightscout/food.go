@@ -1,6 +1,9 @@
 package nightscout
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Food struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
@@ -23,7 +26,8 @@ type Food struct {
 	SrvModified *DateInt `json:"srvModified,omitempty"`
 
 	// Non-JSON values to make mapping easier
-	RawJsonData string `json:"-"`
+	Date        *DateInt `json:"-"` // Unix timestamp in milliseconds
+	RawJsonData string   `json:"-"`
 }
 
 func (t *Food) UnmarshalJSON(data []byte) error {
@@ -41,6 +45,8 @@ func (t *Food) UnmarshalJSON(data []byte) error {
 
 	// Raw Value
 	t.RawJsonData = string(data)
+
+	t.Date = ptr(DateInt(time.Now().UnixMilli()))
 
 	// Identitfiers
 	if t.Identifier == nil {

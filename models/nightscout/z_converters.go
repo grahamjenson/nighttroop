@@ -158,6 +158,10 @@ func DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus {
 		nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
 		pNightscoutSanitizedString := SanitizedString((*source).CreatedByIdentityName)
 		nightscoutDeviceStatus.Device = &pNightscoutSanitizedString
+		if (*source).BatteryLevel != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).BatteryLevel)
+			nightscoutDeviceStatus.UploaderBattery = &nightscoutFlexibleFloat64
+		}
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		pNightscoutDateInt := DateInt((*source).CreatedAt)
 		nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
@@ -212,10 +216,8 @@ func DBModelToFood(source *user.Food) Food {
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
 		nightscoutFood.Identifier = &pNightscoutIdentifierString
-		if (*source).Name != nil {
-			nightscoutSanitizedString := SanitizedString(*(*source).Name)
-			nightscoutFood.Name = &nightscoutSanitizedString
-		}
+		pNightscoutSanitizedString := SanitizedString((*source).Name)
+		nightscoutFood.Name = &pNightscoutSanitizedString
 		if (*source).Carbs != nil {
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Carbs)
 			nightscoutFood.Carbs = &nightscoutFlexibleFloat64
@@ -267,6 +269,24 @@ func DBModelToSetting(source *user.Setting) Setting {
 	}
 	return nightscoutSetting
 }
+func DeviceStatusToCreate(source DeviceStatus, context CreateContext) user.CreateDeviceStatusParams {
+	var userCreateDeviceStatusParams user.CreateDeviceStatusParams
+	userCreateDeviceStatusParams.ID = AssignID(source.Date, context)
+	if source.UploaderBattery != nil {
+		xfloat64 := float64(*source.UploaderBattery)
+		userCreateDeviceStatusParams.BatteryLevel = &xfloat64
+	}
+	pString := source.RawJsonData
+	userCreateDeviceStatusParams.RawJsonData = &pString
+	if source.UtcOffsetMinutes != nil {
+		xint64 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userCreateDeviceStatusParams.UtcOffsetMinutes = &xint64
+	}
+	if source.Date != nil {
+		userCreateDeviceStatusParams.OccurredAt = int64(*source.Date)
+	}
+	return userCreateDeviceStatusParams
+}
 func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadingParams {
 	var userCreateGlucoseReadingParams user.CreateGlucoseReadingParams
 	userCreateGlucoseReadingParams.ID = AssignID(source.Date, context)
@@ -304,6 +324,38 @@ func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
 		userUpdateGlucoseReadingParams.ID = string(*source.Identifier)
 	}
 	return userUpdateGlucoseReadingParams
+}
+func FoodToCreate(source Food, context CreateContext) user.CreateFoodParams {
+	var userCreateFoodParams user.CreateFoodParams
+	userCreateFoodParams.ID = AssignID(source.Date, context)
+	if source.Name != nil {
+		userCreateFoodParams.Name = nightscoutSanitizedStringToString(*source.Name)
+	}
+	if source.Carbs != nil {
+		xfloat64 := float64(*source.Carbs)
+		userCreateFoodParams.Carbs = &xfloat64
+	}
+	pString := source.RawJsonData
+	userCreateFoodParams.RawJsonData = &pString
+	userCreateFoodParams.CreatedByIdentityID = AssignCreatedByID(context)
+	userCreateFoodParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return userCreateFoodParams
+}
+func ProfileToCreate(source Profile, context CreateContext) user.CreateProfileParams {
+	var userCreateProfileParams user.CreateProfileParams
+	userCreateProfileParams.ID = AssignID(source.Date, context)
+	if source.DefaultProfile != nil {
+		userCreateProfileParams.Name = nightscoutSanitizedStringToString(*source.DefaultProfile)
+	}
+	pString := source.RawJsonData
+	userCreateProfileParams.RawJsonData = &pString
+	if source.UtcOffsetMinutes != nil {
+		xint64 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		userCreateProfileParams.UtcOffsetMinutes = &xint64
+	}
+	userCreateProfileParams.CreatedByIdentityName = AssignCreatedByName(context)
+	userCreateProfileParams.CreatedByIdentityID = AssignCreatedByID(context)
+	return userCreateProfileParams
 }
 func TempBasalDBModelToTreatment(source *user.TempBasal) Treatment {
 	var nightscoutTreatment Treatment

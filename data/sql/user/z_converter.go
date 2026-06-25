@@ -86,54 +86,53 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 	var userCreateDeviceStatusParams CreateDeviceStatusParams
 	userCreateDeviceStatusParams.ID = source.ID
-	userCreateDeviceStatusParams.IdentityID = source.IdentityID
 	if source.BatteryLevel != nil {
-		xint64 := *source.BatteryLevel
-		userCreateDeviceStatusParams.BatteryLevel = &xint64
+		xfloat64 := *source.BatteryLevel
+		userCreateDeviceStatusParams.BatteryLevel = &xfloat64
 	}
 	if source.ChargingState != nil {
 		xstring := *source.ChargingState
 		userCreateDeviceStatusParams.ChargingState = &xstring
 	}
 	if source.PumpBattery != nil {
-		xint642 := *source.PumpBattery
-		userCreateDeviceStatusParams.PumpBattery = &xint642
+		xfloat642 := *source.PumpBattery
+		userCreateDeviceStatusParams.PumpBattery = &xfloat642
 	}
 	if source.PumpStatus != nil {
 		xstring2 := *source.PumpStatus
 		userCreateDeviceStatusParams.PumpStatus = &xstring2
 	}
 	if source.PumpReservoir != nil {
-		xfloat64 := *source.PumpReservoir
-		userCreateDeviceStatusParams.PumpReservoir = &xfloat64
+		xfloat643 := *source.PumpReservoir
+		userCreateDeviceStatusParams.PumpReservoir = &xfloat643
 	}
 	if source.PumpInsertionTime != nil {
-		xint643 := *source.PumpInsertionTime
-		userCreateDeviceStatusParams.PumpInsertionTime = &xint643
+		xint64 := *source.PumpInsertionTime
+		userCreateDeviceStatusParams.PumpInsertionTime = &xint64
 	}
 	if source.LoopStatus != nil {
 		xstring3 := *source.LoopStatus
 		userCreateDeviceStatusParams.LoopStatus = &xstring3
 	}
 	if source.LoopTimestamp != nil {
-		xint644 := *source.LoopTimestamp
-		userCreateDeviceStatusParams.LoopTimestamp = &xint644
+		xint642 := *source.LoopTimestamp
+		userCreateDeviceStatusParams.LoopTimestamp = &xint642
 	}
 	if source.CgmStatus != nil {
 		xstring4 := *source.CgmStatus
 		userCreateDeviceStatusParams.CgmStatus = &xstring4
 	}
 	if source.CgmInsertionTime != nil {
-		xint645 := *source.CgmInsertionTime
-		userCreateDeviceStatusParams.CgmInsertionTime = &xint645
+		xint643 := *source.CgmInsertionTime
+		userCreateDeviceStatusParams.CgmInsertionTime = &xint643
 	}
 	if source.RawJsonData != nil {
 		xstring5 := *source.RawJsonData
 		userCreateDeviceStatusParams.RawJsonData = &xstring5
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint646 := *source.UtcOffsetMinutes
-		userCreateDeviceStatusParams.UtcOffsetMinutes = &xint646
+		xint644 := *source.UtcOffsetMinutes
+		userCreateDeviceStatusParams.UtcOffsetMinutes = &xint644
 	}
 	userCreateDeviceStatusParams.OccurredAt = source.OccurredAt
 	userCreateDeviceStatusParams.CreatedByIdentityName = source.CreatedByIdentityName
@@ -143,10 +142,7 @@ func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 func FoodToCreate(source Food) CreateFoodParams {
 	var userCreateFoodParams CreateFoodParams
 	userCreateFoodParams.ID = source.ID
-	if source.Name != nil {
-		xstring := *source.Name
-		userCreateFoodParams.Name = &xstring
-	}
+	userCreateFoodParams.Name = source.Name
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		userCreateFoodParams.Carbs = &xfloat64
@@ -156,8 +152,8 @@ func FoodToCreate(source Food) CreateFoodParams {
 		userCreateFoodParams.Calories = &xfloat642
 	}
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		userCreateFoodParams.RawJsonData = &xstring2
+		xstring := *source.RawJsonData
+		userCreateFoodParams.RawJsonData = &xstring
 	}
 	userCreateFoodParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateFoodParams.CreatedByIdentityName = source.CreatedByIdentityName
@@ -213,10 +209,7 @@ func NoteToCreate(source Note) CreateNoteParams {
 func ProfileToCreate(source Profile) CreateProfileParams {
 	var userCreateProfileParams CreateProfileParams
 	userCreateProfileParams.ID = source.ID
-	if source.Name != nil {
-		xstring := *source.Name
-		userCreateProfileParams.Name = &xstring
-	}
+	userCreateProfileParams.Name = source.Name
 	if source.Start != nil {
 		xint64 := *source.Start
 		userCreateProfileParams.Start = &xint64
@@ -226,8 +219,8 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 		userCreateProfileParams.DurationMinutes = &xint642
 	}
 	if source.Source != nil {
-		xstring2 := *source.Source
-		userCreateProfileParams.Source = &xstring2
+		xstring := *source.Source
+		userCreateProfileParams.Source = &xstring
 	}
 	if source.Percent != nil {
 		xint643 := *source.Percent
@@ -238,32 +231,32 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 		userCreateProfileParams.Dia = &xint644
 	}
 	if source.Units != nil {
-		xstring3 := *source.Units
-		userCreateProfileParams.Units = &xstring3
+		xstring2 := *source.Units
+		userCreateProfileParams.Units = &xstring2
 	}
 	if source.Timezone != nil {
-		xstring4 := *source.Timezone
-		userCreateProfileParams.Timezone = &xstring4
+		xstring3 := *source.Timezone
+		userCreateProfileParams.Timezone = &xstring3
 	}
 	if source.CarbRatiosJson != nil {
-		xstring5 := *source.CarbRatiosJson
-		userCreateProfileParams.CarbRatiosJson = &xstring5
+		xstring4 := *source.CarbRatiosJson
+		userCreateProfileParams.CarbRatiosJson = &xstring4
 	}
 	if source.InsulinSensitivitiesJson != nil {
-		xstring6 := *source.InsulinSensitivitiesJson
-		userCreateProfileParams.InsulinSensitivitiesJson = &xstring6
+		xstring5 := *source.InsulinSensitivitiesJson
+		userCreateProfileParams.InsulinSensitivitiesJson = &xstring5
 	}
 	if source.BasalRatesJson != nil {
-		xstring7 := *source.BasalRatesJson
-		userCreateProfileParams.BasalRatesJson = &xstring7
+		xstring6 := *source.BasalRatesJson
+		userCreateProfileParams.BasalRatesJson = &xstring6
 	}
 	if source.TargetsJson != nil {
-		xstring8 := *source.TargetsJson
-		userCreateProfileParams.TargetsJson = &xstring8
+		xstring7 := *source.TargetsJson
+		userCreateProfileParams.TargetsJson = &xstring7
 	}
 	if source.RawJsonData != nil {
-		xstring9 := *source.RawJsonData
-		userCreateProfileParams.RawJsonData = &xstring9
+		xstring8 := *source.RawJsonData
+		userCreateProfileParams.RawJsonData = &xstring8
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint645 := *source.UtcOffsetMinutes
