@@ -74,7 +74,7 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
 type CreateTempTargetParams struct {
 	ID                    string
 	Start                 int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	DurationMinutes       int64
 	HighTarget            float64
 	LowTarget             float64

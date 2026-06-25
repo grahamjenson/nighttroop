@@ -7,7 +7,10 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 	var userCreateActivityParams CreateActivityParams
 	userCreateActivityParams.ID = source.ID
 	userCreateActivityParams.OccurredAt = source.OccurredAt
-	userCreateActivityParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateActivityParams.UtcOffsetMinutes = &xint64
+	}
 	if source.Name != nil {
 		xstring := *source.Name
 		userCreateActivityParams.Name = &xstring
@@ -21,20 +24,20 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 		userCreateActivityParams.Notes = &xstring3
 	}
 	if source.DurationMinutes != nil {
-		xint64 := *source.DurationMinutes
-		userCreateActivityParams.DurationMinutes = &xint64
+		xint642 := *source.DurationMinutes
+		userCreateActivityParams.DurationMinutes = &xint642
 	}
 	if source.Calories != nil {
-		xint642 := *source.Calories
-		userCreateActivityParams.Calories = &xint642
+		xint643 := *source.Calories
+		userCreateActivityParams.Calories = &xint643
 	}
 	if source.Steps != nil {
-		xint643 := *source.Steps
-		userCreateActivityParams.Steps = &xint643
+		xint644 := *source.Steps
+		userCreateActivityParams.Steps = &xint644
 	}
 	if source.HeartRate != nil {
-		xint644 := *source.HeartRate
-		userCreateActivityParams.HeartRate = &xint644
+		xint645 := *source.HeartRate
+		userCreateActivityParams.HeartRate = &xint645
 	}
 	if source.RawJsonData != nil {
 		xstring4 := *source.RawJsonData
@@ -48,7 +51,10 @@ func BolusToCreate(source Bolus) CreateBolusParams {
 	var userCreateBolusParams CreateBolusParams
 	userCreateBolusParams.ID = source.ID
 	userCreateBolusParams.OccurredAt = source.OccurredAt
-	userCreateBolusParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateBolusParams.UtcOffsetMinutes = &xint64
+	}
 	userCreateBolusParams.Value = source.Value
 	userCreateBolusParams.Type = source.Type
 	if source.RawJsonData != nil {
@@ -63,7 +69,10 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 	var userCreateCarbParams CreateCarbParams
 	userCreateCarbParams.ID = source.ID
 	userCreateCarbParams.OccurredAt = source.OccurredAt
-	userCreateCarbParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateCarbParams.UtcOffsetMinutes = &xint64
+	}
 	userCreateCarbParams.Amount = source.Amount
 	userCreateCarbParams.Type = source.Type
 	if source.RawJsonData != nil {
@@ -122,7 +131,10 @@ func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 		xstring5 := *source.RawJsonData
 		userCreateDeviceStatusParams.RawJsonData = &xstring5
 	}
-	userCreateDeviceStatusParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint646 := *source.UtcOffsetMinutes
+		userCreateDeviceStatusParams.UtcOffsetMinutes = &xint646
+	}
 	userCreateDeviceStatusParams.OccurredAt = source.OccurredAt
 	userCreateDeviceStatusParams.CreatedByIdentityName = source.CreatedByIdentityName
 	userCreateDeviceStatusParams.CreatedByIdentityID = source.CreatedByIdentityID
@@ -160,7 +172,10 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 		xstring := *source.RawJsonData
 		userCreateGlucoseReadingParams.RawJsonData = &xstring
 	}
-	userCreateGlucoseReadingParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
+	}
 	userCreateGlucoseReadingParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateGlucoseReadingParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateGlucoseReadingParams
@@ -171,8 +186,10 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	userUpdateGlucoseReadingParams.OccurredAt = &pInt64
 	pFloat64 := source.Value
 	userUpdateGlucoseReadingParams.Value = &pFloat64
-	pInt642 := source.UtcOffsetMinutes
-	userUpdateGlucoseReadingParams.UtcOffsetMinutes = &pInt642
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint64
+	}
 	userUpdateGlucoseReadingParams.ID = source.ID
 	return userUpdateGlucoseReadingParams
 }
@@ -180,7 +197,10 @@ func NoteToCreate(source Note) CreateNoteParams {
 	var userCreateNoteParams CreateNoteParams
 	userCreateNoteParams.ID = source.ID
 	userCreateNoteParams.OccurredAt = source.OccurredAt
-	userCreateNoteParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateNoteParams.UtcOffsetMinutes = &xint64
+	}
 	userCreateNoteParams.Content = source.Content
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
@@ -245,7 +265,10 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 		xstring9 := *source.RawJsonData
 		userCreateProfileParams.RawJsonData = &xstring9
 	}
-	userCreateProfileParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint645 := *source.UtcOffsetMinutes
+		userCreateProfileParams.UtcOffsetMinutes = &xint645
+	}
 	userCreateProfileParams.CreatedByIdentityName = source.CreatedByIdentityName
 	userCreateProfileParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateProfileParams
@@ -254,7 +277,10 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var userCreateTempBasalParams CreateTempBasalParams
 	userCreateTempBasalParams.ID = source.ID
 	userCreateTempBasalParams.Start = source.Start
-	userCreateTempBasalParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateTempBasalParams.UtcOffsetMinutes = &xint64
+	}
 	userCreateTempBasalParams.DurationMinutes = source.DurationMinutes
 	userCreateTempBasalParams.Value = source.Value
 	if source.RawJsonData != nil {
@@ -269,7 +295,10 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	var userCreateTempTargetParams CreateTempTargetParams
 	userCreateTempTargetParams.ID = source.ID
 	userCreateTempTargetParams.Start = source.Start
-	userCreateTempTargetParams.UtcOffsetMinutes = source.UtcOffsetMinutes
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		userCreateTempTargetParams.UtcOffsetMinutes = &xint64
+	}
 	userCreateTempTargetParams.DurationMinutes = source.DurationMinutes
 	userCreateTempTargetParams.HighTarget = source.HighTarget
 	userCreateTempTargetParams.LowTarget = source.LowTarget

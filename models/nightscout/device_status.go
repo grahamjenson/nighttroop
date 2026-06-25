@@ -3,8 +3,8 @@ package nightscout
 import "encoding/json"
 
 type DeviceStatus struct {
-	Identifier *string `json:"identifier,omitempty"`
-	Device     *string `json:"device,omitempty"`
+	Identifier *string          `json:"identifier,omitempty"`
+	Device     *SanitizedString `json:"device,omitempty"`
 
 	// Uploader status
 	Uploader *UploaderStatus `json:"uploader,omitempty"`
@@ -17,6 +17,9 @@ type DeviceStatus struct {
 
 	// OpenAPS specific
 	OpenAPS *LoopStatus `json:"openaps,omitempty"`
+
+	//
+	UploaderBattery *FlexibleFloat64 `json:"uploaderBattery,omitempty"`
 
 	// Date Fields
 	CreatedAt   *DateString `json:"created_at,omitempty"`
@@ -50,8 +53,13 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 		t.Identifier = &aux.ID
 	}
 
-	// Cleaning Updates
-	if t.CreatedAt != nil {
+	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
+	if t.CreatedAt == nil {
+		// This is UTC not User timezone, will have to set UTC offset minutes at API level
+		ds, now := DateStringNow()
+		t.CreatedAt = ds
+		t.Date = ptr(DateIntFromTime(now))
+	} else {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 
@@ -62,14 +70,14 @@ type UploaderStatus struct {
 	Battery        *FlexibleFloat64 `json:"battery,omitempty"`
 	BatteryVoltage *FlexibleFloat64 `json:"batteryVoltage,omitempty"`
 
-	Name      *string     `json:"name,omitempty"`
-	Timestamp *DateString `json:"timestamp,omitempty"`
+	Name      *SanitizedString `json:"name,omitempty"`
+	Timestamp *DateString      `json:"timestamp,omitempty"`
 }
 
 type LoopStatus struct {
-	Timestamp *DateString `json:"timestamp,omitempty"`
-	Name      *string     `json:"name,omitempty"`
-	Version   *string     `json:"version,omitempty"`
+	Timestamp *DateString      `json:"timestamp,omitempty"`
+	Name      *SanitizedString `json:"name,omitempty"`
+	Version   *SanitizedString `json:"version,omitempty"`
 
 	IOB *IOBStatus `json:"iob,omitempty"`
 	COB *COBStatus `json:"cob,omitempty"`
@@ -83,7 +91,7 @@ type LoopStatus struct {
 
 	RecommendedBolus *FlexibleFloat64 `json:"recommendedBolus,omitempty"`
 
-	FailureReason *string `json:"failureReason,omitempty"`
+	FailureReason *SanitizedString `json:"failureReason,omitempty"`
 }
 
 type PumpStatus struct {
@@ -95,12 +103,12 @@ type PumpStatus struct {
 
 	Extended map[string]any `json:"extended,omitempty"`
 
-	Bolusing       *bool   `json:"bolusing,omitempty"`
-	Suspended      *bool   `json:"suspended,omitempty"`
-	Manufacturer   *string `json:"manufacturer,omitempty"`
-	Model          *string `json:"model,omitempty"`
-	PumpID         *string `json:"pumpID,omitempty"`
-	SecondsFromGMT *int    `json:"secondsFromGMT,omitempty"`
+	Bolusing       *FlexibleBool    `json:"bolusing,omitempty"`
+	Suspended      *FlexibleBool    `json:"suspended,omitempty"`
+	Manufacturer   *SanitizedString `json:"manufacturer,omitempty"`
+	Model          *SanitizedString `json:"model,omitempty"`
+	PumpID         *SanitizedString `json:"pumpID,omitempty"`
+	SecondsFromGMT *FlexibleInt64   `json:"secondsFromGMT,omitempty"`
 }
 
 type IOBStatus struct {

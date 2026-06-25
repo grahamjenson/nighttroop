@@ -78,7 +78,7 @@ INSERT INTO activity (
 type CreateActivityParams struct {
 	ID                    string
 	OccurredAt            int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	Name                  *string
 	Type                  *string
 	Notes                 *string

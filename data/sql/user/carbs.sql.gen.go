@@ -68,7 +68,7 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 type CreateCarbParams struct {
 	ID                    string
 	OccurredAt            int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	Amount                float64
 	Type                  string
 	RawJsonData           *string

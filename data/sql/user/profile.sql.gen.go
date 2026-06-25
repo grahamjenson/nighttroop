@@ -100,7 +100,7 @@ type CreateProfileParams struct {
 	BasalRatesJson           *string
 	TargetsJson              *string
 	RawJsonData              *string
-	UtcOffsetMinutes         int64
+	UtcOffsetMinutes         *int64
 	CreatedByIdentityName    string
 	CreatedByIdentityID      int64
 }

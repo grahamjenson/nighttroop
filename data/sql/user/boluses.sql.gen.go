@@ -68,7 +68,7 @@ INSERT INTO bolus (
 type CreateBolusParams struct {
 	ID                    string
 	OccurredAt            int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	Value                 float64
 	Type                  string
 	RawJsonData           *string

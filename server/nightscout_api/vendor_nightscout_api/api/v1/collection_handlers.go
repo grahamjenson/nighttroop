@@ -50,45 +50,37 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		var created []nsutils.Record
+
+		// Deal with one record being sent or an array being sent
+		arrayOfModels := []any{}
 		switch typed := body.(type) {
 		case map[string]any:
-			doc := typed
-			doc, err := collection.DefaultNormalizeValidateCreateDoc(doc)
-			if err != nil {
-				nsutils.WriteError(w, err)
+			arrayOfModels = append(arrayOfModels, typed)
+		case []any:
+			arrayOfModels = typed
+		default:
+			nsutils.WriteError(w, nsutils.BadDataBodyError)
+			return
+		}
+
+		// Loop over the array of models sent
+		for _, item := range arrayOfModels {
+			doc, ok := item.(map[string]any)
+
+			if !ok {
+				nsutils.WriteError(w, nsutils.BadDataBodyError)
 				return
 			}
+
 			record, err := dep.Store.Create(r.Context(), collection, doc)
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
 			}
 			created = append(created, record)
-		case []any:
-			for _, item := range typed {
-				doc, ok := item.(map[string]any)
-				if !ok {
-					nsutils.WriteError(w, nsutils.BadDataBodyError)
-					return
-				}
-				doc, err := collection.DefaultNormalizeValidateCreateDoc(doc)
-				if err != nil {
-					nsutils.WriteError(w, err)
-					return
-				}
-				record, err := dep.Store.Create(r.Context(), collection, doc)
-				if err != nil {
-					nsutils.WriteError(w, err)
-					return
-				}
-				created = append(created, record)
-			}
-		default:
-			nsutils.WriteError(w, nsutils.BadDataBodyError)
-			return
 		}
-		nsutils.WriteRecordsV1(w, created, nil)
 
+		nsutils.WriteRecordsV1(w, created, nil)
 	}
 }
 

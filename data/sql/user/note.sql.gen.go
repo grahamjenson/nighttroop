@@ -66,7 +66,7 @@ INSERT INTO note (
 type CreateNoteParams struct {
 	ID                    string
 	OccurredAt            int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	Content               string
 	RawJsonData           *string
 	CreatedByIdentityID   int64

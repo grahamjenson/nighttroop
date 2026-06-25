@@ -21,7 +21,7 @@ type Activity struct {
 	HeartRate             *int64
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -35,7 +35,7 @@ type Bolus struct {
 	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -49,7 +49,7 @@ type Carb struct {
 	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -72,7 +72,7 @@ type DeviceStatus struct {
 	CgmInsertionTime      *int64
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -107,7 +107,7 @@ type GlucoseReading struct {
 	Type                  string
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -133,7 +133,7 @@ type Note struct {
 	Content               string
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -157,7 +157,7 @@ type Profile struct {
 	TargetsJson              *string
 	RawJsonData              *string
 	DeletedAt                *int64
-	UtcOffsetMinutes         int64
+	UtcOffsetMinutes         *int64
 	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
@@ -184,7 +184,7 @@ type TempBasal struct {
 	Value                 float64
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string
@@ -199,7 +199,7 @@ type TempTarget struct {
 	LowTarget             float64
 	RawJsonData           *string
 	DeletedAt             *int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByIdentityName string

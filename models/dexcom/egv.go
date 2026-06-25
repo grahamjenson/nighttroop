@@ -32,7 +32,7 @@ func EGVToCreate(e EGV, idPrefix string, createdByIdentityID int64, createdByIde
 		CreatedByIdentityID:   createdByIdentityID,
 		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
-		UtcOffsetMinutes:      int64(e.UTCOffsetInMinutes()),
+		UtcOffsetMinutes:      ptr(int64(e.UTCOffsetInMinutes())),
 	}
 }
 
@@ -115,4 +115,8 @@ func parseDexcomTime(s string) (time.Time, error) {
 
 	// Interpret the epoch instant in the supplied timezone.
 	return t.In(loc), nil
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

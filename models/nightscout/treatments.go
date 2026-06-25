@@ -23,15 +23,15 @@ type Treatment struct {
 
 	Duration *FlexibleInt64 `json:"duration"` // minutes
 
-	Notes     *string `json:"notes"`
-	EnteredBy *string `json:"enteredBy"`
+	Notes     *SanitizedString `json:"notes"`
+	EnteredBy *SanitizedString `json:"enteredBy"`
 
 	// Treatment-specific fields
-	Profile      *string          `json:"profile"`
+	Profile      *SanitizedString `json:"profile"`
 	Percentage   *FlexibleFloat64 `json:"percentage"`
 	Rate         *FlexibleFloat64 `json:"rate"`
 	Absolute     *FlexibleFloat64 `json:"absolute"`
-	Reason       *string          `json:"reason"`
+	Reason       *SanitizedString `json:"reason"`
 	TargetTop    *FlexibleFloat64 `json:"targetTop"`
 	TargetBottom *FlexibleFloat64 `json:"targetBottom"`
 	Units        *Units           `json:"units,omitempty"`
@@ -68,8 +68,13 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		t.Identifier = &aux.ID
 	}
 
-	// Cleaning Updates
-	if t.CreatedAt != nil {
+	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
+	if t.CreatedAt == nil {
+		// This is UTC not User timezone, will have to set UTC offset minutes at API level
+		ds, now := DateStringNow()
+		t.CreatedAt = ds
+		t.Date = ptr(DateIntFromTime(now))
+	} else {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 

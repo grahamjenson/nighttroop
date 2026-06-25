@@ -76,13 +76,6 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Bad or missing request body"})
 			return
 		}
-
-		doc, err = collection.DefaultNormalizeValidateCreateDoc(doc)
-		if err != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
-			return
-		}
-
 		record, err := dep.Store.Create(r.Context(), collection, doc)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
@@ -148,18 +141,8 @@ func Update(dep nsutils.Dependencies) http.HandlerFunc {
 
 		var record nsutils.Record
 		if createNewRecord {
-			doc, err = collection.DefaultNormalizeValidateCreateDoc(doc)
-			if err != nil {
-				nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
-				return
-			}
 			record, err = dep.Store.Create(r.Context(), collection, doc)
 		} else {
-			doc, err = collection.DefaultNormalizeValidateUpdateDoc(existing, doc)
-			if err != nil {
-				nsutils.WriteError(w, err)
-				return
-			}
 			record, err = dep.Store.Update(r.Context(), collection, identifier, doc)
 		}
 
@@ -196,11 +179,6 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
 			nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
-			return
-		}
-		doc, err = collection.DefaultNormalizeValidateUpdateDoc(existing, doc)
-		if err != nil {
-			nsutils.WriteError(w, err)
 			return
 		}
 		record, err := dep.Store.Update(r.Context(), collection, identifier, doc)

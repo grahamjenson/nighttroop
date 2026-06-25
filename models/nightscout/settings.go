@@ -3,10 +3,10 @@ package nightscout
 import "encoding/json"
 
 type Setting struct {
-	Identifier *string `json:"identifier,omitempty"`
-	Type       *string `json:"type,omitempty"`
+	Identifier *string          `json:"identifier,omitempty"`
+	Type       *SanitizedString `json:"type,omitempty"`
 
-	Value *any `json:"value,omitempty"`
+	Value *SanitizedString `json:"value,omitempty"`
 
 	// Date Fields
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`

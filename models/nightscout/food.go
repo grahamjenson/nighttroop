@@ -5,9 +5,9 @@ import "encoding/json"
 type Food struct {
 	Identifier *string `json:"identifier,omitempty"`
 
-	Name        *string `json:"name,omitempty"`
-	Category    *string `json:"category,omitempty"`
-	Subcategory *string `json:"subcategory,omitempty"`
+	Name        *SanitizedString `json:"name,omitempty"`
+	Category    *SanitizedString `json:"category,omitempty"`
+	Subcategory *SanitizedString `json:"subcategory,omitempty"`
 
 	Portion *FlexibleFloat64 `json:"portion,omitempty"`
 	Unit    *FoodUnit        `json:"unit,omitempty"`

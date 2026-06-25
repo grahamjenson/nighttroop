@@ -1,21 +1,23 @@
 package nightscout
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type Activity struct {
 	Identifier *string `json:"identifier"`
 
-	Name *string `json:"name,omitempty"` // Name of the activity
+	Name *SanitizedString `json:"name,omitempty"` // Name of the activity
 
-	ActivityType *string        `json:"activityType"` // Type of activity
-	Duration     *FlexibleInt64 `json:"duration"`     // Duration in minutes
-	Steps        *FlexibleInt64 `json:"steps"`        // Step count
-	Calories     *FlexibleInt64 `json:"calories"`     // Calories burned
-	HeartRate    *FlexibleInt64 `json:"heartRate"`    // Heart rate
-	Notes        *string        `json:"notes"`        // Notes
+	ActivityType *SanitizedString `json:"activityType,omitempty"` // Type of activity
+	Duration     *FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
+	Steps        *FlexibleInt64   `json:"steps,omitempty"`        // Step count
+	Calories     *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
+	HeartRate    *FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
+	Notes        *SanitizedString `json:"notes,omitempty"`        // Notes
 
 	// Date fields
-	CreatedAt   *DateString `json:"created_at"` // ISO 8601 string
+	CreatedAt   *DateString `json:"created_at,omitempty"` // ISO 8601 string
 	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
 	SrvModified *DateInt    `json:"srvModified,omitempty"`
 
@@ -46,8 +48,13 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 		t.Identifier = &aux.ID
 	}
 
-	// Cleaning Updates
-	if t.CreatedAt != nil {
+	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
+	if t.CreatedAt == nil {
+		// This is UTC not User timezone, will have to set UTC offset minutes at API level
+		ds, now := DateStringNow()
+		t.CreatedAt = ds
+		t.Date = ptr(DateIntFromTime(now))
+	} else {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 

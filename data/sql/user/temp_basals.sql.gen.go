@@ -70,7 +70,7 @@ VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
 type CreateTempBasalParams struct {
 	ID                    string
 	Start                 int64
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	DurationMinutes       int64
 	Value                 float64
 	RawJsonData           *string

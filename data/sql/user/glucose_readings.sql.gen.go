@@ -68,7 +68,7 @@ type CreateGlucoseReadingParams struct {
 	OccurredAt            int64
 	Value                 float64
 	RawJsonData           *string
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }

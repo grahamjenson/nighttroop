@@ -261,40 +261,40 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 
 	switch v := m.(type) {
 	case user.GlucoseReading:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case *user.GlucoseReading:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case user.Bolus:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case *user.Bolus:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case user.Carb:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case *user.Carb:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case user.TempBasal:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.Start), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
 		return &ds
 	case *user.TempBasal:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.Start), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
 		return &ds
 	case user.TempTarget:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.Start), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
 		return &ds
 	case *user.TempTarget:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.Start), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
 		return &ds
 	case user.Note:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case *user.Note:
-		ds := DateStringFromDateIntAndUTCOffset(DateInt(v.OccurredAt), FlexibleInt64(v.UtcOffsetMinutes))
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	default:
 		return nil

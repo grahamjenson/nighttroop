@@ -98,7 +98,7 @@ type CreateDeviceStatusParams struct {
 	CgmStatus             *string
 	CgmInsertionTime      *int64
 	RawJsonData           *string
-	UtcOffsetMinutes      int64
+	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64

@@ -9,7 +9,7 @@ import (
 
 type Profile struct {
 	Identifier     *string                    `json:"identifier,omitempty"`
-	DefaultProfile *string                    `json:"defaultProfile,omitempty"`
+	DefaultProfile *SanitizedString           `json:"defaultProfile,omitempty"`
 	Store          map[string]ProfileSettings `json:"store,omitempty"`
 
 	// Date Feilds
@@ -45,8 +45,13 @@ func (t *Profile) UnmarshalJSON(data []byte) error {
 		t.Identifier = &aux.ID
 	}
 
-	// Cleaning Updates
-	if t.StartDate != nil {
+	// Set default StartDate (leave UTCOffset nil to be later replaces by user timezone)
+	if t.StartDate == nil {
+		// This is UTC not User timezone, will have to set UTC offset minutes at API level
+		ds, now := DateStringNow()
+		t.StartDate = ds
+		t.Date = ptr(DateIntFromTime(now))
+	} else {
 		t.Date, t.UtcOffsetMinutes = t.StartDate.MillisUTCOffset()
 	}
 
