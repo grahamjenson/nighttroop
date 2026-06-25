@@ -72,27 +72,3 @@ func (c TreatmentCollection) Delete(ctx context.Context, userContext *httputils.
 func (c TreatmentCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }
-
-func CarbsToRecord(carbs *user.Carb) nsutils.Record {
-	if carbs == nil {
-		return nsutils.Record{}
-	}
-
-	treatmentModel := nightscout.CarbsDBModelToTreatment(*carbs)
-
-	treatmentMap, err := utils.ToMap(&treatmentModel)
-	if err != nil {
-		return nsutils.Record{}
-	}
-
-	return nsutils.Record{
-		Collection:  "treatments",
-		ID:          treatmentModel.Identifier.String(),
-		Data:        treatmentMap,
-		SrvCreated:  treatmentModel.Date.Int64(),
-		SrvModified: treatmentModel.Date.Int64(),
-		Subject:     "",
-		IsValid:     true,
-		DeletedAt:   nil,
-	}
-}

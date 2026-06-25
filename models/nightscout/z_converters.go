@@ -47,208 +47,224 @@ func ActivityToCreate(source Activity, context CreateContext) user.CreateActivit
 	userCreateActivityParams.RawJsonData = &pString
 	return userCreateActivityParams
 }
-func BolusDBModelToTreatment(source user.Bolus) Treatment {
+func BolusDBModelToTreatment(source *user.Bolus) Treatment {
 	var nightscoutTreatment Treatment
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
-	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
-	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Value)
-	nightscoutTreatment.Insulin = &pNightscoutFlexibleFloat64
-	pNightscoutSanitizedString := SanitizedString(source.CreatedByIdentityName)
-	nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
-	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt := DateInt(source.OccurredAt)
-	nightscoutTreatment.Date = &pNightscoutDateInt
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
-	}
-	pNightscoutDateInt2 := DateInt(source.CreatedAt)
-	nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
-	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
-	nightscoutTreatment.SrvModified = &pNightscoutDateInt3
-	if source.RawJsonData != nil {
-		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
+		nightscoutTreatment.EventType = DBTypeToTreatmentType((*source))
+		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).Value)
+		nightscoutTreatment.Insulin = &pNightscoutFlexibleFloat64
+		pNightscoutSanitizedString := SanitizedString((*source).CreatedByIdentityName)
+		nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
+		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutTreatment.Date = &pNightscoutDateInt
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		pNightscoutDateInt2 := DateInt((*source).CreatedAt)
+		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).UpdatedAt)
+		nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+		if (*source).RawJsonData != nil {
+			nightscoutTreatment.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutTreatment
 }
-func CarbsDBModelToTreatment(source user.Carb) Treatment {
+func CarbsDBModelToTreatment(source *user.Carb) Treatment {
 	var nightscoutTreatment Treatment
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
-	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
-	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Amount)
-	nightscoutTreatment.Carbs = &pNightscoutFlexibleFloat64
-	pNightscoutSanitizedString := SanitizedString(source.CreatedByIdentityName)
-	nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
-	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt := DateInt(source.OccurredAt)
-	nightscoutTreatment.Date = &pNightscoutDateInt
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
-	}
-	pNightscoutDateInt2 := DateInt(source.CreatedAt)
-	nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
-	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
-	nightscoutTreatment.SrvModified = &pNightscoutDateInt3
-	if source.RawJsonData != nil {
-		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
+		nightscoutTreatment.EventType = DBTypeToTreatmentType((*source))
+		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).Amount)
+		nightscoutTreatment.Carbs = &pNightscoutFlexibleFloat64
+		pNightscoutSanitizedString := SanitizedString((*source).CreatedByIdentityName)
+		nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
+		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutTreatment.Date = &pNightscoutDateInt
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		pNightscoutDateInt2 := DateInt((*source).CreatedAt)
+		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).UpdatedAt)
+		nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+		if (*source).RawJsonData != nil {
+			nightscoutTreatment.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutTreatment
 }
-func DBModelToActivity(source user.Activity) Activity {
+func DBModelToActivity(source *user.Activity) Activity {
 	var nightscoutActivity Activity
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutActivity.Identifier = &pNightscoutIdentifierString
-	if source.Name != nil {
-		nightscoutSanitizedString := SanitizedString(*source.Name)
-		nightscoutActivity.Name = &nightscoutSanitizedString
-	}
-	if source.Type != nil {
-		nightscoutSanitizedString2 := SanitizedString(*source.Type)
-		nightscoutActivity.ActivityType = &nightscoutSanitizedString2
-	}
-	if source.DurationMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.DurationMinutes)
-		nightscoutActivity.Duration = &nightscoutFlexibleInt64
-	}
-	if source.Steps != nil {
-		nightscoutFlexibleInt642 := FlexibleInt64(*source.Steps)
-		nightscoutActivity.Steps = &nightscoutFlexibleInt642
-	}
-	if source.Calories != nil {
-		nightscoutFlexibleInt643 := FlexibleInt64(*source.Calories)
-		nightscoutActivity.Calories = &nightscoutFlexibleInt643
-	}
-	if source.HeartRate != nil {
-		nightscoutFlexibleInt644 := FlexibleInt64(*source.HeartRate)
-		nightscoutActivity.HeartRate = &nightscoutFlexibleInt644
-	}
-	if source.Notes != nil {
-		nightscoutSanitizedString3 := SanitizedString(*source.Notes)
-		nightscoutActivity.Notes = &nightscoutSanitizedString3
-	}
-	nightscoutActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt := DateInt(source.CreatedAt)
-	nightscoutActivity.SrvCreated = &pNightscoutDateInt
-	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
-	nightscoutActivity.SrvModified = &pNightscoutDateInt2
-	pNightscoutDateInt3 := DateInt(source.OccurredAt)
-	nightscoutActivity.Date = &pNightscoutDateInt3
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt645 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutActivity.UtcOffsetMinutes = &nightscoutFlexibleInt645
-	}
-	if source.RawJsonData != nil {
-		nightscoutActivity.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutActivity.Identifier = &pNightscoutIdentifierString
+		if (*source).Name != nil {
+			nightscoutSanitizedString := SanitizedString(*(*source).Name)
+			nightscoutActivity.Name = &nightscoutSanitizedString
+		}
+		if (*source).Type != nil {
+			nightscoutSanitizedString2 := SanitizedString(*(*source).Type)
+			nightscoutActivity.ActivityType = &nightscoutSanitizedString2
+		}
+		if (*source).DurationMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).DurationMinutes)
+			nightscoutActivity.Duration = &nightscoutFlexibleInt64
+		}
+		if (*source).Steps != nil {
+			nightscoutFlexibleInt642 := FlexibleInt64(*(*source).Steps)
+			nightscoutActivity.Steps = &nightscoutFlexibleInt642
+		}
+		if (*source).Calories != nil {
+			nightscoutFlexibleInt643 := FlexibleInt64(*(*source).Calories)
+			nightscoutActivity.Calories = &nightscoutFlexibleInt643
+		}
+		if (*source).HeartRate != nil {
+			nightscoutFlexibleInt644 := FlexibleInt64(*(*source).HeartRate)
+			nightscoutActivity.HeartRate = &nightscoutFlexibleInt644
+		}
+		if (*source).Notes != nil {
+			nightscoutSanitizedString3 := SanitizedString(*(*source).Notes)
+			nightscoutActivity.Notes = &nightscoutSanitizedString3
+		}
+		nightscoutActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).CreatedAt)
+		nightscoutActivity.SrvCreated = &pNightscoutDateInt
+		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
+		nightscoutActivity.SrvModified = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).OccurredAt)
+		nightscoutActivity.Date = &pNightscoutDateInt3
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt645 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutActivity.UtcOffsetMinutes = &nightscoutFlexibleInt645
+		}
+		if (*source).RawJsonData != nil {
+			nightscoutActivity.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutActivity
 }
-func DBModelToDeviceStatus(source user.DeviceStatus) DeviceStatus {
+func DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
-	pNightscoutSanitizedString := SanitizedString(source.CreatedByIdentityName)
-	nightscoutDeviceStatus.Device = &pNightscoutSanitizedString
-	nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt := DateInt(source.CreatedAt)
-	nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
-	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
-	nightscoutDeviceStatus.SrvModified = &pNightscoutDateInt2
-	pNightscoutDateInt3 := DateInt(source.OccurredAt)
-	nightscoutDeviceStatus.Date = &pNightscoutDateInt3
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
-	}
-	if source.RawJsonData != nil {
-		nightscoutDeviceStatus.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
+		pNightscoutSanitizedString := SanitizedString((*source).CreatedByIdentityName)
+		nightscoutDeviceStatus.Device = &pNightscoutSanitizedString
+		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).CreatedAt)
+		nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
+		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
+		nightscoutDeviceStatus.SrvModified = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).OccurredAt)
+		nightscoutDeviceStatus.Date = &pNightscoutDateInt3
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if (*source).RawJsonData != nil {
+			nightscoutDeviceStatus.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutDeviceStatus
 }
-func DBModelToEntry(source user.GlucoseReading) Entry {
+func DBModelToEntry(source *user.GlucoseReading) Entry {
 	var nightscoutEntry Entry
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutEntry.Identifier = &pNightscoutIdentifierString
-	pNightscoutEntryType := EntryType(source.Type)
-	nightscoutEntry.Type = &pNightscoutEntryType
-	nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue(source)
-	nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue(source)
-	pString := source.CreatedByIdentityName
-	nightscoutEntry.Device = &pString
-	pNightscoutDateInt := DateInt(source.OccurredAt)
-	nightscoutEntry.Date = &pNightscoutDateInt
-	nightscoutEntry.DateString = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt2 := DateInt(source.OccurredAt)
-	nightscoutEntry.Mills = &pNightscoutDateInt2
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutEntry.UtcOffsetMinutes = &nightscoutFlexibleInt64
-	}
-	pNightscoutDateInt3 := DateInt(source.CreatedAt)
-	nightscoutEntry.SrvCreated = &pNightscoutDateInt3
-	pNightscoutDateInt4 := DateInt(source.UpdatedAt)
-	nightscoutEntry.SrvModified = &pNightscoutDateInt4
-	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Value)
-	nightscoutEntry.Value = &pNightscoutFlexibleFloat64
-	if source.RawJsonData != nil {
-		nightscoutEntry.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutEntry.Identifier = &pNightscoutIdentifierString
+		pNightscoutEntryType := EntryType((*source).Type)
+		nightscoutEntry.Type = &pNightscoutEntryType
+		nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue((*source))
+		nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue((*source))
+		pString := (*source).CreatedByIdentityName
+		nightscoutEntry.Device = &pString
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutEntry.Date = &pNightscoutDateInt
+		nightscoutEntry.DateString = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt2 := DateInt((*source).OccurredAt)
+		nightscoutEntry.Mills = &pNightscoutDateInt2
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutEntry.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		pNightscoutDateInt3 := DateInt((*source).CreatedAt)
+		nightscoutEntry.SrvCreated = &pNightscoutDateInt3
+		pNightscoutDateInt4 := DateInt((*source).UpdatedAt)
+		nightscoutEntry.SrvModified = &pNightscoutDateInt4
+		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).Value)
+		nightscoutEntry.Value = &pNightscoutFlexibleFloat64
+		if (*source).RawJsonData != nil {
+			nightscoutEntry.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutEntry
 }
-func DBModelToFood(source user.Food) Food {
+func DBModelToFood(source *user.Food) Food {
 	var nightscoutFood Food
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutFood.Identifier = &pNightscoutIdentifierString
-	if source.Name != nil {
-		nightscoutSanitizedString := SanitizedString(*source.Name)
-		nightscoutFood.Name = &nightscoutSanitizedString
-	}
-	if source.Carbs != nil {
-		nightscoutFlexibleFloat64 := FlexibleFloat64(*source.Carbs)
-		nightscoutFood.Carbs = &nightscoutFlexibleFloat64
-	}
-	pNightscoutDateInt := DateInt(source.CreatedAt)
-	nightscoutFood.SrvCreated = &pNightscoutDateInt
-	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
-	nightscoutFood.SrvModified = &pNightscoutDateInt2
-	if source.RawJsonData != nil {
-		nightscoutFood.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutFood.Identifier = &pNightscoutIdentifierString
+		if (*source).Name != nil {
+			nightscoutSanitizedString := SanitizedString(*(*source).Name)
+			nightscoutFood.Name = &nightscoutSanitizedString
+		}
+		if (*source).Carbs != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Carbs)
+			nightscoutFood.Carbs = &nightscoutFlexibleFloat64
+		}
+		pNightscoutDateInt := DateInt((*source).CreatedAt)
+		nightscoutFood.SrvCreated = &pNightscoutDateInt
+		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
+		nightscoutFood.SrvModified = &pNightscoutDateInt2
+		if (*source).RawJsonData != nil {
+			nightscoutFood.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutFood
 }
-func DBModelToProfile(source user.Profile) Profile {
+func DBModelToProfile(source *user.Profile) Profile {
 	var nightscoutProfile Profile
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutProfile.Identifier = &pNightscoutIdentifierString
-	nightscoutProfile.StartDate = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt := DateInt(source.OccurredAt)
-	nightscoutProfile.Mills = &pNightscoutDateInt
-	pNightscoutDateInt2 := DateInt(source.CreatedAt)
-	nightscoutProfile.SrvCreated = &pNightscoutDateInt2
-	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
-	nightscoutProfile.SrvModified = &pNightscoutDateInt3
-	pNightscoutDateInt4 := DateInt(source.OccurredAt)
-	nightscoutProfile.Date = &pNightscoutDateInt4
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutProfile.UtcOffsetMinutes = &nightscoutFlexibleInt64
-	}
-	if source.RawJsonData != nil {
-		nightscoutProfile.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutProfile.Identifier = &pNightscoutIdentifierString
+		nightscoutProfile.StartDate = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutProfile.Mills = &pNightscoutDateInt
+		pNightscoutDateInt2 := DateInt((*source).CreatedAt)
+		nightscoutProfile.SrvCreated = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).UpdatedAt)
+		nightscoutProfile.SrvModified = &pNightscoutDateInt3
+		pNightscoutDateInt4 := DateInt((*source).OccurredAt)
+		nightscoutProfile.Date = &pNightscoutDateInt4
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutProfile.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if (*source).RawJsonData != nil {
+			nightscoutProfile.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutProfile
 }
-func DBModelToSetting(source user.Setting) Setting {
+func DBModelToSetting(source *user.Setting) Setting {
 	var nightscoutSetting Setting
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutSetting.Identifier = &pNightscoutIdentifierString
-	nightscoutSetting.Value = FromJsonRawMessage(source.Value)
-	pNightscoutDateInt := DateInt(source.CreatedAt)
-	nightscoutSetting.SrvCreated = &pNightscoutDateInt
-	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
-	nightscoutSetting.SrvModified = &pNightscoutDateInt2
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutSetting.Identifier = &pNightscoutIdentifierString
+		nightscoutSetting.Value = FromJsonRawMessage((*source).Value)
+		pNightscoutDateInt := DateInt((*source).CreatedAt)
+		nightscoutSetting.SrvCreated = &pNightscoutDateInt
+		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
+		nightscoutSetting.SrvModified = &pNightscoutDateInt2
+	}
 	return nightscoutSetting
 }
 func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadingParams {
@@ -289,26 +305,28 @@ func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
 	}
 	return userUpdateGlucoseReadingParams
 }
-func TempBasalDBModelToTreatment(source user.TempBasal) Treatment {
+func TempBasalDBModelToTreatment(source *user.TempBasal) Treatment {
 	var nightscoutTreatment Treatment
-	pNightscoutIdentifierString := IdentifierString(source.ID)
-	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
-	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
-	pNightscoutSanitizedString := SanitizedString(source.CreatedByIdentityName)
-	nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
-	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutDateInt := DateInt(source.Start)
-	nightscoutTreatment.Date = &pNightscoutDateInt
-	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
-	}
-	pNightscoutDateInt2 := DateInt(source.CreatedAt)
-	nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
-	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
-	nightscoutTreatment.SrvModified = &pNightscoutDateInt3
-	if source.RawJsonData != nil {
-		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
+		nightscoutTreatment.EventType = DBTypeToTreatmentType((*source))
+		pNightscoutSanitizedString := SanitizedString((*source).CreatedByIdentityName)
+		nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
+		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).Start)
+		nightscoutTreatment.Date = &pNightscoutDateInt
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		pNightscoutDateInt2 := DateInt((*source).CreatedAt)
+		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).UpdatedAt)
+		nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+		if (*source).RawJsonData != nil {
+			nightscoutTreatment.RawJsonData = *(*source).RawJsonData
+		}
 	}
 	return nightscoutTreatment
 }

@@ -45,7 +45,7 @@ func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.Us
 		slog.Error("failed to create glucose reading in database, dbModel is nil")
 		return nil, nsutils.ErrInternal
 	}
-	return ptr(GlucoseReadingToRecord(dbModel)), nil
+	return ptr(c.converter(dbModel)), nil
 }
 
 func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
@@ -61,7 +61,7 @@ func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserC
 	if glucoseReading == nil {
 		return nil, nsutils.ErrNotFound
 	}
-	record := GlucoseReadingToRecord(glucoseReading)
+	record := c.converter(glucoseReading)
 	return &record, nil
 }
 
@@ -73,7 +73,7 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 		return nil, nsutils.ErrInternal
 	}
 
-	return CreateRecordSlice(entries, GlucoseReadingToRecord), nil
+	return CreateRecordSlice(entries, c.converter), nil
 }
 
 func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
@@ -97,7 +97,7 @@ func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.Us
 	if glucoseReading == nil {
 		return nil, nsutils.ErrNotFound
 	}
-	record := GlucoseReadingToRecord(glucoseReading)
+	record := c.converter(glucoseReading)
 	return &record, nil
 }
 
@@ -165,29 +165,5 @@ func (c EntriesCollection) DeleteType(ctx context.Context, userContext *httputil
 			return 0, nsutils.ErrInternal
 		}
 		return int(rowsAffected), nil
-	}
-}
-
-func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
-	if sgv == nil {
-		return nsutils.Record{}
-	}
-
-	entryModel := nightscout.DBModelToEntry(*sgv)
-
-	entryMap, err := utils.ToMap(&entryModel)
-	if err != nil {
-		return nsutils.Record{}
-	}
-
-	return nsutils.Record{
-		Collection:  "entries",
-		ID:          entryModel.Identifier.String(),
-		Data:        entryMap,
-		SrvCreated:  entryModel.SrvCreated.Int64(),
-		SrvModified: entryModel.SrvModified.Int64(),
-		Subject:     sgv.CreatedByIdentityName,
-		IsValid:     true,
-		DeletedAt:   sgv.DeletedAt,
 	}
 }

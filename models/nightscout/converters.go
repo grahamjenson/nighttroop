@@ -44,7 +44,7 @@ type MapConverter interface {
 	// goverter:map DurationMinutes Duration
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToActivity(source user.Activity) Activity
+	DBModelToActivity(source *user.Activity) Activity
 
 	///////
 	// DEVICE STATUS
@@ -58,7 +58,7 @@ type MapConverter interface {
 	// goverter:map CreatedByIdentityName Device
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToDeviceStatus(source user.DeviceStatus) DeviceStatus
+	DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus
 
 	///////
 	// ENTRIES
@@ -88,7 +88,7 @@ type MapConverter interface {
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
-	DBModelToEntry(source user.GlucoseReading) Entry
+	DBModelToEntry(source *user.GlucoseReading) Entry
 
 	///////
 	// FOOD TODO
@@ -99,7 +99,7 @@ type MapConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToFood(source user.Food) Food
+	DBModelToFood(source *user.Food) Food
 
 	///////
 	// Profile TODO
@@ -113,7 +113,7 @@ type MapConverter interface {
 	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToProfile(source user.Profile) Profile
+	DBModelToProfile(source *user.Profile) Profile
 
 	///////
 	// TREATMENTS
@@ -149,7 +149,7 @@ type MapConverter interface {
 	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	BolusDBModelToTreatment(source user.Bolus) Treatment
+	BolusDBModelToTreatment(source *user.Bolus) Treatment
 
 	///////
 	// Carbs
@@ -181,7 +181,7 @@ type MapConverter interface {
 	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	CarbsDBModelToTreatment(source user.Carb) Treatment
+	CarbsDBModelToTreatment(source *user.Carb) Treatment
 
 	///////
 	// Temp Basal
@@ -215,7 +215,7 @@ type MapConverter interface {
 	// goverter:map Start Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	TempBasalDBModelToTreatment(source user.TempBasal) Treatment
+	TempBasalDBModelToTreatment(source *user.TempBasal) Treatment
 
 	///////
 	// Temp Targets
@@ -267,7 +267,7 @@ type MapConverter interface {
 	// goverter:map Value Value | FromJsonRawMessage
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToSetting(source user.Setting) Setting
+	DBModelToSetting(source *user.Setting) Setting
 }
 
 // //
@@ -328,59 +328,17 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 
 	// TODO this should be mapping to interfaces now we have getters
 	switch v := m.(type) {
-	case user.GlucoseReading:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+	case interface {
+		GetOccurredAt() int64
+		GetUtcOffsetMinutes() *int64
+	}:
+		ds := DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
 		return &ds
-	case *user.GlucoseReading:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case user.Activity:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case *user.Activity:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case user.Profile:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case *user.Profile:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case user.DeviceStatus:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case *user.DeviceStatus:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case user.Bolus:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case *user.Bolus:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case user.Carb:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case *user.Carb:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case user.TempBasal:
-		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
-		return &ds
-	case *user.TempBasal:
-		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
-		return &ds
-	case user.TempTarget:
-		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
-		return &ds
-	case *user.TempTarget:
-		ds := DateStringFromInt64AndUTCOffset(v.Start, v.UtcOffsetMinutes)
-		return &ds
-	case user.Note:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
-		return &ds
-	case *user.Note:
-		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+	case interface {
+		GetStart() int64
+		GetUtcOffsetMinutes() *int64
+	}:
+		ds := DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
 		return &ds
 	default:
 		return nil

@@ -24,13 +24,13 @@ func DBModelToRecord[T any, PT interface {
 	GetCreatedAt() int64
 	GetUpdatedAt() int64
 	GetCreatedByIdentityName() string
-}, S any](collectionName nsutils.Collection, convertFunc func(T) S) func(dbModel PT) nsutils.Record {
+}, S any](collectionName nsutils.Collection, convertFunc func(PT) S) func(dbModel PT) nsutils.Record {
 	return func(dbModel PT) nsutils.Record {
 		if dbModel == nil {
 			return nsutils.Record{}
 		}
-		absDBModel := *dbModel
-		nsModel := convertFunc(absDBModel)
+
+		nsModel := convertFunc(dbModel)
 
 		mapModel, err := utils.ToMap(&nsModel)
 		if err != nil {
