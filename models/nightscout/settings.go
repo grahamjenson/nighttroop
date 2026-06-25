@@ -3,8 +3,8 @@ package nightscout
 import "encoding/json"
 
 type Setting struct {
-	Identifier *string          `json:"identifier,omitempty"`
-	Type       *SanitizedString `json:"type,omitempty"`
+	Identifier *IdentifierString `json:"identifier,omitempty"`
+	Type       *SanitizedString  `json:"type,omitempty"`
 
 	Value *SanitizedString `json:"value,omitempty"`
 
@@ -19,7 +19,7 @@ type Setting struct {
 func (t *Setting) UnmarshalJSON(data []byte) error {
 	type Alias Setting
 	aux := struct {
-		ID string `json:"_id"`
+		ID IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

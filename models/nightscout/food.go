@@ -3,7 +3,7 @@ package nightscout
 import "encoding/json"
 
 type Food struct {
-	Identifier *string `json:"identifier,omitempty"`
+	Identifier *IdentifierString `json:"identifier,omitempty"`
 
 	Name        *SanitizedString `json:"name,omitempty"`
 	Category    *SanitizedString `json:"category,omitempty"`
@@ -29,7 +29,7 @@ type Food struct {
 func (t *Food) UnmarshalJSON(data []byte) error {
 	type Alias Food
 	aux := struct {
-		ID string `json:"_id"`
+		ID IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

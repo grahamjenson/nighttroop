@@ -368,6 +368,10 @@ func (u *Units) UnmarshalJSON(data []byte) error {
 
 type SanitizedString string
 
+func (s *SanitizedString) String() string {
+	return string(*s)
+}
+
 var tagRe = regexp.MustCompile(`<[^>]*>`)
 
 func StripAllTags(input string) string {
@@ -429,12 +433,38 @@ func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 
 type IdentifierString string
 
+func (i *IdentifierString) String() string {
+	return string(*i)
+}
+
 func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 	// limit in possible characters and length, convert everything to a string
-	var str string
-	if err := json.Unmarshal(data, &str); err != nil {
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
 		return fmt.Errorf("expected identifier string, got %s", data)
 	}
+
+	str := ""
+
+	switch v := v.(type) {
+	case string:
+		str = v
+	case float64:
+		str = strconv.FormatFloat(v, 'f', -1, 64)
+	case json.Number:
+		str = v.String()
+	default:
+		str = fmt.Sprintf("%v", v)
+	}
+
+	if len(str) > 32 {
+		str = str[:32]
+	}
+
+	if len(str) == 0 {
+		return fmt.Errorf("identifier string cannot be empty")
+	}
+
 	*i = IdentifierString(str)
 	return nil
 }

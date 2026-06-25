@@ -11,7 +11,7 @@ import (
 ////
 
 type Treatment struct {
-	Identifier *string `json:"identifier,omitempty"`
+	Identifier *IdentifierString `json:"identifier,omitempty"`
 
 	EventType *TreatmentEventType `json:"eventType,omitempty"`
 
@@ -50,7 +50,7 @@ type Treatment struct {
 func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
 	aux := struct {
-		ID string `json:"_id"`
+		ID IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

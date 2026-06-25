@@ -3,8 +3,8 @@ package nightscout
 import "encoding/json"
 
 type DeviceStatus struct {
-	Identifier *string          `json:"identifier,omitempty"`
-	Device     *SanitizedString `json:"device,omitempty"`
+	Identifier *IdentifierString `json:"identifier,omitempty"`
+	Device     *SanitizedString  `json:"device,omitempty"`
 
 	// Uploader status
 	Uploader *UploaderStatus `json:"uploader,omitempty"`
@@ -35,7 +35,7 @@ type DeviceStatus struct {
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	type Alias DeviceStatus
 	aux := struct {
-		ID string `json:"_id"`
+		ID IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

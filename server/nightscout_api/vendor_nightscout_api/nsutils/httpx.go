@@ -8,7 +8,7 @@ import (
 )
 
 func WriteRecordV3(w http.ResponseWriter, record Record, fields []string) {
-	body := map[string]any{"status": http.StatusOK, "result": record.SelectFields(fields)}
+	body := map[string]any{"status": http.StatusOK, "result": record.SelectFields(fields, true)}
 	if record.Identifier() != "" {
 		LastModifiedHeader(w, record.SrvModified)
 		body["status"] = http.StatusOK
@@ -22,7 +22,7 @@ func WriteRecordV3(w http.ResponseWriter, record Record, fields []string) {
 func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
 	result := make([]map[string]any, 0, len(records))
 	for _, record := range records {
-		result = append(result, record.SelectFields(fields))
+		result = append(result, record.SelectFields(fields, true))
 	}
 	WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
 }
@@ -30,7 +30,7 @@ func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
 func WriteRecordsV1(w http.ResponseWriter, records []Record, fields []string) {
 	response := make([]map[string]any, 0, len(records))
 	for _, record := range records {
-		response = append(response, record.SelectFields(fields))
+		response = append(response, record.SelectFields(fields, false))
 	}
 	WriteJSON(w, http.StatusOK, response)
 }

@@ -168,12 +168,12 @@ func GlucoseReadingToRecord(sgv *user.GlucoseReading) nsutils.Record {
 
 	return nsutils.Record{
 		Collection:  "entries",
-		ID:          *entryModel.Identifier,
+		ID:          entryModel.Identifier.String(),
 		Data:        entryMap,
 		SrvCreated:  entryModel.SrvCreated.Int64(),
 		SrvModified: entryModel.SrvModified.Int64(),
-		Subject:     "",
+		Subject:     sgv.CreatedByIdentityName,
 		IsValid:     true,
-		DeletedAt:   nil,
+		DeletedAt:   sgv.DeletedAt,
 	}
 }

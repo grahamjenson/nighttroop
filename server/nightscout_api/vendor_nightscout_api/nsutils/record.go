@@ -49,15 +49,13 @@ func (r Record) WithData(data map[string]any) Record {
 
 // ToMap converts the record into a JSON-friendly map.
 //
-// When includeMeta is true, server-managed metadata fields are included.
-func (r Record) ToMap(includeMeta bool) map[string]any {
+// When version3 is true, server-managed metadata fields are included.
+func (r Record) ToMap(version3 bool) map[string]any {
 	out := CloneMap(r.Data)
 	id := r.Identifier()
-	if id != "" {
-		out["_id"] = id
+	if version3 {
+		delete(out, "_id")
 		out["identifier"] = id
-	}
-	if includeMeta {
 		out["srvCreated"] = r.SrvCreated
 		out["srvModified"] = r.SrvModified
 		out["subject"] = r.Subject
@@ -65,13 +63,17 @@ func (r Record) ToMap(includeMeta bool) map[string]any {
 		if r.DeletedAt != nil {
 			out["deletedAt"] = *r.DeletedAt
 		}
+	} else {
+		out["_id"] = id
+		delete(out, "identifier")
 	}
+
 	return out
 }
 
 // SelectFields projects a record to the requested fields.
-func (record Record) SelectFields(fields []string) map[string]any {
-	full := record.ToMap(true)
+func (record Record) SelectFields(fields []string, version3 bool) map[string]any {
+	full := record.ToMap(version3)
 	if len(fields) == 0 {
 		return full
 	}

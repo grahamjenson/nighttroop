@@ -134,14 +134,6 @@ func Int64Field(data map[string]any, key string) (int64, bool, error) {
 	}
 }
 
-func sanitizeNotes(value string) string {
-	trimmed := strings.TrimSpace(strings.ToLower(value))
-	if strings.Contains(trimmed, "<img") {
-		return "<img>"
-	}
-	return value
-}
-
 type CollectionAction string
 
 const (
@@ -157,8 +149,8 @@ func GetCollectionAndEnsurePermission(dep Dependencies, r *http.Request, action 
 		return "", nil, ErrInvalidCollection
 	}
 
-	identity, err := dep.Auth.AuthenticateExplicit(r)
-	if err != nil {
+	identity, errr := dep.Auth.AuthenticateExplicit(r)
+	if errr != nil {
 		return "", nil, ErrMissingCredentials
 	}
 

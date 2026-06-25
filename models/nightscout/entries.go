@@ -19,8 +19,8 @@ import (
 ////
 
 type Entry struct {
-	Identifier *string    `json:"identifier,omitempty"`
-	Type       *EntryType `json:"type,omitempty"`
+	Identifier *IdentifierString `json:"identifier,omitempty"`
+	Type       *EntryType        `json:"type,omitempty"`
 
 	SGV       *FlexibleFloat64 `json:"sgv,omitempty"`
 	MBG       *FlexibleFloat64 `json:"mbg,omitempty"`
@@ -52,7 +52,7 @@ type Entry struct {
 func (t *Entry) UnmarshalJSON(data []byte) error {
 	type Alias Entry
 	aux := struct {
-		ID string `json:"_id"`
+		ID IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

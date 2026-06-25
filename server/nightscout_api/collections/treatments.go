@@ -40,7 +40,7 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 	}
 	return &nsutils.Record{
 		Collection:  "treatments",
-		ID:          *treatmentModel.Identifier,
+		ID:          treatmentModel.Identifier.String(),
 		Data:        data,
 		SrvModified: time.Now().UnixMilli(),
 	}, nil
@@ -89,7 +89,7 @@ func CarbsToRecord(carbs *user.Carb) nsutils.Record {
 
 	return nsutils.Record{
 		Collection:  "treatments",
-		ID:          *treatmentModel.Identifier,
+		ID:          treatmentModel.Identifier.String(),
 		Data:        treatmentMap,
 		SrvCreated:  treatmentModel.Date.Int64(),
 		SrvModified: treatmentModel.Date.Int64(),

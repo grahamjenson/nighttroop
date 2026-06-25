@@ -64,8 +64,8 @@ type MapConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore Direction Trend Units Filtered Unfiltered RSSI Noise SysTime
 	// goverter:map ID Identifier
-	// goverter:map . SGV | GlucoseReadingTypeToValue
-	// goverter:map . MBG | GlucoseReadingTypeToValue
+	// goverter:map . SGV | SGVGlucoseReadingTypeToValue
+	// goverter:map . MBG | MBGGlucoseReadingTypeToValue
 	// goverter:map CreatedByIdentityName Device
 	// goverter:map OccurredAt Date
 	// goverter:map OccurredAt Mills
@@ -244,14 +244,20 @@ func ToDateInt(createdAt int64) *DateInt {
 // ////
 // GlucoseReading
 // ////
-func GlucoseReadingTypeToValue(gr user.GlucoseReading) *FlexibleFloat64 {
-	switch gr.Type {
-	case "sgv":
-		return ptr(FlexibleFloat64(gr.Value))
-	case "mbg":
+func SGVGlucoseReadingTypeToValue(gr user.GlucoseReading) *FlexibleFloat64 {
+	if gr.Type == "sgv" {
 		return ptr(FlexibleFloat64(gr.Value))
 	}
 	return nil
+
+}
+
+func MBGGlucoseReadingTypeToValue(gr user.GlucoseReading) *FlexibleFloat64 {
+	if gr.Type == "mbg" {
+		return ptr(FlexibleFloat64(gr.Value))
+	}
+	return nil
+
 }
 
 func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {

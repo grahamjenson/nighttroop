@@ -5,7 +5,7 @@ import (
 )
 
 type Activity struct {
-	Identifier *string `json:"identifier"`
+	Identifier *IdentifierString `json:"identifier"`
 
 	Name *SanitizedString `json:"name,omitempty"` // Name of the activity
 
@@ -30,7 +30,7 @@ type Activity struct {
 func (t *Activity) UnmarshalJSON(data []byte) error {
 	type Alias Activity
 	aux := struct {
-		ID string `json:"_id"`
+		ID IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

@@ -49,8 +49,8 @@ func ActivityToCreate(source Activity, context CreateContext) user.CreateActivit
 }
 func BolusDBModelToTreatment(source user.Bolus) Treatment {
 	var nightscoutTreatment Treatment
-	pString := source.ID
-	nightscoutTreatment.Identifier = &pString
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
 	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
 	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Value)
 	nightscoutTreatment.Insulin = &pNightscoutFlexibleFloat64
@@ -74,8 +74,8 @@ func BolusDBModelToTreatment(source user.Bolus) Treatment {
 }
 func CarbsDBModelToTreatment(source user.Carb) Treatment {
 	var nightscoutTreatment Treatment
-	pString := source.ID
-	nightscoutTreatment.Identifier = &pString
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
 	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
 	pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Amount)
 	nightscoutTreatment.Carbs = &pNightscoutFlexibleFloat64
@@ -99,8 +99,8 @@ func CarbsDBModelToTreatment(source user.Carb) Treatment {
 }
 func DBModelToActivity(source user.Activity) Activity {
 	var nightscoutActivity Activity
-	pString := source.ID
-	nightscoutActivity.Identifier = &pString
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutActivity.Identifier = &pNightscoutIdentifierString
 	if source.Name != nil {
 		nightscoutSanitizedString := SanitizedString(*source.Name)
 		nightscoutActivity.Name = &nightscoutSanitizedString
@@ -146,14 +146,14 @@ func DBModelToActivity(source user.Activity) Activity {
 }
 func DBModelToEntry(source user.GlucoseReading) Entry {
 	var nightscoutEntry Entry
-	pString := source.ID
-	nightscoutEntry.Identifier = &pString
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutEntry.Identifier = &pNightscoutIdentifierString
 	pNightscoutEntryType := EntryType(source.Type)
 	nightscoutEntry.Type = &pNightscoutEntryType
-	nightscoutEntry.SGV = GlucoseReadingTypeToValue(source)
-	nightscoutEntry.MBG = GlucoseReadingTypeToValue(source)
-	pString2 := source.CreatedByIdentityName
-	nightscoutEntry.Device = &pString2
+	nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue(source)
+	nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue(source)
+	pString := source.CreatedByIdentityName
+	nightscoutEntry.Device = &pString
 	pNightscoutDateInt := DateInt(source.OccurredAt)
 	nightscoutEntry.Date = &pNightscoutDateInt
 	nightscoutEntry.DateString = ModelDateStringFromDateIntAndUTCOffset(source)
@@ -208,14 +208,14 @@ func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
 		userUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
 	if source.Identifier != nil {
-		userUpdateGlucoseReadingParams.ID = *source.Identifier
+		userUpdateGlucoseReadingParams.ID = string(*source.Identifier)
 	}
 	return userUpdateGlucoseReadingParams
 }
 func TempBasalDBModelToTreatment(source user.TempBasal) Treatment {
 	var nightscoutTreatment Treatment
-	pString := source.ID
-	nightscoutTreatment.Identifier = &pString
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
 	nightscoutTreatment.EventType = DBTypeToTreatmentType(source)
 	pNightscoutSanitizedString := SanitizedString(source.CreatedByIdentityName)
 	nightscoutTreatment.EnteredBy = &pNightscoutSanitizedString
@@ -354,7 +354,7 @@ func TreatmentToUpdateBolus(source Treatment) user.UpdateBolusParams {
 		userUpdateBolusParams.UtcOffsetMinutes = &xint642
 	}
 	if source.Identifier != nil {
-		userUpdateBolusParams.ID = *source.Identifier
+		userUpdateBolusParams.ID = string(*source.Identifier)
 	}
 	return userUpdateBolusParams
 }
@@ -373,7 +373,7 @@ func TreatmentToUpdateCarbs(source Treatment) user.UpdateCarbParams {
 		userUpdateCarbParams.UtcOffsetMinutes = &xint642
 	}
 	if source.Identifier != nil {
-		userUpdateCarbParams.ID = *source.Identifier
+		userUpdateCarbParams.ID = string(*source.Identifier)
 	}
 	return userUpdateCarbParams
 }
@@ -392,7 +392,7 @@ func TreatmentToUpdateNote(source Treatment) user.UpdateNoteParams {
 		userUpdateNoteParams.UtcOffsetMinutes = &xint642
 	}
 	if source.Identifier != nil {
-		userUpdateNoteParams.ID = *source.Identifier
+		userUpdateNoteParams.ID = string(*source.Identifier)
 	}
 	return userUpdateNoteParams
 }
@@ -412,7 +412,7 @@ func TreatmentToUpdateTempBasal(source Treatment) user.UpdateTempBasalParams {
 		userUpdateTempBasalParams.UtcOffsetMinutes = &xint643
 	}
 	if source.Identifier != nil {
-		userUpdateTempBasalParams.ID = *source.Identifier
+		userUpdateTempBasalParams.ID = string(*source.Identifier)
 	}
 	return userUpdateTempBasalParams
 }
@@ -439,7 +439,7 @@ func TreatmentToUpdateTempTarget(source Treatment) user.UpdateTempTargetParams {
 		userUpdateTempTargetParams.UtcOffsetMinutes = &xint643
 	}
 	if source.Identifier != nil {
-		userUpdateTempTargetParams.ID = *source.Identifier
+		userUpdateTempTargetParams.ID = string(*source.Identifier)
 	}
 	return userUpdateTempTargetParams
 }
