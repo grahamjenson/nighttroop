@@ -2,7 +2,7 @@
 -- CREATE 
 --------
 
--- name: CreateDeviceStatus :exec
+-- name: CreateDeviceStatus :one
 INSERT INTO device_status (
     id,
     identity_id,
@@ -21,7 +21,8 @@ INSERT INTO device_status (
     occurred_at,
     created_by_identity_name,
     created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

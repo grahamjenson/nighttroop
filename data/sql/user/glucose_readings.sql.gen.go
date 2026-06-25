@@ -49,7 +49,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*Gluco
 	return items, nil
 }
 
-const createGlucoseReading = `-- name: CreateGlucoseReading :execresult
+const createGlucoseReading = `-- name: CreateGlucoseReading :one
 
 INSERT INTO glucose_readings (
     id,
@@ -61,6 +61,7 @@ INSERT INTO glucose_readings (
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateGlucoseReadingParams struct {
@@ -76,8 +77,8 @@ type CreateGlucoseReadingParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseReadingParams) (sql.Result, error) {
-	return q.exec(ctx, q.createGlucoseReadingStmt, createGlucoseReading,
+func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseReadingParams) (*GlucoseReading, error) {
+	row := q.queryRow(ctx, q.createGlucoseReadingStmt, createGlucoseReading,
 		arg.ID,
 		arg.OccurredAt,
 		arg.Value,
@@ -86,6 +87,21 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
+	var i GlucoseReading
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.Type,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const deleteGlucoseReading = `-- name: DeleteGlucoseReading :execresult

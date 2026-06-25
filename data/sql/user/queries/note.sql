@@ -1,7 +1,7 @@
 -------
 -- CREATE 
 --------
--- name: CreateNote :exec
+-- name: CreateNote :one
 INSERT INTO note (
         id,
         occurred_at,
@@ -10,7 +10,8 @@ INSERT INTO note (
         raw_json_data,
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

@@ -3,7 +3,7 @@
 -- CREATE 
 --------
 
--- name: CreateGlucoseReading :execresult
+-- name: CreateGlucoseReading :one
 INSERT INTO glucose_readings (
     id,
     occurred_at,
@@ -13,7 +13,8 @@ INSERT INTO glucose_readings (
     created_by_identity_id,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

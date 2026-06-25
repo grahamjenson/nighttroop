@@ -54,7 +54,7 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 	return items, nil
 }
 
-const createTempTarget = `-- name: CreateTempTarget :exec
+const createTempTarget = `-- name: CreateTempTarget :one
 
 
 INSERT INTO temp_targets (
@@ -69,6 +69,7 @@ INSERT INTO temp_targets (
     created_by_identity_name
     ) 
 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateTempTargetParams struct {
@@ -86,8 +87,8 @@ type CreateTempTargetParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetParams) error {
-	_, err := q.exec(ctx, q.createTempTargetStmt, createTempTarget,
+func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetParams) (*TempTarget, error) {
+	row := q.queryRow(ctx, q.createTempTargetStmt, createTempTarget,
 		arg.ID,
 		arg.Start,
 		arg.UtcOffsetMinutes,
@@ -98,7 +99,22 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
-	return err
+	var i TempTarget
+	err := row.Scan(
+		&i.ID,
+		&i.Start,
+		&i.DurationMinutes,
+		&i.HighTarget,
+		&i.LowTarget,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getTempTarget = `-- name: GetTempTarget :one

@@ -52,7 +52,7 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 	return items, nil
 }
 
-const createTempBasal = `-- name: CreateTempBasal :exec
+const createTempBasal = `-- name: CreateTempBasal :one
 
 INSERT INTO temp_basals (
         id,
@@ -65,6 +65,7 @@ INSERT INTO temp_basals (
         created_by_identity_name
     )
 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateTempBasalParams struct {
@@ -81,8 +82,8 @@ type CreateTempBasalParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams) error {
-	_, err := q.exec(ctx, q.createTempBasalStmt, createTempBasal,
+func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams) (*TempBasal, error) {
+	row := q.queryRow(ctx, q.createTempBasalStmt, createTempBasal,
 		arg.ID,
 		arg.Start,
 		arg.UtcOffsetMinutes,
@@ -92,7 +93,21 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
-	return err
+	var i TempBasal
+	err := row.Scan(
+		&i.ID,
+		&i.Start,
+		&i.DurationMinutes,
+		&i.Value,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getTempBasal = `-- name: GetTempBasal :one

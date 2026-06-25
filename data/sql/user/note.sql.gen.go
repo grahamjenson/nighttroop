@@ -51,7 +51,7 @@ func (q *Queries) AllNotes(ctx context.Context) ([]*Note, error) {
 	return items, nil
 }
 
-const createNote = `-- name: CreateNote :exec
+const createNote = `-- name: CreateNote :one
 INSERT INTO note (
         id,
         occurred_at,
@@ -61,6 +61,7 @@ INSERT INTO note (
         created_by_identity_id,
         created_by_identity_name
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateNoteParams struct {
@@ -76,8 +77,8 @@ type CreateNoteParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
-	_, err := q.exec(ctx, q.createNoteStmt, createNote,
+func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) (*Note, error) {
+	row := q.queryRow(ctx, q.createNoteStmt, createNote,
 		arg.ID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
@@ -86,7 +87,20 @@ func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
-	return err
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getNote = `-- name: GetNote :one

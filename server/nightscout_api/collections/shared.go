@@ -2,6 +2,7 @@ package collections
 
 import (
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/utils"
 )
 
 func CreateRecordSlice[T any](in []T, fn func(T) nsutils.Record) []nsutils.Record {
@@ -14,4 +15,38 @@ func CreateRecordSlice[T any](in []T, fn func(T) nsutils.Record) []nsutils.Recor
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func DBModelToRecord[T any, PT interface {
+	*T
+	GetID() string
+	GetDeletedAt() *int64
+	GetCreatedAt() int64
+	GetUpdatedAt() int64
+	GetCreatedByIdentityName() string
+}, S any](collectionName nsutils.Collection, convertFunc func(T) S) func(dbModel PT) nsutils.Record {
+	return func(dbModel PT) nsutils.Record {
+		if dbModel == nil {
+			return nsutils.Record{}
+		}
+		absDBModel := *dbModel
+		nsModel := convertFunc(absDBModel)
+
+		mapModel, err := utils.ToMap(&nsModel)
+		if err != nil {
+			return nsutils.Record{}
+		}
+
+		record := nsutils.Record{
+			Collection:  string(collectionName),
+			ID:          dbModel.GetID(),
+			Data:        mapModel,
+			SrvCreated:  dbModel.GetCreatedAt(),
+			SrvModified: dbModel.GetUpdatedAt(),
+			Subject:     dbModel.GetCreatedByIdentityName(),
+			IsValid:     true,
+			DeletedAt:   dbModel.GetDeletedAt(),
+		}
+		return record
+	}
 }

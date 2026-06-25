@@ -1,7 +1,7 @@
 -------
 -- CREATE 
 --------
--- name: CreateFood :exec
+-- name: CreateFood :one
 INSERT INTO food (
         id,
         name,
@@ -10,7 +10,8 @@ INSERT INTO food (
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?,  ?, ?, ?, ?, ?, ?);
+) VALUES ( ?,  ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

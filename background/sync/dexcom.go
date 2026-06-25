@@ -42,8 +42,8 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue
 			}
-			count, _ := res.RowsAffected()
-			if count > 0 {
+
+			if res != nil {
 				addedColumns = true
 			}
 

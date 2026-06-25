@@ -1,7 +1,7 @@
 -------
 -- CREATE 
 --------
--- name: CreateBolus :exec
+-- name: CreateBolus :one
 INSERT INTO bolus (
         id,
         occurred_at,
@@ -11,7 +11,8 @@ INSERT INTO bolus (
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

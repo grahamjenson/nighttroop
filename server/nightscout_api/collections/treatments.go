@@ -3,7 +3,6 @@ package collections
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -12,10 +11,17 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type TreatmentCollection struct{}
+type TreatmentCollection struct {
+	carbConverter func(c *user.Carb) nsutils.Record
+}
 
-func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func NewTreatmentCollection() TreatmentCollection {
+	return TreatmentCollection{
+		carbConverter: DBModelToRecord(nsutils.Treatments, nightscout.CarbsDBModelToTreatment),
+	}
+}
+
+func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 
 	treatmentModel := nightscout.Treatment{}
 	err := utils.FromMap(data, &treatmentModel)
@@ -24,54 +30,46 @@ func (c TreatmentCollection) Create(ctx context.Context, data map[string]any) (*
 		return nil, nsutils.ErrInternal
 	}
 
-	created := false
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
-		err = userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))
+		dbModel, err := userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))
 		if err != nil {
 			slog.Error("failed to create carb in database", "error", err)
 			return nil, nsutils.ErrInternal
 		}
-		created = true
+		return ptr(c.carbConverter(dbModel)), nil
 	}
-	if !created {
-		slog.Error("unsupported treatment event type", "eventType", *treatmentModel.EventType)
-		return nil, nsutils.ErrInternal
-	}
-	return &nsutils.Record{
-		Collection:  "treatments",
-		ID:          treatmentModel.Identifier.String(),
-		Data:        data,
-		SrvModified: time.Now().UnixMilli(),
-	}, nil
+
+	slog.Error("unsupported treatment event type", "eventType", *treatmentModel.EventType)
+	return nil, nsutils.ErrInternal
+
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nil
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
 	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
 	if err != nil {
 		slog.Error("failed to query carbs from database", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	records = append(records, CreateRecordSlice(carbs, CarbsToRecord)...)
+	records = append(records, CreateRecordSlice(carbs, c.carbConverter)...)
 
 	return records, nil
 }
 
-func (c TreatmentCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nil
 }
 
-func (c TreatmentCollection) Delete(ctx context.Context, identifier string, permanent bool) *nsutils.HTTPError {
+func (c TreatmentCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nil
 }
 
-func (c TreatmentCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c TreatmentCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nil
 }
 

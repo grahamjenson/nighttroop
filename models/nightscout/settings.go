@@ -11,9 +11,6 @@ type Setting struct {
 	// Date Fields
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
 	SrvModified *DateInt `json:"srvModified,omitempty"`
-
-	// Non-JSON values to make mapping easier
-	RawJsonData string `json:"-"`
 }
 
 func (t *Setting) UnmarshalJSON(data []byte) error {
@@ -28,9 +25,6 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-
-	// Raw Value
-	t.RawJsonData = string(data)
 
 	// Identitfiers
 	if t.Identifier == nil {

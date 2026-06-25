@@ -1,7 +1,7 @@
 -------
 -- CREATE 
 --------
--- name: CreateActivity :exec
+-- name: CreateActivity :one
 INSERT INTO activity (
         id,
         occurred_at,
@@ -16,7 +16,8 @@ INSERT INTO activity (
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

@@ -1,10 +1,10 @@
 -- name: getSettingFromDB :one
 SELECT value
 FROM settings
-WHERE key = ?;
+WHERE id = ?;
 
 -- name: upsertSettingToDB :exec
-INSERT INTO settings(key, value)
+INSERT INTO settings(id, value)
 VALUES (?, json(?))
-ON CONFLICT(key) DO UPDATE SET
+ON CONFLICT(id) DO UPDATE SET
     value = excluded.value;

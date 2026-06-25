@@ -1,13 +1,24 @@
 version: "2"
+plugins:
+  - name: getters
+    process:
+      cmd: "../../../bin/getters"
 sql:
   - schema: "schema_gen.sql"
     queries: "./queries"
     engine: "sqlite"
+    codegen:
+      - plugin: getters
+        out: "."
+        options:
+          package: "user"
+          imports:
+            - "encoding/json"
+            - "nighttroop.t1d.nz/utils/consts"
     gen:
       go:
         package: "user"
         out: "."
-
         emit_prepared_queries: true
         emit_pointers_for_null_types: true
         emit_result_struct_pointers: true

@@ -1,6 +1,8 @@
 package nightscout
 
 import (
+	"encoding/json"
+
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils"
 )
@@ -35,7 +37,7 @@ type MapConverter interface {
 	ActivityToCreate(source Activity, ctx CreateContext) user.CreateActivityParams
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore CreatedAt
+	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ID Identifier
 	// goverter:map Type ActivityType
 	// goverter:map OccurredAt Date
@@ -43,6 +45,20 @@ type MapConverter interface {
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	DBModelToActivity(source user.Activity) Activity
+
+	///////
+	// DEVICE STATUS
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Uploader Loop Pump OpenAPS UploaderBattery
+	// goverter:map ID Identifier
+	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map OccurredAt Date
+	// goverter:map CreatedByIdentityName Device
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	DBModelToDeviceStatus(source user.DeviceStatus) DeviceStatus
 
 	///////
 	// ENTRIES
@@ -73,6 +89,31 @@ type MapConverter interface {
 	// goverter:map UpdatedAt SrvModified
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	DBModelToEntry(source user.GlucoseReading) Entry
+
+	///////
+	// FOOD TODO
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Category Subcategory Portion Unit Fat Protein Energy GI
+	// goverter:map ID Identifier
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	DBModelToFood(source user.Food) Food
+
+	///////
+	// Profile TODO
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore DefaultProfile Store
+	// goverter:map ID Identifier
+	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map OccurredAt Mills
+	// goverter:map OccurredAt Date
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	DBModelToProfile(source user.Profile) Profile
 
 	///////
 	// TREATMENTS
@@ -215,11 +256,31 @@ type MapConverter interface {
 	// goverter:map  Date OccurredAt
 	// goverter:map  Notes Content
 	TreatmentToUpdateNote(source Treatment) user.UpdateNoteParams
+
+	////////
+	// SETTINGS
+	////////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Type
+	// goverter:map ID Identifier
+	// goverter:map Value Value | FromJsonRawMessage
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	DBModelToSetting(source user.Setting) Setting
 }
 
 // //
 // Custom Converter Methods
 // //
+
+func FromJsonRawMessage(raw json.RawMessage) *SanitizedString {
+	if raw == nil {
+		return nil
+	}
+	s := SanitizedString(string(raw))
+	return &s
+}
 
 // goverter:context ctx
 func AssignID(date *DateInt, ctx CreateContext) string {
@@ -265,11 +326,30 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 		return nil
 	}
 
+	// TODO this should be mapping to interfaces now we have getters
 	switch v := m.(type) {
 	case user.GlucoseReading:
 		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case *user.GlucoseReading:
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+		return &ds
+	case user.Activity:
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+		return &ds
+	case *user.Activity:
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+		return &ds
+	case user.Profile:
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+		return &ds
+	case *user.Profile:
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+		return &ds
+	case user.DeviceStatus:
+		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
+		return &ds
+	case *user.DeviceStatus:
 		ds := DateStringFromInt64AndUTCOffset(v.OccurredAt, v.UtcOffsetMinutes)
 		return &ds
 	case user.Bolus:

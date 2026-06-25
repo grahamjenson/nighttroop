@@ -57,7 +57,7 @@ func (q *Queries) AllActivities(ctx context.Context) ([]*Activity, error) {
 	return items, nil
 }
 
-const createActivity = `-- name: CreateActivity :exec
+const createActivity = `-- name: CreateActivity :one
 INSERT INTO activity (
         id,
         occurred_at,
@@ -73,6 +73,7 @@ INSERT INTO activity (
         created_by_identity_id,
         created_by_identity_name
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateActivityParams struct {
@@ -94,8 +95,8 @@ type CreateActivityParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) error {
-	_, err := q.exec(ctx, q.createActivityStmt, createActivity,
+func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) (*Activity, error) {
+	row := q.queryRow(ctx, q.createActivityStmt, createActivity,
 		arg.ID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
@@ -110,7 +111,26 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
-	return err
+	var i Activity
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.Notes,
+		&i.DurationMinutes,
+		&i.Calories,
+		&i.Steps,
+		&i.HeartRate,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getActivityByID = `-- name: GetActivityByID :one

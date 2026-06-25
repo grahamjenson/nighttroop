@@ -196,10 +196,14 @@ CREATE TABLE profile (
 );
 
 CREATE TABLE settings (
-    key TEXT PRIMARY KEY CHECK(length(key) <= 64),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 64),
     value JSON NOT NULL CHECK(length(value) <= 8192),
+    
+    deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
 );
 
 CREATE TABLE sqlite_sequence(name,seq);

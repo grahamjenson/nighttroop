@@ -166,10 +166,13 @@ type Profile struct {
 }
 
 type Setting struct {
-	Key       string
-	Value     json.RawMessage
-	CreatedAt int64
-	UpdatedAt int64
+	ID                    string
+	Value                 json.RawMessage
+	DeletedAt             *int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	CreatedByIdentityID   int64
 }
 
 type SqliteSequence struct {

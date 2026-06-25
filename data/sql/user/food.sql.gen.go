@@ -51,7 +51,7 @@ func (q *Queries) AllFoods(ctx context.Context) ([]*Food, error) {
 	return items, nil
 }
 
-const createFood = `-- name: CreateFood :exec
+const createFood = `-- name: CreateFood :one
 INSERT INTO food (
         id,
         name,
@@ -61,6 +61,7 @@ INSERT INTO food (
         created_by_identity_id,
         created_by_identity_name
 ) VALUES ( ?,  ?, ?, ?, ?, ?, ?)
+RETURNING id, name, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateFoodParams struct {
@@ -76,8 +77,8 @@ type CreateFoodParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) error {
-	_, err := q.exec(ctx, q.createFoodStmt, createFood,
+func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, error) {
+	row := q.queryRow(ctx, q.createFoodStmt, createFood,
 		arg.ID,
 		arg.Name,
 		arg.Carbs,
@@ -86,7 +87,20 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) error {
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
-	return err
+	var i Food
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Carbs,
+		&i.Calories,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getFood = `-- name: GetFood :one

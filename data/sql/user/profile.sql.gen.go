@@ -62,7 +62,7 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 	return items, nil
 }
 
-const createProfile = `-- name: CreateProfile :exec
+const createProfile = `-- name: CreateProfile :one
 
 INSERT INTO profile (
     id,
@@ -83,6 +83,7 @@ INSERT INTO profile (
     created_by_identity_name,
     created_by_identity_id
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateProfileParams struct {
@@ -108,8 +109,8 @@ type CreateProfileParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) error {
-	_, err := q.exec(ctx, q.createProfileStmt, createProfile,
+func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (*Profile, error) {
+	row := q.queryRow(ctx, q.createProfileStmt, createProfile,
 		arg.ID,
 		arg.Name,
 		arg.Start,
@@ -128,7 +129,31 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) er
 		arg.CreatedByIdentityName,
 		arg.CreatedByIdentityID,
 	)
-	return err
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Start,
+		&i.DurationMinutes,
+		&i.Source,
+		&i.Percent,
+		&i.Dia,
+		&i.Units,
+		&i.Timezone,
+		&i.CarbRatiosJson,
+		&i.InsulinSensitivitiesJson,
+		&i.BasalRatesJson,
+		&i.TargetsJson,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getProfile = `-- name: GetProfile :one

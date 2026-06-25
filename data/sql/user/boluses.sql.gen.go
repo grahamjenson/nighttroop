@@ -52,7 +52,7 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 	return items, nil
 }
 
-const createBolus = `-- name: CreateBolus :exec
+const createBolus = `-- name: CreateBolus :one
 INSERT INTO bolus (
         id,
         occurred_at,
@@ -63,6 +63,7 @@ INSERT INTO bolus (
         created_by_identity_id,
         created_by_identity_name
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateBolusParams struct {
@@ -79,8 +80,8 @@ type CreateBolusParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error {
-	_, err := q.exec(ctx, q.createBolusStmt, createBolus,
+func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) (*Bolus, error) {
+	row := q.queryRow(ctx, q.createBolusStmt, createBolus,
 		arg.ID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
@@ -90,7 +91,21 @@ func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) error 
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
-	return err
+	var i Bolus
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.Type,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getBolus = `-- name: GetBolus :one

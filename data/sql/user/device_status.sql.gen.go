@@ -61,7 +61,7 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 	return items, nil
 }
 
-const createDeviceStatus = `-- name: CreateDeviceStatus :exec
+const createDeviceStatus = `-- name: CreateDeviceStatus :one
 
 INSERT INTO device_status (
     id,
@@ -82,6 +82,7 @@ INSERT INTO device_status (
     created_by_identity_name,
     created_by_identity_id
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, identity_id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateDeviceStatusParams struct {
@@ -107,8 +108,8 @@ type CreateDeviceStatusParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatusParams) error {
-	_, err := q.exec(ctx, q.createDeviceStatusStmt, createDeviceStatus,
+func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatusParams) (*DeviceStatus, error) {
+	row := q.queryRow(ctx, q.createDeviceStatusStmt, createDeviceStatus,
 		arg.ID,
 		arg.IdentityID,
 		arg.BatteryLevel,
@@ -127,7 +128,30 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 		arg.CreatedByIdentityName,
 		arg.CreatedByIdentityID,
 	)
-	return err
+	var i DeviceStatus
+	err := row.Scan(
+		&i.ID,
+		&i.IdentityID,
+		&i.BatteryLevel,
+		&i.ChargingState,
+		&i.PumpBattery,
+		&i.PumpStatus,
+		&i.PumpReservoir,
+		&i.PumpInsertionTime,
+		&i.LoopStatus,
+		&i.LoopTimestamp,
+		&i.CgmStatus,
+		&i.CgmInsertionTime,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getDeviceStatus = `-- name: GetDeviceStatus :one

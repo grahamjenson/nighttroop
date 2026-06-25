@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
-	"time"
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -13,12 +12,18 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type EntriesCollection struct{}
+type EntriesCollection struct {
+	converter func(c *user.GlucoseReading) nsutils.Record
+}
 
-func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func NewEntriesCollection() EntriesCollection {
+	return EntriesCollection{
+		converter: DBModelToRecord(nsutils.Entries, nightscout.DBModelToEntry),
+	}
+}
+func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+
 	entryModel := &nightscout.Entry{}
-
 	err := utils.FromMap(data, entryModel)
 
 	if err != nil {
@@ -31,18 +36,19 @@ func (c EntriesCollection) Create(ctx context.Context, data map[string]any) (*ns
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
 	)
 
-	userContext.UserDB.Queries.CreateGlucoseReading(ctx, createParams)
-
-	return &nsutils.Record{
-		Collection:  "entries",
-		ID:          createParams.ID,
-		Data:        data,
-		SrvModified: time.Now().UnixMilli(),
-	}, nil
+	dbModel, err := userContext.UserDB.Queries.CreateGlucoseReading(ctx, createParams)
+	if err != nil {
+		slog.Error("failed to create glucose reading in database", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		slog.Error("failed to create glucose reading in database, dbModel is nil")
+		return nil, nsutils.ErrInternal
+	}
+	return ptr(GlucoseReadingToRecord(dbModel)), nil
 }
 
-func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 
 	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReading(ctx, identifier)
 	if err == sql.ErrNoRows {
@@ -59,8 +65,8 @@ func (c EntriesCollection) Get(ctx context.Context, identifier string) (*nsutils
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+
 	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit))
 	if err != nil {
 		slog.Error("failed to query glucose readings from database", "error", err)
@@ -70,8 +76,8 @@ func (c EntriesCollection) Search(ctx context.Context, query *nsutils.Query) ([]
 	return CreateRecordSlice(entries, GlucoseReadingToRecord), nil
 }
 
-func (c EntriesCollection) Update(ctx context.Context, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+
 	entryModel := &nightscout.Entry{}
 	err := utils.FromMap(patch, entryModel)
 	if err != nil {
@@ -81,13 +87,22 @@ func (c EntriesCollection) Update(ctx context.Context, identifier string, patch 
 
 	updateParams := nightscout.EntryToUpdate(*entryModel)
 	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReading(ctx, updateParams)
-
+	if err == sql.ErrNoRows {
+		return nil, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to update glucose reading in database", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if glucoseReading == nil {
+		return nil, nsutils.ErrNotFound
+	}
 	record := GlucoseReadingToRecord(glucoseReading)
 	return &record, nil
 }
 
-func (c EntriesCollection) Delete(ctx context.Context, identifier string, permanent bool) *nsutils.HTTPError {
-	userContext := httputils.GetUserContext(ctx)
+func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+
 	if permanent {
 		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReading(ctx, identifier)
 		if err != nil {
@@ -124,8 +139,7 @@ func (c EntriesCollection) Delete(ctx context.Context, identifier string, perman
 	return nil
 }
 
-func (c EntriesCollection) DeleteType(ctx context.Context, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(ctx)
+func (c EntriesCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 
 	if permanent {
 		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, typeString)

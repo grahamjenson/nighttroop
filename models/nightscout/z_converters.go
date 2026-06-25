@@ -129,6 +129,7 @@ func DBModelToActivity(source user.Activity) Activity {
 		nightscoutSanitizedString3 := SanitizedString(*source.Notes)
 		nightscoutActivity.Notes = &nightscoutSanitizedString3
 	}
+	nightscoutActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
 	pNightscoutDateInt := DateInt(source.CreatedAt)
 	nightscoutActivity.SrvCreated = &pNightscoutDateInt
 	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
@@ -143,6 +144,28 @@ func DBModelToActivity(source user.Activity) Activity {
 		nightscoutActivity.RawJsonData = *source.RawJsonData
 	}
 	return nightscoutActivity
+}
+func DBModelToDeviceStatus(source user.DeviceStatus) DeviceStatus {
+	var nightscoutDeviceStatus DeviceStatus
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
+	pNightscoutSanitizedString := SanitizedString(source.CreatedByIdentityName)
+	nightscoutDeviceStatus.Device = &pNightscoutSanitizedString
+	nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt := DateInt(source.CreatedAt)
+	nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
+	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
+	nightscoutDeviceStatus.SrvModified = &pNightscoutDateInt2
+	pNightscoutDateInt3 := DateInt(source.OccurredAt)
+	nightscoutDeviceStatus.Date = &pNightscoutDateInt3
+	if source.UtcOffsetMinutes != nil {
+		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+		nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
+	}
+	if source.RawJsonData != nil {
+		nightscoutDeviceStatus.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutDeviceStatus
 }
 func DBModelToEntry(source user.GlucoseReading) Entry {
 	var nightscoutEntry Entry
@@ -173,6 +196,60 @@ func DBModelToEntry(source user.GlucoseReading) Entry {
 		nightscoutEntry.RawJsonData = *source.RawJsonData
 	}
 	return nightscoutEntry
+}
+func DBModelToFood(source user.Food) Food {
+	var nightscoutFood Food
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutFood.Identifier = &pNightscoutIdentifierString
+	if source.Name != nil {
+		nightscoutSanitizedString := SanitizedString(*source.Name)
+		nightscoutFood.Name = &nightscoutSanitizedString
+	}
+	if source.Carbs != nil {
+		nightscoutFlexibleFloat64 := FlexibleFloat64(*source.Carbs)
+		nightscoutFood.Carbs = &nightscoutFlexibleFloat64
+	}
+	pNightscoutDateInt := DateInt(source.CreatedAt)
+	nightscoutFood.SrvCreated = &pNightscoutDateInt
+	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
+	nightscoutFood.SrvModified = &pNightscoutDateInt2
+	if source.RawJsonData != nil {
+		nightscoutFood.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutFood
+}
+func DBModelToProfile(source user.Profile) Profile {
+	var nightscoutProfile Profile
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutProfile.Identifier = &pNightscoutIdentifierString
+	nightscoutProfile.StartDate = ModelDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt := DateInt(source.OccurredAt)
+	nightscoutProfile.Mills = &pNightscoutDateInt
+	pNightscoutDateInt2 := DateInt(source.CreatedAt)
+	nightscoutProfile.SrvCreated = &pNightscoutDateInt2
+	pNightscoutDateInt3 := DateInt(source.UpdatedAt)
+	nightscoutProfile.SrvModified = &pNightscoutDateInt3
+	pNightscoutDateInt4 := DateInt(source.OccurredAt)
+	nightscoutProfile.Date = &pNightscoutDateInt4
+	if source.UtcOffsetMinutes != nil {
+		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+		nightscoutProfile.UtcOffsetMinutes = &nightscoutFlexibleInt64
+	}
+	if source.RawJsonData != nil {
+		nightscoutProfile.RawJsonData = *source.RawJsonData
+	}
+	return nightscoutProfile
+}
+func DBModelToSetting(source user.Setting) Setting {
+	var nightscoutSetting Setting
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutSetting.Identifier = &pNightscoutIdentifierString
+	nightscoutSetting.Value = FromJsonRawMessage(source.Value)
+	pNightscoutDateInt := DateInt(source.CreatedAt)
+	nightscoutSetting.SrvCreated = &pNightscoutDateInt
+	pNightscoutDateInt2 := DateInt(source.UpdatedAt)
+	nightscoutSetting.SrvModified = &pNightscoutDateInt2
+	return nightscoutSetting
 }
 func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadingParams {
 	var userCreateGlucoseReadingParams user.CreateGlucoseReadingParams

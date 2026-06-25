@@ -1,7 +1,7 @@
 -------
 -- CREATE 
 --------
--- name: CreateCarb :exec
+-- name: CreateCarb :one
 INSERT INTO carbs (
     id,
     occurred_at,
@@ -11,7 +11,8 @@ INSERT INTO carbs (
     raw_json_data,
     created_by_identity_name,
     created_by_identity_id)
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

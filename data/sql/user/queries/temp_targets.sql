@@ -8,7 +8,7 @@
 --------
 
 
--- name: CreateTempTarget :exec
+-- name: CreateTempTarget :one
 INSERT INTO temp_targets (
     id, 
     start,
@@ -20,7 +20,8 @@ INSERT INTO temp_targets (
     created_by_identity_id,
     created_by_identity_name
     ) 
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 
 --------

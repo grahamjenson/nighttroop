@@ -2,7 +2,7 @@
 -- CREATE 
 --------
 
--- name: CreateTempBasal :exec
+-- name: CreateTempBasal :one
 INSERT INTO temp_basals (
         id,
         start,
@@ -13,7 +13,8 @@ INSERT INTO temp_basals (
         created_by_identity_id,
         created_by_identity_name
     )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

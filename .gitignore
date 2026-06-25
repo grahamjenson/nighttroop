@@ -3,3 +3,4 @@
 .env
 tmp
 master_key.bin
+bin

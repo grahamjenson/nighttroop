@@ -13,24 +13,24 @@ import (
 const getSettingFromDB = `-- name: getSettingFromDB :one
 SELECT value
 FROM settings
-WHERE key = ?
+WHERE id = ?
 `
 
-func (q *Queries) getSettingFromDB(ctx context.Context, key string) (json.RawMessage, error) {
-	row := q.queryRow(ctx, q.getSettingFromDBStmt, getSettingFromDB, key)
+func (q *Queries) getSettingFromDB(ctx context.Context, id string) (json.RawMessage, error) {
+	row := q.queryRow(ctx, q.getSettingFromDBStmt, getSettingFromDB, id)
 	var value json.RawMessage
 	err := row.Scan(&value)
 	return value, err
 }
 
 const upsertSettingToDB = `-- name: upsertSettingToDB :exec
-INSERT INTO settings(key, value)
+INSERT INTO settings(id, value)
 VALUES (?, json(?))
-ON CONFLICT(key) DO UPDATE SET
+ON CONFLICT(id) DO UPDATE SET
     value = excluded.value
 `
 
-func (q *Queries) upsertSettingToDB(ctx context.Context, key string, json interface{}) error {
-	_, err := q.exec(ctx, q.upsertSettingToDBStmt, upsertSettingToDB, key, json)
+func (q *Queries) upsertSettingToDB(ctx context.Context, iD string, json interface{}) error {
+	_, err := q.exec(ctx, q.upsertSettingToDBStmt, upsertSettingToDB, iD, json)
 	return err
 }

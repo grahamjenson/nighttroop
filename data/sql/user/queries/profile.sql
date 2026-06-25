@@ -2,7 +2,7 @@
 -- CREATE 
 --------
 
--- name: CreateProfile :exec
+-- name: CreateProfile :one
 INSERT INTO profile (
     id,
     name,
@@ -21,7 +21,8 @@ INSERT INTO profile (
     utc_offset_minutes,
     created_by_identity_name,
     created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
 
 --------
 -- READ

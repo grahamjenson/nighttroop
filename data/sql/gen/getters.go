@@ -1,0 +1,222 @@
+//go:build ignore
+
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+
+	"github.com/sqlc-dev/plugin-sdk-go/plugin"
+	"google.golang.org/protobuf/proto"
+)
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+type Options struct {
+	PackageName string   `json:"package"`
+	Imports     []string `json:"imports"`
+}
+
+var TableNameMap = map[string]string{
+	"Bolu":        "Bolus",
+	"DeviceStatu": "DeviceStatus",
+}
+
+var AttributeNameMap = map[string]string{}
+
+var TypeLookupMap = map[string]map[string]string{
+	"Identity": {
+		"role":    "consts.IdentityRole",
+		"enabled": "bool",
+	},
+}
+
+func run() error {
+	reqBytes, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return fmt.Errorf("read stdin: %w", err)
+	}
+
+	// Unmarshal protobuf instead of JSON
+	var req plugin.GenerateRequest
+	if err := proto.Unmarshal(reqBytes, &req); err != nil {
+		return fmt.Errorf("decode request via protobuf: %w", err)
+	}
+
+	var opts Options
+	if err := json.Unmarshal(req.PluginOptions, &opts); err != nil {
+		return fmt.Errorf("decode plugin options via JSON: %w", err)
+	}
+	resp := &plugin.GenerateResponse{
+		Files: make([]*plugin.File, 0),
+	}
+
+	totalContent := fmt.Sprintf(`
+package %s
+
+import (
+	"%s"
+)
+`, opts.PackageName, strings.Join(opts.Imports, "\"\n\t\""))
+
+	// Iterate over all available schemas (SQLite often maps to empty or "main")
+	for _, schema := range req.Catalog.Schemas {
+		for _, table := range schema.Tables {
+			modelName := tableNameLookup(table.Rel.GetName())
+			fmt.Fprintf(os.Stderr, "Generating getters for table: %s\nColumns: %d\nModel: %v%v%v\n",
+				modelName, len(table.Columns), table, schema, schema.Name)
+
+			content := generateGetters(modelName, table.Columns)
+			totalContent += content
+
+		}
+	}
+
+	resp.Files = append(resp.Files, &plugin.File{
+		Name:     "z_getters.go",
+		Contents: []byte(totalContent),
+	})
+
+	respBytes, err := proto.Marshal(resp)
+	if err != nil {
+		return fmt.Errorf("encode response via protobuf: %w", err)
+	}
+
+	// Write raw bytes out to stdout
+	if _, err := os.Stdout.Write(respBytes); err != nil {
+		return fmt.Errorf("write stdout: %w", err)
+	}
+
+	return nil
+}
+
+func tableNameLookup(name string) string {
+	name = snakeToCamel(name)
+	if strings.HasSuffix(name, "ies") {
+		name = name[:len(name)-3] + "y"
+	}
+
+	name = strings.TrimSuffix(name, "s")
+
+	if newName, ok := TableNameMap[name]; ok {
+		return newName
+	}
+	return name
+}
+
+func attributeNameLookup(name string) string {
+	name = snakeToCamel(name)
+	if newName, ok := AttributeNameMap[name]; ok {
+		return newName
+	}
+	return name
+}
+
+var goInitialisms = map[string]bool{
+	"acl": true, "api": true, "ascii": true, "cpu": true, "css": true,
+	"dns": true, "eof": true, "guid": true, "html": true, "http": true,
+	"https": true, "id": true, "ip": true, "lhs": true,
+	"qps": true, "ram": true, "rhs": true, "rpc": true, "sla": true,
+	"smtp": true, "sql": true, "ssh": true, "tls": true, "ttl": true,
+	"ui": true, "uid": true, "uuid": true, "uri": true, "url": true,
+	"utf8": true, "vm": true, "xml": true, "xmpp": true, "xsrf": true,
+	"xss": true,
+}
+
+func snakeToCamel(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	// Split by underscores
+	parts := strings.Split(s, "_")
+	for i, part := range parts {
+		if part == "" {
+			continue
+		}
+
+		lowerPart := strings.ToLower(part)
+		// If it's a known Go initialism, make it fully uppercase
+		if goInitialisms[lowerPart] {
+			parts[i] = strings.ToUpper(lowerPart)
+		} else {
+			// Otherwise capitalize the first letter correctly
+			parts[i] = strings.ToUpper(string(part[0])) + lowerPart[1:]
+		}
+	}
+
+	return strings.Join(parts, "")
+}
+
+func generateGetters(modelName string, columns []*plugin.Column) string {
+	var sb strings.Builder
+
+	for _, col := range columns {
+		fieldName := attributeNameLookup(col.Name)
+		fieldType := getSQLiteGoType(col, modelName)
+
+		sb.WriteString(fmt.Sprintf("// Get%s returns the %s value.\n", fieldName, fieldName))
+		sb.WriteString(fmt.Sprintf("func (m *%s) Get%s() %s {\n", modelName, fieldName, fieldType))
+		sb.WriteString(fmt.Sprintf("	return m.%s\n", fieldName))
+		sb.WriteString("}\n\n")
+	}
+
+	return sb.String()
+}
+
+func typeLookup(schemaName, columnName string) string {
+	if schemaMap, ok := TypeLookupMap[schemaName]; ok {
+		if goType, ok := schemaMap[columnName]; ok {
+			return goType
+		}
+	}
+	return ""
+}
+func getSQLiteGoType(col *plugin.Column, modelName string) string {
+	if goType := typeLookup(modelName, col.Name); goType != "" {
+		return goType
+	}
+
+	ttt := getBaseSQLiteType(col.Type.Name)
+	if ttt == "interface{}" {
+		return ttt
+	}
+	// 1. Handle Null Types (SQLite data types can be optional)
+	if !col.NotNull {
+		return "*" + ttt
+	}
+
+	// 2. Handle standard Non-Null Data Types
+	return ttt
+}
+
+func getBaseSQLiteType(typeName string) string {
+	switch strings.ToLower(typeName) {
+	case "integer", "int", "bigint":
+		return "int64"
+	case "real", "double", "float":
+		return "float64"
+	case "boolean", "bool":
+		return "bool"
+	case "timestamp", "datetime":
+		return "time.Time"
+	case "blob":
+		return "[]byte"
+	case "text", "varchar", "char", "string":
+		return "string"
+	case "json":
+		return "json.RawMessage"
+	case "any":
+		return "interface{}"
+	default:
+		return typeName // TEXT or VARCHAR
+	}
+}

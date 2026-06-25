@@ -52,7 +52,7 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 	return items, nil
 }
 
-const createCarb = `-- name: CreateCarb :exec
+const createCarb = `-- name: CreateCarb :one
 INSERT INTO carbs (
     id,
     occurred_at,
@@ -63,6 +63,7 @@ INSERT INTO carbs (
     created_by_identity_name,
     created_by_identity_id)
 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
 type CreateCarbParams struct {
@@ -79,8 +80,8 @@ type CreateCarbParams struct {
 // -----
 // CREATE
 // ------
-func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
-	_, err := q.exec(ctx, q.createCarbStmt, createCarb,
+func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) (*Carb, error) {
+	row := q.queryRow(ctx, q.createCarbStmt, createCarb,
 		arg.ID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
@@ -90,7 +91,21 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) error {
 		arg.CreatedByIdentityName,
 		arg.CreatedByIdentityID,
 	)
-	return err
+	var i Carb
+	err := row.Scan(
+		&i.ID,
+		&i.Amount,
+		&i.Type,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByIdentityName,
+		&i.CreatedByIdentityID,
+	)
+	return &i, err
 }
 
 const getCarb = `-- name: GetCarb :one

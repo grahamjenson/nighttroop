@@ -45,8 +45,8 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 				slog.Error("Error creating entry in database", "error", err, "eid", createParams.ID, "sync_source_id", userSyncSource.syncIdentity.ID)
 				continue
 			}
-			count, _ := res.RowsAffected()
-			if count > 0 {
+
+			if res != nil {
 				addedColumns = true
 			}
 
