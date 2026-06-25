@@ -71,3 +71,7 @@ func SetSetting[T any](
 	}
 	return q.upsertSettingToDB(ctx, setting.Key, string(data))
 }
+
+func (s *Setting) GetCreatedByIdentityName() string {
+	return ""
+}

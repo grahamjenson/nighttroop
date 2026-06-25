@@ -145,26 +145,34 @@ type UserCreateMaterial struct {
 	Password      string
 }
 
-func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword, totpSecret string, err error) {
+type UserCreateResult struct {
+	UserDB         *UserDB
+	AdminPassword  string
+	TotpSecret     string
+	PwdNSToken     string
+	BackupPassword string
+}
+
+func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
 	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
 		subdomain = utils.NextUserID(false)
 		if db.SubdomainUsed(subdomain) {
-			return nil, "", "", "", fmt.Errorf("user already exists")
+			return nil, fmt.Errorf("user already exists")
 		}
 	}
 
 	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain + ":")
 	if err != nil {
-		return nil, "", "", "", fmt.Errorf("cannot generate backup key hash: %w", err)
+		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
 
 	userDB, err := NewUserDB(context.TODO(), subdomain, false, db.serverConfig)
 	if err != nil {
 
 		userDB.TryCloseAndDelete()
-		return nil, "", "", "", fmt.Errorf("User DB Creation Error: %w", err)
+		return nil, fmt.Errorf("User DB Creation Error: %w", err)
 	}
 
 	// Lock and write user to the db and add to the in memory map
@@ -179,28 +187,34 @@ func (db *ControlDB) CreateUser() (userdb *UserDB, adminPassword, backupPassword
 
 		userDB.TryCloseAndDelete()
 
-		return nil, "", "", "", fmt.Errorf("cannot create user: %w", err)
+		return nil, fmt.Errorf("cannot create user: %w", err)
 	}
 
 	////
 	// Setup the new UserDB
 	////
 
-	adminPassword, totpSecret, err = userDB.createDefaultUsers()
+	adminIdentity, pwdIdentity, err := userDB.createDefaultUsers()
 
 	if err != nil {
 		userDB.TryCloseAndDelete()
-		return nil, "", "", "", fmt.Errorf("cannot create admin identity: %w", err)
+		return nil, fmt.Errorf("cannot create admin identity: %w", err)
 	}
 
 	err = userDB.createDefaultSettings()
 	if err != nil {
 		userDB.TryCloseAndDelete()
-		return nil, "", "", "", fmt.Errorf("cannot create default settings: %w", err)
+		return nil, fmt.Errorf("cannot create default settings: %w", err)
 	}
 	db.users[subdomain] = userDB
 
-	return userDB, adminPassword, backupPassword, totpSecret, nil
+	return &UserCreateResult{
+		UserDB:         userDB,
+		AdminPassword:  adminIdentity.Password,
+		TotpSecret:     *adminIdentity.TotpSecret,
+		PwdNSToken:     *pwdIdentity.NSToken,
+		BackupPassword: backupPassword,
+	}, nil
 }
 
 ////

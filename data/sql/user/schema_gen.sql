@@ -201,9 +201,7 @@ CREATE TABLE settings (
     
     deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 );
 
 CREATE TABLE sqlite_sequence(name,seq);

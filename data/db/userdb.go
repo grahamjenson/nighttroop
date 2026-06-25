@@ -84,40 +84,57 @@ func (db *UserDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }
 
+func (db *UserDB) NSURL() string {
+	return fmt.Sprintf("%s://ns.%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
+}
+
 // ////
 // Identities
 // ////
 
-func (db *UserDB) createDefaultUsers() (string, string, error) {
-
-	adminPassword, totpSecretPtr, _, err := db.CreateIdentity(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+func (db *UserDB) createDefaultUsers() (*IdentityValues, *IdentityValues, error) {
+	// Create Default Admin User
+	adminIdentity, err := db.CreateIdentity(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
+		return nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
-	if totpSecretPtr == nil {
-		return "", "", fmt.Errorf("Failed to Create Default Admin User: TOTP Secret is nil")
+	if adminIdentity.TotpSecret == nil {
+		return nil, nil, fmt.Errorf("Failed to Create Default Admin User: TOTP Secret is nil")
 	}
-	totpSecret := *totpSecretPtr
 
-	_, _, _, err = db.CreateIdentity(consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	// Create Default PWD User (Able to write data on the ns API)
+
+	pwdIdentity, err := db.CreateIdentity(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create dexcom sync identity: %w", err)
+		return nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
+	}
+	if pwdIdentity.NSToken == nil {
+		return nil, nil, fmt.Errorf("Failed to Create Default PWD User: NSToken is nil")
 	}
 
-	_, _, _, err = db.CreateIdentity(consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	////
+	// Create Sync Identities (used to trail)
+	////
+	_, err = db.CreateIdentity(consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create nightscout sync identity: %w", err)
+		return nil, nil, fmt.Errorf("cannot create dexcom sync identity: %w", err)
 	}
 
-	_, _, _, err = db.CreateIdentity(consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	_, err = db.CreateIdentity(consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create libre sync identity: %w", err)
+		return nil, nil, fmt.Errorf("cannot create nightscout sync identity: %w", err)
 	}
 
-	return adminPassword, totpSecret, nil
+	_, err = db.CreateIdentity(consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot create libre sync identity: %w", err)
+	}
+
+	return adminIdentity, pwdIdentity, nil
 }
 
 func (db *UserDB) createDefaultSettings() error {
+	// TODO: we need to enum all allowed settings
 	err := user.SetSetting(context.TODO(), db.Queries, user.UnitsSetting, user.Units{Units: consts.UNITS_MG_DL})
 	if err != nil {
 		return fmt.Errorf("cannot set default units setting: %w", err)
@@ -129,14 +146,20 @@ func (db *UserDB) createDefaultSettings() error {
 	return nil
 }
 
-func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string, *string, *string, error) {
+type IdentityValues struct {
+	Password   string
+	TotpSecret *string
+	NSToken    *string
+}
+
+func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (*IdentityValues, error) {
 
 	security := db.serverConfig.Security
 	hostname := db.serverConfig.HostName
 	password, hashedPassword, err := security.GeneratePassword()
 
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("cannot generate user password: %w", err)
+		return nil, fmt.Errorf("cannot generate user password: %w", err)
 	}
 
 	var totpSecretPtr *string
@@ -145,7 +168,7 @@ func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string,
 
 		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, db.Subdomain, hostname))
 		if err != nil {
-			return "", nil, nil, fmt.Errorf("cannot generate user TOTP: %w", err)
+			return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
 		}
 
 		totpSecretPtr = &totpSecret
@@ -160,18 +183,22 @@ func (db *UserDB) CreateIdentity(name string, role consts.IdentityRole) (string,
 	})
 
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("cannot create user identity: %w", err)
+		return nil, fmt.Errorf("cannot create user identity: %w", err)
 	}
 	var nsToken *string
 	if can.HaveNightscoutToken(role) {
 		token, err := security.CreateNightscoutTokenForIdentity(db.Subdomain, name, string(role), password)
 		if err != nil {
-			return "", nil, nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
+			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
 		}
 		nsToken = &token
 	}
 
-	return password, totpSecretPtr, nsToken, nil
+	return &IdentityValues{
+		Password:   password,
+		TotpSecret: totpSecretPtr,
+		NSToken:    nsToken,
+	}, nil
 }
 
 func (db *UserDB) UpdateIdentityDateFlags(identity *user.Identity, updateLastSeen bool, updateLastWrite bool) error {

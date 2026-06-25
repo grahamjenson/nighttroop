@@ -655,16 +655,6 @@ func (m *Setting) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *Setting) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Setting) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
 // GetName returns the Name value.
 func (m *SqliteSequence) GetName() interface{} {
 	return m.Name

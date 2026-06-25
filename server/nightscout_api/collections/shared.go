@@ -17,6 +17,15 @@ func ptr[T any](v T) *T {
 	return &v
 }
 
+type ConverterToRecordFN[T any, PT interface {
+	*T
+	GetID() string
+	GetDeletedAt() *int64
+	GetCreatedAt() int64
+	GetUpdatedAt() int64
+	GetCreatedByIdentityName() string
+}] func(PT) nsutils.Record
+
 func DBModelToRecord[T any, PT interface {
 	*T
 	GetID() string
@@ -24,7 +33,7 @@ func DBModelToRecord[T any, PT interface {
 	GetCreatedAt() int64
 	GetUpdatedAt() int64
 	GetCreatedByIdentityName() string
-}, S any](collectionName nsutils.Collection, convertFunc func(PT) S) func(dbModel PT) nsutils.Record {
+}, S any](collectionName nsutils.Collection, convertFunc func(PT) S) ConverterToRecordFN[T, PT] {
 	return func(dbModel PT) nsutils.Record {
 		if dbModel == nil {
 			return nsutils.Record{}

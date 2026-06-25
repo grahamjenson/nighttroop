@@ -14,6 +14,7 @@ import (
 
 type EntriesCollection struct {
 	converter func(c *user.GlucoseReading) nsutils.Record
+	creator   func(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 }
 
 func NewEntriesCollection() EntriesCollection {
@@ -21,8 +22,8 @@ func NewEntriesCollection() EntriesCollection {
 		converter: DBModelToRecord(nsutils.Entries, nightscout.DBModelToEntry),
 	}
 }
-func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 
+func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	entryModel := &nightscout.Entry{}
 	err := utils.FromMap(data, entryModel)
 

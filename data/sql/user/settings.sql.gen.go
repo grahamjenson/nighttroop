@@ -24,10 +24,11 @@ func (q *Queries) getSettingFromDB(ctx context.Context, id string) (json.RawMess
 }
 
 const upsertSettingToDB = `-- name: upsertSettingToDB :exec
-INSERT INTO settings(id, value)
-VALUES (?, json(?))
+INSERT INTO settings(id, value, created_at)
+VALUES (?, json(?), CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ON CONFLICT(id) DO UPDATE SET
-    value = excluded.value
+    value = excluded.value,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 `
 
 func (q *Queries) upsertSettingToDB(ctx context.Context, iD string, json interface{}) error {

@@ -22,6 +22,7 @@ const (
 )
 
 const FIRST_ADMIN_NAME = "admin"
+const FIRST_PWD_NAME = "pwd_phone"
 
 const DEXCOM_SYNC_IDENTITY_NAME = "dexcom_sync"
 const NIGHTSCOUT_SYNC_IDENTITY_NAME = "nightscout_sync"

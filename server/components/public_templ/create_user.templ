@@ -74,7 +74,7 @@ templ CreateUserRateLimited(seconds int) {
 </script>
 }
 
-templ CreateUserInfo(url string, password string, totpSecret string, backupKey string) {
+templ CreateUserInfo(url string, adminPassword string, adminTotpSecret string, pwdNSToken string, pwdNSURL string, backupKey string) {
 	<div class="text-left w-full">
 		<div id="Step1" class="max-w-2xl mx-auto space-y-6">
 			<!-- Credentials Display Box -->
@@ -87,7 +87,7 @@ templ CreateUserInfo(url string, password string, totpSecret string, backupKey s
 					<!-- Header bar with Action Button -->
 					<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
 						<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
-						<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: admin\nPassword: " + password + "\nTOTP Secret: " + totpSecret + "\nBackup Key: " + backupKey }</textarea>
+						<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: admin\nPassword: " + adminPassword + "\nTOTP Secret: " + adminTotpSecret + "\nPWD NS Token: " + pwdNSToken + "\nPWD NS URL: " + pwdNSURL + "\nBackup Key: " + backupKey }</textarea>
 						<!-- Clear, High-Visibility Copy Button -->
 						<div class="inline-flex shadow-sm rounded-lg">
 							@copybutton.CopyButton(copybutton.Props{
@@ -98,9 +98,17 @@ templ CreateUserInfo(url string, password string, totpSecret string, backupKey s
 					</div>
 					<!-- Monospace Content Area -->
 					<div class="p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white">
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
+							Site Information
+						</h3>
 						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span class="break-all">{ url }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Backup Key:</span><span class="break-all">{ backupKey }</span></div>
+						<hr class="my-4"/>
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
+							Admin User
+						</h3>
 						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>admin</span></div>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ password }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ adminPassword }</span></div>
 						<div class="flex">
 							<div class="flex items-start gap-6">
 								<!-- Left: label + secret -->
@@ -117,7 +125,7 @@ templ CreateUserInfo(url string, password string, totpSecret string, backupKey s
 							</div>
 							<script type="text/javascript">
 							var qrcode = new QRCode(document.getElementById("qrcode"), {
-								text: "{{ totpSecret }}",
+								text: "{{ adminTotpSecret }}",
 								width: 128,
 								height: 128,
 								colorDark : "#000000",
@@ -126,7 +134,12 @@ templ CreateUserInfo(url string, password string, totpSecret string, backupKey s
 							});
 							</script>
 						</div>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Backup Key:</span><span class="break-all">{ backupKey }</span></div>
+						<hr class="my-4"/>
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
+							Person With Diabetes (PWD) Phone Setup
+						</h3>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">NSToken:</span><span class="break-all">{ pwdNSToken }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">NSURL:</span><span class="break-all">{ pwdNSURL }</span></div>
 					</div>
 				</div>
 			</div>

@@ -34,10 +34,10 @@ func GetConfigControlDBAndUserDBForTest() (config.ServerConfig, *db.ControlDB, *
 		panic(fmt.Errorf("cannot create control db: %w", err))
 	}
 
-	userDB, _, _, _, err := controlDB.CreateUser()
+	identityValues, err := controlDB.CreateUser()
 	if err != nil {
 		panic(fmt.Errorf("cannot create user db: %w", err))
 	}
 
-	return cfg, controlDB, userDB
+	return cfg, controlDB, identityValues.UserDB
 }

@@ -17,6 +17,7 @@ type CreateUserResponse struct {
 	APIKey     string `json:"apiKey"`
 	TOTPSecret string `json:"totpSecret"`
 	BackupKey  string `json:"backupKey"`
+	PWDNSToken string `json:"pwdNSToken"`
 }
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
@@ -45,7 +46,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 			return
 		}
 
-		userDB, adminPassword, backupPassword, totpSecret, err := controlDB.CreateUser()
+		userCreateResult, err := controlDB.CreateUser()
 		if err != nil {
 			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)
@@ -53,10 +54,11 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		}
 
 		responseModel := CreateUserResponse{
-			UserID:     userDB.Subdomain,
-			APIKey:     adminPassword,
-			BackupKey:  backupPassword,
-			TOTPSecret: totpSecret,
+			UserID:     userCreateResult.UserDB.Subdomain,
+			APIKey:     userCreateResult.AdminPassword,
+			BackupKey:  userCreateResult.BackupPassword,
+			TOTPSecret: userCreateResult.TotpSecret,
+			PWDNSToken: userCreateResult.PwdNSToken,
 		}
 
 		slog.Info("Number of Users", "count", controlDB.GetNUsersDBs(), "routines", runtime.NumGoroutine())
@@ -70,7 +72,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = public_templ.CreateUserInfo(userDB.URL(), adminPassword, totpSecret, backupPassword).Render(r.Context(), w)
+		err = public_templ.CreateUserInfo(userCreateResult.UserDB.URL(), userCreateResult.AdminPassword, userCreateResult.TotpSecret, userCreateResult.PwdNSToken, userCreateResult.UserDB.NSURL(), userCreateResult.BackupPassword).Render(r.Context(), w)
 		if err != nil {
 			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)
