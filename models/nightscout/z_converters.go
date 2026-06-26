@@ -297,6 +297,9 @@ func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadin
 	if source.Value != nil {
 		userCreateGlucoseReadingParams.Value = float64(*source.Value)
 	}
+	if source.Type != nil {
+		userCreateGlucoseReadingParams.Type = string(*source.Type)
+	}
 	pString := source.RawJsonData
 	userCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.UtcOffsetMinutes != nil {

@@ -164,6 +164,7 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	userCreateGlucoseReadingParams.ID = source.ID
 	userCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	userCreateGlucoseReadingParams.Value = source.Value
+	userCreateGlucoseReadingParams.Type = source.Type
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
 		userCreateGlucoseReadingParams.RawJsonData = &xstring

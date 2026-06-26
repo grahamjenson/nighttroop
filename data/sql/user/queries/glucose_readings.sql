@@ -8,12 +8,13 @@ INSERT INTO glucose_readings (
     id,
     occurred_at,
     value,
+    type,
     raw_json_data,
     utc_offset_minutes,
     created_by_identity_id,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -25,6 +26,15 @@ SELECT * FROM glucose_readings WHERE id = ?;
 
 -- name: AllGlucoseReadings :many
 SELECT * FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?;
+
+-- name: SearchGlucoseReadings :many
+SELECT * FROM glucose_readings
+WHERE
+    occurred_at >= COALESCE(sqlc.narg(occurred_at_start), occurred_at) AND occurred_at <= COALESCE(sqlc.narg(occurred_at_end), occurred_at)
+ORDER BY
+    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_asc' THEN occurred_at END ASC,
+    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_desc' THEN occurred_at END DESC
+LIMIT COALESCE(sqlc.narg(glimit), 1000);
 
 --------
 -- UPDATE

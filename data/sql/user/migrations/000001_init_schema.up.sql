@@ -78,7 +78,7 @@ CREATE TABLE glucose_readings (
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     value REAL NOT NULL,
-    type TEXT NOT NULL  CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
+    type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly

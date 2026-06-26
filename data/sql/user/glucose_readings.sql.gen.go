@@ -55,12 +55,13 @@ INSERT INTO glucose_readings (
     id,
     occurred_at,
     value,
+    type,
     raw_json_data,
     utc_offset_minutes,
     created_by_identity_id,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
 `
 
@@ -68,6 +69,7 @@ type CreateGlucoseReadingParams struct {
 	ID                    string
 	OccurredAt            int64
 	Value                 float64
+	Type                  string
 	RawJsonData           *string
 	UtcOffsetMinutes      *int64
 	CreatedByIdentityID   int64
@@ -82,6 +84,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.ID,
 		arg.OccurredAt,
 		arg.Value,
+		arg.Type,
 		arg.RawJsonData,
 		arg.UtcOffsetMinutes,
 		arg.CreatedByIdentityID,
@@ -172,6 +175,51 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseRea
 		&i.CreatedByIdentityID,
 	)
 	return &i, err
+}
+
+const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings
+WHERE
+    occurred_at >= COALESCE(?1, occurred_at) AND occurred_at <= COALESCE(?2, occurred_at)
+ORDER BY
+    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_asc' THEN occurred_at END ASC,
+    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_desc' THEN occurred_at END DESC
+LIMIT COALESCE(?3, 1000)
+`
+
+func (q *Queries) SearchGlucoseReadings(ctx context.Context, occurredAtStart *int64, occurredAtEnd *int64, glimit interface{}) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.searchGlucoseReadingsStmt, searchGlucoseReadings, occurredAtStart, occurredAtEnd, glimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Value,
+			&i.Type,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByIdentityName,
+			&i.CreatedByIdentityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
