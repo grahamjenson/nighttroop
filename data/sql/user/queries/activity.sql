@@ -26,7 +26,7 @@ RETURNING *;
 -- name: AllActivities :many
 SELECT * FROM activity ORDER BY occurred_at DESC; 
 
--- name: GetActivityByID :one
+-- name: GetActivity :one
 SELECT * FROM activity WHERE id = ?;
 
 --------

@@ -261,7 +261,8 @@ func DBModelToSetting(source *user.Setting) Setting {
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
 		nightscoutSetting.Identifier = &pNightscoutIdentifierString
-		nightscoutSetting.Value = FromJsonRawMessage((*source).Value)
+		pNightscoutSanitizedString := SanitizedString((*source).Value)
+		nightscoutSetting.Value = &pNightscoutSanitizedString
 		pNightscoutDateInt := DateInt((*source).CreatedAt)
 		nightscoutSetting.SrvCreated = &pNightscoutDateInt
 		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)

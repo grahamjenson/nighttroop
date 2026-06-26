@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -48,21 +49,33 @@ func (c FoodCollection) Create(ctx context.Context, userContext *httputils.UserC
 }
 
 func (c FoodCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	dbModel, err := userContext.UserDB.Queries.GetFood(ctx, identifier)
+	if err == sql.ErrNoRows {
+		return nil, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to get food", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		return nil, nsutils.ErrNotFound
+	}
+	record := c.converter(dbModel)
+	return &record, nil
 }
 
 func (c FoodCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c FoodCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c FoodCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nil
+	return nsutils.ErrNotImplemented
 }
 
 func (c FoodCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nil
+	return 0, nsutils.ErrNotImplemented
 }

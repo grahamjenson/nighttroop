@@ -13,7 +13,6 @@ sql:
         options:
           package: "user"
           imports:
-            - "encoding/json"
             - "nighttroop.t1d.nz/utils/consts"
     gen:
       go:

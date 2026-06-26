@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -48,21 +49,33 @@ func (c ProfileCollection) Create(ctx context.Context, userContext *httputils.Us
 }
 
 func (c ProfileCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	dbModel, err := userContext.UserDB.Queries.GetProfile(ctx, identifier)
+	if err == sql.ErrNoRows {
+		return nil, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to get profile", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		return nil, nsutils.ErrNotFound
+	}
+	record := c.converter(dbModel)
+	return &record, nil
 }
 
 func (c ProfileCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c ProfileCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c ProfileCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nil
+	return nsutils.ErrNotImplemented
 }
 
 func (c ProfileCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nil
+	return 0, nsutils.ErrNotImplemented
 }

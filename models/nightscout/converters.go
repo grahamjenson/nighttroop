@@ -1,8 +1,6 @@
 package nightscout
 
 import (
-	"encoding/json"
-
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils"
 )
@@ -293,7 +291,6 @@ type MapConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore Type
 	// goverter:map ID Identifier
-	// goverter:map Value Value | FromJsonRawMessage
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	DBModelToSetting(source *user.Setting) Setting
@@ -302,14 +299,6 @@ type MapConverter interface {
 // //
 // Custom Converter Methods
 // //
-
-func FromJsonRawMessage(raw json.RawMessage) *SanitizedString {
-	if raw == nil {
-		return nil
-	}
-	s := SanitizedString(string(raw))
-	return &s
-}
 
 // goverter:context ctx
 func AssignID(date *DateInt, ctx CreateContext) string {

@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -48,21 +49,33 @@ func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputi
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	dbModel, err := userContext.UserDB.Queries.GetDeviceStatus(ctx, identifier)
+	if err == sql.ErrNoRows {
+		return nil, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to get device status", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		return nil, nsutils.ErrNotFound
+	}
+	record := c.converter(dbModel)
+	return &record, nil
 }
 
 func (c DeviceStatusCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c DeviceStatusCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c DeviceStatusCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nil
+	return nsutils.ErrNotImplemented
 }
 
 func (c DeviceStatusCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nil
+	return 0, nsutils.ErrNotImplemented
 }

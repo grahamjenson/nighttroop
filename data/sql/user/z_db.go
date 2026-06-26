@@ -108,8 +108,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deletePermanentGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, deletePermanentGlucoseReadingsByType); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePermanentGlucoseReadingsByType: %w", err)
 	}
-	if q.getActivityByIDStmt, err = db.PrepareContext(ctx, getActivityByID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetActivityByID: %w", err)
+	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
+		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
 	if q.getBolusStmt, err = db.PrepareContext(ctx, getBolus); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBolus: %w", err)
@@ -313,9 +313,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deletePermanentGlucoseReadingsByTypeStmt: %w", cerr)
 		}
 	}
-	if q.getActivityByIDStmt != nil {
-		if cerr := q.getActivityByIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getActivityByIDStmt: %w", cerr)
+	if q.getActivityStmt != nil {
+		if cerr := q.getActivityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
 		}
 	}
 	if q.getBolusStmt != nil {
@@ -480,7 +480,7 @@ type Queries struct {
 	deleteGlucoseReadingsByTypeStmt          *sql.Stmt
 	deletePermanentGlucoseReadingStmt        *sql.Stmt
 	deletePermanentGlucoseReadingsByTypeStmt *sql.Stmt
-	getActivityByIDStmt                      *sql.Stmt
+	getActivityStmt                          *sql.Stmt
 	getBolusStmt                             *sql.Stmt
 	getCarbStmt                              *sql.Stmt
 	getDeviceStatusStmt                      *sql.Stmt
@@ -534,7 +534,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteGlucoseReadingsByTypeStmt:          q.deleteGlucoseReadingsByTypeStmt,
 		deletePermanentGlucoseReadingStmt:        q.deletePermanentGlucoseReadingStmt,
 		deletePermanentGlucoseReadingsByTypeStmt: q.deletePermanentGlucoseReadingsByTypeStmt,
-		getActivityByIDStmt:                      q.getActivityByIDStmt,
+		getActivityStmt:                          q.getActivityStmt,
 		getBolusStmt:                             q.getBolusStmt,
 		getCarbStmt:                              q.getCarbStmt,
 		getDeviceStatusStmt:                      q.getDeviceStatusStmt,

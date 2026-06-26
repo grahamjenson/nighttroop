@@ -2,7 +2,6 @@
 package user
 
 import (
-	"encoding/json"
 	"nighttroop.t1d.nz/utils/consts"
 )
 // GetID returns the ID value.
@@ -631,7 +630,7 @@ func (m *Setting) GetID() string {
 }
 
 // GetValue returns the Value value.
-func (m *Setting) GetValue() json.RawMessage {
+func (m *Setting) GetValue() string {
 	return m.Value
 }
 

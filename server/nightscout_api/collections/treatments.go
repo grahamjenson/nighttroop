@@ -46,7 +46,7 @@ func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.
 }
 
 func (c TreatmentCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -62,13 +62,13 @@ func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.
 }
 
 func (c TreatmentCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nil
+	return nsutils.ErrNotImplemented
 }
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nil
+	return 0, nsutils.ErrNotImplemented
 }

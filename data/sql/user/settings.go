@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
@@ -45,7 +46,7 @@ func (s timezoneSetting) UpsertValue(ctx context.Context, q *Queries, value any)
 	}
 	_, ok := value.(TimezoneSettingValue)
 	if !ok {
-		return nil, sql.ErrNoRows
+		return nil, fmt.Errorf("invalid Timezone value setting type %T", value)
 	}
 	return setSetting(ctx, q, s.GetKey(), value)
 }
@@ -85,7 +86,7 @@ func (s unitsSetting) UpsertValue(ctx context.Context, q *Queries, value any) (*
 	}
 	_, ok := value.(UnitsSettingValue)
 	if !ok {
-		return nil, sql.ErrNoRows
+		return nil, fmt.Errorf("invalid Unit value setting type %T", value)
 	}
 	return setSetting(ctx, q, s.GetKey(), value)
 }
@@ -128,7 +129,7 @@ func getSettingValue(
 		return nil, err
 	}
 
-	err = json.Unmarshal(value.Value, retValue)
+	err = json.Unmarshal([]byte(value.Value), retValue)
 	return retValue, err
 }
 

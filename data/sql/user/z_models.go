@@ -5,8 +5,6 @@
 package user
 
 import (
-	"encoding/json"
-
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -166,7 +164,7 @@ type Profile struct {
 
 type Setting struct {
 	ID        string
-	Value     json.RawMessage
+	Value     string
 	DeletedAt *int64
 	CreatedAt int64
 	UpdatedAt int64

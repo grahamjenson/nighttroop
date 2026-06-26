@@ -133,12 +133,12 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 	return &i, err
 }
 
-const getActivityByID = `-- name: GetActivityByID :one
+const getActivity = `-- name: GetActivity :one
 SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity WHERE id = ?
 `
 
-func (q *Queries) GetActivityByID(ctx context.Context, id string) (*Activity, error) {
-	row := q.queryRow(ctx, q.getActivityByIDStmt, getActivityByID, id)
+func (q *Queries) GetActivity(ctx context.Context, id string) (*Activity, error) {
+	row := q.queryRow(ctx, q.getActivityStmt, getActivity, id)
 	var i Activity
 	err := row.Scan(
 		&i.ID,

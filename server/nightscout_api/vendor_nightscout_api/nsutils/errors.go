@@ -32,9 +32,9 @@ var (
 	ErrMissingPermission  = func(permission string) *HTTPError {
 		return &HTTPError{Status: http.StatusForbidden, Message: "Missing permission " + permission}
 	}
-
-	ErrBadToken = &HTTPError{Status: http.StatusUnauthorized, Message: "badToken"}
-	ErrBadJWT   = &HTTPError{Status: http.StatusUnauthorized, Message: "bad jwt"}
+	ErrNotImplemented = &HTTPError{Status: http.StatusNotImplemented, Message: "Not implemented"}
+	ErrBadToken       = &HTTPError{Status: http.StatusUnauthorized, Message: "badToken"}
+	ErrBadJWT         = &HTTPError{Status: http.StatusUnauthorized, Message: "bad jwt"}
 )
 
 // Query Errors

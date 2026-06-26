@@ -3,7 +3,7 @@
 ---------------------------------------------------
 CREATE TABLE settings (
     id TEXT PRIMARY KEY CHECK(length(id) <= 64),
-    value JSON NOT NULL CHECK(length(value) <= 8192),
+    value TEXT NOT NULL CHECK(length(value) <= 8192),
     
     deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

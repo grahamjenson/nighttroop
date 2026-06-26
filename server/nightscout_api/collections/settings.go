@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -57,21 +58,37 @@ func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.U
 }
 
 func (c SettingsCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	setting, ok := user.GetUserSettingFromKey(identifier)
+	if !ok {
+		return nil, nsutils.ErrNotFound
+	}
+	dbModel, err := setting.GetValueModel(ctx, userContext.UserDB.Queries)
+	if err == sql.ErrNoRows {
+		return nil, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to get setting", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		return nil, nsutils.ErrNotFound
+	}
+	record := c.converter(dbModel)
+	return &record, nil
 }
 
 func (c SettingsCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c SettingsCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c SettingsCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nil
+	return nsutils.ErrNotImplemented
 }
 
 func (c SettingsCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nil
+	return 0, nsutils.ErrNotImplemented
 }
