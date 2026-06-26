@@ -135,11 +135,11 @@ func (db *UserDB) createDefaultUsers() (*IdentityValues, *IdentityValues, error)
 
 func (db *UserDB) createDefaultSettings() error {
 	// TODO: we need to enum all allowed settings
-	err := user.SetSetting(context.TODO(), db.Queries, user.UnitsSetting, user.Units{Units: consts.UNITS_MG_DL})
+	_, err := user.UnitsSetting.UpsertValue(context.TODO(), db.Queries, user.UnitsSettingValue{Units: consts.UNITS_MG_DL})
 	if err != nil {
 		return fmt.Errorf("cannot set default units setting: %w", err)
 	}
-	err = user.SetSetting(context.TODO(), db.Queries, user.TimezoneSetting, user.Timezone{TZ: *time.UTC})
+	_, err = user.TimezoneSetting.UpsertValue(context.TODO(), db.Queries, user.TimezoneSettingValue{TZ: *time.UTC})
 	if err != nil {
 		return fmt.Errorf("cannot set default timezone setting: %w", err)
 	}

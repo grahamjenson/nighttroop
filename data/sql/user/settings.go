@@ -9,69 +9,143 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-type SettingValue[T any] struct {
-	Key     string
-	Default T
+var settings = map[string]UserSetting{
+	"timezone": TimezoneSetting,
+	"units":    UnitsSetting,
 }
 
-var (
-	TimezoneSetting = SettingValue[Timezone]{
-		Key: "timezone",
-		Default: Timezone{
-			TZ: *time.UTC,
-		},
-	}
+func GetUserSettingFromKey(key string) (UserSetting, bool) {
+	setting, ok := settings[key]
+	return setting, ok
+}
 
-	UnitsSetting = SettingValue[Units]{
-		Key: "units",
-		Default: Units{
-			Units: consts.UNITS_MG_DL,
-		},
-	}
-)
+type UserSetting interface {
+	GetKey() string
+	GetValue(ctx context.Context, q *Queries) (any, error)
+	GetValueModel(ctx context.Context, q *Queries) (*Setting, error)
+	UpsertValue(ctx context.Context, q *Queries, value any) (*Setting, error)
+	CreateValue(string) (any, error)
+}
 
-type Timezone struct {
+type timezoneSetting struct{}
+
+var TimezoneSetting timezoneSetting
+
+type TimezoneSettingValue struct {
 	TZ time.Location `json:"name"`
 }
 
-type Units struct {
+func (s timezoneSetting) GetKey() string {
+	return "timezone"
+}
+
+func (s timezoneSetting) UpsertValue(ctx context.Context, q *Queries, value any) (*Setting, error) {
+	if value == nil {
+		return nil, sql.ErrNoRows
+	}
+	_, ok := value.(TimezoneSettingValue)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return setSetting(ctx, q, s.GetKey(), value)
+}
+
+func (s timezoneSetting) GetValue(ctx context.Context, q *Queries) (any, error) {
+	return getSettingValue(ctx, q, s.GetKey(), &TimezoneSettingValue{}, TimezoneSettingValue{TZ: *time.UTC})
+}
+
+func (s timezoneSetting) CreateValue(value string) (any, error) {
+	x := &TimezoneSettingValue{}
+	err := json.Unmarshal([]byte(value), x)
+	if err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+func (s timezoneSetting) GetValueModel(ctx context.Context, q *Queries) (*Setting, error) {
+	return q.getSettingFromDB(ctx, s.GetKey())
+}
+
+type unitsSetting struct{}
+
+var UnitsSetting unitsSetting
+
+type UnitsSettingValue struct {
 	Units consts.Units `json:"units"`
 }
 
-func GetSetting[T any](
+func (s unitsSetting) GetKey() string {
+	return "units"
+}
+
+func (s unitsSetting) UpsertValue(ctx context.Context, q *Queries, value any) (*Setting, error) {
+	if value == nil {
+		return nil, sql.ErrNoRows
+	}
+	_, ok := value.(UnitsSettingValue)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return setSetting(ctx, q, s.GetKey(), value)
+}
+
+func (s unitsSetting) GetValue(ctx context.Context, q *Queries) (any, error) {
+	return getSettingValue(ctx, q, s.GetKey(), &UnitsSettingValue{}, UnitsSettingValue{Units: consts.UNITS_MG_DL})
+}
+
+func (s unitsSetting) GetValueModel(ctx context.Context, q *Queries) (*Setting, error) {
+	return q.getSettingFromDB(ctx, s.GetKey())
+}
+
+func (s unitsSetting) CreateValue(value string) (any, error) {
+	x := &UnitsSettingValue{}
+	err := json.Unmarshal([]byte(value), x)
+	if err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// ////
+// Private Functions
+// ////
+
+func getSettingValue(
 	ctx context.Context,
 	q *Queries,
-	setting SettingValue[T],
-) (T, error) {
-	var result T
-
-	value, err := q.getSettingFromDB(ctx, setting.Key)
+	key string,
+	retValue any,
+	defaultValue any,
+) (any, error) {
+	value, err := q.getSettingFromDB(ctx, key)
 
 	if err != nil && err == sql.ErrNoRows {
-		return setting.Default, nil
+		return defaultValue, nil
 	}
 
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	err = json.Unmarshal(value, &result)
-	return result, err
+	err = json.Unmarshal(value.Value, retValue)
+	return retValue, err
 }
 
-func SetSetting[T any](
+func setSetting(
 	ctx context.Context,
 	q *Queries,
-	setting SettingValue[T],
-	value T,
-) error {
+	key string,
+	value any,
+) (*Setting, error) {
 	data, err := json.Marshal(value)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return q.upsertSettingToDB(ctx, setting.Key, string(data))
+	return q.upsertSettingToDB(ctx, key, string(data))
 }
 
+// Neeed to fit some other interfaces
 func (s *Setting) GetCreatedByIdentityName() string {
 	return ""
 }

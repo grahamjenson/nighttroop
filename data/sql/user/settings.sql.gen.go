@@ -7,31 +7,43 @@ package user
 
 import (
 	"context"
-	"encoding/json"
 )
 
 const getSettingFromDB = `-- name: getSettingFromDB :one
-SELECT value
-FROM settings
-WHERE id = ?
+SELECT id, value, deleted_at, created_at, updated_at FROM settings WHERE id = ?
 `
 
-func (q *Queries) getSettingFromDB(ctx context.Context, id string) (json.RawMessage, error) {
+func (q *Queries) getSettingFromDB(ctx context.Context, id string) (*Setting, error) {
 	row := q.queryRow(ctx, q.getSettingFromDBStmt, getSettingFromDB, id)
-	var value json.RawMessage
-	err := row.Scan(&value)
-	return value, err
+	var i Setting
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.DeletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
 }
 
-const upsertSettingToDB = `-- name: upsertSettingToDB :exec
+const upsertSettingToDB = `-- name: upsertSettingToDB :one
 INSERT INTO settings(id, value, created_at)
 VALUES (?, json(?), CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ON CONFLICT(id) DO UPDATE SET
     value = excluded.value,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+RETURNING id, value, deleted_at, created_at, updated_at
 `
 
-func (q *Queries) upsertSettingToDB(ctx context.Context, iD string, json interface{}) error {
-	_, err := q.exec(ctx, q.upsertSettingToDBStmt, upsertSettingToDB, iD, json)
-	return err
+func (q *Queries) upsertSettingToDB(ctx context.Context, iD string, json interface{}) (*Setting, error) {
+	row := q.queryRow(ctx, q.upsertSettingToDBStmt, upsertSettingToDB, iD, json)
+	var i Setting
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.DeletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
 }
