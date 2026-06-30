@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -50,23 +51,26 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		q.StripImplicitDateFilters()
+		q.Fields = &nsutils.QueryStringArray{chi.URLParam(r, "field")}
+		typeEq := chi.URLParam(r, "type")
+		if typeEq != "" {
+			q.TypeEq = ptr(nightscout.ShortString(typeEq))
+		}
 
-		q.Limit = ptr(nightscout.FlexibleInt64(1000))
 		records, err := dep.Store.Search(r.Context(), collection, q)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		filtered := nsutils.Slice(records, chi.URLParam(r, "field"), chi.URLParam(r, "type"), chi.URLParam(r, "prefix"), q.Limit.Int())
-		nsutils.WriteRecordsV1(w, filtered, nil)
+		nsutils.WriteRecordsV1(w, records, q.Fields.ToArray())
 	}
 }
 
 func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		prefix, expr, ok := ParseTimesWildcard(r)
-		if !ok {
+		// TODO: Unsure of what this endpoint actually does
+		collection, _, err := nsutils.GetCollectionFromStringAndEnsurePermission(dep, "entries", r, nsutils.CollectionActionRead)
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -75,31 +79,41 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		q.StripImplicitDateFilters()
-		searchQuery := q
-		q.Limit = ptr(nightscout.FlexibleInt64(1000))
-		records, err := dep.Store.Search(r.Context(), "entries", searchQuery)
+		records, err := dep.Store.Search(r.Context(), collection, q)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		filtered, _ := nsutils.Times(records, prefix, expr, q.Limit.Int())
-		nsutils.WriteRecordsV1(w, filtered, nil)
+		nsutils.WriteRecordsV1(w, records, q.Fields.ToArray())
 	}
 
 }
 
-func TimesEcho(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		prefix, expr, ok := ParseTimesWildcard(r)
-		if !ok {
-			http.NotFound(w, r)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
+		if err != nil {
+			collection, _, err = nsutils.GetCollectionFromStringAndEnsurePermission(dep, "entries", r, nsutils.CollectionActionRead)
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
+		}
+		q, err := nsutils.ParseV1(r.URL.Query())
+		if err != nil {
+			nsutils.WriteError(w, err)
 			return
 		}
-		_, patterns := nsutils.Times(nil, prefix, expr, 0)
+		qJSON, _ := json.MarshalIndent(q, "", "  ")
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-			"req":     map[string]any{"query": r.URL.Query()},
-			"pattern": patterns,
+			"req": map[string]any{
+				"method": r.Method,
+				"url":    r.URL.String(),
+				"query":  r.URL.Query(),
+				"header": r.Header,
+			},
+			"collection": collection,
+			"query":      string(qJSON),
 		})
 	}
 }

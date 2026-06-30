@@ -251,6 +251,7 @@ func (d *DateInt) UnmarshalJSON(data []byte) error {
 	switch val := v.(type) {
 	case float64:
 		mills = int64(val)
+
 	case json.Number:
 		if asInt, err := val.Int64(); err == nil {
 			mills = asInt
@@ -277,6 +278,11 @@ func (d *DateInt) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("expected number or string for date int, got %T", v)
 	}
 
+	// We are going to assume anything over a trillion is a second so convert to mills
+	if mills < 1_000_000_000_000 {
+		mills = mills * 1000
+	}
+
 	*d = DateInt(mills)
 	return nil
 }
@@ -289,7 +295,7 @@ func (d DateInt) Time() time.Time {
 }
 
 func (d DateInt) TimeString() string {
-	return time.UnixMilli(int64(d)).Format(time.RFC3339Nano)
+	return time.UnixMilli(int64(d)).UTC().Format(time.RFC3339Nano)
 }
 
 func (d DateInt) Int64() int64 {
@@ -513,12 +519,17 @@ func ptr[T any](v T) *T {
 func stringToTime(value string) (time.Time, error) {
 	layouts := []string{
 		time.RFC3339Nano,
+		time.RFC3339,
+		time.Layout,
+		time.DateTime,
+		time.DateOnly,
 		"2006-01-02T15:04:05,000Z07:00",
 		"2006-01-02T15:04:05,000-0700",
 		"2006-01-02T15:04:05.000-0700",
 		"2006-01-02T15:04:05-0700",
 		"2006-01-02T15:04:05.000Z07:00",
 		"2006-01-02T15:04:05Z07:00",
+		"2006-01-02 15:04:05.000Z",
 	}
 	for _, layout := range layouts {
 		parsed, err := time.Parse(layout, value)

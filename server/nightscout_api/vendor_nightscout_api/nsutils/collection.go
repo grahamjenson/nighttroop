@@ -144,7 +144,11 @@ const (
 )
 
 func GetCollectionAndEnsurePermission(dep Dependencies, r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
-	collection, err := ParseCollection(chi.URLParam(r, "collection"))
+	return GetCollectionFromStringAndEnsurePermission(dep, chi.URLParam(r, "collection"), r, action)
+}
+
+func GetCollectionFromStringAndEnsurePermission(dep Dependencies, collectionString string, r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
+	collection, err := ParseCollection(collectionString)
 	if err != nil {
 		return "", nil, ErrInvalidCollection
 	}

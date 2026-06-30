@@ -2,8 +2,10 @@ package nsutils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -16,69 +18,73 @@ import (
 type Query struct {
 	// Dates
 	// lte and gte both
-	DateGTE *nightscout.DateInt `mapstructure:"dategte,omitempty"`
-	DateGT  *nightscout.DateInt `mapstructure:"dategt,omitempty"`
+	DateGTE *nightscout.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
+	DateGT  *nightscout.DateInt `mapstructure:"dategt,omitempty" json:"dategt,omitempty"`
 
-	DateLTE *nightscout.DateInt `mapstructure:"datelte,omitempty"`
-	DateLT  *nightscout.DateInt `mapstructure:"datelt,omitempty"`
+	DateLTE *nightscout.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
+	DateLT  *nightscout.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
 
-	CreatedAtGTE *nightscout.DateInt `mapstructure:"createdatgte,omitempty"`
-	CreatedAtGT  *nightscout.DateInt `mapstructure:"createdatgt,omitempty"`
+	CreatedAtGTE *nightscout.DateInt `mapstructure:"createdatgte,omitempty" json:"createdatgte,omitempty"`
+	CreatedAtGT  *nightscout.DateInt `mapstructure:"createdatgt,omitempty" json:"createdatgt,omitempty"`
 
-	CreatedAtLTE *nightscout.DateInt `mapstructure:"createdatlte,omitempty"`
-	CreatedAtLT  *nightscout.DateInt `mapstructure:"createdatlt,omitempty"`
+	CreatedAtLTE *nightscout.DateInt `mapstructure:"createdatlte,omitempty" json:"createdatlte,omitempty"`
+	CreatedAtLT  *nightscout.DateInt `mapstructure:"createdatlt,omitempty" json:"createdatlt,omitempty"`
 
-	UpdatedGTE *nightscout.DateInt `mapstructure:"updatedgte,omitempty"`
-	UpdatedGT  *nightscout.DateInt `mapstructure:"updatedgt,omitempty"`
-	UpdatedLTE *nightscout.DateInt `mapstructure:"updatedlte,omitempty"`
-	UpdatedLT  *nightscout.DateInt `mapstructure:"updatedlt,omitempty"`
+	UpdatedGTE *nightscout.DateInt `mapstructure:"updatedgte,omitempty" json:"updatedgte,omitempty"`
+	UpdatedGT  *nightscout.DateInt `mapstructure:"updatedgt,omitempty" json:"updatedgt,omitempty"`
+	UpdatedLTE *nightscout.DateInt `mapstructure:"updatedlte,omitempty" json:"updatedlte,omitempty"`
+	UpdatedLT  *nightscout.DateInt `mapstructure:"updatedlt,omitempty" json:"updatedlt,omitempty"`
 
-	TypeEq *nightscout.ShortString `mapstructure:"typeeq,omitempty"`
+	// Type
+	TypeEq  *nightscout.ShortString `mapstructure:"typeeq,omitempty" json:"typeeq,omitempty"`
+	TypeNeq *nightscout.ShortString `mapstructure:"typeneq,omitempty" json:"typeneq,omitempty"`
+	TypeIn  *QueryStringArray       `mapstructure:"typein,omitempty" json:"typein,omitempty"`
+	TypeNin *QueryStringArray       `mapstructure:"typenin,omitempty" json:"typenin,omitempty"`
 
 	// Identity
-	IDEq *nightscout.ShortString `mapstructure:"ideq,omitempty"`
-	IDIn *QueryStringArray       `mapstructure:"idin,omitempty"`
+	IDEq *nightscout.ShortString `mapstructure:"ideq,omitempty" json:"ideq,omitempty"`
+	IDIn *QueryStringArray       `mapstructure:"idin,omitempty" json:"idin,omitempty"`
 
-	DeviceEq *nightscout.ShortString `mapstructure:"deviceeq,omitempty"`
-	AppEq    *nightscout.ShortString `mapstructure:"appeq,omitempty"`
+	DeviceEq *nightscout.ShortString `mapstructure:"deviceeq,omitempty" json:"deviceeq,omitempty"`
+	AppEq    *nightscout.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
 
 	// Limits
-	Count *nightscout.FlexibleInt64 `mapstructure:"count,omitempty"`
-	Limit *nightscout.FlexibleInt64 `mapstructure:"limit,omitempty"`
-	Skip  *nightscout.FlexibleInt64 `mapstructure:"skip,omitempty"`
+	Count *nightscout.FlexibleInt64 `mapstructure:"count,omitempty" json:"count,omitempty"`
+	Limit *nightscout.FlexibleInt64 `mapstructure:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *nightscout.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
 
 	// Sort
-	Sort     *nightscout.ShortString  `mapstructure:"sort,omitempty"`
-	SortDesc *nightscout.FlexibleBool `mapstructure:"sort$desc,omitempty"`
+	Sort     *nightscout.ShortString  `mapstructure:"sort,omitempty" json:"sort,omitempty"`
+	SortDesc *nightscout.FlexibleBool `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
 	/////
 
 	// Entries
-	SGVEQ  *string `mapstructure:"sgveq,omitempty"`
-	SGVGTE *string `mapstructure:"sgvgte,omitempty"`
-	SGVGT  *string `mapstructure:"sgvgt,omitempty"`
-	SGVLTE *string `mapstructure:"sgvlte,omitempty"`
-	SGVLT  *string `mapstructure:"sgvlt,omitempty"`
+	SgvEQ  *string `mapstructure:"sgveq,omitempty" json:"sgveq,omitempty"`
+	SgvGTE *string `mapstructure:"sgvgte,omitempty" json:"sgvgte,omitempty"`
+	SgvGT  *string `mapstructure:"sgvgt,omitempty" json:"sgvgt,omitempty"`
+	SgvLTE *string `mapstructure:"sgvlte,omitempty" json:"sgvlte,omitempty"`
+	SgvLT  *string `mapstructure:"sgvlt,omitempty" json:"sgvlt,omitempty"`
 
 	// Treatments
-	CarbsEQ  *string `mapstructure:"carbseq,omitempty"`
-	CarbsGTE *string `mapstructure:"carbsgte,omitempty"`
-	CarbsLT  *string `mapstructure:"carbslt,omitempty"`
+	CarbsEQ  *string `mapstructure:"carbseq,omitempty" json:"carbseq,omitempty"`
+	CarbsGTE *string `mapstructure:"carbsgte,omitempty" json:"carbsgte,omitempty"`
+	CarbsLT  *string `mapstructure:"carbslt,omitempty" json:"carbslt,omitempty"`
 
-	InsulinEQ  *string `mapstructure:"insulineq,omitempty"`
-	InsulinGTE *string `mapstructure:"insulingte,omitempty"`
-	InsulinLT  *string `mapstructure:"insulinlt,omitempty"`
+	InsulinEQ  *string `mapstructure:"insulineq,omitempty" json:"insulineq,omitempty"`
+	InsulinGTE *string `mapstructure:"insulingte,omitempty" json:"insulingte,omitempty"`
+	InsulinLT  *string `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
 
-	NameEq *string `mapstructure:"nameeq,omitempty"`
+	NameEq *string `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
-	Permanent nightscout.FlexibleBool  `mapstructure:"permanent,omitempty"`
-	Envelope  *nightscout.FlexibleBool `mapstructure:"envelope,omitempty"`
-	Fields    *QueryStringArray        `mapstructure:"fields,omitempty"`
+	Permanent *nightscout.FlexibleBool `mapstructure:"permanent,omitempty" json:"permanent,omitempty"`
+	Envelope  *nightscout.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
+	Fields    *QueryStringArray        `mapstructure:"fields,omitempty" json:"fields,omitempty"`
 
-	IncludeDeleted *nightscout.FlexibleBool `mapstructure:"isValid,omitempty"`
+	IncludeDeleted *nightscout.FlexibleBool `mapstructure:"includeDeleted,omitempty" json:"includeDeleted,omitempty"`
 
 	Other map[string]interface{} `mapstructure:",remain"`
 }
@@ -189,7 +195,13 @@ var forwardLookupName = map[string][]string{
 		"activityType", "find[activityType]", "find[activityType][$eq]",
 		"category", "find[category]", "find[category][$eq]",
 	},
-	"typein": {"type$in", "find[type][$in]", "eventType$in", "find[eventType][$in]", "activityType$in", "find[activityType][$in]", "category$in", "find[category][$in]"},
+	"typeneq": {"type$ne", "find[type][$ne]",
+		"eventType$ne", "find[eventType][$ne]",
+		"activityType$ne", "find[activityType][$ne]",
+		"category$ne", "find[category][$ne]",
+	},
+	"typein":  {"type$in", "find[type][$in]", "eventType$in", "find[eventType][$in]", "activityType$in", "find[activityType][$in]", "category$in", "find[category][$in]"},
+	"typenin": {"type$nin", "find[type][$nin]", "eventType$nin", "find[eventType][$nin]", "activityType$nin", "find[activityType][$nin]", "category$nin", "find[category][$nin]"},
 
 	"ideq": {"_id", "find[_id]", "find[_id][$eq]", "identifier", "find[identifier]", "find[identifier][$eq]"},
 	"idin": {"_id$in", "find[_id][$in]", "identifier$in", "find[identifier][$in]"},
@@ -263,18 +275,20 @@ func parseQuery(values url.Values) (*Query, error) {
 				mapKey = v
 			}
 			ret := strings.EqualFold(mapKey, fieldName)
-
 			return ret
 		},
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			JSONUnmarshalerHook,
+		),
 	}
 
 	decoder, err := mapstructure.NewDecoder(config)
 	if err != nil {
-		return nil, ErrBadQueryError
+		return nil, fmt.Errorf("failed to create mapstructure decoder: %w", err)
 	}
 	err = decoder.Decode(qvMap)
 	if err != nil {
-		return nil, ErrBadQueryError
+		return nil, fmt.Errorf("failed to decode query values: %w", err)
 	}
 
 	if len(qv.Other) > 0 {
@@ -282,24 +296,6 @@ func parseQuery(values url.Values) (*Query, error) {
 	}
 
 	return &qv, nil
-}
-
-// StripImplicitDateFilters removes the default rolling-window filters injected
-// by ParseV1 so slice/times style endpoints can search across larger ranges.
-func (q *Query) StripImplicitDateFilters() {
-	// filters := q.Filters
-	// out := make([]Filter, 0, len(filters))
-	// for _, filter := range filters {
-	// 	if filter.Field == "date" && filter.Op == "gte" && strings.Contains(filter.Value, "T") {
-	// 		continue
-	// 	}
-	// 	if filter.Field == "created_at" && filter.Op == "gte" && strings.Contains(filter.Value, "T") {
-	// 		continue
-	// 	}
-	// 	out = append(out, filter)
-	// }
-
-	// q.Filters = out
 }
 
 // ApplyQuery filters, sorts, skips, and limits a record set in memory.
@@ -315,29 +311,35 @@ func ApplyQuery(records []Record, query *Query) []Record {
 	return filtered
 }
 
-// Slice filters records by prefix matching on a selected field and optionally a
-// Nightscout entry type.
-func Slice(records []Record, field, fieldType, prefix string, limit int) []Record {
-	if prefix == "" {
-		return records
+//// Map Structure Helpers
+
+func JSONUnmarshalerHook(
+	from reflect.Type,
+	to reflect.Type,
+	data any,
+) (any, error) {
+	unmarshalerType := reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
+
+	// We need a pointer to the destination type because
+	// UnmarshalJSON is usually defined on *T.
+	ptrType := reflect.PointerTo(to)
+	if !ptrType.Implements(unmarshalerType) {
+		return data, nil
 	}
 
-	filtered := make([]Record, 0, len(records))
-	for _, record := range records {
-		filtered = append(filtered, record)
+	// Marshal the incoming value back to JSON.
+	b, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
 	}
 
-	return filtered
-}
+	// Create a new instance of T.
+	v := reflect.New(to)
 
-// Times filters records by modal time patterns built from a prefix and
-// expression and returns both the filtered records and the generated patterns.
-func Times(records []Record, prefix, expr string, limit int) ([]Record, []string) {
-
-	filtered := make([]Record, 0, len(records))
-	for _, record := range records {
-		filtered = append(filtered, record)
+	// Call UnmarshalJSON.
+	if err := v.Interface().(json.Unmarshaler).UnmarshalJSON(b); err != nil {
+		return nil, err
 	}
 
-	return filtered, nil
+	return v.Elem().Interface(), nil
 }

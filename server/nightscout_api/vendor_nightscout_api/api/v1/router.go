@@ -50,14 +50,28 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 
 	// Weird V1 Ones
 	// No optional query params in chi
+	// We are not doing user submitted Regexs (that is pain)
+
 	// Slice
-	// TODO: These routes should be really limited on input, and if someone wants some query then work it out otherwise ignore
 	r.Get("/slice/{collection}/{field}", Slice(dep))
 	r.Get("/slice/{collection}/{field}/{type}", Slice(dep))
 	r.Get("/slice/{collection}/{field}/{type}/{prefix}", Slice(dep))
 	r.Get("/slice/{collection}/{field}/{type}/{prefix}/{regex}", Slice(dep))
 
-	// Times
+	// Count
 	r.Get("/count/{collection}/where", Count(dep))
 
+	//Times
+	r.Get("/times", Times(dep))
+	r.Get("/times/{prefix}", Times(dep))
+	r.Get("/times/{prefix}/{regex}", Times(dep))
+
+	// Echo & Times Echo
+	r.Get("/echo", Echo(dep))
+	r.Get("/echo/{collection}", Echo(dep))
+	r.Get("/echo/{collection}/{identifier_or_type}", Echo(dep))
+
+	r.Get("/times/echo", Echo(dep))
+	r.Get("/times/echo/{prefix}", Echo(dep))
+	r.Get("/times/echo/{prefix}/{regex}", Echo(dep))
 }
