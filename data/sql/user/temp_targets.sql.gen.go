@@ -12,7 +12,7 @@ import (
 const allTempTargets = `-- name: AllTempTargets :many
 
 
-SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY start DESC
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY start DESC
 `
 
 // ------
@@ -38,6 +38,8 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 			&i.UtcOffsetMinutes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -69,7 +71,7 @@ INSERT INTO temp_targets (
     created_by_identity_name
     ) 
 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateTempTargetParams struct {
@@ -111,6 +113,8 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -118,7 +122,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 }
 
 const getTempTarget = `-- name: GetTempTarget :one
-SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
 `
 
 func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, error) {
@@ -135,6 +139,8 @@ func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, er
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -151,7 +157,7 @@ UPDATE temp_targets SET
     utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = ?
-RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateTempTargetParams struct {
@@ -187,6 +193,8 @@ func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetPara
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

@@ -11,7 +11,7 @@ import (
 )
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
-SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?
 `
 
 func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*GlucoseReading, error) {
@@ -33,6 +33,8 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, limit int64) ([]*Gluco
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -62,7 +64,7 @@ INSERT INTO glucose_readings (
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateGlucoseReadingParams struct {
@@ -101,6 +103,8 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -152,7 +156,7 @@ func (q *Queries) DeletePermanentGlucoseReadingsByType(ctx context.Context, type
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE id = ?
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE id = ?
 `
 
 // ------
@@ -171,6 +175,8 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseRea
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -178,7 +184,7 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseRea
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM glucose_readings
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings
 WHERE
     occurred_at >= COALESCE(?1, occurred_at) AND occurred_at <= COALESCE(?2, occurred_at)
 ORDER BY
@@ -206,6 +212,8 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, occurredAtStart *in
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -230,7 +238,7 @@ UPDATE glucose_readings SET
     utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = ?
-RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateGlucoseReadingParams struct {
@@ -261,6 +269,8 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

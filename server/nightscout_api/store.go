@@ -133,10 +133,10 @@ func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutil
 
 func withDefaultQuery(query *nsutils.Query) *nsutils.Query {
 	defaults := nsutils.DefaultQuery()
-	if query.SortField == "" {
-		query.SortField = defaults.SortField
+	if query.Sort == nil {
+		query.Sort = defaults.Sort
 	}
-	if query.Limit == 0 {
+	if query.Limit == nil {
 		query.Limit = defaults.Limit
 	}
 	return query

@@ -11,7 +11,7 @@ import (
 
 const allCarbs = `-- name: AllCarbs :many
 
-SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
+SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
 `
 
 // ------
@@ -36,6 +36,8 @@ func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -63,7 +65,7 @@ INSERT INTO carbs (
     created_by_identity_name,
     created_by_identity_id)
 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateCarbParams struct {
@@ -102,6 +104,8 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) (*Carb, 
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -109,7 +113,7 @@ func (q *Queries) CreateCarb(ctx context.Context, arg CreateCarbParams) (*Carb, 
 }
 
 const getCarb = `-- name: GetCarb :one
-SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM carbs WHERE id = ?
+SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM carbs WHERE id = ?
 `
 
 func (q *Queries) GetCarb(ctx context.Context, id string) (*Carb, error) {
@@ -125,6 +129,8 @@ func (q *Queries) GetCarb(ctx context.Context, id string) (*Carb, error) {
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -139,7 +145,7 @@ UPDATE carbs SET
     utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = ?
-RETURNING id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateCarbParams struct {
@@ -170,6 +176,8 @@ func (q *Queries) UpdateCarb(ctx context.Context, arg UpdateCarbParams) (*Carb, 
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

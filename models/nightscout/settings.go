@@ -4,9 +4,9 @@ import "encoding/json"
 
 type Setting struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
-	Type       *SanitizedString  `json:"type,omitempty"`
+	Type       *ShortString      `json:"type,omitempty"`
 
-	Value *SanitizedString `json:"value,omitempty"`
+	Value *ShortString `json:"value,omitempty"`
 
 	// Date Fields
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`

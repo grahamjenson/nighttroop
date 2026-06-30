@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
@@ -31,7 +32,7 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		query, _ := nsutils.ParseV3(r.URL.Query())
 
-		nsutils.WriteRecordV3(w, record, query.Fields)
+		nsutils.WriteRecordV3(w, record, query.Fields.ToArray())
 
 	}
 }
@@ -56,7 +57,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 			return
 		}
-		nsutils.WriteRecordsV3(w, records, query.Fields)
+		nsutils.WriteRecordsV3(w, records, query.Fields.ToArray())
 
 	}
 }
@@ -228,13 +229,14 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteError(w, err)
 			return
 		}
+
 		since, errr := strconv.ParseInt(chi.URLParam(r, "since"), 10, 64)
 		if errr != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
 
-		query.Filters = append(query.Filters, nsutils.Filter{Field: "srvModified", Op: "gte", Value: strconv.FormatInt(since, 10)})
+		query.UpdatedGTE = ptr(nightscout.DateInt(since))
 
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
@@ -242,6 +244,6 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		nsutils.WriteRecordsV3(w, records, query.Fields)
+		nsutils.WriteRecordsV3(w, records, query.Fields.ToArray())
 	}
 }

@@ -7,9 +7,9 @@ import (
 type Activity struct {
 	Identifier *IdentifierString `json:"identifier"`
 
-	Name *SanitizedString `json:"name,omitempty"` // Name of the activity
+	Name *ShortString `json:"name,omitempty"` // Name of the activity
 
-	ActivityType *SanitizedString `json:"activityType,omitempty"` // Type of activity
+	ActivityType *ShortString     `json:"activityType,omitempty"` // Type of activity
 	Duration     *FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
 	Steps        *FlexibleInt64   `json:"steps,omitempty"`        // Step count
 	Calories     *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
@@ -20,6 +20,11 @@ type Activity struct {
 	CreatedAt   *DateString `json:"created_at,omitempty"` // ISO 8601 string
 	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
 	SrvModified *DateInt    `json:"srvModified,omitempty"`
+
+	// Default String Fields
+	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
 	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
 
@@ -15,15 +16,18 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		query := nsutils.ParseV1(r.URL.Query(), collection.DefaultDateField())
-
+		query, err := nsutils.ParseV1(r.URL.Query())
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 		identifier_or_type := chi.URLParam(r, "identifier_or_type")
 		if identifier_or_type != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
 			if collection.IsTypeString(identifier_or_type) {
-				query.Filters = append(query.Filters, nsutils.Filter{Field: "type", Op: "eq", Value: identifier_or_type})
+				query.TypeEq = ptr(nightscout.ShortString(identifier_or_type))
 			} else {
-				query.Filters = append(query.Filters, nsutils.Filter{Field: "_id", Op: "eq", Value: identifier_or_type})
+				query.IDEq = ptr(nightscout.ShortString(identifier_or_type))
 			}
 		}
 
@@ -32,7 +36,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteError(w, err)
 			return
 		}
-		nsutils.WriteRecordsV1(w, records, query.Fields)
+		nsutils.WriteRecordsV1(w, records, query.Fields.ToArray())
 	}
 }
 
@@ -92,18 +96,21 @@ func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
-		query := nsutils.ParseV1(r.URL.Query(), collection.DefaultDateField())
+		query, err := nsutils.ParseV1(r.URL.Query())
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 		// Force limit 1 and sort decending by date
-		query.Limit = 1
-		query.SortField = collection.DefaultDateField()
-		query.SortDesc = true
+		query.Limit = ptr(nightscout.FlexibleInt64(1))
+		query.SortDesc = ptr(nightscout.FlexibleBool(true))
 
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		nsutils.WriteRecordsV1(w, records, query.Fields)
+		nsutils.WriteRecordsV1(w, records, query.Fields.ToArray())
 	}
 
 }

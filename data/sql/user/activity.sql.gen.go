@@ -11,7 +11,7 @@ import (
 
 const allActivities = `-- name: AllActivities :many
 
-SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
+SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
 `
 
 // ------
@@ -41,6 +41,8 @@ func (q *Queries) AllActivities(ctx context.Context) ([]*Activity, error) {
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -73,7 +75,7 @@ INSERT INTO activity (
         created_by_identity_id,
         created_by_identity_name
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateActivityParams struct {
@@ -127,6 +129,8 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -134,7 +138,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 }
 
 const getActivity = `-- name: GetActivity :one
-SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM activity WHERE id = ?
+SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM activity WHERE id = ?
 `
 
 func (q *Queries) GetActivity(ctx context.Context, id string) (*Activity, error) {
@@ -155,6 +159,8 @@ func (q *Queries) GetActivity(ctx context.Context, id string) (*Activity, error)
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

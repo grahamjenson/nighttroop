@@ -4,7 +4,7 @@ import "encoding/json"
 
 type DeviceStatus struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
-	Device     *SanitizedString  `json:"device,omitempty"`
+	Device     *ShortString      `json:"device,omitempty"`
 
 	// Uploader status
 	Uploader *UploaderStatus `json:"uploader,omitempty"`
@@ -25,6 +25,10 @@ type DeviceStatus struct {
 	CreatedAt   *DateString `json:"created_at,omitempty"`
 	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
 	SrvModified *DateInt    `json:"srvModified,omitempty"`
+
+	// Default String Fields
+	App     *ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
 	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
@@ -70,14 +74,14 @@ type UploaderStatus struct {
 	Battery        *FlexibleFloat64 `json:"battery,omitempty"`
 	BatteryVoltage *FlexibleFloat64 `json:"batteryVoltage,omitempty"`
 
-	Name      *SanitizedString `json:"name,omitempty"`
-	Timestamp *DateString      `json:"timestamp,omitempty"`
+	Name      *ShortString `json:"name,omitempty"`
+	Timestamp *DateString  `json:"timestamp,omitempty"`
 }
 
 type LoopStatus struct {
-	Timestamp *DateString      `json:"timestamp,omitempty"`
-	Name      *SanitizedString `json:"name,omitempty"`
-	Version   *SanitizedString `json:"version,omitempty"`
+	Timestamp *DateString  `json:"timestamp,omitempty"`
+	Name      *ShortString `json:"name,omitempty"`
+	Version   *ShortString `json:"version,omitempty"`
 
 	IOB *IOBStatus `json:"iob,omitempty"`
 	COB *COBStatus `json:"cob,omitempty"`
@@ -91,7 +95,7 @@ type LoopStatus struct {
 
 	RecommendedBolus *FlexibleFloat64 `json:"recommendedBolus,omitempty"`
 
-	FailureReason *SanitizedString `json:"failureReason,omitempty"`
+	FailureReason *ShortString `json:"failureReason,omitempty"`
 }
 
 type PumpStatus struct {
@@ -103,12 +107,12 @@ type PumpStatus struct {
 
 	Extended map[string]any `json:"extended,omitempty"`
 
-	Bolusing       *FlexibleBool    `json:"bolusing,omitempty"`
-	Suspended      *FlexibleBool    `json:"suspended,omitempty"`
-	Manufacturer   *SanitizedString `json:"manufacturer,omitempty"`
-	Model          *SanitizedString `json:"model,omitempty"`
-	PumpID         *SanitizedString `json:"pumpID,omitempty"`
-	SecondsFromGMT *FlexibleInt64   `json:"secondsFromGMT,omitempty"`
+	Bolusing       *FlexibleBool  `json:"bolusing,omitempty"`
+	Suspended      *FlexibleBool  `json:"suspended,omitempty"`
+	Manufacturer   *ShortString   `json:"manufacturer,omitempty"`
+	Model          *ShortString   `json:"model,omitempty"`
+	PumpID         *ShortString   `json:"pumpID,omitempty"`
+	SecondsFromGMT *FlexibleInt64 `json:"secondsFromGMT,omitempty"`
 }
 
 type IOBStatus struct {

@@ -11,7 +11,7 @@ import (
 
 const allFoods = `-- name: AllFoods :many
 
-SELECT id, name, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM food ORDER BY created_at DESC
+SELECT id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM food ORDER BY created_at DESC
 `
 
 // ------
@@ -29,12 +29,15 @@ func (q *Queries) AllFoods(ctx context.Context) ([]*Food, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Category,
 			&i.Carbs,
 			&i.Calories,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -55,18 +58,20 @@ const createFood = `-- name: CreateFood :one
 INSERT INTO food (
         id,
         name,
+        category,
         carbs,
         calories,
         raw_json_data, 
         created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?,  ?, ?, ?, ?, ?, ?)
-RETURNING id, name, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+) VALUES ( ?,  ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateFoodParams struct {
 	ID                    string
 	Name                  string
+	Category              string
 	Carbs                 *float64
 	Calories              *float64
 	RawJsonData           *string
@@ -81,6 +86,7 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, 
 	row := q.queryRow(ctx, q.createFoodStmt, createFood,
 		arg.ID,
 		arg.Name,
+		arg.Category,
 		arg.Carbs,
 		arg.Calories,
 		arg.RawJsonData,
@@ -91,12 +97,15 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Category,
 		&i.Carbs,
 		&i.Calories,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -104,7 +113,7 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, 
 }
 
 const getFood = `-- name: GetFood :one
-SELECT id, name, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM food WHERE id = ?
+SELECT id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM food WHERE id = ?
 `
 
 func (q *Queries) GetFood(ctx context.Context, id string) (*Food, error) {
@@ -113,12 +122,15 @@ func (q *Queries) GetFood(ctx context.Context, id string) (*Food, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Category,
 		&i.Carbs,
 		&i.Calories,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

@@ -74,6 +74,16 @@ func (m *Activity) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Activity) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Activity) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Activity) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
@@ -129,6 +139,16 @@ func (m *Bolus) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Bolus) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Bolus) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Bolus) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
@@ -182,6 +202,16 @@ func (m *Carb) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *Carb) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Carb) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Carb) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -279,6 +309,16 @@ func (m *DeviceStatus) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *DeviceStatus) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *DeviceStatus) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *DeviceStatus) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
@@ -324,6 +364,11 @@ func (m *Food) GetName() string {
 	return m.Name
 }
 
+// GetCategory returns the Category value.
+func (m *Food) GetCategory() string {
+	return m.Category
+}
+
 // GetCarbs returns the Carbs value.
 func (m *Food) GetCarbs() *float64 {
 	return m.Carbs
@@ -352,6 +397,16 @@ func (m *Food) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *Food) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Food) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Food) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -407,6 +462,16 @@ func (m *GlucoseReading) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *GlucoseReading) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *GlucoseReading) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *GlucoseReading) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -507,6 +572,16 @@ func (m *Note) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *Note) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Note) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Note) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -614,6 +689,16 @@ func (m *Profile) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Profile) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Profile) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Profile) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
@@ -704,6 +789,16 @@ func (m *TempBasal) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *TempBasal) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *TempBasal) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *TempBasal) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
@@ -762,6 +857,16 @@ func (m *TempTarget) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *TempTarget) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *TempTarget) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *TempTarget) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.

@@ -18,23 +18,34 @@ type Treatment struct {
 	Glucose     *FlexibleFloat64 `json:"glucose"`
 	GlucoseType *GlucoseType     `json:"glucoseType"` // "Sensor" or "Finger"
 
-	Carbs   *FlexibleFloat64 `json:"carbs"`
-	Insulin *FlexibleFloat64 `json:"insulin"`
+	Carbs    *FlexibleFloat64 `json:"carbs"`
+	Insulin  *FlexibleFloat64 `json:"insulin"`
+	Protein  *FlexibleFloat64 `json:"protein"`
+	Fat      *FlexibleFloat64 `json:"fat"`
+	PreBolus *FlexibleFloat64 `json:"preBolus"`
+
+	SplitNow *FlexibleFloat64 `json:"splitNow"`
+	SplitExt *FlexibleFloat64 `json:"splitExt"`
 
 	Duration *FlexibleInt64 `json:"duration"` // minutes
 
 	Notes     *SanitizedString `json:"notes"`
-	EnteredBy *SanitizedString `json:"enteredBy"`
+	EnteredBy *ShortString     `json:"enteredBy"`
 
 	// Treatment-specific fields
-	Profile      *SanitizedString `json:"profile"`
+	Profile      *ShortString     `json:"profile"`
 	Percentage   *FlexibleFloat64 `json:"percentage"`
 	Rate         *FlexibleFloat64 `json:"rate"`
 	Absolute     *FlexibleFloat64 `json:"absolute"`
-	Reason       *SanitizedString `json:"reason"`
+	Reason       *ShortString     `json:"reason"`
 	TargetTop    *FlexibleFloat64 `json:"targetTop"`
 	TargetBottom *FlexibleFloat64 `json:"targetBottom"`
 	Units        *Units           `json:"units,omitempty"`
+
+	// Default String Fields
+	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Fields
 	CreatedAt        *DateString    `json:"created_at"`     // ISO8601 -> time.Time
@@ -96,15 +107,29 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 type TreatmentEventType string
 
 const (
-	CorrectionBolus TreatmentEventType = "Correction Bolus"
-	ComboBolus      TreatmentEventType = "Combo Bolus"
-	TemporaryTarget TreatmentEventType = "Temporary Target"
-	MealBolus       TreatmentEventType = "Meal Bolus"
-	TempBasal       TreatmentEventType = "Temp Basal"
-	Note            TreatmentEventType = "Note"
-	ProfileSwitch   TreatmentEventType = "Profile Switch"
-	CarbCorrection  TreatmentEventType = "Carb Correction"
-	Unknown         TreatmentEventType = "Unknown"
+	Announcement      TreatmentEventType = "Announcement"
+	BGCheck           TreatmentEventType = "BG Check"
+	SnackBolus        TreatmentEventType = "Snack Bolus"
+	CorrectionBolus   TreatmentEventType = "Correction Bolus"
+	ComboBolus        TreatmentEventType = "Combo Bolus"
+	TemporaryTarget   TreatmentEventType = "Temporary Target"
+	MealBolus         TreatmentEventType = "Meal Bolus"
+	TempBasal         TreatmentEventType = "Temp Basal"
+	Note              TreatmentEventType = "Note"
+	Exercise          TreatmentEventType = "Exercise"
+	SiteChange        TreatmentEventType = "Site Change"
+	SensorStart       TreatmentEventType = "Sensor Start"
+	SensorChange      TreatmentEventType = "Sensor Change"
+	InsulinChange     TreatmentEventType = "Insulin Change"
+	PumpBatteryChange TreatmentEventType = "Pump Battery Change"
+	Question          TreatmentEventType = "Question"
+	ProfileSwitch     TreatmentEventType = "Profile Switch"
+	CarbCorrection    TreatmentEventType = "Carb Correction"
+	DADAlert          TreatmentEventType = "D.A.D. Alert"
+	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
+	BolusWizard       TreatmentEventType = "Bolus Wizard"
+	//
+	Unknown TreatmentEventType = "Unknown"
 )
 
 func (t TreatmentEventType) ToLocalTypeString() string {
@@ -125,6 +150,32 @@ func (t TreatmentEventType) ToLocalTypeString() string {
 		return "profile_switch"
 	case CarbCorrection:
 		return "carb_correction"
+	case DADAlert:
+		return "dad_alert"
+	case OpenAPSOffline:
+		return "openaps_offline"
+	case BolusWizard:
+		return "bolus_wizard"
+	case Announcement:
+		return "announcement"
+	case BGCheck:
+		return "bg_check"
+	case SnackBolus:
+		return "snack_bolus"
+	case Exercise:
+		return "exercise"
+	case SiteChange:
+		return "site_change"
+	case SensorStart:
+		return "sensor_start"
+	case SensorChange:
+		return "sensor_change"
+	case InsulinChange:
+		return "insulin_change"
+	case PumpBatteryChange:
+		return "pump_battery_change"
+	case Question:
+		return "question"
 	default:
 		return "unknown"
 	}

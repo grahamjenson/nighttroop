@@ -8,9 +8,14 @@ import (
 )
 
 type Profile struct {
-	Identifier     *IdentifierString          `json:"identifier,omitempty"`
-	DefaultProfile *SanitizedString           `json:"defaultProfile,omitempty"`
-	Store          map[string]ProfileSettings `json:"store,omitempty"`
+	Identifier     *IdentifierString               `json:"identifier,omitempty"`
+	DefaultProfile *ShortString                    `json:"defaultProfile,omitempty"`
+	Store          map[ShortString]ProfileSettings `json:"store,omitempty"`
+
+	// Default String Fields
+	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Feilds
 	StartDate   *DateString `json:"startDate,omitempty"`

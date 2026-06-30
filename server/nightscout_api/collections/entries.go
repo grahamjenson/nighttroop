@@ -50,7 +50,6 @@ func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.Us
 }
 
 func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-
 	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReading(ctx, identifier)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
@@ -67,8 +66,7 @@ func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserC
 }
 
 func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-
-	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit))
+	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit.Int64()))
 	if err != nil {
 		slog.Error("failed to query glucose readings from database", "error", err)
 		return nil, nsutils.ErrInternal

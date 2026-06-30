@@ -143,6 +143,7 @@ func FoodToCreate(source Food) CreateFoodParams {
 	var userCreateFoodParams CreateFoodParams
 	userCreateFoodParams.ID = source.ID
 	userCreateFoodParams.Name = source.Name
+	userCreateFoodParams.Category = source.Category
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		userCreateFoodParams.Carbs = &xfloat64

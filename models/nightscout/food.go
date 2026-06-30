@@ -8,18 +8,30 @@ import (
 type Food struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
 
-	Name        *SanitizedString `json:"name,omitempty"`
-	Category    *SanitizedString `json:"category,omitempty"`
-	Subcategory *SanitizedString `json:"subcategory,omitempty"`
+	Name        *ShortString `json:"name,omitempty"`
+	Food        *ShortString `json:"food,omitempty"`
+	Category    *ShortString `json:"category,omitempty"`
+	Subcategory *ShortString `json:"subcategory,omitempty"`
 
 	Portion *FlexibleFloat64 `json:"portion,omitempty"`
 	Unit    *FoodUnit        `json:"unit,omitempty"`
 
-	Carbs   *FlexibleFloat64 `json:"carbs,omitempty"`
-	Fat     *FlexibleFloat64 `json:"fat,omitempty"`
-	Protein *FlexibleFloat64 `json:"protein,omitempty"`
-	Energy  *FlexibleFloat64 `json:"energy,omitempty"`
-	GI      *FlexibleFloat64 `json:"gi,omitempty"`
+	Carbs    *FlexibleFloat64 `json:"carbs,omitempty"`
+	Fat      *FlexibleFloat64 `json:"fat,omitempty"`
+	Protein  *FlexibleFloat64 `json:"protein,omitempty"`
+	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
+	GI       *FlexibleFloat64 `json:"gi,omitempty"`
+	Portions FlexibleFloat64  `json:"portions,omitempty"`
+
+	// QuickPick
+	HideAfterUse *FlexibleBool  `json:"hideafteruse,omitempty"`
+	Hidden       *FlexibleBool  `json:"hidden,omitempty"`
+	Position     *FlexibleInt64 `json:"position,omitempty"`
+
+	// Default String Fields
+	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// API v3 additions
 	SrvCreated  *DateInt `json:"srvCreated,omitempty"`

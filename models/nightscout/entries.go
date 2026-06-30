@@ -28,8 +28,6 @@ type Entry struct {
 	Trend     *FlexibleFloat64 `json:"trend,omitempty"`
 	Units     *Units           `json:"units,omitempty"`
 
-	Device *string `json:"device,omitempty"`
-
 	Filtered   *FlexibleFloat64 `json:"filtered,omitempty"`
 	Unfiltered *FlexibleFloat64 `json:"unfiltered,omitempty"`
 	RSSI       *FlexibleFloat64 `json:"rssi,omitempty"`
@@ -43,6 +41,11 @@ type Entry struct {
 	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
 	SrvCreated       *DateInt       `json:"srvCreated,omitempty"`
 	SrvModified      *DateInt       `json:"srvModified,omitempty"`
+
+	// Default String Fields
+	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
 	Value       *FlexibleFloat64 `json:"-"`

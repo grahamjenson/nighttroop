@@ -35,6 +35,7 @@ type MapConverter interface {
 	ActivityToCreate(source Activity, ctx CreateContext) user.CreateActivityParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Device App Subject
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ID Identifier
 	// goverter:map Type ActivityType
@@ -60,6 +61,7 @@ type MapConverter interface {
 	DeviceStatusToCreate(source DeviceStatus, ctx CreateContext) user.CreateDeviceStatusParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Device App Subject
 	// goverter:ignore Uploader Loop Pump OpenAPS
 	// goverter:map ID Identifier
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
@@ -88,6 +90,7 @@ type MapConverter interface {
 	EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Device App Subject
 	// goverter:ignore Direction Trend Units Filtered Unfiltered RSSI Noise SysTime
 	// goverter:map ID Identifier
 	// goverter:map . SGV | SGVGlucoseReadingTypeToValue
@@ -113,6 +116,7 @@ type MapConverter interface {
 	FoodToCreate(source Food, ctx CreateContext) user.CreateFoodParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Device App Subject Food Portions HideAfterUse Hidden Position
 	// goverter:ignore Category Subcategory Portion Unit Fat Protein Energy GI Date
 	// goverter:map ID Identifier
 	// goverter:map CreatedAt SrvCreated
@@ -133,6 +137,7 @@ type MapConverter interface {
 	ProfileToCreate(source Profile, ctx CreateContext) user.CreateProfileParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Device App Subject
 	// goverter:ignore DefaultProfile Store
 	// goverter:map ID Identifier
 	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
@@ -167,7 +172,7 @@ type MapConverter interface {
 	TreatmentToUpdateBolus(source Treatment) user.UpdateBolusParams
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Carbs Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:ignore Glucose GlucoseType Carbs Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
 	// goverter:map ID Identifier
 	// goverter:map Value Insulin
 	// goverter:map CreatedByIdentityName EnteredBy
@@ -199,7 +204,7 @@ type MapConverter interface {
 	TreatmentToUpdateCarbs(source Treatment) user.UpdateCarbParams
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Insulin Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:ignore Glucose GlucoseType Insulin Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
 	// goverter:map ID Identifier
 	// goverter:map Amount Carbs
 	// goverter:map CreatedByIdentityName EnteredBy
@@ -232,7 +237,7 @@ type MapConverter interface {
 	TreatmentToUpdateTempBasal(source Treatment) user.UpdateTempBasalParams
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Insulin Carbs Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:ignore Glucose GlucoseType Insulin Carbs Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
 	// goverter:map ID Identifier
 	// goverter:map Value Rate
 	// goverter:map Value Absolute

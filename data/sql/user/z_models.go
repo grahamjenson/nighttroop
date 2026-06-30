@@ -23,6 +23,8 @@ type Activity struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -37,6 +39,8 @@ type Bolus struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -51,6 +55,8 @@ type Carb struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -73,6 +79,8 @@ type DeviceStatus struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -88,12 +96,15 @@ type Event struct {
 type Food struct {
 	ID                    string
 	Name                  string
+	Category              string
 	Carbs                 *float64
 	Calories              *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -108,6 +119,8 @@ type GlucoseReading struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -134,6 +147,8 @@ type Note struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -158,6 +173,8 @@ type Profile struct {
 	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
+	UpdatedByIdentityID      *int64
+	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
 	CreatedByIdentityID      int64
 }
@@ -185,6 +202,8 @@ type TempBasal struct {
 	UtcOffsetMinutes      *int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -200,6 +219,8 @@ type TempTarget struct {
 	UtcOffsetMinutes      *int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }

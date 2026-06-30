@@ -69,6 +69,8 @@ CREATE TABLE device_status (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
 );
@@ -87,6 +89,8 @@ CREATE TABLE glucose_readings (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
@@ -106,6 +110,8 @@ CREATE TABLE bolus (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
@@ -124,6 +130,8 @@ CREATE TABLE carbs (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
@@ -142,6 +150,8 @@ CREATE TABLE temp_basals (
     utc_offset_minutes INTEGER DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 
@@ -161,6 +171,8 @@ CREATE TABLE temp_targets (
     utc_offset_minutes INTEGER DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
@@ -194,6 +206,8 @@ CREATE TABLE profile (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
@@ -221,14 +235,18 @@ CREATE TABLE activity (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+    
 );
 
 CREATE TABLE food (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
+    category TEXT NOT NULL CHECK(length(category) <= 32) DEFAULT 'meal',
     carbs REAL,
     calories REAL,
 
@@ -237,6 +255,8 @@ CREATE TABLE food (
     deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );
@@ -252,6 +272,8 @@ CREATE TABLE note (
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
 );

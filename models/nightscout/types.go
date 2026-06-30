@@ -201,6 +201,10 @@ func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
 	return &dateInt, &offset
 }
 
+func (d *DateString) String() string {
+	return string(*d)
+}
+
 func DateStringNow() (*DateString, time.Time) {
 	now := time.Now().UTC()
 	return ptr(DateStringFromTime(now)), now
@@ -261,7 +265,13 @@ func (d *DateInt) UnmarshalJSON(data []byte) error {
 		var err error
 		mills, err = strconv.ParseInt(val, 10, 64)
 		if err != nil {
-			return fmt.Errorf("invalid date int value %q: %w", val, err)
+			// Try Parsing as a DateString and then converting to DateInt
+
+			t, err := stringToTime(val)
+			if err != nil {
+				return fmt.Errorf("invalid date int %q: %w", val, err)
+			}
+			mills = t.UnixMilli()
 		}
 	default:
 		return fmt.Errorf("expected number or string for date int, got %T", v)
@@ -276,6 +286,10 @@ func DateIntFromTime(t time.Time) DateInt {
 }
 func (d DateInt) Time() time.Time {
 	return time.UnixMilli(int64(d))
+}
+
+func (d DateInt) TimeString() string {
+	return time.UnixMilli(int64(d)).Format(time.RFC3339Nano)
 }
 
 func (d DateInt) Int64() int64 {
@@ -362,9 +376,27 @@ func (u *Units) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-/////
+// ///
 // Notes
-/////
+// ///
+
+type ShortString string
+
+func (s *ShortString) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return fmt.Errorf("expected short string, got %s", data)
+	}
+	if len(str) > 64 {
+		str = str[:64]
+	}
+	*s = ShortString(str)
+	return nil
+}
+
+func (s *ShortString) String() string {
+	return string(*s)
+}
 
 type SanitizedString string
 

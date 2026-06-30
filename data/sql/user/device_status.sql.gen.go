@@ -11,7 +11,7 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-SELECT id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
+SELECT id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
 `
 
 // ------
@@ -44,6 +44,8 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -80,7 +82,7 @@ INSERT INTO device_status (
     created_by_identity_name,
     created_by_identity_id
 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateDeviceStatusParams struct {
@@ -143,6 +145,8 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -150,7 +154,7 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 }
 
 const getDeviceStatus = `-- name: GetDeviceStatus :one
-SELECT id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
+SELECT id, battery_level, charging_state, pump_battery, pump_status, pump_reservoir, pump_insertion_time, loop_status, loop_timestamp, cgm_status, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
 `
 
 func (q *Queries) GetDeviceStatus(ctx context.Context, id string) (*DeviceStatus, error) {
@@ -174,6 +178,8 @@ func (q *Queries) GetDeviceStatus(ctx context.Context, id string) (*DeviceStatus
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

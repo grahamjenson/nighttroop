@@ -11,7 +11,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY start DESC
+SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY start DESC
 `
 
 // ------
@@ -36,6 +36,8 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 			&i.UtcOffsetMinutes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
 			&i.CreatedByIdentityID,
 		); err != nil {
@@ -65,7 +67,7 @@ INSERT INTO temp_basals (
         created_by_identity_name
     )
 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateTempBasalParams struct {
@@ -104,6 +106,8 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -111,7 +115,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasal = `-- name: GetTempBasal :one
-SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
+SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
 `
 
 func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, error) {
@@ -127,6 +131,8 @@ func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, erro
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)
@@ -142,7 +148,7 @@ UPDATE temp_basals SET
     utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = ?
-RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_identity_name, created_by_identity_id
+RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateTempBasalParams struct {
@@ -175,6 +181,8 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 		&i.CreatedByIdentityID,
 	)

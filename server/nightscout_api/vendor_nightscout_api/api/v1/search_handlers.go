@@ -6,8 +6,13 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
 )
+
+func ptr[T any](v T) *T {
+	return &v
+}
 
 func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -16,8 +21,11 @@ func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		query := nsutils.ParseV1(r.URL.Query(), collection.DefaultDateField())
-
+		query, err := nsutils.ParseV1(r.URL.Query())
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -36,16 +44,21 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		q := nsutils.ParseV1(r.URL.Query(), collection.DefaultDateField())
-		q.StripImplicitDateFilters()
-		searchQuery := q
-		searchQuery.Limit = 1000
-		records, err := dep.Store.Search(r.Context(), collection, searchQuery)
+		q, err := nsutils.ParseV1(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		filtered := nsutils.Slice(records, chi.URLParam(r, "field"), chi.URLParam(r, "type"), chi.URLParam(r, "prefix"), q.Limit)
+
+		q.StripImplicitDateFilters()
+
+		q.Limit = ptr(nightscout.FlexibleInt64(1000))
+		records, err := dep.Store.Search(r.Context(), collection, q)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+		filtered := nsutils.Slice(records, chi.URLParam(r, "field"), chi.URLParam(r, "type"), chi.URLParam(r, "prefix"), q.Limit.Int())
 		nsutils.WriteRecordsV1(w, filtered, nil)
 	}
 }
@@ -57,16 +70,20 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		q := nsutils.ParseV1(r.URL.Query(), "date")
+		q, err := nsutils.ParseV1(r.URL.Query())
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 		q.StripImplicitDateFilters()
 		searchQuery := q
-		searchQuery.Limit = 1000
+		q.Limit = ptr(nightscout.FlexibleInt64(1000))
 		records, err := dep.Store.Search(r.Context(), "entries", searchQuery)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		filtered, _ := nsutils.Times(records, prefix, expr, q.Limit)
+		filtered, _ := nsutils.Times(records, prefix, expr, q.Limit.Int())
 		nsutils.WriteRecordsV1(w, filtered, nil)
 	}
 
