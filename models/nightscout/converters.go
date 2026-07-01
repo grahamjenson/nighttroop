@@ -80,7 +80,6 @@ type MapConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
 	// goverter:map BatteryPercentage UploaderBattery
-	// goverter:map CreatedByIdentityName Device
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus
@@ -115,7 +114,6 @@ type MapConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map . SGV | SGVGlucoseReadingTypeToValue
 	// goverter:map . MBG | MBGGlucoseReadingTypeToValue
-	// goverter:map CreatedByIdentityName Device
 	// goverter:map OccurredAt Date
 	// goverter:map OccurredAt Mills
 	// goverter:map CreatedAt SrvCreated

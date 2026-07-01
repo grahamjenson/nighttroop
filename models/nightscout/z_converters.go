@@ -168,7 +168,7 @@ func DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus {
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
 		nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
-		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
+		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
 		nightscoutDeviceStatus.Device = &pNightscoutShortString
 		if (*source).BatteryPercentage != nil {
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).BatteryPercentage)
@@ -217,7 +217,7 @@ func DBModelToEntry(source *user.GlucoseReading) Entry {
 		nightscoutEntry.SrvCreated = &pNightscoutDateInt3
 		pNightscoutDateInt4 := DateInt((*source).UpdatedAt)
 		nightscoutEntry.SrvModified = &pNightscoutDateInt4
-		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
+		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
 		nightscoutEntry.Device = &pNightscoutShortString
 		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
 		nightscoutEntry.App = &pNightscoutShortString2
