@@ -14,7 +14,7 @@ import (
 const allIdentities = `-- name: AllIdentities :many
 
 
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, deleted_at, enabled FROM identities ORDER BY created_at DESC
+SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, enabled FROM identities ORDER BY created_at DESC
 `
 
 // ------
@@ -38,6 +38,10 @@ func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 			&i.CreatedAt,
 			&i.LastSeenAt,
 			&i.LastWriteAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
 			&i.DeletedAt,
 			&i.Enabled,
 		); err != nil {
@@ -56,14 +60,23 @@ func (q *Queries) AllIdentities(ctx context.Context) ([]*Identity, error) {
 
 const createIdentity = `-- name: CreateIdentity :exec
 
-INSERT INTO identities (name, password, totp_secret, role) VALUES (?, ?, ?, ?)
+INSERT INTO identities (
+    name,
+    password,
+    totp_secret,
+    role,
+    created_by_identity_id,
+    created_by_identity_name
+) VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateIdentityParams struct {
-	Name       string
-	Password   string
-	TotpSecret string
-	Role       consts.IdentityRole
+	Name                  string
+	Password              string
+	TotpSecret            string
+	Role                  consts.IdentityRole
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
 }
 
 // -----
@@ -75,12 +88,14 @@ func (q *Queries) CreateIdentity(ctx context.Context, arg CreateIdentityParams) 
 		arg.Password,
 		arg.TotpSecret,
 		arg.Role,
+		arg.CreatedByIdentityID,
+		arg.CreatedByIdentityName,
 	)
 	return err
 }
 
 const getIdentity = `-- name: GetIdentity :one
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, deleted_at, enabled FROM identities where name = ? LIMIT 1
+SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, enabled FROM identities where name = ? LIMIT 1
 `
 
 func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, error) {
@@ -95,6 +110,10 @@ func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, erro
 		&i.CreatedAt,
 		&i.LastSeenAt,
 		&i.LastWriteAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
 		&i.DeletedAt,
 		&i.Enabled,
 	)

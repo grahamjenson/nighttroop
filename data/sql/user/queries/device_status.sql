@@ -5,22 +5,25 @@
 -- name: CreateDeviceStatus :one
 INSERT INTO device_status (
     id,
-    battery_level,
+    type,
+    battery_percentage,
     charging_state,
-    pump_battery,
-    pump_status,
+    status,
+    insertion_time,
+    timestamp,
+    iob,
+    cob,
+    basaliob,
+    treatmentiob,
     pump_reservoir,
-    pump_insertion_time,
-    loop_status,
-    loop_timestamp,
-    cgm_status,
-    cgm_insertion_time,
     raw_json_data,
     utc_offset_minutes,
     occurred_at,
+    created_by_app_name,
+    created_by_device_name,
     created_by_identity_name,
     created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

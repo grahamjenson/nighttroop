@@ -84,7 +84,12 @@ func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.Us
 		return nil, nsutils.ErrInternal
 	}
 
-	updateParams := nightscout.EntryToUpdate(*entryModel)
+	updateParams := nightscout.EntryToUpdate(
+		*entryModel,
+		nightscout.UpdateContext{UpdatedByIdentityID: userContext.IdentityModel.ID,
+			UpdatedByIdentityName: userContext.IdentityModel.Name,
+		},
+	)
 	glucoseReading, err := userContext.UserDB.Queries.UpdateGlucoseReading(ctx, updateParams)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound

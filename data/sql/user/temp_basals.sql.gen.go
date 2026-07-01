@@ -11,7 +11,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY start DESC
+SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals ORDER BY start DESC
 `
 
 // ------
@@ -36,6 +36,8 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 			&i.UtcOffsetMinutes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
 			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
@@ -57,17 +59,19 @@ func (q *Queries) AllTempBasals(ctx context.Context) ([]*TempBasal, error) {
 const createTempBasal = `-- name: CreateTempBasal :one
 
 INSERT INTO temp_basals (
-        id,
-        start,
-        utc_offset_minutes,
-        duration_minutes,
-        value,
-        raw_json_data, 
-        created_by_identity_id,
-        created_by_identity_name
+    id,
+    start,
+    utc_offset_minutes,
+    duration_minutes,
+    value,
+    raw_json_data, 
+    created_by_app_name,
+    created_by_device_name, 
+    created_by_identity_id,
+    created_by_identity_name
     )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateTempBasalParams struct {
@@ -77,6 +81,8 @@ type CreateTempBasalParams struct {
 	DurationMinutes       int64
 	Value                 float64
 	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
@@ -92,6 +98,8 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		arg.DurationMinutes,
 		arg.Value,
 		arg.RawJsonData,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
@@ -106,6 +114,8 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
@@ -115,7 +125,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasal = `-- name: GetTempBasal :one
-SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
+SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
 `
 
 func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, error) {
@@ -131,6 +141,8 @@ func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, erro
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
@@ -142,21 +154,25 @@ func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, erro
 const updateTempBasal = `-- name: UpdateTempBasal :one
 
 UPDATE temp_basals SET
-    start = COALESCE(?2, start),
-    duration_minutes = COALESCE(?3, duration_minutes),
-    value = COALESCE(?4, value),
-    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+    start = COALESCE(?4, start),
+    duration_minutes = COALESCE(?5, duration_minutes),
+    value = COALESCE(?6, value),
+    utc_offset_minutes = COALESCE(?7, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = ?,
+    updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+RETURNING id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateTempBasalParams struct {
-	Start            *int64
-	DurationMinutes  *int64
-	Value            *float64
-	UtcOffsetMinutes *int64
-	ID               string
+	Start                 *int64
+	DurationMinutes       *int64
+	Value                 *float64
+	UtcOffsetMinutes      *int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	ID                    string
 }
 
 // ------
@@ -168,6 +184,8 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		arg.DurationMinutes,
 		arg.Value,
 		arg.UtcOffsetMinutes,
+		arg.UpdatedByIdentityID,
+		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
 	var i TempBasal
@@ -181,6 +199,8 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,

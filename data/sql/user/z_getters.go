@@ -74,6 +74,16 @@ func (m *Activity) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *Activity) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *Activity) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m *Activity) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -137,6 +147,16 @@ func (m *Bolus) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *Bolus) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *Bolus) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *Bolus) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -204,6 +224,16 @@ func (m *Carb) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *Carb) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *Carb) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m *Carb) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -229,9 +259,14 @@ func (m *DeviceStatus) GetID() string {
 	return m.ID
 }
 
-// GetBatteryLevel returns the BatteryLevel value.
-func (m *DeviceStatus) GetBatteryLevel() *float64 {
-	return m.BatteryLevel
+// GetType returns the Type value.
+func (m *DeviceStatus) GetType() string {
+	return m.Type
+}
+
+// GetBatteryPercentage returns the BatteryPercentage value.
+func (m *DeviceStatus) GetBatteryPercentage() *float64 {
+	return m.BatteryPercentage
 }
 
 // GetChargingState returns the ChargingState value.
@@ -239,44 +274,44 @@ func (m *DeviceStatus) GetChargingState() *string {
 	return m.ChargingState
 }
 
-// GetPumpBattery returns the PumpBattery value.
-func (m *DeviceStatus) GetPumpBattery() *float64 {
-	return m.PumpBattery
+// GetStatus returns the Status value.
+func (m *DeviceStatus) GetStatus() *string {
+	return m.Status
 }
 
-// GetPumpStatus returns the PumpStatus value.
-func (m *DeviceStatus) GetPumpStatus() *string {
-	return m.PumpStatus
+// GetInsertionTime returns the InsertionTime value.
+func (m *DeviceStatus) GetInsertionTime() *int64 {
+	return m.InsertionTime
+}
+
+// GetTimestamp returns the Timestamp value.
+func (m *DeviceStatus) GetTimestamp() *int64 {
+	return m.Timestamp
+}
+
+// GetIob returns the Iob value.
+func (m *DeviceStatus) GetIob() *float64 {
+	return m.Iob
+}
+
+// GetCob returns the Cob value.
+func (m *DeviceStatus) GetCob() *float64 {
+	return m.Cob
+}
+
+// GetBasaliob returns the Basaliob value.
+func (m *DeviceStatus) GetBasaliob() *float64 {
+	return m.Basaliob
+}
+
+// GetTreatmentiob returns the Treatmentiob value.
+func (m *DeviceStatus) GetTreatmentiob() *float64 {
+	return m.Treatmentiob
 }
 
 // GetPumpReservoir returns the PumpReservoir value.
 func (m *DeviceStatus) GetPumpReservoir() *float64 {
 	return m.PumpReservoir
-}
-
-// GetPumpInsertionTime returns the PumpInsertionTime value.
-func (m *DeviceStatus) GetPumpInsertionTime() *int64 {
-	return m.PumpInsertionTime
-}
-
-// GetLoopStatus returns the LoopStatus value.
-func (m *DeviceStatus) GetLoopStatus() *string {
-	return m.LoopStatus
-}
-
-// GetLoopTimestamp returns the LoopTimestamp value.
-func (m *DeviceStatus) GetLoopTimestamp() *int64 {
-	return m.LoopTimestamp
-}
-
-// GetCgmStatus returns the CgmStatus value.
-func (m *DeviceStatus) GetCgmStatus() *string {
-	return m.CgmStatus
-}
-
-// GetCgmInsertionTime returns the CgmInsertionTime value.
-func (m *DeviceStatus) GetCgmInsertionTime() *int64 {
-	return m.CgmInsertionTime
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -317,6 +352,16 @@ func (m *DeviceStatus) GetUpdatedByIdentityID() *int64 {
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *DeviceStatus) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *DeviceStatus) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *DeviceStatus) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -399,6 +444,16 @@ func (m *Food) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *Food) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *Food) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m *Food) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -464,6 +519,16 @@ func (m *GlucoseReading) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *GlucoseReading) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *GlucoseReading) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m *GlucoseReading) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -524,6 +589,26 @@ func (m *Identity) GetLastWriteAt() *int64 {
 	return m.LastWriteAt
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Identity) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Identity) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m *Identity) GetCreatedByIdentityID() int64 {
+	return m.CreatedByIdentityID
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *Identity) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m *Identity) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -572,6 +657,16 @@ func (m *Note) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *Note) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *Note) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *Note) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -689,6 +784,16 @@ func (m *Profile) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *Profile) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *Profile) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m *Profile) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -789,6 +894,16 @@ func (m *TempBasal) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *TempBasal) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *TempBasal) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m *TempBasal) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -857,6 +972,16 @@ func (m *TempTarget) GetCreatedAt() int64 {
 // GetUpdatedAt returns the UpdatedAt value.
 func (m *TempTarget) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *TempTarget) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *TempTarget) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.

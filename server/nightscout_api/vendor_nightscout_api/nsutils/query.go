@@ -225,6 +225,9 @@ var forwardLookupName = map[string][]string{
 
 	"nameeq": {"name", "find[name]", "find[name][$eq]",
 		"defaultProfile", "find[defaultProfile]", "find[defaultProfile][$eq]",
+		"device", "find[device]", "find[device][$eq]",
+		"app", "find[app]", "find[app][$eq]",
+		"subject", "find[subject]", "find[subject][$eq]",
 	},
 }
 

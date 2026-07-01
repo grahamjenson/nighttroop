@@ -11,7 +11,7 @@ import (
 
 const allFoods = `-- name: AllFoods :many
 
-SELECT id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM food ORDER BY created_at DESC
+SELECT id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM food ORDER BY created_at DESC
 `
 
 // ------
@@ -36,6 +36,8 @@ func (q *Queries) AllFoods(ctx context.Context) ([]*Food, error) {
 			&i.DeletedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
 			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
@@ -56,16 +58,18 @@ func (q *Queries) AllFoods(ctx context.Context) ([]*Food, error) {
 
 const createFood = `-- name: CreateFood :one
 INSERT INTO food (
-        id,
-        name,
-        category,
-        carbs,
-        calories,
-        raw_json_data, 
-        created_by_identity_id,
-        created_by_identity_name
-) VALUES ( ?,  ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+    id,
+    name,
+    category,
+    carbs,
+    calories,
+    raw_json_data,
+    created_by_app_name,
+    created_by_device_name, 
+    created_by_identity_id,
+    created_by_identity_name
+) VALUES ( ?,  ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateFoodParams struct {
@@ -75,6 +79,8 @@ type CreateFoodParams struct {
 	Carbs                 *float64
 	Calories              *float64
 	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
@@ -90,6 +96,8 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, 
 		arg.Carbs,
 		arg.Calories,
 		arg.RawJsonData,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
@@ -104,6 +112,8 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, 
 		&i.DeletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
@@ -113,7 +123,7 @@ func (q *Queries) CreateFood(ctx context.Context, arg CreateFoodParams) (*Food, 
 }
 
 const getFood = `-- name: GetFood :one
-SELECT id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM food WHERE id = ?
+SELECT id, name, category, carbs, calories, raw_json_data, deleted_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM food WHERE id = ?
 `
 
 func (q *Queries) GetFood(ctx context.Context, id string) (*Food, error) {
@@ -129,6 +139,8 @@ func (q *Queries) GetFood(ctx context.Context, id string) (*Food, error) {
 		&i.DeletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,

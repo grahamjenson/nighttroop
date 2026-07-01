@@ -3,7 +3,14 @@
 --------
 
 -- name: CreateIdentity :exec
-INSERT INTO identities (name, password, totp_secret, role) VALUES (?, ?, ?, ?);
+INSERT INTO identities (
+    name,
+    password,
+    totp_secret,
+    role,
+    created_by_identity_id,
+    created_by_identity_name
+) VALUES (?, ?, ?, ?, ?, ?);
 
 
 --------

@@ -45,6 +45,12 @@ func ActivityToCreate(source Activity, context CreateContext) user.CreateActivit
 	}
 	pString := source.RawJsonData
 	userCreateActivityParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateActivityParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateActivityParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	return userCreateActivityParams
 }
 func BolusDBModelToTreatment(source *user.Bolus) Treatment {
@@ -139,6 +145,12 @@ func DBModelToActivity(source *user.Activity) Activity {
 		nightscoutActivity.SrvCreated = &pNightscoutDateInt
 		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
 		nightscoutActivity.SrvModified = &pNightscoutDateInt2
+		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
+		nightscoutActivity.Device = &pNightscoutShortString
+		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
+		nightscoutActivity.App = &pNightscoutShortString2
+		pNightscoutShortString3 := ShortString((*source).CreatedByIdentityName)
+		nightscoutActivity.Subject = &pNightscoutShortString3
 		pNightscoutDateInt3 := DateInt((*source).OccurredAt)
 		nightscoutActivity.Date = &pNightscoutDateInt3
 		if (*source).UtcOffsetMinutes != nil {
@@ -156,8 +168,10 @@ func DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus {
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
 		nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
-		if (*source).BatteryLevel != nil {
-			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).BatteryLevel)
+		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
+		nightscoutDeviceStatus.Device = &pNightscoutShortString
+		if (*source).BatteryPercentage != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).BatteryPercentage)
 			nightscoutDeviceStatus.UploaderBattery = &nightscoutFlexibleFloat64
 		}
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
@@ -165,6 +179,10 @@ func DBModelToDeviceStatus(source *user.DeviceStatus) DeviceStatus {
 		nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
 		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
 		nightscoutDeviceStatus.SrvModified = &pNightscoutDateInt2
+		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
+		nightscoutDeviceStatus.App = &pNightscoutShortString2
+		pNightscoutShortString3 := ShortString((*source).CreatedByIdentityName)
+		nightscoutDeviceStatus.Subject = &pNightscoutShortString3
 		pNightscoutDateInt3 := DateInt((*source).OccurredAt)
 		nightscoutDeviceStatus.Date = &pNightscoutDateInt3
 		if (*source).UtcOffsetMinutes != nil {
@@ -199,6 +217,12 @@ func DBModelToEntry(source *user.GlucoseReading) Entry {
 		nightscoutEntry.SrvCreated = &pNightscoutDateInt3
 		pNightscoutDateInt4 := DateInt((*source).UpdatedAt)
 		nightscoutEntry.SrvModified = &pNightscoutDateInt4
+		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
+		nightscoutEntry.Device = &pNightscoutShortString
+		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
+		nightscoutEntry.App = &pNightscoutShortString2
+		pNightscoutShortString3 := ShortString((*source).CreatedByIdentityName)
+		nightscoutEntry.Subject = &pNightscoutShortString3
 		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).Value)
 		nightscoutEntry.Value = &pNightscoutFlexibleFloat64
 		if (*source).RawJsonData != nil {
@@ -271,7 +295,7 @@ func DeviceStatusToCreate(source DeviceStatus, context CreateContext) user.Creat
 	userCreateDeviceStatusParams.ID = AssignID(source.Date, context)
 	if source.UploaderBattery != nil {
 		xfloat64 := float64(*source.UploaderBattery)
-		userCreateDeviceStatusParams.BatteryLevel = &xfloat64
+		userCreateDeviceStatusParams.BatteryPercentage = &xfloat64
 	}
 	pString := source.RawJsonData
 	userCreateDeviceStatusParams.RawJsonData = &pString
@@ -282,6 +306,14 @@ func DeviceStatusToCreate(source DeviceStatus, context CreateContext) user.Creat
 	if source.Date != nil {
 		userCreateDeviceStatusParams.OccurredAt = int64(*source.Date)
 	}
+	if source.App != nil {
+		userCreateDeviceStatusParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateDeviceStatusParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
+	userCreateDeviceStatusParams.CreatedByIdentityName = AssignCreatedByName(context)
+	userCreateDeviceStatusParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return userCreateDeviceStatusParams
 }
 func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadingParams {
@@ -302,11 +334,17 @@ func EntryToCreate(source Entry, context CreateContext) user.CreateGlucoseReadin
 		xint64 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
+	if source.App != nil {
+		userCreateGlucoseReadingParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateGlucoseReadingParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
 	userCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateGlucoseReadingParams
 }
-func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
+func EntryToUpdate(source Entry, context UpdateContext) user.UpdateGlucoseReadingParams {
 	var userUpdateGlucoseReadingParams user.UpdateGlucoseReadingParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -320,6 +358,8 @@ func EntryToUpdate(source Entry) user.UpdateGlucoseReadingParams {
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
+	userUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
+	userUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		userUpdateGlucoseReadingParams.ID = string(*source.Identifier)
 	}
@@ -340,6 +380,12 @@ func FoodToCreate(source Food, context CreateContext) user.CreateFoodParams {
 	}
 	pString := source.RawJsonData
 	userCreateFoodParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateFoodParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateFoodParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateFoodParams.CreatedByIdentityID = AssignCreatedByID(context)
 	userCreateFoodParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateFoodParams
@@ -355,6 +401,12 @@ func ProfileToCreate(source Profile, context CreateContext) user.CreateProfilePa
 	if source.UtcOffsetMinutes != nil {
 		xint64 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userCreateProfileParams.UtcOffsetMinutes = &xint64
+	}
+	if source.App != nil {
+		userCreateProfileParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateProfileParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
 	userCreateProfileParams.CreatedByIdentityName = AssignCreatedByName(context)
 	userCreateProfileParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -401,6 +453,12 @@ func TreatmentToCreateBolus(source Treatment, context CreateContext) user.Create
 	userCreateBolusParams.Type = TreatmentTypeToDBType(source.EventType)
 	pString := source.RawJsonData
 	userCreateBolusParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateBolusParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateBolusParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateBolusParams.CreatedByIdentityID = AssignCreatedByID(context)
 	userCreateBolusParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateBolusParams
@@ -421,6 +479,12 @@ func TreatmentToCreateCarb(source Treatment, context CreateContext) user.CreateC
 	userCreateCarbParams.Type = TreatmentTypeToDBType(source.EventType)
 	pString := source.RawJsonData
 	userCreateCarbParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateCarbParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateCarbParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateCarbParams.CreatedByIdentityName = AssignCreatedByName(context)
 	userCreateCarbParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return userCreateCarbParams
@@ -440,6 +504,12 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) user.CreateN
 	}
 	pString := source.RawJsonData
 	userCreateNoteParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateNoteParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateNoteParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateNoteParams.CreatedByIdentityID = AssignCreatedByID(context)
 	userCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateNoteParams
@@ -460,6 +530,12 @@ func TreatmentToCreateTempBasal(source Treatment, context CreateContext) user.Cr
 	userCreateTempBasalParams.Value = TempBasalValue(source)
 	pString := source.RawJsonData
 	userCreateTempBasalParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateTempBasalParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateTempBasalParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context)
 	userCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateTempBasalParams
@@ -485,11 +561,17 @@ func TreatmentToCreateTempTarget(source Treatment, context CreateContext) user.C
 	}
 	pString := source.RawJsonData
 	userCreateTempTargetParams.RawJsonData = &pString
+	if source.App != nil {
+		userCreateTempTargetParams.CreatedByAppName = nightscoutShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		userCreateTempTargetParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
+	}
 	userCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context)
 	userCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return userCreateTempTargetParams
 }
-func TreatmentToUpdateBolus(source Treatment) user.UpdateBolusParams {
+func TreatmentToUpdateBolus(source Treatment, context UpdateContext) user.UpdateBolusParams {
 	var userUpdateBolusParams user.UpdateBolusParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -503,12 +585,14 @@ func TreatmentToUpdateBolus(source Treatment) user.UpdateBolusParams {
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userUpdateBolusParams.UtcOffsetMinutes = &xint642
 	}
+	userUpdateBolusParams.UpdatedByIdentityID = AssignUpdatedByID(context)
+	userUpdateBolusParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		userUpdateBolusParams.ID = string(*source.Identifier)
 	}
 	return userUpdateBolusParams
 }
-func TreatmentToUpdateCarbs(source Treatment) user.UpdateCarbParams {
+func TreatmentToUpdateCarbs(source Treatment, context UpdateContext) user.UpdateCarbParams {
 	var userUpdateCarbParams user.UpdateCarbParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -522,12 +606,14 @@ func TreatmentToUpdateCarbs(source Treatment) user.UpdateCarbParams {
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userUpdateCarbParams.UtcOffsetMinutes = &xint642
 	}
+	userUpdateCarbParams.UpdatedByIdentityID = AssignUpdatedByID(context)
+	userUpdateCarbParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		userUpdateCarbParams.ID = string(*source.Identifier)
 	}
 	return userUpdateCarbParams
 }
-func TreatmentToUpdateNote(source Treatment) user.UpdateNoteParams {
+func TreatmentToUpdateNote(source Treatment, context UpdateContext) user.UpdateNoteParams {
 	var userUpdateNoteParams user.UpdateNoteParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -541,12 +627,14 @@ func TreatmentToUpdateNote(source Treatment) user.UpdateNoteParams {
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userUpdateNoteParams.UtcOffsetMinutes = &xint642
 	}
+	userUpdateNoteParams.UpdatedByIdentityID = AssignUpdatedByID(context)
+	userUpdateNoteParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		userUpdateNoteParams.ID = string(*source.Identifier)
 	}
 	return userUpdateNoteParams
 }
-func TreatmentToUpdateTempBasal(source Treatment) user.UpdateTempBasalParams {
+func TreatmentToUpdateTempBasal(source Treatment, context UpdateContext) user.UpdateTempBasalParams {
 	var userUpdateTempBasalParams user.UpdateTempBasalParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -561,12 +649,14 @@ func TreatmentToUpdateTempBasal(source Treatment) user.UpdateTempBasalParams {
 		xint643 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userUpdateTempBasalParams.UtcOffsetMinutes = &xint643
 	}
+	userUpdateTempBasalParams.UpdatedByIdentityID = AssignUpdatedByID(context)
+	userUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		userUpdateTempBasalParams.ID = string(*source.Identifier)
 	}
 	return userUpdateTempBasalParams
 }
-func TreatmentToUpdateTempTarget(source Treatment) user.UpdateTempTargetParams {
+func TreatmentToUpdateTempTarget(source Treatment, context UpdateContext) user.UpdateTempTargetParams {
 	var userUpdateTempTargetParams user.UpdateTempTargetParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -588,6 +678,8 @@ func TreatmentToUpdateTempTarget(source Treatment) user.UpdateTempTargetParams {
 		xint643 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		userUpdateTempTargetParams.UtcOffsetMinutes = &xint643
 	}
+	userUpdateTempTargetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
+	userUpdateTempTargetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		userUpdateTempTargetParams.ID = string(*source.Identifier)
 	}

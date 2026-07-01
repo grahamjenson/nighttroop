@@ -19,9 +19,11 @@ INSERT INTO profile (
     targets_json,
     raw_json_data,
     utc_offset_minutes,
+    created_by_app_name,
+    created_by_device_name, 
     created_by_identity_name,
     created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

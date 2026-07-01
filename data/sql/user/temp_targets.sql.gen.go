@@ -12,7 +12,7 @@ import (
 const allTempTargets = `-- name: AllTempTargets :many
 
 
-SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY start DESC
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY start DESC
 `
 
 // ------
@@ -38,6 +38,8 @@ func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
 			&i.UtcOffsetMinutes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
 			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
@@ -67,11 +69,13 @@ INSERT INTO temp_targets (
     high_target, 
     low_target,
     raw_json_data, 
+    created_by_app_name,
+    created_by_device_name, 
     created_by_identity_id,
     created_by_identity_name
     ) 
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type CreateTempTargetParams struct {
@@ -82,6 +86,8 @@ type CreateTempTargetParams struct {
 	HighTarget            float64
 	LowTarget             float64
 	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
@@ -98,6 +104,8 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		arg.HighTarget,
 		arg.LowTarget,
 		arg.RawJsonData,
+		arg.CreatedByAppName,
+		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
@@ -113,6 +121,8 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
@@ -122,7 +132,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 }
 
 const getTempTarget = `-- name: GetTempTarget :one
-SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
 `
 
 func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, error) {
@@ -139,6 +149,8 @@ func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, er
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
@@ -150,23 +162,27 @@ func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, er
 const updateTempTarget = `-- name: UpdateTempTarget :one
 
 UPDATE temp_targets SET
-    start = COALESCE(?2, start),
-    duration_minutes = COALESCE(?3, duration_minutes),
-    high_target = COALESCE(?4, high_target),
-    low_target = COALESCE(?5, low_target),
-    utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+    start = COALESCE(?4, start),
+    duration_minutes = COALESCE(?5, duration_minutes),
+    high_target = COALESCE(?6, high_target),
+    low_target = COALESCE(?7, low_target),
+    utc_offset_minutes = COALESCE(?8, utc_offset_minutes),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = ?,
+    updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+RETURNING id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
 `
 
 type UpdateTempTargetParams struct {
-	Start            *int64
-	DurationMinutes  *int64
-	HighTarget       *float64
-	LowTarget        *float64
-	UtcOffsetMinutes *int64
-	ID               string
+	Start                 *int64
+	DurationMinutes       *int64
+	HighTarget            *float64
+	LowTarget             *float64
+	UtcOffsetMinutes      *int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	ID                    string
 }
 
 // ------
@@ -179,6 +195,8 @@ func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetPara
 		arg.HighTarget,
 		arg.LowTarget,
 		arg.UtcOffsetMinutes,
+		arg.UpdatedByIdentityID,
+		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
 	var i TempTarget
@@ -193,6 +211,8 @@ func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetPara
 		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
 		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,

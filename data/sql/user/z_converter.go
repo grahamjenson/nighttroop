@@ -43,6 +43,8 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 		xstring4 := *source.RawJsonData
 		userCreateActivityParams.RawJsonData = &xstring4
 	}
+	userCreateActivityParams.CreatedByAppName = source.CreatedByAppName
+	userCreateActivityParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateActivityParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateActivityParams
@@ -61,6 +63,8 @@ func BolusToCreate(source Bolus) CreateBolusParams {
 		xstring := *source.RawJsonData
 		userCreateBolusParams.RawJsonData = &xstring
 	}
+	userCreateBolusParams.CreatedByAppName = source.CreatedByAppName
+	userCreateBolusParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateBolusParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateBolusParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateBolusParams
@@ -79,6 +83,8 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 		xstring := *source.RawJsonData
 		userCreateCarbParams.RawJsonData = &xstring
 	}
+	userCreateCarbParams.CreatedByAppName = source.CreatedByAppName
+	userCreateCarbParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateCarbParams.CreatedByIdentityName = source.CreatedByIdentityName
 	userCreateCarbParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateCarbParams
@@ -86,55 +92,58 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 	var userCreateDeviceStatusParams CreateDeviceStatusParams
 	userCreateDeviceStatusParams.ID = source.ID
-	if source.BatteryLevel != nil {
-		xfloat64 := *source.BatteryLevel
-		userCreateDeviceStatusParams.BatteryLevel = &xfloat64
+	userCreateDeviceStatusParams.Type = source.Type
+	if source.BatteryPercentage != nil {
+		xfloat64 := *source.BatteryPercentage
+		userCreateDeviceStatusParams.BatteryPercentage = &xfloat64
 	}
 	if source.ChargingState != nil {
 		xstring := *source.ChargingState
 		userCreateDeviceStatusParams.ChargingState = &xstring
 	}
-	if source.PumpBattery != nil {
-		xfloat642 := *source.PumpBattery
-		userCreateDeviceStatusParams.PumpBattery = &xfloat642
+	if source.Status != nil {
+		xstring2 := *source.Status
+		userCreateDeviceStatusParams.Status = &xstring2
 	}
-	if source.PumpStatus != nil {
-		xstring2 := *source.PumpStatus
-		userCreateDeviceStatusParams.PumpStatus = &xstring2
+	if source.InsertionTime != nil {
+		xint64 := *source.InsertionTime
+		userCreateDeviceStatusParams.InsertionTime = &xint64
+	}
+	if source.Timestamp != nil {
+		xint642 := *source.Timestamp
+		userCreateDeviceStatusParams.Timestamp = &xint642
+	}
+	if source.Iob != nil {
+		xfloat642 := *source.Iob
+		userCreateDeviceStatusParams.Iob = &xfloat642
+	}
+	if source.Cob != nil {
+		xfloat643 := *source.Cob
+		userCreateDeviceStatusParams.Cob = &xfloat643
+	}
+	if source.Basaliob != nil {
+		xfloat644 := *source.Basaliob
+		userCreateDeviceStatusParams.Basaliob = &xfloat644
+	}
+	if source.Treatmentiob != nil {
+		xfloat645 := *source.Treatmentiob
+		userCreateDeviceStatusParams.Treatmentiob = &xfloat645
 	}
 	if source.PumpReservoir != nil {
-		xfloat643 := *source.PumpReservoir
-		userCreateDeviceStatusParams.PumpReservoir = &xfloat643
-	}
-	if source.PumpInsertionTime != nil {
-		xint64 := *source.PumpInsertionTime
-		userCreateDeviceStatusParams.PumpInsertionTime = &xint64
-	}
-	if source.LoopStatus != nil {
-		xstring3 := *source.LoopStatus
-		userCreateDeviceStatusParams.LoopStatus = &xstring3
-	}
-	if source.LoopTimestamp != nil {
-		xint642 := *source.LoopTimestamp
-		userCreateDeviceStatusParams.LoopTimestamp = &xint642
-	}
-	if source.CgmStatus != nil {
-		xstring4 := *source.CgmStatus
-		userCreateDeviceStatusParams.CgmStatus = &xstring4
-	}
-	if source.CgmInsertionTime != nil {
-		xint643 := *source.CgmInsertionTime
-		userCreateDeviceStatusParams.CgmInsertionTime = &xint643
+		xfloat646 := *source.PumpReservoir
+		userCreateDeviceStatusParams.PumpReservoir = &xfloat646
 	}
 	if source.RawJsonData != nil {
-		xstring5 := *source.RawJsonData
-		userCreateDeviceStatusParams.RawJsonData = &xstring5
+		xstring3 := *source.RawJsonData
+		userCreateDeviceStatusParams.RawJsonData = &xstring3
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint644 := *source.UtcOffsetMinutes
-		userCreateDeviceStatusParams.UtcOffsetMinutes = &xint644
+		xint643 := *source.UtcOffsetMinutes
+		userCreateDeviceStatusParams.UtcOffsetMinutes = &xint643
 	}
 	userCreateDeviceStatusParams.OccurredAt = source.OccurredAt
+	userCreateDeviceStatusParams.CreatedByAppName = source.CreatedByAppName
+	userCreateDeviceStatusParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateDeviceStatusParams.CreatedByIdentityName = source.CreatedByIdentityName
 	userCreateDeviceStatusParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateDeviceStatusParams
@@ -156,6 +165,8 @@ func FoodToCreate(source Food) CreateFoodParams {
 		xstring := *source.RawJsonData
 		userCreateFoodParams.RawJsonData = &xstring
 	}
+	userCreateFoodParams.CreatedByAppName = source.CreatedByAppName
+	userCreateFoodParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateFoodParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateFoodParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateFoodParams
@@ -174,6 +185,8 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 		xint64 := *source.UtcOffsetMinutes
 		userCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
+	userCreateGlucoseReadingParams.CreatedByAppName = source.CreatedByAppName
+	userCreateGlucoseReadingParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateGlucoseReadingParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateGlucoseReadingParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateGlucoseReadingParams
@@ -187,6 +200,14 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		userUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint64
+	}
+	if source.UpdatedByIdentityID != nil {
+		xint642 := *source.UpdatedByIdentityID
+		userUpdateGlucoseReadingParams.UpdatedByIdentityID = &xint642
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring := *source.UpdatedByIdentityName
+		userUpdateGlucoseReadingParams.UpdatedByIdentityName = &xstring
 	}
 	userUpdateGlucoseReadingParams.ID = source.ID
 	return userUpdateGlucoseReadingParams
@@ -204,6 +225,8 @@ func NoteToCreate(source Note) CreateNoteParams {
 		xstring := *source.RawJsonData
 		userCreateNoteParams.RawJsonData = &xstring
 	}
+	userCreateNoteParams.CreatedByAppName = source.CreatedByAppName
+	userCreateNoteParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateNoteParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateNoteParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateNoteParams
@@ -264,6 +287,8 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 		xint645 := *source.UtcOffsetMinutes
 		userCreateProfileParams.UtcOffsetMinutes = &xint645
 	}
+	userCreateProfileParams.CreatedByAppName = source.CreatedByAppName
+	userCreateProfileParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateProfileParams.CreatedByIdentityName = source.CreatedByIdentityName
 	userCreateProfileParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return userCreateProfileParams
@@ -282,6 +307,8 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		xstring := *source.RawJsonData
 		userCreateTempBasalParams.RawJsonData = &xstring
 	}
+	userCreateTempBasalParams.CreatedByAppName = source.CreatedByAppName
+	userCreateTempBasalParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateTempBasalParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateTempBasalParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateTempBasalParams
@@ -301,6 +328,8 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 		xstring := *source.RawJsonData
 		userCreateTempTargetParams.RawJsonData = &xstring
 	}
+	userCreateTempTargetParams.CreatedByAppName = source.CreatedByAppName
+	userCreateTempTargetParams.CreatedByDeviceName = source.CreatedByDeviceName
 	userCreateTempTargetParams.CreatedByIdentityID = source.CreatedByIdentityID
 	userCreateTempTargetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return userCreateTempTargetParams

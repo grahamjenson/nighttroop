@@ -21,6 +21,13 @@ CREATE TABLE identities (
     
     last_seen_at INTEGER,
     last_write_at INTEGER,
+    
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+
+    created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+
     deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
     enabled INTEGER NOT NULL DEFAULT 1
 );
@@ -39,38 +46,41 @@ CREATE TABLE events (
 -- TABLES ABOUT PATIENT DATA
 ---------------------------------------------------
 
--- This reports device status above
+-- This reports device status each device like cgm, pump phone, loop, mums phone, school phone, pixel can report its status
 CREATE TABLE device_status (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    
-
+    type TEXT NOT NULL CHECK(length(type) <= 32), -- pump, cgm, loop, phone
     -- Specific Details about the device, especially the PWD device
-    battery_level REAL,
+    battery_percentage REAL,
     charging_state TEXT CHECK(length(charging_state) <= 32),
+    status TEXT CHECK(length(status) <= 32), -- This is the status of the device, like "ok", "error", "warning", etc
 
-    -- pump sub device
-    pump_battery REAL,
-    pump_status TEXT CHECK(length(pump_status) <= 32),
-    pump_reservoir REAL,
-    pump_insertion_time INTEGER, -- This is sometimes recorded as an event which is stuper annoying
+    insertion_time INTEGER, -- This is sometimes recorded as an event which is stuper annoying
+    timestamp INTEGER, -- This is the timestamp of the device status, like the time of the last reading
 
     -- loop
-    loop_status TEXT CHECK(length(loop_status) <= 32),
-    loop_timestamp INTEGER,
+    iob REAL,
+    cob REAL,
+    basaliob REAL,
+    treatmentiob REAL,
 
-    -- cgm
-    cgm_status TEXT CHECK(length(cgm_status) <= 32),
-    cgm_insertion_time INTEGER, -- This is sometimes recorded as an event which is stuper annoying
+    -- pump specific values
+    pump_reservoir REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
 );
@@ -84,11 +94,15 @@ CREATE TABLE glucose_readings (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -105,11 +119,15 @@ CREATE TABLE bolus (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -125,11 +143,15 @@ CREATE TABLE carbs (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -146,10 +168,14 @@ CREATE TABLE temp_basals (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -167,10 +193,14 @@ CREATE TABLE temp_targets (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -201,11 +231,15 @@ CREATE TABLE profile (
     
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -230,11 +264,15 @@ CREATE TABLE activity (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -252,9 +290,13 @@ CREATE TABLE food (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
@@ -267,11 +309,15 @@ CREATE TABLE note (
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)

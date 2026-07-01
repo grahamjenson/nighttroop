@@ -23,6 +23,8 @@ type Activity struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -39,6 +41,8 @@ type Bolus struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -55,6 +59,8 @@ type Carb struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -63,16 +69,17 @@ type Carb struct {
 
 type DeviceStatus struct {
 	ID                    string
-	BatteryLevel          *float64
+	Type                  string
+	BatteryPercentage     *float64
 	ChargingState         *string
-	PumpBattery           *float64
-	PumpStatus            *string
+	Status                *string
+	InsertionTime         *int64
+	Timestamp             *int64
+	Iob                   *float64
+	Cob                   *float64
+	Basaliob              *float64
+	Treatmentiob          *float64
 	PumpReservoir         *float64
-	PumpInsertionTime     *int64
-	LoopStatus            *string
-	LoopTimestamp         *int64
-	CgmStatus             *string
-	CgmInsertionTime      *int64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -81,6 +88,8 @@ type DeviceStatus struct {
 	UpdatedAt             int64
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	CreatedByIdentityName string
 	CreatedByIdentityID   int64
 }
@@ -103,6 +112,8 @@ type Food struct {
 	DeletedAt             *int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -119,6 +130,8 @@ type GlucoseReading struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -126,16 +139,20 @@ type GlucoseReading struct {
 }
 
 type Identity struct {
-	ID          int64
-	Name        string
-	Password    string
-	TotpSecret  string
-	Role        consts.IdentityRole
-	CreatedAt   int64
-	LastSeenAt  *int64
-	LastWriteAt *int64
-	DeletedAt   *int64
-	Enabled     bool
+	ID                    int64
+	Name                  string
+	Password              string
+	TotpSecret            string
+	Role                  consts.IdentityRole
+	CreatedAt             int64
+	LastSeenAt            *int64
+	LastWriteAt           *int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
+	DeletedAt             *int64
+	Enabled               bool
 }
 
 type Note struct {
@@ -147,6 +164,8 @@ type Note struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -173,6 +192,8 @@ type Profile struct {
 	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
+	CreatedByAppName         string
+	CreatedByDeviceName      string
 	UpdatedByIdentityID      *int64
 	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
@@ -202,6 +223,8 @@ type TempBasal struct {
 	UtcOffsetMinutes      *int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
@@ -219,6 +242,8 @@ type TempTarget struct {
 	UtcOffsetMinutes      *int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string

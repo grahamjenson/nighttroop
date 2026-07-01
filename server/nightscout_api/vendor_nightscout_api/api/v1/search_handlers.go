@@ -3,8 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -105,6 +103,17 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 		qJSON, _ := json.MarshalIndent(q, "", "  ")
+
+		identifierOrType := chi.URLParam(r, "identifierOrType")
+		if identifierOrType != "" {
+			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
+			if collection.IsTypeString(identifierOrType) {
+				q.TypeEq = ptr(nightscout.ShortString(identifierOrType))
+			} else {
+				q.IDEq = ptr(nightscout.ShortString(identifierOrType))
+			}
+		}
+
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"req": map[string]any{
 				"method": r.Method,
@@ -116,24 +125,4 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			"query":      string(qJSON),
 		})
 	}
-}
-
-func ParseTimesWildcard(r *http.Request) (prefix, expr string, ok bool) {
-	wild := chi.URLParam(r, "*")
-	parts := strings.SplitN(wild, "/", 2)
-	if len(parts) != 2 {
-		return "", "", false
-	}
-	prefix = parts[0]
-	expr = strings.TrimSuffix(parts[1], ".json")
-	if decoded, err := url.PathUnescape(prefix); err == nil {
-		prefix = decoded
-	}
-	if decoded, err := url.PathUnescape(expr); err == nil {
-		expr = decoded
-	}
-	if prefix == "" || expr == "" {
-		return "", "", false
-	}
-	return prefix, expr, true
 }
