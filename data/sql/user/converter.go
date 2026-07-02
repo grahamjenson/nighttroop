@@ -14,9 +14,6 @@ type ToCreateParams interface {
 
 	FoodToCreate(source Food) CreateFoodParams
 
-	GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams
-	GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams
-
 	NoteToCreate(source Note) CreateNoteParams
 
 	ProfileToCreate(source Profile) CreateProfileParams
@@ -24,4 +21,12 @@ type ToCreateParams interface {
 	TempBasalToCreate(source TempBasal) CreateTempBasalParams
 
 	TempTargetToCreate(source TempTarget) CreateTempTargetParams
+
+	//////
+	// GLUCOSE READINGS
+	//////
+
+	GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams
+	GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams
+	FromNonDefaultToDefault(source SearchWithNonDefaultSortGlucoseReadingsParams) SearchWithDefaultSortGlucoseReadingsParams
 }

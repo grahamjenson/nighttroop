@@ -26,8 +26,17 @@ RETURNING *;
 -- name: GetGlucoseReading :one
 SELECT * FROM glucose_readings WHERE id = ?;
 
+--
+-- There are three queries here for performance
+-- 1. All default order with limit
+-- 2. Default order with search terms limit and skip
+-- 3. Non-default order with search terms limit and skip
+-- I wont optimize further or compromise on non-prepared statements (until it becomes necessary)!
+
 -- name: AllGlucoseReadings :many
-SELECT * FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?;
+SELECT * FROM glucose_readings 
+ORDER BY occurred_at DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- DateGTE
 -- DateGT
@@ -58,7 +67,7 @@ SELECT * FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?;
 -- SgvLT
 -- IncludeDeleted
 
--- name: DefaultSortSearchGlucoseReadings :many
+-- name: SearchWithDefaultSortGlucoseReadings :many
 SELECT * FROM glucose_readings
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))
@@ -93,11 +102,12 @@ WHERE
     AND (CAST(sqlc.narg('SgvLTE') AS INTEGER) IS NULL OR value <= sqlc.narg('SgvLTE'))
     AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR value < sqlc.narg('SgvLT'))
     
-    AND (CAST(sqlc.narg('IncludeDeleted') AS INTEGER) IS NULL OR deleted_at IS NULL)
+    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg(limit) OFFSET sqlc.arg(skip);
 
--- name: NonDefaultSortSearchGlucoseReadings :many
+
+-- name: SearchWithNonDefaultSortGlucoseReadings :many
 SELECT * FROM glucose_readings
 WHERE
     CAST(sqlc.arg('SortOrder') AS INTEGER) IS NOT NULL

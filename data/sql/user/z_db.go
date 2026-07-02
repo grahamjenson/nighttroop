@@ -96,9 +96,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
-	if q.defaultSortSearchGlucoseReadingsStmt, err = db.PrepareContext(ctx, defaultSortSearchGlucoseReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query DefaultSortSearchGlucoseReadings: %w", err)
-	}
 	if q.deleteGlucoseReadingStmt, err = db.PrepareContext(ctx, deleteGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteGlucoseReading: %w", err)
 	}
@@ -144,8 +141,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
-	if q.nonDefaultSortSearchGlucoseReadingsStmt, err = db.PrepareContext(ctx, nonDefaultSortSearchGlucoseReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query NonDefaultSortSearchGlucoseReadings: %w", err)
+	if q.searchWithDefaultSortGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortGlucoseReadings: %w", err)
+	}
+	if q.searchWithNonDefaultSortGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchWithNonDefaultSortGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithNonDefaultSortGlucoseReadings: %w", err)
 	}
 	if q.updateBolusStmt, err = db.PrepareContext(ctx, updateBolus); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateBolus: %w", err)
@@ -299,11 +299,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.defaultSortSearchGlucoseReadingsStmt != nil {
-		if cerr := q.defaultSortSearchGlucoseReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing defaultSortSearchGlucoseReadingsStmt: %w", cerr)
-		}
-	}
 	if q.deleteGlucoseReadingStmt != nil {
 		if cerr := q.deleteGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteGlucoseReadingStmt: %w", cerr)
@@ -379,9 +374,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.nonDefaultSortSearchGlucoseReadingsStmt != nil {
-		if cerr := q.nonDefaultSortSearchGlucoseReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing nonDefaultSortSearchGlucoseReadingsStmt: %w", cerr)
+	if q.searchWithDefaultSortGlucoseReadingsStmt != nil {
+		if cerr := q.searchWithDefaultSortGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortGlucoseReadingsStmt: %w", cerr)
+		}
+	}
+	if q.searchWithNonDefaultSortGlucoseReadingsStmt != nil {
+		if cerr := q.searchWithNonDefaultSortGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithNonDefaultSortGlucoseReadingsStmt: %w", cerr)
 		}
 	}
 	if q.updateBolusStmt != nil {
@@ -466,58 +466,58 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                       DBTX
-	tx                                       *sql.Tx
-	allActivitiesStmt                        *sql.Stmt
-	allBolusesStmt                           *sql.Stmt
-	allCarbsStmt                             *sql.Stmt
-	allDeviceStatusStmt                      *sql.Stmt
-	allEventsStmt                            *sql.Stmt
-	allFoodsStmt                             *sql.Stmt
-	allGlucoseReadingsStmt                   *sql.Stmt
-	allIdentitiesStmt                        *sql.Stmt
-	allNotesStmt                             *sql.Stmt
-	allProfilesStmt                          *sql.Stmt
-	allTempBasalsStmt                        *sql.Stmt
-	allTempTargetsStmt                       *sql.Stmt
-	createActivityStmt                       *sql.Stmt
-	createBolusStmt                          *sql.Stmt
-	createCarbStmt                           *sql.Stmt
-	createDeviceStatusStmt                   *sql.Stmt
-	createEventStmt                          *sql.Stmt
-	createFoodStmt                           *sql.Stmt
-	createGlucoseReadingStmt                 *sql.Stmt
-	createIdentityStmt                       *sql.Stmt
-	createNoteStmt                           *sql.Stmt
-	createProfileStmt                        *sql.Stmt
-	createTempBasalStmt                      *sql.Stmt
-	createTempTargetStmt                     *sql.Stmt
-	defaultSortSearchGlucoseReadingsStmt     *sql.Stmt
-	deleteGlucoseReadingStmt                 *sql.Stmt
-	deleteGlucoseReadingsByTypeStmt          *sql.Stmt
-	deletePermanentGlucoseReadingStmt        *sql.Stmt
-	deletePermanentGlucoseReadingsByTypeStmt *sql.Stmt
-	getActivityStmt                          *sql.Stmt
-	getBolusStmt                             *sql.Stmt
-	getCarbStmt                              *sql.Stmt
-	getDeviceStatusStmt                      *sql.Stmt
-	getFoodStmt                              *sql.Stmt
-	getGlucoseReadingStmt                    *sql.Stmt
-	getIdentityStmt                          *sql.Stmt
-	getNoteStmt                              *sql.Stmt
-	getProfileStmt                           *sql.Stmt
-	getTempBasalStmt                         *sql.Stmt
-	getTempTargetStmt                        *sql.Stmt
-	nonDefaultSortSearchGlucoseReadingsStmt  *sql.Stmt
-	updateBolusStmt                          *sql.Stmt
-	updateCarbStmt                           *sql.Stmt
-	updateGlucoseReadingStmt                 *sql.Stmt
-	updateIdentityDateFlagsStmt              *sql.Stmt
-	updateNoteStmt                           *sql.Stmt
-	updateTempBasalStmt                      *sql.Stmt
-	updateTempTargetStmt                     *sql.Stmt
-	getSettingFromDBStmt                     *sql.Stmt
-	upsertSettingToDBStmt                    *sql.Stmt
+	db                                          DBTX
+	tx                                          *sql.Tx
+	allActivitiesStmt                           *sql.Stmt
+	allBolusesStmt                              *sql.Stmt
+	allCarbsStmt                                *sql.Stmt
+	allDeviceStatusStmt                         *sql.Stmt
+	allEventsStmt                               *sql.Stmt
+	allFoodsStmt                                *sql.Stmt
+	allGlucoseReadingsStmt                      *sql.Stmt
+	allIdentitiesStmt                           *sql.Stmt
+	allNotesStmt                                *sql.Stmt
+	allProfilesStmt                             *sql.Stmt
+	allTempBasalsStmt                           *sql.Stmt
+	allTempTargetsStmt                          *sql.Stmt
+	createActivityStmt                          *sql.Stmt
+	createBolusStmt                             *sql.Stmt
+	createCarbStmt                              *sql.Stmt
+	createDeviceStatusStmt                      *sql.Stmt
+	createEventStmt                             *sql.Stmt
+	createFoodStmt                              *sql.Stmt
+	createGlucoseReadingStmt                    *sql.Stmt
+	createIdentityStmt                          *sql.Stmt
+	createNoteStmt                              *sql.Stmt
+	createProfileStmt                           *sql.Stmt
+	createTempBasalStmt                         *sql.Stmt
+	createTempTargetStmt                        *sql.Stmt
+	deleteGlucoseReadingStmt                    *sql.Stmt
+	deleteGlucoseReadingsByTypeStmt             *sql.Stmt
+	deletePermanentGlucoseReadingStmt           *sql.Stmt
+	deletePermanentGlucoseReadingsByTypeStmt    *sql.Stmt
+	getActivityStmt                             *sql.Stmt
+	getBolusStmt                                *sql.Stmt
+	getCarbStmt                                 *sql.Stmt
+	getDeviceStatusStmt                         *sql.Stmt
+	getFoodStmt                                 *sql.Stmt
+	getGlucoseReadingStmt                       *sql.Stmt
+	getIdentityStmt                             *sql.Stmt
+	getNoteStmt                                 *sql.Stmt
+	getProfileStmt                              *sql.Stmt
+	getTempBasalStmt                            *sql.Stmt
+	getTempTargetStmt                           *sql.Stmt
+	searchWithDefaultSortGlucoseReadingsStmt    *sql.Stmt
+	searchWithNonDefaultSortGlucoseReadingsStmt *sql.Stmt
+	updateBolusStmt                             *sql.Stmt
+	updateCarbStmt                              *sql.Stmt
+	updateGlucoseReadingStmt                    *sql.Stmt
+	updateIdentityDateFlagsStmt                 *sql.Stmt
+	updateNoteStmt                              *sql.Stmt
+	updateTempBasalStmt                         *sql.Stmt
+	updateTempTargetStmt                        *sql.Stmt
+	getSettingFromDBStmt                        *sql.Stmt
+	upsertSettingToDBStmt                       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -548,7 +548,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileStmt:                        q.createProfileStmt,
 		createTempBasalStmt:                      q.createTempBasalStmt,
 		createTempTargetStmt:                     q.createTempTargetStmt,
-		defaultSortSearchGlucoseReadingsStmt:     q.defaultSortSearchGlucoseReadingsStmt,
 		deleteGlucoseReadingStmt:                 q.deleteGlucoseReadingStmt,
 		deleteGlucoseReadingsByTypeStmt:          q.deleteGlucoseReadingsByTypeStmt,
 		deletePermanentGlucoseReadingStmt:        q.deletePermanentGlucoseReadingStmt,
@@ -564,15 +563,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStmt:                           q.getProfileStmt,
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
-		nonDefaultSortSearchGlucoseReadingsStmt:  q.nonDefaultSortSearchGlucoseReadingsStmt,
-		updateBolusStmt:                          q.updateBolusStmt,
-		updateCarbStmt:                           q.updateCarbStmt,
-		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
-		updateIdentityDateFlagsStmt:              q.updateIdentityDateFlagsStmt,
-		updateNoteStmt:                           q.updateNoteStmt,
-		updateTempBasalStmt:                      q.updateTempBasalStmt,
-		updateTempTargetStmt:                     q.updateTempTargetStmt,
-		getSettingFromDBStmt:                     q.getSettingFromDBStmt,
-		upsertSettingToDBStmt:                    q.upsertSettingToDBStmt,
+		searchWithDefaultSortGlucoseReadingsStmt: q.searchWithDefaultSortGlucoseReadingsStmt,
+		searchWithNonDefaultSortGlucoseReadingsStmt: q.searchWithNonDefaultSortGlucoseReadingsStmt,
+		updateBolusStmt:             q.updateBolusStmt,
+		updateCarbStmt:              q.updateCarbStmt,
+		updateGlucoseReadingStmt:    q.updateGlucoseReadingStmt,
+		updateIdentityDateFlagsStmt: q.updateIdentityDateFlagsStmt,
+		updateNoteStmt:              q.updateNoteStmt,
+		updateTempBasalStmt:         q.updateTempBasalStmt,
+		updateTempTargetStmt:        q.updateTempTargetStmt,
+		getSettingFromDBStmt:        q.getSettingFromDBStmt,
+		upsertSettingToDBStmt:       q.upsertSettingToDBStmt,
 	}
 }

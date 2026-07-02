@@ -71,55 +71,17 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 	so := query.SortOrder()
 	so = so.Support(nsutils.SortOccurredAtDesc, nsutils.SortOccurredAtAsc, nsutils.SortCreatedAtDesc, nsutils.SortCreatedAtAsc, nsutils.SortUpdatedAtDesc, nsutils.SortUpdatedAtAsc)
 
+	defaultSortOrder := so == nsutils.SortOccurredAtDesc
 	limit := int64(100)
 	if query.Limit != nil {
 		limit = query.Limit.Int64()
 	}
+	skip := int64(0)
+	if query.Skip != nil {
+		skip = query.Skip.Int64()
+	}
 
-	// DateGTE
-	// DateGT
-	// DateLTE
-	// DateLT
-	// CreatedAtGTE
-	// CreatedAtGT
-	// CreatedAtLTE
-	// CreatedAtLT
-	// UpdatedGTE
-	// UpdatedGT
-	// UpdatedLTE
-	// UpdatedLT
-	// TypeEq
-	// TypeNeq
-	// TypeIn
-	// TypeNin
-	// IDEq
-	// IDIn
-	// DeviceEq
-	// AppEq
-	// Limit
-	// Skip
-	// SgvEQ
-	// SgvGTE
-	// SgvGT
-	// SgvLTE
-	// SgvLT
-	// IncludeDeleted
-	soi := 1
-	switch so.String() {
-	case nsutils.SortOccurredAtDesc.String():
-		soi = -1
-	case nsutils.SortOccurredAtAsc.String():
-		soi = 1
-	case nsutils.SortCreatedAtDesc.String():
-		soi = -2
-	case nsutils.SortCreatedAtAsc.String():
-		soi = 2
-	case nsutils.SortUpdatedAtDesc.String():
-		soi = -3
-	case nsutils.SortUpdatedAtAsc.String():
-		soi = 3
-	default:
-		slog.Warn("Unknown sort field, defaulting to occurred_at desc", "sort", so.String())
+	if defaultSortOrder && query.HasNoFilters() {
 	}
 	qSSs, _ := json.MarshalIndent(query, "", "  ")
 	fmt.Println("Search EntriesCollection with query:", string(qSSs), "limit:", limit, "sortOrder:", so.String())
@@ -151,9 +113,9 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 		SgvLTE:         query.SgvLTE.Int64p(),
 		SgvLT:          query.SgvLT.Int64p(),
 		IncludeDeleted: query.IncludeDeleted.Boolp(),
-		Skip:           query.Skip.Int64(),
+		Skip:           skip,
 		Limit:          limit,
-		SortOrder:      int64(soi),
+		SortOrder:      so.ToIntVal(),
 	})
 	if err != nil {
 		slog.Error("failed to query glucose readings from database", "error", err)

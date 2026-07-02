@@ -31,6 +31,29 @@ var (
 	NameDesc QuerySort = "-name"
 )
 
+func (qs QuerySort) ToIntVal() int64 {
+	switch qs {
+	case SortOccurredAtAsc:
+		return 1
+	case SortOccurredAtDesc:
+		return -1
+	case SortCreatedAtAsc:
+		return 2
+	case SortCreatedAtDesc:
+		return -2
+	case SortUpdatedAtAsc:
+		return 3
+	case SortUpdatedAtDesc:
+		return -3
+	case NameAsc:
+		return 4
+	case NameDesc:
+		return -4
+	default:
+		return -1
+	}
+}
+
 var allowedSortFields = []QuerySort{
 	SortOccurredAtAsc,
 	SortOccurredAtDesc,
@@ -92,14 +115,6 @@ type Query struct {
 	DeviceEq *nightscout.ShortString `mapstructure:"deviceeq,omitempty" json:"deviceeq,omitempty"`
 	AppEq    *nightscout.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
 
-	// Limits
-	Limit *nightscout.FlexibleInt64 `mapstructure:"limit,omitempty" json:"limit,omitempty"`
-	Skip  *nightscout.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
-
-	// Sort
-	Sort     *nightscout.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
-	SortDesc *nightscout.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
-
 	/////
 	// MODEL SPECIFIC QUERIES
 	/////
@@ -123,6 +138,14 @@ type Query struct {
 	NameEq *nightscout.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
+	// Limits
+	Limit *nightscout.FlexibleInt64 `mapstructure:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *nightscout.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
+
+	// Sort
+	Sort     *nightscout.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
+	SortDesc *nightscout.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
+
 	Envelope *nightscout.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
 	Fields   *QueryStringArray        `mapstructure:"fields,omitempty" json:"fields,omitempty"`
 
@@ -133,52 +156,14 @@ type Query struct {
 	Other map[string]interface{} `mapstructure:",remain"`
 }
 
-func (q *Query) SortOrder() QuerySort {
-	sortField := "occurred_at"
-	desc := false
-	if q.Sort != nil {
-		sortField = q.Sort.String()
-	}
-	if q.SortDesc != nil {
-		sortField = q.SortDesc.String()
-		desc = true
-	}
-
-	switch sortField {
-	case "date", "dateString", "mills", "startDate", "occurred_at":
-		sortField = "occurred_at"
-	case "created_at", "srvCreated":
-		sortField = "created_at"
-	case "updated_at", "srvModified":
-		sortField = "updated_at"
-	case "name", "defaultProfile", "device":
-		sortField = "name"
-	default:
-		slog.Warn("Unknown sort or sort$desc field, defaulting to occurred_at desc", "sort", sortField)
-		return SortOccurredAtDesc
-	}
-
-	fullString := sortField
-	if desc {
-		fullString = "-" + fullString
-	}
-	for _, allowed := range allowedSortFields {
-		if string(allowed) == fullString {
-			return allowed
-		}
-	}
-
-	slog.Warn("Unknown sort field, defaulting to occurred_at desc", "sort", fullString)
-	return SortOccurredAtDesc
-}
-
 type QueryStringArray []string
 
 func (qsa *QueryStringArray) Stringp() *string {
 	if qsa == nil {
 		return nil
 	}
-	return ptr(strings.Join(*qsa, ","))
+	res := "[\"" + strings.Join(*qsa, "\",\"") + "\"]"
+	return &res
 }
 
 func (qsa *QueryStringArray) ToArray() []string {
@@ -300,8 +285,8 @@ var forwardLookupName = map[string][]string{
 	"typein":  {"type$in", "find[type][$in]", "eventType$in", "find[eventType][$in]", "activityType$in", "find[activityType][$in]", "category$in", "find[category][$in]"},
 	"typenin": {"type$nin", "find[type][$nin]", "eventType$nin", "find[eventType][$nin]", "activityType$nin", "find[activityType][$nin]", "category$nin", "find[category][$nin]"},
 
-	"ideq": {"_id", "find[_id]", "find[_id][$eq]", "identifier", "find[identifier]", "find[identifier][$eq]"},
-	"idin": {"_id$in", "find[_id][$in]", "identifier$in", "find[identifier][$in]"},
+	"ideq": {"_id", "find[_id]", "find[_id][$eq]", "identifier", "find[identifier]", "find[identifier][$eq]", "id", "find[id]", "find[id][$eq]"},
+	"idin": {"_id$in", "find[_id][$in]", "identifier$in", "find[identifier][$in]", "id$in", "find[id][$in]"},
 
 	// Model Specific
 	"sgveq": {"sgv", "find[sgv]", "find[sgv][$eq]", "mbg", "find[mbg]", "find[mbg][$eq]"},
@@ -435,4 +420,90 @@ func JSONUnmarshalerHook(
 	}
 
 	return v.Elem().Interface(), nil
+}
+
+var ignore = map[string]bool{
+	"Limit":          true,
+	"Skip":           true,
+	"Sort":           true,
+	"SortDesc":       true,
+	"Envelope":       true,
+	"Fields":         true,
+	"IncludeDeleted": true,
+	"Token":          true,
+	"Other":          true,
+}
+
+func (q *Query) HasAnyFilters() bool {
+	if q == nil {
+		return false
+	}
+
+	rv := reflect.ValueOf(q).Elem()
+	rt := rv.Type()
+
+	for i := 0; i < rv.NumField(); i++ {
+		field := rv.Field(i)
+		fieldType := rt.Field(i)
+
+		// skip ignored fields
+		if ignore[fieldType.Name] {
+			continue
+		}
+
+		if isNonEmpty(field) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isNonEmpty(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+		return !v.IsNil()
+	default:
+		// zero value check for everything else
+		return !v.IsZero()
+	}
+}
+
+func (q *Query) SortOrder() QuerySort {
+	sortField := "occurred_at"
+	desc := false
+	if q.Sort != nil {
+		sortField = q.Sort.String()
+	}
+	if q.SortDesc != nil {
+		sortField = q.SortDesc.String()
+		desc = true
+	}
+
+	switch sortField {
+	case "date", "dateString", "mills", "startDate", "occurred_at":
+		sortField = "occurred_at"
+	case "created_at", "srvCreated":
+		sortField = "created_at"
+	case "updated_at", "srvModified":
+		sortField = "updated_at"
+	case "name", "defaultProfile", "device":
+		sortField = "name"
+	default:
+		slog.Warn("Unknown sort or sort$desc field, defaulting to occurred_at desc", "sort", sortField)
+		return SortOccurredAtDesc
+	}
+
+	fullString := sortField
+	if desc {
+		fullString = "-" + fullString
+	}
+	for _, allowed := range allowedSortFields {
+		if string(allowed) == fullString {
+			return allowed
+		}
+	}
+
+	slog.Warn("Unknown sort field, defaulting to occurred_at desc", "sort", fullString)
+	return SortOccurredAtDesc
 }

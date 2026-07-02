@@ -107,3 +107,34 @@ func Test_Sort(t *testing.T) {
 
 	assert.Equal(t, SortOccurredAtDesc, query.SortOrder())
 }
+
+func Test_HasAnyFilters(t *testing.T) {
+	queries := []url.Values{
+		{
+			"find[date][$gte]": []string{"2023-01-01T00:10:00Z"},
+		},
+		{
+			"date$gte": []string{"2023-01-01T00:10:00Z"},
+		},
+		{
+			"find[date][$lte]": []string{"2023-01-01T00:10:00Z"},
+		},
+		{
+			"date$lte": []string{"2023-01-01T00:10:00Z"},
+		},
+	}
+
+	for _, q := range queries {
+		query, err := parseQuery(q)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.True(t, query.HasAnyFilters())
+	}
+
+	query, err := parseQuery(url.Values{})
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.False(t, query.HasAnyFilters())
+}
