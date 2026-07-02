@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -60,7 +61,11 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	if err != nil {
 		errMsg := err.Error()
 		slog.Error("error syncing user data", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "error", err)
-		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), []string{errMsg}, &elapsedTimeMS, syncInfo.UniqueHash)
+		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), control.UpdateSyncSourceReportsFailureParams{
+			ErrorMessages: []string{errMsg},
+			ElapsedMs:     &elapsedTimeMS,
+			UniqueHash:    syncInfo.UniqueHash,
+		})
 		if updateError != nil {
 			slog.Error("error updating sync source report with failure", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "error", updateError)
 		}
@@ -68,7 +73,10 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	}
 
 	slog.Info("finished sync", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
-	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), &elapsedTimeMS, syncInfo.UniqueHash)
+	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), control.UpdateSyncSourceReportsSuccessParams{
+		ElapsedMs:  &elapsedTimeMS,
+		UniqueHash: syncInfo.UniqueHash,
+	})
 	if updateError != nil {
 		slog.Error("error updating sync source report with success", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "error", updateError)
 		return updateError

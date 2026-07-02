@@ -201,7 +201,9 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	userContext := httputils.GetUserContext(r.Context())
 	userDB := userContext.UserDB
 
-	identity, err := userDB.Queries.GetIdentity(context.TODO(), identityNameFromToken)
+	identity, err := userDB.Queries.GetIdentity(context.TODO(), user.GetIdentityParams{
+		Name: identityNameFromToken,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
@@ -213,7 +215,9 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	identity, err := userDB.Queries.GetIdentity(context.TODO(), formName)
+	identity, err := userDB.Queries.GetIdentity(context.TODO(), user.GetIdentityParams{
+		Name: formName,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}

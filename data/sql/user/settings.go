@@ -65,7 +65,9 @@ func (s timezoneSetting) CreateValue(value string) (any, error) {
 }
 
 func (s timezoneSetting) GetValueModel(ctx context.Context, q *Queries) (*Setting, error) {
-	return q.getSettingFromDB(ctx, s.GetKey())
+	return q.getSettingFromDB(ctx, getSettingFromDBParams{
+		ID: s.GetKey(),
+	})
 }
 
 type unitsSetting struct{}
@@ -96,7 +98,9 @@ func (s unitsSetting) GetValue(ctx context.Context, q *Queries) (any, error) {
 }
 
 func (s unitsSetting) GetValueModel(ctx context.Context, q *Queries) (*Setting, error) {
-	return q.getSettingFromDB(ctx, s.GetKey())
+	return q.getSettingFromDB(ctx, getSettingFromDBParams{
+		ID: s.GetKey(),
+	})
 }
 
 func (s unitsSetting) CreateValue(value string) (any, error) {
@@ -119,7 +123,9 @@ func getSettingValue(
 	retValue any,
 	defaultValue any,
 ) (any, error) {
-	value, err := q.getSettingFromDB(ctx, key)
+	value, err := q.getSettingFromDB(ctx, getSettingFromDBParams{
+		ID: key,
+	})
 
 	if err != nil && err == sql.ErrNoRows {
 		return defaultValue, nil
@@ -143,7 +149,9 @@ func setSetting(
 	if err != nil {
 		return nil, err
 	}
-	return q.upsertSettingToDB(ctx, key, string(data))
+	return q.upsertSettingToDB(ctx, upsertSettingToDBParams{
+		ID: key, Json: string(data),
+	})
 }
 
 // Neeed to fit some other interfaces

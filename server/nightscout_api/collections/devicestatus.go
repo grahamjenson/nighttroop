@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -49,7 +50,9 @@ func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputi
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.UserDB.Queries.GetDeviceStatus(ctx, identifier)
+	dbModel, err := userContext.UserDB.Queries.GetDeviceStatus(ctx, user.GetDeviceStatusParams{
+		ID: identifier,
+	})
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -64,7 +67,7 @@ func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.
 	return &record, nil
 }
 
-func (c DeviceStatusCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 

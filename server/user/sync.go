@@ -183,7 +183,10 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 			return
 		}
 
-		err = controlDB.Queries.DeleteSyncSource(r.Context(), type_, userContext.Subdomain)
+		err = controlDB.Queries.DeleteSyncSource(r.Context(), control.DeleteSyncSourceParams{
+			Subdomain: userContext.Subdomain,
+			Type:      type_,
+		})
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return

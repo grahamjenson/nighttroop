@@ -46,8 +46,12 @@ const getAdmin = `-- name: GetAdmin :one
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at FROM admins WHERE name = ?
 `
 
-func (q *Queries) GetAdmin(ctx context.Context, name string) (*Admin, error) {
-	row := q.queryRow(ctx, q.getAdminStmt, getAdmin, name)
+type GetAdminParams struct {
+	Name string
+}
+
+func (q *Queries) GetAdmin(ctx context.Context, arg GetAdminParams) (*Admin, error) {
+	row := q.queryRow(ctx, q.getAdminStmt, getAdmin, arg.Name)
 	var i Admin
 	err := row.Scan(
 		&i.ID,

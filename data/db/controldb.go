@@ -94,7 +94,9 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 func (db *ControlDB) createAdminIfNoneExists() error {
 	ctx := context.TODO()
 	adminName := consts.FIRST_ADMIN_NAME
-	model, err := db.Queries.GetAdmin(ctx, adminName)
+	model, err := db.Queries.GetAdmin(ctx, control.GetAdminParams{
+		Name: adminName,
+	})
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cannot query admin: %w", err)
 	}
@@ -179,7 +181,10 @@ func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 	db.usersRWLock.Lock()
 	defer db.usersRWLock.Unlock()
 
-	_, err = db.Queries.CreateUser(context.TODO(), subdomain, backupKeyHash)
+	_, err = db.Queries.CreateUser(context.TODO(), control.CreateUserParams{
+		Subdomain:     subdomain,
+		BackupKeyHash: backupKeyHash,
+	})
 
 	if err != nil {
 		// Clean up the created DB file
@@ -228,7 +233,10 @@ func (db *ControlDB) DeleteUsers(subdomains []string) error {
 		return nil
 	}
 	bytes, _ := json.Marshal(subdomains)
-	deletedSubdomains, err := db.Queries.DeleteUsers(context.TODO(), string(bytes))
+	deletedSubdomains, err := db.Queries.DeleteUsers(context.TODO(), control.DeleteUsersParams{
+		JsonEach: string(bytes),
+	})
+
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
@@ -289,7 +297,9 @@ func (db *ControlDB) AllUsers() []*UserDB {
 }
 
 func (db *ControlDB) SubdomainUsed(subdomain string) bool {
-	exists, err := db.Queries.SubdomainExists(context.TODO(), subdomain)
+	exists, err := db.Queries.SubdomainExists(context.TODO(), control.SubdomainExistsParams{
+		Subdomain: subdomain,
+	})
 	if err != nil {
 		return false
 	}
@@ -312,14 +322,21 @@ func (db *ControlDB) UpdateUserDateFlags(userModel *control.User, updateLastSeen
 	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
 		lastWriteAt = &now
 	}
-	db.Queries.UpdateUserDateFlags(context.TODO(), lastSeenAt, lastWriteAt, subdomain)
+	db.Queries.UpdateUserDateFlags(context.TODO(), control.UpdateUserDateFlagsParams{
+		LastSeenAt:  lastSeenAt,
+		LastWriteAt: lastWriteAt,
+		Subdomain:   subdomain,
+	})
 
 	return nil
 }
 
 func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.User, error) {
 	// Check if user exists in the db
-	model, err := db.Queries.GetUser(context.TODO(), subdomain)
+	model, err := db.Queries.GetUser(context.TODO(), control.GetUserParams{
+		Subdomain: subdomain,
+	})
+
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot get user from db: %w", err)
 	}
@@ -347,7 +364,9 @@ func (db *ControlDB) getUserDBFromMap(subdomain string) (*UserDB, error) {
 }
 
 func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
-	res, err := db.Queries.GetBatchUsers(context.TODO(), char)
+	res, err := db.Queries.GetBatchUsers(context.TODO(), control.GetBatchUsersParams{
+		Batch: char,
+	})
 	if err != nil {
 		return false, fmt.Errorf("cannot query users: %w", err)
 	}
@@ -357,7 +376,9 @@ func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 
 	users := []*UserDB{}
-	res, err := db.Queries.GetBatchUsers(context.TODO(), char)
+	res, err := db.Queries.GetBatchUsers(context.TODO(), control.GetBatchUsersParams{
+		Batch: char,
+	})
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
 	}
@@ -366,7 +387,10 @@ func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 }
 
 func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.Queries.GetNeverSeenUsers(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	res, err := db.Queries.GetNeverSeenUsers(context.TODO(), control.GetNeverSeenUsersParams{
+		LastSeenAt:  lastSeenMinutes.Minutes(),
+		LastWriteAt: lastWriteMinutes.Minutes(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("cannot query never seen users: %w", err)
 	}
@@ -375,7 +399,10 @@ func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteM
 }
 
 func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.Queries.GetInactiveUsers(context.TODO(), lastSeenMinutes.Minutes(), lastWriteMinutes.Minutes())
+	res, err := db.Queries.GetInactiveUsers(context.TODO(), control.GetInactiveUsersParams{
+		LastSeenAt:  lastSeenMinutes.Minutes(),
+		LastWriteAt: lastWriteMinutes.Minutes(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("cannot query inactive users: %w", err)
 	}
@@ -402,7 +429,9 @@ func getUserDBsFromModels(db *ControlDB, models []*control.User) ([]*UserDB, err
 
 func (db *ControlDB) GetAllUserSyncSources(ctx context.Context, subdomain string) (nightscout *control.UserSyncSource, dexcom *control.UserSyncSource, err error) {
 	// TODO: This might become a problem we could make faster with a dirty flag or something
-	sync_sources, err := db.Queries.GetAllUserSyncSourcesForUser(ctx, subdomain)
+	sync_sources, err := db.Queries.GetAllUserSyncSourcesForUser(ctx, control.GetAllUserSyncSourcesForUserParams{
+		Subdomain: subdomain,
+	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
 	}

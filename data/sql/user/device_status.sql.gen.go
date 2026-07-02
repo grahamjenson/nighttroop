@@ -172,8 +172,12 @@ const getDeviceStatus = `-- name: GetDeviceStatus :one
 SELECT id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
 `
 
-func (q *Queries) GetDeviceStatus(ctx context.Context, id string) (*DeviceStatus, error) {
-	row := q.queryRow(ctx, q.getDeviceStatusStmt, getDeviceStatus, id)
+type GetDeviceStatusParams struct {
+	ID string
+}
+
+func (q *Queries) GetDeviceStatus(ctx context.Context, arg GetDeviceStatusParams) (*DeviceStatus, error) {
+	row := q.queryRow(ctx, q.getDeviceStatusStmt, getDeviceStatus, arg.ID)
 	var i DeviceStatus
 	err := row.Scan(
 		&i.ID,

@@ -65,7 +65,9 @@ func (t *TruncateJobManager) TruncateJobs() error {
 	}
 
 	for k, _ := range dayQueueJobMap {
-		_, err := q.EnsureJobStatsDailyForGroup(ctx, k)
+		_, err := q.EnsureJobStatsDailyForGroup(ctx, control.EnsureJobStatsDailyForGroupParams{
+			DayQueueJob: k,
+		})
 		if err != nil {
 			return fmt.Errorf("Error ensuring job stats daily for group: %w", err)
 		}
@@ -97,7 +99,9 @@ func (t *TruncateJobManager) TruncateJobs() error {
 		return fmt.Errorf("Error updating job stats daily: %w", err)
 	}
 
-	err = qtx.DeleteJobsByIds(ctx, ids)
+	err = qtx.DeleteJobsByIds(ctx, control.DeleteJobsByIdsParams{
+		Ids: ids,
+	})
 	if err != nil {
 		return fmt.Errorf("Error deleting old jobs: %w", err)
 	}

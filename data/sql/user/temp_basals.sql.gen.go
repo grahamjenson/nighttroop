@@ -128,8 +128,12 @@ const getTempBasal = `-- name: GetTempBasal :one
 SELECT id, start, duration_minutes, value, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_basals WHERE id = ?
 `
 
-func (q *Queries) GetTempBasal(ctx context.Context, id string) (*TempBasal, error) {
-	row := q.queryRow(ctx, q.getTempBasalStmt, getTempBasal, id)
+type GetTempBasalParams struct {
+	ID string
+}
+
+func (q *Queries) GetTempBasal(ctx context.Context, arg GetTempBasalParams) (*TempBasal, error) {
+	row := q.queryRow(ctx, q.getTempBasalStmt, getTempBasal, arg.ID)
 	var i TempBasal
 	err := row.Scan(
 		&i.ID,

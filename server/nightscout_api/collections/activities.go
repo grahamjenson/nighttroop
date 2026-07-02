@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -49,7 +50,9 @@ func (c ActivityCollection) Create(ctx context.Context, userContext *httputils.U
 }
 
 func (c ActivityCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.UserDB.Queries.GetActivity(ctx, identifier)
+	dbModel, err := userContext.UserDB.Queries.GetActivity(ctx, user.GetActivityParams{
+		ID: identifier,
+	})
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -64,7 +67,7 @@ func (c ActivityCollection) Get(ctx context.Context, userContext *httputils.User
 	return &record, nil
 }
 
-func (c ActivityCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c ActivityCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	// TODO
 	return nil, nsutils.ErrNotImplemented
 }

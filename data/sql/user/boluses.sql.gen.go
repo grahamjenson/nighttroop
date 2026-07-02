@@ -126,8 +126,12 @@ const getBolus = `-- name: GetBolus :one
 SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM bolus WHERE id = ?
 `
 
-func (q *Queries) GetBolus(ctx context.Context, id string) (*Bolus, error) {
-	row := q.queryRow(ctx, q.getBolusStmt, getBolus, id)
+type GetBolusParams struct {
+	ID string
+}
+
+func (q *Queries) GetBolus(ctx context.Context, arg GetBolusParams) (*Bolus, error) {
+	row := q.queryRow(ctx, q.getBolusStmt, getBolus, arg.ID)
 	var i Bolus
 	err := row.Scan(
 		&i.ID,

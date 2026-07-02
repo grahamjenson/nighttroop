@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -13,7 +14,7 @@ import (
 type CollectionStore interface {
 	Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 	Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
-	Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError)
+	Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
 	Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 	Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
@@ -67,7 +68,7 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 	return *record, nil
 }
 
-func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 
 	if !ok {

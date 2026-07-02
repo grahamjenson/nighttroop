@@ -63,8 +63,12 @@ WHERE
     id = ?
 `
 
-func (q *Queries) CompleteJob(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.completeJobStmt, completeJob, id)
+type CompleteJobParams struct {
+	ID int64
+}
+
+func (q *Queries) CompleteJob(ctx context.Context, arg CompleteJobParams) error {
+	_, err := q.exec(ctx, q.completeJobStmt, completeJob, arg.ID)
 	return err
 }
 
@@ -75,17 +79,21 @@ DELETE FROM jobs
 WHERE id IN (/*SLICE:ids*/?)
 `
 
+type DeleteJobsByIdsParams struct {
+	Ids []int64
+}
+
 // ----------
 // Job Stats
 // ----------
-func (q *Queries) DeleteJobsByIds(ctx context.Context, ids []int64) error {
+func (q *Queries) DeleteJobsByIds(ctx context.Context, arg DeleteJobsByIdsParams) error {
 	query := deleteJobsByIds
 	var queryParams []interface{}
-	if len(ids) > 0 {
-		for _, v := range ids {
+	if len(arg.Ids) > 0 {
+		for _, v := range arg.Ids {
 			queryParams = append(queryParams, v)
 		}
-		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(arg.Ids))[1:], 1)
 	} else {
 		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
 	}
@@ -103,9 +111,13 @@ ON CONFLICT(day_queue_job) DO UPDATE SET
 RETURNING day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at
 `
 
+type EnsureJobStatsDailyForGroupParams struct {
+	DayQueueJob string
+}
+
 // jobs created at more than 1 minute ago
-func (q *Queries) EnsureJobStatsDailyForGroup(ctx context.Context, dayQueueJob string) (*JobStatsDaily, error) {
-	row := q.queryRow(ctx, q.ensureJobStatsDailyForGroupStmt, ensureJobStatsDailyForGroup, dayQueueJob)
+func (q *Queries) EnsureJobStatsDailyForGroup(ctx context.Context, arg EnsureJobStatsDailyForGroupParams) (*JobStatsDaily, error) {
+	row := q.queryRow(ctx, q.ensureJobStatsDailyForGroupStmt, ensureJobStatsDailyForGroup, arg.DayQueueJob)
 	var i JobStatsDaily
 	err := row.Scan(
 		&i.DayQueueJob,
@@ -144,8 +156,13 @@ WHERE
     id = ?
 `
 
-func (q *Queries) FailJob(ctx context.Context, errors errors.ErrorList, iD int64) error {
-	_, err := q.exec(ctx, q.failJobStmt, failJob, errors, iD)
+type FailJobParams struct {
+	Errors errors.ErrorList
+	ID     int64
+}
+
+func (q *Queries) FailJob(ctx context.Context, arg FailJobParams) error {
+	_, err := q.exec(ctx, q.failJobStmt, failJob, arg.Errors, arg.ID)
 	return err
 }
 
@@ -158,8 +175,12 @@ WHERE
     id = ?
 `
 
-func (q *Queries) FindJob(ctx context.Context, id int64) (*Job, error) {
-	row := q.queryRow(ctx, q.findJobStmt, findJob, id)
+type FindJobParams struct {
+	ID int64
+}
+
+func (q *Queries) FindJob(ctx context.Context, arg FindJobParams) (*Job, error) {
+	row := q.queryRow(ctx, q.findJobStmt, findJob, arg.ID)
 	var i Job
 	err := row.Scan(
 		&i.ID,
@@ -249,8 +270,14 @@ WHERE
     ) RETURNING id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at
 `
 
-func (q *Queries) MarkJobsForConsumer(ctx context.Context, queue string, executeAfter int64, limit int64) ([]*Job, error) {
-	rows, err := q.query(ctx, q.markJobsForConsumerStmt, markJobsForConsumer, queue, executeAfter, limit)
+type MarkJobsForConsumerParams struct {
+	Queue        string
+	ExecuteAfter int64
+	Limit        int64
+}
+
+func (q *Queries) MarkJobsForConsumer(ctx context.Context, arg MarkJobsForConsumerParams) ([]*Job, error) {
+	rows, err := q.query(ctx, q.markJobsForConsumerStmt, markJobsForConsumer, arg.Queue, arg.ExecuteAfter, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -403,8 +430,13 @@ WHERE
     AND consumer_fetched_at < ?
 `
 
-func (q *Queries) ResetJobs(ctx context.Context, queue string, consumerFetchedAt int64) (int64, error) {
-	result, err := q.exec(ctx, q.resetJobsStmt, resetJobs, queue, consumerFetchedAt)
+type ResetJobsParams struct {
+	Queue             string
+	ConsumerFetchedAt int64
+}
+
+func (q *Queries) ResetJobs(ctx context.Context, arg ResetJobsParams) (int64, error) {
+	result, err := q.exec(ctx, q.resetJobsStmt, resetJobs, arg.Queue, arg.ConsumerFetchedAt)
 	if err != nil {
 		return 0, err
 	}

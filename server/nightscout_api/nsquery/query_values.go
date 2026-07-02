@@ -1,7 +1,6 @@
-package nsutils
+package nsquery
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -12,77 +11,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscout"
 )
 
-// Because we cant support all mongo queries and filters
-// Nighttroop is just going to enumerate and translate all queries into a limited set of supported queries
-
-type QuerySort string
-
-var (
-	// dates
-	SortOccurredAtAsc  QuerySort = "occurred_at"
-	SortOccurredAtDesc QuerySort = "-occurred_at"
-	SortCreatedAtAsc   QuerySort = "created_at"
-	SortCreatedAtDesc  QuerySort = "-created_at"
-	SortUpdatedAtAsc   QuerySort = "updated_at"
-	SortUpdatedAtDesc  QuerySort = "-updated_at"
-
-	// Model Specific
-	NameAsc  QuerySort = "name"
-	NameDesc QuerySort = "-name"
-)
-
-func (qs QuerySort) ToIntVal() int64 {
-	switch qs {
-	case SortOccurredAtAsc:
-		return 1
-	case SortOccurredAtDesc:
-		return -1
-	case SortCreatedAtAsc:
-		return 2
-	case SortCreatedAtDesc:
-		return -2
-	case SortUpdatedAtAsc:
-		return 3
-	case SortUpdatedAtDesc:
-		return -3
-	case NameAsc:
-		return 4
-	case NameDesc:
-		return -4
-	default:
-		return -1
-	}
-}
-
-var allowedSortFields = []QuerySort{
-	SortOccurredAtAsc,
-	SortOccurredAtDesc,
-	SortCreatedAtAsc,
-	SortCreatedAtDesc,
-	SortUpdatedAtAsc,
-	SortUpdatedAtDesc,
-	NameAsc,
-	NameDesc,
-}
-
-func (qs QuerySort) String() string {
-	return string(qs)
-}
-
-func (qs QuerySort) Support(allowed ...QuerySort) QuerySort {
-	if len(allowed) == 0 {
-		return qs
-	}
-	for _, a := range allowed {
-		if qs == a {
-			return qs
-		}
-	}
-	// We are returning first element as default
-	return allowed[0]
-}
-
-type Query struct {
+type QueryValues struct {
 	// Dates
 	// lte and gte both
 	DateGTE *nightscout.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
@@ -156,102 +85,6 @@ type Query struct {
 	Other map[string]interface{} `mapstructure:",remain"`
 }
 
-type QueryStringArray []string
-
-func (qsa *QueryStringArray) Stringp() *string {
-	if qsa == nil {
-		return nil
-	}
-	res := "[\"" + strings.Join(*qsa, "\",\"") + "\"]"
-	return &res
-}
-
-func (qsa *QueryStringArray) ToArray() []string {
-	if qsa == nil {
-		return []string{}
-	}
-	return []string(*qsa)
-}
-func (qsa *QueryStringArray) UnmarshalJSON(data []byte) error {
-	// First try a JSON array.
-	var arr []string
-	if err := json.Unmarshal(data, &arr); err == nil {
-		*qsa = arr
-		return nil
-	}
-
-	// Otherwise expect a JSON string.
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-
-	var parts []string
-	switch {
-	case s == "_all":
-		parts = []string{}
-	case strings.Contains(s, "|"):
-		parts = strings.Split(s, "|")
-	case strings.Contains(s, ","):
-		parts = strings.Split(s, ",")
-	default:
-		parts = []string{s}
-	}
-
-	// Trim whitespace and drop empty elements.
-	out := make([]string, 0, len(parts))
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part != "" {
-			out = append(out, part)
-		}
-	}
-
-	*qsa = out
-	return nil
-}
-
-func ptr[T any](v T) *T {
-	return &v
-}
-
-// DefaultQuery returns the default query shape used by list-style endpoints.
-func withDefaults(qv *Query) {
-	if qv == nil {
-		qv = &Query{}
-	}
-
-	if qv.Limit == nil || qv.Limit.Int64() <= 0 || qv.Limit.Int64() > 100 {
-		qv.Limit = ptr(nightscout.FlexibleInt64(100))
-	}
-
-	if qv.Sort == nil && qv.SortDesc == nil {
-		qv.SortDesc = ptr(nightscout.ShortString("date"))
-	}
-}
-
-// ParseV1 translates Nightscout v1 query parameters into the storage query
-// model used by this library.
-func ParseV1(values url.Values) (*Query, *HTTPError) {
-	qv, err := parseQuery(values)
-	if err != nil {
-		return nil, ErrBadQueryError(err.Error())
-	}
-	withDefaults(qv)
-
-	return qv, nil
-}
-
-// ParseV3 translates Nightscout API v3 query parameters into a storage query.
-func ParseV3(values url.Values) (*Query, *HTTPError) {
-	qv, err := parseQuery(values)
-	if err != nil {
-		return nil, ErrBadQueryError(err.Error())
-	}
-	withDefaults(qv)
-	return qv, nil
-}
-
 // This is just much nicer to work with but the reverse is faster, so we
 var forwardLookupName = map[string][]string{
 	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]"},
@@ -317,7 +150,7 @@ var forwardLookupName = map[string][]string{
 
 var reverseLookupName = map[string]string{}
 
-func parseQuery(values url.Values) (*Query, error) {
+func ParseQueryValues(values url.Values) (*QueryValues, error) {
 	if len(reverseLookupName) == 0 {
 		for k, v := range forwardLookupName {
 			for _, vv := range v {
@@ -352,7 +185,7 @@ func parseQuery(values url.Values) (*Query, error) {
 
 	}
 
-	var qv Query
+	var qv QueryValues
 	config := &mapstructure.DecoderConfig{
 		Result:  &qv,
 		TagName: "mapstructure",
@@ -389,87 +222,7 @@ func parseQuery(values url.Values) (*Query, error) {
 	return &qv, nil
 }
 
-//// Map Structure Helpers
-
-func JSONUnmarshalerHook(
-	from reflect.Type,
-	to reflect.Type,
-	data any,
-) (any, error) {
-	unmarshalerType := reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
-
-	// We need a pointer to the destination type because
-	// UnmarshalJSON is usually defined on *T.
-	ptrType := reflect.PointerTo(to)
-	if !ptrType.Implements(unmarshalerType) {
-		return data, nil
-	}
-
-	// Marshal the incoming value back to JSON.
-	b, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a new instance of T.
-	v := reflect.New(to)
-
-	// Call UnmarshalJSON.
-	if err := v.Interface().(json.Unmarshaler).UnmarshalJSON(b); err != nil {
-		return nil, err
-	}
-
-	return v.Elem().Interface(), nil
-}
-
-var ignore = map[string]bool{
-	"Limit":          true,
-	"Skip":           true,
-	"Sort":           true,
-	"SortDesc":       true,
-	"Envelope":       true,
-	"Fields":         true,
-	"IncludeDeleted": true,
-	"Token":          true,
-	"Other":          true,
-}
-
-func (q *Query) HasAnyFilters() bool {
-	if q == nil {
-		return false
-	}
-
-	rv := reflect.ValueOf(q).Elem()
-	rt := rv.Type()
-
-	for i := 0; i < rv.NumField(); i++ {
-		field := rv.Field(i)
-		fieldType := rt.Field(i)
-
-		// skip ignored fields
-		if ignore[fieldType.Name] {
-			continue
-		}
-
-		if isNonEmpty(field) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isNonEmpty(v reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
-		return !v.IsNil()
-	default:
-		// zero value check for everything else
-		return !v.IsZero()
-	}
-}
-
-func (q *Query) SortOrder() QuerySort {
+func (q *QueryValues) SortOrder() *QuerySort {
 	sortField := "occurred_at"
 	desc := false
 	if q.Sort != nil {
@@ -491,7 +244,7 @@ func (q *Query) SortOrder() QuerySort {
 		sortField = "name"
 	default:
 		slog.Warn("Unknown sort or sort$desc field, defaulting to occurred_at desc", "sort", sortField)
-		return SortOccurredAtDesc
+		return nil
 	}
 
 	fullString := sortField
@@ -500,10 +253,56 @@ func (q *Query) SortOrder() QuerySort {
 	}
 	for _, allowed := range allowedSortFields {
 		if string(allowed) == fullString {
-			return allowed
+			return &allowed
 		}
 	}
 
 	slog.Warn("Unknown sort field, defaulting to occurred_at desc", "sort", fullString)
-	return SortOccurredAtDesc
+	return nil
+}
+
+var nonFilters = map[string]bool{
+	"Limit":    true,
+	"Skip":     true,
+	"Sort":     true,
+	"SortDesc": true,
+	"Envelope": true,
+	"Fields":   true,
+	"Token":    true,
+	"Other":    true,
+}
+
+func (q *QueryValues) HasAnyFilters() bool {
+	if q == nil {
+		return false
+	}
+
+	rv := reflect.ValueOf(q).Elem()
+	rt := rv.Type()
+
+	for i := 0; i < rv.NumField(); i++ {
+		field := rv.Field(i)
+		fieldType := rt.Field(i)
+
+		// skip ignored fields
+		if nonFilters[fieldType.Name] {
+			continue
+		}
+
+		if isNonEmpty(field) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isNonEmpty(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+		return !v.IsNil()
+	default:
+		// zero value check for everything else
+		return !v.IsZero()
+	}
 }

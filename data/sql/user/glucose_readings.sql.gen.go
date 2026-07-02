@@ -17,13 +17,18 @@ ORDER BY occurred_at DESC
 LIMIT ?2 OFFSET ?1
 `
 
+type AllGlucoseReadingsParams struct {
+	Skip  int64
+	Limit int64
+}
+
 // There are three queries here for performance
 // 1. All default order with limit
 // 2. Default order with search terms limit and skip
 // 3. Non-default order with search terms limit and skip
 // I wont optimize further or compromise on non-prepared statements (until it becomes necessary)!
-func (q *Queries) AllGlucoseReadings(ctx context.Context, skip int64, limit int64) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings, skip, limit)
+func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadingsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -137,11 +142,15 @@ UPDATE glucose_readings SET
 WHERE id = ?
 `
 
+type DeleteGlucoseReadingParams struct {
+	ID string
+}
+
 // ------
 // DELETE
 // ------
-func (q *Queries) DeleteGlucoseReading(ctx context.Context, id string) (sql.Result, error) {
-	return q.exec(ctx, q.deleteGlucoseReadingStmt, deleteGlucoseReading, id)
+func (q *Queries) DeleteGlucoseReading(ctx context.Context, arg DeleteGlucoseReadingParams) (sql.Result, error) {
+	return q.exec(ctx, q.deleteGlucoseReadingStmt, deleteGlucoseReading, arg.ID)
 }
 
 const deleteGlucoseReadingsByType = `-- name: DeleteGlucoseReadingsByType :execresult
@@ -151,16 +160,24 @@ UPDATE glucose_readings SET
 WHERE type = ?
 `
 
-func (q *Queries) DeleteGlucoseReadingsByType(ctx context.Context, type_ string) (sql.Result, error) {
-	return q.exec(ctx, q.deleteGlucoseReadingsByTypeStmt, deleteGlucoseReadingsByType, type_)
+type DeleteGlucoseReadingsByTypeParams struct {
+	Type string
+}
+
+func (q *Queries) DeleteGlucoseReadingsByType(ctx context.Context, arg DeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.deleteGlucoseReadingsByTypeStmt, deleteGlucoseReadingsByType, arg.Type)
 }
 
 const deletePermanentGlucoseReading = `-- name: DeletePermanentGlucoseReading :execresult
 DELETE FROM glucose_readings WHERE id = ?
 `
 
-func (q *Queries) DeletePermanentGlucoseReading(ctx context.Context, id string) (sql.Result, error) {
-	return q.exec(ctx, q.deletePermanentGlucoseReadingStmt, deletePermanentGlucoseReading, id)
+type DeletePermanentGlucoseReadingParams struct {
+	ID string
+}
+
+func (q *Queries) DeletePermanentGlucoseReading(ctx context.Context, arg DeletePermanentGlucoseReadingParams) (sql.Result, error) {
+	return q.exec(ctx, q.deletePermanentGlucoseReadingStmt, deletePermanentGlucoseReading, arg.ID)
 }
 
 const deletePermanentGlucoseReadingsByType = `-- name: DeletePermanentGlucoseReadingsByType :execresult
@@ -168,8 +185,12 @@ DELETE FROM glucose_readings
 WHERE type = ?
 `
 
-func (q *Queries) DeletePermanentGlucoseReadingsByType(ctx context.Context, type_ string) (sql.Result, error) {
-	return q.exec(ctx, q.deletePermanentGlucoseReadingsByTypeStmt, deletePermanentGlucoseReadingsByType, type_)
+type DeletePermanentGlucoseReadingsByTypeParams struct {
+	Type string
+}
+
+func (q *Queries) DeletePermanentGlucoseReadingsByType(ctx context.Context, arg DeletePermanentGlucoseReadingsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.deletePermanentGlucoseReadingsByTypeStmt, deletePermanentGlucoseReadingsByType, arg.Type)
 }
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
@@ -177,11 +198,15 @@ const getGlucoseReading = `-- name: GetGlucoseReading :one
 SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings WHERE id = ?
 `
 
+type GetGlucoseReadingParams struct {
+	ID string
+}
+
 // ------
 // READ
 // ------
-func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, id)
+func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingParams) (*GlucoseReading, error) {
+	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, arg.ID)
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,

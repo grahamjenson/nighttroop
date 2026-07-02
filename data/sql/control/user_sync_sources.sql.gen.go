@@ -72,9 +72,14 @@ const deleteSyncSource = `-- name: DeleteSyncSource :exec
 DELETE FROM user_sync_sources WHERE type = ? and subdomain = ?
 `
 
+type DeleteSyncSourceParams struct {
+	Type      consts.SyncSourceType
+	Subdomain string
+}
+
 // DELETE is real for security
-func (q *Queries) DeleteSyncSource(ctx context.Context, type_ consts.SyncSourceType, subdomain string) error {
-	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, type_, subdomain)
+func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourceParams) error {
+	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, arg.Type, arg.Subdomain)
 	return err
 }
 
@@ -82,8 +87,12 @@ const disableNightscoutSyncSource = `-- name: DisableNightscoutSyncSource :exec
 UPDATE user_sync_sources SET enabled = 0, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
 `
 
-func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, subdomain string) error {
-	_, err := q.exec(ctx, q.disableNightscoutSyncSourceStmt, disableNightscoutSyncSource, subdomain)
+type DisableNightscoutSyncSourceParams struct {
+	Subdomain string
+}
+
+func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, arg DisableNightscoutSyncSourceParams) error {
+	_, err := q.exec(ctx, q.disableNightscoutSyncSourceStmt, disableNightscoutSyncSource, arg.Subdomain)
 	return err
 }
 
@@ -91,8 +100,12 @@ const getAllUserSyncSourcesForUniqueHash = `-- name: GetAllUserSyncSourcesForUni
 SELECT uss.id, uss.subdomain, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM user_sync_sources uss JOIN users u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
 `
 
-func (q *Queries) GetAllUserSyncSourcesForUniqueHash(ctx context.Context, uniqueHash string) ([]*UserSyncSource, error) {
-	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUniqueHashStmt, getAllUserSyncSourcesForUniqueHash, uniqueHash)
+type GetAllUserSyncSourcesForUniqueHashParams struct {
+	UniqueHash string
+}
+
+func (q *Queries) GetAllUserSyncSourcesForUniqueHash(ctx context.Context, arg GetAllUserSyncSourcesForUniqueHashParams) ([]*UserSyncSource, error) {
+	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUniqueHashStmt, getAllUserSyncSourcesForUniqueHash, arg.UniqueHash)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +142,12 @@ const getAllUserSyncSourcesForUser = `-- name: GetAllUserSyncSourcesForUser :man
 SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM user_sync_sources where subdomain = ?
 `
 
-func (q *Queries) GetAllUserSyncSourcesForUser(ctx context.Context, subdomain string) ([]*UserSyncSource, error) {
-	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUserStmt, getAllUserSyncSourcesForUser, subdomain)
+type GetAllUserSyncSourcesForUserParams struct {
+	Subdomain string
+}
+
+func (q *Queries) GetAllUserSyncSourcesForUser(ctx context.Context, arg GetAllUserSyncSourcesForUserParams) ([]*UserSyncSource, error) {
+	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUserStmt, getAllUserSyncSourcesForUser, arg.Subdomain)
 	if err != nil {
 		return nil, err
 	}

@@ -174,8 +174,12 @@ const getProfile = `-- name: GetProfile :one
 SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM profile WHERE id = ?
 `
 
-func (q *Queries) GetProfile(ctx context.Context, id string) (*Profile, error) {
-	row := q.queryRow(ctx, q.getProfileStmt, getProfile, id)
+type GetProfileParams struct {
+	ID string
+}
+
+func (q *Queries) GetProfile(ctx context.Context, arg GetProfileParams) (*Profile, error) {
+	row := q.queryRow(ctx, q.getProfileStmt, getProfile, arg.ID)
 	var i Profile
 	err := row.Scan(
 		&i.ID,

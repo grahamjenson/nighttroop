@@ -13,7 +13,11 @@ const truncateEvents = `-- name: TruncateEvents :exec
 DELETE FROM events WHERE id < (SELECT MAX(e.id) - ? FROM events as e)
 `
 
-func (q *Queries) TruncateEvents(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.truncateEventsStmt, truncateEvents, id)
+type TruncateEventsParams struct {
+	ID int64
+}
+
+func (q *Queries) TruncateEvents(ctx context.Context, arg TruncateEventsParams) error {
+	_, err := q.exec(ctx, q.truncateEventsStmt, truncateEvents, arg.ID)
 	return err
 }

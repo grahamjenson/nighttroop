@@ -73,7 +73,9 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			return nil
 		}
 		// This will filter out
-		syncSources, err := b.controlDB.Queries.GetAllUserSyncSourcesForUniqueHash(ctx, syncJob.UniqueHash)
+		syncSources, err := b.controlDB.Queries.GetAllUserSyncSourcesForUniqueHash(ctx, control.GetAllUserSyncSourcesForUniqueHashParams{
+			UniqueHash: syncJob.UniqueHash,
+		})
 		if err != nil {
 			slog.Error("Error getting user sync sources", "error", err, "unique_hash", syncJob.UniqueHash)
 			return err
@@ -159,7 +161,9 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.UserSy
 	if identityName == "" {
 		return nil, fmt.Errorf("invalid sync source type: %s", syncSource.Type)
 	}
-	identity, err := userDb.Queries.GetIdentity(context.TODO(), identityName)
+	identity, err := userDb.Queries.GetIdentity(context.TODO(), user.GetIdentityParams{
+		Name: identityName,
+	})
 	if err != nil {
 		return nil, err
 	}

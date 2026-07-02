@@ -1,4 +1,4 @@
-package nsutils
+package nsquery
 
 import (
 	"fmt"
@@ -36,14 +36,14 @@ func Test_Query_DateGTE(t *testing.T) {
 	}
 
 	for _, q := range queries {
-		query, err := parseQuery(q)
+		query, err := ParseQueryValues(q)
 		if !assert.NoError(t, err) {
 			return
 		}
 		if !assert.NotNil(t, query.DateGTE) {
 			return
 		}
-		assert.Equal(t, date, query.DateGTE.TimeString())
+		assert.Equal(t, dateMills, query.DateGTE)
 	}
 }
 
@@ -63,14 +63,14 @@ func Test_Fields(t *testing.T) {
 		},
 	}
 	for _, q := range queries {
-		query, err := parseQuery(q)
+		query, err := ParseQueryValues(q)
 		if !assert.NoError(t, err) {
 			return
 		}
 		if !assert.NotNil(t, query.Fields) {
 			return
 		}
-		assert.Equal(t, []string{"date", "value", "type"}, query.Fields.ToArray())
+		assert.Equal(t, []string{"date", "value", "type"}, query.Fields)
 	}
 }
 
@@ -89,15 +89,15 @@ func Test_Sort(t *testing.T) {
 	}
 
 	for _, q := range queries {
-		query, err := parseQuery(q)
+		query, err := ParseQueryValues(q)
 		if !assert.NoError(t, err) {
 			return
 		}
-		assert.NotNil(t, query.SortOrder())
-		assert.Equal(t, SortOccurredAtAsc, query.SortOrder())
+		assert.NotNil(t, query.SortOrder)
+		assert.Equal(t, SortOccurredAtAsc, query.SortOrder)
 	}
 
-	query, err := parseQuery(url.Values{
+	query, err := ParseQueryValues(url.Values{
 		"sort": []string{"invalid_field"},
 	})
 
@@ -105,7 +105,7 @@ func Test_Sort(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, SortOccurredAtDesc, query.SortOrder())
+	assert.Equal(t, SortOccurredAtDesc, query.SortOrder)
 }
 
 func Test_HasAnyFilters(t *testing.T) {
@@ -125,16 +125,27 @@ func Test_HasAnyFilters(t *testing.T) {
 	}
 
 	for _, q := range queries {
-		query, err := parseQuery(q)
+		query, err := ParseQueryValues(q)
 		if !assert.NoError(t, err) {
 			return
 		}
 		assert.True(t, query.HasAnyFilters())
 	}
 
-	query, err := parseQuery(url.Values{})
-	if !assert.NoError(t, err) {
-		return
+	falsequeries := []url.Values{
+		{
+			"limit": []string{"1"},
+		},
+		{
+			"skip": []string{"1"},
+		},
+		{},
 	}
-	assert.False(t, query.HasAnyFilters())
+	for _, q := range falsequeries {
+		query, err := ParseQueryValues(q)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.False(t, query.HasAnyFilters())
+	}
 }

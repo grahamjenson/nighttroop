@@ -161,7 +161,9 @@ func GetIdentity(ctx context.Context, subdomain string, identityName string, rol
 		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", userContext.Subdomain, subdomain)
 	}
 
-	identity, err := userContext.UserDB.Queries.GetIdentity(ctx, identityName)
+	identity, err := userContext.UserDB.Queries.GetIdentity(ctx, user.GetIdentityParams{
+		Name: identityName,
+	})
 	if err != nil {
 		return nil, err
 	}

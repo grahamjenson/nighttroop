@@ -28,5 +28,4 @@ type ToCreateParams interface {
 
 	GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams
 	GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams
-	FromNonDefaultToDefault(source SearchWithNonDefaultSortGlucoseReadingsParams) SearchWithDefaultSortGlucoseReadingsParams
 }

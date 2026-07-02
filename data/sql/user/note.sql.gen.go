@@ -121,8 +121,12 @@ const getNote = `-- name: GetNote :one
 SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM note WHERE id = ?
 `
 
-func (q *Queries) GetNote(ctx context.Context, id string) (*Note, error) {
-	row := q.queryRow(ctx, q.getNoteStmt, getNote, id)
+type GetNoteParams struct {
+	ID string
+}
+
+func (q *Queries) GetNote(ctx context.Context, arg GetNoteParams) (*Note, error) {
+	row := q.queryRow(ctx, q.getNoteStmt, getNote, arg.ID)
 	var i Note
 	err := row.Scan(
 		&i.ID,

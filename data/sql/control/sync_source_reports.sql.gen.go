@@ -87,9 +87,13 @@ SET
 WHERE unique_hash = ?1
 `
 
+type UpdateSyncReportAttemptParams struct {
+	UniqueHash string
+}
+
 // ---- Updates to the Sync Reporting -----
-func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, uniqueHash string) error {
-	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, uniqueHash)
+func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, arg UpdateSyncReportAttemptParams) error {
+	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, arg.UniqueHash)
 	return err
 }
 
@@ -128,8 +132,14 @@ SET
 WHERE unique_hash = ?3
 `
 
-func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, errorMessages errors.ErrorList, elapsedMs *int64, uniqueHash string) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, errorMessages, elapsedMs, uniqueHash)
+type UpdateSyncSourceReportsFailureParams struct {
+	ErrorMessages errors.ErrorList
+	ElapsedMs     *int64
+	UniqueHash    string
+}
+
+func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, arg UpdateSyncSourceReportsFailureParams) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, arg.ErrorMessages, arg.ElapsedMs, arg.UniqueHash)
 	return err
 }
 
@@ -165,7 +175,12 @@ SET
 WHERE unique_hash = ?2
 `
 
-func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, elapsedMs *int64, uniqueHash string) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, elapsedMs, uniqueHash)
+type UpdateSyncSourceReportsSuccessParams struct {
+	ElapsedMs  *int64
+	UniqueHash string
+}
+
+func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, arg UpdateSyncSourceReportsSuccessParams) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, arg.ElapsedMs, arg.UniqueHash)
 	return err
 }

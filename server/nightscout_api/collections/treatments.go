@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -49,7 +50,7 @@ func (c TreatmentCollection) Get(ctx context.Context, userContext *httputils.Use
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
 	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
 	if err != nil {

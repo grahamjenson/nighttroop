@@ -49,7 +49,7 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 	err = user.MigrateUp(subdomain, sqldb)
 	if err != nil {
 		sqldb.Close()
-		return userDB, fmt.Errorf("Migration Error Occured user db: %s %w", subdomain, err)
+		return userDB, fmt.Errorf("Migration Error Occurred user db: %s %w", subdomain, err)
 	}
 
 	userDB.Queries, err = user.Prepare(context.TODO(), sqldb)
@@ -216,7 +216,12 @@ func (db *UserDB) UpdateIdentityDateFlags(identity *user.Identity, updateLastSee
 	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
 		lastWriteAt = &now
 	}
-	db.Queries.UpdateIdentityDateFlags(context.TODO(), lastSeenAt, lastWriteAt, identity.ID)
+
+	db.Queries.UpdateIdentityDateFlags(context.TODO(), user.UpdateIdentityDateFlagsParams{
+		LastSeenAt:  lastSeenAt,
+		LastWriteAt: lastWriteAt,
+		ID:          identity.ID,
+	})
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -52,7 +53,7 @@ func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.Us
 }
 
 func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReading(ctx, identifier)
+	glucoseReading, err := userContext.UserDB.Queries.GetGlucoseReading(ctx, user.GetGlucoseReadingParams{ID: identifier})
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -67,11 +68,11 @@ func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserC
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	so := query.SortOrder()
-	so = so.Support(nsutils.SortOccurredAtDesc, nsutils.SortOccurredAtAsc, nsutils.SortCreatedAtDesc, nsutils.SortCreatedAtAsc, nsutils.SortUpdatedAtDesc, nsutils.SortUpdatedAtAsc)
+	so = so.Support(nsquery.SortOccurredAtDesc, nsquery.SortOccurredAtAsc, nsquery.SortCreatedAtDesc, nsquery.SortCreatedAtAsc, nsquery.SortUpdatedAtDesc, nsquery.SortUpdatedAtAsc)
 
-	defaultSortOrder := so == nsutils.SortOccurredAtDesc
+	defaultSortOrder := so == nsquery.SortOccurredAtDesc
 	limit := int64(100)
 	if query.Limit != nil {
 		limit = query.Limit.Int64()
@@ -81,44 +82,91 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 		skip = query.Skip.Int64()
 	}
 
-	if defaultSortOrder && query.HasNoFilters() {
-	}
+	hasFilters := query.HasAnyFilters()
+
 	qSSs, _ := json.MarshalIndent(query, "", "  ")
 	fmt.Println("Search EntriesCollection with query:", string(qSSs), "limit:", limit, "sortOrder:", so.String())
-	entries, err := userContext.UserDB.Queries.NonDefaultSortSearchGlucoseReadings(ctx, user.NonDefaultSortSearchGlucoseReadingsParams{
-		DateGTE:      query.DateGTE.Int64p(),
-		DateLTE:      query.DateLTE.Int64p(),
-		DateGT:       query.DateGT.Int64p(),
-		DateLT:       query.DateLT.Int64p(),
-		CreatedAtGTE: query.CreatedAtGTE.Int64p(),
-		CreatedAtGT:  query.CreatedAtGT.Int64p(),
-		CreatedAtLTE: query.CreatedAtLTE.Int64p(),
-		CreatedAtLT:  query.CreatedAtLT.Int64p(),
-		UpdatedGTE:   query.UpdatedGTE.Int64p(),
-		UpdatedGT:    query.UpdatedGT.Int64p(),
-		UpdatedLTE:   query.UpdatedLTE.Int64p(),
-		UpdatedLT:    query.UpdatedLT.Int64p(),
-		TypeEq:       query.TypeEq.Stringp(),
-		TypeNeq:      query.TypeNeq.Stringp(),
-		TypeIn:       query.TypeIn.Stringp(),
-		TypeNin:      query.TypeNin.Stringp(),
-		IDEq:         query.IDEq.Stringp(),
-		IDIn:         query.IDIn.Stringp(),
-		DeviceEq:     query.DeviceEq.Stringp(),
-		AppEq:        query.AppEq.Stringp(),
 
-		SgvEQ:          query.SgvEQ.Int64p(),
-		SgvGTE:         query.SgvGTE.Int64p(),
-		SgvGT:          query.SgvGT.Int64p(),
-		SgvLTE:         query.SgvLTE.Int64p(),
-		SgvLT:          query.SgvLT.Int64p(),
-		IncludeDeleted: query.IncludeDeleted.Boolp(),
-		Skip:           skip,
-		Limit:          limit,
-		SortOrder:      so.ToIntVal(),
-	})
-	if err != nil {
-		slog.Error("failed to query glucose readings from database", "error", err)
+	var entries []*user.GlucoseReading
+	var rerr error
+	// There are three options,
+	if defaultSortOrder && !hasFilters {
+		fmt.Println("ALL AllGlucoseReadings AllGlucoseReadings ")
+		entries, rerr = userContext.UserDB.Queries.AllGlucoseReadings(ctx, user.AllGlucoseReadingsParams{
+			Skip:  skip,
+			Limit: limit,
+		})
+	} else if defaultSortOrder && hasFilters {
+		fmt.Println("FILTERS SearchWithDefaultSortGlucoseReadings SearchWithDefaultSortGlucoseReadings with filters")
+		entries, rerr = userContext.UserDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, user.SearchWithDefaultSortGlucoseReadingsParams{
+			DateGTE:      query.DateGTE.Int64p(),
+			DateLTE:      query.DateLTE.Int64p(),
+			DateGT:       query.DateGT.Int64p(),
+			DateLT:       query.DateLT.Int64p(),
+			CreatedAtGTE: query.CreatedAtGTE.Int64p(),
+			CreatedAtGT:  query.CreatedAtGT.Int64p(),
+			CreatedAtLTE: query.CreatedAtLTE.Int64p(),
+			CreatedAtLT:  query.CreatedAtLT.Int64p(),
+			UpdatedGTE:   query.UpdatedGTE.Int64p(),
+			UpdatedGT:    query.UpdatedGT.Int64p(),
+			UpdatedLTE:   query.UpdatedLTE.Int64p(),
+			UpdatedLT:    query.UpdatedLT.Int64p(),
+			TypeEq:       query.TypeEq.Stringp(),
+			TypeNeq:      query.TypeNeq.Stringp(),
+			TypeIn:       query.TypeIn.Stringp(),
+			TypeNin:      query.TypeNin.Stringp(),
+			IDEq:         query.IDEq.Stringp(),
+			IDIn:         query.IDIn.Stringp(),
+			DeviceEq:     query.DeviceEq.Stringp(),
+			AppEq:        query.AppEq.Stringp(),
+
+			SgvEQ:          query.SgvEQ.Int64p(),
+			SgvGTE:         query.SgvGTE.Int64p(),
+			SgvGT:          query.SgvGT.Int64p(),
+			SgvLTE:         query.SgvLTE.Int64p(),
+			SgvLT:          query.SgvLT.Int64p(),
+			IncludeDeleted: query.IncludeDeleted.Boolp(),
+			Skip:           skip,
+			Limit:          limit,
+		})
+	} else {
+		fmt.Println("SORT SearchWithNonDefaultSortGlucoseReadings SearchWithNonDefaultSortGlucoseReadings with filters")
+		entries, rerr = userContext.UserDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, user.SearchWithNonDefaultSortGlucoseReadingsParams{
+			DateGTE:      query.DateGTE.Int64p(),
+			DateLTE:      query.DateLTE.Int64p(),
+			DateGT:       query.DateGT.Int64p(),
+			DateLT:       query.DateLT.Int64p(),
+			CreatedAtGTE: query.CreatedAtGTE.Int64p(),
+			CreatedAtGT:  query.CreatedAtGT.Int64p(),
+			CreatedAtLTE: query.CreatedAtLTE.Int64p(),
+			CreatedAtLT:  query.CreatedAtLT.Int64p(),
+			UpdatedGTE:   query.UpdatedGTE.Int64p(),
+			UpdatedGT:    query.UpdatedGT.Int64p(),
+			UpdatedLTE:   query.UpdatedLTE.Int64p(),
+			UpdatedLT:    query.UpdatedLT.Int64p(),
+			TypeEq:       query.TypeEq.Stringp(),
+			TypeNeq:      query.TypeNeq.Stringp(),
+			TypeIn:       query.TypeIn.Stringp(),
+			TypeNin:      query.TypeNin.Stringp(),
+			IDEq:         query.IDEq.Stringp(),
+			IDIn:         query.IDIn.Stringp(),
+			DeviceEq:     query.DeviceEq.Stringp(),
+			AppEq:        query.AppEq.Stringp(),
+
+			SgvEQ:          query.SgvEQ.Int64p(),
+			SgvGTE:         query.SgvGTE.Int64p(),
+			SgvGT:          query.SgvGT.Int64p(),
+			SgvLTE:         query.SgvLTE.Int64p(),
+			SgvLT:          query.SgvLT.Int64p(),
+			IncludeDeleted: query.IncludeDeleted.Boolp(),
+			Skip:           skip,
+			Limit:          limit,
+			SortOrder:      so.ToIntVal(),
+		})
+	}
+
+	if rerr != nil {
+		slog.Error("failed to query glucose readings from database", "error", rerr)
 		return nil, nsutils.ErrInternal
 	}
 
@@ -158,7 +206,7 @@ func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.Us
 func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
 
 	if permanent {
-		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReading(ctx, identifier)
+		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReading(ctx, user.DeletePermanentGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -174,7 +222,7 @@ func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.Us
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
 	} else {
-		res, err := userContext.UserDB.Queries.DeleteGlucoseReading(ctx, identifier)
+		res, err := userContext.UserDB.Queries.DeleteGlucoseReading(ctx, user.DeleteGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -196,7 +244,7 @@ func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.Us
 func (c EntriesCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 
 	if permanent {
-		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, typeString)
+		res, err := userContext.UserDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, user.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose readings by type", "error", err)
 			return 0, nsutils.ErrInternal
@@ -208,7 +256,7 @@ func (c EntriesCollection) DeleteType(ctx context.Context, userContext *httputil
 		}
 		return int(rowsAffected), nil
 	} else {
-		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingsByType(ctx, typeString)
+		res, err := userContext.UserDB.Queries.DeleteGlucoseReadingsByType(ctx, user.DeleteGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {
 			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
 			return 0, nsutils.ErrInternal

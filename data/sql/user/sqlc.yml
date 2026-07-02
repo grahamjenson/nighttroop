@@ -22,7 +22,7 @@ sql:
         emit_pointers_for_null_types: true
         emit_result_struct_pointers: true
 
-        query_parameter_limit: 3
+        query_parameter_limit: 0
         
         output_files_suffix: ".gen"
         output_db_file_name: "z_db.go"

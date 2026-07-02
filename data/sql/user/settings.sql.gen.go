@@ -13,8 +13,12 @@ const getSettingFromDB = `-- name: getSettingFromDB :one
 SELECT id, value, deleted_at, created_at, updated_at FROM settings WHERE id = ?
 `
 
-func (q *Queries) getSettingFromDB(ctx context.Context, id string) (*Setting, error) {
-	row := q.queryRow(ctx, q.getSettingFromDBStmt, getSettingFromDB, id)
+type getSettingFromDBParams struct {
+	ID string
+}
+
+func (q *Queries) getSettingFromDB(ctx context.Context, arg getSettingFromDBParams) (*Setting, error) {
+	row := q.queryRow(ctx, q.getSettingFromDBStmt, getSettingFromDB, arg.ID)
 	var i Setting
 	err := row.Scan(
 		&i.ID,
@@ -35,8 +39,13 @@ ON CONFLICT(id) DO UPDATE SET
 RETURNING id, value, deleted_at, created_at, updated_at
 `
 
-func (q *Queries) upsertSettingToDB(ctx context.Context, iD string, json interface{}) (*Setting, error) {
-	row := q.queryRow(ctx, q.upsertSettingToDBStmt, upsertSettingToDB, iD, json)
+type upsertSettingToDBParams struct {
+	ID   string
+	Json interface{}
+}
+
+func (q *Queries) upsertSettingToDB(ctx context.Context, arg upsertSettingToDBParams) (*Setting, error) {
+	row := q.queryRow(ctx, q.upsertSettingToDBStmt, upsertSettingToDB, arg.ID, arg.Json)
 	var i Setting
 	err := row.Scan(
 		&i.ID,

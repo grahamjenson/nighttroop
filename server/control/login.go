@@ -123,7 +123,10 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 }
 
 func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*control.Admin, error) {
-	admin, err := controlDB.Queries.GetAdmin(context.TODO(), username)
+	admin, err := controlDB.Queries.GetAdmin(context.TODO(), control.GetAdminParams{
+		Name: username,
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("admin not found: %w", err)
 	}

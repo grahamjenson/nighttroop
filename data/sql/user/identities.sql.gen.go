@@ -98,8 +98,12 @@ const getIdentity = `-- name: GetIdentity :one
 SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, enabled FROM identities where name = ? LIMIT 1
 `
 
-func (q *Queries) GetIdentity(ctx context.Context, name string) (*Identity, error) {
-	row := q.queryRow(ctx, q.getIdentityStmt, getIdentity, name)
+type GetIdentityParams struct {
+	Name string
+}
+
+func (q *Queries) GetIdentity(ctx context.Context, arg GetIdentityParams) (*Identity, error) {
+	row := q.queryRow(ctx, q.getIdentityStmt, getIdentity, arg.Name)
 	var i Identity
 	err := row.Scan(
 		&i.ID,
@@ -129,10 +133,16 @@ SET
 WHERE id = ?
 `
 
+type UpdateIdentityDateFlagsParams struct {
+	LastSeenAt  *int64
+	LastWriteAt *int64
+	ID          int64
+}
+
 // ------
 // UPDATE
 // ------
-func (q *Queries) UpdateIdentityDateFlags(ctx context.Context, lastSeenAt *int64, lastWriteAt *int64, iD int64) error {
-	_, err := q.exec(ctx, q.updateIdentityDateFlagsStmt, updateIdentityDateFlags, lastSeenAt, lastWriteAt, iD)
+func (q *Queries) UpdateIdentityDateFlags(ctx context.Context, arg UpdateIdentityDateFlagsParams) error {
+	_, err := q.exec(ctx, q.updateIdentityDateFlagsStmt, updateIdentityDateFlags, arg.LastSeenAt, arg.LastWriteAt, arg.ID)
 	return err
 }

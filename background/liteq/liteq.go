@@ -94,7 +94,11 @@ func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*cont
 		limit = params.Count
 	}
 
-	return j.queries.MarkJobsForConsumer(ctx, params.Queue, executeAfter, limit)
+	return j.queries.MarkJobsForConsumer(ctx, control.MarkJobsForConsumerParams{
+		Queue:        params.Queue,
+		ExecuteAfter: executeAfter,
+		Limit:        limit,
+	})
 }
 
 type WorkerFunc func(context.Context, *control.Job) error
@@ -121,7 +125,10 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		}
 
 		if params.VisibilityTimeout > 0 {
-			_, err := j.queries.ResetJobs(ctx, params.Queue, time.Now().UnixMilli()-(params.VisibilityTimeout*1000))
+			_, err := j.queries.ResetJobs(ctx, control.ResetJobsParams{
+				Queue:             params.Queue,
+				ConsumerFetchedAt: time.Now().UnixMilli() - (params.VisibilityTimeout * 1000),
+			})
 
 			if err != nil {
 				return fmt.Errorf("error resetting jobs: %w", err)
@@ -148,11 +155,16 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 			workers.Submit(func() {
 				err := params.Worker(ctx, job)
 				if err != nil {
-					j.queries.FailJob(ctx, errors.ErrorList(append(job.Errors, err.Error())), job.ID)
+					j.queries.FailJob(ctx, control.FailJobParams{
+						Errors: errors.ErrorList(append(job.Errors, err.Error())),
+						ID:     job.ID,
+					})
 					return
 				}
 
-				j.queries.CompleteJob(ctx, job.ID)
+				j.queries.CompleteJob(ctx, control.CompleteJobParams{
+					ID: job.ID,
+				})
 			})
 		}
 	}

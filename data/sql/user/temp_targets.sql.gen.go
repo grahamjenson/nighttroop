@@ -135,8 +135,12 @@ const getTempTarget = `-- name: GetTempTarget :one
 SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets WHERE id = ?
 `
 
-func (q *Queries) GetTempTarget(ctx context.Context, id string) (*TempTarget, error) {
-	row := q.queryRow(ctx, q.getTempTargetStmt, getTempTarget, id)
+type GetTempTargetParams struct {
+	ID string
+}
+
+func (q *Queries) GetTempTarget(ctx context.Context, arg GetTempTargetParams) (*TempTarget, error) {
+	row := q.queryRow(ctx, q.getTempTargetStmt, getTempTarget, arg.ID)
 	var i TempTarget
 	err := row.Scan(
 		&i.ID,

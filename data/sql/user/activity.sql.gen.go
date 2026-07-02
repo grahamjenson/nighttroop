@@ -151,8 +151,12 @@ const getActivity = `-- name: GetActivity :one
 SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM activity WHERE id = ?
 `
 
-func (q *Queries) GetActivity(ctx context.Context, id string) (*Activity, error) {
-	row := q.queryRow(ctx, q.getActivityStmt, getActivity, id)
+type GetActivityParams struct {
+	ID string
+}
+
+func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Activity, error) {
+	row := q.queryRow(ctx, q.getActivityStmt, getActivity, arg.ID)
 	var i Activity
 	err := row.Scan(
 		&i.ID,

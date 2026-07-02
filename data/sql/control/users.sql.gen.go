@@ -14,8 +14,13 @@ INSERT INTO users (subdomain, backup_key_hash)
 VALUES (?, ?) RETURNING id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at
 `
 
-func (q *Queries) CreateUser(ctx context.Context, subdomain string, backupKeyHash string) (*User, error) {
-	row := q.queryRow(ctx, q.createUserStmt, createUser, subdomain, backupKeyHash)
+type CreateUserParams struct {
+	Subdomain     string
+	BackupKeyHash string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (*User, error) {
+	row := q.queryRow(ctx, q.createUserStmt, createUser, arg.Subdomain, arg.BackupKeyHash)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -38,9 +43,13 @@ WHERE subdomain IN (SELECT value FROM json_each(?))
 RETURNING subdomain
 `
 
+type DeleteUsersParams struct {
+	JsonEach interface{}
+}
+
 // Pass a list of users as a string to delete
-func (q *Queries) DeleteUsers(ctx context.Context, jsonEach interface{}) ([]string, error) {
-	rows, err := q.query(ctx, q.deleteUsersStmt, deleteUsers, jsonEach)
+func (q *Queries) DeleteUsers(ctx context.Context, arg DeleteUsersParams) ([]string, error) {
+	rows, err := q.query(ctx, q.deleteUsersStmt, deleteUsers, arg.JsonEach)
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +113,12 @@ SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, 
     WHERE batch = ? AND deleted_at IS NULL ORDER BY subdomain DESC
 `
 
-func (q *Queries) GetBatchUsers(ctx context.Context, batch string) ([]*User, error) {
-	rows, err := q.query(ctx, q.getBatchUsersStmt, getBatchUsers, batch)
+type GetBatchUsersParams struct {
+	Batch string
+}
+
+func (q *Queries) GetBatchUsers(ctx context.Context, arg GetBatchUsersParams) ([]*User, error) {
+	rows, err := q.query(ctx, q.getBatchUsersStmt, getBatchUsers, arg.Batch)
 	if err != nil {
 		return nil, err
 	}
@@ -142,11 +155,16 @@ SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, 
 WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
 `
 
+type GetInactiveUsersParams struct {
+	LastSeenAt  float64
+	LastWriteAt float64
+}
+
 // @param last_seen_at INT
 // @param last_write_at INT
 // Inactive Users are users that were once active but have stopped, so the assumption is they have data
-func (q *Queries) GetInactiveUsers(ctx context.Context, lastSeenAt float64, lastWriteAt float64) ([]*User, error) {
-	rows, err := q.query(ctx, q.getInactiveUsersStmt, getInactiveUsers, lastSeenAt, lastWriteAt)
+func (q *Queries) GetInactiveUsers(ctx context.Context, arg GetInactiveUsersParams) ([]*User, error) {
+	rows, err := q.query(ctx, q.getInactiveUsersStmt, getInactiveUsers, arg.LastSeenAt, arg.LastWriteAt)
 	if err != nil {
 		return nil, err
 	}
@@ -188,14 +206,19 @@ SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, 
         )
 `
 
+type GetNeverSeenUsersParams struct {
+	LastSeenAt  float64
+	LastWriteAt float64
+}
+
 // @param last_seen_at INT
 // @param last_write_at INT
 // finds deleted_at is null users where
 //
 //	last_seen_at is null and created_at is more than minutes ago and
 //	OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
-func (q *Queries) GetNeverSeenUsers(ctx context.Context, lastSeenAt float64, lastWriteAt float64) ([]*User, error) {
-	rows, err := q.query(ctx, q.getNeverSeenUsersStmt, getNeverSeenUsers, lastSeenAt, lastWriteAt)
+func (q *Queries) GetNeverSeenUsers(ctx context.Context, arg GetNeverSeenUsersParams) ([]*User, error) {
+	rows, err := q.query(ctx, q.getNeverSeenUsersStmt, getNeverSeenUsers, arg.LastSeenAt, arg.LastWriteAt)
 	if err != nil {
 		return nil, err
 	}
@@ -268,8 +291,12 @@ const getUser = `-- name: GetUser :one
 SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM users WHERE subdomain = ? AND deleted_at IS NULL
 `
 
-func (q *Queries) GetUser(ctx context.Context, subdomain string) (*User, error) {
-	row := q.queryRow(ctx, q.getUserStmt, getUser, subdomain)
+type GetUserParams struct {
+	Subdomain string
+}
+
+func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (*User, error) {
+	row := q.queryRow(ctx, q.getUserStmt, getUser, arg.Subdomain)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -289,8 +316,12 @@ const subdomainExists = `-- name: SubdomainExists :one
 SELECT CAST(COUNT(*) > 0 AS BOOLEAN) FROM users WHERE subdomain = ?
 `
 
-func (q *Queries) SubdomainExists(ctx context.Context, subdomain string) (bool, error) {
-	row := q.queryRow(ctx, q.subdomainExistsStmt, subdomainExists, subdomain)
+type SubdomainExistsParams struct {
+	Subdomain string
+}
+
+func (q *Queries) SubdomainExists(ctx context.Context, arg SubdomainExistsParams) (bool, error) {
+	row := q.queryRow(ctx, q.subdomainExistsStmt, subdomainExists, arg.Subdomain)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
@@ -317,7 +348,13 @@ SET
 WHERE subdomain = ?
 `
 
-func (q *Queries) UpdateUserDateFlags(ctx context.Context, lastSeenAt *int64, lastWriteAt *int64, subdomain string) error {
-	_, err := q.exec(ctx, q.updateUserDateFlagsStmt, updateUserDateFlags, lastSeenAt, lastWriteAt, subdomain)
+type UpdateUserDateFlagsParams struct {
+	LastSeenAt  *int64
+	LastWriteAt *int64
+	Subdomain   string
+}
+
+func (q *Queries) UpdateUserDateFlags(ctx context.Context, arg UpdateUserDateFlagsParams) error {
+	_, err := q.exec(ctx, q.updateUserDateFlagsStmt, updateUserDateFlags, arg.LastSeenAt, arg.LastWriteAt, arg.Subdomain)
 	return err
 }

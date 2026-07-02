@@ -126,8 +126,12 @@ const getCarb = `-- name: GetCarb :one
 SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM carbs WHERE id = ?
 `
 
-func (q *Queries) GetCarb(ctx context.Context, id string) (*Carb, error) {
-	row := q.queryRow(ctx, q.getCarbStmt, getCarb, id)
+type GetCarbParams struct {
+	ID string
+}
+
+func (q *Queries) GetCarb(ctx context.Context, arg GetCarbParams) (*Carb, error) {
+	row := q.queryRow(ctx, q.getCarbStmt, getCarb, arg.ID)
 	var i Carb
 	err := row.Scan(
 		&i.ID,
