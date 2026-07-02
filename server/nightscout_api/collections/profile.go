@@ -68,7 +68,7 @@ func (c ProfileCollection) Get(ctx context.Context, userContext *httputils.UserC
 	return &record, nil
 }
 
-func (c ProfileCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 

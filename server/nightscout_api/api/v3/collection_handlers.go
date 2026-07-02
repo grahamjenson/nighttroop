@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
@@ -30,9 +29,9 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}
-		query, _ := nsutils.ParseV3(r.URL.Query())
+		query, _ := nsutils.ParseQuery(r.URL.Query())
 
-		nsutils.WriteRecordV3(w, record, query.Fields.ToArray())
+		nsutils.WriteRecordV3(w, record, query.Fields)
 
 	}
 }
@@ -46,7 +45,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		query, err := nsutils.ParseV3(r.URL.Query())
+		query, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -57,7 +56,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 			return
 		}
-		nsutils.WriteRecordsV3(w, records, query.Fields.ToArray())
+		nsutils.WriteRecordsV3(w, records, query.Fields)
 
 	}
 }
@@ -224,7 +223,7 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		query, err := nsutils.ParseV3(r.URL.Query())
+		query, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -236,7 +235,7 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		query.UpdatedGTE = ptr(nightscout.DateInt(since))
+		query.UpdatedGTE = ptr(since)
 
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
@@ -244,6 +243,6 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		nsutils.WriteRecordsV3(w, records, query.Fields.ToArray())
+		nsutils.WriteRecordsV3(w, records, query.Fields)
 	}
 }

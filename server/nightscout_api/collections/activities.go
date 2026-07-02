@@ -67,7 +67,7 @@ func (c ActivityCollection) Get(ctx context.Context, userContext *httputils.User
 	return &record, nil
 }
 
-func (c ActivityCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c ActivityCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	// TODO
 	return nil, nsutils.ErrNotImplemented
 }

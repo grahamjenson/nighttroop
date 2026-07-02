@@ -68,101 +68,28 @@ func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserC
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	so := query.SortOrder()
-	so = so.Support(nsquery.SortOccurredAtDesc, nsquery.SortOccurredAtAsc, nsquery.SortCreatedAtDesc, nsquery.SortCreatedAtAsc, nsquery.SortUpdatedAtDesc, nsquery.SortUpdatedAtAsc)
-
+func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+	// Declare the support orders
+	so := query.SortOrder.Support(nsquery.SortOccurredAtDesc, nsquery.SortOccurredAtAsc, nsquery.SortCreatedAtDesc, nsquery.SortCreatedAtAsc, nsquery.SortUpdatedAtDesc, nsquery.SortUpdatedAtAsc)
+	// check against default sort order
 	defaultSortOrder := so == nsquery.SortOccurredAtDesc
-	limit := int64(100)
-	if query.Limit != nil {
-		limit = query.Limit.Int64()
-	}
-	skip := int64(0)
-	if query.Skip != nil {
-		skip = query.Skip.Int64()
-	}
-
-	hasFilters := query.HasAnyFilters()
 
 	qSSs, _ := json.MarshalIndent(query, "", "  ")
-	fmt.Println("Search EntriesCollection with query:", string(qSSs), "limit:", limit, "sortOrder:", so.String())
+	fmt.Println("Search EntriesCollection with query:", string(qSSs), "sortOrder:", so.String())
 
 	var entries []*user.GlucoseReading
 	var rerr error
-	// There are three options,
-	if defaultSortOrder && !hasFilters {
-		fmt.Println("ALL AllGlucoseReadings AllGlucoseReadings ")
-		entries, rerr = userContext.UserDB.Queries.AllGlucoseReadings(ctx, user.AllGlucoseReadingsParams{
-			Skip:  skip,
-			Limit: limit,
-		})
-	} else if defaultSortOrder && hasFilters {
-		fmt.Println("FILTERS SearchWithDefaultSortGlucoseReadings SearchWithDefaultSortGlucoseReadings with filters")
-		entries, rerr = userContext.UserDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, user.SearchWithDefaultSortGlucoseReadingsParams{
-			DateGTE:      query.DateGTE.Int64p(),
-			DateLTE:      query.DateLTE.Int64p(),
-			DateGT:       query.DateGT.Int64p(),
-			DateLT:       query.DateLT.Int64p(),
-			CreatedAtGTE: query.CreatedAtGTE.Int64p(),
-			CreatedAtGT:  query.CreatedAtGT.Int64p(),
-			CreatedAtLTE: query.CreatedAtLTE.Int64p(),
-			CreatedAtLT:  query.CreatedAtLT.Int64p(),
-			UpdatedGTE:   query.UpdatedGTE.Int64p(),
-			UpdatedGT:    query.UpdatedGT.Int64p(),
-			UpdatedLTE:   query.UpdatedLTE.Int64p(),
-			UpdatedLT:    query.UpdatedLT.Int64p(),
-			TypeEq:       query.TypeEq.Stringp(),
-			TypeNeq:      query.TypeNeq.Stringp(),
-			TypeIn:       query.TypeIn.Stringp(),
-			TypeNin:      query.TypeNin.Stringp(),
-			IDEq:         query.IDEq.Stringp(),
-			IDIn:         query.IDIn.Stringp(),
-			DeviceEq:     query.DeviceEq.Stringp(),
-			AppEq:        query.AppEq.Stringp(),
 
-			SgvEQ:          query.SgvEQ.Int64p(),
-			SgvGTE:         query.SgvGTE.Int64p(),
-			SgvGT:          query.SgvGT.Int64p(),
-			SgvLTE:         query.SgvLTE.Int64p(),
-			SgvLT:          query.SgvLT.Int64p(),
-			IncludeDeleted: query.IncludeDeleted.Boolp(),
-			Skip:           skip,
-			Limit:          limit,
-		})
+	// There are three options,
+	if defaultSortOrder && !query.HasFilters {
+		fmt.Println("ALL AllGlucoseReadings AllGlucoseReadings ")
+		entries, rerr = userContext.UserDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
+	} else if defaultSortOrder && query.HasFilters {
+		fmt.Println("FILTERS SearchWithDefaultSortGlucoseReadings SearchWithDefaultSortGlucoseReadings with filters")
+		entries, rerr = userContext.UserDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	} else {
 		fmt.Println("SORT SearchWithNonDefaultSortGlucoseReadings SearchWithNonDefaultSortGlucoseReadings with filters")
-		entries, rerr = userContext.UserDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, user.SearchWithNonDefaultSortGlucoseReadingsParams{
-			DateGTE:      query.DateGTE.Int64p(),
-			DateLTE:      query.DateLTE.Int64p(),
-			DateGT:       query.DateGT.Int64p(),
-			DateLT:       query.DateLT.Int64p(),
-			CreatedAtGTE: query.CreatedAtGTE.Int64p(),
-			CreatedAtGT:  query.CreatedAtGT.Int64p(),
-			CreatedAtLTE: query.CreatedAtLTE.Int64p(),
-			CreatedAtLT:  query.CreatedAtLT.Int64p(),
-			UpdatedGTE:   query.UpdatedGTE.Int64p(),
-			UpdatedGT:    query.UpdatedGT.Int64p(),
-			UpdatedLTE:   query.UpdatedLTE.Int64p(),
-			UpdatedLT:    query.UpdatedLT.Int64p(),
-			TypeEq:       query.TypeEq.Stringp(),
-			TypeNeq:      query.TypeNeq.Stringp(),
-			TypeIn:       query.TypeIn.Stringp(),
-			TypeNin:      query.TypeNin.Stringp(),
-			IDEq:         query.IDEq.Stringp(),
-			IDIn:         query.IDIn.Stringp(),
-			DeviceEq:     query.DeviceEq.Stringp(),
-			AppEq:        query.AppEq.Stringp(),
-
-			SgvEQ:          query.SgvEQ.Int64p(),
-			SgvGTE:         query.SgvGTE.Int64p(),
-			SgvGT:          query.SgvGT.Int64p(),
-			SgvLTE:         query.SgvLTE.Int64p(),
-			SgvLT:          query.SgvLT.Int64p(),
-			IncludeDeleted: query.IncludeDeleted.Boolp(),
-			Skip:           skip,
-			Limit:          limit,
-			SortOrder:      so.ToIntVal(),
-		})
+		entries, rerr = userContext.UserDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchNonDefaultOrder(query))
 	}
 
 	if rerr != nil {

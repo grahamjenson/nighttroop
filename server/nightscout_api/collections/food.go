@@ -67,7 +67,7 @@ func (c FoodCollection) Get(ctx context.Context, userContext *httputils.UserCont
 	return &record, nil
 }
 
-func (c FoodCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c FoodCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 

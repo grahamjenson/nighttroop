@@ -150,7 +150,7 @@ var forwardLookupName = map[string][]string{
 
 var reverseLookupName = map[string]string{}
 
-func ParseQueryValues(values url.Values) (*QueryValues, error) {
+func ParseQueryValues(values url.Values) (QueryValues, error) {
 	if len(reverseLookupName) == 0 {
 		for k, v := range forwardLookupName {
 			for _, vv := range v {
@@ -204,22 +204,22 @@ func ParseQueryValues(values url.Values) (*QueryValues, error) {
 
 	decoder, err := mapstructure.NewDecoder(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create mapstructure decoder: %w", err)
+		return QueryValues{}, fmt.Errorf("failed to create mapstructure decoder: %w", err)
 	}
 	err = decoder.Decode(qvMap)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode query values: %w", err)
+		return QueryValues{}, fmt.Errorf("failed to decode query values: %w", err)
 	}
 
 	if qv.Sort != nil && qv.SortDesc != nil {
-		return nil, fmt.Errorf("cannot specify both sort and sort$desc parameters")
+		return QueryValues{}, fmt.Errorf("cannot specify both sort and sort$desc parameters")
 	}
 
 	if len(qv.Other) > 0 {
 		slog.Warn("Unrecognized Nightscout Query Parameters", "params", qv.Other)
 	}
 
-	return &qv, nil
+	return qv, nil
 }
 
 func (q *QueryValues) SortOrder() *QuerySort {

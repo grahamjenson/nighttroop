@@ -149,13 +149,21 @@ func (qs QuerySort) String() string {
 	return string(qs)
 }
 
-func (qs QuerySort) Support(allowed ...QuerySort) QuerySort {
-	if len(allowed) == 0 {
-		return qs
+func (qs *QuerySort) Support(allowed ...QuerySort) QuerySort {
+	if len(allowed) == 0 && qs == nil {
+		return SortCreatedAtDesc
 	}
+	if len(allowed) == 0 && qs != nil {
+		return *qs
+	}
+
+	if qs == nil {
+		return allowed[0]
+	}
+
 	for _, a := range allowed {
-		if qs == a {
-			return qs
+		if *qs == a {
+			return *qs
 		}
 	}
 	// We are returning first element as default

@@ -16,17 +16,19 @@ type ToSearchParams interface {
 	// goverter:map IDIn | QueryStringArrayToString
 	// goverter:map Fields | QueryStringArrayToArray
 	// goverter:map . HasFilters | GetHasFilters
-	QueryValueToQuery(source *QueryValues) *Query
+	// goverter:map . Skip | GetSkipInt64
+	// goverter:map . Limit | GetLimitInt64
+	QueryValueToQuery(source QueryValues) Query
 
 	//////
 	// GLUCOSE READINGS
 	//////
 
-	GlucoseSearchAll(source *Query) *user.AllGlucoseReadingsParams
-	GlucoseSearchDefaultOrder(source *Query) *user.SearchWithDefaultSortGlucoseReadingsParams
+	GlucoseSearchAll(source Query) user.AllGlucoseReadingsParams
+	GlucoseSearchDefaultOrder(source Query) user.SearchWithDefaultSortGlucoseReadingsParams
 
 	// goverter:map . SortOrder | GetSortOrderInt64
-	GlucoseSearchNonDefaultOrder(source *Query) *user.SearchWithNonDefaultSortGlucoseReadingsParams
+	GlucoseSearchNonDefaultOrder(source Query) user.SearchWithNonDefaultSortGlucoseReadingsParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {
@@ -37,10 +39,24 @@ func QueryStringArrayToArray(source *QueryStringArray) []string {
 	return source.ToArray()
 }
 
-func GetHasFilters(source *QueryValues) bool {
+func GetHasFilters(source QueryValues) bool {
 	return source.HasAnyFilters()
 }
 
-func GetSortOrderInt64(source *Query) int64 {
+func GetSkipInt64(source QueryValues) int64 {
+	if source.Skip == nil {
+		return 0
+	}
+	return source.Skip.Int64()
+}
+
+func GetLimitInt64(source QueryValues) int64 {
+	if source.Limit == nil || *source.Limit <= 0 || *source.Limit > 1000 {
+		return 1000
+	}
+	return source.Limit.Int64()
+}
+
+func GetSortOrderInt64(source Query) int64 {
 	return source.SortOrder.ToIntVal()
 }

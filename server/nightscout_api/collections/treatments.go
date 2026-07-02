@@ -50,7 +50,7 @@ func (c TreatmentCollection) Get(ctx context.Context, userContext *httputils.Use
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
 	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
 	if err != nil {

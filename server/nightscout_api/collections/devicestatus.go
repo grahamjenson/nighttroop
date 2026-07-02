@@ -67,7 +67,7 @@ func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.
 	return &record, nil
 }
 
-func (c DeviceStatusCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 

@@ -70,5 +70,3 @@ type Query struct {
 	Fields     []string
 	Envelope   *bool
 }
-
-//// Map Structure Helpers

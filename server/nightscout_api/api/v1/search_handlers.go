@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
@@ -20,7 +19,7 @@ func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		query, err := nsutils.ParseV1(r.URL.Query())
+		query, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -43,16 +42,16 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		q, err := nsutils.ParseV1(r.URL.Query())
+		q, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
 
-		q.Fields = &nsutils.QueryStringArray{chi.URLParam(r, "field")}
+		q.Fields = []string{chi.URLParam(r, "field")}
 		typeEq := chi.URLParam(r, "type")
 		if typeEq != "" {
-			q.TypeEq = ptr(nightscout.ShortString(typeEq))
+			q.TypeEq = ptr(typeEq)
 		}
 
 		records, err := dep.Store.Search(r.Context(), collection, q)
@@ -60,7 +59,7 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		nsutils.WriteRecordsV1(w, records, q.Fields.ToArray())
+		nsutils.WriteRecordsV1(w, records, q.Fields)
 	}
 }
 
@@ -72,7 +71,7 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		q, err := nsutils.ParseV1(r.URL.Query())
+		q, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -82,7 +81,7 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecordsV1(w, records, q.Fields.ToArray())
+		nsutils.WriteRecordsV1(w, records, q.Fields)
 	}
 
 }
@@ -97,7 +96,7 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 				return
 			}
 		}
-		q, err := nsutils.ParseV1(r.URL.Query())
+		q, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -108,9 +107,9 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
 			if collection.IsTypeString(identifierOrType) {
-				q.TypeEq = ptr(nightscout.ShortString(identifierOrType))
+				q.TypeEq = ptr(identifierOrType)
 			} else {
-				q.IDEq = ptr(nightscout.ShortString(identifierOrType))
+				q.IDEq = ptr(identifierOrType)
 			}
 		}
 

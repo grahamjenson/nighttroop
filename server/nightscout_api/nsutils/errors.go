@@ -60,8 +60,6 @@ var (
 	ErrBadQueryError = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad query parameters: %s", field)}
 	}
-
-	ErrBadQueryParams    = &HTTPError{Status: http.StatusBadRequest, Message: "Bad query parameters"}
 	ErrBadRequest        = &HTTPError{Status: http.StatusBadRequest, Message: "Bad request"}
 	ErrInvalidCollection = &HTTPError{Status: http.StatusBadRequest, Message: "invalid collection"}
 	BadDataBodyError     = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing body"}
