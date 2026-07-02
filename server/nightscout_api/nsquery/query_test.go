@@ -43,7 +43,7 @@ func Test_Query_DateGTE(t *testing.T) {
 		if !assert.NotNil(t, query.DateGTE) {
 			return
 		}
-		assert.Equal(t, dateMills, query.DateGTE)
+		assert.Equal(t, date, query.DateGTE.TimeString())
 	}
 }
 
@@ -70,7 +70,7 @@ func Test_Fields(t *testing.T) {
 		if !assert.NotNil(t, query.Fields) {
 			return
 		}
-		assert.Equal(t, []string{"date", "value", "type"}, query.Fields)
+		assert.Equal(t, []string{"date", "value", "type"}, query.Fields.ToArray())
 	}
 }
 
@@ -93,8 +93,8 @@ func Test_Sort(t *testing.T) {
 		if !assert.NoError(t, err) {
 			return
 		}
-		assert.NotNil(t, query.SortOrder)
-		assert.Equal(t, SortOccurredAtAsc, query.SortOrder)
+		assert.NotNil(t, query.SortOrder())
+		assert.Equal(t, SortOccurredAtAsc.String(), query.SortOrder().String())
 	}
 
 	query, err := ParseQueryValues(url.Values{
@@ -105,7 +105,7 @@ func Test_Sort(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, SortOccurredAtDesc, query.SortOrder)
+	assert.Nil(t, query.SortOrder())
 }
 
 func Test_HasAnyFilters(t *testing.T) {

@@ -10,7 +10,6 @@ import "nighttroop.t1d.nz/data/sql/user"
 type ToSearchParams interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore TypeNin IDIn Fields
 	// goverter:map TypeIn | QueryStringArrayToString
 	// goverter:map TypeNin | QueryStringArrayToString
 	// goverter:map IDIn | QueryStringArrayToString

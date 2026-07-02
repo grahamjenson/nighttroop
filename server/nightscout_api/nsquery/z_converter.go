@@ -294,10 +294,12 @@ func QueryValueToQuery(source QueryValues) Query {
 		nsqueryQuery.TypeNeq = &xstring2
 	}
 	nsqueryQuery.TypeIn = QueryStringArrayToString(source.TypeIn)
+	nsqueryQuery.TypeNin = QueryStringArrayToString(source.TypeNin)
 	if source.IDEq != nil {
 		xstring3 := nightscoutShortStringToString(*source.IDEq)
 		nsqueryQuery.IDEq = &xstring3
 	}
+	nsqueryQuery.IDIn = QueryStringArrayToString(source.IDIn)
 	if source.DeviceEq != nil {
 		xstring4 := nightscoutShortStringToString(*source.DeviceEq)
 		nsqueryQuery.DeviceEq = &xstring4
@@ -365,6 +367,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		nsqueryQuerySort := QuerySort(*source.SortOrder())
 		nsqueryQuery.SortOrder = &nsqueryQuerySort
 	}
+	nsqueryQuery.Fields = QueryStringArrayToArray(source.Fields)
 	if source.Envelope != nil {
 		xbool2 := nightscoutFlexibleBoolToBool(*source.Envelope)
 		nsqueryQuery.Envelope = &xbool2

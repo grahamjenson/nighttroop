@@ -223,6 +223,13 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 }
 
 func (q *QueryValues) SortOrder() *QuerySort {
+	if q == nil {
+		return nil
+	}
+	if q.Sort == nil && q.SortDesc == nil {
+		return nil
+	}
+
 	sortField := "occurred_at"
 	desc := false
 	if q.Sort != nil {
