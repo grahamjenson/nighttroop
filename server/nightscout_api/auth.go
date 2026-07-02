@@ -6,7 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"

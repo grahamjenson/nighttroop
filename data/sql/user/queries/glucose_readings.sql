@@ -29,14 +29,52 @@ SELECT * FROM glucose_readings WHERE id = ?;
 -- name: AllGlucoseReadings :many
 SELECT * FROM glucose_readings ORDER BY occurred_at DESC LIMIT ?;
 
+-- DateGTE
+-- DateGT
+-- DateLTE
+-- DateLT
+-- CreatedAtGTE
+-- CreatedAtGT
+-- CreatedAtLTE
+-- CreatedAtLT
+-- UpdatedGTE
+-- UpdatedGT
+-- UpdatedLTE
+-- UpdatedLT
+-- TypeEq
+-- TypeNeq
+-- TypeIn
+-- TypeNin
+-- IDEq
+-- IDIn
+-- DeviceEq
+-- AppEq
+-- Limit
+-- Skip
+-- SgvEQ
+-- SgvGTE
+-- SgvGT
+-- SgvLTE
+-- SgvLT
+-- IncludeDeleted
+
 -- name: SearchGlucoseReadings :many
 SELECT * FROM glucose_readings
 WHERE
-    occurred_at >= COALESCE(sqlc.narg(occurred_at_start), occurred_at) AND occurred_at <= COALESCE(sqlc.narg(occurred_at_end), occurred_at)
+    (CAST(sqlc.narg(DateGTE) AS INTEGER) IS NULL OR occurred_at >= sqlc.narg(DateGTE))
+    AND (CAST(sqlc.narg(DateLTE) AS INTEGER) IS NULL OR occurred_at <= sqlc.narg(DateLTE))
+    AND (CAST(sqlc.narg(DateGT) AS INTEGER) IS NULL OR occurred_at > sqlc.narg(DateGT))
+    AND (CAST(sqlc.narg(DateLT) AS INTEGER) IS NULL OR occurred_at < sqlc.narg(DateLT))
+    AND CAST(:SortOrder AS TEXT) IS NOT NULL
 ORDER BY
-    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_asc' THEN occurred_at END ASC,
-    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_desc' THEN occurred_at END DESC
-LIMIT COALESCE(sqlc.narg(glimit), 1000);
+    CASE WHEN :SortOrder = 'occurred_at' THEN occurred_at END ASC,
+    CASE WHEN :SortOrder = '-occurred_at' THEN occurred_at END DESC,
+    CASE WHEN :SortOrder = 'created_at' THEN created_at END ASC,
+    CASE WHEN :SortOrder = '-created_at' THEN created_at END DESC,
+    CASE WHEN :SortOrder = 'updated_at' THEN updated_at END ASC,
+    CASE WHEN :SortOrder = '-updated_at' THEN updated_at END DESC,
+    created_at ASC
+LIMIT sqlc.arg(limit);
 
 --------
 -- UPDATE

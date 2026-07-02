@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/models/nightscout"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
 // Read returns a single document from an API v3 collection.

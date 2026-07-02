@@ -73,3 +73,37 @@ func Test_Fields(t *testing.T) {
 		assert.Equal(t, []string{"date", "value", "type"}, query.Fields.ToArray())
 	}
 }
+
+func Test_Sort(t *testing.T) {
+	// Tests Sort parsing different params
+	queries := []url.Values{
+		{
+			"sort": []string{"date"},
+		},
+		{
+			"sort": []string{"mills"},
+		},
+		{
+			"sort": []string{"dateString"},
+		},
+	}
+
+	for _, q := range queries {
+		query, err := parseQuery(q)
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.NotNil(t, query.SortOrder())
+		assert.Equal(t, SortOccurredAtAsc, query.SortOrder())
+	}
+
+	query, err := parseQuery(url.Values{
+		"sort": []string{"invalid_field"},
+	})
+
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	assert.Equal(t, SortOccurredAtDesc, query.SortOrder())
+}

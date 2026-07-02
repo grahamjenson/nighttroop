@@ -302,8 +302,11 @@ func (d DateInt) Int64() int64 {
 	return int64(d)
 }
 
-func (d DateInt) Int64p() *int64 {
-	v := int64(d)
+func (d *DateInt) Int64p() *int64 {
+	if d == nil {
+		return nil
+	}
+	v := int64(*d)
 	return &v
 }
 

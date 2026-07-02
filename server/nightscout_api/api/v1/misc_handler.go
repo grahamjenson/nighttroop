@@ -3,7 +3,7 @@ package v1
 import (
 	"net/http"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
 // Versions reports the API versions exposed by this server.

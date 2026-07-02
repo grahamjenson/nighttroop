@@ -1,7 +1,7 @@
 package collections
 
 import (
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 )
 

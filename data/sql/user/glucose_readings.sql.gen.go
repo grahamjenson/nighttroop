@@ -196,17 +196,71 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseRea
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
+
 SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings
 WHERE
-    occurred_at >= COALESCE(?1, occurred_at) AND occurred_at <= COALESCE(?2, occurred_at)
+    (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
+    AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
+    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at > ?3)
+    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at < ?4)
+    AND CAST(?5 AS TEXT) IS NOT NULL
 ORDER BY
-    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_asc' THEN occurred_at END ASC,
-    CASE WHEN CAST(:sort_order AS TEXT) = 'occurred_at_desc' THEN occurred_at END DESC
-LIMIT COALESCE(?3, 1000)
+    CASE WHEN :SortOrder = 'occurred_at' THEN occurred_at END ASC,
+    CASE WHEN :SortOrder = '-occurred_at' THEN occurred_at END DESC,
+    CASE WHEN :SortOrder = 'created_at' THEN created_at END ASC,
+    CASE WHEN :SortOrder = '-created_at' THEN created_at END DESC,
+    CASE WHEN :SortOrder = 'updated_at' THEN updated_at END ASC,
+    CASE WHEN :SortOrder = '-updated_at' THEN updated_at END DESC,
+    created_at ASC
+LIMIT ?6
 `
 
-func (q *Queries) SearchGlucoseReadings(ctx context.Context, occurredAtStart *int64, occurredAtEnd *int64, glimit interface{}) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.searchGlucoseReadingsStmt, searchGlucoseReadings, occurredAtStart, occurredAtEnd, glimit)
+type SearchGlucoseReadingsParams struct {
+	Dategte   *int64
+	Datelte   *int64
+	Dategt    *int64
+	Datelt    *int64
+	SortOrder string
+	Limit     int64
+}
+
+// DateGTE
+// DateGT
+// DateLTE
+// DateLT
+// CreatedAtGTE
+// CreatedAtGT
+// CreatedAtLTE
+// CreatedAtLT
+// UpdatedGTE
+// UpdatedGT
+// UpdatedLTE
+// UpdatedLT
+// TypeEq
+// TypeNeq
+// TypeIn
+// TypeNin
+// IDEq
+// IDIn
+// DeviceEq
+// AppEq
+// Limit
+// Skip
+// SgvEQ
+// SgvGTE
+// SgvGT
+// SgvLTE
+// SgvLT
+// IncludeDeleted
+func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseReadingsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.searchGlucoseReadingsStmt, searchGlucoseReadings,
+		arg.Dategte,
+		arg.Datelte,
+		arg.Dategt,
+		arg.Datelt,
+		arg.SortOrder,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

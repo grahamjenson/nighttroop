@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/models/nightscout"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
 func Search(dep nsutils.Dependencies) http.HandlerFunc {
@@ -103,7 +103,8 @@ func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 		}
 		// Force limit 1 and sort decending by date
 		query.Limit = ptr(nightscout.FlexibleInt64(1))
-		query.SortDesc = ptr(nightscout.FlexibleBool(true))
+		query.SortDesc = nil
+		query.Sort = nil
 
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {

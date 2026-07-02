@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -69,7 +69,6 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 
 func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
-	query = withDefaultQuery(query)
 
 	if !ok {
 		return nil, nsutils.ErrInvalidCollection
@@ -129,15 +128,4 @@ func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutil
 	}
 	return collectionsStore.DeleteType(ctx, userContext, typeString, permanent)
 
-}
-
-func withDefaultQuery(query *nsutils.Query) *nsutils.Query {
-	defaults := nsutils.DefaultQuery()
-	if query.Sort == nil {
-		query.Sort = defaults.Sort
-	}
-	if query.Limit == nil {
-		query.Limit = defaults.Limit
-	}
-	return query
 }

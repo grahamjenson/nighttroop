@@ -3,11 +3,13 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/models/nightscout"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -66,7 +68,52 @@ func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserC
 }
 
 func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query *nsutils.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	entries, err := userContext.UserDB.Queries.AllGlucoseReadings(ctx, int64(query.Limit.Int64()))
+	so := query.SortOrder()
+	so = so.Support(nsutils.SortOccurredAtDesc, nsutils.SortOccurredAtAsc, nsutils.SortCreatedAtDesc, nsutils.SortCreatedAtAsc, nsutils.SortUpdatedAtDesc, nsutils.SortUpdatedAtAsc)
+
+	limit := int64(100)
+	if query.Limit != nil {
+		limit = query.Limit.Int64()
+	}
+
+	// DateGTE
+	// DateGT
+	// DateLTE
+	// DateLT
+	// CreatedAtGTE
+	// CreatedAtGT
+	// CreatedAtLTE
+	// CreatedAtLT
+	// UpdatedGTE
+	// UpdatedGT
+	// UpdatedLTE
+	// UpdatedLT
+	// TypeEq
+	// TypeNeq
+	// TypeIn
+	// TypeNin
+	// IDEq
+	// IDIn
+	// DeviceEq
+	// AppEq
+	// Limit
+	// Skip
+	// SgvEQ
+	// SgvGTE
+	// SgvGT
+	// SgvLTE
+	// SgvLT
+	// IncludeDeleted
+	qSSs, _ := json.MarshalIndent(query, "", "  ")
+	fmt.Println("Search EntriesCollection with query:", string(qSSs), "limit:", limit, "sortOrder:", so.String())
+	entries, err := userContext.UserDB.Queries.SearchGlucoseReadings(ctx, user.SearchGlucoseReadingsParams{
+		Dategte:   query.DateGTE.Int64p(),
+		Datelte:   query.DateLTE.Int64p(),
+		Dategt:    query.DateGT.Int64p(),
+		Datelt:    query.DateLT.Int64p(),
+		Limit:     limit,
+		SortOrder: so.String(),
+	})
 	if err != nil {
 		slog.Error("failed to query glucose readings from database", "error", err)
 		return nil, nsutils.ErrInternal

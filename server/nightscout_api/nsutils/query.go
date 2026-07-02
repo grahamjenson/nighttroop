@@ -15,6 +15,50 @@ import (
 // Because we cant support all mongo queries and filters
 // Nighttroop is just going to enumerate and translate all queries into a limited set of supported queries
 
+type QuerySort string
+
+var (
+	// dates
+	SortOccurredAtAsc  QuerySort = "occurred_at"
+	SortOccurredAtDesc QuerySort = "-occurred_at"
+	SortCreatedAtAsc   QuerySort = "created_at"
+	SortCreatedAtDesc  QuerySort = "-created_at"
+	SortUpdatedAtAsc   QuerySort = "updated_at"
+	SortUpdatedAtDesc  QuerySort = "-updated_at"
+
+	// Model Specific
+	NameAsc  QuerySort = "name"
+	NameDesc QuerySort = "-name"
+)
+
+var allowedSortFields = []QuerySort{
+	SortOccurredAtAsc,
+	SortOccurredAtDesc,
+	SortCreatedAtAsc,
+	SortCreatedAtDesc,
+	SortUpdatedAtAsc,
+	SortUpdatedAtDesc,
+	NameAsc,
+	NameDesc,
+}
+
+func (qs QuerySort) String() string {
+	return string(qs)
+}
+
+func (qs QuerySort) Support(allowed ...QuerySort) QuerySort {
+	if len(allowed) == 0 {
+		return qs
+	}
+	for _, a := range allowed {
+		if qs == a {
+			return qs
+		}
+	}
+	// We are returning first element as default
+	return allowed[0]
+}
+
 type Query struct {
 	// Dates
 	// lte and gte both
@@ -49,13 +93,12 @@ type Query struct {
 	AppEq    *nightscout.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
 
 	// Limits
-	Count *nightscout.FlexibleInt64 `mapstructure:"count,omitempty" json:"count,omitempty"`
 	Limit *nightscout.FlexibleInt64 `mapstructure:"limit,omitempty" json:"limit,omitempty"`
 	Skip  *nightscout.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
 
 	// Sort
-	Sort     *nightscout.ShortString  `mapstructure:"sort,omitempty" json:"sort,omitempty"`
-	SortDesc *nightscout.FlexibleBool `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
+	Sort     *nightscout.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
+	SortDesc *nightscout.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
@@ -80,13 +123,53 @@ type Query struct {
 	NameEq *string `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
-	Permanent *nightscout.FlexibleBool `mapstructure:"permanent,omitempty" json:"permanent,omitempty"`
-	Envelope  *nightscout.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
-	Fields    *QueryStringArray        `mapstructure:"fields,omitempty" json:"fields,omitempty"`
+	Envelope *nightscout.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
+	Fields   *QueryStringArray        `mapstructure:"fields,omitempty" json:"fields,omitempty"`
 
 	IncludeDeleted *nightscout.FlexibleBool `mapstructure:"includeDeleted,omitempty" json:"includeDeleted,omitempty"`
 
+	Token *string `mapstructure:"token,omitempty" json:"-"`
+
 	Other map[string]interface{} `mapstructure:",remain"`
+}
+
+func (q *Query) SortOrder() QuerySort {
+	sortField := "occurred_at"
+	desc := false
+	if q.Sort != nil {
+		sortField = q.Sort.String()
+	}
+	if q.SortDesc != nil {
+		sortField = q.SortDesc.String()
+		desc = true
+	}
+
+	switch sortField {
+	case "date", "dateString", "mills", "startDate", "occurred_at":
+		sortField = "occurred_at"
+	case "created_at", "srvCreated":
+		sortField = "created_at"
+	case "updated_at", "srvModified":
+		sortField = "updated_at"
+	case "name", "defaultProfile", "device":
+		sortField = "name"
+	default:
+		slog.Warn("Unknown sort or sort$desc field, defaulting to occurred_at desc", "sort", sortField)
+		return SortOccurredAtDesc
+	}
+
+	fullString := sortField
+	if desc {
+		fullString = "-" + fullString
+	}
+	for _, allowed := range allowedSortFields {
+		if string(allowed) == fullString {
+			return allowed
+		}
+	}
+
+	slog.Warn("Unknown sort field, defaulting to occurred_at desc", "sort", fullString)
+	return SortOccurredAtDesc
 }
 
 type QueryStringArray []string
@@ -141,11 +224,17 @@ func ptr[T any](v T) *T {
 }
 
 // DefaultQuery returns the default query shape used by list-style endpoints.
-func DefaultQuery() *Query {
-	return &Query{
-		Limit:    ptr(nightscout.FlexibleInt64(100)),
-		Sort:     ptr(nightscout.ShortString("date")),
-		SortDesc: ptr(nightscout.FlexibleBool(true)),
+func withDefaults(qv *Query) {
+	if qv == nil {
+		qv = &Query{}
+	}
+
+	if qv.Limit == nil || qv.Limit.Int64() <= 0 || qv.Limit.Int64() > 100 {
+		qv.Limit = ptr(nightscout.FlexibleInt64(100))
+	}
+
+	if qv.Sort == nil && qv.SortDesc == nil {
+		qv.SortDesc = ptr(nightscout.ShortString("date"))
 	}
 }
 
@@ -154,8 +243,9 @@ func DefaultQuery() *Query {
 func ParseV1(values url.Values) (*Query, *HTTPError) {
 	qv, err := parseQuery(values)
 	if err != nil {
-		return nil, ErrBadQueryError
+		return nil, ErrBadQueryError(err.Error())
 	}
+	withDefaults(qv)
 
 	return qv, nil
 }
@@ -164,9 +254,9 @@ func ParseV1(values url.Values) (*Query, *HTTPError) {
 func ParseV3(values url.Values) (*Query, *HTTPError) {
 	qv, err := parseQuery(values)
 	if err != nil {
-		return nil, ErrBadQueryError
+		return nil, ErrBadQueryError(err.Error())
 	}
-
+	withDefaults(qv)
 	return qv, nil
 }
 
@@ -229,6 +319,8 @@ var forwardLookupName = map[string][]string{
 		"app", "find[app]", "find[app][$eq]",
 		"subject", "find[subject]", "find[subject][$eq]",
 	},
+
+	"limit": {"limit", "count"},
 }
 
 var reverseLookupName = map[string]string{}
@@ -292,6 +384,10 @@ func parseQuery(values url.Values) (*Query, error) {
 	err = decoder.Decode(qvMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode query values: %w", err)
+	}
+
+	if qv.Sort != nil && qv.SortDesc != nil {
+		return nil, fmt.Errorf("cannot specify both sort and sort$desc parameters")
 	}
 
 	if len(qv.Other) > 0 {

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/nightscout"
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
 // Version reports the application and API version metadata for API v3.
@@ -48,7 +48,7 @@ func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Requ
 		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food}
 		lastModifiedMap := make(map[nsutils.Collection]int64)
 		for _, collection := range collections {
-			record, err := dep.Store.Search(r.Context(), collection, &nsutils.Query{Limit: ptr(nightscout.FlexibleInt64(1)), SortDesc: ptr(nightscout.FlexibleBool(true)), Sort: ptr(nightscout.ShortString("srv_modified"))})
+			record, err := dep.Store.Search(r.Context(), collection, &nsutils.Query{Limit: ptr(nightscout.FlexibleInt64(1)), SortDesc: ptr(nightscout.ShortString("srv_modified"))})
 			if err != nil || record == nil || len(record) == 0 {
 				continue
 			}

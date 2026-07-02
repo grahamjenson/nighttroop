@@ -3,7 +3,7 @@ package v2
 import (
 	"net/http"
 
-	"nighttroop.t1d.nz/server/nightscout_api/vendor_nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
 // PropertiesList lists properties using the Nightscout v1 query format.
