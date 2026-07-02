@@ -96,6 +96,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
+	if q.defaultSortSearchGlucoseReadingsStmt, err = db.PrepareContext(ctx, defaultSortSearchGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query DefaultSortSearchGlucoseReadings: %w", err)
+	}
 	if q.deleteGlucoseReadingStmt, err = db.PrepareContext(ctx, deleteGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteGlucoseReading: %w", err)
 	}
@@ -141,8 +144,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
-	if q.searchGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchGlucoseReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchGlucoseReadings: %w", err)
+	if q.nonDefaultSortSearchGlucoseReadingsStmt, err = db.PrepareContext(ctx, nonDefaultSortSearchGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query NonDefaultSortSearchGlucoseReadings: %w", err)
 	}
 	if q.updateBolusStmt, err = db.PrepareContext(ctx, updateBolus); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateBolus: %w", err)
@@ -296,6 +299,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.defaultSortSearchGlucoseReadingsStmt != nil {
+		if cerr := q.defaultSortSearchGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing defaultSortSearchGlucoseReadingsStmt: %w", cerr)
+		}
+	}
 	if q.deleteGlucoseReadingStmt != nil {
 		if cerr := q.deleteGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteGlucoseReadingStmt: %w", cerr)
@@ -371,9 +379,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.searchGlucoseReadingsStmt != nil {
-		if cerr := q.searchGlucoseReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchGlucoseReadingsStmt: %w", cerr)
+	if q.nonDefaultSortSearchGlucoseReadingsStmt != nil {
+		if cerr := q.nonDefaultSortSearchGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing nonDefaultSortSearchGlucoseReadingsStmt: %w", cerr)
 		}
 	}
 	if q.updateBolusStmt != nil {
@@ -484,6 +492,7 @@ type Queries struct {
 	createProfileStmt                        *sql.Stmt
 	createTempBasalStmt                      *sql.Stmt
 	createTempTargetStmt                     *sql.Stmt
+	defaultSortSearchGlucoseReadingsStmt     *sql.Stmt
 	deleteGlucoseReadingStmt                 *sql.Stmt
 	deleteGlucoseReadingsByTypeStmt          *sql.Stmt
 	deletePermanentGlucoseReadingStmt        *sql.Stmt
@@ -499,7 +508,7 @@ type Queries struct {
 	getProfileStmt                           *sql.Stmt
 	getTempBasalStmt                         *sql.Stmt
 	getTempTargetStmt                        *sql.Stmt
-	searchGlucoseReadingsStmt                *sql.Stmt
+	nonDefaultSortSearchGlucoseReadingsStmt  *sql.Stmt
 	updateBolusStmt                          *sql.Stmt
 	updateCarbStmt                           *sql.Stmt
 	updateGlucoseReadingStmt                 *sql.Stmt
@@ -539,6 +548,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileStmt:                        q.createProfileStmt,
 		createTempBasalStmt:                      q.createTempBasalStmt,
 		createTempTargetStmt:                     q.createTempTargetStmt,
+		defaultSortSearchGlucoseReadingsStmt:     q.defaultSortSearchGlucoseReadingsStmt,
 		deleteGlucoseReadingStmt:                 q.deleteGlucoseReadingStmt,
 		deleteGlucoseReadingsByTypeStmt:          q.deleteGlucoseReadingsByTypeStmt,
 		deletePermanentGlucoseReadingStmt:        q.deletePermanentGlucoseReadingStmt,
@@ -554,7 +564,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStmt:                           q.getProfileStmt,
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
-		searchGlucoseReadingsStmt:                q.searchGlucoseReadingsStmt,
+		nonDefaultSortSearchGlucoseReadingsStmt:  q.nonDefaultSortSearchGlucoseReadingsStmt,
 		updateBolusStmt:                          q.updateBolusStmt,
 		updateCarbStmt:                           q.updateCarbStmt,
 		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,

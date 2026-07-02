@@ -104,15 +104,56 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 	// SgvLTE
 	// SgvLT
 	// IncludeDeleted
+	soi := 1
+	switch so.String() {
+	case nsutils.SortOccurredAtDesc.String():
+		soi = -1
+	case nsutils.SortOccurredAtAsc.String():
+		soi = 1
+	case nsutils.SortCreatedAtDesc.String():
+		soi = -2
+	case nsutils.SortCreatedAtAsc.String():
+		soi = 2
+	case nsutils.SortUpdatedAtDesc.String():
+		soi = -3
+	case nsutils.SortUpdatedAtAsc.String():
+		soi = 3
+	default:
+		slog.Warn("Unknown sort field, defaulting to occurred_at desc", "sort", so.String())
+	}
 	qSSs, _ := json.MarshalIndent(query, "", "  ")
 	fmt.Println("Search EntriesCollection with query:", string(qSSs), "limit:", limit, "sortOrder:", so.String())
-	entries, err := userContext.UserDB.Queries.SearchGlucoseReadings(ctx, user.SearchGlucoseReadingsParams{
-		Dategte:   query.DateGTE.Int64p(),
-		Datelte:   query.DateLTE.Int64p(),
-		Dategt:    query.DateGT.Int64p(),
-		Datelt:    query.DateLT.Int64p(),
-		Limit:     limit,
-		SortOrder: so.String(),
+	entries, err := userContext.UserDB.Queries.NonDefaultSortSearchGlucoseReadings(ctx, user.NonDefaultSortSearchGlucoseReadingsParams{
+		DateGTE:      query.DateGTE.Int64p(),
+		DateLTE:      query.DateLTE.Int64p(),
+		DateGT:       query.DateGT.Int64p(),
+		DateLT:       query.DateLT.Int64p(),
+		CreatedAtGTE: query.CreatedAtGTE.Int64p(),
+		CreatedAtGT:  query.CreatedAtGT.Int64p(),
+		CreatedAtLTE: query.CreatedAtLTE.Int64p(),
+		CreatedAtLT:  query.CreatedAtLT.Int64p(),
+		UpdatedGTE:   query.UpdatedGTE.Int64p(),
+		UpdatedGT:    query.UpdatedGT.Int64p(),
+		UpdatedLTE:   query.UpdatedLTE.Int64p(),
+		UpdatedLT:    query.UpdatedLT.Int64p(),
+		TypeEq:       query.TypeEq.Stringp(),
+		TypeNeq:      query.TypeNeq.Stringp(),
+		TypeIn:       query.TypeIn.Stringp(),
+		TypeNin:      query.TypeNin.Stringp(),
+		IDEq:         query.IDEq.Stringp(),
+		IDIn:         query.IDIn.Stringp(),
+		DeviceEq:     query.DeviceEq.Stringp(),
+		AppEq:        query.AppEq.Stringp(),
+
+		SgvEQ:          query.SgvEQ.Int64p(),
+		SgvGTE:         query.SgvGTE.Int64p(),
+		SgvGT:          query.SgvGT.Int64p(),
+		SgvLTE:         query.SgvLTE.Int64p(),
+		SgvLT:          query.SgvLT.Int64p(),
+		IncludeDeleted: query.IncludeDeleted.Boolp(),
+		Skip:           query.Skip.Int64(),
+		Limit:          limit,
+		SortOrder:      int64(soi),
 	})
 	if err != nil {
 		slog.Error("failed to query glucose readings from database", "error", err)

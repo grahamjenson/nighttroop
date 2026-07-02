@@ -81,7 +81,7 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nil, err
 	}
-	records = nsutils.ApplyQuery(records, query)
+
 	return records, nil
 
 }

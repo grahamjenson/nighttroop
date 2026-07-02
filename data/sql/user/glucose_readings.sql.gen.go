@@ -121,6 +121,174 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 	return &i, err
 }
 
+const defaultSortSearchGlucoseReadings = `-- name: DefaultSortSearchGlucoseReadings :many
+
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings
+WHERE
+    (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
+    AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
+    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at > ?3)
+    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at < ?4)
+
+    AND (CAST(?5 AS INTEGER) IS NULL OR created_at >= ?5)
+    AND (CAST(?6 AS INTEGER) IS NULL OR created_at <= ?6)
+    AND (CAST(?7 AS INTEGER) IS NULL OR created_at > ?7)
+    AND (CAST(?8 AS INTEGER) IS NULL OR created_at < ?8)
+
+    AND (CAST(?9 AS INTEGER) IS NULL OR updated_at >= ?9)
+    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at <= ?10)
+    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at > ?11)
+    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at < ?12)
+
+    AND (CAST(?13 AS TEXT) IS NULL OR type = ?13)
+    AND (CAST(?14 AS TEXT) IS NULL OR type != ?14)
+    AND (CAST(?15 AS TEXT) IS NULL OR type IN (SELECT value FROM json_each(?15)))
+    AND (CAST(?16 AS TEXT) IS NULL OR type NOT IN (SELECT value FROM json_each(?16)))
+
+    AND (CAST(?17 AS TEXT) IS NULL OR id = ?17)
+    AND (CAST(?18 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?18)))
+
+    AND (CAST(?19 AS TEXT) IS NULL OR created_by_device_name = ?19)
+    AND (CAST(?20 AS TEXT) IS NULL OR created_by_app_name = ?20)
+
+    AND (CAST(?21 AS INTEGER) IS NULL OR value = ?21)
+    AND (CAST(?22 AS INTEGER) IS NULL OR value >= ?22)
+    AND (CAST(?23 AS INTEGER) IS NULL OR value > ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR value <= ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR value < ?25)
+    
+    AND (CAST(?26 AS INTEGER) IS NULL OR deleted_at IS NULL)
+ORDER BY occurred_at DESC
+LIMIT ?28 OFFSET ?27
+`
+
+type DefaultSortSearchGlucoseReadingsParams struct {
+	DateGTE        *int64
+	DateLTE        *int64
+	DateGT         *int64
+	DateLT         *int64
+	CreatedAtGTE   *int64
+	CreatedAtLTE   *int64
+	CreatedAtGT    *int64
+	CreatedAtLT    *int64
+	UpdatedGTE     *int64
+	UpdatedLTE     *int64
+	UpdatedGT      *int64
+	UpdatedLT      *int64
+	TypeEq         *string
+	TypeNeq        *string
+	TypeIn         *string
+	TypeNin        *string
+	IDEq           *string
+	IDIn           *string
+	DeviceEq       *string
+	AppEq          *string
+	SgvEQ          *int64
+	SgvGTE         *int64
+	SgvGT          *int64
+	SgvLTE         *int64
+	SgvLT          *int64
+	IncludeDeleted *int64
+	Skip           int64
+	Limit          int64
+}
+
+// DateGTE
+// DateGT
+// DateLTE
+// DateLT
+// CreatedAtGTE
+// CreatedAtGT
+// CreatedAtLTE
+// CreatedAtLT
+// UpdatedGTE
+// UpdatedGT
+// UpdatedLTE
+// UpdatedLT
+// TypeEq
+// TypeNeq
+// TypeIn
+// TypeNin
+// IDEq
+// IDIn
+// DeviceEq
+// AppEq
+// Limit
+// Skip
+// SgvEQ
+// SgvGTE
+// SgvGT
+// SgvLTE
+// SgvLT
+// IncludeDeleted
+func (q *Queries) DefaultSortSearchGlucoseReadings(ctx context.Context, arg DefaultSortSearchGlucoseReadingsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.defaultSortSearchGlucoseReadingsStmt, defaultSortSearchGlucoseReadings,
+		arg.DateGTE,
+		arg.DateLTE,
+		arg.DateGT,
+		arg.DateLT,
+		arg.CreatedAtGTE,
+		arg.CreatedAtLTE,
+		arg.CreatedAtGT,
+		arg.CreatedAtLT,
+		arg.UpdatedGTE,
+		arg.UpdatedLTE,
+		arg.UpdatedGT,
+		arg.UpdatedLT,
+		arg.TypeEq,
+		arg.TypeNeq,
+		arg.TypeIn,
+		arg.TypeNin,
+		arg.IDEq,
+		arg.IDIn,
+		arg.DeviceEq,
+		arg.AppEq,
+		arg.SgvEQ,
+		arg.SgvGTE,
+		arg.SgvGT,
+		arg.SgvLTE,
+		arg.SgvLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Value,
+			&i.Type,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityName,
+			&i.CreatedByIdentityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deleteGlucoseReading = `-- name: DeleteGlucoseReading :execresult
 
 UPDATE glucose_readings SET 
@@ -195,70 +363,118 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, id string) (*GlucoseRea
 	return &i, err
 }
 
-const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-
+const nonDefaultSortSearchGlucoseReadings = `-- name: NonDefaultSortSearchGlucoseReadings :many
 SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM glucose_readings
 WHERE
-    (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
-    AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
-    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at > ?3)
-    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at < ?4)
-    AND CAST(?5 AS TEXT) IS NOT NULL
+    CAST(?1 AS INTEGER) IS NOT NULL
+    AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at >= ?2)
+    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at <= ?3)
+    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at > ?4)
+    AND (CAST(?5 AS INTEGER) IS NULL OR occurred_at < ?5)
+
+    AND (CAST(?6 AS INTEGER) IS NULL OR created_at >= ?6)
+    AND (CAST(?7 AS INTEGER) IS NULL OR created_at <= ?7)
+    AND (CAST(?8 AS INTEGER) IS NULL OR created_at > ?8)
+    AND (CAST(?9 AS INTEGER) IS NULL OR created_at < ?9)
+
+    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at >= ?10)
+    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at <= ?11)
+    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at > ?12)
+    AND (CAST(?13 AS INTEGER) IS NULL OR updated_at < ?13)
+
+    AND (CAST(?14 AS TEXT) IS NULL OR type = ?14)
+    AND (CAST(?15 AS TEXT) IS NULL OR type != ?15)
+    AND (CAST(?16 AS TEXT) IS NULL OR type IN (SELECT value FROM json_each(?16)))
+    AND (CAST(?17 AS TEXT) IS NULL OR type NOT IN (SELECT value FROM json_each(?17)))
+
+    AND (CAST(?18 AS TEXT) IS NULL OR id = ?18)
+    AND (CAST(?19 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?19)))
+
+    AND (CAST(?20 AS TEXT) IS NULL OR created_by_device_name = ?20)
+    AND (CAST(?21 AS TEXT) IS NULL OR created_by_app_name = ?21)
+
+    AND (CAST(?22 AS INTEGER) IS NULL OR value = ?22)
+    AND (CAST(?23 AS INTEGER) IS NULL OR value >= ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR value > ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR value <= ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR value < ?26)
+    
+    AND (CAST(?27 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY
-    CASE WHEN :SortOrder = 'occurred_at' THEN occurred_at END ASC,
-    CASE WHEN :SortOrder = '-occurred_at' THEN occurred_at END DESC,
-    CASE WHEN :SortOrder = 'created_at' THEN created_at END ASC,
-    CASE WHEN :SortOrder = '-created_at' THEN created_at END DESC,
-    CASE WHEN :SortOrder = 'updated_at' THEN updated_at END ASC,
-    CASE WHEN :SortOrder = '-updated_at' THEN updated_at END DESC,
-    created_at ASC
-LIMIT ?6
+    -- Ascending Sorting (Map columns to 1, 2, 3)
+    CASE WHEN ?1 = 1 THEN occurred_at END ASC,
+    CASE WHEN ?1 = 2 THEN created_at  END ASC,
+    CASE WHEN ?1 = 3 THEN updated_at  END ASC,
+
+    -- Descending Sorting (Map columns to -1, -2, -3)
+    CASE WHEN ?1 = -1 THEN occurred_at END DESC,
+    CASE WHEN ?1 = -2 THEN created_at  END DESC,
+    CASE WHEN ?1 = -3 THEN updated_at  END DESC
+LIMIT ?29 OFFSET ?28
 `
 
-type SearchGlucoseReadingsParams struct {
-	Dategte   *int64
-	Datelte   *int64
-	Dategt    *int64
-	Datelt    *int64
-	SortOrder string
-	Limit     int64
+type NonDefaultSortSearchGlucoseReadingsParams struct {
+	SortOrder      int64
+	DateGTE        *int64
+	DateLTE        *int64
+	DateGT         *int64
+	DateLT         *int64
+	CreatedAtGTE   *int64
+	CreatedAtLTE   *int64
+	CreatedAtGT    *int64
+	CreatedAtLT    *int64
+	UpdatedGTE     *int64
+	UpdatedLTE     *int64
+	UpdatedGT      *int64
+	UpdatedLT      *int64
+	TypeEq         *string
+	TypeNeq        *string
+	TypeIn         *string
+	TypeNin        *string
+	IDEq           *string
+	IDIn           *string
+	DeviceEq       *string
+	AppEq          *string
+	SgvEQ          *int64
+	SgvGTE         *int64
+	SgvGT          *int64
+	SgvLTE         *int64
+	SgvLT          *int64
+	IncludeDeleted *bool
+	Skip           int64
+	Limit          int64
 }
 
-// DateGTE
-// DateGT
-// DateLTE
-// DateLT
-// CreatedAtGTE
-// CreatedAtGT
-// CreatedAtLTE
-// CreatedAtLT
-// UpdatedGTE
-// UpdatedGT
-// UpdatedLTE
-// UpdatedLT
-// TypeEq
-// TypeNeq
-// TypeIn
-// TypeNin
-// IDEq
-// IDIn
-// DeviceEq
-// AppEq
-// Limit
-// Skip
-// SgvEQ
-// SgvGTE
-// SgvGT
-// SgvLTE
-// SgvLT
-// IncludeDeleted
-func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseReadingsParams) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.searchGlucoseReadingsStmt, searchGlucoseReadings,
-		arg.Dategte,
-		arg.Datelte,
-		arg.Dategt,
-		arg.Datelt,
+func (q *Queries) NonDefaultSortSearchGlucoseReadings(ctx context.Context, arg NonDefaultSortSearchGlucoseReadingsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.nonDefaultSortSearchGlucoseReadingsStmt, nonDefaultSortSearchGlucoseReadings,
 		arg.SortOrder,
+		arg.DateGTE,
+		arg.DateLTE,
+		arg.DateGT,
+		arg.DateLT,
+		arg.CreatedAtGTE,
+		arg.CreatedAtLTE,
+		arg.CreatedAtGT,
+		arg.CreatedAtLT,
+		arg.UpdatedGTE,
+		arg.UpdatedLTE,
+		arg.UpdatedGT,
+		arg.UpdatedLT,
+		arg.TypeEq,
+		arg.TypeNeq,
+		arg.TypeIn,
+		arg.TypeNin,
+		arg.IDEq,
+		arg.IDIn,
+		arg.DeviceEq,
+		arg.AppEq,
+		arg.SgvEQ,
+		arg.SgvGTE,
+		arg.SgvGT,
+		arg.SgvLTE,
+		arg.SgvLT,
+		arg.IncludeDeleted,
+		arg.Skip,
 		arg.Limit,
 	)
 	if err != nil {

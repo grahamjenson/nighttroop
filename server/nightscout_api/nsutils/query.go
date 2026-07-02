@@ -105,22 +105,22 @@ type Query struct {
 	/////
 
 	// Entries
-	SgvEQ  *string `mapstructure:"sgveq,omitempty" json:"sgveq,omitempty"`
-	SgvGTE *string `mapstructure:"sgvgte,omitempty" json:"sgvgte,omitempty"`
-	SgvGT  *string `mapstructure:"sgvgt,omitempty" json:"sgvgt,omitempty"`
-	SgvLTE *string `mapstructure:"sgvlte,omitempty" json:"sgvlte,omitempty"`
-	SgvLT  *string `mapstructure:"sgvlt,omitempty" json:"sgvlt,omitempty"`
+	SgvEQ  *nightscout.FlexibleInt64 `mapstructure:"sgveq,omitempty" json:"sgveq,omitempty"`
+	SgvGTE *nightscout.FlexibleInt64 `mapstructure:"sgvgte,omitempty" json:"sgvgte,omitempty"`
+	SgvGT  *nightscout.FlexibleInt64 `mapstructure:"sgvgt,omitempty" json:"sgvgt,omitempty"`
+	SgvLTE *nightscout.FlexibleInt64 `mapstructure:"sgvlte,omitempty" json:"sgvlte,omitempty"`
+	SgvLT  *nightscout.FlexibleInt64 `mapstructure:"sgvlt,omitempty" json:"sgvlt,omitempty"`
 
 	// Treatments
-	CarbsEQ  *string `mapstructure:"carbseq,omitempty" json:"carbseq,omitempty"`
-	CarbsGTE *string `mapstructure:"carbsgte,omitempty" json:"carbsgte,omitempty"`
-	CarbsLT  *string `mapstructure:"carbslt,omitempty" json:"carbslt,omitempty"`
+	CarbsEQ  *nightscout.FlexibleInt64 `mapstructure:"carbseq,omitempty" json:"carbseq,omitempty"`
+	CarbsGTE *nightscout.FlexibleInt64 `mapstructure:"carbsgte,omitempty" json:"carbsgte,omitempty"`
+	CarbsLT  *nightscout.FlexibleInt64 `mapstructure:"carbslt,omitempty" json:"carbslt,omitempty"`
 
-	InsulinEQ  *string `mapstructure:"insulineq,omitempty" json:"insulineq,omitempty"`
-	InsulinGTE *string `mapstructure:"insulingte,omitempty" json:"insulingte,omitempty"`
-	InsulinLT  *string `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
+	InsulinEQ  *nightscout.FlexibleInt64 `mapstructure:"insulineq,omitempty" json:"insulineq,omitempty"`
+	InsulinGTE *nightscout.FlexibleInt64 `mapstructure:"insulingte,omitempty" json:"insulingte,omitempty"`
+	InsulinLT  *nightscout.FlexibleInt64 `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
 
-	NameEq *string `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
+	NameEq *nightscout.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
 	Envelope *nightscout.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
@@ -173,6 +173,13 @@ func (q *Query) SortOrder() QuerySort {
 }
 
 type QueryStringArray []string
+
+func (qsa *QueryStringArray) Stringp() *string {
+	if qsa == nil {
+		return nil
+	}
+	return ptr(strings.Join(*qsa, ","))
+}
 
 func (qsa *QueryStringArray) ToArray() []string {
 	if qsa == nil {
@@ -395,19 +402,6 @@ func parseQuery(values url.Values) (*Query, error) {
 	}
 
 	return &qv, nil
-}
-
-// ApplyQuery filters, sorts, skips, and limits a record set in memory.
-func ApplyQuery(records []Record, query *Query) []Record {
-	filtered := make([]Record, 0, len(records))
-	for _, record := range records {
-
-		// if matchesAll(record, query.Filters) {
-		filtered = append(filtered, record.Clone())
-		// }
-	}
-
-	return filtered
 }
 
 //// Map Structure Helpers

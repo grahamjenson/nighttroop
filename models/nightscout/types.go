@@ -92,6 +92,14 @@ func (i *FlexibleInt64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (i *FlexibleInt64) Int64p() *int64 {
+	if i == nil {
+		return nil
+	}
+	v := int64(*i)
+	return &v
+}
+
 func (i *FlexibleInt64) Int64() int64 {
 	if i == nil {
 		return 0
@@ -134,6 +142,14 @@ func (b *FlexibleBool) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("expected bool or string for bool, got %T", v)
 	}
 	return nil
+}
+
+func (b *FlexibleBool) Boolp() *bool {
+	if b == nil {
+		return nil
+	}
+	v := bool(*b)
+	return &v
 }
 
 func (b *FlexibleBool) Bool() bool {
@@ -405,6 +421,14 @@ func (s *ShortString) UnmarshalJSON(data []byte) error {
 
 func (s *ShortString) String() string {
 	return string(*s)
+}
+
+func (s *ShortString) Stringp() *string {
+	if s == nil {
+		return nil
+	}
+	str := string(*s)
+	return &str
 }
 
 type SanitizedString string
