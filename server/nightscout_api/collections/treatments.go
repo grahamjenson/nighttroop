@@ -30,7 +30,10 @@ func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.
 		slog.Error("failed to map data to treatment model", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-
+	if treatmentModel.EventType == nil {
+		slog.Error("treatment model event type is nil")
+		return nil, nsutils.ErrInternal
+	}
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
 		dbModel, err := userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))

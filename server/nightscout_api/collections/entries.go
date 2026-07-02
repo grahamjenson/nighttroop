@@ -3,8 +3,6 @@ package collections
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/user"
@@ -74,21 +72,15 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 	// check against default sort order
 	defaultSortOrder := so == nsquery.SortOccurredAtDesc
 
-	qSSs, _ := json.MarshalIndent(query, "", "  ")
-	fmt.Println("Search EntriesCollection with query:", string(qSSs), "sortOrder:", so.String())
-
 	var entries []*user.GlucoseReading
 	var rerr error
 
 	// There are three options,
 	if defaultSortOrder && !query.HasFilters {
-		fmt.Println("ALL AllGlucoseReadings AllGlucoseReadings ")
 		entries, rerr = userContext.UserDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
 	} else if defaultSortOrder && query.HasFilters {
-		fmt.Println("FILTERS SearchWithDefaultSortGlucoseReadings SearchWithDefaultSortGlucoseReadings with filters")
 		entries, rerr = userContext.UserDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	} else {
-		fmt.Println("SORT SearchWithNonDefaultSortGlucoseReadings SearchWithNonDefaultSortGlucoseReadings with filters")
 		entries, rerr = userContext.UserDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchNonDefaultOrder(query))
 	}
 
