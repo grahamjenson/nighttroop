@@ -1,40 +1,25 @@
 # TODO
 
-1. EPIC NIGHTSCOUT CAMPATABILLITY
-    1. Identities Page To retrieve NS token and information on communication
-    1. Create non-admin device for care portal role
-    1. generate and offer copy token button to call api
-    1. Save data from sync as entry
-    1. Save data tag with unique sync identity that created it (sgv is tagged with DexcomSync identity, so that we can trace where stuff comes from)
+1. EPIC NIGHTSCOUT COMPATABILILTY
     1. fetch data in ns store to return to the user
-    1. make models a bit nicer, maybe with generics e.g. Record[Entry] or something
     1. write punishment loop for bad syncing
     1. write wrapper for cron to report runtimes
     1. Enable turning off s3 (or making it local for testing)
+    1. Test out litestream as a way to sync dbs (maybe litestream just for control and add the identities there)
     1. Deploy to a fly.io dev/staging environment
     1. Connect actual data and do some fun perf testing
     1. Cleanup overloaded terms User/Device/Identity
+    1. 
 
 1. Timezones for profiles, user settings, just to make sure that when a treatment is logged we know whne against the profile it actually happened
-2. Logging with contexts to DBs, 
 1. error reporting with sentry, 
-1. check that users dont get error responses traces
-1. Nightscout reimplementation routes
+1. check that users dont get error responses traces!
 5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
 1. Write data sync logic and protections, punishing bad servers...
 1. Archive has a problem where they are deleting files from the db not removing from control
 1. archivied_at in the user table in control.db
 
-# NightTroop
 
-NightTroop is a server that hosts many NightScout servers at the same time.
-It is a ground up rewrite of the NightScout server to make it easier and more scalable to host many users.
-
-# On Boarding
-
-Go to nighttroop.t1d.nz and click the button to create your user.
-You can sync data from Dexcom and/or Nightscout instance (exactly one of each per user), 
-so you can fill out your dexcom username/password + 
 
 
 # Testing locally
@@ -42,19 +27,27 @@ so you can fill out your dexcom username/password +
 Docker runs our local test s3 server `minio` (the only external dependency)
 
 ```
-brew install sqlc
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
+```
+
+```
+brew install docker colima docker-compose golang-migrate tailwindcss go-air templ sqlc
 go install github.com/jmattheis/goverter/cmd/goverter@v1.9.3
-brew install templ
-brew install go-air
-brew install tailwindcss
-brew install golang-migrate
-brew install docker colima docker-compose
+go install github.com/mickamy/slog-pretty/cmd/spretty@latest
+
+
 colima start
 docker-compose up -d
 ```
 
 ```
-go run main.go
+air | spretty
+```
+
+If you want to wipe data and start again
+
+```
+docker-compose restart && rm -rf .dbs && go generate ./... && sleep 2 && air | spretty
 ```
 
 Then go to `localhost:8080` and create a user, `control.localhost:8080` and login as control.
