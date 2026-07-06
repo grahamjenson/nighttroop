@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/dexcom"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -35,7 +35,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 			createParams := dexcom.EGVToCreate(e, "dexcom", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
 			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
-				if user.IsDuplicateID(err) {
+				if site.IsDuplicateID(err) {
 					continue
 				}
 				// Probably just non-unique ID

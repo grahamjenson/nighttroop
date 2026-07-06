@@ -3,7 +3,7 @@
 //   sqlc v1.31.1
 // source: profile.sql
 
-package user
+package site
 
 import (
 	"context"

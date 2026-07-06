@@ -18,7 +18,7 @@ const UserContextKey = "user_context"
 
 type UserContext struct {
 	ControlDB *db.ControlDB
-	SiteDB    *db.UserDB
+	SiteDB    *db.SiteDB
 	SiteModel *control.Site
 
 	IdentityModel *control.SiteIdentity
@@ -48,10 +48,10 @@ func SetUserActionInUserContext(ctx context.Context, action UserAction) context.
 }
 
 ////
-// UserDB
+// SiteDB
 ////
 
-func SetUserDBAndModelAndCreateUserContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.UserDB, siteModel *control.Site, subdomain string) context.Context {
+func SetSiteDBAndModelAndCreateUserContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string) context.Context {
 	userContext := &UserContext{}
 	userContext.ControlDB = controlDB
 	userContext.SiteDB = siteDB

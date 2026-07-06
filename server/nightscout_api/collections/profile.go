@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/user"
+	user "nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"

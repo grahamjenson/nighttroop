@@ -3,7 +3,7 @@
 //   sqlc v1.31.1
 // source: device_status.sql
 
-package user
+package site
 
 import (
 	"context"

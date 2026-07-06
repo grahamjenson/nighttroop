@@ -1,4 +1,4 @@
-package user
+package site
 
 // goverter:converter
 // goverter:output:format function

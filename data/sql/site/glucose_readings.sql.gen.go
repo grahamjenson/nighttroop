@@ -3,7 +3,7 @@
 //   sqlc v1.31.1
 // source: glucose_readings.sql
 
-package user
+package site
 
 import (
 	"context"

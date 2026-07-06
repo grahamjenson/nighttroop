@@ -26,7 +26,7 @@ func GetTestServerConfig() config.ServerConfig {
 	return *storedServerConfig
 }
 
-func GetConfigControlDBAndUserDBForTest() (config.ServerConfig, *db.ControlDB, *db.UserDB) {
+func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteDB) {
 	cfg := GetTestServerConfig()
 
 	controlDB, err := db.NewControlDB(cfg)
@@ -39,5 +39,5 @@ func GetConfigControlDBAndUserDBForTest() (config.ServerConfig, *db.ControlDB, *
 		panic(fmt.Errorf("cannot create user db: %w", err))
 	}
 
-	return cfg, controlDB, identityValues.UserDB
+	return cfg, controlDB, identityValues.SiteDB
 }

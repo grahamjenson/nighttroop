@@ -54,7 +54,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		}
 
 		responseModel := CreateUserResponse{
-			UserID:     userCreateResult.UserDB.Subdomain,
+			UserID:     userCreateResult.SiteDB.Subdomain,
 			APIKey:     userCreateResult.AdminPassword,
 			BackupKey:  userCreateResult.BackupPassword,
 			TOTPSecret: userCreateResult.TotpSecret,
@@ -72,7 +72,7 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = public_templ.CreateUserInfo(userCreateResult.UserDB.URL(), userCreateResult.AdminPassword, userCreateResult.TotpSecret, userCreateResult.PwdNSToken, userCreateResult.UserDB.NSURL(), userCreateResult.BackupPassword).Render(r.Context(), w)
+		err = public_templ.CreateUserInfo(userCreateResult.SiteDB.URL(), userCreateResult.AdminPassword, userCreateResult.TotpSecret, userCreateResult.PwdNSToken, userCreateResult.SiteDB.NSURL(), userCreateResult.BackupPassword).Render(r.Context(), w)
 		if err != nil {
 			slog.Error("Unable to create user", "error", err)
 			http.Error(w, "Unable to Create User", http.StatusInternalServerError)

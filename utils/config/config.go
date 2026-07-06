@@ -83,7 +83,7 @@ type ServerConfig struct {
 
 	// Truncate Config
 	TruncateIntervalInSeconds int
-	MaxUserDBSizeKB           int
+	MaxSiteDBSizeKB           int
 	MaxControlDBSizeKB        int
 
 	RateLimiters *RateLimiters
@@ -178,7 +178,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		MaxIdentitiesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_IDENTITIES_PER_USER", 10),
 
 		// Truncate Config
-		MaxUserDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
+		MaxSiteDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
 		MaxControlDBSizeKB:        configIntSelect(dotenvdev, dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
 		TruncateIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 
@@ -425,7 +425,7 @@ func printServerConfig(config ServerConfig) {
 		"MaxIdentitiesPerUser", config.MaxIdentitiesPerUser,
 		"MaxUserLastSeenInMins", config.MaxUserLastSeenInMins,
 		"MaxUserLastWrittenInMins", config.MaxUserLastWrittenInMins,
-		"MaxUserDBSizeKB", config.MaxUserDBSizeKB,
+		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
 	)

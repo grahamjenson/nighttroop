@@ -12,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"nighttroop.t1d.nz/data/sql/control"
 
-	"nighttroop.t1d.nz/data/sql/user"
+	user "nighttroop.t1d.nz/data/sql/site"
 )
 
 func main() {

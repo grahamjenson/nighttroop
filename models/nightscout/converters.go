@@ -1,7 +1,7 @@
 package nightscout
 
 import (
-	"nighttroop.t1d.nz/data/sql/user"
+	user "nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 )
 

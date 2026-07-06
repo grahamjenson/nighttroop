@@ -1,6 +1,6 @@
 package nsquery
 
-import "nighttroop.t1d.nz/data/sql/user"
+import "nighttroop.t1d.nz/data/sql/site"
 
 //go:generate goverter gen .
 
@@ -23,11 +23,11 @@ type ToSearchParams interface {
 	// GLUCOSE READINGS
 	//////
 
-	GlucoseSearchAll(source Query) user.AllGlucoseReadingsParams
-	GlucoseSearchDefaultOrder(source Query) user.SearchWithDefaultSortGlucoseReadingsParams
+	GlucoseSearchAll(source Query) site.AllGlucoseReadingsParams
+	GlucoseSearchDefaultOrder(source Query) site.SearchWithDefaultSortGlucoseReadingsParams
 
 	// goverter:map . SortOrder | GetSortOrderInt64
-	GlucoseSearchNonDefaultOrder(source Query) user.SearchWithNonDefaultSortGlucoseReadingsParams
+	GlucoseSearchNonDefaultOrder(source Query) site.SearchWithNonDefaultSortGlucoseReadingsParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {

@@ -23,7 +23,7 @@ type ControlDB struct {
 	serverConfig config.ServerConfig
 
 	// previously modified
-	users map[string]*UserDB
+	users map[string]*SiteDB
 
 	usersRWLock sync.RWMutex
 
@@ -40,7 +40,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	// Create a new control db
 	controlDB := &ControlDB{
 		SQLiteDB:     sqldb,
-		users:        make(map[string]*UserDB),
+		users:        make(map[string]*SiteDB),
 		serverConfig: serverConfig,
 	}
 
@@ -82,9 +82,9 @@ func (db *ControlDB) fillUsers() ([]string, error) {
 	for _, model := range res {
 		users = append(users, model.Subdomain)
 		// User DB has to be avaialble
-		userDB, err := NewUserDB(context.TODO(), model.Subdomain, true, db.serverConfig)
+		userDB, err := NewSiteDB(context.TODO(), model.Subdomain, true, db.serverConfig)
 		if err != nil {
-			return users, fmt.Errorf("UserDB failed to be added to the ControlDB list, %w", err)
+			return users, fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
 		}
 		db.users[model.Subdomain] = userDB
 	}
@@ -149,7 +149,7 @@ type UserCreateMaterial struct {
 }
 
 type UserCreateResult struct {
-	UserDB         *UserDB
+	SiteDB         *SiteDB
 	AdminPassword  string
 	TotpSecret     string
 	PwdNSToken     string
@@ -171,7 +171,7 @@ func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
 
-	userDB, err := NewUserDB(context.TODO(), subdomain, false, db.serverConfig)
+	userDB, err := NewSiteDB(context.TODO(), subdomain, false, db.serverConfig)
 	if err != nil {
 
 		userDB.TryCloseAndDelete()
@@ -197,7 +197,7 @@ func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 	}
 
 	////
-	// Setup the new UserDB
+	// Setup the new SiteDB
 	////
 
 	adminIdentity, pwdIdentity, err := db.createDefaultIdentities(subdomain)
@@ -210,7 +210,7 @@ func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 	db.users[subdomain] = userDB
 
 	return &UserCreateResult{
-		UserDB:         userDB,
+		SiteDB:         userDB,
 		AdminPassword:  adminIdentity.Password,
 		TotpSecret:     *adminIdentity.TotpSecret,
 		PwdNSToken:     *pwdIdentity.NSToken,
@@ -252,7 +252,7 @@ func (db *ControlDB) DeleteUsers(subdomains []string) error {
 
 		user.Close()
 
-		path, backupPath := utils.UserDBPaths(subdomain)
+		path, backupPath := utils.SiteDBPaths(subdomain)
 
 		err := utils.DeleteFiles([]string{path, backupPath})
 		if err != nil {
@@ -281,11 +281,11 @@ func (db *ControlDB) GetNUsersDBs() int {
 	return l
 }
 
-func (db *ControlDB) AllUsers() []*UserDB {
+func (db *ControlDB) AllUsers() []*SiteDB {
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
 
-	users := []*UserDB{}
+	users := []*SiteDB{}
 	for _, user := range db.users {
 		users = append(users, user)
 	}
@@ -327,7 +327,7 @@ func (db *ControlDB) UpdateUserDateFlags(userModel *control.Site, updateLastSeen
 	return nil
 }
 
-func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.Site, error) {
+func (db *ControlDB) GetUser(subdomain string) (*SiteDB, *control.Site, error) {
 	// Check if user exists in the db
 	model, err := db.Queries.GetSite(context.TODO(), control.GetSiteParams{
 		Subdomain: subdomain,
@@ -340,14 +340,14 @@ func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.Site, error) {
 		return nil, nil, fmt.Errorf("user not found")
 	}
 
-	userDb, err := db.getUserDBFromMap(subdomain)
+	userDb, err := db.getSiteDBFromMap(subdomain)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Cannot get UserDB from memory: %w", err)
+		return nil, nil, fmt.Errorf("Cannot get SiteDB from memory: %w", err)
 	}
 	return userDb, model, nil
 }
 
-func (db *ControlDB) getUserDBFromMap(subdomain string) (*UserDB, error) {
+func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
 
@@ -369,9 +369,9 @@ func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
 	return len(res) > 0, nil
 }
 
-func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
+func (db *ControlDB) GetUserBatch(char string) ([]*SiteDB, error) {
 
-	users := []*UserDB{}
+	users := []*SiteDB{}
 	res, err := db.Queries.GetBatchSites(context.TODO(), control.GetBatchSitesParams{
 		Batch: char,
 	})
@@ -379,10 +379,10 @@ func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 		return users, fmt.Errorf("cannot query sites: %w", err)
 	}
 
-	return getUserDBsFromModels(db, res)
+	return getSiteDBsFromModels(db, res)
 }
 
-func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
+func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*SiteDB, error) {
 	res, err := db.Queries.GetNeverSeenSites(context.TODO(), control.GetNeverSeenSitesParams{
 		LastSeenAt:  lastSeenMinutes.Minutes(),
 		LastWriteAt: lastWriteMinutes.Minutes(),
@@ -391,10 +391,10 @@ func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteM
 		return nil, fmt.Errorf("cannot query never seen sites: %w", err)
 	}
 
-	return getUserDBsFromModels(db, res)
+	return getSiteDBsFromModels(db, res)
 }
 
-func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
+func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*SiteDB, error) {
 	res, err := db.Queries.GetInactiveSites(context.TODO(), control.GetInactiveSitesParams{
 		LastSeenAt:  lastSeenMinutes.Minutes(),
 		LastWriteAt: lastWriteMinutes.Minutes(),
@@ -403,12 +403,12 @@ func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMi
 		return nil, fmt.Errorf("cannot query inactive sites: %w", err)
 	}
 
-	return getUserDBsFromModels(db, res)
+	return getSiteDBsFromModels(db, res)
 
 }
 
-func getUserDBsFromModels(db *ControlDB, models []*control.Site) ([]*UserDB, error) {
-	users := []*UserDB{}
+func getSiteDBsFromModels(db *ControlDB, models []*control.Site) ([]*SiteDB, error) {
+	users := []*SiteDB{}
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
 
@@ -591,11 +591,11 @@ func (db *ControlDB) UpdateIdentityDateFlags(identity *control.SiteIdentity, upd
 // Test methods
 ////
 
-func (db *ControlDB) TestOnlyDeleteAllUsers(users []*UserDB) error {
+func (db *ControlDB) TestOnlyDeleteAllUsers(users []*SiteDB) error {
 	if len(users) == 0 {
 		return nil
 	}
-	db.users = make(map[string]*UserDB)
+	db.users = make(map[string]*SiteDB)
 	err := db.Queries.TESTTruncateSites(context.TODO())
 
 	return err

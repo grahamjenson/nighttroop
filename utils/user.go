@@ -20,7 +20,7 @@ const CONTROL_DB_BACKUP_PATH = ".dbs/backup/control.sqlite"
 const USER_DB_FOLDER = ".dbs/db/user"
 const USER_DB_BACKUP_FOLDER = ".dbs/backup/user"
 
-func UserDBPaths(subdomain string) (string, string) {
+func SiteDBPaths(subdomain string) (string, string) {
 	if len(subdomain) == 0 {
 		return "", ""
 	}

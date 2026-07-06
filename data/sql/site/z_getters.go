@@ -1,5 +1,5 @@
 
-package user
+package site
 
 
 // GetID returns the ID value.

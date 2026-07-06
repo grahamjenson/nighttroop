@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 )
 
@@ -38,7 +38,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 			createParams := nightscout.EntryToCreate(e, nightscout.CreateContext{IDPrefix: "nssync", CreatedByIdentityID: userSyncSource.syncIdentity.ID, CreatedByIdentityName: userSyncSource.syncIdentity.Name})
 			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
-				if user.IsDuplicateID(err) {
+				if site.IsDuplicateID(err) {
 					continue
 				}
 				// Probably just non-unique eid

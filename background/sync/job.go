@@ -40,7 +40,7 @@ type SyncJobInfo struct {
 
 type SyncUserInfo struct {
 	siteModel    *control.Site
-	siteDB       *db.UserDB
+	siteDB       *db.SiteDB
 	controlDB    *db.ControlDB
 	syncIdentity *control.SiteIdentity
 }

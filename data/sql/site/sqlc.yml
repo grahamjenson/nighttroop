@@ -11,11 +11,11 @@ sql:
       - plugin: getters
         out: "."
         options:
-          package: "user"
+          package: "site"
           imports: []
     gen:
       go:
-        package: "user"
+        package: "site"
         out: "."
         emit_prepared_queries: true
         emit_pointers_for_null_types: true

@@ -4,236 +4,236 @@
 package nsquery
 
 import (
-	user "nighttroop.t1d.nz/data/sql/user"
+	site "nighttroop.t1d.nz/data/sql/site"
 	nightscout "nighttroop.t1d.nz/models/nightscout"
 )
 
-func GlucoseSearchAll(source Query) user.AllGlucoseReadingsParams {
-	var userAllGlucoseReadingsParams user.AllGlucoseReadingsParams
-	userAllGlucoseReadingsParams.Skip = source.Skip
-	userAllGlucoseReadingsParams.Limit = source.Limit
-	return userAllGlucoseReadingsParams
+func GlucoseSearchAll(source Query) site.AllGlucoseReadingsParams {
+	var siteAllGlucoseReadingsParams site.AllGlucoseReadingsParams
+	siteAllGlucoseReadingsParams.Skip = source.Skip
+	siteAllGlucoseReadingsParams.Limit = source.Limit
+	return siteAllGlucoseReadingsParams
 }
-func GlucoseSearchDefaultOrder(source Query) user.SearchWithDefaultSortGlucoseReadingsParams {
-	var userSearchWithDefaultSortGlucoseReadingsParams user.SearchWithDefaultSortGlucoseReadingsParams
+func GlucoseSearchDefaultOrder(source Query) site.SearchWithDefaultSortGlucoseReadingsParams {
+	var siteSearchWithDefaultSortGlucoseReadingsParams site.SearchWithDefaultSortGlucoseReadingsParams
 	if source.DateGTE != nil {
 		xint64 := *source.DateGTE
-		userSearchWithDefaultSortGlucoseReadingsParams.DateGTE = &xint64
+		siteSearchWithDefaultSortGlucoseReadingsParams.DateGTE = &xint64
 	}
 	if source.DateLTE != nil {
 		xint642 := *source.DateLTE
-		userSearchWithDefaultSortGlucoseReadingsParams.DateLTE = &xint642
+		siteSearchWithDefaultSortGlucoseReadingsParams.DateLTE = &xint642
 	}
 	if source.DateGT != nil {
 		xint643 := *source.DateGT
-		userSearchWithDefaultSortGlucoseReadingsParams.DateGT = &xint643
+		siteSearchWithDefaultSortGlucoseReadingsParams.DateGT = &xint643
 	}
 	if source.DateLT != nil {
 		xint644 := *source.DateLT
-		userSearchWithDefaultSortGlucoseReadingsParams.DateLT = &xint644
+		siteSearchWithDefaultSortGlucoseReadingsParams.DateLT = &xint644
 	}
 	if source.CreatedAtGTE != nil {
 		xint645 := *source.CreatedAtGTE
-		userSearchWithDefaultSortGlucoseReadingsParams.CreatedAtGTE = &xint645
+		siteSearchWithDefaultSortGlucoseReadingsParams.CreatedAtGTE = &xint645
 	}
 	if source.CreatedAtLTE != nil {
 		xint646 := *source.CreatedAtLTE
-		userSearchWithDefaultSortGlucoseReadingsParams.CreatedAtLTE = &xint646
+		siteSearchWithDefaultSortGlucoseReadingsParams.CreatedAtLTE = &xint646
 	}
 	if source.CreatedAtGT != nil {
 		xint647 := *source.CreatedAtGT
-		userSearchWithDefaultSortGlucoseReadingsParams.CreatedAtGT = &xint647
+		siteSearchWithDefaultSortGlucoseReadingsParams.CreatedAtGT = &xint647
 	}
 	if source.CreatedAtLT != nil {
 		xint648 := *source.CreatedAtLT
-		userSearchWithDefaultSortGlucoseReadingsParams.CreatedAtLT = &xint648
+		siteSearchWithDefaultSortGlucoseReadingsParams.CreatedAtLT = &xint648
 	}
 	if source.UpdatedGTE != nil {
 		xint649 := *source.UpdatedGTE
-		userSearchWithDefaultSortGlucoseReadingsParams.UpdatedGTE = &xint649
+		siteSearchWithDefaultSortGlucoseReadingsParams.UpdatedGTE = &xint649
 	}
 	if source.UpdatedLTE != nil {
 		xint6410 := *source.UpdatedLTE
-		userSearchWithDefaultSortGlucoseReadingsParams.UpdatedLTE = &xint6410
+		siteSearchWithDefaultSortGlucoseReadingsParams.UpdatedLTE = &xint6410
 	}
 	if source.UpdatedGT != nil {
 		xint6411 := *source.UpdatedGT
-		userSearchWithDefaultSortGlucoseReadingsParams.UpdatedGT = &xint6411
+		siteSearchWithDefaultSortGlucoseReadingsParams.UpdatedGT = &xint6411
 	}
 	if source.UpdatedLT != nil {
 		xint6412 := *source.UpdatedLT
-		userSearchWithDefaultSortGlucoseReadingsParams.UpdatedLT = &xint6412
+		siteSearchWithDefaultSortGlucoseReadingsParams.UpdatedLT = &xint6412
 	}
 	if source.TypeEq != nil {
 		xstring := *source.TypeEq
-		userSearchWithDefaultSortGlucoseReadingsParams.TypeEq = &xstring
+		siteSearchWithDefaultSortGlucoseReadingsParams.TypeEq = &xstring
 	}
 	if source.TypeNeq != nil {
 		xstring2 := *source.TypeNeq
-		userSearchWithDefaultSortGlucoseReadingsParams.TypeNeq = &xstring2
+		siteSearchWithDefaultSortGlucoseReadingsParams.TypeNeq = &xstring2
 	}
 	if source.TypeIn != nil {
 		xstring3 := *source.TypeIn
-		userSearchWithDefaultSortGlucoseReadingsParams.TypeIn = &xstring3
+		siteSearchWithDefaultSortGlucoseReadingsParams.TypeIn = &xstring3
 	}
 	if source.TypeNin != nil {
 		xstring4 := *source.TypeNin
-		userSearchWithDefaultSortGlucoseReadingsParams.TypeNin = &xstring4
+		siteSearchWithDefaultSortGlucoseReadingsParams.TypeNin = &xstring4
 	}
 	if source.IDEq != nil {
 		xstring5 := *source.IDEq
-		userSearchWithDefaultSortGlucoseReadingsParams.IDEq = &xstring5
+		siteSearchWithDefaultSortGlucoseReadingsParams.IDEq = &xstring5
 	}
 	if source.IDIn != nil {
 		xstring6 := *source.IDIn
-		userSearchWithDefaultSortGlucoseReadingsParams.IDIn = &xstring6
+		siteSearchWithDefaultSortGlucoseReadingsParams.IDIn = &xstring6
 	}
 	if source.DeviceEq != nil {
 		xstring7 := *source.DeviceEq
-		userSearchWithDefaultSortGlucoseReadingsParams.DeviceEq = &xstring7
+		siteSearchWithDefaultSortGlucoseReadingsParams.DeviceEq = &xstring7
 	}
 	if source.AppEq != nil {
 		xstring8 := *source.AppEq
-		userSearchWithDefaultSortGlucoseReadingsParams.AppEq = &xstring8
+		siteSearchWithDefaultSortGlucoseReadingsParams.AppEq = &xstring8
 	}
 	if source.SgvEQ != nil {
 		xint6413 := *source.SgvEQ
-		userSearchWithDefaultSortGlucoseReadingsParams.SgvEQ = &xint6413
+		siteSearchWithDefaultSortGlucoseReadingsParams.SgvEQ = &xint6413
 	}
 	if source.SgvGTE != nil {
 		xint6414 := *source.SgvGTE
-		userSearchWithDefaultSortGlucoseReadingsParams.SgvGTE = &xint6414
+		siteSearchWithDefaultSortGlucoseReadingsParams.SgvGTE = &xint6414
 	}
 	if source.SgvGT != nil {
 		xint6415 := *source.SgvGT
-		userSearchWithDefaultSortGlucoseReadingsParams.SgvGT = &xint6415
+		siteSearchWithDefaultSortGlucoseReadingsParams.SgvGT = &xint6415
 	}
 	if source.SgvLTE != nil {
 		xint6416 := *source.SgvLTE
-		userSearchWithDefaultSortGlucoseReadingsParams.SgvLTE = &xint6416
+		siteSearchWithDefaultSortGlucoseReadingsParams.SgvLTE = &xint6416
 	}
 	if source.SgvLT != nil {
 		xint6417 := *source.SgvLT
-		userSearchWithDefaultSortGlucoseReadingsParams.SgvLT = &xint6417
+		siteSearchWithDefaultSortGlucoseReadingsParams.SgvLT = &xint6417
 	}
 	if source.IncludeDeleted != nil {
 		xbool := *source.IncludeDeleted
-		userSearchWithDefaultSortGlucoseReadingsParams.IncludeDeleted = &xbool
+		siteSearchWithDefaultSortGlucoseReadingsParams.IncludeDeleted = &xbool
 	}
-	userSearchWithDefaultSortGlucoseReadingsParams.Skip = source.Skip
-	userSearchWithDefaultSortGlucoseReadingsParams.Limit = source.Limit
-	return userSearchWithDefaultSortGlucoseReadingsParams
+	siteSearchWithDefaultSortGlucoseReadingsParams.Skip = source.Skip
+	siteSearchWithDefaultSortGlucoseReadingsParams.Limit = source.Limit
+	return siteSearchWithDefaultSortGlucoseReadingsParams
 }
-func GlucoseSearchNonDefaultOrder(source Query) user.SearchWithNonDefaultSortGlucoseReadingsParams {
-	var userSearchWithNonDefaultSortGlucoseReadingsParams user.SearchWithNonDefaultSortGlucoseReadingsParams
-	userSearchWithNonDefaultSortGlucoseReadingsParams.SortOrder = GetSortOrderInt64(source)
+func GlucoseSearchNonDefaultOrder(source Query) site.SearchWithNonDefaultSortGlucoseReadingsParams {
+	var siteSearchWithNonDefaultSortGlucoseReadingsParams site.SearchWithNonDefaultSortGlucoseReadingsParams
+	siteSearchWithNonDefaultSortGlucoseReadingsParams.SortOrder = GetSortOrderInt64(source)
 	if source.DateGTE != nil {
 		xint64 := *source.DateGTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.DateGTE = &xint64
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.DateGTE = &xint64
 	}
 	if source.DateLTE != nil {
 		xint642 := *source.DateLTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.DateLTE = &xint642
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.DateLTE = &xint642
 	}
 	if source.DateGT != nil {
 		xint643 := *source.DateGT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.DateGT = &xint643
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.DateGT = &xint643
 	}
 	if source.DateLT != nil {
 		xint644 := *source.DateLT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.DateLT = &xint644
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.DateLT = &xint644
 	}
 	if source.CreatedAtGTE != nil {
 		xint645 := *source.CreatedAtGTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtGTE = &xint645
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtGTE = &xint645
 	}
 	if source.CreatedAtLTE != nil {
 		xint646 := *source.CreatedAtLTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtLTE = &xint646
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtLTE = &xint646
 	}
 	if source.CreatedAtGT != nil {
 		xint647 := *source.CreatedAtGT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtGT = &xint647
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtGT = &xint647
 	}
 	if source.CreatedAtLT != nil {
 		xint648 := *source.CreatedAtLT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtLT = &xint648
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.CreatedAtLT = &xint648
 	}
 	if source.UpdatedGTE != nil {
 		xint649 := *source.UpdatedGTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedGTE = &xint649
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedGTE = &xint649
 	}
 	if source.UpdatedLTE != nil {
 		xint6410 := *source.UpdatedLTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedLTE = &xint6410
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedLTE = &xint6410
 	}
 	if source.UpdatedGT != nil {
 		xint6411 := *source.UpdatedGT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedGT = &xint6411
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedGT = &xint6411
 	}
 	if source.UpdatedLT != nil {
 		xint6412 := *source.UpdatedLT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedLT = &xint6412
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.UpdatedLT = &xint6412
 	}
 	if source.TypeEq != nil {
 		xstring := *source.TypeEq
-		userSearchWithNonDefaultSortGlucoseReadingsParams.TypeEq = &xstring
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.TypeEq = &xstring
 	}
 	if source.TypeNeq != nil {
 		xstring2 := *source.TypeNeq
-		userSearchWithNonDefaultSortGlucoseReadingsParams.TypeNeq = &xstring2
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.TypeNeq = &xstring2
 	}
 	if source.TypeIn != nil {
 		xstring3 := *source.TypeIn
-		userSearchWithNonDefaultSortGlucoseReadingsParams.TypeIn = &xstring3
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.TypeIn = &xstring3
 	}
 	if source.TypeNin != nil {
 		xstring4 := *source.TypeNin
-		userSearchWithNonDefaultSortGlucoseReadingsParams.TypeNin = &xstring4
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.TypeNin = &xstring4
 	}
 	if source.IDEq != nil {
 		xstring5 := *source.IDEq
-		userSearchWithNonDefaultSortGlucoseReadingsParams.IDEq = &xstring5
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.IDEq = &xstring5
 	}
 	if source.IDIn != nil {
 		xstring6 := *source.IDIn
-		userSearchWithNonDefaultSortGlucoseReadingsParams.IDIn = &xstring6
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.IDIn = &xstring6
 	}
 	if source.DeviceEq != nil {
 		xstring7 := *source.DeviceEq
-		userSearchWithNonDefaultSortGlucoseReadingsParams.DeviceEq = &xstring7
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.DeviceEq = &xstring7
 	}
 	if source.AppEq != nil {
 		xstring8 := *source.AppEq
-		userSearchWithNonDefaultSortGlucoseReadingsParams.AppEq = &xstring8
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.AppEq = &xstring8
 	}
 	if source.SgvEQ != nil {
 		xint6413 := *source.SgvEQ
-		userSearchWithNonDefaultSortGlucoseReadingsParams.SgvEQ = &xint6413
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.SgvEQ = &xint6413
 	}
 	if source.SgvGTE != nil {
 		xint6414 := *source.SgvGTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.SgvGTE = &xint6414
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.SgvGTE = &xint6414
 	}
 	if source.SgvGT != nil {
 		xint6415 := *source.SgvGT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.SgvGT = &xint6415
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.SgvGT = &xint6415
 	}
 	if source.SgvLTE != nil {
 		xint6416 := *source.SgvLTE
-		userSearchWithNonDefaultSortGlucoseReadingsParams.SgvLTE = &xint6416
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.SgvLTE = &xint6416
 	}
 	if source.SgvLT != nil {
 		xint6417 := *source.SgvLT
-		userSearchWithNonDefaultSortGlucoseReadingsParams.SgvLT = &xint6417
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.SgvLT = &xint6417
 	}
 	if source.IncludeDeleted != nil {
 		xbool := *source.IncludeDeleted
-		userSearchWithNonDefaultSortGlucoseReadingsParams.IncludeDeleted = &xbool
+		siteSearchWithNonDefaultSortGlucoseReadingsParams.IncludeDeleted = &xbool
 	}
-	userSearchWithNonDefaultSortGlucoseReadingsParams.Skip = source.Skip
-	userSearchWithNonDefaultSortGlucoseReadingsParams.Limit = source.Limit
-	return userSearchWithNonDefaultSortGlucoseReadingsParams
+	siteSearchWithNonDefaultSortGlucoseReadingsParams.Skip = source.Skip
+	siteSearchWithNonDefaultSortGlucoseReadingsParams.Limit = source.Limit
+	return siteSearchWithNonDefaultSortGlucoseReadingsParams
 }
 func QueryValueToQuery(source QueryValues) Query {
 	var nsqueryQuery Query

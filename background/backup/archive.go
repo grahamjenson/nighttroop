@@ -70,7 +70,7 @@ func (b *BackupJobManager) findUsersToDeleteWithoutArchiving() ([]string, error)
 
 }
 
-func (b *BackupJobManager) findUsersToArchive() ([]*db.UserDB, error) {
+func (b *BackupJobManager) findUsersToArchive() ([]*db.SiteDB, error) {
 	users, err := b.controlDB.GetInactiveUsers(b.MaxUserLastSeen, b.MaxUserNeverWritten)
 	if err != nil {
 		return nil, fmt.Errorf("Cant get inactive users %w", err)
@@ -81,13 +81,13 @@ func (b *BackupJobManager) findUsersToArchive() ([]*db.UserDB, error) {
 	return users, nil
 }
 
-func (b *BackupJobManager) archiveUsers(archiveList []*db.UserDB) ([]string, error) {
+func (b *BackupJobManager) archiveUsers(archiveList []*db.SiteDB) ([]string, error) {
 	removeList := []string{}
 	for _, user := range archiveList {
 		if user.Subdomain == "" {
 			continue
 		}
-		path, backupPath := utils.UserDBPaths(user.Subdomain)
+		path, backupPath := utils.SiteDBPaths(user.Subdomain)
 
 		// Last Backup
 		err := utils.SqliteBackup(b.ctx, user.SQLiteDB, path, backupPath)

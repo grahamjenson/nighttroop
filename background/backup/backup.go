@@ -75,7 +75,7 @@ func (b *BackupJobManager) BackupUserBatch(char string) error {
 		if user.Subdomain == "" {
 			continue
 		}
-		path, backupPath := utils.UserDBPaths(user.Subdomain)
+		path, backupPath := utils.SiteDBPaths(user.Subdomain)
 
 		// Have to add it anyway because we need all paths
 		err := utils.SqliteBackup(ctx, user.SQLiteDB, path, backupPath)

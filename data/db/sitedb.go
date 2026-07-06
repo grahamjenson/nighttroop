@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"nighttroop.t1d.nz/data/sql/user"
+	user "nighttroop.t1d.nz/data/sql/site"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
@@ -15,7 +15,7 @@ import (
 // TenentDB
 // //
 
-type UserDB struct {
+type SiteDB struct {
 	serverConfig config.ServerConfig
 
 	SQLiteDB  *sql.DB
@@ -25,19 +25,19 @@ type UserDB struct {
 	Queries *user.Queries
 }
 
-func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config.ServerConfig) (*UserDB, error) {
-	path, _ := utils.UserDBPaths(subdomain)
+func NewSiteDB(ctx context.Context, subdomain string, mustExist bool, cfg config.ServerConfig) (*SiteDB, error) {
+	path, _ := utils.SiteDBPaths(subdomain)
 	if mustExist && !utils.FileExists(path) {
-		return nil, fmt.Errorf("The User DB %s Must exist and doesnt", subdomain)
+		return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", subdomain)
 	}
 
 	sqldb, err := OpenSqliteDB(path, 100, cfg.IsTest())
 	if err != nil {
-		return nil, fmt.Errorf("cannot open user db: %s %w", subdomain, err)
+		return nil, fmt.Errorf("cannot open site db: %s %w", subdomain, err)
 	}
 
-	// Create a new control db
-	userDB := &UserDB{
+	// Create a new site db
+	siteDB := &SiteDB{
 		serverConfig: cfg,
 		SQLiteDB:     sqldb,
 		Subdomain:    subdomain,
@@ -46,20 +46,20 @@ func NewUserDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 	err = user.MigrateUp(subdomain, sqldb)
 	if err != nil {
 		sqldb.Close()
-		return userDB, fmt.Errorf("Migration Error Occurred user db: %s %w", subdomain, err)
+		return siteDB, fmt.Errorf("Migration Error Occurred site db: %s %w", subdomain, err)
 	}
 
-	userDB.Queries, err = user.Prepare(context.TODO(), sqldb)
+	siteDB.Queries, err = user.Prepare(context.TODO(), sqldb)
 	if err != nil {
 		sqldb.Close()
-		return userDB, fmt.Errorf("cannot prepare statements for user db: %s %w", subdomain, err)
+		return siteDB, fmt.Errorf("cannot prepare statements for site db: %s %w", subdomain, err)
 	}
 
-	return userDB, nil
+	return siteDB, nil
 }
 
 // WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWOLLOWED
-func (db *UserDB) TryCloseAndDelete() {
+func (db *SiteDB) TryCloseAndDelete() {
 	if db == nil {
 		return
 	}
@@ -69,18 +69,18 @@ func (db *UserDB) TryCloseAndDelete() {
 	if db.Subdomain == "" {
 		return
 	}
-	path, _ := utils.UserDBPaths(db.Subdomain)
+	path, _ := utils.SiteDBPaths(db.Subdomain)
 	_ = utils.DeleteFile(path)
 }
 
-func (db *UserDB) Close() error {
+func (db *SiteDB) Close() error {
 	return db.SQLiteDB.Close()
 }
 
-func (db *UserDB) URL() string {
+func (db *SiteDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }
 
-func (db *UserDB) NSURL() string {
+func (db *SiteDB) NSURL() string {
 	return fmt.Sprintf("%s://ns.%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }
