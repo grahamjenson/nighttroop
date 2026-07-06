@@ -12,6 +12,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -72,7 +73,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 // This will fetch all the users in
 func (db *ControlDB) fillUsers() ([]string, error) {
 	users := []string{}
-	res, err := db.Queries.GetNotDeletedUsers(context.TODO())
+	res, err := db.Queries.GetNotDeletedSites(context.TODO())
 
 	if err != nil {
 		return users, fmt.Errorf("cannot query users: %w", err)
@@ -181,7 +182,7 @@ func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 	db.usersRWLock.Lock()
 	defer db.usersRWLock.Unlock()
 
-	_, err = db.Queries.CreateUser(context.TODO(), control.CreateUserParams{
+	_, err = db.Queries.CreateSite(context.TODO(), control.CreateSiteParams{
 		Subdomain:     subdomain,
 		BackupKeyHash: backupKeyHash,
 	})
@@ -199,18 +200,13 @@ func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
 	// Setup the new UserDB
 	////
 
-	adminIdentity, pwdIdentity, err := userDB.createDefaultUsers()
+	adminIdentity, pwdIdentity, err := db.createDefaultIdentities(subdomain)
 
 	if err != nil {
 		userDB.TryCloseAndDelete()
 		return nil, fmt.Errorf("cannot create admin identity: %w", err)
 	}
 
-	err = userDB.createDefaultSettings()
-	if err != nil {
-		userDB.TryCloseAndDelete()
-		return nil, fmt.Errorf("cannot create default settings: %w", err)
-	}
 	db.users[subdomain] = userDB
 
 	return &UserCreateResult{
@@ -233,7 +229,7 @@ func (db *ControlDB) DeleteUsers(subdomains []string) error {
 		return nil
 	}
 	bytes, _ := json.Marshal(subdomains)
-	deletedSubdomains, err := db.Queries.DeleteUsers(context.TODO(), control.DeleteUsersParams{
+	deletedSubdomains, err := db.Queries.DeleteSites(context.TODO(), control.DeleteSitesParams{
 		JsonEach: string(bytes),
 	})
 
@@ -306,7 +302,7 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 	return exists
 }
 
-func (db *ControlDB) UpdateUserDateFlags(userModel *control.User, updateLastSeen bool, updateLastWrite bool) error {
+func (db *ControlDB) UpdateUserDateFlags(userModel *control.Site, updateLastSeen bool, updateLastWrite bool) error {
 	subdomain := userModel.Subdomain
 
 	// Only update if not seen in 10 minutes
@@ -322,7 +318,7 @@ func (db *ControlDB) UpdateUserDateFlags(userModel *control.User, updateLastSeen
 	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
 		lastWriteAt = &now
 	}
-	db.Queries.UpdateUserDateFlags(context.TODO(), control.UpdateUserDateFlagsParams{
+	db.Queries.UpdateSiteDateFlags(context.TODO(), control.UpdateSiteDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		Subdomain:   subdomain,
@@ -331,9 +327,9 @@ func (db *ControlDB) UpdateUserDateFlags(userModel *control.User, updateLastSeen
 	return nil
 }
 
-func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.User, error) {
+func (db *ControlDB) GetUser(subdomain string) (*UserDB, *control.Site, error) {
 	// Check if user exists in the db
-	model, err := db.Queries.GetUser(context.TODO(), control.GetUserParams{
+	model, err := db.Queries.GetSite(context.TODO(), control.GetSiteParams{
 		Subdomain: subdomain,
 	})
 
@@ -364,11 +360,11 @@ func (db *ControlDB) getUserDBFromMap(subdomain string) (*UserDB, error) {
 }
 
 func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
-	res, err := db.Queries.GetBatchUsers(context.TODO(), control.GetBatchUsersParams{
+	res, err := db.Queries.GetBatchSites(context.TODO(), control.GetBatchSitesParams{
 		Batch: char,
 	})
 	if err != nil {
-		return false, fmt.Errorf("cannot query users: %w", err)
+		return false, fmt.Errorf("cannot query sites: %w", err)
 	}
 	return len(res) > 0, nil
 }
@@ -376,42 +372,42 @@ func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
 func (db *ControlDB) GetUserBatch(char string) ([]*UserDB, error) {
 
 	users := []*UserDB{}
-	res, err := db.Queries.GetBatchUsers(context.TODO(), control.GetBatchUsersParams{
+	res, err := db.Queries.GetBatchSites(context.TODO(), control.GetBatchSitesParams{
 		Batch: char,
 	})
 	if err != nil {
-		return users, fmt.Errorf("cannot query users: %w", err)
+		return users, fmt.Errorf("cannot query sites: %w", err)
 	}
 
 	return getUserDBsFromModels(db, res)
 }
 
 func (db *ControlDB) GetNeverSeenUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.Queries.GetNeverSeenUsers(context.TODO(), control.GetNeverSeenUsersParams{
+	res, err := db.Queries.GetNeverSeenSites(context.TODO(), control.GetNeverSeenSitesParams{
 		LastSeenAt:  lastSeenMinutes.Minutes(),
 		LastWriteAt: lastWriteMinutes.Minutes(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot query never seen users: %w", err)
+		return nil, fmt.Errorf("cannot query never seen sites: %w", err)
 	}
 
 	return getUserDBsFromModels(db, res)
 }
 
 func (db *ControlDB) GetInactiveUsers(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*UserDB, error) {
-	res, err := db.Queries.GetInactiveUsers(context.TODO(), control.GetInactiveUsersParams{
+	res, err := db.Queries.GetInactiveSites(context.TODO(), control.GetInactiveSitesParams{
 		LastSeenAt:  lastSeenMinutes.Minutes(),
 		LastWriteAt: lastWriteMinutes.Minutes(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot query inactive users: %w", err)
+		return nil, fmt.Errorf("cannot query inactive sites: %w", err)
 	}
 
 	return getUserDBsFromModels(db, res)
 
 }
 
-func getUserDBsFromModels(db *ControlDB, models []*control.User) ([]*UserDB, error) {
+func getUserDBsFromModels(db *ControlDB, models []*control.Site) ([]*UserDB, error) {
 	users := []*UserDB{}
 	db.usersRWLock.RLock()
 	defer db.usersRWLock.RUnlock()
@@ -427,7 +423,7 @@ func getUserDBsFromModels(db *ControlDB, models []*control.User) ([]*UserDB, err
 	return users, nil
 }
 
-func (db *ControlDB) GetAllUserSyncSources(ctx context.Context, subdomain string) (nightscout *control.UserSyncSource, dexcom *control.UserSyncSource, err error) {
+func (db *ControlDB) GetAllUserSyncSources(ctx context.Context, subdomain string) (nightscout *control.SiteSyncSource, dexcom *control.SiteSyncSource, err error) {
 	// TODO: This might become a problem we could make faster with a dirty flag or something
 	sync_sources, err := db.Queries.GetAllUserSyncSourcesForUser(ctx, control.GetAllUserSyncSourcesForUserParams{
 		Subdomain: subdomain,
@@ -465,6 +461,132 @@ func (db *ControlDB) Close() error {
 	return db.SQLiteDB.Close()
 }
 
+// ////
+// Identities
+// ////
+
+func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, error) {
+	// Create Default Admin User
+	adminIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
+	}
+	if adminIdentity.TotpSecret == nil {
+		return nil, nil, fmt.Errorf("Failed to Create Default Admin User: TOTP Secret is nil")
+	}
+
+	// Create Default PWD User (Able to write data on the ns API)
+
+	pwdIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
+	}
+	if pwdIdentity.NSToken == nil {
+		return nil, nil, fmt.Errorf("Failed to Create Default PWD User: NSToken is nil")
+	}
+
+	////
+	// Create Sync Identities (used to trail)
+	////
+	_, err = db.CreateIdentity(subdomain, consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot create dexcom sync identity: %w", err)
+	}
+
+	_, err = db.CreateIdentity(subdomain, consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot create nightscout sync identity: %w", err)
+	}
+
+	_, err = db.CreateIdentity(subdomain, consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot create libre sync identity: %w", err)
+	}
+
+	return adminIdentity, pwdIdentity, nil
+}
+
+type IdentityValues struct {
+	Password   string
+	TotpSecret *string
+	NSToken    *string
+}
+
+func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.IdentityRole) (*IdentityValues, error) {
+
+	security := db.serverConfig.Security
+	hostname := db.serverConfig.HostName
+	password, hashedPassword, err := security.GeneratePassword()
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate user password: %w", err)
+	}
+
+	var totpSecretPtr *string
+	encTOTPSecret := ""
+	if can.MustLoginWithTotp(role, false) {
+
+		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, subdomain, hostname))
+		if err != nil {
+			return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
+		}
+
+		totpSecretPtr = &totpSecret
+		encTOTPSecret = encTOTPSecretRet
+	}
+
+	err = db.Queries.CreateSiteIdentity(context.TODO(), control.CreateSiteIdentityParams{
+		Subdomain:  subdomain,
+		Name:       name,
+		Password:   hashedPassword,
+		TotpSecret: encTOTPSecret,
+		Role:       role,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot create user identity: %w", err)
+	}
+	var nsToken *string
+	if can.HaveNightscoutToken(role) {
+		token, err := security.CreateNightscoutTokenForIdentity(subdomain, name, string(role), password)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
+		}
+		nsToken = &token
+	}
+
+	return &IdentityValues{
+		Password:   password,
+		TotpSecret: totpSecretPtr,
+		NSToken:    nsToken,
+	}, nil
+}
+
+func (db *ControlDB) UpdateIdentityDateFlags(identity *control.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
+
+	// Only update if not seen in 10 minutes
+	lastWriteMoreThan10MinutesAgo := identity.LastWriteAt == nil || time.Now().After(identity.LastWriteAtDate().Add(-10*time.Minute))
+	lastSeenMoreThan10MinutesAgo := identity.LastSeenAt == nil || time.Now().After(identity.LastSeenAtDate().Add(-10*time.Minute))
+
+	now := time.Now().UnixMilli()
+	var lastSeenAt *int64
+	var lastWriteAt *int64
+	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
+		lastSeenAt = &now
+	}
+	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
+		lastWriteAt = &now
+	}
+
+	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), control.UpdateSiteIdentityDateFlagsParams{
+		LastSeenAt:  lastSeenAt,
+		LastWriteAt: lastWriteAt,
+		ID:          identity.ID,
+	})
+
+	return nil
+}
+
 ////
 // Test methods
 ////
@@ -474,7 +596,7 @@ func (db *ControlDB) TestOnlyDeleteAllUsers(users []*UserDB) error {
 		return nil
 	}
 	db.users = make(map[string]*UserDB)
-	err := db.Queries.TESTTruncateUsers(context.TODO())
+	err := db.Queries.TESTTruncateSites(context.TODO())
 
 	return err
 }

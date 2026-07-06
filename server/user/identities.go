@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/components/user_templ"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -55,7 +56,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 }
 
 func extractAndGetIdentities(userContext *httputils.UserContext, context context.Context) ([]*user_templ.UserIdentity, []*user_templ.UserIdentity, error) {
-	identities, err := userContext.UserDB.Queries.AllIdentities(context)
+	identities, err := userContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{Subdomain: userContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -98,7 +99,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 			return
 		}
 
-		identityValues, err := userContext.UserDB.CreateIdentity(name, consts.IdentityRole(role))
+		identityValues, err := userContext.ControlDB.CreateIdentity(userContext.Subdomain, name, consts.IdentityRole(role))
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to create identity", err)
 			return
@@ -112,7 +113,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.CreateIdentityResponse(userContext.UserDB.URL(), identity, identityValues.Password, identityValues.TotpSecret, identityValues.NSToken).Render(r.Context(), w)
+			err = user_templ.CreateIdentityResponse(userContext.SiteDB.URL(), identity, identityValues.Password, identityValues.TotpSecret, identityValues.NSToken).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
 				return

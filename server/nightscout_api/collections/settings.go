@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,12 +14,19 @@ import (
 )
 
 type SettingsCollection struct {
-	converter func(c *user.Setting) nsutils.Record
+	converter func(c *control.SiteSetting) nsutils.Record
+}
+
+func DBModelToSetting(c *control.SiteSetting) nightscout.Setting {
+	return nightscout.Setting{
+		Identifier: ptr(nightscout.IdentifierString(c.Key)),
+		Value:      ptr(nightscout.ShortString(c.Value)),
+	}
 }
 
 func NewSettingsCollection() SettingsCollection {
 	return SettingsCollection{
-		converter: DBModelToRecord(nsutils.Settings, nightscout.DBModelToSetting),
+		converter: DBModelToRecord(nsutils.Settings, DBModelToSetting),
 	}
 }
 
@@ -34,7 +41,7 @@ func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.U
 
 	key := settingModel.Identifier
 	stringValue := settingModel.Value
-	settingValue, ok := user.GetUserSettingFromKey(key.String())
+	settingValue, ok := control.GetSiteSettingTypeFromKey(key.String())
 	if !ok {
 		slog.Error("invalid setting key", "key", key)
 		return nil, nsutils.BadDataBodyError
@@ -45,7 +52,7 @@ func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.U
 		slog.Error("failed to create setting value from string", "error", err)
 		return nil, nsutils.BadDataBodyError
 	}
-	dbModel, err := settingValue.UpsertValue(ctx, userContext.UserDB.Queries, value)
+	dbModel, err := settingValue.UpsertValue(ctx, userContext.Subdomain, userContext.ControlDB.Queries, value)
 
 	if err != nil {
 		slog.Error("failed to create setting in database", "error", err)
@@ -59,11 +66,11 @@ func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.U
 }
 
 func (c SettingsCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	setting, ok := user.GetUserSettingFromKey(identifier)
+	setting, ok := control.GetSiteSettingTypeFromKey(identifier)
 	if !ok {
 		return nil, nsutils.ErrNotFound
 	}
-	dbModel, err := setting.GetValueModel(ctx, userContext.UserDB.Queries)
+	dbModel, err := setting.GetValueModel(ctx, userContext.Subdomain, userContext.ControlDB.Queries)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}

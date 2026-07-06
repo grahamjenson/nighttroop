@@ -164,3 +164,8 @@ func setSetting(
 func (s *SiteSetting) GetCreatedByIdentityName() string {
 	return ""
 }
+
+// Neeed to fit some other interfaces
+func (s *SiteSetting) GetID() string {
+	return ""
+}

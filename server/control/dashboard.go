@@ -25,7 +25,7 @@ func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 
 func GetUsersHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		users, err := controlDB.Queries.GetAllUsers(context.TODO())
+		users, err := controlDB.Queries.GetAllSites(context.TODO())
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return

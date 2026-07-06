@@ -33,7 +33,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 		addedColumns := false
 		for _, e := range egvs {
 			createParams := dexcom.EGVToCreate(e, "dexcom", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
+			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if user.IsDuplicateID(err) {
 					continue
@@ -51,8 +51,8 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 
 		// Update that it has been seen and used recently
 		if addedColumns {
-			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.userModel.Subdomain)
-			userSyncSource.userDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
+			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.siteModel.Subdomain)
+			userSyncSource.controlDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
 			totalAddedColumns += 1
 		}
 	}

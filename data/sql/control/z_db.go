@@ -135,9 +135,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateDexcomSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateDexcomSyncSourceWithoutPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSourceWithoutPassword: %w", err)
 	}
-	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
-	}
 	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
 	}
@@ -149,6 +146,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateSiteDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDateFlags: %w", err)
+	}
+	if q.updateSiteIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteIdentityDateFlags); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityDateFlags: %w", err)
 	}
 	if q.updateSyncReportAttemptStmt, err = db.PrepareContext(ctx, updateSyncReportAttempt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncReportAttempt: %w", err)
@@ -355,11 +355,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateDexcomSyncSourceWithoutPasswordStmt: %w", cerr)
 		}
 	}
-	if q.updateIdentityDateFlagsStmt != nil {
-		if cerr := q.updateIdentityDateFlagsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
-		}
-	}
 	if q.updateJobStatsDailyStmt != nil {
 		if cerr := q.updateJobStatsDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateJobStatsDailyStmt: %w", cerr)
@@ -378,6 +373,11 @@ func (q *Queries) Close() error {
 	if q.updateSiteDateFlagsStmt != nil {
 		if cerr := q.updateSiteDateFlagsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDateFlagsStmt: %w", cerr)
+		}
+	}
+	if q.updateSiteIdentityDateFlagsStmt != nil {
+		if cerr := q.updateSiteIdentityDateFlagsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteIdentityDateFlagsStmt: %w", cerr)
 		}
 	}
 	if q.updateSyncReportAttemptStmt != nil {
@@ -481,11 +481,11 @@ type Queries struct {
 	truncateEventsStmt                            *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
-	updateIdentityDateFlagsStmt                   *sql.Stmt
 	updateJobStatsDailyStmt                       *sql.Stmt
 	updateNightscoutSyncSourceStmt                *sql.Stmt
 	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
 	updateSiteDateFlagsStmt                       *sql.Stmt
+	updateSiteIdentityDateFlagsStmt               *sql.Stmt
 	updateSyncReportAttemptStmt                   *sql.Stmt
 	updateSyncSourceReportsFailureStmt            *sql.Stmt
 	updateSyncSourceReportsSuccessStmt            *sql.Stmt
@@ -534,11 +534,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		truncateEventsStmt:                            q.truncateEventsStmt,
 		updateDexcomSyncSourceStmt:                    q.updateDexcomSyncSourceStmt,
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
-		updateIdentityDateFlagsStmt:                   q.updateIdentityDateFlagsStmt,
 		updateJobStatsDailyStmt:                       q.updateJobStatsDailyStmt,
 		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
 		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
 		updateSiteDateFlagsStmt:                       q.updateSiteDateFlagsStmt,
+		updateSiteIdentityDateFlagsStmt:               q.updateSiteIdentityDateFlagsStmt,
 		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
 		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
 		updateSyncSourceReportsSuccessStmt:            q.updateSyncSourceReportsSuccessStmt,

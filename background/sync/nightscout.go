@@ -36,7 +36,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		addedColumns := false
 		for _, e := range egvs {
 			createParams := nightscout.EntryToCreate(e, nightscout.CreateContext{IDPrefix: "nssync", CreatedByIdentityID: userSyncSource.syncIdentity.ID, CreatedByIdentityName: userSyncSource.syncIdentity.Name})
-			res, err := userSyncSource.userDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
+			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if user.IsDuplicateID(err) {
 					continue
@@ -54,8 +54,8 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 
 		// Update that it has been seen and used recently
 		if addedColumns {
-			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.userModel.Subdomain)
-			userSyncSource.userDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
+			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.siteModel.Subdomain)
+			userSyncSource.controlDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
 			totalAddedColumns += 1
 		}
 	}

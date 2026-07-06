@@ -31,7 +31,7 @@ SELECT * FROM site_identities WHERE subdomain = ? AND name = ? LIMIT 1;
 -- UPDATE
 --------
 
--- name: UpdateIdentityDateFlags :exec
+-- name: UpdateSiteIdentityDateFlags :exec
 UPDATE site_identities
 SET
     last_seen_at = COALESCE(?, last_seen_at),

@@ -8,7 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -38,7 +38,7 @@ type RoleOption struct {
 	Value consts.IdentityRole
 }
 
-func IdentityModelToUserIdentity(identity *user.Identity, currentIdentityName string) *UserIdentity {
+func IdentityModelToUserIdentity(identity *control.SiteIdentity, currentIdentityName string) *UserIdentity {
 	lastSeen := "Never"
 	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
 		lastSeen = time.UnixMilli(*identity.LastSeenAt).Format("2006-01-02 15:04:05")

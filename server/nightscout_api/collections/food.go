@@ -37,7 +37,7 @@ func (c FoodCollection) Create(ctx context.Context, userContext *httputils.UserC
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.UserDB.Queries.CreateFood(ctx, createParams)
+	dbModel, err := userContext.SiteDB.Queries.CreateFood(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create food in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,7 +50,7 @@ func (c FoodCollection) Create(ctx context.Context, userContext *httputils.UserC
 }
 
 func (c FoodCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.UserDB.Queries.GetFood(ctx, user.GetFoodParams{
+	dbModel, err := userContext.SiteDB.Queries.GetFood(ctx, user.GetFoodParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {

@@ -10,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/user"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -40,9 +39,10 @@ type SyncJobInfo struct {
 }
 
 type SyncUserInfo struct {
-	userModel    *control.User
-	userDB       *db.UserDB
-	syncIdentity *user.Identity
+	siteModel    *control.Site
+	siteDB       *db.UserDB
+	controlDB    *db.ControlDB
+	syncIdentity *control.SiteIdentity
 }
 
 func SetupSyncJobManager(config config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -125,7 +125,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 	}
 }
 
-func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.UserSyncSource) (string, string, consts.DexcomRegion, error) {
+func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncSource) (string, string, consts.DexcomRegion, error) {
 
 	encUrlOrUserName := syncSource.UrlOrUsername
 	encPassword := syncSource.Password
@@ -142,7 +142,7 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.UserSyncS
 	return unencUsername, unencPassword, dexcomRegion, nil
 }
 
-func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.UserSyncSource) (*SyncUserInfo, error) {
+func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSyncSource) (*SyncUserInfo, error) {
 	userDb, userModel, err := b.controlDB.GetUser(syncSource.Subdomain)
 	if err != nil {
 		return nil, err
@@ -161,16 +161,20 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.UserSy
 	if identityName == "" {
 		return nil, fmt.Errorf("invalid sync source type: %s", syncSource.Type)
 	}
-	identity, err := userDb.Queries.GetIdentity(context.TODO(), user.GetIdentityParams{
-		Name: identityName,
+	identity, err := b.controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+		Subdomain: syncSource.Subdomain,
+		Name:      identityName,
 	})
+
 	if err != nil {
 		return nil, err
 	}
+
 	return &SyncUserInfo{
-		userDB:       userDb,
-		userModel:    userModel,
+		siteDB:       userDb,
+		siteModel:    userModel,
 		syncIdentity: identity,
+		controlDB:    b.controlDB,
 	}, nil
 }
 

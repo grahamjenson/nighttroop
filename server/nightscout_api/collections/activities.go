@@ -37,7 +37,7 @@ func (c ActivityCollection) Create(ctx context.Context, userContext *httputils.U
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.UserDB.Queries.CreateActivity(ctx, createParams)
+	dbModel, err := userContext.SiteDB.Queries.CreateActivity(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create activity in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,7 +50,7 @@ func (c ActivityCollection) Create(ctx context.Context, userContext *httputils.U
 }
 
 func (c ActivityCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.UserDB.Queries.GetActivity(ctx, user.GetActivityParams{
+	dbModel, err := userContext.SiteDB.Queries.GetActivity(ctx, user.GetActivityParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {

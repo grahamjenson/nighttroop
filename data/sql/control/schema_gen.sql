@@ -72,7 +72,8 @@ CREATE TABLE jobs (
 CREATE TABLE site_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
+    name TEXT NOT NULL CHECK(length(name) <= 32),
+
     password TEXT NOT NULL CHECK(length(password) <= 128),
     totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
     role TEXT NOT NULL CHECK(length(role) <= 32),
@@ -88,7 +89,10 @@ CREATE TABLE site_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
-    enabled INTEGER NOT NULL DEFAULT 1
+    enabled INTEGER NOT NULL DEFAULT 1,
+
+    -- Constraints
+    UNIQUE(subdomain, name)
 );
 
 CREATE TABLE site_settings (

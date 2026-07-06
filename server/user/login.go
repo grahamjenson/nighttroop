@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/control"
 
 	"nighttroop.t1d.nz/server/components/user_templ"
 	"nighttroop.t1d.nz/utils/can"
@@ -72,7 +72,6 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		userContext := httputils.GetUserContext(r.Context())
 		subdomain := userContext.Subdomain
-		userDB := userContext.UserDB
 
 		if err := r.ParseForm(); err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
@@ -90,7 +89,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		}
 
 		// First thing validate the password
-		identity, err := loginTheUserPasswordOnly(userDB, formName, formPassword)
+		identity, err := loginTheUserPasswordOnly(userContext.ControlDB, userContext.Subdomain, formName, formPassword)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			return
@@ -196,13 +195,13 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 	}
 }
 
-func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*user.Identity, error) {
+func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*control.SiteIdentity, error) {
 	// First try the JWT token (either header or cookie)
 	userContext := httputils.GetUserContext(r.Context())
-	userDB := userContext.UserDB
 
-	identity, err := userDB.Queries.GetIdentity(context.TODO(), user.GetIdentityParams{
-		Name: identityNameFromToken,
+	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+		Subdomain: userContext.Subdomain,
+		Name:      identityNameFromToken,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
@@ -210,13 +209,14 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	return identity, nil
 }
 
-func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) (*user.Identity, error) {
+func loginTheUserPasswordOnly(controlDB *db.ControlDB, subdomain, formName, formPassword string) (*control.SiteIdentity, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	identity, err := userDB.Queries.GetIdentity(context.TODO(), user.GetIdentityParams{
-		Name: formName,
+	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+		Subdomain: subdomain,
+		Name:      formName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
@@ -229,7 +229,7 @@ func loginTheUserPasswordOnly(userDB *db.UserDB, formName, formPassword string) 
 	return identity, nil
 }
 
-func validateIdentityTOTP(config config.ServerConfig, identity *user.Identity, totpToken string) error {
+func validateIdentityTOTP(config config.ServerConfig, identity *control.SiteIdentity, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
@@ -269,7 +269,6 @@ func fetchVerifyPreAuthToken(config config.ServerConfig, r *http.Request) (strin
 // ///
 func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
 	userContext := httputils.GetUserContext(r.Context())
-	userDB := userContext.UserDB
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
@@ -284,7 +283,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 		return
 	}
 
-	identity, err := loginTheUserAPI(userDB, config, creds.Name, creds.Password, creds.TOTP)
+	identity, err := loginTheUserAPI(userContext.ControlDB, userContext.Subdomain, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
 		errors.GenericIdentityLoginError(w, r, err)
 		return
@@ -310,8 +309,8 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 }
 
-func loginTheUserAPI(userDB *db.UserDB, cfg config.ServerConfig, devicename, password, totpToken string) (*user.Identity, error) {
-	device, err := loginTheUserPasswordOnly(userDB, devicename, password)
+func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg config.ServerConfig, devicename, password, totpToken string) (*control.SiteIdentity, error) {
+	device, err := loginTheUserPasswordOnly(controlDB, subdomain, devicename, password)
 	if err != nil {
 		return nil, err
 	}

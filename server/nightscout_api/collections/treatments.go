@@ -36,7 +36,7 @@ func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.
 	}
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
-		dbModel, err := userContext.UserDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))
+		dbModel, err := userContext.SiteDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))
 		if err != nil {
 			slog.Error("failed to create carb in database", "error", err)
 			return nil, nsutils.ErrInternal
@@ -55,7 +55,7 @@ func (c TreatmentCollection) Get(ctx context.Context, userContext *httputils.Use
 
 func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
-	carbs, err := userContext.UserDB.Queries.AllCarbs(ctx)
+	carbs, err := userContext.SiteDB.Queries.AllCarbs(ctx)
 	if err != nil {
 		slog.Error("failed to query carbs from database", "error", err)
 		return nil, nsutils.ErrInternal

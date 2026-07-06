@@ -37,7 +37,7 @@ func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputi
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.UserDB.Queries.CreateDeviceStatus(ctx, createParams)
+	dbModel, err := userContext.SiteDB.Queries.CreateDeviceStatus(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create device status in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,7 +50,7 @@ func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputi
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.UserDB.Queries.GetDeviceStatus(ctx, user.GetDeviceStatusParams{
+	dbModel, err := userContext.SiteDB.Queries.GetDeviceStatus(ctx, user.GetDeviceStatusParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/user"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -74,8 +74,8 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 
 			if sw.status == 200 {
 				wasWrite := userContext.UserAction == httputils.UserActionWrite
-				controlDB.UpdateUserDateFlags(userContext.UserModel, true, wasWrite)
-				userContext.UserDB.UpdateIdentityDateFlags(userContext.IdentityModel, true, wasWrite)
+				controlDB.UpdateUserDateFlags(userContext.SiteModel, true, wasWrite)
+				userContext.ControlDB.UpdateIdentityDateFlags(userContext.IdentityModel, true, wasWrite)
 			}
 		})
 	}
@@ -114,7 +114,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Identity, error) {
+func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.SiteIdentity, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -155,14 +155,15 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*user.Ide
 	return nil, fmt.Errorf("No JWT token found")
 }
 
-func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*user.Identity, error) {
+func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.SiteIdentity, error) {
 	userContext := httputils.GetUserContext(ctx)
 	if subdomain != userContext.Subdomain {
 		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", userContext.Subdomain, subdomain)
 	}
 
-	identity, err := userContext.UserDB.Queries.GetIdentity(ctx, user.GetIdentityParams{
-		Name: identityName,
+	identity, err := userContext.ControlDB.Queries.GetSiteIdentity(ctx, control.GetSiteIdentityParams{
+		Subdomain: subdomain,
+		Name:      identityName,
 	})
 	if err != nil {
 		return nil, err

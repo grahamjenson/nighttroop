@@ -37,7 +37,7 @@ func (c ProfileCollection) Create(ctx context.Context, userContext *httputils.Us
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.UserDB.Queries.CreateProfile(ctx, createParams)
+	dbModel, err := userContext.SiteDB.Queries.CreateProfile(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create profile in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,7 +50,7 @@ func (c ProfileCollection) Create(ctx context.Context, userContext *httputils.Us
 }
 
 func (c ProfileCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.UserDB.Queries.GetProfile(ctx, user.GetProfileParams{
+	dbModel, err := userContext.SiteDB.Queries.GetProfile(ctx, user.GetProfileParams{
 		ID: identifier,
 	})
 

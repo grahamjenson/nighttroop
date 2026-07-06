@@ -218,7 +218,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 // UTIL METHODS
 ////////
 
-func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config config.ServerConfig, nightscout *control.UserSyncSource, nsUrl string, nsPassword string, enabled bool) error {
+func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config config.ServerConfig, nightscout *control.SiteSyncSource, nsUrl string, nsPassword string, enabled bool) error {
 
 	if nsUrl == "" {
 		return fmt.Errorf("Nightscout URL cannot be empty. ")
@@ -342,7 +342,7 @@ func nsURLNormalizeValidate(rawUrl string, config config.ServerConfig) (string, 
 	return normalizedUrl, nil
 }
 
-func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, security *security.SecurityConfig, dexcom *control.UserSyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
+func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, security *security.SecurityConfig, dexcom *control.SiteSyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
 	var err error
 	errMsg := ""
 	if dexUsername == "" {

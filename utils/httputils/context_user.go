@@ -5,7 +5,6 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/user"
 )
 
 type UserAction string
@@ -18,10 +17,11 @@ const (
 const UserContextKey = "user_context"
 
 type UserContext struct {
-	UserDB    *db.UserDB
-	UserModel *control.User
+	ControlDB *db.ControlDB
+	SiteDB    *db.UserDB
+	SiteModel *control.Site
 
-	IdentityModel *user.Identity
+	IdentityModel *control.SiteIdentity
 
 	Subdomain string
 
@@ -51,10 +51,11 @@ func SetUserActionInUserContext(ctx context.Context, action UserAction) context.
 // UserDB
 ////
 
-func SetUserDBAndModelAndCreateUserContext(ctx context.Context, userDB *db.UserDB, userGetModel *control.User, subdomain string) context.Context {
+func SetUserDBAndModelAndCreateUserContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.UserDB, siteModel *control.Site, subdomain string) context.Context {
 	userContext := &UserContext{}
-	userContext.UserDB = userDB
-	userContext.UserModel = userGetModel
+	userContext.ControlDB = controlDB
+	userContext.SiteDB = siteDB
+	userContext.SiteModel = siteModel
 	userContext.Subdomain = subdomain
 
 	return context.WithValue(ctx, UserContextKey, userContext)
@@ -63,7 +64,7 @@ func SetUserDBAndModelAndCreateUserContext(ctx context.Context, userDB *db.UserD
 // //
 // IdentityModel
 // //
-func SetIdentityModelInUserContext(ctx context.Context, identityModel *user.Identity) context.Context {
+func SetIdentityModelInUserContext(ctx context.Context, identityModel *control.SiteIdentity) context.Context {
 	userContext := GetUserContext(ctx)
 	userContext.IdentityModel = identityModel
 	return context.WithValue(ctx, UserContextKey, userContext)

@@ -134,7 +134,7 @@ func (q *Queries) GetSiteIdentity(ctx context.Context, arg GetSiteIdentityParams
 	return &i, err
 }
 
-const updateIdentityDateFlags = `-- name: UpdateIdentityDateFlags :exec
+const updateSiteIdentityDateFlags = `-- name: UpdateSiteIdentityDateFlags :exec
 
 UPDATE site_identities
 SET
@@ -143,7 +143,7 @@ SET
 WHERE id = ?
 `
 
-type UpdateIdentityDateFlagsParams struct {
+type UpdateSiteIdentityDateFlagsParams struct {
 	LastSeenAt  *int64
 	LastWriteAt *int64
 	ID          int64
@@ -152,7 +152,7 @@ type UpdateIdentityDateFlagsParams struct {
 // ------
 // UPDATE
 // ------
-func (q *Queries) UpdateIdentityDateFlags(ctx context.Context, arg UpdateIdentityDateFlagsParams) error {
-	_, err := q.exec(ctx, q.updateIdentityDateFlagsStmt, updateIdentityDateFlags, arg.LastSeenAt, arg.LastWriteAt, arg.ID)
+func (q *Queries) UpdateSiteIdentityDateFlags(ctx context.Context, arg UpdateSiteIdentityDateFlagsParams) error {
+	_, err := q.exec(ctx, q.updateSiteIdentityDateFlagsStmt, updateSiteIdentityDateFlags, arg.LastSeenAt, arg.LastWriteAt, arg.ID)
 	return err
 }
