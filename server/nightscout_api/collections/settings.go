@@ -30,7 +30,7 @@ func NewSettingsCollection() SettingsCollection {
 	}
 }
 
-func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	settingModel := &nightscout.Setting{}
 	err := utils.FromMap(data, settingModel)
 
@@ -52,7 +52,7 @@ func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.U
 		slog.Error("failed to create setting value from string", "error", err)
 		return nil, nsutils.BadDataBodyError
 	}
-	dbModel, err := settingValue.UpsertValue(ctx, userContext.Subdomain, userContext.ControlDB.Queries, value)
+	dbModel, err := settingValue.UpsertValue(ctx, siteContext.Subdomain, siteContext.ControlDB.Queries, value)
 
 	if err != nil {
 		slog.Error("failed to create setting in database", "error", err)
@@ -65,12 +65,12 @@ func (c SettingsCollection) Create(ctx context.Context, userContext *httputils.U
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c SettingsCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	setting, ok := control.GetSiteSettingTypeFromKey(identifier)
 	if !ok {
 		return nil, nsutils.ErrNotFound
 	}
-	dbModel, err := setting.GetValueModel(ctx, userContext.Subdomain, userContext.ControlDB.Queries)
+	dbModel, err := setting.GetValueModel(ctx, siteContext.Subdomain, siteContext.ControlDB.Queries)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -85,18 +85,18 @@ func (c SettingsCollection) Get(ctx context.Context, userContext *httputils.User
 	return &record, nil
 }
 
-func (c SettingsCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c SettingsCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c SettingsCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c SettingsCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

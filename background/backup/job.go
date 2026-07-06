@@ -101,8 +101,8 @@ func (b *BackupJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
 
 func (b *BackupJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) func() {
 	return func() {
-		for index := range utils.USER_CHAR_SET {
-			char := string(utils.USER_CHAR_SET[index])
+		for index := range utils.SITE_CHAR_SET {
+			char := string(utils.SITE_CHAR_SET[index])
 			// Optimization to not queue jobs with no users
 			// If it errors just ignore the query all together
 			res, err := b.controlDB.HasUsersInBatch(char)

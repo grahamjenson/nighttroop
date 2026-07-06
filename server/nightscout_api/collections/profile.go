@@ -23,7 +23,7 @@ func NewProfileCollection() ProfileCollection {
 	}
 }
 
-func (c ProfileCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	profileModel := &nightscout.Profile{}
 	err := utils.FromMap(data, profileModel)
 
@@ -34,10 +34,10 @@ func (c ProfileCollection) Create(ctx context.Context, userContext *httputils.Us
 
 	createParams := nightscout.ProfileToCreate(
 		*profileModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
+		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.SiteDB.Queries.CreateProfile(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateProfile(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create profile in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -49,8 +49,8 @@ func (c ProfileCollection) Create(ctx context.Context, userContext *httputils.Us
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c ProfileCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.SiteDB.Queries.GetProfile(ctx, user.GetProfileParams{
+func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.GetProfile(ctx, user.GetProfileParams{
 		ID: identifier,
 	})
 
@@ -68,18 +68,18 @@ func (c ProfileCollection) Get(ctx context.Context, userContext *httputils.UserC
 	return &record, nil
 }
 
-func (c ProfileCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c ProfileCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c ProfileCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c ProfileCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c ProfileCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

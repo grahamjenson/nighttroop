@@ -70,8 +70,8 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		// Browser Login
 		////
 
-		userContext := httputils.GetUserContext(r.Context())
-		subdomain := userContext.Subdomain
+		siteContext := httputils.GetSiteContext(r.Context())
+		subdomain := siteContext.Subdomain
 
 		if err := r.ParseForm(); err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
@@ -89,7 +89,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		}
 
 		// First thing validate the password
-		identity, err := loginTheUserPasswordOnly(userContext.ControlDB, userContext.Subdomain, formName, formPassword)
+		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, siteContext.Subdomain, formName, formPassword)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			return
@@ -116,7 +116,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 			return
 		} else {
-			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, identity.Name, string(identity.Role))
+			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, err)
 				return
@@ -140,7 +140,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 			errors.GenericIdentityLoginError(w, r, fmt.Errorf("API login not supported for TOTP endpoint"))
 			return
 		}
-		userContext := httputils.GetUserContext(r.Context())
+		siteContext := httputils.GetSiteContext(r.Context())
 
 		// 1. Fetch And Validate Pre-Auth Token
 		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r)
@@ -176,7 +176,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 		}
 
 		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, identity.Name, string(identity.Role))
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -197,10 +197,10 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 
 func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*control.SiteIdentity, error) {
 	// First try the JWT token (either header or cookie)
-	userContext := httputils.GetUserContext(r.Context())
+	siteContext := httputils.GetSiteContext(r.Context())
 
 	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
-		Subdomain: userContext.Subdomain,
+		Subdomain: siteContext.Subdomain,
 		Name:      identityNameFromToken,
 	})
 	if err != nil {
@@ -268,7 +268,7 @@ func fetchVerifyPreAuthToken(config config.ServerConfig, r *http.Request) (strin
 // API Login functions
 // ///
 func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
-	userContext := httputils.GetUserContext(r.Context())
+	siteContext := httputils.GetSiteContext(r.Context())
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
@@ -277,19 +277,19 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", userContext.Subdomain, creds.Name), r.RemoteAddr)
+	allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", siteContext.Subdomain, creds.Name), r.RemoteAddr)
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return
 	}
 
-	identity, err := loginTheUserAPI(userContext.ControlDB, userContext.Subdomain, config, creds.Name, creds.Password, creds.TOTP)
+	identity, err := loginTheUserAPI(siteContext.ControlDB, siteContext.Subdomain, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
 		errors.GenericIdentityLoginError(w, r, err)
 		return
 	}
 
-	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, identity.Name, string(identity.Role))
+	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
 	if err != nil {
 		errors.GenericIdentityLoginError(w, r, err)
 		return

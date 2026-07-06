@@ -44,12 +44,12 @@ func (m *NightTroopAPIAuth) HasPermission(identity nsutils.Identity, permission 
 }
 
 func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*nsutils.Identity, *nsutils.HTTPError) {
-	userContext := httputils.GetUserContext(r.Context())
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(r.Context())
+	if siteContext == nil {
 		return nil, nsutils.ErrMissingCredentials
 	}
 
-	ntIdentity := NighttroopIdentityToNightscoutIdentity(userContext.IdentityModel.Name, userContext.IdentityModel.Role)
+	ntIdentity := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
 	return ntIdentity, nil
 }
 

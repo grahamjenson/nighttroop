@@ -24,7 +24,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			identityModel, keepGoing, err := tryAuthWithJWTToken(cfg, r)
 			if err == nil {
 
-				ctx = httputils.SetIdentityModelInUserContext(ctx, identityModel)
+				ctx = httputils.SetIdentityModelInSiteContext(ctx, identityModel)
 
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
@@ -40,7 +40,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 			// Last Chance
 			identityModel, err = tryAuthWithLegacyToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetIdentityModelInUserContext(ctx, identityModel)
+				ctx = httputils.SetIdentityModelInSiteContext(ctx, identityModel)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -98,14 +98,14 @@ func tryAuthWithLegacyToken(config config.ServerConfig, r *http.Request) (*contr
 		return nil, fmt.Errorf("no token provided")
 	}
 
-	userContext := httputils.GetUserContext(r.Context())
+	siteContext := httputils.GetSiteContext(r.Context())
 
 	tokenParamSubdomain, tokenParamName, tokenRole, tokenParamPassword, err := config.Security.SplitNightscoutTokenForIdentity(tokenParam)
 	if err != nil {
 		return nil, fmt.Errorf("invalid token format: %w", err)
 	}
 
-	if tokenParamSubdomain != userContext.Subdomain {
+	if tokenParamSubdomain != siteContext.Subdomain {
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 

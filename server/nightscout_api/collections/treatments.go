@@ -22,7 +22,7 @@ func NewTreatmentCollection() TreatmentCollection {
 	}
 }
 
-func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 
 	treatmentModel := nightscout.Treatment{}
 	err := utils.FromMap(data, &treatmentModel)
@@ -36,7 +36,7 @@ func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.
 	}
 	switch *treatmentModel.EventType {
 	case nightscout.CarbCorrection:
-		dbModel, err := userContext.SiteDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name}))
+		dbModel, err := siteContext.SiteDB.Queries.CreateCarb(ctx, nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name}))
 		if err != nil {
 			slog.Error("failed to create carb in database", "error", err)
 			return nil, nsutils.ErrInternal
@@ -49,13 +49,13 @@ func (c TreatmentCollection) Create(ctx context.Context, userContext *httputils.
 
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
-	carbs, err := userContext.SiteDB.Queries.AllCarbs(ctx)
+	carbs, err := siteContext.SiteDB.Queries.AllCarbs(ctx)
 	if err != nil {
 		slog.Error("failed to query carbs from database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -65,14 +65,14 @@ func (c TreatmentCollection) Search(ctx context.Context, userContext *httputils.
 	return records, nil
 }
 
-func (c TreatmentCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TreatmentCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c TreatmentCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

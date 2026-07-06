@@ -12,12 +12,12 @@ import (
 )
 
 type CollectionStore interface {
-	Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
-	Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
-	Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
-	Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
-	Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError
-	DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
+	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
+	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
+	Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
+	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
 }
 
 type NightTroopAPIStore struct {
@@ -33,11 +33,11 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
 	}
-	userContext := httputils.GetUserContext(ctx)
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Create(ctx, userContext, data)
+	record, err := collectionsStore.Create(ctx, siteContext, data)
 
 	if err != nil {
 		return nsutils.Record{}, err
@@ -54,11 +54,11 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
 	}
-	userContext := httputils.GetUserContext(ctx)
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Get(ctx, userContext, identifier)
+	record, err := collectionsStore.Get(ctx, siteContext, identifier)
 	if err != nil {
 		return nsutils.Record{}, err
 	}
@@ -74,11 +74,11 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	if !ok {
 		return nil, nsutils.ErrInvalidCollection
 	}
-	userContext := httputils.GetUserContext(ctx)
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
 		return nil, nsutils.ErrMissingCredentials
 	}
-	records, err := collectionsStore.Search(ctx, userContext, query)
+	records, err := collectionsStore.Search(ctx, siteContext, query)
 	if err != nil {
 		return nil, err
 	}
@@ -92,11 +92,11 @@ func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Co
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
 	}
-	userContext := httputils.GetUserContext(ctx)
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Update(ctx, userContext, identifier, patch)
+	record, err := collectionsStore.Update(ctx, siteContext, identifier, patch)
 	if err != nil {
 		return nsutils.Record{}, err
 	}
@@ -111,11 +111,11 @@ func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Co
 	if !ok {
 		return nsutils.ErrInvalidCollection
 	}
-	userContext := httputils.GetUserContext(ctx)
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
 		return nsutils.ErrMissingCredentials
 	}
-	return collectionsStore.Delete(ctx, userContext, identifier, permanent)
+	return collectionsStore.Delete(ctx, siteContext, identifier, permanent)
 }
 
 func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutils.Collection, typeString string, permanent bool) (int, *nsutils.HTTPError) {
@@ -123,10 +123,10 @@ func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutil
 	if !ok {
 		return 0, nsutils.ErrInvalidCollection
 	}
-	userContext := httputils.GetUserContext(ctx)
-	if userContext == nil {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
 		return 0, nsutils.ErrMissingCredentials
 	}
-	return collectionsStore.DeleteType(ctx, userContext, typeString, permanent)
+	return collectionsStore.DeleteType(ctx, siteContext, typeString, permanent)
 
 }

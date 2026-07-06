@@ -23,7 +23,7 @@ func NewFoodCollection() FoodCollection {
 	}
 }
 
-func (c FoodCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	foodModel := &nightscout.Food{}
 	err := utils.FromMap(data, foodModel)
 
@@ -34,10 +34,10 @@ func (c FoodCollection) Create(ctx context.Context, userContext *httputils.UserC
 
 	createParams := nightscout.FoodToCreate(
 		*foodModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
+		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.SiteDB.Queries.CreateFood(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateFood(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create food in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -49,8 +49,8 @@ func (c FoodCollection) Create(ctx context.Context, userContext *httputils.UserC
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c FoodCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.SiteDB.Queries.GetFood(ctx, user.GetFoodParams{
+func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.GetFood(ctx, user.GetFoodParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {
@@ -67,18 +67,18 @@ func (c FoodCollection) Get(ctx context.Context, userContext *httputils.UserCont
 	return &record, nil
 }
 
-func (c FoodCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c FoodCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c FoodCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c FoodCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c FoodCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c FoodCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c FoodCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

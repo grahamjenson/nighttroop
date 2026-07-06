@@ -10,8 +10,8 @@ type UserContext struct {
 	Subdomain string
 }
 
-templ UserBase(userContext UserContext) {
-	@shared_templ.Base("Nighttroop for " + userContext.Subdomain) {
+templ UserBase(siteContext UserContext) {
+	@shared_templ.Base("Nighttroop for " + siteContext.Subdomain) {
 		@Header()
 		<div
 			id="main-content"

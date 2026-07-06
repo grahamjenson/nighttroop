@@ -22,12 +22,12 @@ func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool,
 }
 
 func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userContext := GetUserContext(r.Context())
-	userSubdomain := userContext.Subdomain
+	siteContext := GetSiteContext(r.Context())
+	userSubdomain := siteContext.Subdomain
 	// If no identity then associate with default to ensure blocking
 	identityName := consts.DEFAULT_RATE_LIMITING_IDENTITY_NAME
-	if userContext.IdentityModel != nil {
-		identityName = userContext.IdentityModel.Name
+	if siteContext.IdentityModel != nil {
+		identityName = siteContext.IdentityModel.Name
 	}
 
 	readLimiter := serverConfig.RateLimiters.UserGETLimiter(userSubdomain)
@@ -37,12 +37,12 @@ func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, in
 }
 
 func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userContext := GetUserContext(r.Context())
-	userSubdomain := userContext.Subdomain
+	siteContext := GetSiteContext(r.Context())
+	userSubdomain := siteContext.Subdomain
 	// If no identity then associate with default to ensure blocking
 	identityName := consts.DEFAULT_RATE_LIMITING_IDENTITY_NAME
-	if userContext.IdentityModel != nil {
-		identityName = userContext.IdentityModel.Name
+	if siteContext.IdentityModel != nil {
+		identityName = siteContext.IdentityModel.Name
 	}
 
 	writeLimiter := serverConfig.RateLimiters.UserPOSTLimiter(userSubdomain)
@@ -52,8 +52,8 @@ func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, i
 }
 
 func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	userContext := GetUserContext(r.Context())
-	userSubdomain := userContext.Subdomain
+	siteContext := GetSiteContext(r.Context())
+	userSubdomain := siteContext.Subdomain
 
 	writeLimiter := serverConfig.RateLimiters.UserUpdateSyncLimiter(userSubdomain)
 

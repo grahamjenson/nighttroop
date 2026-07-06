@@ -18,7 +18,7 @@ func (b *BackupJobManager) BackupToS3() {
 		slog.Error("Backup error", "error", err)
 	}
 
-	for _, char := range utils.USER_CHAR_SET {
+	for _, char := range utils.SITE_CHAR_SET {
 		err := b.BackupUserBatch(string(char))
 
 		if err != nil {
@@ -80,7 +80,7 @@ func (b *BackupJobManager) BackupUserBatch(char string) error {
 		// Have to add it anyway because we need all paths
 		err := utils.SqliteBackup(ctx, user.SQLiteDB, path, backupPath)
 		if err != nil {
-			return fmt.Errorf("cannot backup user db: %w", user.Subdomain, err)
+			return fmt.Errorf("cannot backup site db: %w", user.Subdomain, err)
 		}
 
 		paths = append(paths, backupPath)
@@ -88,9 +88,9 @@ func (b *BackupJobManager) BackupUserBatch(char string) error {
 
 	trackTrim = len(paths) > 0
 
-	err = b.S3Client.UploadFilesToS3(b.S3Client.UserBatchS3Path(char), paths)
+	err = b.S3Client.UploadFilesToS3(b.S3Client.SiteBatchS3Path(char), paths)
 	if err != nil {
-		return fmt.Errorf("cannot sync user pool: %w %v", err, string(char))
+		return fmt.Errorf("cannot sync site pool: %w %v", err, string(char))
 	}
 
 	// Copy the control db to the backup location

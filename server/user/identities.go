@@ -19,9 +19,9 @@ import (
 func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
-		userContext := httputils.GetUserContext(r.Context())
+		siteContext := httputils.GetSiteContext(r.Context())
 
-		userIdentities, deviceIdentities, err := extractAndGetIdentities(userContext, r.Context())
+		userIdentities, deviceIdentities, err := extractAndGetIdentities(siteContext, r.Context())
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to get identities", err)
 			return
@@ -32,7 +32,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 			err = user_templ.Identities(userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
 				fmt.Println("Error rendering identities template:", err)
-				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", userContext.Subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", siteContext.Subdomain)
 				return
 			}
 			return
@@ -41,7 +41,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 		if acceptType == httputils.AcceptTypeHTMX {
 			err = user_templ.IdentitesTable(userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
 			}
 			return
@@ -55,8 +55,8 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 	}
 }
 
-func extractAndGetIdentities(userContext *httputils.UserContext, context context.Context) ([]*user_templ.UserIdentity, []*user_templ.UserIdentity, error) {
-	identities, err := userContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{Subdomain: userContext.Subdomain})
+func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*user_templ.UserIdentity, []*user_templ.UserIdentity, error) {
+	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{Subdomain: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,11 +66,11 @@ func extractAndGetIdentities(userContext *httputils.UserContext, context context
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			userIdentities = append([]*user_templ.UserIdentity{user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityModel.Name)}, userIdentities...)
+			userIdentities = append([]*user_templ.UserIdentity{user_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityModel.Name))
+			userIdentities = append(userIdentities, user_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, userContext.IdentityModel.Name))
+			deviceIdentities = append(deviceIdentities, user_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		default:
 			continue
 		}
@@ -82,7 +82,7 @@ func extractAndGetIdentities(userContext *httputils.UserContext, context context
 func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
-		userContext := httputils.GetUserContext(r.Context())
+		siteContext := httputils.GetSiteContext(r.Context())
 
 		// Input is a form that has a name and role
 		err := r.ParseForm()
@@ -99,7 +99,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 			return
 		}
 
-		identityValues, err := userContext.ControlDB.CreateIdentity(userContext.Subdomain, name, consts.IdentityRole(role))
+		identityValues, err := siteContext.ControlDB.CreateIdentity(siteContext.Subdomain, name, consts.IdentityRole(role))
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to create identity", err)
 			return
@@ -113,9 +113,9 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.CreateIdentityResponse(userContext.SiteDB.URL(), identity, identityValues.Password, identityValues.TotpSecret, identityValues.NSToken).Render(r.Context(), w)
+			err = user_templ.CreateIdentityResponse(siteContext.SiteDB.URL(), identity, identityValues.Password, identityValues.TotpSecret, identityValues.NSToken).Render(r.Context(), w)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", userContext.Subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
 			}
 			return

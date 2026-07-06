@@ -24,8 +24,8 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 
 	err = TryDownloadExrtractUserDbs(s3Client)
 	// Create the rest of the folders here
-	for _, char := range utils.USER_CHAR_SET {
-		dir, _ := utils.UserBatchPaths(string(char))
+	for _, char := range utils.SITE_CHAR_SET {
+		dir, _ := utils.SiteBatchPaths(string(char))
 		utils.MkDirs(dir)
 	}
 
@@ -72,12 +72,12 @@ func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
 	g.SetLimit(limit)
 
-	slog.Info("TryDownloadExrtractUserDbs running", "user_batch_length", utils.USER_BATCH_LENGTH, "limit", limit)
-	for _, char := range utils.USER_CHAR_SET {
+	slog.Info("TryDownloadExrtractUserDbs running", "site_batch_length", utils.SITE_BATCH_LENGTH, "limit", limit)
+	for _, char := range utils.SITE_CHAR_SET {
 		g.Go(func() error {
 			_, err := TryDownloadExrtractUserDbsForBatch(s3Client, string(char))
 			if err != nil {
-				return fmt.Errorf("cannot restore user pool: %w", err)
+				return fmt.Errorf("cannot restore site pool: %w", err)
 			}
 			return nil
 		})
@@ -95,7 +95,7 @@ func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 
 func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string) (bool, error) {
 
-	path, _ := utils.UserBatchPaths(char)
+	path, _ := utils.SiteBatchPaths(char)
 	if utils.FileExists(path) {
 		return true, nil
 	}

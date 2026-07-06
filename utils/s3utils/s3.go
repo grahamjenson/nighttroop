@@ -83,7 +83,7 @@ func NewS3Client(config config.ServerConfig) *S3Client {
 
 func (c *S3Client) TestS3Client() error {
 	testKey := c.TestObjectPath()
-	randomGen := utils.NextUserID(false)
+	randomGen := utils.NextSiteSubdomain(false)
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
 
 	_, err := c.s3.PutObject(context.TODO(), &s3.PutObjectInput{
@@ -133,13 +133,13 @@ func (c *S3Client) ControlS3Path() string {
 	return fmt.Sprintf("%s/backup/control.tar.lz4.enc", c.HostName)
 }
 
-func (c *S3Client) UserBatchS3Path(char string) string {
-	return fmt.Sprintf("%s/backup/user/%s.tar.lz4.enc", c.HostName, char)
+func (c *S3Client) SiteBatchS3Path(char string) string {
+	return fmt.Sprintf("%s/backup/site/%s.tar.lz4.enc", c.HostName, char)
 }
 
-func (c *S3Client) UserArchiveS3Path(subdomain string) string {
+func (c *S3Client) SiteArchiveS3Path(subdomain string) string {
 	char := subdomain[0]
-	return fmt.Sprintf("%s/archive/user/%s/%s.tar.lz4.enc", c.HostName, string(char), subdomain)
+	return fmt.Sprintf("%s/archive/site/%s/%s.tar.lz4.enc", c.HostName, string(char), subdomain)
 }
 
 func (c *S3Client) TestObjectPath() string {

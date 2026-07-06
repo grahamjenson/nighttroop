@@ -15,7 +15,7 @@ import (
 
 type EntriesCollection struct {
 	converter func(c *user.GlucoseReading) nsutils.Record
-	creator   func(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	creator   func(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 }
 
 func NewEntriesCollection() EntriesCollection {
@@ -24,7 +24,7 @@ func NewEntriesCollection() EntriesCollection {
 	}
 }
 
-func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	entryModel := &nightscout.Entry{}
 	err := utils.FromMap(data, entryModel)
 
@@ -35,10 +35,10 @@ func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.Us
 
 	createParams := nightscout.EntryToCreate(
 		*entryModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
+		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create glucose reading in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,8 +50,8 @@ func (c EntriesCollection) Create(ctx context.Context, userContext *httputils.Us
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	glucoseReading, err := userContext.SiteDB.Queries.GetGlucoseReading(ctx, user.GetGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	glucoseReading, err := siteContext.SiteDB.Queries.GetGlucoseReading(ctx, user.GetGlucoseReadingParams{ID: identifier})
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -66,7 +66,7 @@ func (c EntriesCollection) Get(ctx context.Context, userContext *httputils.UserC
 	return &record, nil
 }
 
-func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	// Declare the support orders
 	so := query.SortOrder.Support(nsquery.SortOccurredAtDesc, nsquery.SortOccurredAtAsc, nsquery.SortCreatedAtDesc, nsquery.SortCreatedAtAsc, nsquery.SortUpdatedAtDesc, nsquery.SortUpdatedAtAsc)
 	// check against default sort order
@@ -77,11 +77,11 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 
 	// There are three options,
 	if defaultSortOrder && !query.HasFilters {
-		entries, rerr = userContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
+		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
 	} else if defaultSortOrder && query.HasFilters {
-		entries, rerr = userContext.SiteDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
+		entries, rerr = siteContext.SiteDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	} else {
-		entries, rerr = userContext.SiteDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchNonDefaultOrder(query))
+		entries, rerr = siteContext.SiteDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchNonDefaultOrder(query))
 	}
 
 	if rerr != nil {
@@ -92,7 +92,7 @@ func (c EntriesCollection) Search(ctx context.Context, userContext *httputils.Us
 	return CreateRecordSlice(entries, c.converter), nil
 }
 
-func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c EntriesCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 
 	entryModel := &nightscout.Entry{}
 	err := utils.FromMap(patch, entryModel)
@@ -103,11 +103,11 @@ func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.Us
 
 	updateParams := nightscout.EntryToUpdate(
 		*entryModel,
-		nightscout.UpdateContext{UpdatedByIdentityID: userContext.IdentityModel.ID,
-			UpdatedByIdentityName: userContext.IdentityModel.Name,
+		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID,
+			UpdatedByIdentityName: siteContext.IdentityModel.Name,
 		},
 	)
-	glucoseReading, err := userContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
+	glucoseReading, err := siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -122,10 +122,10 @@ func (c EntriesCollection) Update(ctx context.Context, userContext *httputils.Us
 	return &record, nil
 }
 
-func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 
 	if permanent {
-		res, err := userContext.SiteDB.Queries.DeletePermanentGlucoseReading(ctx, user.DeletePermanentGlucoseReadingParams{ID: identifier})
+		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReading(ctx, user.DeletePermanentGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -141,7 +141,7 @@ func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.Us
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
 	} else {
-		res, err := userContext.SiteDB.Queries.DeleteGlucoseReading(ctx, user.DeleteGlucoseReadingParams{ID: identifier})
+		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReading(ctx, user.DeleteGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -160,10 +160,10 @@ func (c EntriesCollection) Delete(ctx context.Context, userContext *httputils.Us
 	return nil
 }
 
-func (c EntriesCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 
 	if permanent {
-		res, err := userContext.SiteDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, user.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
+		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, user.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose readings by type", "error", err)
 			return 0, nsutils.ErrInternal
@@ -175,7 +175,7 @@ func (c EntriesCollection) DeleteType(ctx context.Context, userContext *httputil
 		}
 		return int(rowsAffected), nil
 	} else {
-		res, err := userContext.SiteDB.Queries.DeleteGlucoseReadingsByType(ctx, user.DeleteGlucoseReadingsByTypeParams{Type: typeString})
+		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReadingsByType(ctx, user.DeleteGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {
 			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
 			return 0, nsutils.ErrInternal

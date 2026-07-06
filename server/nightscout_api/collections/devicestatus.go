@@ -23,7 +23,7 @@ func NewDeviceStatusCollection() DeviceStatusCollection {
 	}
 }
 
-func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	deviceStatusModel := &nightscout.DeviceStatus{}
 	err := utils.FromMap(data, deviceStatusModel)
 
@@ -34,10 +34,10 @@ func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputi
 
 	createParams := nightscout.DeviceStatusToCreate(
 		*deviceStatusModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
+		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.SiteDB.Queries.CreateDeviceStatus(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateDeviceStatus(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create device status in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -49,8 +49,8 @@ func (c DeviceStatusCollection) Create(ctx context.Context, userContext *httputi
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.SiteDB.Queries.GetDeviceStatus(ctx, user.GetDeviceStatusParams{
+func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.GetDeviceStatus(ctx, user.GetDeviceStatusParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {
@@ -67,18 +67,18 @@ func (c DeviceStatusCollection) Get(ctx context.Context, userContext *httputils.
 	return &record, nil
 }
 
-func (c DeviceStatusCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c DeviceStatusCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c DeviceStatusCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c DeviceStatusCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

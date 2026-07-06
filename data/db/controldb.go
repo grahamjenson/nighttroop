@@ -157,10 +157,10 @@ type UserCreateResult struct {
 }
 
 func (db *ControlDB) CreateUser() (*UserCreateResult, error) {
-	subdomain := utils.NextUserID(db.serverConfig.IsDev() || db.serverConfig.IsTest())
+	subdomain := utils.NextSiteSubdomain(db.serverConfig.IsDev() || db.serverConfig.IsTest())
 	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
-		subdomain = utils.NextUserID(false)
+		subdomain = utils.NextSiteSubdomain(false)
 		if db.SubdomainUsed(subdomain) {
 			return nil, fmt.Errorf("user already exists")
 		}

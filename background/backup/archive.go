@@ -96,7 +96,7 @@ func (b *BackupJobManager) archiveUsers(archiveList []*db.SiteDB) ([]string, err
 		}
 
 		// Save as backup file and upload to final localtion
-		err = b.S3Client.UploadFilesToS3(b.S3Client.UserArchiveS3Path(user.Subdomain), []string{backupPath})
+		err = b.S3Client.UploadFilesToS3(b.S3Client.SiteArchiveS3Path(user.Subdomain), []string{backupPath})
 		if err != nil {
 			return nil, fmt.Errorf("cannot upload archived user db: %w", user.Subdomain, err)
 		}

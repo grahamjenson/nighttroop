@@ -78,23 +78,23 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 
 func NightscoutAuthRoute(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userContext := httputils.GetUserContext(r.Context())
-		if userContext.IdentityModel == nil {
+		siteContext := httputils.GetSiteContext(r.Context())
+		if siteContext.IdentityModel == nil {
 			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
 			return
 		}
 
 		// The user should have already been verified
-		token, expiresAt, err := config.Security.GenerateUserJWTToken(userContext.Subdomain, userContext.IdentityModel.Name, string(userContext.IdentityModel.Role))
+		token, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
 		if err != nil {
 			http.Error(w, "Internal Server Error: Failed to generate JWT token", http.StatusInternalServerError)
 			return
 		}
 
-		nsIdentity := NighttroopIdentityToNightscoutIdentity(userContext.IdentityModel.Name, userContext.IdentityModel.Role)
+		nsIdentity := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
 		response := map[string]any{
 			"token":            token,
-			"sub":              userContext.IdentityModel.Name,
+			"sub":              siteContext.IdentityModel.Name,
 			"permissionGroups": [][]string{nsIdentity.Permissions},
 			"iat":              time.Now().Unix(),
 			"exp":              expiresAt.Unix(),

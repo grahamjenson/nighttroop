@@ -23,7 +23,7 @@ func NewActivityCollection() ActivityCollection {
 	}
 }
 
-func (c ActivityCollection) Create(ctx context.Context, userContext *httputils.UserContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	activityModel := &nightscout.Activity{}
 	err := utils.FromMap(data, activityModel)
 
@@ -34,10 +34,10 @@ func (c ActivityCollection) Create(ctx context.Context, userContext *httputils.U
 
 	createParams := nightscout.ActivityToCreate(
 		*activityModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: userContext.IdentityModel.ID, CreatedByIdentityName: userContext.IdentityModel.Name},
+		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := userContext.SiteDB.Queries.CreateActivity(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateActivity(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create activity in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -49,8 +49,8 @@ func (c ActivityCollection) Create(ctx context.Context, userContext *httputils.U
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c ActivityCollection) Get(ctx context.Context, userContext *httputils.UserContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := userContext.SiteDB.Queries.GetActivity(ctx, user.GetActivityParams{
+func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.GetActivity(ctx, user.GetActivityParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {
@@ -67,19 +67,19 @@ func (c ActivityCollection) Get(ctx context.Context, userContext *httputils.User
 	return &record, nil
 }
 
-func (c ActivityCollection) Search(ctx context.Context, userContext *httputils.UserContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	// TODO
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c ActivityCollection) Update(ctx context.Context, userContext *httputils.UserContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ActivityCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c ActivityCollection) Delete(ctx context.Context, userContext *httputils.UserContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c ActivityCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c ActivityCollection) DeleteType(ctx context.Context, userContext *httputils.UserContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+func (c ActivityCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

@@ -20,7 +20,7 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userAction := httputils.UserActionRead
+			userAction := httputils.SiteActionRead
 			method := strings.ToUpper(r.Method)
 			if method == http.MethodGet || method == http.MethodHead {
 				// For GET and HEAD requests, we can use a more permissive rate limit
@@ -34,14 +34,14 @@ func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http
 			} else {
 				// For POST, PUT, DELETE, etc., we should enforce a stricter rate limit
 				allowed, remainingTime := httputils.UserPOSTAllowed(config, r)
-				userAction = httputils.UserActionWrite
+				userAction = httputils.SiteActionWrite
 				if !allowed {
 					w.WriteHeader(http.StatusTooManyRequests)
 					slog.Info("User POST rate limit exceeded", "remainingTime", remainingTime)
 					return
 				}
 			}
-			ctx := httputils.SetUserActionInUserContext(r.Context(), userAction)
+			ctx := httputils.SetSiteActionInSiteContext(r.Context(), userAction)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -63,7 +63,7 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			userContext := httputils.GetUserContext(r.Context())
+			siteContext := httputils.GetSiteContext(r.Context())
 
 			sw := &statusResponseWriter{
 				ResponseWriter: w,
@@ -73,9 +73,9 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 			next.ServeHTTP(sw, r)
 
 			if sw.status == 200 {
-				wasWrite := userContext.UserAction == httputils.UserActionWrite
-				controlDB.UpdateUserDateFlags(userContext.SiteModel, true, wasWrite)
-				userContext.ControlDB.UpdateIdentityDateFlags(userContext.IdentityModel, true, wasWrite)
+				wasWrite := siteContext.SiteAction == httputils.SiteActionWrite
+				controlDB.UpdateUserDateFlags(siteContext.SiteModel, true, wasWrite)
+				siteContext.ControlDB.UpdateIdentityDateFlags(siteContext.IdentityModel, true, wasWrite)
 			}
 		})
 	}
@@ -93,7 +93,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 
 			identity, err := TryAuthWithJWTToken(cfg, r)
 			if err == nil {
-				ctx = httputils.SetIdentityModelInUserContext(ctx, identity)
+				ctx = httputils.SetIdentityModelInSiteContext(ctx, identity)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -156,12 +156,12 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.
 }
 
 func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.SiteIdentity, error) {
-	userContext := httputils.GetUserContext(ctx)
-	if subdomain != userContext.Subdomain {
-		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", userContext.Subdomain, subdomain)
+	siteContext := httputils.GetSiteContext(ctx)
+	if subdomain != siteContext.Subdomain {
+		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
 	}
 
-	identity, err := userContext.ControlDB.Queries.GetSiteIdentity(ctx, control.GetSiteIdentityParams{
+	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, control.GetSiteIdentityParams{
 		Subdomain: subdomain,
 		Name:      identityName,
 	})

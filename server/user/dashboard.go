@@ -11,7 +11,7 @@ import (
 func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		//userContext := httputils.GetUserContext(r.Context())
+		//siteContext := httputils.GetSiteContext(r.Context())
 		err := user_templ.Dashboard().Render(r.Context(), w)
 
 		if err != nil {

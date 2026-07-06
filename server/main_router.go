@@ -59,19 +59,19 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			userSubdomain := strings.TrimSuffix(subdomain, ".ns")
 			userSubdomain = strings.TrimPrefix(userSubdomain, "ns.")
 
-			if !utils.SyntacticallyValidateUserID(userSubdomain) {
-				slog.Error("Main router 404 for nightscout subdomain with invalid user id format", "subdomain", subdomain)
+			if !utils.SyntacticallyValidateSiteID(userSubdomain) {
+				slog.Error("Main router 404 for nightscout subdomain with invalid site id format", "subdomain", subdomain)
 				http.NotFound(w, r)
 				return
 			}
-			// so <userid>.ns.domain routes to the nightscout compatible API
+			// so <siteid>.ns.domain routes to the nightscout compatible API
 			if exists, ctx := UserExistsAndWriteToContext(controlDB, userSubdomain, r); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for nightscout subdomain", "subdomain", subdomain)
 				http.NotFound(w, r)
 			}
-		case utils.SyntacticallyValidateUserID(subdomain):
+		case utils.SyntacticallyValidateSiteID(subdomain):
 			// Check to see if in memory map
 			// SHOULD ATTACH USER DB AND MODEL TO THE CONTEXT AT THIS POINT
 
@@ -96,7 +96,7 @@ func UserExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *h
 		return false, nil
 	}
 
-	ctx := httputils.SetSiteDBAndModelAndCreateUserContext(r.Context(), controlDB, userDB, userGetModel, subdomain)
+	ctx := httputils.SetSiteDBAndModelAndCreateSiteContext(r.Context(), controlDB, userDB, userGetModel, subdomain)
 
 	return true, ctx
 }

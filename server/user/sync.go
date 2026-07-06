@@ -26,7 +26,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		acceptType := httputils.GetAcceptType(r)
-		userContext := httputils.GetUserContext(r.Context())
+		siteContext := httputils.GetSiteContext(r.Context())
 
 		ctx := r.Context()
 
@@ -37,7 +37,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, userContext.Subdomain)
+		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, siteContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -83,7 +83,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		if acceptType == httputils.AcceptTypeHTML {
 			err = user_templ.SyncSettings(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", userContext.Subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", siteContext.Subdomain)
 				return
 			}
 			return
@@ -92,7 +92,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		if acceptType == httputils.AcceptTypeHTMX {
 			err = user_templ.SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
 			if err != nil {
-				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", userContext.Subdomain)
+				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
 			}
 			return
@@ -113,7 +113,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		acceptType := httputils.GetAcceptType(r)
-		userContext := httputils.GetUserContext(r.Context())
+		siteContext := httputils.GetSiteContext(r.Context())
 
 		ctx := r.Context()
 
@@ -123,7 +123,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, userContext.Subdomain)
+		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, siteContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -132,9 +132,9 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 		}
 
 		if syncSourceType == consts.SyncSourceTypeNightscout {
-			err = saveNightScoutSettings(ctx, userContext.Subdomain, controlDB, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
+			err = saveNightScoutSettings(ctx, siteContext.Subdomain, controlDB, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
 		} else {
-			err = saveDexcomSettings(ctx, userContext.Subdomain, controlDB, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
+			err = saveDexcomSettings(ctx, siteContext.Subdomain, controlDB, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
 		}
 
 		if err != nil {
@@ -168,7 +168,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
-		userContext := httputils.GetUserContext(r.Context())
+		siteContext := httputils.GetSiteContext(r.Context())
 
 		// 1. Extract ID from URL path
 		typeStr := chi.URLParam(r, "type")
@@ -184,7 +184,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 		}
 
 		err = controlDB.Queries.DeleteSyncSource(r.Context(), control.DeleteSyncSourceParams{
-			Subdomain: userContext.Subdomain,
+			Subdomain: siteContext.Subdomain,
 			Type:      type_,
 		})
 		if err != nil {
