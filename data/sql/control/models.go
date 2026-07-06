@@ -2,7 +2,7 @@ package control
 
 import "time"
 
-func (u *User) LastSeenAtDate() *time.Time {
+func (u *SiteIdentity) LastSeenAtDate() *time.Time {
 	if u.LastSeenAt == nil {
 		return nil
 	}
@@ -10,7 +10,23 @@ func (u *User) LastSeenAtDate() *time.Time {
 	return &t
 }
 
-func (u *User) LastWriteAtDate() *time.Time {
+func (u *SiteIdentity) LastWriteAtDate() *time.Time {
+	if u.LastWriteAt == nil {
+		return nil
+	}
+	t := time.UnixMilli(*u.LastWriteAt)
+	return &t
+}
+
+func (u *Site) LastSeenAtDate() *time.Time {
+	if u.LastSeenAt == nil {
+		return nil
+	}
+	t := time.UnixMilli(*u.LastSeenAt)
+	return &t
+}
+
+func (u *Site) LastWriteAtDate() *time.Time {
 	if u.LastWriteAt == nil {
 		return nil
 	}

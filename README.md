@@ -9,12 +9,13 @@
     1. Deploy to a fly.io dev/staging environment
     1. Connect actual data and do some fun perf testing
     1. Cleanup overloaded terms User/Device/Identity
-    1. 
+    1. ControlDB should have 100% of info to recreate site (identities, settings)
+    1. Limit number of identities the user can create! Deleting will also need to delete identities. Or maybe just delete ones we havnt seen in a while.
 
 1. Timezones for profiles, user settings, just to make sure that when a treatment is logged we know whne against the profile it actually happened
 1. error reporting with sentry, 
 1. check that users dont get error responses traces!
-5. Write an endpoint to add NightscoutURL and/OR dexcom login/share creds for a user
+5. Write API endpoints for sync and identity
 1. Write data sync logic and protections, punishing bad servers...
 1. Archive has a problem where they are deleting files from the db not removing from control
 1. archivied_at in the user table in control.db

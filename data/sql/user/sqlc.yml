@@ -12,8 +12,7 @@ sql:
         out: "."
         options:
           package: "user"
-          imports:
-            - "nighttroop.t1d.nz/utils/consts"
+          imports: []
     gen:
       go:
         package: "user"
@@ -37,11 +36,3 @@ overrides:
   go:
     rename:
       bolu: Bolus
-    overrides:
-      - column: "identities.role"
-        go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
-          type: "IdentityRole"
-      - column: "identities.enabled"
-        go_type:
-          type: "bool"

@@ -45,9 +45,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allGlucoseReadingsStmt, err = db.PrepareContext(ctx, allGlucoseReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query AllGlucoseReadings: %w", err)
 	}
-	if q.allIdentitiesStmt, err = db.PrepareContext(ctx, allIdentities); err != nil {
-		return nil, fmt.Errorf("error preparing query AllIdentities: %w", err)
-	}
 	if q.allNotesStmt, err = db.PrepareContext(ctx, allNotes); err != nil {
 		return nil, fmt.Errorf("error preparing query AllNotes: %w", err)
 	}
@@ -80,9 +77,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.createGlucoseReadingStmt, err = db.PrepareContext(ctx, createGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateGlucoseReading: %w", err)
-	}
-	if q.createIdentityStmt, err = db.PrepareContext(ctx, createIdentity); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateIdentity: %w", err)
 	}
 	if q.createNoteStmt, err = db.PrepareContext(ctx, createNote); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateNote: %w", err)
@@ -126,9 +120,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getGlucoseReadingStmt, err = db.PrepareContext(ctx, getGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query GetGlucoseReading: %w", err)
 	}
-	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
-		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
-	}
 	if q.getNoteStmt, err = db.PrepareContext(ctx, getNote); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNote: %w", err)
 	}
@@ -156,9 +147,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateGlucoseReadingStmt, err = db.PrepareContext(ctx, updateGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateGlucoseReading: %w", err)
 	}
-	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
-	}
 	if q.updateNoteStmt, err = db.PrepareContext(ctx, updateNote); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateNote: %w", err)
 	}
@@ -167,12 +155,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateTempTargetStmt, err = db.PrepareContext(ctx, updateTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempTarget: %w", err)
-	}
-	if q.getSettingFromDBStmt, err = db.PrepareContext(ctx, getSettingFromDB); err != nil {
-		return nil, fmt.Errorf("error preparing query getSettingFromDB: %w", err)
-	}
-	if q.upsertSettingToDBStmt, err = db.PrepareContext(ctx, upsertSettingToDB); err != nil {
-		return nil, fmt.Errorf("error preparing query upsertSettingToDB: %w", err)
 	}
 	return &q, nil
 }
@@ -212,11 +194,6 @@ func (q *Queries) Close() error {
 	if q.allGlucoseReadingsStmt != nil {
 		if cerr := q.allGlucoseReadingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allGlucoseReadingsStmt: %w", cerr)
-		}
-	}
-	if q.allIdentitiesStmt != nil {
-		if cerr := q.allIdentitiesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allIdentitiesStmt: %w", cerr)
 		}
 	}
 	if q.allNotesStmt != nil {
@@ -272,11 +249,6 @@ func (q *Queries) Close() error {
 	if q.createGlucoseReadingStmt != nil {
 		if cerr := q.createGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createGlucoseReadingStmt: %w", cerr)
-		}
-	}
-	if q.createIdentityStmt != nil {
-		if cerr := q.createIdentityStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createIdentityStmt: %w", cerr)
 		}
 	}
 	if q.createNoteStmt != nil {
@@ -349,11 +321,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getGlucoseReadingStmt: %w", cerr)
 		}
 	}
-	if q.getIdentityStmt != nil {
-		if cerr := q.getIdentityStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
-		}
-	}
 	if q.getNoteStmt != nil {
 		if cerr := q.getNoteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getNoteStmt: %w", cerr)
@@ -399,11 +366,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateGlucoseReadingStmt: %w", cerr)
 		}
 	}
-	if q.updateIdentityDateFlagsStmt != nil {
-		if cerr := q.updateIdentityDateFlagsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
-		}
-	}
 	if q.updateNoteStmt != nil {
 		if cerr := q.updateNoteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateNoteStmt: %w", cerr)
@@ -417,16 +379,6 @@ func (q *Queries) Close() error {
 	if q.updateTempTargetStmt != nil {
 		if cerr := q.updateTempTargetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateTempTargetStmt: %w", cerr)
-		}
-	}
-	if q.getSettingFromDBStmt != nil {
-		if cerr := q.getSettingFromDBStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSettingFromDBStmt: %w", cerr)
-		}
-	}
-	if q.upsertSettingToDBStmt != nil {
-		if cerr := q.upsertSettingToDBStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing upsertSettingToDBStmt: %w", cerr)
 		}
 	}
 	return err
@@ -475,7 +427,6 @@ type Queries struct {
 	allEventsStmt                               *sql.Stmt
 	allFoodsStmt                                *sql.Stmt
 	allGlucoseReadingsStmt                      *sql.Stmt
-	allIdentitiesStmt                           *sql.Stmt
 	allNotesStmt                                *sql.Stmt
 	allProfilesStmt                             *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
@@ -487,7 +438,6 @@ type Queries struct {
 	createEventStmt                             *sql.Stmt
 	createFoodStmt                              *sql.Stmt
 	createGlucoseReadingStmt                    *sql.Stmt
-	createIdentityStmt                          *sql.Stmt
 	createNoteStmt                              *sql.Stmt
 	createProfileStmt                           *sql.Stmt
 	createTempBasalStmt                         *sql.Stmt
@@ -502,7 +452,6 @@ type Queries struct {
 	getDeviceStatusStmt                         *sql.Stmt
 	getFoodStmt                                 *sql.Stmt
 	getGlucoseReadingStmt                       *sql.Stmt
-	getIdentityStmt                             *sql.Stmt
 	getNoteStmt                                 *sql.Stmt
 	getProfileStmt                              *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
@@ -512,12 +461,9 @@ type Queries struct {
 	updateBolusStmt                             *sql.Stmt
 	updateCarbStmt                              *sql.Stmt
 	updateGlucoseReadingStmt                    *sql.Stmt
-	updateIdentityDateFlagsStmt                 *sql.Stmt
 	updateNoteStmt                              *sql.Stmt
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
-	getSettingFromDBStmt                        *sql.Stmt
-	upsertSettingToDBStmt                       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -531,7 +477,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allEventsStmt:                            q.allEventsStmt,
 		allFoodsStmt:                             q.allFoodsStmt,
 		allGlucoseReadingsStmt:                   q.allGlucoseReadingsStmt,
-		allIdentitiesStmt:                        q.allIdentitiesStmt,
 		allNotesStmt:                             q.allNotesStmt,
 		allProfilesStmt:                          q.allProfilesStmt,
 		allTempBasalsStmt:                        q.allTempBasalsStmt,
@@ -543,7 +488,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createEventStmt:                          q.createEventStmt,
 		createFoodStmt:                           q.createFoodStmt,
 		createGlucoseReadingStmt:                 q.createGlucoseReadingStmt,
-		createIdentityStmt:                       q.createIdentityStmt,
 		createNoteStmt:                           q.createNoteStmt,
 		createProfileStmt:                        q.createProfileStmt,
 		createTempBasalStmt:                      q.createTempBasalStmt,
@@ -558,21 +502,17 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getDeviceStatusStmt:                      q.getDeviceStatusStmt,
 		getFoodStmt:                              q.getFoodStmt,
 		getGlucoseReadingStmt:                    q.getGlucoseReadingStmt,
-		getIdentityStmt:                          q.getIdentityStmt,
 		getNoteStmt:                              q.getNoteStmt,
 		getProfileStmt:                           q.getProfileStmt,
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
 		searchWithDefaultSortGlucoseReadingsStmt: q.searchWithDefaultSortGlucoseReadingsStmt,
 		searchWithNonDefaultSortGlucoseReadingsStmt: q.searchWithNonDefaultSortGlucoseReadingsStmt,
-		updateBolusStmt:             q.updateBolusStmt,
-		updateCarbStmt:              q.updateCarbStmt,
-		updateGlucoseReadingStmt:    q.updateGlucoseReadingStmt,
-		updateIdentityDateFlagsStmt: q.updateIdentityDateFlagsStmt,
-		updateNoteStmt:              q.updateNoteStmt,
-		updateTempBasalStmt:         q.updateTempBasalStmt,
-		updateTempTargetStmt:        q.updateTempTargetStmt,
-		getSettingFromDBStmt:        q.getSettingFromDBStmt,
-		upsertSettingToDBStmt:       q.upsertSettingToDBStmt,
+		updateBolusStmt:          q.updateBolusStmt,
+		updateCarbStmt:           q.updateCarbStmt,
+		updateGlucoseReadingStmt: q.updateGlucoseReadingStmt,
+		updateNoteStmt:           q.updateNoteStmt,
+		updateTempBasalStmt:      q.updateTempBasalStmt,
+		updateTempTargetStmt:     q.updateTempTargetStmt,
 	}
 }

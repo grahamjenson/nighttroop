@@ -37,7 +37,7 @@ CREATE TABLE job_stats_daily (
     duration_sum REAL NOT NULL DEFAULT 0,
     duration_squared_sum REAL NOT NULL DEFAULT 0,
 
-    errors TEXT NOT NULL DEFAULT '[]',
+    errors TEXT  NOT  NULL  DEFAULT  "[]" CHECK(length(errors) <= 1024),
 
     -- liteq jobs use epoch in seconds
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),

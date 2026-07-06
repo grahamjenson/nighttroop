@@ -1,9 +1,7 @@
 
 package user
 
-import (
-	"nighttroop.t1d.nz/utils/consts"
-)
+
 // GetID returns the ID value.
 func (m *Activity) GetID() string {
 	return m.ID
@@ -550,76 +548,6 @@ func (m *GlucoseReading) GetCreatedByIdentityID() int64 {
 }
 
 // GetID returns the ID value.
-func (m *Identity) GetID() int64 {
-	return m.ID
-}
-
-// GetName returns the Name value.
-func (m *Identity) GetName() string {
-	return m.Name
-}
-
-// GetPassword returns the Password value.
-func (m *Identity) GetPassword() string {
-	return m.Password
-}
-
-// GetTotpSecret returns the TotpSecret value.
-func (m *Identity) GetTotpSecret() string {
-	return m.TotpSecret
-}
-
-// GetRole returns the Role value.
-func (m *Identity) GetRole() consts.IdentityRole {
-	return m.Role
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *Identity) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m *Identity) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m *Identity) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Identity) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *Identity) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Identity) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *Identity) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *Identity) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetEnabled returns the Enabled value.
-func (m *Identity) GetEnabled() bool {
-	return m.Enabled
-}
-
-// GetID returns the ID value.
 func (m *Note) GetID() string {
 	return m.ID
 }
@@ -812,31 +740,6 @@ func (m *Profile) GetCreatedByIdentityName() string {
 // GetCreatedByIdentityID returns the CreatedByIdentityID value.
 func (m *Profile) GetCreatedByIdentityID() int64 {
 	return m.CreatedByIdentityID
-}
-
-// GetID returns the ID value.
-func (m *Setting) GetID() string {
-	return m.ID
-}
-
-// GetValue returns the Value value.
-func (m *Setting) GetValue() string {
-	return m.Value
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *Setting) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *Setting) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m *Setting) GetUpdatedAt() int64 {
-	return m.UpdatedAt
 }
 
 // GetName returns the Name value.

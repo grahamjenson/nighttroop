@@ -170,27 +170,6 @@ CREATE TABLE glucose_readings (
 
 );
 
-CREATE TABLE identities (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
-    password TEXT NOT NULL CHECK(length(password) <= 128),
-    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
-    role TEXT NOT NULL CHECK(length(role) <= 32),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    last_seen_at INTEGER,
-    last_write_at INTEGER,
-    
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-
-    created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
-
-    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
-    enabled INTEGER NOT NULL DEFAULT 1
-);
-
 CREATE TABLE note (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     content TEXT CHECK(length(content) <= 1024) NOT NULL,
@@ -247,15 +226,6 @@ CREATE TABLE profile (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-);
-
-CREATE TABLE settings (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 64),
-    value TEXT NOT NULL CHECK(length(value) <= 8192),
-    
-    deleted_at INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 );
 
 CREATE TABLE sqlite_sequence(name,seq);

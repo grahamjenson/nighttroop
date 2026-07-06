@@ -3,7 +3,7 @@
 -- name: CreateSyncReportsForAllSyncSources :exec
 INSERT OR IGNORE INTO sync_source_reports (unique_hash)
 SELECT us.unique_hash
-FROM user_sync_sources us
+FROM site_sync_sources us
 WHERE NOT EXISTS (
     SELECT 1
     FROM sync_source_reports sr
@@ -11,7 +11,7 @@ WHERE NOT EXISTS (
 );
 
 
--- return all sync reports that have an associated enabled user_sync_souce
+-- return all sync reports that have an associated enabled site_sync_source
 -- AND have last_attempted_sync is more than sync_interval_seconds ago or last_attempted_sync is null (never attempted)
 
 -- name: GetSyncReportsToRun :many
@@ -19,9 +19,9 @@ SELECT
     ssr.unique_hash,
     CAST(MIN(us.type) AS TEXT) AS type
 FROM sync_source_reports ssr
-JOIN user_sync_sources us
+JOIN site_sync_sources us
     ON us.unique_hash = ssr.unique_hash
-JOIN users u
+JOIN sites u
     ON u.subdomain = us.subdomain
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL

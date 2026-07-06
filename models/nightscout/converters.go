@@ -340,12 +340,7 @@ type MapConverter interface {
 	// SETTINGS
 	////////
 
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Type
-	// goverter:map ID Identifier
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	DBModelToSetting(source *user.Setting) Setting
+	// Doing this manually for control
 }
 
 // //

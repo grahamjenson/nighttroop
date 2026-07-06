@@ -4,10 +4,6 @@
 
 package user
 
-import (
-	"nighttroop.t1d.nz/utils/consts"
-)
-
 type Activity struct {
 	ID                    string
 	Name                  *string
@@ -138,23 +134,6 @@ type GlucoseReading struct {
 	CreatedByIdentityID   int64
 }
 
-type Identity struct {
-	ID                    int64
-	Name                  string
-	Password              string
-	TotpSecret            string
-	Role                  consts.IdentityRole
-	CreatedAt             int64
-	LastSeenAt            *int64
-	LastWriteAt           *int64
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	CreatedByIdentityID   int64
-	CreatedByIdentityName string
-	DeletedAt             *int64
-	Enabled               bool
-}
-
 type Note struct {
 	ID                    string
 	Content               string
@@ -198,14 +177,6 @@ type Profile struct {
 	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
 	CreatedByIdentityID      int64
-}
-
-type Setting struct {
-	ID        string
-	Value     string
-	DeletedAt *int64
-	CreatedAt int64
-	UpdatedAt int64
 }
 
 type SqliteSequence struct {

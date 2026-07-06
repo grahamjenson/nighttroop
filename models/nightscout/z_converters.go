@@ -276,20 +276,6 @@ func DBModelToProfile(source *user.Profile) Profile {
 	}
 	return nightscoutProfile
 }
-func DBModelToSetting(source *user.Setting) Setting {
-	var nightscoutSetting Setting
-	if source != nil {
-		pNightscoutIdentifierString := IdentifierString((*source).ID)
-		nightscoutSetting.Identifier = &pNightscoutIdentifierString
-		pNightscoutShortString := ShortString((*source).Value)
-		nightscoutSetting.Value = &pNightscoutShortString
-		pNightscoutDateInt := DateInt((*source).CreatedAt)
-		nightscoutSetting.SrvCreated = &pNightscoutDateInt
-		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
-		nightscoutSetting.SrvModified = &pNightscoutDateInt2
-	}
-	return nightscoutSetting
-}
 func DeviceStatusToCreate(source DeviceStatus, context CreateContext) user.CreateDeviceStatusParams {
 	var userCreateDeviceStatusParams user.CreateDeviceStatusParams
 	userCreateDeviceStatusParams.ID = AssignID(source.Date, context)

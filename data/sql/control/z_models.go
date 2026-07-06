@@ -62,6 +62,58 @@ type JobStatsDaily struct {
 	UpdatedAt          int64
 }
 
+type Site struct {
+	ID               int64
+	Subdomain        string
+	Batch            string
+	BackupKeyHash    string
+	CreatedAt        int64
+	MaxDbSizeKbLimit *int64
+	LastSeenAt       *int64
+	LastWriteAt      *int64
+	DeletedAt        *int64
+}
+
+type SiteIdentity struct {
+	ID                    int64
+	Subdomain             string
+	Name                  string
+	Password              string
+	TotpSecret            string
+	Role                  consts.IdentityRole
+	CreatedAt             int64
+	LastSeenAt            *int64
+	LastWriteAt           *int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
+	DeletedAt             *int64
+	Enabled               bool
+}
+
+type SiteSetting struct {
+	Subdomain string
+	Key       string
+	Value     string
+	DeletedAt *int64
+	CreatedAt int64
+	UpdatedAt int64
+}
+
+type SiteSyncSource struct {
+	ID            int64
+	Subdomain     string
+	Type          consts.SyncSourceType
+	UrlOrUsername string
+	Password      string
+	DexcomRegion  consts.DexcomRegion
+	CreatedAt     int64
+	UpdatedAt     int64
+	Enabled       bool
+	UniqueHash    string
+}
+
 type SqliteSequence struct {
 	Name interface{}
 	Seq  interface{}
@@ -87,29 +139,4 @@ type SyncSourceReport struct {
 	SuccessEma                 *float64
 	FailureEma                 *float64
 	LastSyncDuration           *int64
-}
-
-type User struct {
-	ID               int64
-	Subdomain        string
-	Batch            string
-	BackupKeyHash    string
-	CreatedAt        int64
-	MaxDbSizeKbLimit *int64
-	LastSeenAt       *int64
-	LastWriteAt      *int64
-	DeletedAt        *int64
-}
-
-type UserSyncSource struct {
-	ID            int64
-	Subdomain     string
-	Type          consts.SyncSourceType
-	UrlOrUsername string
-	Password      string
-	DexcomRegion  consts.DexcomRegion
-	CreatedAt     int64
-	UpdatedAt     int64
-	Enabled       bool
-	UniqueHash    string
 }

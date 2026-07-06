@@ -15,7 +15,6 @@ CREATE TABLE admins (
     totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
     role TEXT NOT NULL CHECK(role IN ('admin', 'read')), -- for future use, can have different levels of admin access
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
     last_seen_at INTEGER
 );
 
@@ -45,7 +44,7 @@ CREATE TABLE job_stats_daily (
     duration_sum REAL NOT NULL DEFAULT 0,
     duration_squared_sum REAL NOT NULL DEFAULT 0,
 
-    errors TEXT NOT NULL DEFAULT '[]',
+    errors TEXT  NOT  NULL  DEFAULT  "[]" CHECK(length(errors) <= 1024),
 
     -- liteq jobs use epoch in seconds
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
@@ -70,6 +69,79 @@ CREATE TABLE jobs (
     PRIMARY KEY (id)
 );
 
+CREATE TABLE site_identities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
+    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
+    password TEXT NOT NULL CHECK(length(password) <= 128),
+    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
+    role TEXT NOT NULL CHECK(length(role) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    last_seen_at INTEGER,
+    last_write_at INTEGER,
+    
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+
+    created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+
+    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
+    enabled INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE site_settings (
+    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
+    key        TEXT NOT NULL CHECK(length(key) <= 64),
+    value      TEXT NOT NULL CHECK(length(value) <= 8192),
+
+    deleted_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+    PRIMARY KEY (subdomain, key)
+);
+
+CREATE TABLE site_sync_sources (
+    -- Nightscout/Dexcom
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32), -- only for nightscout, dexcom can leave null
+    type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
+
+    url_or_username TEXT NOT NULL CHECK(length(url_or_username) <= 256), -- url for nightscout, username for dexcom
+    password TEXT NOT NULL CHECK(length(password) <= 256), -- or ns token
+    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
+
+    unique_hash TEXT NOT NULL CHECK(length(unique_hash) <= 512), 
+
+    -- Unique contraint of subdomain and type
+    UNIQUE(subdomain, type)
+);
+
+CREATE TABLE sites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subdomain TEXT UNIQUE NOT NULL CHECK(length(subdomain) <= 32),
+    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL NOT NULL,
+    
+    backup_key_hash TEXT NOT NULL CHECK(length(backup_key_hash) <= 64), 
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+
+    max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
+    
+
+    -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
+    last_seen_at INTEGER,
+    last_write_at INTEGER,
+    deleted_at INTEGER
+);
+
 CREATE TABLE sqlite_sequence(name,seq);
 
 CREATE TABLE sync_source_reports (
@@ -83,8 +155,6 @@ CREATE TABLE sync_source_reports (
     -- Frequency of syncs used to punish bad servers or behaviour
     sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default' CHECK(length(sync_interval_seconds_reason) <= 256), -- reason for the current sync interval, can be default, user_request, error_response, etc. Used to determine if we should change the sync interval after a sync attempt
     sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
-
-
 
     -- Timing of syncs
     last_attempted_sync INTEGER,
@@ -110,44 +180,5 @@ CREATE TABLE sync_source_reports (
     
     -- Duration of last sync in ms
     last_sync_duration INTEGER -- 1 for success, 0 for failure, null for never tried, used for quick checks without having to look at timestamps 
-);
-
-CREATE TABLE user_sync_sources (
-    -- Nightscout/Dexcom
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32), -- only for nightscout, dexcom can leave null
-    type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
-
-    url_or_username TEXT NOT NULL CHECK(length(url_or_username) <= 256), -- url for nightscout, username for dexcom
-    password TEXT NOT NULL CHECK(length(password) <= 256), -- or ns token
-    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
-
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
-
-    unique_hash TEXT NOT NULL CHECK(length(unique_hash) <= 512), 
-
-    -- Unique contraint of subdomain and type
-    UNIQUE(subdomain, type)
-);
-
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT UNIQUE NOT NULL CHECK(length(subdomain) <= 32),
-    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL NOT NULL,
-    
-    backup_key_hash TEXT NOT NULL CHECK(length(backup_key_hash) <= 64), 
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-
-    max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
-    
-
-    -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
-    last_seen_at INTEGER,
-    last_write_at INTEGER,
-    deleted_at INTEGER
 );
 

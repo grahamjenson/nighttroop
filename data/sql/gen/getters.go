@@ -33,9 +33,26 @@ var TableNameMap = map[string]string{
 var AttributeNameMap = map[string]string{}
 
 var TypeLookupMap = map[string]map[string]string{
-	"Identity": {
-		"role":    "consts.IdentityRole",
-		"enabled": "bool",
+	"SiteIdentity": {
+		"Role":    "consts.IdentityRole",
+		"Enabled": "bool",
+	},
+	"Job": {
+		"Errors": "errors.ErrorList",
+	},
+	"JobStatsDaily": {
+		"Errors": "errors.ErrorList",
+	},
+	"Admin": {
+		"Role": "consts.AdminRole",
+	},
+	"SiteSyncSource": {
+		"Type":         "consts.SyncSourceType",
+		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
+	},
+	"SyncSourceReport": {
+		"PreviousSyncErrors": "errors.ErrorList",
 	},
 }
 
@@ -59,13 +76,20 @@ func run() error {
 		Files: make([]*plugin.File, 0),
 	}
 
+	importsString := ""
+	if len(opts.Imports) > 0 {
+		importsString = "import (\n"
+		for _, imp := range opts.Imports {
+			importsString += fmt.Sprintf("\t\"%s\"\n", imp)
+		}
+		importsString += ")\n\n"
+	}
+
 	totalContent := fmt.Sprintf(`
 package %s
 
-import (
-	"%s"
-)
-`, opts.PackageName, strings.Join(opts.Imports, "\"\n\t\""))
+%s
+`, opts.PackageName, importsString)
 
 	// Iterate over all available schemas (SQLite often maps to empty or "main")
 	for _, schema := range req.Catalog.Schemas {
@@ -126,7 +150,7 @@ var goInitialisms = map[string]bool{
 	"https": true, "id": true, "ip": true, "lhs": true,
 	"qps": true, "ram": true, "rhs": true, "rpc": true, "sla": true,
 	"smtp": true, "sql": true, "ssh": true, "tls": true, "ttl": true,
-	"ui": true, "uid": true, "uuid": true, "uri": true, "url": true,
+	"ui": true, "uid": true, "uuid": true, "uri": true,
 	"utf8": true, "vm": true, "xml": true, "xmpp": true, "xsrf": true,
 	"xss": true,
 }
@@ -161,7 +185,7 @@ func generateGetters(modelName string, columns []*plugin.Column) string {
 
 	for _, col := range columns {
 		fieldName := attributeNameLookup(col.Name)
-		fieldType := getSQLiteGoType(col, modelName)
+		fieldType := getSQLiteGoType(col, modelName, fieldName)
 
 		sb.WriteString(fmt.Sprintf("// Get%s returns the %s value.\n", fieldName, fieldName))
 		sb.WriteString(fmt.Sprintf("func (m *%s) Get%s() %s {\n", modelName, fieldName, fieldType))
@@ -172,16 +196,17 @@ func generateGetters(modelName string, columns []*plugin.Column) string {
 	return sb.String()
 }
 
-func typeLookup(schemaName, columnName string) string {
+func typeLookup(schemaName, fieldName string) string {
+
 	if schemaMap, ok := TypeLookupMap[schemaName]; ok {
-		if goType, ok := schemaMap[columnName]; ok {
+		if goType, ok := schemaMap[fieldName]; ok {
 			return goType
 		}
 	}
 	return ""
 }
-func getSQLiteGoType(col *plugin.Column, modelName string) string {
-	if goType := typeLookup(modelName, col.Name); goType != "" {
+func getSQLiteGoType(col *plugin.Column, modelName, fieldName string) string {
+	if goType := typeLookup(modelName, fieldName); goType != "" {
 		return goType
 	}
 

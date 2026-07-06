@@ -2,15 +2,16 @@
 -- CREATE 
 --------
 
--- name: CreateIdentity :exec
-INSERT INTO identities (
+-- name: CreateSiteIdentity :exec
+INSERT INTO site_identities (
+    subdomain,
     name,
     password,
     totp_secret,
     role,
     created_by_identity_id,
     created_by_identity_name
-) VALUES (?, ?, ?, ?, ?, ?);
+) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 
 --------
@@ -18,12 +19,12 @@ INSERT INTO identities (
 --------
 
 
--- name: AllIdentities :many
-SELECT * FROM identities ORDER BY created_at DESC;
+-- name: AllSiteIdentities :many
+SELECT * FROM site_identities WHERE subdomain = ? ORDER BY created_at DESC;
 
 
--- name: GetIdentity :one
-SELECT * FROM identities where name = ? LIMIT 1;
+-- name: GetSiteIdentity :one
+SELECT * FROM site_identities WHERE subdomain = ? AND name = ? LIMIT 1;
 
 
 --------
@@ -31,7 +32,7 @@ SELECT * FROM identities where name = ? LIMIT 1;
 --------
 
 -- name: UpdateIdentityDateFlags :exec
-UPDATE identities
+UPDATE site_identities
 SET
     last_seen_at = COALESCE(?, last_seen_at),
     last_write_at = COALESCE(?, last_write_at)
