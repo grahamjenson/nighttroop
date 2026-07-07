@@ -12,7 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 
-	"nighttroop.t1d.nz/server/components/user_templ"
+	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/errors"
@@ -41,7 +41,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := user_templ.Login().Render(r.Context(), w)
+		err := site_templ.Login().Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, "Template Error", http.StatusInternalServerError)
 			return
@@ -109,7 +109,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			err = user_templ.LoginTOTP().Render(r.Context(), w)
+			err = site_templ.LoginTOTP().Render(r.Context(), w)
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, err)
 				return

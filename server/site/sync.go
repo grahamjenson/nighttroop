@@ -13,7 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/components/shared_templ"
-	"nighttroop.t1d.nz/server/components/user_templ"
+	"nighttroop.t1d.nz/server/components/site_templ"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -81,7 +81,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
-			err = user_templ.SyncSettings(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
+			err = site_templ.SyncSettings(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", siteContext.Subdomain)
 				return
@@ -90,7 +90,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = user_templ.SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
+			err = site_templ.SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", siteContext.Subdomain)
 				return

@@ -73,7 +73,7 @@ func CreateSite() templ.Component {
 				Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 				FullWidth: true,
 				Attributes: templ.Attributes{
-					"hx-post":         "/user",
+					"hx-post":         "/site",
 					"hx-target":       "#panel-content",
 					"hx-swap":         "innerHTML",
 					"hx-target-error": "#error-container",
