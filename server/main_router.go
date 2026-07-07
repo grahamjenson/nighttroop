@@ -18,7 +18,7 @@ import (
 func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Handler {
 
 	controlRouter := NewControlRouter(controlDB, config)
-	userRouter := NewUserRouter(controlDB, config)
+	siteRouter := NewSiteRouter(controlDB, config)
 	public := NewPublicRouter(controlDB, config)
 	nightscoutRouter := nightscout_api.NewNightscoutRouter(controlDB, config)
 
@@ -65,7 +65,7 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 				return
 			}
 			// so <siteid>.ns.domain routes to the nightscout compatible API
-			if exists, ctx := UserExistsAndWriteToContext(controlDB, userSubdomain, r); exists {
+			if exists, ctx := SiteExistsAndWriteToContext(controlDB, userSubdomain, r); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for nightscout subdomain", "subdomain", subdomain)
@@ -75,8 +75,8 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			// Check to see if in memory map
 			// SHOULD ATTACH USER DB AND MODEL TO THE CONTEXT AT THIS POINT
 
-			if exists, ctx := UserExistsAndWriteToContext(controlDB, subdomain, r); exists {
-				userRouter.ServeHTTP(w, r.WithContext(ctx))
+			if exists, ctx := SiteExistsAndWriteToContext(controlDB, subdomain, r); exists {
+				siteRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for subdomain", "subdomain", subdomain)
 				http.NotFound(w, r)
@@ -89,14 +89,14 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 
 }
 
-func UserExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *http.Request) (bool, context.Context) {
-	userDB, userGetModel, err := controlDB.GetUser(subdomain)
+func SiteExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *http.Request) (bool, context.Context) {
+	siteDB, siteModel, err := controlDB.GetSite(subdomain)
 	if err != nil {
-		slog.Error("Error getting user for subdomain", "subdomain", subdomain, "error", err)
+		slog.Error("Error getting site for subdomain", "subdomain", subdomain, "error", err)
 		return false, nil
 	}
 
-	ctx := httputils.SetSiteDBAndModelAndCreateSiteContext(r.Context(), controlDB, userDB, userGetModel, subdomain)
+	ctx := httputils.SetSiteDBAndModelAndCreateSiteContext(r.Context(), controlDB, siteDB, siteModel, subdomain)
 
 	return true, ctx
 }

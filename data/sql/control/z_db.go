@@ -75,14 +75,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAdminStmt, err = db.PrepareContext(ctx, getAdmin); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAdmin: %w", err)
 	}
+	if q.getAllSiteSyncSourcesForSiteStmt, err = db.PrepareContext(ctx, getAllSiteSyncSourcesForSite); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllSiteSyncSourcesForSite: %w", err)
+	}
+	if q.getAllSiteSyncSourcesForUniqueHashStmt, err = db.PrepareContext(ctx, getAllSiteSyncSourcesForUniqueHash); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllSiteSyncSourcesForUniqueHash: %w", err)
+	}
 	if q.getAllSitesStmt, err = db.PrepareContext(ctx, getAllSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSites: %w", err)
-	}
-	if q.getAllUserSyncSourcesForUniqueHashStmt, err = db.PrepareContext(ctx, getAllUserSyncSourcesForUniqueHash); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAllUserSyncSourcesForUniqueHash: %w", err)
-	}
-	if q.getAllUserSyncSourcesForUserStmt, err = db.PrepareContext(ctx, getAllUserSyncSourcesForUser); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAllUserSyncSourcesForUser: %w", err)
 	}
 	if q.getBatchSitesStmt, err = db.PrepareContext(ctx, getBatchSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBatchSites: %w", err)
@@ -255,19 +255,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAdminStmt: %w", cerr)
 		}
 	}
+	if q.getAllSiteSyncSourcesForSiteStmt != nil {
+		if cerr := q.getAllSiteSyncSourcesForSiteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllSiteSyncSourcesForSiteStmt: %w", cerr)
+		}
+	}
+	if q.getAllSiteSyncSourcesForUniqueHashStmt != nil {
+		if cerr := q.getAllSiteSyncSourcesForUniqueHashStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllSiteSyncSourcesForUniqueHashStmt: %w", cerr)
+		}
+	}
 	if q.getAllSitesStmt != nil {
 		if cerr := q.getAllSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAllSitesStmt: %w", cerr)
-		}
-	}
-	if q.getAllUserSyncSourcesForUniqueHashStmt != nil {
-		if cerr := q.getAllUserSyncSourcesForUniqueHashStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAllUserSyncSourcesForUniqueHashStmt: %w", cerr)
-		}
-	}
-	if q.getAllUserSyncSourcesForUserStmt != nil {
-		if cerr := q.getAllUserSyncSourcesForUserStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAllUserSyncSourcesForUserStmt: %w", cerr)
 		}
 	}
 	if q.getBatchSitesStmt != nil {
@@ -461,9 +461,9 @@ type Queries struct {
 	failJobStmt                                   *sql.Stmt
 	findJobStmt                                   *sql.Stmt
 	getAdminStmt                                  *sql.Stmt
+	getAllSiteSyncSourcesForSiteStmt              *sql.Stmt
+	getAllSiteSyncSourcesForUniqueHashStmt        *sql.Stmt
 	getAllSitesStmt                               *sql.Stmt
-	getAllUserSyncSourcesForUniqueHashStmt        *sql.Stmt
-	getAllUserSyncSourcesForUserStmt              *sql.Stmt
 	getBatchSitesStmt                             *sql.Stmt
 	getInactiveSitesStmt                          *sql.Stmt
 	getJobsToBeSummarisedStmt                     *sql.Stmt
@@ -514,9 +514,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		failJobStmt:                                   q.failJobStmt,
 		findJobStmt:                                   q.findJobStmt,
 		getAdminStmt:                                  q.getAdminStmt,
+		getAllSiteSyncSourcesForSiteStmt:              q.getAllSiteSyncSourcesForSiteStmt,
+		getAllSiteSyncSourcesForUniqueHashStmt:        q.getAllSiteSyncSourcesForUniqueHashStmt,
 		getAllSitesStmt:                               q.getAllSitesStmt,
-		getAllUserSyncSourcesForUniqueHashStmt:        q.getAllUserSyncSourcesForUniqueHashStmt,
-		getAllUserSyncSourcesForUserStmt:              q.getAllUserSyncSourcesForUserStmt,
 		getBatchSitesStmt:                             q.getBatchSitesStmt,
 		getInactiveSitesStmt:                          q.getInactiveSitesStmt,
 		getJobsToBeSummarisedStmt:                     q.getJobsToBeSummarisedStmt,

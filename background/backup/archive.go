@@ -18,7 +18,7 @@ func (b *BackupJobManager) ArchiveInactiveUsers() error {
 	}
 
 	// Just delete these users without an archive, as they have not been used in so many minutes
-	err = b.controlDB.DeleteUsers(deleteList)
+	err = b.controlDB.DeleteSites(deleteList)
 	if err != nil {
 		slog.Error("Failed to delete user without archiving", "error", err, "users", deleteList)
 	}
@@ -35,7 +35,7 @@ func (b *BackupJobManager) ArchiveInactiveUsers() error {
 	}
 
 	// Delete the users from the DB, and their user DB files (including WAL and BACKUP)
-	err = b.controlDB.DeleteUsers(removeList)
+	err = b.controlDB.DeleteSites(removeList)
 	if err != nil {
 		slog.Error("Failed to delete user", "subdomain", removeList, "error", err)
 	} else {
@@ -49,7 +49,7 @@ func (b *BackupJobManager) ArchiveInactiveUsers() error {
 
 // The users we delete without archiving are users that
 func (b *BackupJobManager) findUsersToDeleteWithoutArchiving() ([]string, error) {
-	users, err := b.controlDB.GetNeverSeenUsers(b.MaxUserNeverSeen, b.MaxUserNeverWritten)
+	users, err := b.controlDB.GetNeverSeenSites(b.MaxUserNeverSeen, b.MaxUserNeverWritten)
 	if err != nil {
 		return nil, fmt.Errorf("Cant get never seen users %w", err)
 	}
@@ -71,7 +71,7 @@ func (b *BackupJobManager) findUsersToDeleteWithoutArchiving() ([]string, error)
 }
 
 func (b *BackupJobManager) findUsersToArchive() ([]*db.SiteDB, error) {
-	users, err := b.controlDB.GetInactiveUsers(b.MaxUserLastSeen, b.MaxUserNeverWritten)
+	users, err := b.controlDB.GetInactiveSites(b.MaxUserLastSeen, b.MaxUserNeverWritten)
 	if err != nil {
 		return nil, fmt.Errorf("Cant get inactive users %w", err)
 	}

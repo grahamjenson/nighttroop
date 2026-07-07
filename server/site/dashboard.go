@@ -1,4 +1,4 @@
-package user
+package site
 
 import (
 	"net/http"

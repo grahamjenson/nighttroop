@@ -58,29 +58,29 @@ func (b *BackupJobManager) BackupUserBatch(char string) error {
 	defer utils.TrackTime(time.Now(), "backup user pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
 
-	users, err := b.controlDB.GetUserBatch(char)
+	sites, err := b.controlDB.GetSiteBatch(char)
 
 	if err != nil {
-		return fmt.Errorf("cannot get user batch: %w", err)
+		return fmt.Errorf("cannot get site batch: %w", err)
 	}
-	if len(users) == 0 {
+	if len(sites) == 0 {
 		return nil
 	}
 
-	slog.Info("Backing up user batch", "char", char, "user_count", len(users))
+	slog.Info("Backing up site batch", "char", char, "site_count", len(sites))
 
 	paths := []string{}
 
-	for _, user := range users {
-		if user.Subdomain == "" {
+	for _, site := range sites {
+		if site.Subdomain == "" {
 			continue
 		}
-		path, backupPath := utils.SiteDBPaths(user.Subdomain)
+		path, backupPath := utils.SiteDBPaths(site.Subdomain)
 
 		// Have to add it anyway because we need all paths
-		err := utils.SqliteBackup(ctx, user.SQLiteDB, path, backupPath)
+		err := utils.SqliteBackup(ctx, site.SQLiteDB, path, backupPath)
 		if err != nil {
-			return fmt.Errorf("cannot backup site db: %w", user.Subdomain, err)
+			return fmt.Errorf("cannot backup site db: %w", site.Subdomain, err)
 		}
 
 		paths = append(paths, backupPath)

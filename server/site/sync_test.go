@@ -1,4 +1,4 @@
-package user_test
+package site_test
 
 ///
 // Sync nightscout requirements

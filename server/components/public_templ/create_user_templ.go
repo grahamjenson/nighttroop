@@ -12,7 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 )
 
-func CreateUser() templ.Component {
+func CreateSite() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -96,7 +96,7 @@ func CreateUser() templ.Component {
 	})
 }
 
-func CreateUserRateLimited(seconds int) templ.Component {
+func CreateSiteRateLimited(seconds int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -138,7 +138,7 @@ func CreateUserRateLimited(seconds int) templ.Component {
 	})
 }
 
-func CreateUserInfo(url string, adminPassword string, adminTotpSecret string, pwdNSToken string, pwdNSURL string, backupKey string) templ.Component {
+func CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, pwdNSToken string, pwdNSURL string, backupKey string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

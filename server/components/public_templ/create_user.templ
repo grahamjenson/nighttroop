@@ -5,7 +5,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 )
 
-templ CreateUser() {
+templ CreateSite() {
 	@PublicBase() {
 		<div class="flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50 ">
 			<!-- Header -->
@@ -45,7 +45,7 @@ templ CreateUser() {
 	}
 }
 
-templ CreateUserRateLimited(seconds int) {
+templ CreateSiteRateLimited(seconds int) {
 	<div id="rate-limit-alert" class="mt-3 rounded-xl bg-amber-500/10 p-4 text-amber-800 border border-amber-500/20 shadow-sm" role="alert">
 		<div class="flex items-center justify-center">
 			<!-- Animated Tailwind Spinner -->
@@ -74,7 +74,7 @@ templ CreateUserRateLimited(seconds int) {
 </script>
 }
 
-templ CreateUserInfo(url string, adminPassword string, adminTotpSecret string, pwdNSToken string, pwdNSURL string, backupKey string) {
+templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, pwdNSToken string, pwdNSURL string, backupKey string) {
 	<div class="text-left w-full">
 		<div id="Step1" class="max-w-2xl mx-auto space-y-6">
 			<!-- Credentials Display Box -->

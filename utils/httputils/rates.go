@@ -14,7 +14,7 @@ func GlobalIPRateLimitAllowed(serverConfig config.ServerConfig, ipAddress string
 	return limiter.Allow()
 }
 
-func CreateUserAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func CreateSiteAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
 	createLimiter := serverConfig.RateLimiters.UserCreateLimiter
 	ipLimiter := serverConfig.RateLimiters.GetUserCreateIPRateLimiter(GetIP(r))
 

@@ -96,16 +96,16 @@ func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, arg DisableNi
 	return err
 }
 
-const getAllUserSyncSourcesForUniqueHash = `-- name: GetAllUserSyncSourcesForUniqueHash :many
-SELECT uss.id, uss.subdomain, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM site_sync_sources uss JOIN sites u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
+const getAllSiteSyncSourcesForSite = `-- name: GetAllSiteSyncSourcesForSite :many
+SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM site_sync_sources where subdomain = ?
 `
 
-type GetAllUserSyncSourcesForUniqueHashParams struct {
-	UniqueHash string
+type GetAllSiteSyncSourcesForSiteParams struct {
+	Subdomain string
 }
 
-func (q *Queries) GetAllUserSyncSourcesForUniqueHash(ctx context.Context, arg GetAllUserSyncSourcesForUniqueHashParams) ([]*SiteSyncSource, error) {
-	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUniqueHashStmt, getAllUserSyncSourcesForUniqueHash, arg.UniqueHash)
+func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSiteSyncSourcesForSiteParams) ([]*SiteSyncSource, error) {
+	rows, err := q.query(ctx, q.getAllSiteSyncSourcesForSiteStmt, getAllSiteSyncSourcesForSite, arg.Subdomain)
 	if err != nil {
 		return nil, err
 	}
@@ -138,16 +138,16 @@ func (q *Queries) GetAllUserSyncSourcesForUniqueHash(ctx context.Context, arg Ge
 	return items, nil
 }
 
-const getAllUserSyncSourcesForUser = `-- name: GetAllUserSyncSourcesForUser :many
-SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM site_sync_sources where subdomain = ?
+const getAllSiteSyncSourcesForUniqueHash = `-- name: GetAllSiteSyncSourcesForUniqueHash :many
+SELECT uss.id, uss.subdomain, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM site_sync_sources uss JOIN sites u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
 `
 
-type GetAllUserSyncSourcesForUserParams struct {
-	Subdomain string
+type GetAllSiteSyncSourcesForUniqueHashParams struct {
+	UniqueHash string
 }
 
-func (q *Queries) GetAllUserSyncSourcesForUser(ctx context.Context, arg GetAllUserSyncSourcesForUserParams) ([]*SiteSyncSource, error) {
-	rows, err := q.query(ctx, q.getAllUserSyncSourcesForUserStmt, getAllUserSyncSourcesForUser, arg.Subdomain)
+func (q *Queries) GetAllSiteSyncSourcesForUniqueHash(ctx context.Context, arg GetAllSiteSyncSourcesForUniqueHashParams) ([]*SiteSyncSource, error) {
+	rows, err := q.query(ctx, q.getAllSiteSyncSourcesForUniqueHashStmt, getAllSiteSyncSourcesForUniqueHash, arg.UniqueHash)
 	if err != nil {
 		return nil, err
 	}

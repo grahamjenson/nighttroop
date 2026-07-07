@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/server/user"
+	"nighttroop.t1d.nz/server/site"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -64,7 +64,7 @@ func tryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.
 		if err != nil {
 			return nil, false, fmt.Errorf("bad JWT token: %w", err)
 		}
-		identity, err := user.GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		identity, err := site.GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Error("Bad JWT token cant find identity", "error", err)
 			return nil, false, fmt.Errorf("identity not found: %w", err)
@@ -109,7 +109,7 @@ func tryAuthWithLegacyToken(config config.ServerConfig, r *http.Request) (*contr
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 
-	identity, err := user.GetIdentity(r.Context(), tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
+	identity, err := site.GetIdentity(r.Context(), tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}

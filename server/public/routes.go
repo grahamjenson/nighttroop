@@ -22,7 +22,7 @@ type CreateUserResponse struct {
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := public_templ.CreateUser().Render(r.Context(), w)
+		err := public_templ.CreateSite().Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -30,38 +30,38 @@ func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
 	}
 }
 
-func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTCreateSiteHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		allowed, remainingTime := httputils.CreateUserAllowed(config, r)
+		allowed, remainingTime := httputils.CreateSiteAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			public_templ.CreateUserRateLimited(remainingTime+1).Render(r.Context(), w)
+			public_templ.CreateSiteRateLimited(remainingTime+1).Render(r.Context(), w)
 			return
 		}
 
-		// Check to see if there is 10k users and return error if there is
-		if controlDB.GetNUsersDBs() > config.MaxUsers {
+		// Check to see if there is 10k sites and return error if there is
+		if controlDB.GetNSitesDBs() > config.MaxUsers {
 			// TODO make this a template like above
-			http.Error(w, "Full: Too many users", http.StatusTooManyRequests)
+			http.Error(w, "Full: Too many sites", http.StatusTooManyRequests)
 			return
 		}
 
-		userCreateResult, err := controlDB.CreateUser()
+		siteCreateResult, err := controlDB.CreateSite()
 		if err != nil {
-			slog.Error("Unable to create user", "error", err)
-			http.Error(w, "Unable to Create User", http.StatusInternalServerError)
+			slog.Error("Unable to create site", "error", err)
+			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
 			return
 		}
 
 		responseModel := CreateUserResponse{
-			UserID:     userCreateResult.SiteDB.Subdomain,
-			APIKey:     userCreateResult.AdminPassword,
-			BackupKey:  userCreateResult.BackupPassword,
-			TOTPSecret: userCreateResult.TotpSecret,
-			PWDNSToken: userCreateResult.PwdNSToken,
+			UserID:     siteCreateResult.SiteDB.Subdomain,
+			APIKey:     siteCreateResult.AdminPassword,
+			BackupKey:  siteCreateResult.BackupPassword,
+			TOTPSecret: siteCreateResult.TotpSecret,
+			PWDNSToken: siteCreateResult.PwdNSToken,
 		}
 
-		slog.Info("Number of Users", "count", controlDB.GetNUsersDBs(), "routines", runtime.NumGoroutine())
+		slog.Info("Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())
 
 		if httputils.GetAcceptType(r).API() {
 			w.Header().Set("Content-Type", "application/json")
@@ -72,10 +72,10 @@ func POSTCreateUserHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = public_templ.CreateUserInfo(userCreateResult.SiteDB.URL(), userCreateResult.AdminPassword, userCreateResult.TotpSecret, userCreateResult.PwdNSToken, userCreateResult.SiteDB.NSURL(), userCreateResult.BackupPassword).Render(r.Context(), w)
+		err = public_templ.CreateSiteInfo(siteCreateResult.SiteDB.URL(), siteCreateResult.AdminPassword, siteCreateResult.TotpSecret, siteCreateResult.PwdNSToken, siteCreateResult.SiteDB.NSURL(), siteCreateResult.BackupPassword).Render(r.Context(), w)
 		if err != nil {
-			slog.Error("Unable to create user", "error", err)
-			http.Error(w, "Unable to Create User", http.StatusInternalServerError)
+			slog.Error("Unable to create site", "error", err)
+			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
 		}
 
 	}

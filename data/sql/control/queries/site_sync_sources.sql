@@ -1,8 +1,8 @@
 
--- name: GetAllUserSyncSourcesForUser :many
+-- name: GetAllSiteSyncSourcesForSite :many
 SELECT * FROM site_sync_sources where subdomain = ?;
 
--- name: GetAllUserSyncSourcesForUniqueHash :many
+-- name: GetAllSiteSyncSourcesForUniqueHash :many
 SELECT uss.* FROM site_sync_sources uss JOIN sites u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL;
 
 -----

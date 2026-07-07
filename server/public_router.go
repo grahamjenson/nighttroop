@@ -17,7 +17,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Ro
 
 	r.Get("/", public.GETMainPageHandler(controlDB))
 
-	r.Post("/user", public.POSTCreateUserHandler(controlDB, config))
+	r.Post("/site", public.POSTCreateSiteHandler(controlDB, config))
 
 	// TODO public routes
 	// 1. Documentation

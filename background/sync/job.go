@@ -73,7 +73,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) 
 			return nil
 		}
 		// This will filter out
-		syncSources, err := b.controlDB.Queries.GetAllUserSyncSourcesForUniqueHash(ctx, control.GetAllUserSyncSourcesForUniqueHashParams{
+		syncSources, err := b.controlDB.Queries.GetAllSiteSyncSourcesForUniqueHash(ctx, control.GetAllSiteSyncSourcesForUniqueHashParams{
 			UniqueHash: syncJob.UniqueHash,
 		})
 		if err != nil {
@@ -143,7 +143,7 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncS
 }
 
 func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSyncSource) (*SyncUserInfo, error) {
-	userDb, userModel, err := b.controlDB.GetUser(syncSource.Subdomain)
+	userDb, userModel, err := b.controlDB.GetSite(syncSource.Subdomain)
 	if err != nil {
 		return nil, err
 	}

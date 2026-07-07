@@ -34,9 +34,9 @@ func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *
 		panic(fmt.Errorf("cannot create control db: %w", err))
 	}
 
-	identityValues, err := controlDB.CreateUser()
+	identityValues, err := controlDB.CreateSite()
 	if err != nil {
-		panic(fmt.Errorf("cannot create user db: %w", err))
+		panic(fmt.Errorf("cannot create site db: %w", err))
 	}
 
 	return cfg, controlDB, identityValues.SiteDB

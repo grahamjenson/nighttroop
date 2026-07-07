@@ -1,4 +1,4 @@
-package user
+package site
 
 import (
 	"context"
@@ -37,7 +37,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, siteContext.Subdomain)
+		nightscout, dexcom, err := controlDB.GetAllSiteSyncSources(ctx, siteContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -123,7 +123,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllUserSyncSources(ctx, siteContext.Subdomain)
+		nightscout, dexcom, err := controlDB.GetAllSiteSyncSources(ctx, siteContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)

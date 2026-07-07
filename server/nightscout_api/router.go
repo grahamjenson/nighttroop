@@ -13,7 +13,7 @@ import (
 	v3 "nighttroop.t1d.nz/server/nightscout_api/api/v3"
 	"nighttroop.t1d.nz/server/nightscout_api/collections"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/server/user"
+	"nighttroop.t1d.nz/server/site"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -44,12 +44,12 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 	// make sure to continue rate limiting
-	r.Use(user.UserRateLimitMiddleware(config))
+	r.Use(site.UserRateLimitMiddleware(config))
 	// make sure to check auth for JWT/token param/token URL param
 
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
-		r.Use(user.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
+		r.Use(site.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
 		r.Get("/api/v2/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
 		r.Get("/api/v2/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))
