@@ -99,7 +99,7 @@ func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string)
 	if utils.FileExists(path) {
 		return true, nil
 	}
-	s3Path := s3Client.UserBatchS3Path(char)
+	s3Path := s3Client.SiteBatchS3Path(char)
 
 	_, found, err := s3Client.DownloadFilesFromS3(s3Path, path)
 
