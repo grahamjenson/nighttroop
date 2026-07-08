@@ -34,10 +34,10 @@ type BackupJobManager struct {
 	ctx       context.Context
 	S3Client  *s3utils.S3Client
 
-	MaxUserLastSeen     time.Duration
-	MaxUserLastWritten  time.Duration
-	MaxUserNeverSeen    time.Duration
-	MaxUserNeverWritten time.Duration
+	MaxSiteLastSeen     time.Duration
+	MaxSiteLastWritten  time.Duration
+	MaxSiteNeverSeen    time.Duration
+	MaxSiteNeverWritten time.Duration
 
 	BatchBackupIntervalInSeconds   int
 	ControlBackupIntervalInSeconds int
@@ -51,10 +51,10 @@ func SetupBackupJob(ctx context.Context, controlDB *db.ControlDB, config config.
 	jobs := &BackupJobManager{
 		controlDB:                      controlDB,
 		ctx:                            ctx,
-		MaxUserLastSeen:                time.Duration(config.MaxUserLastSeenInMins) * time.Minute,
-		MaxUserLastWritten:             time.Duration(config.MaxUserLastWrittenInMins) * time.Minute,
-		MaxUserNeverSeen:               time.Duration(config.MaxUserNeverSeenInMins) * time.Minute,
-		MaxUserNeverWritten:            time.Duration(config.MaxUserNeverWrittenInMins) * time.Minute,
+		MaxSiteLastSeen:                time.Duration(config.MaxSiteLastSeenInMins) * time.Minute,
+		MaxSiteLastWritten:             time.Duration(config.MaxSiteLastWrittenInMins) * time.Minute,
+		MaxSiteNeverSeen:               time.Duration(config.MaxSiteNeverSeenInMins) * time.Minute,
+		MaxSiteNeverWritten:            time.Duration(config.MaxSiteNeverWrittenInMins) * time.Minute,
 		BatchBackupIntervalInSeconds:   config.BatchBackupIntervalInSeconds,
 		ControlBackupIntervalInSeconds: config.ControlBackupIntervalInSeconds,
 		ArchiveIntervalInSeconds:       config.ArchiveIntervalInSeconds,
@@ -80,7 +80,7 @@ func (b *BackupJobManager) workerFunc() liteq.WorkerFunc {
 		case ControlBackupJob:
 			return b.BackupControl()
 		case BatchBackupJob:
-			return b.BackupUserBatch(params.Char)
+			return b.BackupSiteBatch(params.Char)
 		case ArchiveBackupJob:
 			return b.ArchiveInactiveUsers()
 		default:
@@ -103,9 +103,9 @@ func (b *BackupJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) func(
 	return func() {
 		for index := range utils.SITE_CHAR_SET {
 			char := string(utils.SITE_CHAR_SET[index])
-			// Optimization to not queue jobs with no users
+			// Optimization to not queue jobs with no sites
 			// If it errors just ignore the query all together
-			res, err := b.controlDB.HasUsersInBatch(char)
+			res, err := b.controlDB.HasSitesInBatch(char)
 			if err == nil && !res {
 				// Skip spaming the jobs queue
 				continue

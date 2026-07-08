@@ -82,7 +82,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		formPassword := r.FormValue("password")
 
 		// Rate Limit login attempts by user and IP
-		allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", subdomain, formName), r.RemoteAddr)
+		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", subdomain, formName), r.RemoteAddr)
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return
@@ -277,7 +277,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := config.RateLimiters.UserLoginAllow(fmt.Sprintf("%s:%s", siteContext.Subdomain, creds.Name), r.RemoteAddr)
+	allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", siteContext.Subdomain, creds.Name), r.RemoteAddr)
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return

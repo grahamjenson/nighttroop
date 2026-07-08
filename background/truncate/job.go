@@ -14,7 +14,7 @@ import (
 
 const TRUNCATE_JOB = "truncate_job"
 
-const TRUNCATE_USER_JOB = "truncate_user_job"
+const TRUNCATE_SITE_JOB = "truncate_user_job"
 const TRUNCATE_JOBS_JOB = "truncate_jobs"
 
 type TruncateJobManager struct {
@@ -37,7 +37,7 @@ func (t *TruncateJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerS
 func (t *TruncateJobManager) workerFunc() func(ctx context.Context, j *control.Job) error {
 	return func(ctx context.Context, j *control.Job) error {
 		switch j.Job {
-		case TRUNCATE_USER_JOB:
+		case TRUNCATE_SITE_JOB:
 			err := t.TruncateUsers()
 			if err != nil {
 				slog.Error("Error truncating users", "error", err)
@@ -66,7 +66,7 @@ func buildTruncateCronFunc(queue *liteq.JobQueue) func() {
 	return func() {
 		err := queue.QueueJob(context.Background(), liteq.QueueJobParams{
 			Queue: TRUNCATE_JOB,
-			Job:   TRUNCATE_USER_JOB,
+			Job:   TRUNCATE_SITE_JOB,
 		})
 		err = queue.QueueJob(context.Background(), liteq.QueueJobParams{
 			Queue: TRUNCATE_JOB,

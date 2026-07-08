@@ -40,7 +40,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		}
 
 		// Check to see if there is 10k sites and return error if there is
-		if controlDB.GetNSitesDBs() > config.MaxUsers {
+		if controlDB.GetNSitesDBs() > config.MaxSites {
 			// TODO make this a template like above
 			http.Error(w, "Full: Too many sites", http.StatusTooManyRequests)
 			return

@@ -11,7 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-// This is the last method called to backup both control and user dbs
+// This is the last method called to backup both control and site dbs
 func (b *BackupJobManager) BackupToS3() {
 	err := b.BackupControl()
 	if err != nil {
@@ -19,10 +19,10 @@ func (b *BackupJobManager) BackupToS3() {
 	}
 
 	for _, char := range utils.SITE_CHAR_SET {
-		err := b.BackupUserBatch(string(char))
+		err := b.BackupSiteBatch(string(char))
 
 		if err != nil {
-			slog.Error("Error backing up user batch", "error", err, "char", char)
+			slog.Error("Error backing up site batch", "error", err, "char", char)
 			continue
 		}
 	}
@@ -50,12 +50,12 @@ func (b *BackupJobManager) BackupControl() error {
 }
 
 // ///
-// User Backup
+// Site Backup
 // ///
 
-func (b *BackupJobManager) BackupUserBatch(char string) error {
+func (b *BackupJobManager) BackupSiteBatch(char string) error {
 	trackTrim := false
-	defer utils.TrackTime(time.Now(), "backup user pool "+char, &trackTrim, nil)
+	defer utils.TrackTime(time.Now(), "backup site pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
 
 	sites, err := b.controlDB.GetSiteBatch(char)

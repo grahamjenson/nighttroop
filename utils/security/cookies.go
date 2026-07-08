@@ -7,7 +7,7 @@ import (
 )
 
 const CONTROL_TOKEN_COOKIE = "control_token"
-const USER_TOKEN_COOKIE = "user_token"
+const SITE_TOKEN_COOKIE = "user_token"
 const PRE_AUTH_TOKEN_COOKIE = "pre_auth_token"
 
 func (cfg *SecurityConfig) SetControlLoginCookie(w http.ResponseWriter, tokenString string, expiresAt time.Time) {
@@ -89,7 +89,7 @@ func GetUserPreAuthTokenFromRequest(r *http.Request) (string, error) {
 
 func (cfg *SecurityConfig) SetUserLoginCookie(w http.ResponseWriter, tokenString string, expiresAt time.Time) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     USER_TOKEN_COOKIE,
+		Name:     SITE_TOKEN_COOKIE,
 		Value:    tokenString,
 		Expires:  expiresAt,
 		HttpOnly: true,
@@ -101,7 +101,7 @@ func (cfg *SecurityConfig) SetUserLoginCookie(w http.ResponseWriter, tokenString
 
 func (cfg *SecurityConfig) ClearUserLoginCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     USER_TOKEN_COOKIE,
+		Name:     SITE_TOKEN_COOKIE,
 		Value:    "",
 		MaxAge:   -1,
 		Expires:  time.Unix(0, 0),
@@ -113,7 +113,7 @@ func (cfg *SecurityConfig) ClearUserLoginCookie(w http.ResponseWriter) {
 }
 
 func GetUserTokenFromRequest(r *http.Request) (string, error) {
-	cookie, err := r.Cookie(USER_TOKEN_COOKIE)
+	cookie, err := r.Cookie(SITE_TOKEN_COOKIE)
 	if err != nil {
 		return "", fmt.Errorf("no user token cookie found")
 	}

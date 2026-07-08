@@ -6,8 +6,8 @@ The main goal is to reduce the complexity of setting up NightScout to a single *
 # On Boarding
 
 1. Go to nighttroop.t1d.nz
-2. Click the "Create User" button
-3. Copy the **User Data** and store it somewhere safe
+2. Click the "Create Site" button
+3. Copy the **Site Data** and store it somewhere safe
 
 ### Getting data into night troop
 
@@ -15,12 +15,12 @@ Getting the BGL and treatment data into Nightscout should be pretty easy
 
 #### PWD Phone
 
-1. Copy the Nightscout Compatabile URL and Password from the **User Data**
+1. Copy the Nightscout Compatabile URL and Password from the **Site Data**
 2. Copy PWD Setup Person With Diabetes (**PWD**) phone with information 
 
 #### Dexcom/Nightscout/Libre Sync
 
-1. Login with Admin password and TOTP token from the **User Data**
+1. Login with Admin password and TOTP token from the **Site Data**
 2. In the **Settings Menu** click the Sync settings
 
 3. Fill in Dexcom Username and Password  

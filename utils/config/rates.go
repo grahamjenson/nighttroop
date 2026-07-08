@@ -17,40 +17,40 @@ type RateLimiters struct {
 	ipLoginRateLimiters   *lru.Cache[string, *rate.Limiter]
 
 	identityGETRateLimiters *lru.Cache[string, *rate.Limiter]
-	userGETRateLimiters     *lru.Cache[string, *rate.Limiter]
+	siteGETRateLimiters     *lru.Cache[string, *rate.Limiter]
 
 	identityPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
-	userPOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
+	sitePOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
 
-	UserCreateLimiter   *rate.Limiter
-	userCreateIpLimiter *lru.Cache[string, *rate.Limiter]
+	SiteCreateLimiter   *rate.Limiter
+	siteCreateIpLimiter *lru.Cache[string, *rate.Limiter]
 
 	GlobalRateLimiter    *rate.Limiter // Limiter for all requestes everywhere
 	globalIPRateLimiters *lru.Cache[string, *rate.Limiter]
 }
 
 func newRateLimiters(config ServerConfig) *RateLimiters {
-	maxUsers := config.MaxUsers
-	maxIdentities := config.MaxIdentitiesPerUser
+	maxSites := config.MaxSites
+	maxIdentities := config.MaxIdentitiesPerSite
 	wiggle := 2
 	// We are using the hashicorp LRU to make sure that we dont run out of memory if all users with all identitys are hitting us always
 	return &RateLimiters{
 		serverConfig: config,
 
-		userLoginRateLimiters: lruMust(maxUsers * maxIdentities * wiggle),
-		ipLoginRateLimiters:   lruMust(maxUsers * maxIdentities * wiggle * 2),
+		userLoginRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
+		ipLoginRateLimiters:   lruMust(maxSites * maxIdentities * wiggle * 2),
 
-		identityGETRateLimiters: lruMust(maxUsers * maxIdentities * wiggle),
-		userGETRateLimiters:     lruMust(maxUsers * wiggle),
+		identityGETRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
+		siteGETRateLimiters:     lruMust(maxSites * wiggle),
 
-		identityPOSTRateLimiters: lruMust(maxUsers * maxIdentities * wiggle),
-		userPOSTRateLimiters:     lruMust(maxUsers * wiggle),
+		identityPOSTRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
+		sitePOSTRateLimiters:     lruMust(maxSites * wiggle),
 
-		UserCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.UserCreateGlobalPerMinuteLimit)/60.0), config.UserCreateGlobalPerMinuteBurst),
-		userCreateIpLimiter: lruMust(maxUsers * wiggle),
+		SiteCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.SiteCreateGlobalPerMinuteLimit)/60.0), config.SiteCreateGlobalPerMinuteBurst),
+		siteCreateIpLimiter: lruMust(maxSites * wiggle),
 
 		GlobalRateLimiter:    rate.NewLimiter(rate.Limit(float64(config.GlobalRateLimit)/60.0), config.GlobalRateBurst),
-		globalIPRateLimiters: lruMust(maxUsers * maxIdentities * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
+		globalIPRateLimiters: lruMust(maxSites * maxIdentities * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
 	}
 
 }
@@ -77,40 +77,40 @@ func (r *RateLimiters) GetGlobalIPRateLimiter(ipAddress string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipAddress, float64(r.serverConfig.GlobalIPPerMinuteLimit), r.serverConfig.GlobalIPPerMinuteBurst)
 }
 
-func (r *RateLimiters) GetUserCreateIPRateLimiter(ipAddress string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.userCreateIpLimiter, ipAddress, r.serverConfig.UserCreateIPPerMinuteLimit, r.serverConfig.UserCreateIPPerMinuteBurst)
+func (r *RateLimiters) GetSiteCreateIPRateLimiter(ipAddress string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteCreateIpLimiter, ipAddress, r.serverConfig.SiteCreateIPPerMinuteLimit, r.serverConfig.SiteCreateIPPerMinuteBurst)
 }
 
 // //
-// User Rate Limiters
+// Site Rate Limiters
 // //
 
 func (r *RateLimiters) IdentityGETLimiter(identityID string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.identityGETRateLimiters, identityID, float64(r.serverConfig.UserGETPerMinuteLimit), r.serverConfig.UserGETPerMinuteBurst)
+	return r.getOrCreateLimiter(r.identityGETRateLimiters, identityID, float64(r.serverConfig.SiteGETPerMinuteLimit), r.serverConfig.SiteGETPerMinuteBurst)
 }
 
 func (r *RateLimiters) IdentityPOSTLimiter(identityID string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, identityID, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, identityID, float64(r.serverConfig.SitePOSTPerMinuteLimit), r.serverConfig.SitePOSTPerMinuteBurst)
 }
 
-func (r *RateLimiters) UserGETLimiter(userId string) *rate.Limiter {
+func (r *RateLimiters) SiteGETLimiter(subdomain string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.userGETRateLimiters, userId, float64(r.serverConfig.UserGETPerMinuteLimit), r.serverConfig.UserGETPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteGETRateLimiters, subdomain, float64(r.serverConfig.SiteGETPerMinuteLimit), r.serverConfig.SiteGETPerMinuteBurst)
 }
 
-func (r *RateLimiters) UserPOSTLimiter(userId string) *rate.Limiter {
+func (r *RateLimiters) SitePOSTLimiter(subdomain string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userId, float64(r.serverConfig.UserPOSTPerMinuteLimit), r.serverConfig.UserPOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, float64(r.serverConfig.SitePOSTPerMinuteLimit), r.serverConfig.SitePOSTPerMinuteBurst)
 }
 
-func (r *RateLimiters) UserUpdateSyncLimiter(userID string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.userPOSTRateLimiters, userID, float64(r.serverConfig.UserUpdateSyncPerMinuteLimit), r.serverConfig.UserUpdateSyncPerMinuteBurst)
+func (r *RateLimiters) SiteUpdateSyncLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, float64(r.serverConfig.SiteUpdateSyncPerMinuteLimit), r.serverConfig.SiteUpdateSyncPerMinuteBurst)
 }
 
-func (r *RateLimiters) UserLoginAllow(userID string, ip string) (bool, int) {
-	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, userID, float64(r.serverConfig.UserLoginPerMinuteLimit), r.serverConfig.UserLoginPerMinuteBurst)
-	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, float64(r.serverConfig.UserLoginPerMinuteLimit), r.serverConfig.UserLoginPerMinuteBurst)
+func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {
+	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, subdomain, float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
+	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
 
 	// Calculate tokens remaining
 	userTokens := userLimiter.Tokens()

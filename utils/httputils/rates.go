@@ -15,8 +15,8 @@ func GlobalIPRateLimitAllowed(serverConfig config.ServerConfig, ipAddress string
 }
 
 func CreateSiteAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
-	createLimiter := serverConfig.RateLimiters.UserCreateLimiter
-	ipLimiter := serverConfig.RateLimiters.GetUserCreateIPRateLimiter(GetIP(r))
+	createLimiter := serverConfig.RateLimiters.SiteCreateLimiter
+	ipLimiter := serverConfig.RateLimiters.GetSiteCreateIPRateLimiter(GetIP(r))
 
 	return AllowAll(createLimiter, ipLimiter)
 }
@@ -30,7 +30,7 @@ func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, in
 		identityName = siteContext.IdentityModel.Name
 	}
 
-	readLimiter := serverConfig.RateLimiters.UserGETLimiter(userSubdomain)
+	readLimiter := serverConfig.RateLimiters.SiteGETLimiter(userSubdomain)
 	identityLimiter := serverConfig.RateLimiters.IdentityGETLimiter(identityName)
 
 	return AllowAll(readLimiter, identityLimiter)
@@ -45,7 +45,7 @@ func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, i
 		identityName = siteContext.IdentityModel.Name
 	}
 
-	writeLimiter := serverConfig.RateLimiters.UserPOSTLimiter(userSubdomain)
+	writeLimiter := serverConfig.RateLimiters.SitePOSTLimiter(userSubdomain)
 	identityLimiter := serverConfig.RateLimiters.IdentityPOSTLimiter(identityName)
 
 	return AllowAll(writeLimiter, identityLimiter)
@@ -55,7 +55,7 @@ func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (b
 	siteContext := GetSiteContext(r.Context())
 	userSubdomain := siteContext.Subdomain
 
-	writeLimiter := serverConfig.RateLimiters.UserUpdateSyncLimiter(userSubdomain)
+	writeLimiter := serverConfig.RateLimiters.SiteUpdateSyncLimiter(userSubdomain)
 
 	return AllowAll(writeLimiter)
 }

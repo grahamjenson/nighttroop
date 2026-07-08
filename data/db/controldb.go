@@ -62,7 +62,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 		return nil, fmt.Errorf("cannot create admin user: %w", err)
 	}
 
-	// This will go over all non-deleted users and add them to the control db users
+	// This will go over all non-deleted sites and add them to the control db sites
 	_, err = controlDB.fillSites()
 	if err != nil {
 		return nil, fmt.Errorf("cannot fill sites: %w", err)
@@ -351,15 +351,15 @@ func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
 	db.sitesRWLock.RLock()
 	defer db.sitesRWLock.RUnlock()
 
-	userdb := db.sites[subdomain]
-	if userdb == nil {
-		return nil, fmt.Errorf("user not found in memory")
+	siteDB := db.sites[subdomain]
+	if siteDB == nil {
+		return nil, fmt.Errorf("site not found in memory")
 	}
 
-	return userdb, nil
+	return siteDB, nil
 }
 
-func (db *ControlDB) HasUsersInBatch(char string) (bool, error) {
+func (db *ControlDB) HasSitesInBatch(char string) (bool, error) {
 	res, err := db.Queries.GetBatchSites(context.TODO(), control.GetBatchSitesParams{
 		Batch: char,
 	})
@@ -446,15 +446,15 @@ func (db *ControlDB) GetAllSiteSyncSources(ctx context.Context, subdomain string
 }
 
 ////
-// End of Get USER Methods
+// End of Get SITE Methods
 ////
 
 func (db *ControlDB) Close() error {
-	// Keep it locked so no new users can be created
-	for _, user := range db.sites {
-		err := user.Close()
+	// Keep it locked so no new sites can be created
+	for _, site := range db.sites {
+		err := site.Close()
 		if err != nil {
-			slog.Error("Failed to close user db", "subdomain", user.Subdomain, "error", err)
+			slog.Error("Failed to close site db", "subdomain", site.Subdomain, "error", err)
 		}
 	}
 

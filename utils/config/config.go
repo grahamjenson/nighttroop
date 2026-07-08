@@ -47,30 +47,32 @@ type ServerConfig struct {
 	GlobalIPPerMinuteLimit int
 	GlobalIPPerMinuteBurst int
 
-	UserLoginPerMinuteLimit int
-	UserLoginPerMinuteBurst int
+	SiteLoginPerMinuteLimit int
+	SiteLoginPerMinuteBurst int
 
 	// Authenticated Rate Limits
-	UserGETPerMinuteLimit        int
-	UserGETPerMinuteBurst        int
-	UserPOSTPerMinuteLimit       int
-	UserPOSTPerMinuteBurst       int
-	UserUpdateSyncPerMinuteLimit int
-	UserUpdateSyncPerMinuteBurst int
+	SiteGETPerMinuteLimit        int
+	SiteGETPerMinuteBurst        int
+	SitePOSTPerMinuteLimit       int
+	SitePOSTPerMinuteBurst       int
+	SiteUpdateSyncPerMinuteLimit int
+	SiteUpdateSyncPerMinuteBurst int
 
-	// User Create Rate Limits
-	UserCreateGlobalPerMinuteLimit int
-	UserCreateGlobalPerMinuteBurst int
-	UserCreateIPPerMinuteLimit     float64
-	UserCreateIPPerMinuteBurst     int
+	//
+	// Site Create Rate Limits
+	SiteCreateGlobalPerMinuteLimit int
+	SiteCreateGlobalPerMinuteBurst int
+	SiteCreateIPPerMinuteLimit     float64
+	SiteCreateIPPerMinuteBurst     int
 
-	// User Limits
-	MaxUsers                  int
-	MaxIdentitiesPerUser      int
-	MaxUserLastSeenInMins     int
-	MaxUserLastWrittenInMins  int
-	MaxUserNeverSeenInMins    int
-	MaxUserNeverWrittenInMins int
+	//
+	// Site Limits
+	MaxSites                  int
+	MaxIdentitiesPerSite      int
+	MaxSiteLastSeenInMins     int
+	MaxSiteLastWrittenInMins  int
+	MaxSiteNeverSeenInMins    int
+	MaxSiteNeverWrittenInMins int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
@@ -100,8 +102,8 @@ type ServerConfig struct {
 	DexcomClientSecret string
 }
 
-const USER_GET_LIMIT = 180
-const USER_POST_LIMIT = 60
+const SITE_GET_LIMIT = 180
+const SITE_POST_LIMIT = 60
 
 // Priority is
 // 1. Args
@@ -153,41 +155,43 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		// Public RateLimits
 		GlobalRateLimit:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_LIMIT", 100000), // Stop DDOS doing downloads
 		GlobalRateBurst:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_BURST", 100000),
-		GlobalIPPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", USER_GET_LIMIT*4), // Single IP can fully manage 4 users
-		GlobalIPPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_BURST", USER_GET_LIMIT*8),
+		GlobalIPPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", SITE_GET_LIMIT*4), // Single IP can fully manage 4 sites
+		GlobalIPPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_BURST", SITE_GET_LIMIT*8),
 
-		UserLoginPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
-		UserLoginPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_LOGIN_PER_MINUTE_BURST", 10),
+		SiteLoginPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "SITE_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
+		SiteLoginPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "SITE_LOGIN_PER_MINUTE_BURST", 10),
 
-		// User Create Rate Limits
-		UserCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_LIMIT", 7), // If maxed out this filles up in a day
-		UserCreateGlobalPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
-		UserCreateIPPerMinuteLimit:     configFloatSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_LIMIT", 0.1), // 1 event every 10 minutes
-		UserCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "USER_CREATE_IP_PER_MINUTE_BURST", 1),
+		// Site Create Rate Limits
+		SiteCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT", 7), // If maxed out this filles up in a day
+		SiteCreateGlobalPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
+		SiteCreateIPPerMinuteLimit:     configFloatSelect(dotenvdev, dotenv, "SITE_CREATE_IP_PER_MINUTE_LIMIT", 0.1), // 1 event every 10 minutes
+		SiteCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "SITE_CREATE_IP_PER_MINUTE_BURST", 1),
 
-		// Authed User Rate Limits
-		UserGETPerMinuteLimit:        configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_LIMIT", USER_GET_LIMIT),
-		UserGETPerMinuteBurst:        configIntSelect(dotenvdev, dotenv, "USER_GET_PER_MINUTE_BURST", USER_GET_LIMIT*2),
-		UserPOSTPerMinuteLimit:       configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_LIMIT", USER_POST_LIMIT),
-		UserPOSTPerMinuteBurst:       configIntSelect(dotenvdev, dotenv, "USER_POST_PER_MINUTE_BURST", USER_POST_LIMIT*4),
-		UserUpdateSyncPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "USER_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop users from updating sync settings too much
-		UserUpdateSyncPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "USER_UPDATE_SYNC_PER_MINUTE_BURST", 4),
+		// Authed
+		// Site Rate Limits
+		SiteGETPerMinuteLimit:        configIntSelect(dotenvdev, dotenv, "SITE_GET_PER_MINUTE_LIMIT", SITE_GET_LIMIT),
+		SiteGETPerMinuteBurst:        configIntSelect(dotenvdev, dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
+		SitePOSTPerMinuteLimit:       configIntSelect(dotenvdev, dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
+		SitePOSTPerMinuteBurst:       configIntSelect(dotenvdev, dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
+		SiteUpdateSyncPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop sites from updating sync settings too much
+		SiteUpdateSyncPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_BURST", 4),
 
-		// User Limits
-		MaxUsers:             configIntSelect(dotenvdev, dotenv, "MAX_USERS", 10000),
-		MaxIdentitiesPerUser: configIntSelect(dotenvdev, dotenv, "MAX_IDENTITIES_PER_USER", 10),
+		//
+		// Site Limits
+		MaxSites:             configIntSelect(dotenvdev, dotenv, "MAX_SITES", 10000),
+		MaxIdentitiesPerSite: configIntSelect(dotenvdev, dotenv, "MAX_IDENTITIES_PER_USER", 10),
 
 		// Truncate Config
-		MaxSiteDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_USER_DB_SIZE_KB", 3000),
+		MaxSiteDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_SITE_DB_SIZE_KB", 3000),
 		MaxControlDBSizeKB:        configIntSelect(dotenvdev, dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
 		TruncateIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 
 		// Archiving limits
-		MaxUserLastSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_USER_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
-		MaxUserLastWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_LAST_WRITTEN_IN_MINS", 60*24*7), // 1 week
+		MaxSiteLastSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_SITE_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
+		MaxSiteLastWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_SITE_LAST_WRITTEN_IN_MINS", 60*24*7), // 1 week
 
-		MaxUserNeverSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_USER_NEVER_SEEN_IN_MINS", 30),       // 30 minutes to login first time
-		MaxUserNeverWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_USER_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
+		MaxSiteNeverSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_SITE_NEVER_SEEN_IN_MINS", 30),       // 30 minutes to login first time
+		MaxSiteNeverWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_SITE_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
@@ -413,18 +417,18 @@ func printServerConfig(config ServerConfig) {
 		"SQLitePath", config.SqlitePath,
 		"GlobalRateLimit r/s", config.GlobalRateLimit,
 		"GlobalRateBurst", config.GlobalRateBurst,
-		"UserGETPerMinuteLimit r/s", config.UserGETPerMinuteLimit,
-		"UserGETPerMinuteBurst", config.UserGETPerMinuteBurst,
-		"UserPOSTPerMinuteLimit r/s", config.UserPOSTPerMinuteLimit,
-		"UserPOSTPerMinuteBurst", config.UserPOSTPerMinuteBurst,
-		"UserCreateGlobalPerMinuteLimit r/s", config.UserCreateGlobalPerMinuteLimit,
-		"UserCreateGlobalPerMinuteBurst", config.UserCreateGlobalPerMinuteBurst,
-		"UserCreateIPPerMinuteLimit r/s", config.UserCreateIPPerMinuteLimit,
-		"UserCreateIPPerMinuteBurst", config.UserCreateIPPerMinuteBurst,
-		"MaxUsers", config.MaxUsers,
-		"MaxIdentitiesPerUser", config.MaxIdentitiesPerUser,
-		"MaxUserLastSeenInMins", config.MaxUserLastSeenInMins,
-		"MaxUserLastWrittenInMins", config.MaxUserLastWrittenInMins,
+		"SiteGETPerMinuteLimit r/s", config.SiteGETPerMinuteLimit,
+		"SiteGETPerMinuteBurst", config.SiteGETPerMinuteBurst,
+		"SitePOSTPerMinuteLimit r/s", config.SitePOSTPerMinuteLimit,
+		"SitePOSTPerMinuteBurst", config.SitePOSTPerMinuteBurst,
+		"SiteCreateGlobalPerMinuteLimit r/s", config.SiteCreateGlobalPerMinuteLimit,
+		"SiteCreateGlobalPerMinuteBurst", config.SiteCreateGlobalPerMinuteBurst,
+		"SiteCreateIPPerMinuteLimit r/s", config.SiteCreateIPPerMinuteLimit,
+		"SiteCreateIPPerMinuteBurst", config.SiteCreateIPPerMinuteBurst,
+		"MaxSites", config.MaxSites,
+		"MaxIdentitiesPerSite", config.MaxIdentitiesPerSite,
+		"MaxSiteLastSeenInMins", config.MaxSiteLastSeenInMins,
+		"MaxSiteLastWrittenInMins", config.MaxSiteLastWrittenInMins,
 		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
