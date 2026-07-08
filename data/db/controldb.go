@@ -242,15 +242,15 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 	// Close the DB and remove from the map
 	for _, subdomain := range deletedSubdomains {
 		db.sitesRWLock.Lock()
-		user, ok := db.sites[subdomain]
+		site, ok := db.sites[subdomain]
 		if !ok {
 			db.sitesRWLock.Unlock()
-			return fmt.Errorf("user not found")
+			return fmt.Errorf("site not found")
 		}
 		delete(db.sites, subdomain)
 		db.sitesRWLock.Unlock()
 
-		user.Close()
+		site.Close()
 
 		path, backupPath := utils.SiteDBPaths(subdomain)
 
@@ -302,12 +302,12 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 	return exists
 }
 
-func (db *ControlDB) UpdateUserDateFlags(userModel *control.Site, updateLastSeen bool, updateLastWrite bool) error {
-	subdomain := userModel.Subdomain
+func (db *ControlDB) UpdateSiteDateFlags(siteModel *control.Site, updateLastSeen bool, updateLastWrite bool) error {
+	subdomain := siteModel.Subdomain
 
 	// Only update if not seen in 10 minutes
-	lastWriteMoreThan10MinutesAgo := userModel.LastWriteAt == nil || time.Now().After(userModel.LastWriteAtDate().Add(-10*time.Minute))
-	lastSeenMoreThan10MinutesAgo := userModel.LastSeenAt == nil || time.Now().After(userModel.LastSeenAtDate().Add(-10*time.Minute))
+	lastWriteMoreThan10MinutesAgo := siteModel.LastWriteAt == nil || time.Now().After(siteModel.LastWriteAtDate().Add(-10*time.Minute))
+	lastSeenMoreThan10MinutesAgo := siteModel.LastSeenAt == nil || time.Now().After(siteModel.LastSeenAtDate().Add(-10*time.Minute))
 
 	now := time.Now().UnixMilli()
 	var lastSeenAt *int64

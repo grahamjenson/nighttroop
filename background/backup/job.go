@@ -82,7 +82,7 @@ func (b *BackupJobManager) workerFunc() liteq.WorkerFunc {
 		case BatchBackupJob:
 			return b.BackupSiteBatch(params.Char)
 		case ArchiveBackupJob:
-			return b.ArchiveInactiveUsers()
+			return b.ArchiveInactiveSites()
 		default:
 			return fmt.Errorf("unknown backup job function: %s", params.FunctionName)
 		}

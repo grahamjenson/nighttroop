@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
@@ -22,7 +22,7 @@ type SiteDB struct {
 	Subdomain string
 
 	// Prepared statements
-	Queries *user.Queries
+	Queries *site.Queries
 }
 
 func NewSiteDB(ctx context.Context, subdomain string, mustExist bool, cfg config.ServerConfig) (*SiteDB, error) {
@@ -43,13 +43,13 @@ func NewSiteDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 		Subdomain:    subdomain,
 	}
 
-	err = user.MigrateUp(subdomain, sqldb)
+	err = site.MigrateUp(subdomain, sqldb)
 	if err != nil {
 		sqldb.Close()
 		return siteDB, fmt.Errorf("Migration Error Occurred site db: %s %w", subdomain, err)
 	}
 
-	siteDB.Queries, err = user.Prepare(context.TODO(), sqldb)
+	siteDB.Queries, err = site.Prepare(context.TODO(), sqldb)
 	if err != nil {
 		sqldb.Close()
 		return siteDB, fmt.Errorf("cannot prepare statements for site db: %s %w", subdomain, err)

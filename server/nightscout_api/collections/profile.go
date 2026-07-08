@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,7 +14,7 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *user.Profile) nsutils.Record
+	converter func(c *site.Profile) nsutils.Record
 }
 
 func NewProfileCollection() ProfileCollection {
@@ -50,7 +50,7 @@ func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetProfile(ctx, user.GetProfileParams{
+	dbModel, err := siteContext.SiteDB.Queries.GetProfile(ctx, site.GetProfileParams{
 		ID: identifier,
 	})
 

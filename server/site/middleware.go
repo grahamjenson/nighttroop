@@ -74,7 +74,7 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 
 			if sw.status == 200 {
 				wasWrite := siteContext.SiteAction == httputils.SiteActionWrite
-				controlDB.UpdateUserDateFlags(siteContext.SiteModel, true, wasWrite)
+				controlDB.UpdateSiteDateFlags(siteContext.SiteModel, true, wasWrite)
 				siteContext.ControlDB.UpdateIdentityDateFlags(siteContext.IdentityModel, true, wasWrite)
 			}
 		})

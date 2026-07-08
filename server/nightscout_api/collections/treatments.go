@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -13,7 +13,7 @@ import (
 )
 
 type TreatmentCollection struct {
-	carbConverter func(c *user.Carb) nsutils.Record
+	carbConverter func(c *site.Carb) nsutils.Record
 }
 
 func NewTreatmentCollection() TreatmentCollection {

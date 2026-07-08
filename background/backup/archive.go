@@ -9,8 +9,8 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-func (b *BackupJobManager) ArchiveInactiveUsers() error {
-	defer utils.TrackTime(time.Now(), "ArchiveInactiveUsers", nil, nil)
+func (b *BackupJobManager) ArchiveInactiveSites() error {
+	defer utils.TrackTime(time.Now(), "ArchiveInactiveSites", nil, nil)
 
 	deleteList, err := b.findSitesToDeleteWithoutArchiving()
 	if err != nil {

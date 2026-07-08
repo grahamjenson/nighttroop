@@ -12,12 +12,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"nighttroop.t1d.nz/data/sql/control"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 )
 
 func main() {
-	if err := checkUsers(); err != nil {
-		log.Fatalf("check users failed: %v", err)
+	if err := checkSites(); err != nil {
+		log.Fatalf("check sites failed: %v", err)
 	}
 
 	if err := checkControl(); err != nil {
@@ -26,7 +26,7 @@ func main() {
 
 }
 
-func checkUsers() error {
+func checkSites() error {
 	usersTmpFile, err := os.CreateTemp("", "sqlc-schema-*.db")
 	if err != nil {
 		return fmt.Errorf("failed to create temp db: %w", err)
@@ -47,19 +47,19 @@ func checkUsers() error {
 	}
 	defer db.Close()
 
-	err = user.MigrateUp("dummy", db)
+	err = site.MigrateUp("dummy", db)
 	if err != nil {
 		return fmt.Errorf("failed to migrate user db: %w", err)
 	}
 
-	_, err = user.Prepare(context.TODO(), db)
+	_, err = site.Prepare(context.TODO(), db)
 	if err != nil {
 		return fmt.Errorf("failed to prepare user queries: %w", err)
 	} else {
 		fmt.Println("USER DB Prepared successfully")
 	}
 
-	err = user.MigrateDown("dummy", db)
+	err = site.MigrateDown("dummy", db)
 	if err != nil {
 		return fmt.Errorf("failed to migrate down user db: %w", err)
 	}

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,7 +14,7 @@ import (
 )
 
 type ActivityCollection struct {
-	converter func(c *user.Activity) nsutils.Record
+	converter func(c *site.Activity) nsutils.Record
 }
 
 func NewActivityCollection() ActivityCollection {
@@ -50,7 +50,7 @@ func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.S
 }
 
 func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetActivity(ctx, user.GetActivityParams{
+	dbModel, err := siteContext.SiteDB.Queries.GetActivity(ctx, site.GetActivityParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {

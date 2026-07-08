@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 )
 
@@ -24,8 +24,8 @@ func (e EGV) UTCOffsetInMinutes() int {
 	return offset / 60
 }
 
-func EGVToCreate(e EGV, idPrefix string, createdByIdentityID int64, createdByIdentityName string) user.CreateGlucoseReadingParams {
-	return user.CreateGlucoseReadingParams{
+func EGVToCreate(e EGV, idPrefix string, createdByIdentityID int64, createdByIdentityName string) site.CreateGlucoseReadingParams {
+	return site.CreateGlucoseReadingParams{
 		ID:                    utils.NextDateID(idPrefix, e.SystemTime.UnixMilli()),
 		OccurredAt:            e.SystemTime.UnixMilli(),
 		Value:                 float64(e.Value),

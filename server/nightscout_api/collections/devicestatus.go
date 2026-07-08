@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,7 +14,7 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	converter func(c *user.DeviceStatus) nsutils.Record
+	converter func(c *site.DeviceStatus) nsutils.Record
 }
 
 func NewDeviceStatusCollection() DeviceStatusCollection {
@@ -50,7 +50,7 @@ func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputi
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetDeviceStatus(ctx, user.GetDeviceStatusParams{
+	dbModel, err := siteContext.SiteDB.Queries.GetDeviceStatus(ctx, site.GetDeviceStatusParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {

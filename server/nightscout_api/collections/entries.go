@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,7 +14,7 @@ import (
 )
 
 type EntriesCollection struct {
-	converter func(c *user.GlucoseReading) nsutils.Record
+	converter func(c *site.GlucoseReading) nsutils.Record
 	creator   func(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 }
 
@@ -51,7 +51,7 @@ func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	glucoseReading, err := siteContext.SiteDB.Queries.GetGlucoseReading(ctx, user.GetGlucoseReadingParams{ID: identifier})
+	glucoseReading, err := siteContext.SiteDB.Queries.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -72,7 +72,7 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 	// check against default sort order
 	defaultSortOrder := so == nsquery.SortOccurredAtDesc
 
-	var entries []*user.GlucoseReading
+	var entries []*site.GlucoseReading
 	var rerr error
 
 	// There are three options,
@@ -125,7 +125,7 @@ func (c EntriesCollection) Update(ctx context.Context, siteContext *httputils.Si
 func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 
 	if permanent {
-		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReading(ctx, user.DeletePermanentGlucoseReadingParams{ID: identifier})
+		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReading(ctx, site.DeletePermanentGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -141,7 +141,7 @@ func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.Si
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
 	} else {
-		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReading(ctx, user.DeleteGlucoseReadingParams{ID: identifier})
+		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReading(ctx, site.DeleteGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -163,7 +163,7 @@ func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.Si
 func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 
 	if permanent {
-		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, user.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
+		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, site.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose readings by type", "error", err)
 			return 0, nsutils.ErrInternal
@@ -175,7 +175,7 @@ func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputil
 		}
 		return int(rowsAffected), nil
 	} else {
-		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReadingsByType(ctx, user.DeleteGlucoseReadingsByTypeParams{Type: typeString})
+		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReadingsByType(ctx, site.DeleteGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {
 			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
 			return 0, nsutils.ErrInternal

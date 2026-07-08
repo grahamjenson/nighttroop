@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	user "nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,7 +14,7 @@ import (
 )
 
 type FoodCollection struct {
-	converter func(c *user.Food) nsutils.Record
+	converter func(c *site.Food) nsutils.Record
 }
 
 func NewFoodCollection() FoodCollection {
@@ -50,7 +50,7 @@ func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetFood(ctx, user.GetFoodParams{
+	dbModel, err := siteContext.SiteDB.Queries.GetFood(ctx, site.GetFoodParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {
