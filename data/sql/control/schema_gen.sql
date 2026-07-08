@@ -8,16 +8,6 @@ WHERE
     job_status = 'queued'
     OR job_status = 'fetched';
 
-CREATE TABLE admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL CHECK(length(name) <= 32),
-    password TEXT NOT NULL CHECK(length(password) <= 128),
-    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
-    role TEXT NOT NULL CHECK(role IN ('admin', 'read')), -- for future use, can have different levels of admin access
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    last_seen_at INTEGER
-);
-
 CREATE TABLE data_source_block_list(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -32,6 +22,32 @@ CREATE TABLE events (
     details TEXT,
     start INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     end INTEGER
+);
+
+CREATE TABLE identities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
+    name TEXT NOT NULL CHECK(length(name) <= 32),
+
+    password TEXT NOT NULL CHECK(length(password) <= 128),
+    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
+    role TEXT NOT NULL CHECK(length(role) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    last_seen_at INTEGER,
+    last_write_at INTEGER,
+    
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+
+    created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+
+    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
+    enabled INTEGER NOT NULL DEFAULT 1,
+
+    -- Constraints
+    UNIQUE(subdomain, name)
 );
 
 CREATE TABLE job_stats_daily (
@@ -69,33 +85,7 @@ CREATE TABLE jobs (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE site_identities (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
-    name TEXT NOT NULL CHECK(length(name) <= 32),
-
-    password TEXT NOT NULL CHECK(length(password) <= 128),
-    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
-    role TEXT NOT NULL CHECK(length(role) <= 32),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    last_seen_at INTEGER,
-    last_write_at INTEGER,
-    
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-
-    created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
-
-    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
-    enabled INTEGER NOT NULL DEFAULT 1,
-
-    -- Constraints
-    UNIQUE(subdomain, name)
-);
-
-CREATE TABLE site_settings (
+CREATE TABLE settings (
     subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
     key        TEXT NOT NULL CHECK(length(key) <= 64),
     value      TEXT NOT NULL CHECK(length(value) <= 8192),

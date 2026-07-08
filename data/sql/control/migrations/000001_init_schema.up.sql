@@ -20,18 +20,6 @@ CREATE TABLE events (
 );
 
 
----- ADMINS
-
-CREATE TABLE admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL CHECK(length(name) <= 32),
-    password TEXT NOT NULL CHECK(length(password) <= 128),
-    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
-    role TEXT NOT NULL CHECK(role IN ('admin', 'read')), -- for future use, can have different levels of admin access
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    last_seen_at INTEGER
-);
-
 -- SITE SYNC TABLES
 
 -- This is a basic table that will stop certain urls from being added as data sources, for security and abuse prevention
@@ -118,7 +106,7 @@ CREATE TABLE sites (
 
 -- SITE TABLES
 
-CREATE TABLE site_settings (
+CREATE TABLE settings (
     subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
     key        TEXT NOT NULL CHECK(length(key) <= 64),
     value      TEXT NOT NULL CHECK(length(value) <= 8192),
@@ -131,7 +119,7 @@ CREATE TABLE site_settings (
 );
 
 -- This table is like users and devices
-CREATE TABLE site_identities (
+CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
     name TEXT NOT NULL CHECK(length(name) <= 32),
@@ -156,7 +144,6 @@ CREATE TABLE site_identities (
     -- Constraints
     UNIQUE(subdomain, name)
 );
-
 
 -- USER SYNC TABLES
 

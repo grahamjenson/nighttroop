@@ -21,7 +21,7 @@ type SiteContext struct {
 	SiteDB    *db.SiteDB
 	SiteModel *control.Site
 
-	IdentityModel *control.SiteIdentity
+	IdentityModel *control.Identity
 
 	Subdomain string
 
@@ -64,7 +64,7 @@ func SetSiteDBAndModelAndCreateSiteContext(ctx context.Context, controlDB *db.Co
 // //
 // IdentityModel
 // //
-func SetIdentityModelInSiteContext(ctx context.Context, identityModel *control.SiteIdentity) context.Context {
+func SetIdentityModelInSiteContext(ctx context.Context, identityModel *control.Identity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
 	return context.WithValue(ctx, SiteContextKey, siteContext)

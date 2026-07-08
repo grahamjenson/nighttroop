@@ -114,7 +114,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.SiteIdentity, error) {
+func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.Identity, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -155,13 +155,13 @@ func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.
 	return nil, fmt.Errorf("No JWT token found")
 }
 
-func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.SiteIdentity, error) {
+func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.Identity, error) {
 	siteContext := httputils.GetSiteContext(ctx)
 	if subdomain != siteContext.Subdomain {
 		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
 	}
 
-	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, control.GetSiteIdentityParams{
+	identity, err := siteContext.ControlDB.Queries.GetIdentity(ctx, control.GetIdentityParams{
 		Subdomain: subdomain,
 		Name:      identityName,
 	})

@@ -195,11 +195,11 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.Han
 	}
 }
 
-func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*control.SiteIdentity, error) {
+func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*control.Identity, error) {
 	// First try the JWT token (either header or cookie)
 	siteContext := httputils.GetSiteContext(r.Context())
 
-	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+	identity, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
 		Subdomain: siteContext.Subdomain,
 		Name:      identityNameFromToken,
 	})
@@ -209,12 +209,12 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	return identity, nil
 }
 
-func loginTheUserPasswordOnly(controlDB *db.ControlDB, subdomain, formName, formPassword string) (*control.SiteIdentity, error) {
+func loginTheUserPasswordOnly(controlDB *db.ControlDB, subdomain, formName, formPassword string) (*control.Identity, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+	identity, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
 		Subdomain: subdomain,
 		Name:      formName,
 	})
@@ -229,7 +229,7 @@ func loginTheUserPasswordOnly(controlDB *db.ControlDB, subdomain, formName, form
 	return identity, nil
 }
 
-func validateIdentityTOTP(config config.ServerConfig, identity *control.SiteIdentity, totpToken string) error {
+func validateIdentityTOTP(config config.ServerConfig, identity *control.Identity, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
@@ -309,7 +309,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 }
 
-func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg config.ServerConfig, devicename, password, totpToken string) (*control.SiteIdentity, error) {
+func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg config.ServerConfig, devicename, password, totpToken string) (*control.Identity, error) {
 	device, err := loginTheUserPasswordOnly(controlDB, subdomain, devicename, password)
 	if err != nil {
 		return nil, err

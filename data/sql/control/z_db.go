@@ -24,29 +24,29 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.allIdentitiesStmt, err = db.PrepareContext(ctx, allIdentities); err != nil {
+		return nil, fmt.Errorf("error preparing query AllIdentities: %w", err)
+	}
 	if q.allJobStatsDailyStmt, err = db.PrepareContext(ctx, allJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query AllJobStatsDaily: %w", err)
-	}
-	if q.allSiteIdentitiesStmt, err = db.PrepareContext(ctx, allSiteIdentities); err != nil {
-		return nil, fmt.Errorf("error preparing query AllSiteIdentities: %w", err)
 	}
 	if q.completeJobStmt, err = db.PrepareContext(ctx, completeJob); err != nil {
 		return nil, fmt.Errorf("error preparing query CompleteJob: %w", err)
 	}
-	if q.createAdminStmt, err = db.PrepareContext(ctx, createAdmin); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateAdmin: %w", err)
-	}
 	if q.createDexcomSyncSourceStmt, err = db.PrepareContext(ctx, createDexcomSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateDexcomSyncSource: %w", err)
+	}
+	if q.createIdentityStmt, err = db.PrepareContext(ctx, createIdentity); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateIdentity: %w", err)
+	}
+	if q.createIfNotExistsIdentityStmt, err = db.PrepareContext(ctx, createIfNotExistsIdentity); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateIfNotExistsIdentity: %w", err)
 	}
 	if q.createNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, createNightscoutSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateNightscoutSyncSource: %w", err)
 	}
 	if q.createSiteStmt, err = db.PrepareContext(ctx, createSite); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSite: %w", err)
-	}
-	if q.createSiteIdentityStmt, err = db.PrepareContext(ctx, createSiteIdentity); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateSiteIdentity: %w", err)
 	}
 	if q.createSyncReportsForAllSyncSourcesStmt, err = db.PrepareContext(ctx, createSyncReportsForAllSyncSources); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSyncReportsForAllSyncSources: %w", err)
@@ -72,9 +72,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.findJobStmt, err = db.PrepareContext(ctx, findJob); err != nil {
 		return nil, fmt.Errorf("error preparing query FindJob: %w", err)
 	}
-	if q.getAdminStmt, err = db.PrepareContext(ctx, getAdmin); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAdmin: %w", err)
-	}
 	if q.getAllSiteSyncSourcesForSiteStmt, err = db.PrepareContext(ctx, getAllSiteSyncSourcesForSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSiteSyncSourcesForSite: %w", err)
 	}
@@ -86,6 +83,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getBatchSitesStmt, err = db.PrepareContext(ctx, getBatchSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBatchSites: %w", err)
+	}
+	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
+		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
 	}
 	if q.getInactiveSitesStmt, err = db.PrepareContext(ctx, getInactiveSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInactiveSites: %w", err)
@@ -101,9 +101,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSiteStmt, err = db.PrepareContext(ctx, getSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSite: %w", err)
-	}
-	if q.getSiteIdentityStmt, err = db.PrepareContext(ctx, getSiteIdentity); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSiteIdentity: %w", err)
 	}
 	if q.getSyncReportsToRunStmt, err = db.PrepareContext(ctx, getSyncReportsToRun); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSyncReportsToRun: %w", err)
@@ -135,6 +132,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateDexcomSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateDexcomSyncSourceWithoutPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSourceWithoutPassword: %w", err)
 	}
+	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
+	}
 	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
 	}
@@ -147,9 +147,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDateFlags: %w", err)
 	}
-	if q.updateSiteIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteIdentityDateFlags); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityDateFlags: %w", err)
-	}
 	if q.updateSyncReportAttemptStmt, err = db.PrepareContext(ctx, updateSyncReportAttempt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncReportAttempt: %w", err)
 	}
@@ -159,25 +156,25 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSyncSourceReportsSuccessStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsSuccess); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsSuccess: %w", err)
 	}
-	if q.getSiteSettingFromDBStmt, err = db.PrepareContext(ctx, getSiteSettingFromDB); err != nil {
-		return nil, fmt.Errorf("error preparing query getSiteSettingFromDB: %w", err)
+	if q.getSettingFromDBStmt, err = db.PrepareContext(ctx, getSettingFromDB); err != nil {
+		return nil, fmt.Errorf("error preparing query getSettingFromDB: %w", err)
 	}
-	if q.upsertSiteSettingToDBStmt, err = db.PrepareContext(ctx, upsertSiteSettingToDB); err != nil {
-		return nil, fmt.Errorf("error preparing query upsertSiteSettingToDB: %w", err)
+	if q.upsertSettingToDBStmt, err = db.PrepareContext(ctx, upsertSettingToDB); err != nil {
+		return nil, fmt.Errorf("error preparing query upsertSettingToDB: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
+	if q.allIdentitiesStmt != nil {
+		if cerr := q.allIdentitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allIdentitiesStmt: %w", cerr)
+		}
+	}
 	if q.allJobStatsDailyStmt != nil {
 		if cerr := q.allJobStatsDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allJobStatsDailyStmt: %w", cerr)
-		}
-	}
-	if q.allSiteIdentitiesStmt != nil {
-		if cerr := q.allSiteIdentitiesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allSiteIdentitiesStmt: %w", cerr)
 		}
 	}
 	if q.completeJobStmt != nil {
@@ -185,14 +182,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing completeJobStmt: %w", cerr)
 		}
 	}
-	if q.createAdminStmt != nil {
-		if cerr := q.createAdminStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createAdminStmt: %w", cerr)
-		}
-	}
 	if q.createDexcomSyncSourceStmt != nil {
 		if cerr := q.createDexcomSyncSourceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createDexcomSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.createIdentityStmt != nil {
+		if cerr := q.createIdentityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createIdentityStmt: %w", cerr)
+		}
+	}
+	if q.createIfNotExistsIdentityStmt != nil {
+		if cerr := q.createIfNotExistsIdentityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createIfNotExistsIdentityStmt: %w", cerr)
 		}
 	}
 	if q.createNightscoutSyncSourceStmt != nil {
@@ -203,11 +205,6 @@ func (q *Queries) Close() error {
 	if q.createSiteStmt != nil {
 		if cerr := q.createSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createSiteStmt: %w", cerr)
-		}
-	}
-	if q.createSiteIdentityStmt != nil {
-		if cerr := q.createSiteIdentityStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createSiteIdentityStmt: %w", cerr)
 		}
 	}
 	if q.createSyncReportsForAllSyncSourcesStmt != nil {
@@ -250,11 +247,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing findJobStmt: %w", cerr)
 		}
 	}
-	if q.getAdminStmt != nil {
-		if cerr := q.getAdminStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAdminStmt: %w", cerr)
-		}
-	}
 	if q.getAllSiteSyncSourcesForSiteStmt != nil {
 		if cerr := q.getAllSiteSyncSourcesForSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAllSiteSyncSourcesForSiteStmt: %w", cerr)
@@ -273,6 +265,11 @@ func (q *Queries) Close() error {
 	if q.getBatchSitesStmt != nil {
 		if cerr := q.getBatchSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getBatchSitesStmt: %w", cerr)
+		}
+	}
+	if q.getIdentityStmt != nil {
+		if cerr := q.getIdentityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
 		}
 	}
 	if q.getInactiveSitesStmt != nil {
@@ -298,11 +295,6 @@ func (q *Queries) Close() error {
 	if q.getSiteStmt != nil {
 		if cerr := q.getSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteStmt: %w", cerr)
-		}
-	}
-	if q.getSiteIdentityStmt != nil {
-		if cerr := q.getSiteIdentityStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSiteIdentityStmt: %w", cerr)
 		}
 	}
 	if q.getSyncReportsToRunStmt != nil {
@@ -355,6 +347,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateDexcomSyncSourceWithoutPasswordStmt: %w", cerr)
 		}
 	}
+	if q.updateIdentityDateFlagsStmt != nil {
+		if cerr := q.updateIdentityDateFlagsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
+		}
+	}
 	if q.updateJobStatsDailyStmt != nil {
 		if cerr := q.updateJobStatsDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateJobStatsDailyStmt: %w", cerr)
@@ -375,11 +372,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteDateFlagsStmt: %w", cerr)
 		}
 	}
-	if q.updateSiteIdentityDateFlagsStmt != nil {
-		if cerr := q.updateSiteIdentityDateFlagsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSiteIdentityDateFlagsStmt: %w", cerr)
-		}
-	}
 	if q.updateSyncReportAttemptStmt != nil {
 		if cerr := q.updateSyncReportAttemptStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSyncReportAttemptStmt: %w", cerr)
@@ -395,14 +387,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSyncSourceReportsSuccessStmt: %w", cerr)
 		}
 	}
-	if q.getSiteSettingFromDBStmt != nil {
-		if cerr := q.getSiteSettingFromDBStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSiteSettingFromDBStmt: %w", cerr)
+	if q.getSettingFromDBStmt != nil {
+		if cerr := q.getSettingFromDBStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSettingFromDBStmt: %w", cerr)
 		}
 	}
-	if q.upsertSiteSettingToDBStmt != nil {
-		if cerr := q.upsertSiteSettingToDBStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing upsertSiteSettingToDBStmt: %w", cerr)
+	if q.upsertSettingToDBStmt != nil {
+		if cerr := q.upsertSettingToDBStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertSettingToDBStmt: %w", cerr)
 		}
 	}
 	return err
@@ -444,14 +436,14 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                            DBTX
 	tx                                            *sql.Tx
+	allIdentitiesStmt                             *sql.Stmt
 	allJobStatsDailyStmt                          *sql.Stmt
-	allSiteIdentitiesStmt                         *sql.Stmt
 	completeJobStmt                               *sql.Stmt
-	createAdminStmt                               *sql.Stmt
 	createDexcomSyncSourceStmt                    *sql.Stmt
+	createIdentityStmt                            *sql.Stmt
+	createIfNotExistsIdentityStmt                 *sql.Stmt
 	createNightscoutSyncSourceStmt                *sql.Stmt
 	createSiteStmt                                *sql.Stmt
-	createSiteIdentityStmt                        *sql.Stmt
 	createSyncReportsForAllSyncSourcesStmt        *sql.Stmt
 	deleteJobsByIdsStmt                           *sql.Stmt
 	deleteSitesStmt                               *sql.Stmt
@@ -460,17 +452,16 @@ type Queries struct {
 	ensureJobStatsDailyForGroupStmt               *sql.Stmt
 	failJobStmt                                   *sql.Stmt
 	findJobStmt                                   *sql.Stmt
-	getAdminStmt                                  *sql.Stmt
 	getAllSiteSyncSourcesForSiteStmt              *sql.Stmt
 	getAllSiteSyncSourcesForUniqueHashStmt        *sql.Stmt
 	getAllSitesStmt                               *sql.Stmt
 	getBatchSitesStmt                             *sql.Stmt
+	getIdentityStmt                               *sql.Stmt
 	getInactiveSitesStmt                          *sql.Stmt
 	getJobsToBeSummarisedStmt                     *sql.Stmt
 	getNeverSeenSitesStmt                         *sql.Stmt
 	getNotDeletedSitesStmt                        *sql.Stmt
 	getSiteStmt                                   *sql.Stmt
-	getSiteIdentityStmt                           *sql.Stmt
 	getSyncReportsToRunStmt                       *sql.Stmt
 	markJobsForConsumerStmt                       *sql.Stmt
 	queueJobIgnoreDupeStmt                        *sql.Stmt
@@ -481,30 +472,30 @@ type Queries struct {
 	truncateEventsStmt                            *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
+	updateIdentityDateFlagsStmt                   *sql.Stmt
 	updateJobStatsDailyStmt                       *sql.Stmt
 	updateNightscoutSyncSourceStmt                *sql.Stmt
 	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
 	updateSiteDateFlagsStmt                       *sql.Stmt
-	updateSiteIdentityDateFlagsStmt               *sql.Stmt
 	updateSyncReportAttemptStmt                   *sql.Stmt
 	updateSyncSourceReportsFailureStmt            *sql.Stmt
 	updateSyncSourceReportsSuccessStmt            *sql.Stmt
-	getSiteSettingFromDBStmt                      *sql.Stmt
-	upsertSiteSettingToDBStmt                     *sql.Stmt
+	getSettingFromDBStmt                          *sql.Stmt
+	upsertSettingToDBStmt                         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                            tx,
 		tx:                                            tx,
+		allIdentitiesStmt:                             q.allIdentitiesStmt,
 		allJobStatsDailyStmt:                          q.allJobStatsDailyStmt,
-		allSiteIdentitiesStmt:                         q.allSiteIdentitiesStmt,
 		completeJobStmt:                               q.completeJobStmt,
-		createAdminStmt:                               q.createAdminStmt,
 		createDexcomSyncSourceStmt:                    q.createDexcomSyncSourceStmt,
+		createIdentityStmt:                            q.createIdentityStmt,
+		createIfNotExistsIdentityStmt:                 q.createIfNotExistsIdentityStmt,
 		createNightscoutSyncSourceStmt:                q.createNightscoutSyncSourceStmt,
 		createSiteStmt:                                q.createSiteStmt,
-		createSiteIdentityStmt:                        q.createSiteIdentityStmt,
 		createSyncReportsForAllSyncSourcesStmt:        q.createSyncReportsForAllSyncSourcesStmt,
 		deleteJobsByIdsStmt:                           q.deleteJobsByIdsStmt,
 		deleteSitesStmt:                               q.deleteSitesStmt,
@@ -513,17 +504,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		ensureJobStatsDailyForGroupStmt:               q.ensureJobStatsDailyForGroupStmt,
 		failJobStmt:                                   q.failJobStmt,
 		findJobStmt:                                   q.findJobStmt,
-		getAdminStmt:                                  q.getAdminStmt,
 		getAllSiteSyncSourcesForSiteStmt:              q.getAllSiteSyncSourcesForSiteStmt,
 		getAllSiteSyncSourcesForUniqueHashStmt:        q.getAllSiteSyncSourcesForUniqueHashStmt,
 		getAllSitesStmt:                               q.getAllSitesStmt,
 		getBatchSitesStmt:                             q.getBatchSitesStmt,
+		getIdentityStmt:                               q.getIdentityStmt,
 		getInactiveSitesStmt:                          q.getInactiveSitesStmt,
 		getJobsToBeSummarisedStmt:                     q.getJobsToBeSummarisedStmt,
 		getNeverSeenSitesStmt:                         q.getNeverSeenSitesStmt,
 		getNotDeletedSitesStmt:                        q.getNotDeletedSitesStmt,
 		getSiteStmt:                                   q.getSiteStmt,
-		getSiteIdentityStmt:                           q.getSiteIdentityStmt,
 		getSyncReportsToRunStmt:                       q.getSyncReportsToRunStmt,
 		markJobsForConsumerStmt:                       q.markJobsForConsumerStmt,
 		queueJobIgnoreDupeStmt:                        q.queueJobIgnoreDupeStmt,
@@ -534,15 +524,15 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		truncateEventsStmt:                            q.truncateEventsStmt,
 		updateDexcomSyncSourceStmt:                    q.updateDexcomSyncSourceStmt,
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
+		updateIdentityDateFlagsStmt:                   q.updateIdentityDateFlagsStmt,
 		updateJobStatsDailyStmt:                       q.updateJobStatsDailyStmt,
 		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
 		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
 		updateSiteDateFlagsStmt:                       q.updateSiteDateFlagsStmt,
-		updateSiteIdentityDateFlagsStmt:               q.updateSiteIdentityDateFlagsStmt,
 		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
 		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
 		updateSyncSourceReportsSuccessStmt:            q.updateSyncSourceReportsSuccessStmt,
-		getSiteSettingFromDBStmt:                      q.getSiteSettingFromDBStmt,
-		upsertSiteSettingToDBStmt:                     q.upsertSiteSettingToDBStmt,
+		getSettingFromDBStmt:                          q.getSettingFromDBStmt,
+		upsertSettingToDBStmt:                         q.upsertSettingToDBStmt,
 	}
 }

@@ -10,21 +10,21 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-var settings = map[string]SiteSettingType{
+var settings = map[string]SettingType{
 	"timezone": TimezoneSetting,
 	"units":    UnitsSetting,
 }
 
-func GetSiteSettingTypeFromKey(key string) (SiteSettingType, bool) {
+func GetSettingTypeFromKey(key string) (SettingType, bool) {
 	setting, ok := settings[key]
 	return setting, ok
 }
 
-type SiteSettingType interface {
+type SettingType interface {
 	GetKey() string
 	GetValue(ctx context.Context, subdomain string, q *Queries) (any, error)
-	GetValueModel(ctx context.Context, subdomain string, q *Queries) (*SiteSetting, error)
-	UpsertValue(ctx context.Context, subdomain string, q *Queries, value any) (*SiteSetting, error)
+	GetValueModel(ctx context.Context, subdomain string, q *Queries) (*Setting, error)
+	UpsertValue(ctx context.Context, subdomain string, q *Queries, value any) (*Setting, error)
 	CreateValue(jsonString string) (any, error)
 }
 
@@ -40,7 +40,7 @@ func (s timezoneSetting) GetKey() string {
 	return "timezone"
 }
 
-func (s timezoneSetting) UpsertValue(ctx context.Context, subdomain string, q *Queries, value any) (*SiteSetting, error) {
+func (s timezoneSetting) UpsertValue(ctx context.Context, subdomain string, q *Queries, value any) (*Setting, error) {
 	if value == nil {
 		return nil, sql.ErrNoRows
 	}
@@ -64,8 +64,8 @@ func (s timezoneSetting) CreateValue(jsonString string) (any, error) {
 	return x, nil
 }
 
-func (s timezoneSetting) GetValueModel(ctx context.Context, subdomain string, q *Queries) (*SiteSetting, error) {
-	return q.getSiteSettingFromDB(ctx, getSiteSettingFromDBParams{
+func (s timezoneSetting) GetValueModel(ctx context.Context, subdomain string, q *Queries) (*Setting, error) {
+	return q.getSettingFromDB(ctx, getSettingFromDBParams{
 		Subdomain: subdomain,
 		Key:       s.GetKey(),
 	})
@@ -83,7 +83,7 @@ func (s unitsSetting) GetKey() string {
 	return "units"
 }
 
-func (s unitsSetting) UpsertValue(ctx context.Context, subdomain string, q *Queries, value any) (*SiteSetting, error) {
+func (s unitsSetting) UpsertValue(ctx context.Context, subdomain string, q *Queries, value any) (*Setting, error) {
 	if value == nil {
 		return nil, sql.ErrNoRows
 	}
@@ -98,8 +98,8 @@ func (s unitsSetting) GetValue(ctx context.Context, subdomain string, q *Queries
 	return getSettingValue(ctx, q, subdomain, s.GetKey(), &UnitsSettingValue{}, UnitsSettingValue{Units: consts.UNITS_MG_DL})
 }
 
-func (s unitsSetting) GetValueModel(ctx context.Context, subdomain string, q *Queries) (*SiteSetting, error) {
-	return q.getSiteSettingFromDB(ctx, getSiteSettingFromDBParams{
+func (s unitsSetting) GetValueModel(ctx context.Context, subdomain string, q *Queries) (*Setting, error) {
+	return q.getSettingFromDB(ctx, getSettingFromDBParams{
 		Subdomain: subdomain,
 		Key:       s.GetKey(),
 	})
@@ -126,7 +126,7 @@ func getSettingValue(
 	retValue any,
 	defaultValue any,
 ) (any, error) {
-	value, err := q.getSiteSettingFromDB(ctx, getSiteSettingFromDBParams{
+	value, err := q.getSettingFromDB(ctx, getSettingFromDBParams{
 		Subdomain: subdomain,
 		Key:       key,
 	})
@@ -149,23 +149,23 @@ func setSetting(
 	subdomain string,
 	key string,
 	value any,
-) (*SiteSetting, error) {
+) (*Setting, error) {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return nil, err
 	}
-	return q.upsertSiteSettingToDB(ctx, upsertSiteSettingToDBParams{
+	return q.upsertSettingToDB(ctx, upsertSettingToDBParams{
 		Subdomain: subdomain,
 		Key:       key, Json: string(data),
 	})
 }
 
 // Neeed to fit some other interfaces
-func (s *SiteSetting) GetCreatedByIdentityName() string {
+func (s *Setting) GetCreatedByIdentityName() string {
 	return ""
 }
 
 // Neeed to fit some other interfaces
-func (s *SiteSetting) GetID() string {
+func (s *Setting) GetID() string {
 	return ""
 }

@@ -56,7 +56,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) h
 }
 
 func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site_templ.UserIdentity, []*site_templ.UserIdentity, error) {
-	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{Subdomain: siteContext.Subdomain})
+	identities, err := siteContext.ControlDB.Queries.AllIdentities(context, control.AllIdentitiesParams{Subdomain: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}

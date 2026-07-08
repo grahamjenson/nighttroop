@@ -9,16 +9,6 @@ import (
 	"nighttroop.t1d.nz/utils/errors"
 )
 
-type Admin struct {
-	ID         int64
-	Name       string
-	Password   string
-	TotpSecret string
-	Role       consts.AdminRole
-	CreatedAt  int64
-	LastSeenAt *int64
-}
-
 type DataSourceBlockList struct {
 	ID        int64
 	CreatedAt int64
@@ -33,6 +23,24 @@ type Event struct {
 	Details *string
 	Start   int64
 	End     *int64
+}
+
+type Identity struct {
+	ID                    int64
+	Subdomain             string
+	Name                  string
+	Password              string
+	TotpSecret            string
+	Role                  consts.IdentityRole
+	CreatedAt             int64
+	LastSeenAt            *int64
+	LastWriteAt           *int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
+	DeletedAt             *int64
+	Enabled               bool
 }
 
 type Job struct {
@@ -62,6 +70,15 @@ type JobStatsDaily struct {
 	UpdatedAt          int64
 }
 
+type Setting struct {
+	Subdomain string
+	Key       string
+	Value     string
+	DeletedAt *int64
+	CreatedAt int64
+	UpdatedAt int64
+}
+
 type Site struct {
 	ID               int64
 	Subdomain        string
@@ -72,33 +89,6 @@ type Site struct {
 	LastSeenAt       *int64
 	LastWriteAt      *int64
 	DeletedAt        *int64
-}
-
-type SiteIdentity struct {
-	ID                    int64
-	Subdomain             string
-	Name                  string
-	Password              string
-	TotpSecret            string
-	Role                  consts.IdentityRole
-	CreatedAt             int64
-	LastSeenAt            *int64
-	LastWriteAt           *int64
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	CreatedByIdentityID   int64
-	CreatedByIdentityName string
-	DeletedAt             *int64
-	Enabled               bool
-}
-
-type SiteSetting struct {
-	Subdomain string
-	Key       string
-	Value     string
-	DeletedAt *int64
-	CreatedAt int64
-	UpdatedAt int64
 }
 
 type SiteSyncSource struct {

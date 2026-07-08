@@ -42,7 +42,7 @@ type SyncUserInfo struct {
 	siteModel    *control.Site
 	siteDB       *db.SiteDB
 	controlDB    *db.ControlDB
-	syncIdentity *control.SiteIdentity
+	syncIdentity *control.Identity
 }
 
 func SetupSyncJobManager(config config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -161,7 +161,7 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSy
 	if identityName == "" {
 		return nil, fmt.Errorf("invalid sync source type: %s", syncSource.Type)
 	}
-	identity, err := b.controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+	identity, err := b.controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
 		Subdomain: syncSource.Subdomain,
 		Name:      identityName,
 	})

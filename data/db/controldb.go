@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -57,9 +57,9 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	}
 
 	// If no admin user exists create one with a random password and TOTP secret and print the ENCRYPTED credentials to the console
-	err = controlDB.createAdminIfNoneExists()
+	err = controlDB.seedDefaultIdentities()
 	if err != nil {
-		return nil, fmt.Errorf("cannot create admin user: %w", err)
+		return nil, fmt.Errorf("cannot create default identities: %w", err)
 	}
 
 	// This will go over all non-deleted sites and add them to the control db sites
@@ -92,41 +92,20 @@ func (db *ControlDB) fillSites() ([]string, error) {
 	return sites, nil
 }
 
-func (db *ControlDB) createAdminIfNoneExists() error {
-	ctx := context.TODO()
-	adminName := consts.FIRST_ADMIN_NAME
-	model, err := db.Queries.GetAdmin(ctx, control.GetAdminParams{
-		Name: adminName,
-	})
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("cannot query admin: %w", err)
-	}
-	if model.Name == adminName {
+func (db *ControlDB) seedDefaultIdentities() error {
+	db.CreateIdentity("control", consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	db.CreateIdentity("control", consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	db.CreateIdentity("control", consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+
+	idValues, err := db.CreateIdentity("control", consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	if err != nil && errors.IsUniqueViolationError(err) {
+		// Admin user already exists so we can ignore this error
 		return nil
+	} else if err != nil {
+		return err
 	}
 
-	password, hashedPassword, err := db.serverConfig.Security.GeneratePassword()
-	if err != nil {
-		return fmt.Errorf("cannot generate admin password: %w", err)
-	}
-
-	totpSecret, encTOTPSecret, err := db.serverConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s", adminName, db.serverConfig.HostName))
-	if err != nil {
-		return fmt.Errorf("cannot generate admin TOTP: %w", err)
-	}
-
-	_, err = db.Queries.CreateAdmin(ctx, control.CreateAdminParams{
-		Name:       adminName,
-		Password:   hashedPassword,
-		Role:       "admin",
-		TotpSecret: encTOTPSecret,
-	})
-
-	if err != nil {
-		return fmt.Errorf("cannot create admin: %w", err)
-	}
-
-	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", adminName, password, totpSecret)
+	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", consts.FIRST_ADMIN_NAME, idValues.Password, *idValues.TotpSecret)
 	encBundle, err := db.serverConfig.Security.Encrypt(bundle)
 	if err != nil {
 		return fmt.Errorf("cannot encrypt admin bundle: %w", err)
@@ -485,24 +464,6 @@ func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues,
 		return nil, nil, fmt.Errorf("Failed to Create Default PWD User: NSToken is nil")
 	}
 
-	////
-	// Create Sync Identities (used to trail)
-	////
-	_, err = db.CreateIdentity(subdomain, consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot create dexcom sync identity: %w", err)
-	}
-
-	_, err = db.CreateIdentity(subdomain, consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot create nightscout sync identity: %w", err)
-	}
-
-	_, err = db.CreateIdentity(subdomain, consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot create libre sync identity: %w", err)
-	}
-
 	return adminIdentity, pwdIdentity, nil
 }
 
@@ -535,7 +496,7 @@ func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.I
 		encTOTPSecret = encTOTPSecretRet
 	}
 
-	err = db.Queries.CreateSiteIdentity(context.TODO(), control.CreateSiteIdentityParams{
+	err = db.Queries.CreateIdentity(context.TODO(), control.CreateIdentityParams{
 		Subdomain:  subdomain,
 		Name:       name,
 		Password:   hashedPassword,
@@ -562,7 +523,7 @@ func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.I
 	}, nil
 }
 
-func (db *ControlDB) UpdateIdentityDateFlags(identity *control.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
+func (db *ControlDB) UpdateIdentityDateFlags(identity *control.Identity, updateLastSeen bool, updateLastWrite bool) error {
 
 	// Only update if not seen in 10 minutes
 	lastWriteMoreThan10MinutesAgo := identity.LastWriteAt == nil || time.Now().After(identity.LastWriteAtDate().Add(-10*time.Minute))
@@ -578,7 +539,7 @@ func (db *ControlDB) UpdateIdentityDateFlags(identity *control.SiteIdentity, upd
 		lastWriteAt = &now
 	}
 
-	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), control.UpdateSiteIdentityDateFlagsParams{
+	db.Queries.UpdateIdentityDateFlags(context.TODO(), control.UpdateIdentityDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		ID:          identity.ID,
@@ -591,8 +552,8 @@ func (db *ControlDB) UpdateIdentityDateFlags(identity *control.SiteIdentity, upd
 // Test methods
 ////
 
-func (db *ControlDB) TestOnlyDeleteAllUsers(users []*SiteDB) error {
-	if len(users) == 0 {
+func (db *ControlDB) TestOnlyDeleteAllUsers(sites []*SiteDB) error {
+	if len(sites) == 0 {
 		return nil
 	}
 	db.sites = make(map[string]*SiteDB)

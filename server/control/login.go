@@ -122,9 +122,10 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*control.Admin, error) {
-	admin, err := controlDB.Queries.GetAdmin(context.TODO(), control.GetAdminParams{
-		Name: username,
+func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*control.Identity, error) {
+	admin, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
+		Subdomain: "control",
+		Name:      username,
 	})
 
 	if err != nil {

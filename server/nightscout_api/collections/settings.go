@@ -14,10 +14,10 @@ import (
 )
 
 type SettingsCollection struct {
-	converter func(c *control.SiteSetting) nsutils.Record
+	converter func(c *control.Setting) nsutils.Record
 }
 
-func DBModelToSetting(c *control.SiteSetting) nightscout.Setting {
+func DBModelToSetting(c *control.Setting) nightscout.Setting {
 	return nightscout.Setting{
 		Identifier: ptr(nightscout.IdentifierString(c.Key)),
 		Value:      ptr(nightscout.ShortString(c.Value)),
@@ -41,7 +41,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 
 	key := settingModel.Identifier
 	stringValue := settingModel.Value
-	settingValue, ok := control.GetSiteSettingTypeFromKey(key.String())
+	settingValue, ok := control.GetSettingTypeFromKey(key.String())
 	if !ok {
 		slog.Error("invalid setting key", "key", key)
 		return nil, nsutils.BadDataBodyError
@@ -66,7 +66,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 }
 
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	setting, ok := control.GetSiteSettingTypeFromKey(identifier)
+	setting, ok := control.GetSettingTypeFromKey(identifier)
 	if !ok {
 		return nil, nsutils.ErrNotFound
 	}

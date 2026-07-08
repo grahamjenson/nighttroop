@@ -8,41 +8,6 @@ import (
 
 
 // GetID returns the ID value.
-func (m *Admin) GetID() int64 {
-	return m.ID
-}
-
-// GetName returns the Name value.
-func (m *Admin) GetName() string {
-	return m.Name
-}
-
-// GetPassword returns the Password value.
-func (m *Admin) GetPassword() string {
-	return m.Password
-}
-
-// GetTotpSecret returns the TotpSecret value.
-func (m *Admin) GetTotpSecret() string {
-	return m.TotpSecret
-}
-
-// GetRole returns the Role value.
-func (m *Admin) GetRole() consts.AdminRole {
-	return m.Role
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *Admin) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m *Admin) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// GetID returns the ID value.
 func (m *DataSourceBlockList) GetID() int64 {
 	return m.ID
 }
@@ -90,6 +55,81 @@ func (m *Event) GetStart() int64 {
 // GetEnd returns the End value.
 func (m *Event) GetEnd() *int64 {
 	return m.End
+}
+
+// GetID returns the ID value.
+func (m *Identity) GetID() int64 {
+	return m.ID
+}
+
+// GetSubdomain returns the Subdomain value.
+func (m *Identity) GetSubdomain() string {
+	return m.Subdomain
+}
+
+// GetName returns the Name value.
+func (m *Identity) GetName() string {
+	return m.Name
+}
+
+// GetPassword returns the Password value.
+func (m *Identity) GetPassword() string {
+	return m.Password
+}
+
+// GetTotpSecret returns the TotpSecret value.
+func (m *Identity) GetTotpSecret() string {
+	return m.TotpSecret
+}
+
+// GetRole returns the Role value.
+func (m *Identity) GetRole() consts.IdentityRole {
+	return m.Role
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *Identity) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m *Identity) GetLastSeenAt() *int64 {
+	return m.LastSeenAt
+}
+
+// GetLastWriteAt returns the LastWriteAt value.
+func (m *Identity) GetLastWriteAt() *int64 {
+	return m.LastWriteAt
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m *Identity) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *Identity) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m *Identity) GetCreatedByIdentityID() int64 {
+	return m.CreatedByIdentityID
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *Identity) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *Identity) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetEnabled returns the Enabled value.
+func (m *Identity) GetEnabled() bool {
+	return m.Enabled
 }
 
 // GetDayQueueJob returns the DayQueueJob value.
@@ -197,108 +237,33 @@ func (m *Job) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
-// GetID returns the ID value.
-func (m *SiteIdentity) GetID() int64 {
-	return m.ID
-}
-
 // GetSubdomain returns the Subdomain value.
-func (m *SiteIdentity) GetSubdomain() string {
-	return m.Subdomain
-}
-
-// GetName returns the Name value.
-func (m *SiteIdentity) GetName() string {
-	return m.Name
-}
-
-// GetPassword returns the Password value.
-func (m *SiteIdentity) GetPassword() string {
-	return m.Password
-}
-
-// GetTotpSecret returns the TotpSecret value.
-func (m *SiteIdentity) GetTotpSecret() string {
-	return m.TotpSecret
-}
-
-// GetRole returns the Role value.
-func (m *SiteIdentity) GetRole() consts.IdentityRole {
-	return m.Role
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *SiteIdentity) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m *SiteIdentity) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m *SiteIdentity) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *SiteIdentity) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *SiteIdentity) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *SiteIdentity) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *SiteIdentity) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *SiteIdentity) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetEnabled returns the Enabled value.
-func (m *SiteIdentity) GetEnabled() bool {
-	return m.Enabled
-}
-
-// GetSubdomain returns the Subdomain value.
-func (m *SiteSetting) GetSubdomain() string {
+func (m *Setting) GetSubdomain() string {
 	return m.Subdomain
 }
 
 // GetKey returns the Key value.
-func (m *SiteSetting) GetKey() string {
+func (m *Setting) GetKey() string {
 	return m.Key
 }
 
 // GetValue returns the Value value.
-func (m *SiteSetting) GetValue() string {
+func (m *Setting) GetValue() string {
 	return m.Value
 }
 
 // GetDeletedAt returns the DeletedAt value.
-func (m *SiteSetting) GetDeletedAt() *int64 {
+func (m *Setting) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
 // GetCreatedAt returns the CreatedAt value.
-func (m *SiteSetting) GetCreatedAt() int64 {
+func (m *Setting) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
-func (m *SiteSetting) GetUpdatedAt() int64 {
+func (m *Setting) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 

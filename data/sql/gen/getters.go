@@ -33,7 +33,7 @@ var TableNameMap = map[string]string{
 var AttributeNameMap = map[string]string{}
 
 var TypeLookupMap = map[string]map[string]string{
-	"SiteIdentity": {
+	"Identity": {
 		"Role":    "consts.IdentityRole",
 		"Enabled": "bool",
 	},

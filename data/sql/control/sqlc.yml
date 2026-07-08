@@ -77,10 +77,10 @@ overrides:
 
 
 
-      - column: "site_identities.role"
+      - column: "identities.role"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "IdentityRole"
-      - column: "site_identities.enabled"
+      - column: "identities.enabled"
         go_type:
           type: "bool"
