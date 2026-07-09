@@ -132,6 +132,10 @@ const (
 	Unknown TreatmentEventType = "Unknown"
 )
 
+func (t TreatmentEventType) String() string {
+	return string(t)
+}
+
 func (t TreatmentEventType) ToLocalTypeString() string {
 	switch t {
 	case CorrectionBolus:

@@ -2,12 +2,13 @@
 
 Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL to, and my wife, our school and me can see on devices like phones, watches and smart devices. We also are able to upload information to Nightscout that controls his insulin pump, like carbs he has eaten, or target BGLs for exercise or eating. It is an integral part of how we manage T1D. 
 
-Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when diagnosed with diabetes. Third parties have popped up to host Nightscout for you and charge as much as $12 per month. To save a buck and help people I wanted to host some Nightscout instances for us, but hosting Nightscout is such a PITA:
+Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout for you. These are useful, but can cost as much as $12 per month. 
 
-1. As Nightscout can only host one persons data per server instance, you have to run multiple instances of the same server!
-1. Each instance requires its own Node process and MongoDB database, so is very resource intensive to scale.
-1. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB config... Setup and configuration is so complex that hosts spend most of their development effort on a configuration layer for users. 
-1. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing all more difficult. 
+To help people and to save a buck I looked into hosting my own and other people Nightscout instances, but...
+
+Firstly, Nightscout can only host one persons data per server instance, so you have to run multiple instances of this resource hungry server and database!
+Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is so annoying and counterintuitive that it is almost  
+Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a bit more difficult.
 
 I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user called "NightTroop" (because a group of scouts is a troop).
 What makes NightTroop different from typical projects/products is that:
@@ -15,7 +16,9 @@ What makes NightTroop different from typical projects/products is that:
 1. it would be a wild success if it had 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies.
 1. I don't want to take money for it, so I don't want to spend money on it.
 1. I don't want to collect Personally Identifiable Information (PII) from the users. Since it is hosting health data, I don't want any concern of misuse.
- 
+1. I want it easy to host and self host
+1. I want it easy to use and sign up for
+
 For NightTroop to be sustainable it has to be low complexity and low cost, so the goal is for each user cost $0.01 per-year; 10,000 users is a $100 per year. 
 Lets see how close it can get.
 
@@ -27,24 +30,25 @@ NightTroop needs to be boring, maintainable, easy to setup, low complexity, chea
 Using SQLite lets us get rid of the database external dependency, it is also very fast.
 
 Using SQLite does make deployment and disaster recovery harder because there is no built in replication or high availability.
-To make a Nighttroop trustworthy we will need to be external storage of SQLite DBs.
-Given recent data is so much more important than past data, periodic (say every 5 minutes) snapshots should be fine. 
+To make a Nighttroop trustworthy we will need to be external storage of SQLite DBs, S3 like services are best.
+
+-- TODO Most of the data is continual, and usually not the master copy. only matters recent data is so much more important than past data, periodic (say every 5 minutes) snapshots should be fine. 
 Snapshotting then uploading one giant SQLite DB would block IO then network.
 Sharding data over many USER DB's solves blocking and a few other problems, e.g. managing 10k 2MB DBs should be easier than managing 1 giant 20GB database.
 
 ## Onboarding + Rate Limiting
 
-Not storing PII of a user makes onboarding super simple, it should be as simple as clicking a button and getting access.
-The problem with the anonominity is that it becomes extra work to make sure users are behaving and not over consuming resources.
+Not storing PII of a user makes onboarding super simple, it should be "click a button -> get a site".
+Anonominity adds extra work to make sure users are behaving and not over consuming resources.
 The solution is to:
 
 1. Limiting user creation and limit total users, e.g. one user per minute created and stop creating users at 10k.
 1. Rate limiting API usage and any users background tasks.
 1. Limiting returned data length, e.g. returning a months worth of data every query.
-1. Limiting the size of user databases by truncating old information.
-1. Archiving and deleting inactive users (easier with sharded user DBs).
+1. Limiting the size of user databases by truncating or compressing old information.
+1. Archiving and deleting inactive users.
 
-All of these are the extra work needed to keep the costs down, but should make resource usage more predictable.
+All of these are the extra work because one noisy neighbor is now a problem for many.
 
 # Back of the envelope pricing for 10K users
 

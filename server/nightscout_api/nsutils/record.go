@@ -135,3 +135,11 @@ func DBModelToRecord[T any, PT interface {
 		return record
 	}
 }
+
+func CreateRecordSlice[T any](in []T, fn func(T) Record) []Record {
+	out := make([]Record, len(in))
+	for i, v := range in {
+		out[i] = fn(v)
+	}
+	return out
+}

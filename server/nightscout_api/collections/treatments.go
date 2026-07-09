@@ -57,7 +57,7 @@ func NewTreatmentCollection() TreatmentCollection {
 		nightscout.Announcement:      treatments.UnknownTypeCollection{},
 		nightscout.BGCheck:           treatments.UnknownTypeCollection{},
 		nightscout.BolusWizard:       treatments.UnknownTypeCollection{},
-		nightscout.CarbCorrection:    treatments.CarbsCollection{},
+		nightscout.CarbCorrection:    treatments.NewCarbsCollection(),
 		nightscout.ComboBolus:        treatments.UnknownTypeCollection{},
 		nightscout.CorrectionBolus:   treatments.UnknownTypeCollection{},
 		nightscout.DADAlert:          treatments.UnknownTypeCollection{},
@@ -133,7 +133,25 @@ func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.Sit
 
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
-	for _, typeCollect := range c.treatmentCollectionTypes {
+	for typeKind, typeCollect := range c.treatmentCollectionTypes {
+
+		// Check that the type is not excluded by query
+		if query.TypeEq != nil && *query.TypeEq != typeKind.String() {
+			continue
+		}
+
+		if query.TypeNeq != nil && *query.TypeNeq == typeKind.String() {
+			continue
+		}
+
+		if query.TypeIn != nil && !strings.Contains(*query.TypeIn, typeKind.String()) {
+			continue
+		}
+
+		if query.TypeNin != nil && strings.Contains(*query.TypeNin, typeKind.String()) {
+			continue
+		}
+
 		typeRecords, rerr := typeCollect.Search(ctx, siteContext, query)
 		if rerr != nil {
 			slog.Error("failed to search treatments from database", "error", rerr)

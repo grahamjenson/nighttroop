@@ -15,15 +15,14 @@ type CarbsCollection struct {
 	converter func(c *site.Carb) nsutils.Record
 }
 
-func (c CarbsCollection) GetPrefix() string {
-	return "cc"
+func NewCarbsCollection() CarbsCollection {
+	return CarbsCollection{
+		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.CarbsDBModelToTreatment),
+	}
 }
 
-func (c CarbsCollection) converterToRecord(carb *site.Carb) nsutils.Record {
-	if c.converter == nil {
-		c.converter = nsutils.DBModelToRecord(nsutils.Treatments, nightscout.CarbsDBModelToTreatment)
-	}
-	return c.converter(carb)
+func (c CarbsCollection) GetPrefix() string {
+	return "cc"
 }
 
 func (c CarbsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
@@ -39,25 +38,39 @@ func (c CarbsCollection) Create(ctx context.Context, siteContext *httputils.Site
 		slog.Error("failed to create carb in database", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	return ptr(c.converterToRecord(dbModel)), nil
+	return ptr(c.converter(dbModel)), nil
 }
 
-func (u CarbsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c CarbsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (u CarbsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c CarbsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+	var rerr error
+	var carbs []*site.Carb
+
+	if !query.HasFilters {
+		carbs, rerr = siteContext.SiteDB.Queries.AllCarbs(ctx, nsquery.CarbsSearchAll(query))
+	} else {
+		carbs, rerr = siteContext.SiteDB.Queries.SearchWithDefaultSortCarbs(ctx, nsquery.CarbsSearchDefaultOrder(query))
+	}
+
+	if rerr != nil {
+		slog.Error("failed to query carbs from database", "error", rerr)
+		return nil, nsutils.ErrInternal
+	}
+
+	return nsutils.CreateRecordSlice(carbs, c.converter), nil
+}
+
+func (c CarbsCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (u CarbsCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
-}
-
-func (u CarbsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c CarbsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (u CarbsCollection) DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError) {
+func (c CarbsCollection) DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

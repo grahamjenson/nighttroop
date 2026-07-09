@@ -89,7 +89,7 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 
-	return CreateRecordSlice(entries, c.converter), nil
+	return nsutils.CreateRecordSlice(entries, c.converter), nil
 }
 
 func (c EntriesCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
