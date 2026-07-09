@@ -423,6 +423,35 @@ func TempBasalDBModelToTreatment(source *site.TempBasal) Treatment {
 	}
 	return nightscoutTreatment
 }
+func TempTargetDBModelToTreatment(source *site.TempTarget) Treatment {
+	var nightscoutTreatment Treatment
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
+		nightscoutTreatment.EventType = DBTypeToTreatmentType((*source))
+		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
+		nightscoutTreatment.EnteredBy = &pNightscoutShortString
+		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).HighTarget)
+		nightscoutTreatment.TargetTop = &pNightscoutFlexibleFloat64
+		pNightscoutFlexibleFloat642 := FlexibleFloat64((*source).LowTarget)
+		nightscoutTreatment.TargetBottom = &pNightscoutFlexibleFloat642
+		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).Start)
+		nightscoutTreatment.Date = &pNightscoutDateInt
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		pNightscoutDateInt2 := DateInt((*source).CreatedAt)
+		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
+		pNightscoutDateInt3 := DateInt((*source).UpdatedAt)
+		nightscoutTreatment.SrvModified = &pNightscoutDateInt3
+		if (*source).RawJsonData != nil {
+			nightscoutTreatment.RawJsonData = *(*source).RawJsonData
+		}
+	}
+	return nightscoutTreatment
+}
 func TreatmentToCreateBolus(source Treatment, context CreateContext) site.CreateBolusParams {
 	var siteCreateBolusParams site.CreateBolusParams
 	siteCreateBolusParams.ID = AssignID(source.Date, context)

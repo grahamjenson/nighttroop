@@ -50,10 +50,14 @@ type Query struct {
 	// Treatments
 	CarbsEQ  *int64
 	CarbsGTE *int64
+	CarbsGT  *int64
+	CarbsLTE *int64
 	CarbsLT  *int64
 
 	InsulinEQ  *int64
 	InsulinGTE *int64
+	InsulinGT  *int64
+	InsulinLTE *int64
 	InsulinLT  *int64
 
 	NameEq         *string

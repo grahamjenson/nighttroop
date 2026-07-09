@@ -58,10 +58,14 @@ type QueryValues struct {
 	// Treatments
 	CarbsEQ  *nightscout.FlexibleInt64 `mapstructure:"carbseq,omitempty" json:"carbseq,omitempty"`
 	CarbsGTE *nightscout.FlexibleInt64 `mapstructure:"carbsgte,omitempty" json:"carbsgte,omitempty"`
+	CarbsGT  *nightscout.FlexibleInt64 `mapstructure:"carbsgt,omitempty" json:"carbsgt,omitempty"`
+	CarbsLTE *nightscout.FlexibleInt64 `mapstructure:"carbslte,omitempty" json:"carbslte,omitempty"`
 	CarbsLT  *nightscout.FlexibleInt64 `mapstructure:"carbslt,omitempty" json:"carbslt,omitempty"`
 
 	InsulinEQ  *nightscout.FlexibleInt64 `mapstructure:"insulineq,omitempty" json:"insulineq,omitempty"`
 	InsulinGTE *nightscout.FlexibleInt64 `mapstructure:"insulingte,omitempty" json:"insulingte,omitempty"`
+	InsulinGT  *nightscout.FlexibleInt64 `mapstructure:"insulingt,omitempty" json:"insulingt,omitempty"`
+	InsulinLTE *nightscout.FlexibleInt64 `mapstructure:"insulinlte,omitempty" json:"insulinlte,omitempty"`
 	InsulinLT  *nightscout.FlexibleInt64 `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
 
 	NameEq *nightscout.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
@@ -132,10 +136,14 @@ var forwardLookupName = map[string][]string{
 
 	"carbseq":  {"carbs", "find[carbs]", "find[carbs][$eq]"},
 	"carbsgte": {"carbs$gte", "find[carbs][$gte]"},
+	"carbsgt":  {"carbs$gt", "find[carbs][$gt]"},
+	"carbslte": {"carbs$lte", "find[carbs][$lte]"},
 	"carbslt":  {"carbs$lt", "find[carbs][$lt]"},
 
 	"insulineq":  {"insulin", "find[insulin]", "find[insulin][$eq]"},
 	"insulingte": {"insulin$gte", "find[insulin][$gte]"},
+	"insulingt":  {"insulin$gt", "find[insulin][$gt]"},
+	"insulinlte": {"insulin$lte", "find[insulin][$lte]"},
 	"insulinlt":  {"insulin$lt", "find[insulin][$lt]"},
 
 	"nameeq": {"name", "find[name]", "find[name][$eq]",

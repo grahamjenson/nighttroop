@@ -289,6 +289,7 @@ type MapConverter interface {
 	///////
 	// Temp Targets
 	///////
+
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:context ctx
 	// goverter:map  App CreatedByAppName
@@ -312,6 +313,21 @@ type MapConverter interface {
 	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	TreatmentToUpdateTempTarget(source Treatment, ctx UpdateContext) site.UpdateTempTargetParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Glucose GlucoseType Insulin Carbs Duration Notes Profile Percentage Rate Absolute Reason Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
+	// goverter:map ID Identifier
+	// goverter:map Value Rate
+	// goverter:map Value Absolute
+	// goverter:map CreatedByIdentityName EnteredBy
+	// goverter:map . EventType  	    | DBTypeToTreatmentType
+	// goverter:map . CreatedAt         | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map Start Date
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	// goverter:map HighTarget TargetTop
+	// goverter:map LowTarget TargetBottom
+	TempTargetDBModelToTreatment(source *site.TempTarget) Treatment
 
 	///////
 	// Notes

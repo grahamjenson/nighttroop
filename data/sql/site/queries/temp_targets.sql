@@ -32,7 +32,9 @@ RETURNING *;
 
 
 -- name: AllTempTargets :many
-SELECT * FROM temp_targets ORDER BY start DESC;
+SELECT * FROM temp_targets
+ORDER BY start DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: GetTempTarget :one
 SELECT * FROM temp_targets WHERE id = ?;

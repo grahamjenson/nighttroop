@@ -28,6 +28,13 @@ type ToSearchParams interface {
 
 	// goverter:map . SortOrder | GetSortOrderInt64
 	GlucoseSearchNonDefaultOrder(source Query) site.SearchWithNonDefaultSortGlucoseReadingsParams
+
+	//////
+	// Carbs
+	//////
+
+	CarbsSearchAll(source Query) site.AllCarbsParams
+	CarbsSearchDefaultOrder(source Query) site.SearchWithDefaultSortCarbsParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {

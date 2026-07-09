@@ -177,7 +177,6 @@ CREATE TABLE temp_targets (
 );
 
 
-
 CREATE TABLE profile (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 

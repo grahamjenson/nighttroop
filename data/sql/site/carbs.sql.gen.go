@@ -11,14 +11,21 @@ import (
 
 const allCarbs = `-- name: AllCarbs :many
 
-SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM carbs ORDER BY occurred_at DESC
+SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM carbs 
+ORDER BY occurred_at DESC
+LIMIT ?2 OFFSET ?1
 `
+
+type AllCarbsParams struct {
+	Skip  int64
+	Limit int64
+}
 
 // ------
 // READ
 // ------
-func (q *Queries) AllCarbs(ctx context.Context) ([]*Carb, error) {
-	rows, err := q.query(ctx, q.allCarbsStmt, allCarbs)
+func (q *Queries) AllCarbs(ctx context.Context, arg AllCarbsParams) ([]*Carb, error) {
+	rows, err := q.query(ctx, q.allCarbsStmt, allCarbs, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +158,132 @@ func (q *Queries) GetCarb(ctx context.Context, arg GetCarbParams) (*Carb, error)
 		&i.CreatedByIdentityID,
 	)
 	return &i, err
+}
+
+const searchWithDefaultSortCarbs = `-- name: SearchWithDefaultSortCarbs :many
+SELECT id, amount, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM carbs
+WHERE
+    (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
+    AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
+    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at > ?3)
+    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at < ?4)
+
+    AND (CAST(?5 AS INTEGER) IS NULL OR created_at >= ?5)
+    AND (CAST(?6 AS INTEGER) IS NULL OR created_at <= ?6)
+    AND (CAST(?7 AS INTEGER) IS NULL OR created_at > ?7)
+    AND (CAST(?8 AS INTEGER) IS NULL OR created_at < ?8)
+
+    AND (CAST(?9 AS INTEGER) IS NULL OR updated_at >= ?9)
+    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at <= ?10)
+    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at > ?11)
+    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at < ?12)
+
+    AND (CAST(?13 AS TEXT) IS NULL OR id = ?13)
+    AND (CAST(?14 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?14)))
+
+    AND (CAST(?15 AS TEXT) IS NULL OR created_by_device_name = ?15)
+    AND (CAST(?16 AS TEXT) IS NULL OR created_by_app_name = ?16)
+
+    AND (CAST(?17 AS INTEGER) IS NULL OR amount = ?17)
+    AND (CAST(?18 AS INTEGER) IS NULL OR amount >= ?18)
+    AND (CAST(?19 AS INTEGER) IS NULL OR amount > ?19)
+    AND (CAST(?20 AS INTEGER) IS NULL OR amount <= ?20)
+    AND (CAST(?21 AS INTEGER) IS NULL OR amount < ?21)
+    
+    AND (CAST(?22 AS BOOL) IS NULL OR deleted_at IS NULL)
+ORDER BY occurred_at DESC
+LIMIT ?24 OFFSET ?23
+`
+
+type SearchWithDefaultSortCarbsParams struct {
+	DateGTE        *int64
+	DateLTE        *int64
+	DateGT         *int64
+	DateLT         *int64
+	CreatedAtGTE   *int64
+	CreatedAtLTE   *int64
+	CreatedAtGT    *int64
+	CreatedAtLT    *int64
+	UpdatedGTE     *int64
+	UpdatedLTE     *int64
+	UpdatedGT      *int64
+	UpdatedLT      *int64
+	IDEq           *string
+	IDIn           *string
+	DeviceEq       *string
+	AppEq          *string
+	CarbsEQ        *int64
+	CarbsGTE       *int64
+	CarbsGT        *int64
+	CarbsLTE       *int64
+	CarbsLT        *int64
+	IncludeDeleted *bool
+	Skip           int64
+	Limit          int64
+}
+
+func (q *Queries) SearchWithDefaultSortCarbs(ctx context.Context, arg SearchWithDefaultSortCarbsParams) ([]*Carb, error) {
+	rows, err := q.query(ctx, q.searchWithDefaultSortCarbsStmt, searchWithDefaultSortCarbs,
+		arg.DateGTE,
+		arg.DateLTE,
+		arg.DateGT,
+		arg.DateLT,
+		arg.CreatedAtGTE,
+		arg.CreatedAtLTE,
+		arg.CreatedAtGT,
+		arg.CreatedAtLT,
+		arg.UpdatedGTE,
+		arg.UpdatedLTE,
+		arg.UpdatedGT,
+		arg.UpdatedLT,
+		arg.IDEq,
+		arg.IDIn,
+		arg.DeviceEq,
+		arg.AppEq,
+		arg.CarbsEQ,
+		arg.CarbsGTE,
+		arg.CarbsGT,
+		arg.CarbsLTE,
+		arg.CarbsLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Carb
+	for rows.Next() {
+		var i Carb
+		if err := rows.Scan(
+			&i.ID,
+			&i.Amount,
+			&i.Type,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityName,
+			&i.CreatedByIdentityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateCarb = `-- name: UpdateCarb :one

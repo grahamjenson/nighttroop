@@ -181,6 +181,55 @@ func (t TreatmentEventType) ToLocalTypeString() string {
 	}
 }
 
+func (t TreatmentEventType) ToIDPrefix() string {
+	switch t {
+	case CorrectionBolus:
+		return "cb"
+	case ComboBolus:
+		return "cob"
+	case TemporaryTarget:
+		return "tt"
+	case MealBolus:
+		return "mb"
+	case TempBasal:
+		return "tb"
+	case Note:
+		return "note"
+	case ProfileSwitch:
+		return "profile_switch"
+	case CarbCorrection:
+		return "carb_correction"
+	case DADAlert:
+		return "dad_alert"
+	case OpenAPSOffline:
+		return "openaps_offline"
+	case BolusWizard:
+		return "bolus_wizard"
+	case Announcement:
+		return "announcement"
+	case BGCheck:
+		return "bg_check"
+	case SnackBolus:
+		return "snack_bolus"
+	case Exercise:
+		return "exercise"
+	case SiteChange:
+		return "site_change"
+	case SensorStart:
+		return "sensor_start"
+	case SensorChange:
+		return "sensor_change"
+	case InsulinChange:
+		return "insulin_change"
+	case PumpBatteryChange:
+		return "pump_battery_change"
+	case Question:
+		return "question"
+	default:
+		return "unknown"
+	}
+}
+
 func FromLocalTypeString(s string) *TreatmentEventType {
 	cb := CorrectionBolus
 	cob := ComboBolus

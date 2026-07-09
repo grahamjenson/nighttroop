@@ -132,6 +132,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
+	if q.searchWithDefaultSortCarbsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortCarbs); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortCarbs: %w", err)
+	}
 	if q.searchWithDefaultSortGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortGlucoseReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortGlucoseReadings: %w", err)
 	}
@@ -341,6 +344,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.searchWithDefaultSortCarbsStmt != nil {
+		if cerr := q.searchWithDefaultSortCarbsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortCarbsStmt: %w", cerr)
+		}
+	}
 	if q.searchWithDefaultSortGlucoseReadingsStmt != nil {
 		if cerr := q.searchWithDefaultSortGlucoseReadingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchWithDefaultSortGlucoseReadingsStmt: %w", cerr)
@@ -456,6 +464,7 @@ type Queries struct {
 	getProfileStmt                              *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
+	searchWithDefaultSortCarbsStmt              *sql.Stmt
 	searchWithDefaultSortGlucoseReadingsStmt    *sql.Stmt
 	searchWithNonDefaultSortGlucoseReadingsStmt *sql.Stmt
 	updateBolusStmt                             *sql.Stmt
@@ -506,6 +515,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStmt:                           q.getProfileStmt,
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
+		searchWithDefaultSortCarbsStmt:           q.searchWithDefaultSortCarbsStmt,
 		searchWithDefaultSortGlucoseReadingsStmt: q.searchWithDefaultSortGlucoseReadingsStmt,
 		searchWithNonDefaultSortGlucoseReadingsStmt: q.searchWithNonDefaultSortGlucoseReadingsStmt,
 		updateBolusStmt:          q.updateBolusStmt,

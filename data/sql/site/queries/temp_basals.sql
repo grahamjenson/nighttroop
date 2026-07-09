@@ -23,7 +23,10 @@ RETURNING *;
 --------
 
 -- name: AllTempBasals :many
-SELECT * FROM temp_basals ORDER BY start DESC;
+SELECT * FROM temp_basals
+ORDER BY start DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 
 
 -- name: GetTempBasal :one

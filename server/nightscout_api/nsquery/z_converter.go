@@ -8,6 +8,106 @@ import (
 	nightscout "nighttroop.t1d.nz/models/nightscout"
 )
 
+func CarbsSearchAll(source Query) site.AllCarbsParams {
+	var siteAllCarbsParams site.AllCarbsParams
+	siteAllCarbsParams.Skip = source.Skip
+	siteAllCarbsParams.Limit = source.Limit
+	return siteAllCarbsParams
+}
+func CarbsSearchDefaultOrder(source Query) site.SearchWithDefaultSortCarbsParams {
+	var siteSearchWithDefaultSortCarbsParams site.SearchWithDefaultSortCarbsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		siteSearchWithDefaultSortCarbsParams.DateGTE = &xint64
+	}
+	if source.DateLTE != nil {
+		xint642 := *source.DateLTE
+		siteSearchWithDefaultSortCarbsParams.DateLTE = &xint642
+	}
+	if source.DateGT != nil {
+		xint643 := *source.DateGT
+		siteSearchWithDefaultSortCarbsParams.DateGT = &xint643
+	}
+	if source.DateLT != nil {
+		xint644 := *source.DateLT
+		siteSearchWithDefaultSortCarbsParams.DateLT = &xint644
+	}
+	if source.CreatedAtGTE != nil {
+		xint645 := *source.CreatedAtGTE
+		siteSearchWithDefaultSortCarbsParams.CreatedAtGTE = &xint645
+	}
+	if source.CreatedAtLTE != nil {
+		xint646 := *source.CreatedAtLTE
+		siteSearchWithDefaultSortCarbsParams.CreatedAtLTE = &xint646
+	}
+	if source.CreatedAtGT != nil {
+		xint647 := *source.CreatedAtGT
+		siteSearchWithDefaultSortCarbsParams.CreatedAtGT = &xint647
+	}
+	if source.CreatedAtLT != nil {
+		xint648 := *source.CreatedAtLT
+		siteSearchWithDefaultSortCarbsParams.CreatedAtLT = &xint648
+	}
+	if source.UpdatedGTE != nil {
+		xint649 := *source.UpdatedGTE
+		siteSearchWithDefaultSortCarbsParams.UpdatedGTE = &xint649
+	}
+	if source.UpdatedLTE != nil {
+		xint6410 := *source.UpdatedLTE
+		siteSearchWithDefaultSortCarbsParams.UpdatedLTE = &xint6410
+	}
+	if source.UpdatedGT != nil {
+		xint6411 := *source.UpdatedGT
+		siteSearchWithDefaultSortCarbsParams.UpdatedGT = &xint6411
+	}
+	if source.UpdatedLT != nil {
+		xint6412 := *source.UpdatedLT
+		siteSearchWithDefaultSortCarbsParams.UpdatedLT = &xint6412
+	}
+	if source.IDEq != nil {
+		xstring := *source.IDEq
+		siteSearchWithDefaultSortCarbsParams.IDEq = &xstring
+	}
+	if source.IDIn != nil {
+		xstring2 := *source.IDIn
+		siteSearchWithDefaultSortCarbsParams.IDIn = &xstring2
+	}
+	if source.DeviceEq != nil {
+		xstring3 := *source.DeviceEq
+		siteSearchWithDefaultSortCarbsParams.DeviceEq = &xstring3
+	}
+	if source.AppEq != nil {
+		xstring4 := *source.AppEq
+		siteSearchWithDefaultSortCarbsParams.AppEq = &xstring4
+	}
+	if source.CarbsEQ != nil {
+		xint6413 := *source.CarbsEQ
+		siteSearchWithDefaultSortCarbsParams.CarbsEQ = &xint6413
+	}
+	if source.CarbsGTE != nil {
+		xint6414 := *source.CarbsGTE
+		siteSearchWithDefaultSortCarbsParams.CarbsGTE = &xint6414
+	}
+	if source.CarbsGT != nil {
+		xint6415 := *source.CarbsGT
+		siteSearchWithDefaultSortCarbsParams.CarbsGT = &xint6415
+	}
+	if source.CarbsLTE != nil {
+		xint6416 := *source.CarbsLTE
+		siteSearchWithDefaultSortCarbsParams.CarbsLTE = &xint6416
+	}
+	if source.CarbsLT != nil {
+		xint6417 := *source.CarbsLT
+		siteSearchWithDefaultSortCarbsParams.CarbsLT = &xint6417
+	}
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteSearchWithDefaultSortCarbsParams.IncludeDeleted = &xbool
+	}
+	siteSearchWithDefaultSortCarbsParams.Skip = source.Skip
+	siteSearchWithDefaultSortCarbsParams.Limit = source.Limit
+	return siteSearchWithDefaultSortCarbsParams
+}
 func GlucoseSearchAll(source Query) site.AllGlucoseReadingsParams {
 	var siteAllGlucoseReadingsParams site.AllGlucoseReadingsParams
 	siteAllGlucoseReadingsParams.Skip = source.Skip
@@ -336,21 +436,37 @@ func QueryValueToQuery(source QueryValues) Query {
 		xint6419 := nightscoutFlexibleInt64ToInt64(*source.CarbsGTE)
 		nsqueryQuery.CarbsGTE = &xint6419
 	}
+	if source.CarbsGT != nil {
+		xint6420 := nightscoutFlexibleInt64ToInt64(*source.CarbsGT)
+		nsqueryQuery.CarbsGT = &xint6420
+	}
+	if source.CarbsLTE != nil {
+		xint6421 := nightscoutFlexibleInt64ToInt64(*source.CarbsLTE)
+		nsqueryQuery.CarbsLTE = &xint6421
+	}
 	if source.CarbsLT != nil {
-		xint6420 := nightscoutFlexibleInt64ToInt64(*source.CarbsLT)
-		nsqueryQuery.CarbsLT = &xint6420
+		xint6422 := nightscoutFlexibleInt64ToInt64(*source.CarbsLT)
+		nsqueryQuery.CarbsLT = &xint6422
 	}
 	if source.InsulinEQ != nil {
-		xint6421 := nightscoutFlexibleInt64ToInt64(*source.InsulinEQ)
-		nsqueryQuery.InsulinEQ = &xint6421
+		xint6423 := nightscoutFlexibleInt64ToInt64(*source.InsulinEQ)
+		nsqueryQuery.InsulinEQ = &xint6423
 	}
 	if source.InsulinGTE != nil {
-		xint6422 := nightscoutFlexibleInt64ToInt64(*source.InsulinGTE)
-		nsqueryQuery.InsulinGTE = &xint6422
+		xint6424 := nightscoutFlexibleInt64ToInt64(*source.InsulinGTE)
+		nsqueryQuery.InsulinGTE = &xint6424
+	}
+	if source.InsulinGT != nil {
+		xint6425 := nightscoutFlexibleInt64ToInt64(*source.InsulinGT)
+		nsqueryQuery.InsulinGT = &xint6425
+	}
+	if source.InsulinLTE != nil {
+		xint6426 := nightscoutFlexibleInt64ToInt64(*source.InsulinLTE)
+		nsqueryQuery.InsulinLTE = &xint6426
 	}
 	if source.InsulinLT != nil {
-		xint6423 := nightscoutFlexibleInt64ToInt64(*source.InsulinLT)
-		nsqueryQuery.InsulinLT = &xint6423
+		xint6427 := nightscoutFlexibleInt64ToInt64(*source.InsulinLT)
+		nsqueryQuery.InsulinLT = &xint6427
 	}
 	if source.NameEq != nil {
 		xstring6 := nightscoutShortStringToString(*source.NameEq)

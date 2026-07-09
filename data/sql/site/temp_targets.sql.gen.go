@@ -12,14 +12,21 @@ import (
 const allTempTargets = `-- name: AllTempTargets :many
 
 
-SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets ORDER BY start DESC
+SELECT id, start, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM temp_targets
+ORDER BY start DESC
+LIMIT ?2 OFFSET ?1
 `
+
+type AllTempTargetsParams struct {
+	Skip  int64
+	Limit int64
+}
 
 // ------
 // READ
 // ------
-func (q *Queries) AllTempTargets(ctx context.Context) ([]*TempTarget, error) {
-	rows, err := q.query(ctx, q.allTempTargetsStmt, allTempTargets)
+func (q *Queries) AllTempTargets(ctx context.Context, arg AllTempTargetsParams) ([]*TempTarget, error) {
+	rows, err := q.query(ctx, q.allTempTargetsStmt, allTempTargets, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
