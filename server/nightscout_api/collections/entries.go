@@ -20,7 +20,7 @@ type EntriesCollection struct {
 
 func NewEntriesCollection() EntriesCollection {
 	return EntriesCollection{
-		converter: DBModelToRecord(nsutils.Entries, nightscout.DBModelToEntry),
+		converter: nsutils.DBModelToRecord(nsutils.Entries, nightscout.DBModelToEntry),
 	}
 }
 
@@ -161,7 +161,6 @@ func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-
 	if permanent {
 		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, site.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
 		if err != nil {

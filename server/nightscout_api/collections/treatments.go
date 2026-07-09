@@ -3,50 +3,82 @@ package collections
 import (
 	"context"
 	"log/slog"
+	"strings"
 
-	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/server/nightscout_api/collections/treatments"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type TreatmentCollection struct {
-	carbConverter       func(c *site.Carb) nsutils.Record
-	tempTargetConverter func(c *site.TempTarget) nsutils.Record
-	tempBasalConverter  func(c *site.TempBasal) nsutils.Record
+type TreatmentTypeCollection interface {
+	GetPrefix() string
+
+	Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError)
+	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
+	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
+	Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
+	DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError)
 }
 
-func NewTreatmentCollection() TreatmentCollection {
-	return TreatmentCollection{
-		carbConverter:       DBModelToRecord(nsutils.Treatments, nightscout.CarbsDBModelToTreatment),
-		tempTargetConverter: DBModelToRecord(nsutils.Treatments, nightscout.TempTargetDBModelToTreatment),
-		tempBasalConverter:  DBModelToRecord(nsutils.Treatments, nightscout.TempBasalDBModelToTreatment),
-	}
+type TreatmentCollection struct {
+	treatmentCollectionTypes map[nightscout.TreatmentEventType]TreatmentTypeCollection
 }
+
+// There is a list of incoming types, but we only support a few, and some we break apart into simpler types
 
 // Announcement
 // BGCheck
-// SnackBolus
-// CorrectionBolus
+// BolusWizard
+// CarbCorrection
 // ComboBolus
-// TemporaryTarget
-// MealBolus
-// TempBasal
-// Note
+// CorrectionBolus
+// DADAlert
 // Exercise
-// SiteChange
-// SensorStart
-// SensorChange
 // InsulinChange
+// MealBolus
+// Note
+// OpenAPSOffline
+// ProfileSwitch
 // PumpBatteryChange
 // Question
-// ProfileSwitch
-// CarbCorrection
-// DADAlert
-// OpenAPSOffline
-// BolusWizard
+// SensorChange
+// SensorStart
+// SiteChange
+// SnackBolus
+// TempBasal
+// TemporaryTarget
+
+func NewTreatmentCollection() TreatmentCollection {
+	typeMap := map[nightscout.TreatmentEventType]TreatmentTypeCollection{
+		nightscout.Announcement:      treatments.UnknownTypeCollection{},
+		nightscout.BGCheck:           treatments.UnknownTypeCollection{},
+		nightscout.BolusWizard:       treatments.UnknownTypeCollection{},
+		nightscout.CarbCorrection:    treatments.CarbsCollection{},
+		nightscout.ComboBolus:        treatments.UnknownTypeCollection{},
+		nightscout.CorrectionBolus:   treatments.UnknownTypeCollection{},
+		nightscout.DADAlert:          treatments.UnknownTypeCollection{},
+		nightscout.Exercise:          treatments.UnknownTypeCollection{},
+		nightscout.InsulinChange:     treatments.UnknownTypeCollection{},
+		nightscout.MealBolus:         treatments.UnknownTypeCollection{},
+		nightscout.Note:              treatments.UnknownTypeCollection{},
+		nightscout.OpenAPSOffline:    treatments.UnknownTypeCollection{},
+		nightscout.ProfileSwitch:     treatments.UnknownTypeCollection{},
+		nightscout.PumpBatteryChange: treatments.UnknownTypeCollection{},
+		nightscout.Question:          treatments.UnknownTypeCollection{},
+		nightscout.SensorChange:      treatments.UnknownTypeCollection{},
+		nightscout.SensorStart:       treatments.UnknownTypeCollection{},
+		nightscout.SiteChange:        treatments.UnknownTypeCollection{},
+		nightscout.SnackBolus:        treatments.UnknownTypeCollection{},
+		nightscout.TempBasal:         treatments.TempBasalTypeCollection{},
+		nightscout.TemporaryTarget:   treatments.TempTargetTypeCollection{},
+		nightscout.Unknown:           treatments.UnknownTypeCollection{},
+	}
+	return TreatmentCollection{treatmentCollectionTypes: typeMap}
+}
 
 func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	treatmentModel := nightscout.Treatment{}
@@ -60,116 +92,109 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 		return nil, nsutils.ErrInternal
 	}
 	et := *treatmentModel.EventType
-	switch et {
-	case nightscout.Announcement:
-		break
-	case nightscout.BGCheck:
-		break
-	case nightscout.SnackBolus:
-		break
-	case nightscout.CorrectionBolus:
-		break
-	case nightscout.ComboBolus:
-		break
-	case nightscout.TemporaryTarget:
-		dbModel, err := siteContext.SiteDB.Queries.CreateTempTarget(ctx,
-			nightscout.TreatmentToCreateTempTarget(treatmentModel, nightscout.CreateContext{
-				IDPrefix:              et.ToIDPrefix(),
-				CreatedByIdentityID:   siteContext.IdentityModel.ID,
-				CreatedByIdentityName: siteContext.IdentityModel.Name,
-			},
-			),
-		)
-		if err != nil {
-			slog.Error("failed to create temp target in database", "error", err)
-			return nil, nsutils.ErrInternal
-		}
-		return ptr(c.tempTargetConverter(dbModel)), nil
-	case nightscout.MealBolus:
-		break
-	case nightscout.TempBasal:
-		dbModel, err := siteContext.SiteDB.Queries.CreateTempBasal(ctx,
-			nightscout.TreatmentToCreateTempBasal(treatmentModel, nightscout.CreateContext{
-				IDPrefix:              et.ToIDPrefix(),
-				CreatedByIdentityID:   siteContext.IdentityModel.ID,
-				CreatedByIdentityName: siteContext.IdentityModel.Name,
-			},
-			),
-		)
-		if err != nil {
-			slog.Error("failed to create temp basal in database", "error", err)
-			return nil, nsutils.ErrInternal
-		}
-		return ptr(c.tempBasalConverter(dbModel)), nil
-	case nightscout.Note:
-		break
-	case nightscout.Exercise:
-		break
-	case nightscout.SiteChange:
-		break
-	case nightscout.SensorStart:
-		break
-	case nightscout.SensorChange:
-		break
-	case nightscout.InsulinChange:
-		break
-	case nightscout.PumpBatteryChange:
-		break
-	case nightscout.Question:
-		break
-	case nightscout.ProfileSwitch:
-		break
-	case nightscout.CarbCorrection:
-		dbModel, err := siteContext.SiteDB.Queries.CreateCarb(ctx,
-			nightscout.TreatmentToCreateCarb(treatmentModel, nightscout.CreateContext{
-				IDPrefix:              et.ToIDPrefix(),
-				CreatedByIdentityID:   siteContext.IdentityModel.ID,
-				CreatedByIdentityName: siteContext.IdentityModel.Name,
-			},
-			),
-		)
-		if err != nil {
-			slog.Error("failed to create carb in database", "error", err)
-			return nil, nsutils.ErrInternal
-		}
-		return ptr(c.carbConverter(dbModel)), nil
-	case nightscout.DADAlert:
-		break
-	case nightscout.OpenAPSOffline:
-		break
-	case nightscout.BolusWizard:
-		break
+
+	typeCollect, ok := c.treatmentCollectionTypes[et]
+	if !ok {
+		slog.Error("unsupported treatment event type", "eventType", et)
+		return nil, nsutils.ErrInternal
+	}
+	record, rerr := typeCollect.Create(ctx, siteContext, treatmentModel)
+	if rerr != nil {
+		slog.Error("failed to create treatment in database", "error", rerr)
+		return nil, rerr
+	}
+	if record == nil {
+		slog.Error("treatment creation returned nil value", "eventType", et)
+		return nil, nsutils.ErrInternal
 	}
 
-	slog.Error("unsupported treatment event type", "eventType", *treatmentModel.EventType)
-	return nil, nsutils.ErrInternal
-
+	return record, nil
 }
 
 func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
+	for _, typeCollect := range c.treatmentCollectionTypes {
+		if strings.HasPrefix(identifier, typeCollect.GetPrefix()) {
+			record, rerr := typeCollect.Get(ctx, siteContext, identifier)
+			if rerr != nil {
+				slog.Error("failed to get treatment from database", "error", rerr)
+				return nil, rerr
+			}
+			if record == nil {
+				slog.Error("treatment retrieval returned nil value", "identifier", identifier)
+				return nil, nsutils.ErrInternal
+			}
+			return record, nil
+		}
+	}
+
+	slog.Error("unsupported treatment event type for identifier", "identifier", identifier)
+	return nil, nsutils.ErrInternal
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	records := []nsutils.Record{}
-	carbs, err := siteContext.SiteDB.Queries.AllCarbs(ctx, nsquery.CarbsSearchAll(query))
-	if err != nil {
-		slog.Error("failed to query carbs from database", "error", err)
-		return nil, nsutils.ErrInternal
+	for _, typeCollect := range c.treatmentCollectionTypes {
+		typeRecords, rerr := typeCollect.Search(ctx, siteContext, query)
+		if rerr != nil {
+			slog.Error("failed to search treatments from database", "error", rerr)
+			return nil, rerr
+		}
+		if typeRecords == nil {
+			slog.Error("treatment search returned nil value", "typePrefix", typeCollect.GetPrefix())
+			return nil, nsutils.ErrInternal
+		}
+		records = append(records, typeRecords...)
 	}
-	records = append(records, CreateRecordSlice(carbs, c.carbConverter)...)
-
 	return records, nil
 }
 
 func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
+	for _, typeCollect := range c.treatmentCollectionTypes {
+		if strings.HasPrefix(identifier, typeCollect.GetPrefix()) {
+			record, rerr := typeCollect.Update(ctx, siteContext, identifier, patch)
+			if rerr != nil {
+				slog.Error("failed to update treatment in database", "error", rerr)
+				return nil, rerr
+			}
+			if record == nil {
+				slog.Error("treatment update returned nil value", "identifier", identifier)
+				return nil, nsutils.ErrInternal
+			}
+			return record, nil
+		}
+	}
+
+	slog.Error("unsupported treatment event type for identifier", "identifier", identifier)
+	return nil, nsutils.ErrInternal
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nsutils.ErrNotImplemented
+	for _, typeCollect := range c.treatmentCollectionTypes {
+		if strings.HasPrefix(identifier, typeCollect.GetPrefix()) {
+			rerr := typeCollect.Delete(ctx, siteContext, identifier, permanent)
+			if rerr != nil {
+				slog.Error("failed to delete treatment from database", "error", rerr)
+				return rerr
+			}
+			return nil
+		}
+	}
+
+	slog.Error("unsupported treatment event type for identifier", "identifier", identifier)
+	return nsutils.ErrInternal
 }
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
+	nightscoutType := nightscout.TreatmentEventType(typeString)
+	typeCollect, ok := c.treatmentCollectionTypes[nightscoutType]
+	if !ok {
+		slog.Error("unsupported treatment event type for deletion", "typeString", typeString)
+		return 0, nsutils.ErrInternal
+	}
+	count, rerr := typeCollect.DeleteAll(ctx, siteContext, permanent)
+	if rerr != nil {
+		slog.Error("failed to delete treatments of type from database", "error", rerr)
+		return 0, rerr
+	}
+	return count, nil
 }

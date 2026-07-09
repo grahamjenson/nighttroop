@@ -26,7 +26,7 @@ func DBModelToSetting(c *control.Setting) nightscout.Setting {
 
 func NewSettingsCollection() SettingsCollection {
 	return SettingsCollection{
-		converter: DBModelToRecord(nsutils.Settings, DBModelToSetting),
+		converter: nsutils.DBModelToRecord(nsutils.Settings, DBModelToSetting),
 	}
 }
 

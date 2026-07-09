@@ -19,7 +19,7 @@ type DeviceStatusCollection struct {
 
 func NewDeviceStatusCollection() DeviceStatusCollection {
 	return DeviceStatusCollection{
-		converter: DBModelToRecord(nsutils.Devicestatus, nightscout.DBModelToDeviceStatus),
+		converter: nsutils.DBModelToRecord(nsutils.Devicestatus, nightscout.DBModelToDeviceStatus),
 	}
 }
 

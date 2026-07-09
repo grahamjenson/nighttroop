@@ -19,7 +19,7 @@ type FoodCollection struct {
 
 func NewFoodCollection() FoodCollection {
 	return FoodCollection{
-		converter: DBModelToRecord(nsutils.Food, nightscout.DBModelToFood),
+		converter: nsutils.DBModelToRecord(nsutils.Food, nightscout.DBModelToFood),
 	}
 }
 

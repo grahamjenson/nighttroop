@@ -19,7 +19,7 @@ type ProfileCollection struct {
 
 func NewProfileCollection() ProfileCollection {
 	return ProfileCollection{
-		converter: DBModelToRecord(nsutils.Profile, nightscout.DBModelToProfile),
+		converter: nsutils.DBModelToRecord(nsutils.Profile, nightscout.DBModelToProfile),
 	}
 }
 

@@ -1,6 +1,10 @@
 package nsutils
 
-import "fmt"
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/utils"
+)
 
 // Record is the normalized internal representation used by the storage layer.
 type Record struct {
@@ -87,4 +91,47 @@ func (record Record) SelectFields(fields []string, version3 bool) map[string]any
 		delete(out, "_id")
 	}
 	return out
+}
+
+type ConverterToRecordFN[T any, PT interface {
+	*T
+	GetID() string
+	GetDeletedAt() *int64
+	GetCreatedAt() int64
+	GetUpdatedAt() int64
+	GetCreatedByIdentityName() string
+}] func(PT) Record
+
+func DBModelToRecord[T any, PT interface {
+	*T
+	GetID() string
+	GetDeletedAt() *int64
+	GetCreatedAt() int64
+	GetUpdatedAt() int64
+	GetCreatedByIdentityName() string
+}, S any](collectionName Collection, convertFunc func(PT) S) ConverterToRecordFN[T, PT] {
+	return func(dbModel PT) Record {
+		if dbModel == nil {
+			return Record{}
+		}
+
+		nsModel := convertFunc(dbModel)
+
+		mapModel, err := utils.ToMap(&nsModel)
+		if err != nil {
+			return Record{}
+		}
+
+		record := Record{
+			Collection:  string(collectionName),
+			ID:          dbModel.GetID(),
+			Data:        mapModel,
+			SrvCreated:  dbModel.GetCreatedAt(),
+			SrvModified: dbModel.GetUpdatedAt(),
+			Subject:     dbModel.GetCreatedByIdentityName(),
+			IsValid:     true,
+			DeletedAt:   dbModel.GetDeletedAt(),
+		}
+		return record
+	}
 }

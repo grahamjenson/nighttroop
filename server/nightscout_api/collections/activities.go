@@ -19,7 +19,7 @@ type ActivityCollection struct {
 
 func NewActivityCollection() ActivityCollection {
 	return ActivityCollection{
-		converter: DBModelToRecord(nsutils.Activity, nightscout.DBModelToActivity),
+		converter: nsutils.DBModelToRecord(nsutils.Activity, nightscout.DBModelToActivity),
 	}
 }
 

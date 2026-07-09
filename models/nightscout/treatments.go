@@ -109,25 +109,25 @@ type TreatmentEventType string
 const (
 	Announcement      TreatmentEventType = "Announcement"
 	BGCheck           TreatmentEventType = "BG Check"
-	SnackBolus        TreatmentEventType = "Snack Bolus"
-	CorrectionBolus   TreatmentEventType = "Correction Bolus"
+	BolusWizard       TreatmentEventType = "Bolus Wizard"
+	CarbCorrection    TreatmentEventType = "Carb Correction"
 	ComboBolus        TreatmentEventType = "Combo Bolus"
-	TemporaryTarget   TreatmentEventType = "Temporary Target"
-	MealBolus         TreatmentEventType = "Meal Bolus"
-	TempBasal         TreatmentEventType = "Temp Basal"
-	Note              TreatmentEventType = "Note"
+	CorrectionBolus   TreatmentEventType = "Correction Bolus"
+	DADAlert          TreatmentEventType = "D.A.D. Alert"
 	Exercise          TreatmentEventType = "Exercise"
-	SiteChange        TreatmentEventType = "Site Change"
-	SensorStart       TreatmentEventType = "Sensor Start"
-	SensorChange      TreatmentEventType = "Sensor Change"
 	InsulinChange     TreatmentEventType = "Insulin Change"
+	MealBolus         TreatmentEventType = "Meal Bolus"
+	Note              TreatmentEventType = "Note"
+	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
+	ProfileSwitch     TreatmentEventType = "Profile Switch"
 	PumpBatteryChange TreatmentEventType = "Pump Battery Change"
 	Question          TreatmentEventType = "Question"
-	ProfileSwitch     TreatmentEventType = "Profile Switch"
-	CarbCorrection    TreatmentEventType = "Carb Correction"
-	DADAlert          TreatmentEventType = "D.A.D. Alert"
-	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
-	BolusWizard       TreatmentEventType = "Bolus Wizard"
+	SensorChange      TreatmentEventType = "Sensor Change"
+	SensorStart       TreatmentEventType = "Sensor Start"
+	SiteChange        TreatmentEventType = "Site Change"
+	SnackBolus        TreatmentEventType = "Snack Bolus"
+	TempBasal         TreatmentEventType = "Temp Basal"
+	TemporaryTarget   TreatmentEventType = "Temporary Target"
 	//
 	Unknown TreatmentEventType = "Unknown"
 )
@@ -144,55 +144,6 @@ func (t TreatmentEventType) ToLocalTypeString() string {
 		return "meal_bolus"
 	case TempBasal:
 		return "temp_basal"
-	case Note:
-		return "note"
-	case ProfileSwitch:
-		return "profile_switch"
-	case CarbCorrection:
-		return "carb_correction"
-	case DADAlert:
-		return "dad_alert"
-	case OpenAPSOffline:
-		return "openaps_offline"
-	case BolusWizard:
-		return "bolus_wizard"
-	case Announcement:
-		return "announcement"
-	case BGCheck:
-		return "bg_check"
-	case SnackBolus:
-		return "snack_bolus"
-	case Exercise:
-		return "exercise"
-	case SiteChange:
-		return "site_change"
-	case SensorStart:
-		return "sensor_start"
-	case SensorChange:
-		return "sensor_change"
-	case InsulinChange:
-		return "insulin_change"
-	case PumpBatteryChange:
-		return "pump_battery_change"
-	case Question:
-		return "question"
-	default:
-		return "unknown"
-	}
-}
-
-func (t TreatmentEventType) ToIDPrefix() string {
-	switch t {
-	case CorrectionBolus:
-		return "cb"
-	case ComboBolus:
-		return "cob"
-	case TemporaryTarget:
-		return "tt"
-	case MealBolus:
-		return "mb"
-	case TempBasal:
-		return "tb"
 	case Note:
 		return "note"
 	case ProfileSwitch:
