@@ -1,7 +1,9 @@
 package httputils
 
 import (
+	"net"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -43,11 +45,11 @@ func (at AcceptType) API() bool {
 	return at == AcceptTypeJSON
 }
 
-type ContentType int
+type ContentType string
 
 const (
-	ContentTypeForm ContentType = iota
-	ContentTypeJSON
+	ContentTypeForm ContentType = "application/x-www-form-urlencoded"
+	ContentTypeJSON ContentType = "application/json"
 )
 
 func GetContentType(r *http.Request) ContentType {
@@ -64,26 +66,50 @@ func GetContentType(r *http.Request) ContentType {
 }
 
 func GetIP(r *http.Request) string {
+	// Check if it has been cached in the context to not repeat this work
 	ipAddress := GetIPFromHTTPContext(r.Context())
 	if ipAddress != "" {
 		return ipAddress
 	}
 
-	// Check X-Forwarded-For header first (in case of reverse proxy)
-	xForwardedFor := r.Header.Get("X-Forwarded-For")
-	if xForwardedFor != "" {
-		// The X-Forwarded-For header can contain multiple IPs, the first one is the client's IP
-		ips := strings.Split(xForwardedFor, ",")
-		return strings.TrimSpace(ips[0])
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil {
+		return host
 	}
 
-	// Fallback to RemoteAddr
-	ip := r.RemoteAddr
-
-	// RemoteAddr can contain port, so split by colon and take the first part
-	if colonIndex := strings.LastIndex(ip, ":"); colonIndex != -1 {
-		ip = ip[:colonIndex]
+	// If we are deployed on Fly.io then use the Fly-Client-IP header
+	if os.Getenv("FLY_APP_NAME") != "" {
+		if ip := strings.TrimSpace(r.Header.Get("Fly-Client-IP")); ip != "" {
+			return ip
+		}
 	}
 
-	return ip
+	// If it is a trusted proxy then we can accept the X-Forwarded For
+	if isTrustedProxy(host) {
+		// Check X-Forwarded-For header first (in case of reverse proxy)
+		xForwardedFor := r.Header.Get("X-Forwarded-For")
+		if xForwardedFor != "" {
+			// The X-Forwarded-For header can contain multiple IPs, the first one is the client's IP
+			ips := strings.Split(xForwardedFor, ",")
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	return host
+}
+
+func isTrustedProxy(ip string) bool {
+	// Define a list of trusted proxy IPs or CIDR ranges
+	trustedProxies := []string{
+		"127.0.0.1",
+		"::1",
+	}
+
+	for _, trustedProxy := range trustedProxies {
+		if ip == trustedProxy {
+			return true
+		}
+	}
+
+	return false
 }

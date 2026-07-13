@@ -82,7 +82,8 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		formPassword := r.FormValue("password")
 
 		// Rate Limit login attempts by user and IP
-		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", subdomain, formName), r.RemoteAddr)
+
+		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", subdomain, formName), httputils.GetIP(r))
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return
@@ -277,7 +278,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", siteContext.Subdomain, creds.Name), r.RemoteAddr)
+	allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", siteContext.Subdomain, creds.Name), httputils.GetIP(r))
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return
@@ -316,16 +317,17 @@ func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg config.Serve
 	}
 
 	// An Identity only requires a TOTP secret if the role is admin
-	if can.MustLoginWithTotp(device.Role, device.TotpSecret != "") && totpToken == "" {
-		return nil, fmt.Errorf("User requires TOTP secret")
-	}
-
-	totpSecret, err := cfg.Security.Decrypt(device.TotpSecret)
-	if err != nil {
-		return nil, err
-	}
-	if !cfg.Security.TOTPValidate(totpToken, totpSecret) {
-		return nil, fmt.Errorf("invalid TOTP token")
+	if can.MustLoginWithTotp(device.Role, device.TotpSecret != "") {
+		if totpToken == "" {
+			return nil, fmt.Errorf("user requires TOTP secret")
+		}
+		totpSecret, err := cfg.Security.Decrypt(device.TotpSecret)
+		if err != nil {
+			return nil, err
+		}
+		if !cfg.Security.TOTPValidate(totpToken, totpSecret) {
+			return nil, fmt.Errorf("invalid TOTP token")
+		}
 	}
 
 	return device, nil

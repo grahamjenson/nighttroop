@@ -34,9 +34,6 @@ type ServerConfig struct {
 	// sentry
 	SentryDSN string
 
-	// security
-	SecretsEncryptionKey string
-
 	// paths
 	SqlitePath string
 
@@ -92,7 +89,8 @@ type ServerConfig struct {
 
 	// These keys are used to encrypt secrets in the DB and S3 at rest
 	// This has the option to add additional keys
-	Security *security.SecurityConfig
+	Security   *security.SecurityConfig
+	RawKeySets string
 
 	// Logging
 	Logger *slog.Logger
@@ -128,7 +126,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 	// DEFAULTS
 	serverConfig := ServerConfig{
 		Logger: logger,
-		Mode:   consts.Development,
+		Mode:   consts.ServerMode(configStringSelect(dotenvdev, dotenv, "MODE", "development")),
 
 		// Host config
 		HostName:     configStringSelect(dotenvdev, dotenv, "HOST_NAME", "nt.local.t1d.nz"),
@@ -145,7 +143,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		SentryDSN: configStringSelect(dotenvdev, dotenv, "SENTRY_DSN", ""),
 
 		// security
-		SecretsEncryptionKey: configStringSelect(dotenvdev, dotenv, "SECRETS_ENCRYPTION_KEY", "mysecretencryptionkey"),
+		RawKeySets: configStringSelect(dotenvdev, dotenv, consts.KEY_SETS_ENV_KEY, ""),
 
 		// paths
 		SqlitePath: configStringSelect(dotenvdev, dotenv, "SQLITE_PATH", "./data"),
@@ -207,13 +205,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		DexcomClientSecret: configStringSelect(dotenvdev, dotenv, "DEXCOM_CLIENT_SECRET", ""),
 	}
 
-	serverConfig.RateLimiters = newRateLimiters(serverConfig)
-
-	mode := configStringSelect(dotenvdev, dotenv, "MODE", "development")
-
-	keySetsRaw := configStringSelect(dotenvdev, dotenv, consts.KEY_SETS_ENV_KEY, "")
-	serverConfig.Security = security.NewSecurityConfig(keySetsRaw, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
-
+	// Error out if unknown ENVARS are found in .env.dev or .env
 	if len(dotenvdev) > 0 {
 		slog.Error("Unknown .env.dev variables: ", "variables", func() []string {
 			var keys []string
@@ -236,7 +228,7 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 		return ServerConfig{}, fmt.Errorf("unknown .env variables")
 	}
 
-	// Override with flags
+	// Override with flags some common settings
 	flagmode := ""
 	flag.StringVar(&flagmode, "mode", "", "developmen or production")
 	// host config
@@ -246,11 +238,12 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 
 	flag.Parse()
 
-	// CLEAN UP A FEW THINGS
 	if flagmode != "" {
-		mode = flagmode
+		serverConfig.Mode = consts.ServerMode(flagmode)
 	}
-	if err := serverConfig.ValidateClean(mode); err != nil {
+
+	// Validate the config
+	if err := serverConfig.ValidateClean(); err != nil {
 		return ServerConfig{}, err
 	}
 
@@ -258,6 +251,10 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 	serverConfig.HostNameWithPort = fmt.Sprintf("%s:%d", serverConfig.HostName, serverConfig.HostPort)
 	serverConfig.HostURL = fmt.Sprintf("%s://%s", serverConfig.HostProtocol, serverConfig.HostName)
 	serverConfig.HostURLWithPort = fmt.Sprintf("%s://%s:%d", serverConfig.HostProtocol, serverConfig.HostName, serverConfig.HostPort)
+
+	serverConfig.RateLimiters = newRateLimiters(serverConfig)
+
+	serverConfig.Security = security.NewSecurityConfig(serverConfig.RawKeySets, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 
 	printServerConfig(serverConfig)
 	return serverConfig, nil
@@ -275,19 +272,13 @@ func (config *ServerConfig) IsTest() bool {
 	return config.Mode == consts.Test
 }
 
-func (config *ServerConfig) ValidateClean(mode string) error {
+func (config *ServerConfig) ValidateClean() error {
 	// Deal with mode
-
-	switch strings.ToLower(mode) {
-	case "production":
-		config.Mode = consts.Production
-	case "development":
-		config.Mode = consts.Development
-	case "test":
-		config.Mode = consts.Test
-	default:
-		return fmt.Errorf("invalid mode: %s", mode)
+	mode, err := config.Mode.Normalize()
+	if err != nil {
+		return err
 	}
+	config.Mode = mode
 
 	config.HostProtocol = strings.ToLower(config.HostProtocol)
 	if config.HostProtocol != "http" && config.HostProtocol != "https" {
@@ -351,7 +342,7 @@ func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envV
 
 func configFloatSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue float64) float64 {
 
-	returnval := fmt.Sprintf("%d", defaultValue)
+	returnval := fmt.Sprintf("%f", defaultValue)
 
 	if val, ok := dotenv[envVar]; ok {
 		returnval = val
@@ -438,4 +429,8 @@ func printServerConfig(config ServerConfig) {
 func (config *ServerConfig) IsHTTPS() bool {
 	// This should only be false in development
 	return config.HostProtocol == "https"
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

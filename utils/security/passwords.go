@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pquerna/otp/totp"
-	"nighttroop.t1d.nz/utils/consts"
 )
 
 func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
@@ -19,8 +18,8 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 
 	totpSecret = totpKey.Secret()
 
-	if cfg.IsDev() || cfg.IsTest() {
-		totpSecret = consts.DEV_ADMIN_TOTP_SECRET
+	if cfg.IsDevOrTest() {
+		totpSecret = *cfg.DevelopmentDangerousHardcodedAdminTOTPSecret
 	}
 
 	encTOTPSecret, err := cfg.Encrypt(totpSecret)
@@ -34,9 +33,9 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, err error) {
 	password, hashedPassword, err = SecureCredentials()
 
-	if cfg.IsDev() || cfg.IsTest() {
+	if cfg.IsDevOrTest() {
 		// We are going to override this stuff in dev, just to make it easier
-		password = consts.DEV_ADMIN_PASSWORD
+		password = *cfg.DevelopmentDangerousHardcodedAdminPassword
 		hashedPassword = HashPassword(password)
 	}
 
@@ -47,8 +46,8 @@ func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, 
 }
 
 func (cfg *SecurityConfig) TOTPValidate(token, secret string) bool {
-	if secret == consts.DEV_ADMIN_TOTP_SECRET {
-		return token == "123123"
+	if cfg.IsDevOrTest() && secret == *cfg.DevelopmentDangerousHardcodedAdminTOTPSecret {
+		return token == *cfg.DevelopmentDangerousHardcodedAdminTOTPCode
 	}
 	return totp.Validate(token, secret)
 }

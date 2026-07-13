@@ -341,8 +341,26 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 			return fmt.Errorf("reading tar entry: %w", err)
 		}
 
-		targetPath := filepath.Join(outputDir, header.Name)
+		////
+		// Security Check: dont let the tar file escape the output directory
+		// e.g. if header.Name is "../../etc/passwd" or "/absolute/path/to/file"
+		////
+		name := filepath.Clean(header.Name)
+		if filepath.IsAbs(name) {
+			return fmt.Errorf("archive contains absolute path: %s", header.Name)
+		}
 
+		targetPath := filepath.Join(outputDir, name)
+
+		rel, err := filepath.Rel(outputDir, targetPath)
+		if err != nil {
+			return err
+		}
+		if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return fmt.Errorf("archive entry escapes destination: %s", header.Name)
+		}
+
+		////
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {

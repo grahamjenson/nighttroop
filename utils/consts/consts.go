@@ -3,6 +3,7 @@ package consts
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 )
 
 type Units string
@@ -13,13 +14,26 @@ const (
 )
 const MMOL_L_TO_MG_DL = 18.018
 
-type ServerMode int
+type ServerMode string
 
 const (
-	Production ServerMode = iota
-	Development
-	Test
+	Production  ServerMode = "prod"
+	Development ServerMode = "dev"
+	Test        ServerMode = "test"
 )
+
+func (mode ServerMode) Normalize() (ServerMode, error) {
+	switch strings.ToLower(string(mode)) {
+	case "prod", "production":
+		return Production, nil
+	case "dev", "development":
+		return Development, nil
+	case "test":
+		return Test, nil
+	default:
+		return "", fmt.Errorf("unknown server mode: %s", mode)
+	}
+}
 
 const FIRST_ADMIN_NAME = "admin"
 const FIRST_PWD_NAME = "pwd_phone"
@@ -27,12 +41,6 @@ const FIRST_PWD_NAME = "pwd_phone"
 const DEXCOM_SYNC_IDENTITY_NAME = "dexcom_sync"
 const NIGHTSCOUT_SYNC_IDENTITY_NAME = "nightscout_sync"
 const LIBRE_SYNC_IDENTITY_NAME = "libre_sync"
-
-// //
-// DEVELOPMENT HARDCODED STUFF
-// //
-const DEV_ADMIN_PASSWORD = "password"
-const DEV_ADMIN_TOTP_SECRET = "FakeTOTPSecretForDevOnly" // This is not a real secret, just for development. In production this should be generated and stored securely.
 
 type AdminRole string
 

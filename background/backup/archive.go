@@ -14,7 +14,7 @@ func (b *BackupJobManager) ArchiveInactiveSites() error {
 
 	deleteList, err := b.findSitesToDeleteWithoutArchiving()
 	if err != nil {
-		return fmt.Errorf("Cant find sites to delete without archiving %w", err)
+		return fmt.Errorf("cant find sites to delete without archiving %w", err)
 	}
 
 	// Just delete these sites without an archive, as they have not been used in so many minutes
@@ -25,13 +25,13 @@ func (b *BackupJobManager) ArchiveInactiveSites() error {
 
 	archiveList, err := b.findSitesToArchive()
 	if err != nil {
-		return fmt.Errorf("Cant find sites to archive %w", err)
+		return fmt.Errorf("cant find sites to archive %w", err)
 	}
 
 	// Backup and upload the archived sites
 	removeList, err := b.archiveSites(archiveList)
 	if err != nil {
-		return fmt.Errorf("Cant archive sites %w", err)
+		return fmt.Errorf("cant archive sites %w", err)
 	}
 
 	// Delete the sites from the DB, and their site DB files (including WAL and BACKUP)
@@ -51,7 +51,7 @@ func (b *BackupJobManager) ArchiveInactiveSites() error {
 func (b *BackupJobManager) findSitesToDeleteWithoutArchiving() ([]string, error) {
 	sites, err := b.controlDB.GetNeverSeenSites(b.MaxSiteNeverSeen, b.MaxSiteNeverWritten)
 	if err != nil {
-		return nil, fmt.Errorf("Cant get never seen sites %w", err)
+		return nil, fmt.Errorf("cant get never seen sites %w", err)
 	}
 
 	if len(sites) == 0 {
@@ -73,7 +73,7 @@ func (b *BackupJobManager) findSitesToDeleteWithoutArchiving() ([]string, error)
 func (b *BackupJobManager) findSitesToArchive() ([]*db.SiteDB, error) {
 	sites, err := b.controlDB.GetInactiveSites(b.MaxSiteLastSeen, b.MaxSiteNeverWritten)
 	if err != nil {
-		return nil, fmt.Errorf("Cant get inactive sites %w", err)
+		return nil, fmt.Errorf("cant get inactive sites %w", err)
 	}
 	if len(sites) == 0 {
 		return nil, nil
@@ -92,13 +92,13 @@ func (b *BackupJobManager) archiveSites(archiveList []*db.SiteDB) ([]string, err
 		// Last Backup
 		err := utils.SqliteBackup(b.ctx, site.SQLiteDB, path, backupPath)
 		if err != nil {
-			return nil, fmt.Errorf("cannot backup site db: %w", site.Subdomain, err)
+			return nil, fmt.Errorf("cannot backup site db %s: %w", site.Subdomain, err)
 		}
 
 		// Save as backup file and upload to final localtion
 		err = b.S3Client.UploadFilesToS3(b.S3Client.SiteArchiveS3Path(site.Subdomain), []string{backupPath})
 		if err != nil {
-			return nil, fmt.Errorf("cannot upload archived site db: %w", site.Subdomain, err)
+			return nil, fmt.Errorf("cannot upload archived site db %s: %w", site.Subdomain, err)
 		}
 
 		removeList = append(removeList, site.Subdomain)

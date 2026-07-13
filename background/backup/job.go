@@ -45,7 +45,8 @@ type BackupJobManager struct {
 }
 
 // BackupJob
-// Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
+
+// SetupBackupJob Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
 func SetupBackupJob(ctx context.Context, controlDB *db.ControlDB, config config.ServerConfig, s3Client *s3utils.S3Client) *BackupJobManager {
 
 	jobs := &BackupJobManager{

@@ -1,6 +1,7 @@
 package nightscout_api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -49,7 +50,10 @@ func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*nsutils.Iden
 		return nil, nsutils.ErrMissingCredentials
 	}
 
-	ntIdentity := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	ntIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	if err != nil {
+		return nil, nsutils.ErrMissingCredentials
+	}
 	return ntIdentity, nil
 }
 
@@ -73,7 +77,7 @@ func permissionMatch(granted, wanted string) bool {
 	return true
 }
 
-func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) *nsutils.Identity {
+func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) (*nsutils.Identity, error) {
 	// Collections
 	// 'entries'
 	// 'treatments'
@@ -112,10 +116,10 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	case consts.IdentityRoleUser, consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceReadWrite:
 		permissions = append(permissions, "api:*:*")
 	default:
-		return nil
+		return nil, fmt.Errorf("unknown identity role: %s", ntid)
 	}
 	return &nsutils.Identity{
 		Name:        identityName,
 		Permissions: permissions,
-	}
+	}, nil
 }

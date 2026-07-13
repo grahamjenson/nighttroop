@@ -27,6 +27,14 @@ type SecurityConfig struct {
 	jwtControlValidator *jwt.Validator
 	jwtUserValidator    *jwt.Validator
 	jwtPreAuthValidator *jwt.Validator
+
+	/////
+	// Dangerous Dev Only Configs
+	/////
+
+	DevelopmentDangerousHardcodedAdminPassword   *string
+	DevelopmentDangerousHardcodedAdminTOTPSecret *string
+	DevelopmentDangerousHardcodedAdminTOTPCode   *string
 }
 
 func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, https bool) *SecurityConfig {
@@ -34,6 +42,11 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 		Mode:     mode,
 		HostName: hostname,
 		HTTPS:    https,
+	}
+
+	if cfg.IsTest() {
+		// Hard code dev and tests key sets for now
+		keysRaw = "CPrKm7wMEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtS2V5EiIaIEPeianjuFWmWBX0ZPsUWPIcG7VwyKUko2WSzyPDZEPNGAEQARj6ypu8DCAB,COC0mZcNEnoKbgo9dHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2NtSGtkZlN0cmVhbWluZ0tleRIrEgcIgCAQIBgDGiBAAlF6GIXYVKqNpOzDqeCHAAuQ2P2uUnlpHWdajhjzBBgBEAEY4LSZlw0gAw,CN2im5oDEmcKWwoxdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuSnd0SG1hY0tleRIkEAEaIAL9oiEoyOMBd/tk4joXYbELpOdygdRSg+5u+/VbertXGAEQARjdopuaAyAB,CP7I64IGEmgKXAoudHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuSG1hY0tleRIoEgQIAxAgGiBaXWmgBYmmFu7Jn0GtCF1OlU5MrZuWEGdPwyzf6kjddBgBEAEY/sjrggYgAQ"
 	}
 
 	err := cfg.ConfigCreateEncryptionKeys(keysRaw)
@@ -44,6 +57,12 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 	err = cfg.createJWTPrimitives()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create JWT primitives: %v", err))
+	}
+
+	if cfg.IsDevOrTest() {
+		cfg.DevelopmentDangerousHardcodedAdminPassword = ptr("password")
+		cfg.DevelopmentDangerousHardcodedAdminTOTPSecret = ptr("FakeTOTPSecretForDevOnly")
+		cfg.DevelopmentDangerousHardcodedAdminTOTPCode = ptr("123123")
 	}
 
 	return cfg
@@ -59,4 +78,12 @@ func (config *SecurityConfig) IsProd() bool {
 
 func (config *SecurityConfig) IsTest() bool {
 	return config.Mode == consts.Test
+}
+
+func (config *SecurityConfig) IsDevOrTest() bool {
+	return config.Mode == consts.Development || config.Mode == consts.Test
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

@@ -63,7 +63,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		case httputils.ContentTypeJSON:
 			var creds LoginRequest
 			if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-				errors.GenericAdminLoginError(w, r, fmt.Errorf("Invalid JSON payload: %w", err))
+				errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid JSON payload: %w", err))
 				return
 			}
 
@@ -73,7 +73,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		case httputils.ContentTypeForm:
 
 			if err := r.ParseForm(); err != nil {
-				errors.GenericAdminLoginError(w, r, fmt.Errorf("Invalid form data: %w", err))
+				errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid form data: %w", err))
 				return
 			}
 
@@ -81,11 +81,11 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 			password = r.FormValue("password")
 			totpToken = r.FormValue("totp")
 		default:
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("Unsupported Content-Type: %s", contentType))
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("unsupported Content-Type: %s", string(contentType)))
 			return
 		}
 
-		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", "control", username), r.RemoteAddr)
+		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", "control", username), httputils.GetIP(r))
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return
@@ -93,13 +93,13 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 
 		admin, err := loginTheControlUser(controlDB, config, username, password, totpToken)
 		if err != nil {
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("Invalid credentials: %w", err))
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid credentials: %w", err))
 			return
 		}
 
 		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))
 		if err != nil {
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("Failed to generate JWT token: %w", err))
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("failed to generate JWT token: %w", err))
 			return
 		}
 

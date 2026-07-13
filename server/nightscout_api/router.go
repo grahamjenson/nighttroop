@@ -91,7 +91,11 @@ func NightscoutAuthRoute(controlDB *db.ControlDB, config config.ServerConfig) ht
 			return
 		}
 
-		nsIdentity := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+		nsIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+		if err != nil {
+			http.Error(w, "Internal Server Error: Failed to convert identity", http.StatusInternalServerError)
+			return
+		}
 		response := map[string]any{
 			"token":            token,
 			"sub":              siteContext.IdentityModel.Name,

@@ -1,4 +1,3 @@
-// Make the backgorund jobs orthogonal to the DB
 package backup
 
 import (
@@ -11,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-// This is the last method called to backup both control and site dbs
+// BackupToS3 This is the last method called to backup both control and site dbs
 func (b *BackupJobManager) BackupToS3() {
 	err := b.BackupControl()
 	if err != nil {
@@ -80,7 +79,7 @@ func (b *BackupJobManager) BackupSiteBatch(char string) error {
 		// Have to add it anyway because we need all paths
 		err := utils.SqliteBackup(ctx, site.SQLiteDB, path, backupPath)
 		if err != nil {
-			return fmt.Errorf("cannot backup site db: %w", site.Subdomain, err)
+			return fmt.Errorf("cannot backup site db %s: %w", site.Subdomain, err)
 		}
 
 		paths = append(paths, backupPath)
@@ -90,7 +89,7 @@ func (b *BackupJobManager) BackupSiteBatch(char string) error {
 
 	err = b.S3Client.UploadFilesToS3(b.S3Client.SiteBatchS3Path(char), paths)
 	if err != nil {
-		return fmt.Errorf("cannot sync site pool: %w %v", err, string(char))
+		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
 
 	// Copy the control db to the backup location

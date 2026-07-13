@@ -134,7 +134,7 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 	// SO NO STATE CHANGING IN GET REQUESTS
 	corsCSRFMiddleware := http.NewCrossOriginProtection()
 	httpServer := &http.Server{
-		Addr:         ":8080",
+		Addr:         fmt.Sprintf(":%d", serverConfig.HostPort),
 		Handler:      corsCSRFMiddleware.Handler(server.GetMainHandler(controlDB, serverConfig)),
 		ReadTimeout:  5 * time.Second,  // Max time to read the entire request
 		WriteTimeout: 10 * time.Second, // Max time to write the response
