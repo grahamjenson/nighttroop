@@ -21,40 +21,6 @@
 1. archivied_at in the user table in control.db
 
 
-
-
-# Testing locally
-
-Docker runs our local test s3 server `minio` (the only external dependency)
-
-```
-echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
-```
-
-```
-brew install docker colima docker-compose golang-migrate tailwindcss go-air templ sqlc
-go install github.com/jmattheis/goverter/cmd/goverter@v1.9.3
-go install github.com/mickamy/slog-pretty/cmd/spretty@latest
-
-
-colima start
-docker-compose up -d
-```
-
-```
-air | spretty
-```
-
-If you want to wipe data and start again
-
-```
-docker-compose restart && rm -rf .dbs && go generate ./... && sleep 2 && air | spretty
-```
-
-Then go to `localhost:8080` and create a user, `control.localhost:8080` and login as control.
-In Development all initial passwords are `password` and all TOTP is `123123`
-
-
 # TODO:
 1. Login Counter ratelimiter per IP and per username
 1. NS endpoints
@@ -66,30 +32,6 @@ In Development all initial passwords are `password` and all TOTP is `123123`
 The goal is to make an app for diabetes camps that can add all the kids and see their numbers and show alarms/highlight issues.
 
 
-
-
-# Syncing
-Each request set the `to-be-synced` to be `true`;
-Write an infinite go routine per user every 30 seconds checks `to-be-synced` and will fetch data if `true`.
-
-
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-
-This section below is for development of Nighttroop
-
-# Local Development
-
-# Running a Development server
-
-# Testing
-
-# Submitting changes
-
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
 
 This section below is information for running your own nighttroop
 
