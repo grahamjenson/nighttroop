@@ -82,11 +82,6 @@ func (m *Activity) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Activity) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *Activity) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -95,11 +90,6 @@ func (m *Activity) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Activity) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Activity) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -157,11 +147,6 @@ func (m *Bolus) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Bolus) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *Bolus) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -170,11 +155,6 @@ func (m *Bolus) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Bolus) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Bolus) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -232,11 +212,6 @@ func (m *Carb) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Carb) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *Carb) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -245,11 +220,6 @@ func (m *Carb) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Carb) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Carb) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -342,11 +312,6 @@ func (m *DeviceStatus) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *DeviceStatus) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *DeviceStatus) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -365,11 +330,6 @@ func (m *DeviceStatus) GetCreatedByDeviceName() string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *DeviceStatus) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *DeviceStatus) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -452,11 +412,6 @@ func (m *Food) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Food) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *Food) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -465,11 +420,6 @@ func (m *Food) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Food) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Food) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -527,11 +477,6 @@ func (m *GlucoseReading) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *GlucoseReading) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *GlucoseReading) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -540,11 +485,6 @@ func (m *GlucoseReading) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *GlucoseReading) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *GlucoseReading) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -597,11 +537,6 @@ func (m *Note) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Note) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *Note) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -610,11 +545,6 @@ func (m *Note) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Note) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Note) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -722,11 +652,6 @@ func (m *Profile) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *Profile) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *Profile) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -735,11 +660,6 @@ func (m *Profile) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *Profile) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *Profile) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetName returns the Name value.
@@ -807,11 +727,6 @@ func (m *TempBasal) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *TempBasal) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *TempBasal) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -820,11 +735,6 @@ func (m *TempBasal) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *TempBasal) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *TempBasal) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 
 // GetID returns the ID value.
@@ -887,11 +797,6 @@ func (m *TempTarget) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m *TempTarget) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m *TempTarget) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -900,10 +805,5 @@ func (m *TempTarget) GetUpdatedByIdentityName() *string {
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *TempTarget) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
-}
-
-// GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m *TempTarget) GetCreatedByIdentityID() int64 {
-	return m.CreatedByIdentityID
 }
 

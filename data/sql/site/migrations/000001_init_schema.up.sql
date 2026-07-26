@@ -11,6 +11,7 @@ CREATE TABLE events (
     end_at INTEGER
 );
 
+
 ---------------------------------------------------
 -- TABLES ABOUT PATIENT DATA
 ---------------------------------------------------
@@ -46,12 +47,10 @@ CREATE TABLE device_status (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
 
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL  -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE glucose_readings (
@@ -72,12 +71,8 @@ CREATE TABLE glucose_readings (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-
-
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE bolus (
@@ -97,11 +92,8 @@ CREATE TABLE bolus (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE carbs (
@@ -121,11 +113,8 @@ CREATE TABLE carbs (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE temp_basals (
@@ -145,11 +134,8 @@ CREATE TABLE temp_basals (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE temp_targets (
@@ -170,10 +156,8 @@ CREATE TABLE temp_targets (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 
@@ -208,10 +192,8 @@ CREATE TABLE profile (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 
@@ -241,11 +223,8 @@ CREATE TABLE activity (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
-    
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE food (
@@ -265,10 +244,8 @@ CREATE TABLE food (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );
 
 CREATE TABLE note (
@@ -286,8 +263,6 @@ CREATE TABLE note (
     
     created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_id INTEGER, -- id of identity that updated this record
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
-    created_by_identity_id INTEGER NOT NULL -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32) -- denormalized name for easier lookup (also survives delete)
 );

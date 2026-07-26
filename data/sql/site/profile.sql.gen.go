@@ -11,7 +11,7 @@ import (
 
 const allProfiles = `-- name: AllProfiles :many
 
-SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM profile ORDER BY start DESC
+SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile ORDER BY start DESC
 `
 
 // ------
@@ -48,10 +48,8 @@ func (q *Queries) AllProfiles(ctx context.Context) ([]*Profile, error) {
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
-			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
-			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -86,10 +84,9 @@ INSERT INTO profile (
     utc_offset_minutes,
     created_by_app_name,
     created_by_device_name, 
-    created_by_identity_name,
-    created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+    created_by_identity_name
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateProfileParams struct {
@@ -111,7 +108,6 @@ type CreateProfileParams struct {
 	CreatedByAppName         string
 	CreatedByDeviceName      string
 	CreatedByIdentityName    string
-	CreatedByIdentityID      int64
 }
 
 // -----
@@ -137,7 +133,6 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (*
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
-		arg.CreatedByIdentityID,
 	)
 	var i Profile
 	err := row.Scan(
@@ -162,16 +157,14 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (*
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
 
 const getProfile = `-- name: GetProfile :one
-SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM profile WHERE id = ?
+SELECT id, name, start, duration_minutes, source, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile WHERE id = ?
 `
 
 type GetProfileParams struct {
@@ -203,10 +196,8 @@ func (q *Queries) GetProfile(ctx context.Context, arg GetProfileParams) (*Profil
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }

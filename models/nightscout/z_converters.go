@@ -51,6 +51,7 @@ func ActivityToCreate(source Activity, context CreateContext) site.CreateActivit
 	if source.Device != nil {
 		siteCreateActivityParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
+	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateActivityParams
 }
 func BolusDBModelToTreatment(source *site.Bolus) Treatment {
@@ -299,7 +300,6 @@ func DeviceStatusToCreate(source DeviceStatus, context CreateContext) site.Creat
 		siteCreateDeviceStatusParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
 	siteCreateDeviceStatusParams.CreatedByIdentityName = AssignCreatedByName(context)
-	siteCreateDeviceStatusParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return siteCreateDeviceStatusParams
 }
 func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadingParams {
@@ -326,7 +326,6 @@ func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadin
 	if source.Device != nil {
 		siteCreateGlucoseReadingParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
-	siteCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams
 }
@@ -344,7 +343,6 @@ func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadin
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
-	siteUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateGlucoseReadingParams.ID = string(*source.Identifier)
@@ -372,7 +370,6 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodParams {
 	if source.Device != nil {
 		siteCreateFoodParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
-	siteCreateFoodParams.CreatedByIdentityID = AssignCreatedByID(context)
 	siteCreateFoodParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodParams
 }
@@ -395,7 +392,6 @@ func ProfileToCreate(source Profile, context CreateContext) site.CreateProfilePa
 		siteCreateProfileParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
 	siteCreateProfileParams.CreatedByIdentityName = AssignCreatedByName(context)
-	siteCreateProfileParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return siteCreateProfileParams
 }
 func TempBasalDBModelToTreatment(source *site.TempBasal) Treatment {
@@ -474,7 +470,6 @@ func TreatmentToCreateBolus(source Treatment, context CreateContext) site.Create
 	if source.Device != nil {
 		siteCreateBolusParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
-	siteCreateBolusParams.CreatedByIdentityID = AssignCreatedByID(context)
 	siteCreateBolusParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateBolusParams
 }
@@ -501,7 +496,6 @@ func TreatmentToCreateCarb(source Treatment, context CreateContext) site.CreateC
 		siteCreateCarbParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
 	siteCreateCarbParams.CreatedByIdentityName = AssignCreatedByName(context)
-	siteCreateCarbParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return siteCreateCarbParams
 }
 func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateNoteParams {
@@ -525,7 +519,6 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateN
 	if source.Device != nil {
 		siteCreateNoteParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
-	siteCreateNoteParams.CreatedByIdentityID = AssignCreatedByID(context)
 	siteCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateNoteParams
 }
@@ -551,7 +544,6 @@ func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.Cr
 	if source.Device != nil {
 		siteCreateTempBasalParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
-	siteCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context)
 	siteCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateTempBasalParams
 }
@@ -582,7 +574,6 @@ func TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.C
 	if source.Device != nil {
 		siteCreateTempTargetParams.CreatedByDeviceName = nightscoutShortStringToString(*source.Device)
 	}
-	siteCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context)
 	siteCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateTempTargetParams
 }
@@ -600,7 +591,6 @@ func TreatmentToUpdateBolus(source Treatment, context UpdateContext) site.Update
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateBolusParams.UtcOffsetMinutes = &xint642
 	}
-	siteUpdateBolusParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	siteUpdateBolusParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateBolusParams.ID = string(*source.Identifier)
@@ -621,7 +611,6 @@ func TreatmentToUpdateCarbs(source Treatment, context UpdateContext) site.Update
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateCarbParams.UtcOffsetMinutes = &xint642
 	}
-	siteUpdateCarbParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	siteUpdateCarbParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateCarbParams.ID = string(*source.Identifier)
@@ -642,7 +631,6 @@ func TreatmentToUpdateNote(source Treatment, context UpdateContext) site.UpdateN
 		xint642 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateNoteParams.UtcOffsetMinutes = &xint642
 	}
-	siteUpdateNoteParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	siteUpdateNoteParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateNoteParams.ID = string(*source.Identifier)
@@ -664,7 +652,6 @@ func TreatmentToUpdateTempBasal(source Treatment, context UpdateContext) site.Up
 		xint643 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateTempBasalParams.UtcOffsetMinutes = &xint643
 	}
-	siteUpdateTempBasalParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	siteUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateTempBasalParams.ID = string(*source.Identifier)
@@ -693,7 +680,6 @@ func TreatmentToUpdateTempTarget(source Treatment, context UpdateContext) site.U
 		xint643 := nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateTempTargetParams.UtcOffsetMinutes = &xint643
 	}
-	siteUpdateTempTargetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	siteUpdateTempTargetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateTempTargetParams.ID = string(*source.Identifier)

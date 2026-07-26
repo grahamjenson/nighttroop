@@ -11,7 +11,7 @@ import (
 
 const allActivities = `-- name: AllActivities :many
 
-SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM activity ORDER BY occurred_at DESC
+SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activity ORDER BY occurred_at DESC
 `
 
 // ------
@@ -43,10 +43,8 @@ func (q *Queries) AllActivities(ctx context.Context) ([]*Activity, error) {
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
-			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
-			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -76,10 +74,9 @@ INSERT INTO activity (
         raw_json_data,
         created_by_app_name,
         created_by_device_name,
-        created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateActivityParams struct {
@@ -96,7 +93,6 @@ type CreateActivityParams struct {
 	RawJsonData           *string
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
 
@@ -118,7 +114,6 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
-		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
 	var i Activity
@@ -139,16 +134,14 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
 
 const getActivity = `-- name: GetActivity :one
-SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM activity WHERE id = ?
+SELECT id, name, type, notes, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activity WHERE id = ?
 `
 
 type GetActivityParams struct {
@@ -175,10 +168,8 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }

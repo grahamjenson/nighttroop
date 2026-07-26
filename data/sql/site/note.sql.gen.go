@@ -11,7 +11,7 @@ import (
 
 const allNotes = `-- name: AllNotes :many
 
-SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM note ORDER BY occurred_at DESC
+SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM note ORDER BY occurred_at DESC
 `
 
 // ------
@@ -37,10 +37,8 @@ func (q *Queries) AllNotes(ctx context.Context) ([]*Note, error) {
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
-			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
-			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -63,11 +61,10 @@ INSERT INTO note (
     content,
     raw_json_data,
     created_by_app_name,
-    created_by_device_name, 
-    created_by_identity_id,
+    created_by_device_name,
     created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateNoteParams struct {
@@ -78,7 +75,6 @@ type CreateNoteParams struct {
 	RawJsonData           *string
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
 
@@ -94,7 +90,6 @@ func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) (*Note, 
 		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
-		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
 	var i Note
@@ -109,16 +104,14 @@ func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) (*Note, 
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
 
 const getNote = `-- name: GetNote :one
-SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM note WHERE id = ?
+SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM note WHERE id = ?
 `
 
 type GetNoteParams struct {
@@ -139,10 +132,8 @@ func (q *Queries) GetNote(ctx context.Context, arg GetNoteParams) (*Note, error)
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
@@ -150,21 +141,19 @@ func (q *Queries) GetNote(ctx context.Context, arg GetNoteParams) (*Note, error)
 const updateNote = `-- name: UpdateNote :one
 
 UPDATE note SET
-    occurred_at = COALESCE(?4, occurred_at),
-    content = COALESCE(?5, content),
-    utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
+    occurred_at = COALESCE(?3, occurred_at),
+    content = COALESCE(?4, content),
+    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?,
     updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateNoteParams struct {
 	OccurredAt            *int64
 	Content               *string
 	UtcOffsetMinutes      *int64
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -177,7 +166,6 @@ func (q *Queries) UpdateNote(ctx context.Context, arg UpdateNoteParams) (*Note, 
 		arg.OccurredAt,
 		arg.Content,
 		arg.UtcOffsetMinutes,
-		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
@@ -193,10 +181,8 @@ func (q *Queries) UpdateNote(ctx context.Context, arg UpdateNoteParams) (*Note, 
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }

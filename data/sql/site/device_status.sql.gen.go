@@ -11,7 +11,7 @@ import (
 
 const allDeviceStatus = `-- name: AllDeviceStatus :many
 
-SELECT id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name, created_by_identity_id FROM device_status ORDER BY occurred_at DESC
+SELECT id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_status ORDER BY occurred_at DESC
 `
 
 // ------
@@ -45,12 +45,10 @@ func (q *Queries) AllDeviceStatus(ctx context.Context) ([]*DeviceStatus, error) 
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
 			&i.CreatedByIdentityName,
-			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -85,10 +83,9 @@ INSERT INTO device_status (
     occurred_at,
     created_by_app_name,
     created_by_device_name,
-    created_by_identity_name,
-    created_by_identity_id
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name, created_by_identity_id
+    created_by_identity_name
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type CreateDeviceStatusParams struct {
@@ -110,7 +107,6 @@ type CreateDeviceStatusParams struct {
 	CreatedByAppName      string
 	CreatedByDeviceName   string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 // -----
@@ -136,7 +132,6 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
-		arg.CreatedByIdentityID,
 	)
 	var i DeviceStatus
 	err := row.Scan(
@@ -158,18 +153,16 @@ func (q *Queries) CreateDeviceStatus(ctx context.Context, arg CreateDeviceStatus
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
 
 const getDeviceStatus = `-- name: GetDeviceStatus :one
-SELECT id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name, created_by_identity_id FROM device_status WHERE id = ?
+SELECT id, type, battery_percentage, charging_state, status, insertion_time, timestamp, iob, cob, basaliob, treatmentiob, pump_reservoir, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_status WHERE id = ?
 `
 
 type GetDeviceStatusParams struct {
@@ -198,12 +191,10 @@ func (q *Queries) GetDeviceStatus(ctx context.Context, arg GetDeviceStatusParams
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }

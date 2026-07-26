@@ -11,7 +11,7 @@ import (
 
 const allBoluses = `-- name: AllBoluses :many
 
-SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM bolus ORDER BY occurred_at DESC
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM bolus ORDER BY occurred_at DESC
 `
 
 // ------
@@ -38,10 +38,8 @@ func (q *Queries) AllBoluses(ctx context.Context) ([]*Bolus, error) {
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
-			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByIdentityName,
-			&i.CreatedByIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -66,10 +64,9 @@ INSERT INTO bolus (
         raw_json_data, 
         created_by_app_name,
         created_by_device_name,
-        created_by_identity_id,
         created_by_identity_name
-) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateBolusParams struct {
@@ -81,7 +78,6 @@ type CreateBolusParams struct {
 	RawJsonData           *string
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
 
@@ -98,7 +94,6 @@ func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) (*Bolu
 		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
-		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
 	)
 	var i Bolus
@@ -114,16 +109,14 @@ func (q *Queries) CreateBolus(ctx context.Context, arg CreateBolusParams) (*Bolu
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
 
 const getBolus = `-- name: GetBolus :one
-SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id FROM bolus WHERE id = ?
+SELECT id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM bolus WHERE id = ?
 `
 
 type GetBolusParams struct {
@@ -145,10 +138,8 @@ func (q *Queries) GetBolus(ctx context.Context, arg GetBolusParams) (*Bolus, err
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }
@@ -156,21 +147,19 @@ func (q *Queries) GetBolus(ctx context.Context, arg GetBolusParams) (*Bolus, err
 const updateBolus = `-- name: UpdateBolus :one
 
 UPDATE bolus SET
-    occurred_at = COALESCE(?4, occurred_at),
-    value = COALESCE(?5, value),
-    utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
+    occurred_at = COALESCE(?3, occurred_at),
+    value = COALESCE(?4, value),
+    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?,
     updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_name, created_by_identity_id
+RETURNING id, value, type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateBolusParams struct {
 	OccurredAt            *int64
 	Value                 *float64
 	UtcOffsetMinutes      *int64
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -183,7 +172,6 @@ func (q *Queries) UpdateBolus(ctx context.Context, arg UpdateBolusParams) (*Bolu
 		arg.OccurredAt,
 		arg.Value,
 		arg.UtcOffsetMinutes,
-		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
@@ -200,10 +188,8 @@ func (q *Queries) UpdateBolus(ctx context.Context, arg UpdateBolusParams) (*Bolu
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
-		&i.CreatedByIdentityID,
 	)
 	return &i, err
 }

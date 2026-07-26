@@ -45,7 +45,6 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 	}
 	siteCreateActivityParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateActivityParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateActivityParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateActivityParams
 }
@@ -65,7 +64,6 @@ func BolusToCreate(source Bolus) CreateBolusParams {
 	}
 	siteCreateBolusParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateBolusParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateBolusParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateBolusParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateBolusParams
 }
@@ -86,7 +84,6 @@ func CarbsToCreate(source Carb) CreateCarbParams {
 	siteCreateCarbParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateCarbParams.CreatedByDeviceName = source.CreatedByDeviceName
 	siteCreateCarbParams.CreatedByIdentityName = source.CreatedByIdentityName
-	siteCreateCarbParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return siteCreateCarbParams
 }
 func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
@@ -145,7 +142,6 @@ func DeviceStatusToCreate(source DeviceStatus) CreateDeviceStatusParams {
 	siteCreateDeviceStatusParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateDeviceStatusParams.CreatedByDeviceName = source.CreatedByDeviceName
 	siteCreateDeviceStatusParams.CreatedByIdentityName = source.CreatedByIdentityName
-	siteCreateDeviceStatusParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return siteCreateDeviceStatusParams
 }
 func FoodToCreate(source Food) CreateFoodParams {
@@ -167,7 +163,6 @@ func FoodToCreate(source Food) CreateFoodParams {
 	}
 	siteCreateFoodParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateFoodParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateFoodParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateFoodParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateFoodParams
 }
@@ -187,7 +182,6 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	}
 	siteCreateGlucoseReadingParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateGlucoseReadingParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateGlucoseReadingParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateGlucoseReadingParams
 }
@@ -200,10 +194,6 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint64
-	}
-	if source.UpdatedByIdentityID != nil {
-		xint642 := *source.UpdatedByIdentityID
-		siteUpdateGlucoseReadingParams.UpdatedByIdentityID = &xint642
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring := *source.UpdatedByIdentityName
@@ -227,7 +217,6 @@ func NoteToCreate(source Note) CreateNoteParams {
 	}
 	siteCreateNoteParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateNoteParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateNoteParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateNoteParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateNoteParams
 }
@@ -290,7 +279,6 @@ func ProfileToCreate(source Profile) CreateProfileParams {
 	siteCreateProfileParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateProfileParams.CreatedByDeviceName = source.CreatedByDeviceName
 	siteCreateProfileParams.CreatedByIdentityName = source.CreatedByIdentityName
-	siteCreateProfileParams.CreatedByIdentityID = source.CreatedByIdentityID
 	return siteCreateProfileParams
 }
 func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
@@ -309,7 +297,6 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	}
 	siteCreateTempBasalParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateTempBasalParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateTempBasalParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateTempBasalParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateTempBasalParams
 }
@@ -330,7 +317,6 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	}
 	siteCreateTempTargetParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateTempTargetParams.CreatedByDeviceName = source.CreatedByDeviceName
-	siteCreateTempTargetParams.CreatedByIdentityID = source.CreatedByIdentityID
 	siteCreateTempTargetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateTempTargetParams
 }

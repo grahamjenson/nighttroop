@@ -28,7 +28,6 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore CreatedByIdentityID CreatedByIdentityName
 	// goverter:map ActivityType Type
 	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
@@ -37,7 +36,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	ActivityToCreate(source Activity, ctx CreateContext) site.CreateActivityParams
 
@@ -67,7 +65,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:context ctx
 	// goverter:map  Date ID                | AssignID
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	DeviceStatusToCreate(source DeviceStatus, ctx CreateContext) site.CreateDeviceStatusParams
 
@@ -94,7 +91,6 @@ type MapConverter interface {
 	// goverter:map  Date OccurredAt
 	// goverter:map  App CreatedByAppName
 	// goverter:map  Device CreatedByDeviceName
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	EntryToCreate(source Entry, ctx CreateContext) site.CreateGlucoseReadingParams
 
@@ -102,7 +98,6 @@ type MapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	EntryToUpdate(source Entry, ctx UpdateContext) site.UpdateGlucoseReadingParams
 
@@ -131,7 +126,6 @@ type MapConverter interface {
 	// goverter:map  App CreatedByAppName
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodParams
 
@@ -154,7 +148,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  DefaultProfile Name
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	ProfileToCreate(source Profile, ctx CreateContext) site.CreateProfileParams
 
@@ -183,7 +176,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
 	// goverter:map  Insulin Value
@@ -194,7 +186,6 @@ type MapConverter interface {
 	// goverter:map  Date OccurredAt
 	// goverter:map  Insulin Value
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	TreatmentToUpdateBolus(source Treatment, ctx UpdateContext) site.UpdateBolusParams
 
@@ -220,7 +211,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
 	// goverter:map  Carbs Amount
@@ -231,7 +221,6 @@ type MapConverter interface {
 	// goverter:map  Date OccurredAt
 	// goverter:map  Carbs Amount
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	TreatmentToUpdateCarbs(source Treatment, ctx UpdateContext) site.UpdateCarbParams
 
@@ -257,7 +246,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date Start
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  . Value | TempBasalValue
 	// goverter:map Duration DurationMinutes
@@ -269,7 +257,6 @@ type MapConverter interface {
 	// goverter:map  . Value | TempBasalValuePtr
 	// goverter:map Duration DurationMinutes
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	TreatmentToUpdateTempBasal(source Treatment, ctx UpdateContext) site.UpdateTempBasalParams
 
@@ -296,7 +283,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date Start
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map Duration DurationMinutes
 	// goverter:map TargetTop HighTarget
@@ -310,7 +296,6 @@ type MapConverter interface {
 	// goverter:map TargetTop HighTarget
 	// goverter:map TargetBottom LowTarget
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	TreatmentToUpdateTempTarget(source Treatment, ctx UpdateContext) site.UpdateTempTargetParams
 
@@ -338,7 +323,6 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  Date OccurredAt
-	// goverter:map  CreatedByIdentityID    | AssignCreatedByID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  Notes Content
 	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
@@ -348,7 +332,6 @@ type MapConverter interface {
 	// goverter:map  Date OccurredAt
 	// goverter:map  Notes Content
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:map UpdatedByIdentityID   | AssignUpdatedByID
 	// goverter:context ctx
 	TreatmentToUpdateNote(source Treatment, ctx UpdateContext) site.UpdateNoteParams
 
@@ -374,18 +357,8 @@ func AssignCreatedByName(ctx CreateContext) string {
 }
 
 // goverter:context ctx
-func AssignCreatedByID(ctx CreateContext) int64 {
-	return ctx.CreatedByIdentityID
-}
-
-// goverter:context ctx
 func AssignUpdatedByName(ctx UpdateContext) *string {
 	return ptr(ctx.UpdatedByIdentityName)
-}
-
-// goverter:context ctx
-func AssignUpdatedByID(ctx UpdateContext) *int64 {
-	return ptr(ctx.UpdatedByIdentityID)
 }
 
 func ToDateInt(createdAt int64) *DateInt {

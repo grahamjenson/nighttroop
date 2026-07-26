@@ -21,10 +21,8 @@ type Activity struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type Bolus struct {
@@ -39,10 +37,8 @@ type Bolus struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type Carb struct {
@@ -57,10 +53,8 @@ type Carb struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type DeviceStatus struct {
@@ -82,12 +76,10 @@ type DeviceStatus struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByAppName      string
 	CreatedByDeviceName   string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type Event struct {
@@ -110,10 +102,8 @@ type Food struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type GlucoseReading struct {
@@ -128,10 +118,8 @@ type GlucoseReading struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type Note struct {
@@ -145,10 +133,8 @@ type Note struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type Profile struct {
@@ -173,10 +159,8 @@ type Profile struct {
 	UpdatedAt                int64
 	CreatedByAppName         string
 	CreatedByDeviceName      string
-	UpdatedByIdentityID      *int64
 	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
-	CreatedByIdentityID      int64
 }
 
 type SqliteSequence struct {
@@ -196,10 +180,8 @@ type TempBasal struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
 
 type TempTarget struct {
@@ -215,8 +197,6 @@ type TempTarget struct {
 	UpdatedAt             int64
 	CreatedByAppName      string
 	CreatedByDeviceName   string
-	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
-	CreatedByIdentityID   int64
 }
