@@ -70,15 +70,6 @@ type JobStatsDaily struct {
 	UpdatedAt          int64
 }
 
-type Setting struct {
-	Subdomain string
-	Key       string
-	Value     string
-	DeletedAt *int64
-	CreatedAt int64
-	UpdatedAt int64
-}
-
 type Site struct {
 	ID               int64
 	Subdomain        string

@@ -237,36 +237,6 @@ func (m *Job) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m *Setting) GetSubdomain() string {
-	return m.Subdomain
-}
-
-// GetKey returns the Key value.
-func (m *Setting) GetKey() string {
-	return m.Key
-}
-
-// GetValue returns the Value value.
-func (m *Setting) GetValue() string {
-	return m.Value
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *Setting) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *Setting) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m *Setting) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
 // GetID returns the ID value.
 func (m *SiteSyncSource) GetID() int64 {
 	return m.ID

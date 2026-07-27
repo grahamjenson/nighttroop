@@ -106,18 +106,6 @@ CREATE TABLE sites (
 
 -- SITE TABLES
 
-CREATE TABLE settings (
-    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
-    key        TEXT NOT NULL CHECK(length(key) <= 64),
-    value      TEXT NOT NULL CHECK(length(value) <= 8192),
-
-    deleted_at INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-    PRIMARY KEY (subdomain, key)
-);
-
 -- This table is like users and devices
 CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

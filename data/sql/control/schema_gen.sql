@@ -85,18 +85,6 @@ CREATE TABLE jobs (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE settings (
-    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
-    key        TEXT NOT NULL CHECK(length(key) <= 64),
-    value      TEXT NOT NULL CHECK(length(value) <= 8192),
-
-    deleted_at INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-    PRIMARY KEY (subdomain, key)
-);
-
 CREATE TABLE site_sync_sources (
     -- Nightscout/Dexcom
     id INTEGER PRIMARY KEY AUTOINCREMENT,
