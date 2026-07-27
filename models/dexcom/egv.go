@@ -29,7 +29,6 @@ func EGVToCreate(e EGV, idPrefix string, createdByIdentityID int64, createdByIde
 		ID:                    utils.NextDateID(idPrefix, e.SystemTime.UnixMilli()),
 		OccurredAt:            e.SystemTime.UnixMilli(),
 		Value:                 float64(e.Value),
-		CreatedByIdentityID:   createdByIdentityID,
 		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
 		UtcOffsetMinutes:      ptr(int64(e.UTCOffsetInMinutes())),

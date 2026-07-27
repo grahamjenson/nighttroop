@@ -11,21 +11,21 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type CarbsCollection struct {
+type CarbsCorrection struct {
 	converter func(c *site.Carb) nsutils.Record
 }
 
-func NewCarbsCollection() CarbsCollection {
-	return CarbsCollection{
+func NewCarbsCorrection() CarbsCorrection {
+	return CarbsCorrection{
 		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.CarbsDBModelToTreatment),
 	}
 }
 
-func (c CarbsCollection) GetPrefix() string {
+func (c CarbsCorrection) GetPrefix() string {
 	return "cc"
 }
 
-func (c CarbsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
+func (c CarbsCorrection) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
 	dbModel, err := siteContext.SiteDB.Queries.CreateCarb(ctx,
 		nightscout.TreatmentToCreateCarb(treatment, nightscout.CreateContext{
 			IDPrefix:              c.GetPrefix(),
@@ -41,11 +41,11 @@ func (c CarbsCollection) Create(ctx context.Context, siteContext *httputils.Site
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c CarbsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c CarbsCorrection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c CarbsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c CarbsCorrection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	var rerr error
 	var carbs []*site.Carb
 
@@ -63,14 +63,14 @@ func (c CarbsCollection) Search(ctx context.Context, siteContext *httputils.Site
 	return nsutils.CreateRecordSlice(carbs, c.converter), nil
 }
 
-func (c CarbsCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c CarbsCorrection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c CarbsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c CarbsCorrection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c CarbsCollection) DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError) {
+func (c CarbsCorrection) DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

@@ -11,22 +11,21 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type TempTargetTypeCollection struct {
+type TempTarget struct {
 	converter func(c *site.TempTarget) nsutils.Record
 }
 
-func (c TempTargetTypeCollection) converterToRecord(tempTarget *site.TempTarget) nsutils.Record {
-	if c.converter == nil {
-		c.converter = nsutils.DBModelToRecord(nsutils.Treatments, nightscout.TempTargetDBModelToTreatment)
+func NewTempTarget() TempTarget {
+	return TempTarget{
+		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.TempTargetDBModelToTreatment),
 	}
-	return c.converter(tempTarget)
 }
 
-func (c TempTargetTypeCollection) GetPrefix() string {
+func (c TempTarget) GetPrefix() string {
 	return "tt"
 }
 
-func (c TempTargetTypeCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TempTarget) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
 	dbModel, err := siteContext.SiteDB.Queries.CreateTempTarget(ctx,
 		nightscout.TreatmentToCreateTempTarget(treatment, nightscout.CreateContext{
 			IDPrefix:              c.GetPrefix(),
@@ -39,25 +38,25 @@ func (c TempTargetTypeCollection) Create(ctx context.Context, siteContext *httpu
 		slog.Error("failed to create temp target in database", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	return ptr(c.converterToRecord(dbModel)), nil
+	return ptr(c.converter(dbModel)), nil
 }
 
-func (c TempTargetTypeCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TempTarget) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TempTargetTypeCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c TempTarget) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TempTargetTypeCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TempTarget) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c TempTargetTypeCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+func (c TempTarget) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
-func (c TempTargetTypeCollection) DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError) {
+func (c TempTarget) DeleteAll(ctx context.Context, siteContext *httputils.SiteContext, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }
