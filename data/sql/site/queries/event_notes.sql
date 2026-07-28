@@ -2,7 +2,7 @@
 -- CREATE 
 --------
 -- name: CreateNote :one
-INSERT INTO note (
+INSERT INTO notes (
     id,
     occurred_at,
     utc_offset_minutes,
@@ -19,17 +19,17 @@ RETURNING *;
 --------
 
 -- name: AllNotes :many
-SELECT * FROM note ORDER BY occurred_at DESC; 
+SELECT * FROM notes ORDER BY occurred_at DESC; 
 
 -- name: GetNote :one
-SELECT * FROM note WHERE id = ?;
+SELECT * FROM notes WHERE id = ?;
 
 --------
 -- UPDATE
 --------
 
 -- name: UpdateNote :one
-UPDATE note SET
+UPDATE notes SET
     occurred_at = COALESCE(sqlc.narg(occurred_at), occurred_at),
     content = COALESCE(sqlc.narg(content), content),
     utc_offset_minutes = COALESCE(sqlc.narg(utc_offset_minutes), utc_offset_minutes),

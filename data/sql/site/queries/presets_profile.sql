@@ -2,8 +2,8 @@
 -- CREATE 
 --------
 
--- name: CreateProfile :one
-INSERT INTO profile (
+-- name: CreateProfilePreset :one
+INSERT INTO profile_presets (
     id,
     name,
     start,
@@ -30,11 +30,11 @@ RETURNING *;
 --------
 
 -- name: AllProfiles :many
-SELECT * FROM profile ORDER BY start DESC;
+SELECT * FROM profile_presets ORDER BY start DESC;
 
 
 -- name: GetProfile :one
-SELECT * FROM profile WHERE id = ?;
+SELECT * FROM profile_presets WHERE id = ?;
 --------
 -- UPDATE
 --------

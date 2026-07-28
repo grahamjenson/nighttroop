@@ -6,9 +6,12 @@
 -- name: CreateGlucoseReading :one
 INSERT INTO glucose_readings (
     id,
-    occurred_at,
+    
     value,
-    type,
+    reading_type,
+    
+    occurred_at,
+    
     raw_json_data,
     utc_offset_minutes,
     created_by_app_name,
@@ -84,10 +87,10 @@ WHERE
     AND (CAST(sqlc.narg('UpdatedGT') AS INTEGER) IS NULL OR updated_at > sqlc.narg('UpdatedGT'))
     AND (CAST(sqlc.narg('UpdatedLT') AS INTEGER) IS NULL OR updated_at < sqlc.narg('UpdatedLT'))
 
-    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR type = sqlc.narg('TypeEq'))
-    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR type != sqlc.narg('TypeNeq'))
-    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR type IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
-    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
+    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR reading_type = sqlc.narg('TypeEq'))
+    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR reading_type != sqlc.narg('TypeNeq'))
+    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR reading_type IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
+    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR reading_type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
 
     AND (CAST(sqlc.narg('IDEq') AS TEXT) IS NULL OR id = sqlc.narg('IDEq'))
     AND (CAST(sqlc.narg('IDIn') AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(sqlc.narg('IDIn'))))

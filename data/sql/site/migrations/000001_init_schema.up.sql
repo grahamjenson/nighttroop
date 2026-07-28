@@ -2,12 +2,16 @@
 -- SITE PATIENT DATA Tables
 ---------------------------------------------------
 
+-----------
+-- EVENTS (they happen at a time on a time line)
+-----------
+
 CREATE TABLE glucose_readings (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    value REAL NOT NULL,
-    type TEXT NOT NULL CHECK(length(type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
+    reading REAL NOT NULL,
+    reading_type TEXT NOT NULL CHECK(length(reading_type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
@@ -27,7 +31,7 @@ CREATE TABLE glucose_readings (
 CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
-    amount REAL NOT NULL,
+    dose REAL NOT NULL,
     dose_type TEXT NOT NULL CHECK (dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
 
     -- Default Stuff
@@ -49,11 +53,11 @@ CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     name TEXT CHECK(length(name) <= 64), -- this could be a reference to a preset
 
-    carbs REAL NOT NULL DEFAULT 0,
-    fat REAL NOT NULL DEFAULT 0,
-    protein REAL NOT NULL DEFAULT 0,
-    fibre REAL NOT NULL DEFAULT 0,
-    calories REAL NOT NULL DEFAULT 0,
+    carbs REAL,
+    fat REAL,
+    protein REAL,
+    fibre REAL,
+    calories REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
@@ -255,7 +259,7 @@ CREATE TABLE activities (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     name TEXT CHECK(length(name) <= 64),
-    type TEXT CHECK(length(type) <= 32),
+    activity_type TEXT CHECK(length(activity_type) <= 32),
 
     duration_minutes INTEGER,
     calories INTEGER,
@@ -298,13 +302,12 @@ CREATE TABLE notes (
 );
 
 
-----------
--- Treatment is a group of other types, joined together so that they can be treated as a single event, e.g. a bolus wizard having a glucose reading and a bolus
-----------
+
+-- EventGroup is when multiple events happen together, like a meal with insulin and glucose reading
 
 CREATE TABLE event_group (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    type TEXT NOT NULL CHECK(length(type) <= 32),
+    group_type TEXT NOT NULL CHECK(length(group_type) <= 32),
 
     glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
     insulin_dose_id TEXT UNIQUE REFERENCES insulin_doses(id) ON DELETE RESTRICT,
@@ -337,7 +340,7 @@ CREATE TABLE event_group (
 );
 
 ----------
--- Presets are user defined templates for the above types, and can be used to create new instances of the above types
+-- PRESETS are user defined templates for the event types
 ----------
 
 CREATE TABLE food_presets (
@@ -410,31 +413,13 @@ CREATE TABLE profile_presets (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-CREATE TABLE insulin_products (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
-    
-    dia_hours REAL NOT NULL default 6,
-    onset_minutes REAL NOT NULL default 20,
-    peak_minutes REAL NOT NULL default 60,
 
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+----------
+-- SETTINGS is a singleton defined settings used to configure site behavior
+----------
 
-    deleted_at INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
-
--- Site Settings is a singleton
 CREATE TABLE site_settings (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id INTEGER PRIMARY KEY,
 
     -- SGVs
     units TEXT NOT NULL CHECK (units IN ('mmol/L', 'mg/dL')) DEFAULT 'mmol/L', -- mg/dL, mmol/L
@@ -454,7 +439,7 @@ CREATE TABLE site_settings (
     -- CARBS
     carb_max_absortion_hours REAL NOT NULL default 6,
     carb_min_5m_impact REAL NOT NULL default 0,
-    
+
     -- Default Stuff
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)

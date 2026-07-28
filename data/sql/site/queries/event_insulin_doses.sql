@@ -1,35 +1,39 @@
 -------
 -- CREATE 
 --------
--- name: CreateFood :one
-INSERT INTO food (
+-- name: CreateInsulinDose :one
+INSERT INTO insulin_doses (
     id,
+    dose,
+    dose_type,
+
     occurred_at,
+
     utc_offset_minutes,
-    amount,
-    type,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
 -- READ
 --------
 
--- name: AllCarbs :many
-SELECT * FROM food 
+-- name: AllInsulinDoses :many
+SELECT * FROM insulin_doses
+WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
--- name: GetCarb :one
-SELECT * FROM food WHERE id = ?;
 
--- name: SearchWithDefaultSortCarbs :many
-SELECT * FROM food
+-- name: GetInsulinDose :one
+SELECT * FROM insulin_doses WHERE id = ?;
+
+-- name: SearchWithDefaultSortInsulinDoses :many
+SELECT * FROM insulin_doses
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))
     AND (CAST(sqlc.narg('DateLTE') AS INTEGER) IS NULL OR occurred_at <= sqlc.narg('DateLTE'))
@@ -52,24 +56,25 @@ WHERE
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
 
-    AND (CAST(sqlc.narg('CarbsEQ') AS INTEGER) IS NULL OR amount = sqlc.narg('CarbsEQ'))
-    AND (CAST(sqlc.narg('CarbsGTE') AS INTEGER) IS NULL OR amount >= sqlc.narg('CarbsGTE'))
-    AND (CAST(sqlc.narg('CarbsGT') AS INTEGER) IS NULL OR amount > sqlc.narg('CarbsGT'))
-    AND (CAST(sqlc.narg('CarbsLTE') AS INTEGER) IS NULL OR amount <= sqlc.narg('CarbsLTE'))
-    AND (CAST(sqlc.narg('CarbsLT') AS INTEGER) IS NULL OR amount < sqlc.narg('CarbsLT'))
+    AND (CAST(sqlc.narg('InsulinEQ') AS INTEGER) IS NULL OR dose = sqlc.narg('InsulinEQ'))
+    AND (CAST(sqlc.narg('InsulinGTE') AS INTEGER) IS NULL OR dose >= sqlc.narg('InsulinGTE'))
+    AND (CAST(sqlc.narg('InsulinGT') AS INTEGER) IS NULL OR dose > sqlc.narg('InsulinGT'))
+    AND (CAST(sqlc.narg('InsulinLTE') AS INTEGER) IS NULL OR dose <= sqlc.narg('InsulinLTE'))
+    AND (CAST(sqlc.narg('InsulinLT') AS INTEGER) IS NULL OR dose < sqlc.narg('InsulinLT'))
     
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg(limit) OFFSET sqlc.arg(skip);
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 --------
 -- UPDATE
 --------
 
--- name: UpdateCarb :one
-UPDATE food SET
-    occurred_at = COALESCE(sqlc.narg(occurred_at), occurred_at),
-    amount = COALESCE(sqlc.narg(amount), amount),
-    utc_offset_minutes = COALESCE(sqlc.narg(utc_offset_minutes), utc_offset_minutes),
+-- name: UpdateInsulinDose :one
+UPDATE insulin_doses SET
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
+    dose = COALESCE(sqlc.narg('Dose'), dose),
+    utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ?
@@ -78,3 +83,12 @@ RETURNING *;
 --------
 -- DELETE
 --------
+
+-- name: SoftDeleteInsulinDose :one
+UPDATE insulin_doses SET
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    deleted_by_identity_name = ?
+WHERE id = ?
+RETURNING *;
+
+

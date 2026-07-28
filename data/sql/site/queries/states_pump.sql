@@ -2,8 +2,8 @@
 -- CREATE 
 --------
 
--- name: CreateDeviceStatus :one
-INSERT INTO device_status (
+-- name: CreatePumpState :one
+INSERT INTO pump_states (
     id,
     type,
     battery_percentage,
@@ -29,11 +29,11 @@ RETURNING *;
 -- READ
 --------
 
--- name: AllDeviceStatus :many
-SELECT * FROM device_status ORDER BY occurred_at DESC;
+-- name: AllPumpStates :many
+SELECT * FROM pump_states ORDER BY occurred_at DESC;
 
--- name: GetDeviceStatus :one
-SELECT * FROM device_status WHERE id = ?;
+-- name: GetPumpState :one
+SELECT * FROM pump_states WHERE id = ?;
 
 --------
 -- UPDATE

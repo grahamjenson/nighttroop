@@ -1,8 +1,8 @@
 -------
 -- CREATE 
 --------
--- name: CreateFood :one
-INSERT INTO food (
+-- name: CreateFoodPreset :one
+INSERT INTO food_presets (
     id,
     name,
     category,
@@ -20,10 +20,10 @@ RETURNING *;
 --------
 
 -- name: AllFoods :many
-SELECT * FROM food ORDER BY created_at DESC; 
+SELECT * FROM food_presets ORDER BY created_at DESC; 
 
 -- name: GetFood :one
-SELECT * FROM food WHERE id = ?;
+SELECT * FROM food_presets WHERE id = ?;
 
 --------
 -- UPDATE

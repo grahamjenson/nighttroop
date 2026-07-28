@@ -217,27 +217,6 @@ CREATE TABLE insulin_doses (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-CREATE TABLE insulin_products (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
-    
-    dia_hours REAL NOT NULL default 6,
-    onset_minutes REAL NOT NULL default 20,
-    peak_minutes REAL NOT NULL default 60,
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
 CREATE TABLE loop_states (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     status TEXT CHECK(length(status) <= 32), -- This is the status of the device, like "ok", "error", "warning", etc
@@ -369,7 +348,7 @@ CREATE TABLE pump_states (
 );
 
 CREATE TABLE site_settings (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id INTEGER PRIMARY KEY,
 
     -- SGVs
     units TEXT NOT NULL CHECK (units IN ('mmol/L', 'mg/dL')) DEFAULT 'mmol/L', -- mg/dL, mmol/L
@@ -389,7 +368,7 @@ CREATE TABLE site_settings (
     -- CARBS
     carb_max_absortion_hours REAL NOT NULL default 6,
     carb_min_5m_impact REAL NOT NULL default 0,
-    
+
     -- Default Stuff
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)
