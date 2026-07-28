@@ -30,9 +30,3 @@ sql:
         output_batch_file_name: "z_batch.go"
         output_copyfrom_file_name: "z_copyfrom.go"
 
-
-          
-overrides:
-  go:
-    rename:
-      bolu: Bolus

@@ -39,6 +39,17 @@
 1. Backfill button on sync page for Dexcom, NS
 1. archivied_at in the user table in control.db
 
+1. Reports/Derived Values:
+    1. AGP
+    1. TTD
+    1. % High/Low... 
+    1. Small multiples Daily 
+
+1. Alarms:
+    1. Create Alarms
+    1. Define main types
+    1. Notifications for device/identity
+
 1. Site UI:
     1. Config Timezone settings
     1. Timezones for profiles, user settings, just to make sure that when a treatment is logged we know when against the profile it actually happened
@@ -73,7 +84,11 @@
 
 # Nighttroop
 
-The goal is to make an app for diabetes camps that can add all the kids and see their numbers and show alarms/highlight issues.
+Nighttroop is primarly a simple, free live diabates dashboard that will quickly get you up and running.
+
+The tradeoffs:
+1. Historical data
+1. Complexity with setups.
 
 
 
