@@ -1,34 +1,42 @@
 -------
 -- CREATE 
 --------
--- name: CreateFood :one
+-- name: CreateFoodIntake :one
 INSERT INTO food_intakes (
     id,
+    name,
+    carbs,
+    fat,
+    protein,
+    fibre,
+    calories,
+
     occurred_at,
+
     utc_offset_minutes,
-    amount,
-    type,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
 -- READ
 --------
 
--- name: AllCarbs :many
+-- name: AllFoodIntakes :many
 SELECT * FROM food_intakes
+WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
--- name: GetCarb :one
+
+-- name: GetFoodIntake :one
 SELECT * FROM food_intakes WHERE id = ?;
 
--- name: SearchWithDefaultSortCarbs :many
+-- name: SearchWithDefaultSortFoodIntakes :many
 SELECT * FROM food_intakes
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))
@@ -49,32 +57,50 @@ WHERE
     AND (CAST(sqlc.narg('IDEq') AS TEXT) IS NULL OR id = sqlc.narg('IDEq'))
     AND (CAST(sqlc.narg('IDIn') AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(sqlc.narg('IDIn'))))
 
+    AND (CAST(sqlc.narg('NameEq') AS TEXT) IS NULL OR name = sqlc.narg('NameEq'))
+
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
-
-    AND (CAST(sqlc.narg('CarbsEQ') AS INTEGER) IS NULL OR amount = sqlc.narg('CarbsEQ'))
-    AND (CAST(sqlc.narg('CarbsGTE') AS INTEGER) IS NULL OR amount >= sqlc.narg('CarbsGTE'))
-    AND (CAST(sqlc.narg('CarbsGT') AS INTEGER) IS NULL OR amount > sqlc.narg('CarbsGT'))
-    AND (CAST(sqlc.narg('CarbsLTE') AS INTEGER) IS NULL OR amount <= sqlc.narg('CarbsLTE'))
-    AND (CAST(sqlc.narg('CarbsLT') AS INTEGER) IS NULL OR amount < sqlc.narg('CarbsLT'))
     
+    AND (CAST(sqlc.narg('CarbsEQ') AS INTEGER) IS NULL OR carbs = sqlc.narg('CarbsEQ'))
+    AND (CAST(sqlc.narg('CarbsGTE') AS INTEGER) IS NULL OR carbs >= sqlc.narg('CarbsGTE'))
+    AND (CAST(sqlc.narg('CarbsGT') AS INTEGER) IS NULL OR carbs > sqlc.narg('CarbsGT'))
+    AND (CAST(sqlc.narg('CarbsLTE') AS INTEGER) IS NULL OR carbs <= sqlc.narg('CarbsLTE'))
+    AND (CAST(sqlc.narg('CarbsLT') AS INTEGER) IS NULL OR carbs < sqlc.narg('CarbsLT'))
+
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg(limit) OFFSET sqlc.arg(skip);
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 --------
 -- UPDATE
 --------
 
--- name: UpdateCarb :one
+-- name: UpdateFoodIntake :one
 UPDATE food_intakes SET
-    occurred_at = COALESCE(sqlc.narg('occurred_at'), occurred_at),
-    amount = COALESCE(sqlc.narg('amount'), amount),
-    utc_offset_minutes = COALESCE(sqlc.narg('utc_offset_minutes'), utc_offset_minutes),
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
+    name = COALESCE(sqlc.narg('Name'), name),
+    carbs = COALESCE(sqlc.narg('Carbs'), carbs),
+    fat = COALESCE(sqlc.narg('Fat'), fat),
+    protein = COALESCE(sqlc.narg('Protein'), protein),
+    fibre = COALESCE(sqlc.narg('Fibre'), fibre),
+    calories = COALESCE(sqlc.narg('Calories'), calories),
+    utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ?
+WHERE id = ? AND deleted_at IS NULL
 RETURNING *; 
 
 --------
 -- DELETE
 --------
+
+-- name: SoftDeleteFoodIntake :one
+UPDATE food_intakes SET
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE id = ? AND deleted_at IS NULL
+RETURNING *;
+
+-- name: HardDeleteFoodIntake :one
+DELETE FROM food_intakes WHERE id = ? RETURNING *;

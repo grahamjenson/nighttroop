@@ -68,6 +68,12 @@ type QueryValues struct {
 	InsulinLTE *nightscout.FlexibleInt64 `mapstructure:"insulinlte,omitempty" json:"insulinlte,omitempty"`
 	InsulinLT  *nightscout.FlexibleInt64 `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
 
+	DurationEQ  *nightscout.FlexibleInt64 `mapstructure:"durationeq,omitempty" json:"durationeq,omitempty"`
+	DurationGTE *nightscout.FlexibleInt64 `mapstructure:"durationgte,omitempty" json:"durationgte,omitempty"`
+	DurationGT  *nightscout.FlexibleInt64 `mapstructure:"durationgt,omitempty" json:"durationgt,omitempty"`
+	DurationLTE *nightscout.FlexibleInt64 `mapstructure:"durationlte,omitempty" json:"durationlte,omitempty"`
+	DurationLT  *nightscout.FlexibleInt64 `mapstructure:"durationlt,omitempty" json:"durationlt,omitempty"`
+
 	NameEq *nightscout.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
@@ -91,11 +97,11 @@ type QueryValues struct {
 
 // This is just much nicer to work with but the reverse is faster, so we
 var forwardLookupName = map[string][]string{
-	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]"},
-	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]"},
+	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]"},
+	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]"},
 
-	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]"},
-	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]"},
+	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]"},
+	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]"},
 
 	"createdatgte": {"created_at$gte", "find[created_at][$gte]", "srvCreated$gte", "find[srvCreated][$gte]"},
 	"createdatgt":  {"created_at$gt", "find[created_at][$gt]", "srvCreated$gt", "find[srvCreated][$gt]"},
@@ -109,6 +115,12 @@ var forwardLookupName = map[string][]string{
 	"updatedlte": {"updated_at$lte", "find[updated_at][$lte]", "srvModified$lte", "find[srvModified][$lte]"},
 	"updatedlt":  {"updated_at$lt", "find[updated_at][$lt]", "srvModified$lt", "find[srvModified][$lt]"},
 
+	"durationeq":  {"duration", "find[duration]", "find[duration][$eq]", "durationMinutes", "find[durationMinutes]", "find[durationMinutes][$eq]"},
+	"durationgte": {"duration$gte", "find[duration][$gte]", "durationMinutes$gte", "find[durationMinutes][$gte]"},
+	"durationgt":  {"duration$gt", "find[duration][$gt]", "durationMinutes$gt", "find[durationMinutes][$gt]"},
+	"durationlte": {"duration$lte", "find[duration][$lte]", "durationMinutes$lte", "find[durationMinutes][$lte]"},
+	"durationlt":  {"duration$lt", "find[duration][$lt]", "durationMinutes$lt", "find[durationMinutes][$lt]"},
+
 	"typeeq": {"type", "find[type]", "find[type][$eq]",
 		"eventType", "find[eventType]", "find[eventType][$eq]",
 		"activityType", "find[activityType]", "find[activityType][$eq]",
@@ -119,6 +131,7 @@ var forwardLookupName = map[string][]string{
 		"activityType$ne", "find[activityType][$ne]",
 		"category$ne", "find[category][$ne]",
 	},
+
 	"typein":  {"type$in", "find[type][$in]", "eventType$in", "find[eventType][$in]", "activityType$in", "find[activityType][$in]", "category$in", "find[category][$in]"},
 	"typenin": {"type$nin", "find[type][$nin]", "eventType$nin", "find[eventType][$nin]", "activityType$nin", "find[activityType][$nin]", "category$nin", "find[category][$nin]"},
 
@@ -249,7 +262,7 @@ func (q *QueryValues) SortOrder() *QuerySort {
 	}
 
 	switch sortField {
-	case "date", "dateString", "mills", "startDate", "occurred_at":
+	case "date", "dateString", "mills", "startDate", "occurred_at", "start":
 		sortField = "occurred_at"
 	case "created_at", "srvCreated":
 		sortField = "created_at"

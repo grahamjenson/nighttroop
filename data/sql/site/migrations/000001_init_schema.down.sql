@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS insulin_doses;
 DROP TABLE IF EXISTS food_intakes;
 DROP TABLE IF EXISTS temp_basals;
 DROP TABLE IF EXISTS temp_targets;
-DROP TABLE IF EXISTS profile_changes;
+DROP TABLE IF EXISTS profile_switches;
 
 DROP TABLE IF EXISTS pump_states;
 DROP TABLE IF EXISTS cgm_states;

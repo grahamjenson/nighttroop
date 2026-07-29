@@ -74,18 +74,23 @@ CREATE TABLE food_intakes (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+
+-- temp_basals, temp_targets and profile_switches are all ranges over a time period so start is occured_at until duration (unless another overide happens)
+-- activity also has a duration
 CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
-    start INTEGER NOT NULL,
     duration_minutes INTEGER NOT NULL,
-    amount REAL NOT NULL,
+    absolute REAL NOT NULL,
+    percentage REAL, -- This is optional, but absolute is not
+    
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -98,7 +103,6 @@ CREATE TABLE temp_basals (
 CREATE TABLE temp_targets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
-    start INTEGER NOT NULL,
     duration_minutes INTEGER NOT NULL,
     high_target REAL NOT NULL,
     low_target REAL NOT NULL,
@@ -108,6 +112,7 @@ CREATE TABLE temp_targets (
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -118,8 +123,8 @@ CREATE TABLE temp_targets (
 );
 
 
--- Profile Changes are tricksy, they have a percent, but the values stored in here already contain that percent
-CREATE TABLE profile_changes (
+-- Profile Switches are tricksy, they have a percent, but the values stored in here already contain that percent
+CREATE TABLE profile_switches (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     name TEXT NOT NULL CHECK(length(name) <= 64),
@@ -314,7 +319,7 @@ CREATE TABLE event_group (
     food_intake_id TEXT UNIQUE REFERENCES food_intakes(id) ON DELETE RESTRICT,
     temp_basal_id TEXT UNIQUE REFERENCES temp_basals(id) ON DELETE RESTRICT,
     temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
-    profile_change_id TEXT UNIQUE REFERENCES profile_changes(id) ON DELETE RESTRICT,
+    profile_switch_id TEXT UNIQUE REFERENCES profile_switch(id) ON DELETE RESTRICT,
 
     device_state_id TEXT UNIQUE REFERENCES device_states(id) ON DELETE RESTRICT,
     loop_state_id TEXT UNIQUE REFERENCES loop_states(id) ON DELETE RESTRICT,

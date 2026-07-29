@@ -15,7 +15,7 @@ INSERT INTO insulin_doses (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -53,15 +53,21 @@ WHERE
     AND (CAST(sqlc.narg('IDEq') AS TEXT) IS NULL OR id = sqlc.narg('IDEq'))
     AND (CAST(sqlc.narg('IDIn') AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(sqlc.narg('IDIn'))))
 
+
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
+    
+    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR dose_type = sqlc.narg('TypeEq'))
+    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR dose_type != sqlc.narg('TypeNeq'))
+    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR dose_type IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
+    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR dose_type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
 
     AND (CAST(sqlc.narg('InsulinEQ') AS INTEGER) IS NULL OR dose = sqlc.narg('InsulinEQ'))
     AND (CAST(sqlc.narg('InsulinGTE') AS INTEGER) IS NULL OR dose >= sqlc.narg('InsulinGTE'))
     AND (CAST(sqlc.narg('InsulinGT') AS INTEGER) IS NULL OR dose > sqlc.narg('InsulinGT'))
     AND (CAST(sqlc.narg('InsulinLTE') AS INTEGER) IS NULL OR dose <= sqlc.narg('InsulinLTE'))
     AND (CAST(sqlc.narg('InsulinLT') AS INTEGER) IS NULL OR dose < sqlc.narg('InsulinLT'))
-    
+
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
@@ -73,11 +79,12 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: UpdateInsulinDose :one
 UPDATE insulin_doses SET
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
+    dose_type = COALESCE(sqlc.narg('DoseType'), dose_type),
     dose = COALESCE(sqlc.narg('Dose'), dose),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ?
+WHERE id = ? AND deleted_at IS NULL
 RETURNING *; 
 
 --------
@@ -87,8 +94,9 @@ RETURNING *;
 -- name: SoftDeleteInsulinDose :one
 UPDATE insulin_doses SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    deleted_by_identity_name = ?
-WHERE id = ?
+    updated_by_identity_name = ?
+WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
-
+-- name: HardDeleteInsulinDose :one
+DELETE FROM insulin_doses WHERE id = ? RETURNING *;

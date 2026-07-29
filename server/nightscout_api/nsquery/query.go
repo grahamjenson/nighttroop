@@ -60,6 +60,12 @@ type Query struct {
 	InsulinLTE *int64
 	InsulinLT  *int64
 
+	DurationEQ  *int64
+	DurationGTE *int64
+	DurationGT  *int64
+	DurationLTE *int64
+	DurationLT  *int64
+
 	NameEq         *string
 	IncludeDeleted *bool
 
