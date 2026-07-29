@@ -267,19 +267,19 @@ type PumpState struct {
 }
 
 type SiteSetting struct {
-	ID                    int64
-	Units                 string
-	Timezone              string
-	BolusDiaHours         float64
-	BolusOnsetMinutes     float64
-	BolusPeakMinutes      float64
-	BasalDiaHours         float64
-	BasalOnsetMinutes     float64
-	BasalPeakMinutes      float64
-	CarbMaxAbsortionHours float64
-	CarbMin5mImpact       float64
-	UpdatedAt             int64
-	UpdatedByIdentityName *string
+	ID                     int64
+	Units                  string
+	Timezone               string
+	BolusDiaHours          float64
+	BolusOnsetMinutes      float64
+	BolusPeakMinutes       float64
+	BasalDiaHours          float64
+	BasalOnsetMinutes      float64
+	BasalPeakMinutes       float64
+	CarbMaxAbsorptionHours float64
+	CarbMin5mImpact        float64
+	UpdatedAt              int64
+	UpdatedByIdentityName  *string
 }
 
 type TempBasal struct {

@@ -69,12 +69,12 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateLoopState :one
 UPDATE loop_states SET
-    loop_state = COALESCE(sqlc.narg('LoopStatus'), loop_state),
+    loop_state = COALESCE(sqlc.narg('LoopState'), loop_state),
     loop_timestamp = COALESCE(sqlc.narg('LoopTimestamp'), loop_timestamp),
-    iob = COALESCE(sqlc.narg('IOB'), iob),
-    iob_basal = COALESCE(sqlc.narg('IOBBasal'), iob_basal),
-    iob_treatment = COALESCE(sqlc.narg('IOBTreatment'), iob_treatment),
-    cob = COALESCE(sqlc.narg('COB'), cob),
+    iob = COALESCE(sqlc.narg('Iob'), iob),
+    iob_basal = COALESCE(sqlc.narg('IobBasal'), iob_basal),
+    iob_treatment = COALESCE(sqlc.narg('IobTreatment'), iob_treatment),
+    cob = COALESCE(sqlc.narg('Cob'), cob),
     
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

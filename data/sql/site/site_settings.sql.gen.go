@@ -11,7 +11,7 @@ import (
 
 const getSiteSettings = `-- name: GetSiteSettings :one
 
-SELECT id, units, timezone, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, carb_max_absortion_hours, carb_min_5m_impact, updated_at, updated_by_identity_name FROM site_settings WHERE id = 1
+SELECT id, units, timezone, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, carb_max_absorption_hours, carb_min_5m_impact, updated_at, updated_by_identity_name FROM site_settings WHERE id = 1
 `
 
 // ------
@@ -30,7 +30,7 @@ func (q *Queries) GetSiteSettings(ctx context.Context) (*SiteSetting, error) {
 		&i.BasalDiaHours,
 		&i.BasalOnsetMinutes,
 		&i.BasalPeakMinutes,
-		&i.CarbMaxAbsortionHours,
+		&i.CarbMaxAbsorptionHours,
 		&i.CarbMin5mImpact,
 		&i.UpdatedAt,
 		&i.UpdatedByIdentityName,
@@ -49,28 +49,28 @@ UPDATE site_settings SET
     basal_dia_hours = COALESCE(?8, basal_dia_hours),
     basal_onset_minutes = COALESCE(?9, basal_onset_minutes),
     basal_peak_minutes = COALESCE(?10, basal_peak_minutes),
-    carb_max_absortion_hours = COALESCE(?11, carb_max_absortion_hours),
+    carb_max_absorption_hours = COALESCE(?11, carb_max_absorption_hours),
     carb_min_5m_impact = COALESCE(?12, carb_min_5m_impact),
     
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, units, timezone, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, carb_max_absortion_hours, carb_min_5m_impact, updated_at, updated_by_identity_name
+RETURNING id, units, timezone, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, carb_max_absorption_hours, carb_min_5m_impact, updated_at, updated_by_identity_name
 `
 
 type UpdateSiteSettingsParams struct {
-	Units                 *string
-	Timezone              *string
-	BolusDIAHours         *float64
-	BolusOnsetMinutes     *float64
-	BolusPeakMinutes      *float64
-	BasalDIAHours         *float64
-	BasalOnsetMinutes     *float64
-	BasalPeakMinutes      *float64
-	CarbMaxAbsortionHours *float64
-	CarbMin5mImpact       *float64
-	UpdatedByIdentityName *string
-	ID                    int64
+	Units                  *string
+	Timezone               *string
+	BolusDiaHours          *float64
+	BolusOnsetMinutes      *float64
+	BolusPeakMinutes       *float64
+	BasalDiaHours          *float64
+	BasalOnsetMinutes      *float64
+	BasalPeakMinutes       *float64
+	CarbMaxAbsorptionHours *float64
+	CarbMin5mImpact        *float64
+	UpdatedByIdentityName  *string
+	ID                     int64
 }
 
 // ------
@@ -80,13 +80,13 @@ func (q *Queries) UpdateSiteSettings(ctx context.Context, arg UpdateSiteSettings
 	row := q.queryRow(ctx, q.updateSiteSettingsStmt, updateSiteSettings,
 		arg.Units,
 		arg.Timezone,
-		arg.BolusDIAHours,
+		arg.BolusDiaHours,
 		arg.BolusOnsetMinutes,
 		arg.BolusPeakMinutes,
-		arg.BasalDIAHours,
+		arg.BasalDiaHours,
 		arg.BasalOnsetMinutes,
 		arg.BasalPeakMinutes,
-		arg.CarbMaxAbsortionHours,
+		arg.CarbMaxAbsorptionHours,
 		arg.CarbMin5mImpact,
 		arg.UpdatedByIdentityName,
 		arg.ID,
@@ -102,7 +102,7 @@ func (q *Queries) UpdateSiteSettings(ctx context.Context, arg UpdateSiteSettings
 		&i.BasalDiaHours,
 		&i.BasalOnsetMinutes,
 		&i.BasalPeakMinutes,
-		&i.CarbMaxAbsortionHours,
+		&i.CarbMaxAbsorptionHours,
 		&i.CarbMin5mImpact,
 		&i.UpdatedAt,
 		&i.UpdatedByIdentityName,

@@ -66,9 +66,9 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateCGMState :one
 UPDATE cgm_states SET
-    cgm_state = COALESCE(sqlc.narg('CGMStatus'), cgm_state),
-    cgm_timestamp = COALESCE(sqlc.narg('CGMTimestamp'), cgm_timestamp),
-    cgm_insertion_time = COALESCE(sqlc.narg('CGMInsertionTime'), cgm_insertion_time),
+    cgm_state = COALESCE(sqlc.narg('CgmState'), cgm_state),
+    cgm_timestamp = COALESCE(sqlc.narg('CgmTimestamp'), cgm_timestamp),
+    cgm_insertion_time = COALESCE(sqlc.narg('CgmInsertionTime'), cgm_insertion_time),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

@@ -69,7 +69,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdatePumpState :one
 UPDATE pump_states SET
-    pump_state = COALESCE(sqlc.narg('PumpStatus'), pump_state),
+    pump_state = COALESCE(sqlc.narg('PumpState'), pump_state),
     pump_timestamp = COALESCE(sqlc.narg('PumpTimestamp'), pump_timestamp),
     pump_insertion_time = COALESCE(sqlc.narg('PumpInsertionTime'), pump_insertion_time),
     pump_reservoir = COALESCE(sqlc.narg('PumpReservoir'), pump_reservoir),

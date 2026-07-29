@@ -355,9 +355,9 @@ RETURNING id, cgm_state, cgm_timestamp, cgm_insertion_time, raw_json_data, delet
 `
 
 type UpdateCGMStateParams struct {
-	CGMStatus             *string
-	CGMTimestamp          *int64
-	CGMInsertionTime      *int64
+	CgmState              *string
+	CgmTimestamp          *int64
+	CgmInsertionTime      *int64
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -369,9 +369,9 @@ type UpdateCGMStateParams struct {
 // ------
 func (q *Queries) UpdateCGMState(ctx context.Context, arg UpdateCGMStateParams) (*CgmState, error) {
 	row := q.queryRow(ctx, q.updateCGMStateStmt, updateCGMState,
-		arg.CGMStatus,
-		arg.CGMTimestamp,
-		arg.CGMInsertionTime,
+		arg.CgmState,
+		arg.CgmTimestamp,
+		arg.CgmInsertionTime,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,

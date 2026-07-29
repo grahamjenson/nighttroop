@@ -366,7 +366,7 @@ RETURNING id, device_state, device_timestamp, device_battery_percentage, device_
 `
 
 type UpdateDeviceStateParams struct {
-	DeviceStatus            *string
+	DeviceState             *string
 	DeviceTimestamp         *int64
 	DeviceBatteryPercentage *float64
 	DeviceChargingState     *string
@@ -381,7 +381,7 @@ type UpdateDeviceStateParams struct {
 // ------
 func (q *Queries) UpdateDeviceState(ctx context.Context, arg UpdateDeviceStateParams) (*DeviceState, error) {
 	row := q.queryRow(ctx, q.updateDeviceStateStmt, updateDeviceState,
-		arg.DeviceStatus,
+		arg.DeviceState,
 		arg.DeviceTimestamp,
 		arg.DeviceBatteryPercentage,
 		arg.DeviceChargingState,

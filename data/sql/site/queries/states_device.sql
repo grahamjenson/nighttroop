@@ -68,7 +68,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateDeviceState :one
 UPDATE device_states SET
-    device_state = COALESCE(sqlc.narg('DeviceStatus'), device_state),
+    device_state = COALESCE(sqlc.narg('DeviceState'), device_state),
     device_timestamp = COALESCE(sqlc.narg('DeviceTimestamp'), device_timestamp),
     device_battery_percentage = COALESCE(sqlc.narg('DeviceBatteryPercentage'), device_battery_percentage),
     device_charging_state = COALESCE(sqlc.narg('DeviceChargingState'), device_charging_state),

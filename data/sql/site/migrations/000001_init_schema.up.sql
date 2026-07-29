@@ -439,7 +439,7 @@ CREATE TABLE site_settings (
     basal_peak_minutes REAL NOT NULL default 120,
 
     -- CARBS
-    carb_max_absortion_hours REAL NOT NULL default 6,
+    carb_max_absorption_hours REAL NOT NULL default 6,
     carb_min_5m_impact REAL NOT NULL default 0,
 
     -- Default Stuff

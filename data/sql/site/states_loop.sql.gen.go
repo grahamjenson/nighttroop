@@ -385,12 +385,12 @@ RETURNING id, loop_state, loop_timestamp, iob, iob_basal, iob_treatment, cob, ra
 `
 
 type UpdateLoopStateParams struct {
-	LoopStatus            *string
+	LoopState             *string
 	LoopTimestamp         *int64
-	IOB                   *float64
-	IOBBasal              *float64
-	IOBTreatment          *float64
-	COB                   *float64
+	Iob                   *float64
+	IobBasal              *float64
+	IobTreatment          *float64
+	Cob                   *float64
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -402,12 +402,12 @@ type UpdateLoopStateParams struct {
 // ------
 func (q *Queries) UpdateLoopState(ctx context.Context, arg UpdateLoopStateParams) (*LoopState, error) {
 	row := q.queryRow(ctx, q.updateLoopStateStmt, updateLoopState,
-		arg.LoopStatus,
+		arg.LoopState,
 		arg.LoopTimestamp,
-		arg.IOB,
-		arg.IOBBasal,
-		arg.IOBTreatment,
-		arg.COB,
+		arg.Iob,
+		arg.IobBasal,
+		arg.IobTreatment,
+		arg.Cob,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,

@@ -385,7 +385,7 @@ RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, p
 `
 
 type UpdatePumpStateParams struct {
-	PumpStatus            *string
+	PumpState             *string
 	PumpTimestamp         *int64
 	PumpInsertionTime     *int64
 	PumpReservoir         *float64
@@ -402,7 +402,7 @@ type UpdatePumpStateParams struct {
 // ------
 func (q *Queries) UpdatePumpState(ctx context.Context, arg UpdatePumpStateParams) (*PumpState, error) {
 	row := q.queryRow(ctx, q.updatePumpStateStmt, updatePumpState,
-		arg.PumpStatus,
+		arg.PumpState,
 		arg.PumpTimestamp,
 		arg.PumpInsertionTime,
 		arg.PumpReservoir,

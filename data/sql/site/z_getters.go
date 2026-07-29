@@ -1147,9 +1147,9 @@ func (m *SiteSetting) GetBasalPeakMinutes() float64 {
 	return m.BasalPeakMinutes
 }
 
-// GetCarbMaxAbsortionHours returns the CarbMaxAbsortionHours value.
-func (m *SiteSetting) GetCarbMaxAbsortionHours() float64 {
-	return m.CarbMaxAbsortionHours
+// GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
+func (m *SiteSetting) GetCarbMaxAbsorptionHours() float64 {
+	return m.CarbMaxAbsorptionHours
 }
 
 // GetCarbMin5mImpact returns the CarbMin5mImpact value.
