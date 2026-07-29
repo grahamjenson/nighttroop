@@ -11,7 +11,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals
+SELECT id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -39,7 +39,7 @@ func (q *Queries) AllTempBasals(ctx context.Context, arg AllTempBasalsParams) ([
 			&i.ID,
 			&i.DurationMinutes,
 			&i.Absolute,
-			&i.Percentage,
+			&i.Percent,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -69,7 +69,7 @@ INSERT INTO temp_basals (
     id,
     duration_minutes,
     absolute,
-    percentage,
+    percent,
 
     utc_offset_minutes,
     occurred_at,
@@ -79,14 +79,14 @@ INSERT INTO temp_basals (
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateTempBasalParams struct {
 	ID                    string
 	DurationMinutes       int64
 	Absolute              float64
-	Percentage            *float64
+	Percent               *float64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	RawJsonData           *string
@@ -103,7 +103,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		arg.ID,
 		arg.DurationMinutes,
 		arg.Absolute,
-		arg.Percentage,
+		arg.Percent,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
 		arg.RawJsonData,
@@ -116,7 +116,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		&i.ID,
 		&i.DurationMinutes,
 		&i.Absolute,
-		&i.Percentage,
+		&i.Percent,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -132,7 +132,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasal = `-- name: GetTempBasal :one
-SELECT id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals WHERE id = ?
+SELECT id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals WHERE id = ?
 `
 
 type GetTempBasalParams struct {
@@ -146,7 +146,7 @@ func (q *Queries) GetTempBasal(ctx context.Context, arg GetTempBasalParams) (*Te
 		&i.ID,
 		&i.DurationMinutes,
 		&i.Absolute,
-		&i.Percentage,
+		&i.Percent,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -162,7 +162,7 @@ func (q *Queries) GetTempBasal(ctx context.Context, arg GetTempBasalParams) (*Te
 }
 
 const hardDeleteTempBasal = `-- name: HardDeleteTempBasal :one
-DELETE FROM temp_basals WHERE id = ? RETURNING id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM temp_basals WHERE id = ? RETURNING id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type HardDeleteTempBasalParams struct {
@@ -176,7 +176,7 @@ func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBas
 		&i.ID,
 		&i.DurationMinutes,
 		&i.Absolute,
-		&i.Percentage,
+		&i.Percent,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -192,7 +192,7 @@ func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBas
 }
 
 const searchWithDefaultSortTempBasals = `-- name: SearchWithDefaultSortTempBasals :many
-SELECT id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals
+SELECT id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -291,7 +291,7 @@ func (q *Queries) SearchWithDefaultSortTempBasals(ctx context.Context, arg Searc
 			&i.ID,
 			&i.DurationMinutes,
 			&i.Absolute,
-			&i.Percentage,
+			&i.Percent,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -322,7 +322,7 @@ UPDATE temp_basals SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteTempBasalParams struct {
@@ -340,7 +340,7 @@ func (q *Queries) SoftDeleteTempBasal(ctx context.Context, arg SoftDeleteTempBas
 		&i.ID,
 		&i.DurationMinutes,
 		&i.Absolute,
-		&i.Percentage,
+		&i.Percent,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -360,20 +360,20 @@ const updateTempBasal = `-- name: UpdateTempBasal :one
 UPDATE temp_basals SET
     duration_minutes = COALESCE(?3, duration_minutes),
     absolute = COALESCE(?4, absolute),
-    percentage = COALESCE(?5, percentage),
+    percent = COALESCE(?5, percent),
 
     occurred_at = COALESCE(?6, occurred_at),
     utc_offset_minutes = COALESCE(?7, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, duration_minutes, absolute, percentage, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateTempBasalParams struct {
 	DurationMinutes       *int64
 	Absolute              *float64
-	Percentage            *float64
+	Percent               *float64
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -387,7 +387,7 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 	row := q.queryRow(ctx, q.updateTempBasalStmt, updateTempBasal,
 		arg.DurationMinutes,
 		arg.Absolute,
-		arg.Percentage,
+		arg.Percent,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,
@@ -398,7 +398,7 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		&i.ID,
 		&i.DurationMinutes,
 		&i.Absolute,
-		&i.Percentage,
+		&i.Percent,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,

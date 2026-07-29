@@ -214,9 +214,9 @@ func DeviceStateToCreate(source DeviceState) CreateDeviceStateParams {
 		xint64 := *source.DeviceTimestamp
 		siteCreateDeviceStateParams.DeviceTimestamp = &xint64
 	}
-	if source.DeviceBatteryPercentage != nil {
-		xfloat64 := *source.DeviceBatteryPercentage
-		siteCreateDeviceStateParams.DeviceBatteryPercentage = &xfloat64
+	if source.DeviceBatteryPercent != nil {
+		xfloat64 := *source.DeviceBatteryPercent
+		siteCreateDeviceStateParams.DeviceBatteryPercent = &xfloat64
 	}
 	if source.DeviceChargingState != nil {
 		xstring2 := *source.DeviceChargingState
@@ -246,9 +246,9 @@ func DeviceStateToUpdate(source DeviceState) UpdateDeviceStateParams {
 		xint64 := *source.DeviceTimestamp
 		siteUpdateDeviceStateParams.DeviceTimestamp = &xint64
 	}
-	if source.DeviceBatteryPercentage != nil {
-		xfloat64 := *source.DeviceBatteryPercentage
-		siteUpdateDeviceStateParams.DeviceBatteryPercentage = &xfloat64
+	if source.DeviceBatteryPercent != nil {
+		xfloat64 := *source.DeviceBatteryPercent
+		siteUpdateDeviceStateParams.DeviceBatteryPercent = &xfloat64
 	}
 	if source.DeviceChargingState != nil {
 		xstring2 := *source.DeviceChargingState
@@ -766,9 +766,9 @@ func PumpStateToCreate(source PumpState) CreatePumpStateParams {
 		xfloat64 := *source.PumpReservoir
 		siteCreatePumpStateParams.PumpReservoir = &xfloat64
 	}
-	if source.PumpBatteryPercentage != nil {
-		xfloat642 := *source.PumpBatteryPercentage
-		siteCreatePumpStateParams.PumpBatteryPercentage = &xfloat642
+	if source.PumpBatteryPercent != nil {
+		xfloat642 := *source.PumpBatteryPercent
+		siteCreatePumpStateParams.PumpBatteryPercent = &xfloat642
 	}
 	if source.PumpChargingState != nil {
 		xstring2 := *source.PumpChargingState
@@ -806,9 +806,9 @@ func PumpStateToUpdate(source PumpState) UpdatePumpStateParams {
 		xfloat64 := *source.PumpReservoir
 		siteUpdatePumpStateParams.PumpReservoir = &xfloat64
 	}
-	if source.PumpBatteryPercentage != nil {
-		xfloat642 := *source.PumpBatteryPercentage
-		siteUpdatePumpStateParams.PumpBatteryPercentage = &xfloat642
+	if source.PumpBatteryPercent != nil {
+		xfloat642 := *source.PumpBatteryPercent
+		siteUpdatePumpStateParams.PumpBatteryPercent = &xfloat642
 	}
 	if source.PumpChargingState != nil {
 		xstring2 := *source.PumpChargingState
@@ -861,9 +861,9 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	siteCreateTempBasalParams.ID = source.ID
 	siteCreateTempBasalParams.DurationMinutes = source.DurationMinutes
 	siteCreateTempBasalParams.Absolute = source.Absolute
-	if source.Percentage != nil {
-		xfloat64 := *source.Percentage
-		siteCreateTempBasalParams.Percentage = &xfloat64
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteCreateTempBasalParams.Percent = &xfloat64
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -885,9 +885,9 @@ func TempBasalToUpdate(source TempBasal) UpdateTempBasalParams {
 	siteUpdateTempBasalParams.DurationMinutes = &pInt64
 	pFloat64 := source.Absolute
 	siteUpdateTempBasalParams.Absolute = &pFloat64
-	if source.Percentage != nil {
-		xfloat64 := *source.Percentage
-		siteUpdateTempBasalParams.Percentage = &xfloat64
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteUpdateTempBasalParams.Percent = &xfloat64
 	}
 	pInt642 := source.OccurredAt
 	siteUpdateTempBasalParams.OccurredAt = &pInt642

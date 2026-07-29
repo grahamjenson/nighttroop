@@ -6,7 +6,7 @@ INSERT INTO temp_basals (
     id,
     duration_minutes,
     absolute,
-    percentage,
+    percent,
 
     utc_offset_minutes,
     occurred_at,
@@ -74,7 +74,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 UPDATE temp_basals SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     absolute = COALESCE(sqlc.narg('Absolute'), absolute),
-    percentage = COALESCE(sqlc.narg('Percentage'), percentage),
+    percent = COALESCE(sqlc.narg('Percent'), percent),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

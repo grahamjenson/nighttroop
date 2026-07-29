@@ -8,13 +8,11 @@ type Query struct {
 	// lte and gte both
 	DateGTE *int64
 	DateGT  *int64
-
 	DateLTE *int64
 	DateLT  *int64
 
 	CreatedAtGTE *int64
 	CreatedAtGT  *int64
-
 	CreatedAtLTE *int64
 	CreatedAtLT  *int64
 
@@ -35,6 +33,13 @@ type Query struct {
 
 	DeviceEq *string
 	AppEq    *string
+
+	IncludeDeleted *bool
+
+	// Altering Return values or structure
+	// Limits
+	Limit int64
+	Skip  int64
 
 	/////
 	// MODEL SPECIFIC QUERIES
@@ -66,15 +71,9 @@ type Query struct {
 	DurationLTE *int64
 	DurationLT  *int64
 
-	NameEq         *string
-	IncludeDeleted *bool
+	NameEq *string
 
-	// Altering Return values or structure
-	// Limits
-	Limit int64
-	Skip  int64
-
-	// Sort
+	// Util Options
 	HasFilters bool
 	SortOrder  *QuerySort
 	Fields     []string

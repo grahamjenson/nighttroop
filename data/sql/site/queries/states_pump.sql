@@ -8,7 +8,7 @@ INSERT INTO pump_states (
     pump_timestamp,
     pump_insertion_time,
     pump_reservoir,
-    pump_battery_percentage,
+    pump_battery_percent,
     pump_charging_state,
 
     utc_offset_minutes,
@@ -73,7 +73,7 @@ UPDATE pump_states SET
     pump_timestamp = COALESCE(sqlc.narg('PumpTimestamp'), pump_timestamp),
     pump_insertion_time = COALESCE(sqlc.narg('PumpInsertionTime'), pump_insertion_time),
     pump_reservoir = COALESCE(sqlc.narg('PumpReservoir'), pump_reservoir),
-    pump_battery_percentage = COALESCE(sqlc.narg('PumpBatteryPercentage'), pump_battery_percentage),
+    pump_battery_percent = COALESCE(sqlc.narg('PumpBatteryPercent'), pump_battery_percent),
     pump_charging_state = COALESCE(sqlc.narg('PumpChargingState'), pump_charging_state),
     
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),

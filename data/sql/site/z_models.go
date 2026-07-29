@@ -59,21 +59,21 @@ type CgmState struct {
 }
 
 type DeviceState struct {
-	ID                      string
-	DeviceState             *string
-	DeviceTimestamp         *int64
-	DeviceBatteryPercentage *float64
-	DeviceChargingState     *string
-	RawJsonData             *string
-	DeletedAt               *int64
-	UtcOffsetMinutes        *int64
-	OccurredAt              int64
-	CreatedAt               int64
-	UpdatedAt               int64
-	UpdatedByIdentityName   *string
-	CreatedByAppName        string
-	CreatedByDeviceName     string
-	CreatedByIdentityName   string
+	ID                    string
+	DeviceState           *string
+	DeviceTimestamp       *int64
+	DeviceBatteryPercent  *float64
+	DeviceChargingState   *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	UpdatedByIdentityName *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
 }
 
 type EventGroup struct {
@@ -252,7 +252,7 @@ type PumpState struct {
 	PumpTimestamp         *int64
 	PumpInsertionTime     *int64
 	PumpReservoir         *float64
-	PumpBatteryPercentage *float64
+	PumpBatteryPercent    *float64
 	PumpChargingState     *string
 	RawJsonData           *string
 	DeletedAt             *int64
@@ -286,7 +286,7 @@ type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64
 	Absolute              float64
-	Percentage            *float64
+	Percent               *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

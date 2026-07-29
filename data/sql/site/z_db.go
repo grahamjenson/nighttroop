@@ -237,6 +237,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchWithDefaultSortDeviceStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortDeviceStates); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortDeviceStates: %w", err)
 	}
+	if q.searchWithDefaultSortEventGroupsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortEventGroups); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortEventGroups: %w", err)
+	}
 	if q.searchWithDefaultSortFoodIntakesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortFoodIntakes); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortFoodIntakes: %w", err)
 	}
@@ -720,6 +723,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchWithDefaultSortDeviceStatesStmt: %w", cerr)
 		}
 	}
+	if q.searchWithDefaultSortEventGroupsStmt != nil {
+		if cerr := q.searchWithDefaultSortEventGroupsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortEventGroupsStmt: %w", cerr)
+		}
+	}
 	if q.searchWithDefaultSortFoodIntakesStmt != nil {
 		if cerr := q.searchWithDefaultSortFoodIntakesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchWithDefaultSortFoodIntakesStmt: %w", cerr)
@@ -1035,6 +1043,7 @@ type Queries struct {
 	searchWithDefaultSortActivityPresetsStmt *sql.Stmt
 	searchWithDefaultSortCGMStatesStmt       *sql.Stmt
 	searchWithDefaultSortDeviceStatesStmt    *sql.Stmt
+	searchWithDefaultSortEventGroupsStmt     *sql.Stmt
 	searchWithDefaultSortFoodIntakesStmt     *sql.Stmt
 	searchWithDefaultSortFoodPresetsStmt     *sql.Stmt
 	searchWithDefaultSortGlucoseReadingsStmt *sql.Stmt
@@ -1153,6 +1162,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchWithDefaultSortActivityPresetsStmt: q.searchWithDefaultSortActivityPresetsStmt,
 		searchWithDefaultSortCGMStatesStmt:       q.searchWithDefaultSortCGMStatesStmt,
 		searchWithDefaultSortDeviceStatesStmt:    q.searchWithDefaultSortDeviceStatesStmt,
+		searchWithDefaultSortEventGroupsStmt:     q.searchWithDefaultSortEventGroupsStmt,
 		searchWithDefaultSortFoodIntakesStmt:     q.searchWithDefaultSortFoodIntakesStmt,
 		searchWithDefaultSortFoodPresetsStmt:     q.searchWithDefaultSortFoodPresetsStmt,
 		searchWithDefaultSortGlucoseReadingsStmt: q.searchWithDefaultSortGlucoseReadingsStmt,

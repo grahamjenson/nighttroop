@@ -11,7 +11,7 @@ import (
 
 const allDeviceStates = `-- name: AllDeviceStates :many
 
-SELECT id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states
+SELECT id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -39,7 +39,7 @@ func (q *Queries) AllDeviceStates(ctx context.Context, arg AllDeviceStatesParams
 			&i.ID,
 			&i.DeviceState,
 			&i.DeviceTimestamp,
-			&i.DeviceBatteryPercentage,
+			&i.DeviceBatteryPercent,
 			&i.DeviceChargingState,
 			&i.RawJsonData,
 			&i.DeletedAt,
@@ -70,7 +70,7 @@ INSERT INTO device_states (
     id,
     device_state,
     device_timestamp,
-    device_battery_percentage,
+    device_battery_percent,
     device_charging_state,
 
 
@@ -82,21 +82,21 @@ INSERT INTO device_states (
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type CreateDeviceStateParams struct {
-	ID                      string
-	DeviceState             *string
-	DeviceTimestamp         *int64
-	DeviceBatteryPercentage *float64
-	DeviceChargingState     *string
-	UtcOffsetMinutes        *int64
-	OccurredAt              int64
-	RawJsonData             *string
-	CreatedByAppName        string
-	CreatedByDeviceName     string
-	CreatedByIdentityName   string
+	ID                    string
+	DeviceState           *string
+	DeviceTimestamp       *int64
+	DeviceBatteryPercent  *float64
+	DeviceChargingState   *string
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
 }
 
 // -----
@@ -107,7 +107,7 @@ func (q *Queries) CreateDeviceState(ctx context.Context, arg CreateDeviceStatePa
 		arg.ID,
 		arg.DeviceState,
 		arg.DeviceTimestamp,
-		arg.DeviceBatteryPercentage,
+		arg.DeviceBatteryPercent,
 		arg.DeviceChargingState,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
@@ -121,7 +121,7 @@ func (q *Queries) CreateDeviceState(ctx context.Context, arg CreateDeviceStatePa
 		&i.ID,
 		&i.DeviceState,
 		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercentage,
+		&i.DeviceBatteryPercent,
 		&i.DeviceChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -138,7 +138,7 @@ func (q *Queries) CreateDeviceState(ctx context.Context, arg CreateDeviceStatePa
 }
 
 const getDeviceState = `-- name: GetDeviceState :one
-SELECT id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states WHERE id = ?
+SELECT id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states WHERE id = ?
 `
 
 type GetDeviceStateParams struct {
@@ -152,7 +152,7 @@ func (q *Queries) GetDeviceState(ctx context.Context, arg GetDeviceStateParams) 
 		&i.ID,
 		&i.DeviceState,
 		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercentage,
+		&i.DeviceBatteryPercent,
 		&i.DeviceChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -169,7 +169,7 @@ func (q *Queries) GetDeviceState(ctx context.Context, arg GetDeviceStateParams) 
 }
 
 const hardDeleteDeviceState = `-- name: HardDeleteDeviceState :one
-DELETE FROM device_states WHERE id = ? RETURNING id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+DELETE FROM device_states WHERE id = ? RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type HardDeleteDeviceStateParams struct {
@@ -183,7 +183,7 @@ func (q *Queries) HardDeleteDeviceState(ctx context.Context, arg HardDeleteDevic
 		&i.ID,
 		&i.DeviceState,
 		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercentage,
+		&i.DeviceBatteryPercent,
 		&i.DeviceChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -200,7 +200,7 @@ func (q *Queries) HardDeleteDeviceState(ctx context.Context, arg HardDeleteDevic
 }
 
 const searchWithDefaultSortDeviceStates = `-- name: SearchWithDefaultSortDeviceStates :many
-SELECT id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states
+SELECT id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -283,7 +283,7 @@ func (q *Queries) SearchWithDefaultSortDeviceStates(ctx context.Context, arg Sea
 			&i.ID,
 			&i.DeviceState,
 			&i.DeviceTimestamp,
-			&i.DeviceBatteryPercentage,
+			&i.DeviceBatteryPercent,
 			&i.DeviceChargingState,
 			&i.RawJsonData,
 			&i.DeletedAt,
@@ -315,7 +315,7 @@ UPDATE device_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type SoftDeleteDeviceStateParams struct {
@@ -333,7 +333,7 @@ func (q *Queries) SoftDeleteDeviceState(ctx context.Context, arg SoftDeleteDevic
 		&i.ID,
 		&i.DeviceState,
 		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercentage,
+		&i.DeviceBatteryPercent,
 		&i.DeviceChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -354,7 +354,7 @@ const updateDeviceState = `-- name: UpdateDeviceState :one
 UPDATE device_states SET
     device_state = COALESCE(?3, device_state),
     device_timestamp = COALESCE(?4, device_timestamp),
-    device_battery_percentage = COALESCE(?5, device_battery_percentage),
+    device_battery_percent = COALESCE(?5, device_battery_percent),
     device_charging_state = COALESCE(?6, device_charging_state),
     
     occurred_at = COALESCE(?7, occurred_at),
@@ -362,18 +362,18 @@ UPDATE device_states SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, device_state, device_timestamp, device_battery_percentage, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type UpdateDeviceStateParams struct {
-	DeviceState             *string
-	DeviceTimestamp         *int64
-	DeviceBatteryPercentage *float64
-	DeviceChargingState     *string
-	OccurredAt              *int64
-	UtcOffsetMinutes        *int64
-	UpdatedByIdentityName   *string
-	ID                      string
+	DeviceState           *string
+	DeviceTimestamp       *int64
+	DeviceBatteryPercent  *float64
+	DeviceChargingState   *string
+	OccurredAt            *int64
+	UtcOffsetMinutes      *int64
+	UpdatedByIdentityName *string
+	ID                    string
 }
 
 // ------
@@ -383,7 +383,7 @@ func (q *Queries) UpdateDeviceState(ctx context.Context, arg UpdateDeviceStatePa
 	row := q.queryRow(ctx, q.updateDeviceStateStmt, updateDeviceState,
 		arg.DeviceState,
 		arg.DeviceTimestamp,
-		arg.DeviceBatteryPercentage,
+		arg.DeviceBatteryPercent,
 		arg.DeviceChargingState,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
@@ -395,7 +395,7 @@ func (q *Queries) UpdateDeviceState(ctx context.Context, arg UpdateDeviceStatePa
 		&i.ID,
 		&i.DeviceState,
 		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercentage,
+		&i.DeviceBatteryPercent,
 		&i.DeviceChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,

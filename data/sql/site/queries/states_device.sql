@@ -6,7 +6,7 @@ INSERT INTO device_states (
     id,
     device_state,
     device_timestamp,
-    device_battery_percentage,
+    device_battery_percent,
     device_charging_state,
 
 
@@ -70,7 +70,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 UPDATE device_states SET
     device_state = COALESCE(sqlc.narg('DeviceState'), device_state),
     device_timestamp = COALESCE(sqlc.narg('DeviceTimestamp'), device_timestamp),
-    device_battery_percentage = COALESCE(sqlc.narg('DeviceBatteryPercentage'), device_battery_percentage),
+    device_battery_percent = COALESCE(sqlc.narg('DeviceBatteryPercent'), device_battery_percent),
     device_charging_state = COALESCE(sqlc.narg('DeviceChargingState'), device_charging_state),
     
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),

@@ -11,7 +11,7 @@ import (
 
 const allPumpStates = `-- name: AllPumpStates :many
 
-SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states
+SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -41,7 +41,7 @@ func (q *Queries) AllPumpStates(ctx context.Context, arg AllPumpStatesParams) ([
 			&i.PumpTimestamp,
 			&i.PumpInsertionTime,
 			&i.PumpReservoir,
-			&i.PumpBatteryPercentage,
+			&i.PumpBatteryPercent,
 			&i.PumpChargingState,
 			&i.RawJsonData,
 			&i.DeletedAt,
@@ -74,7 +74,7 @@ INSERT INTO pump_states (
     pump_timestamp,
     pump_insertion_time,
     pump_reservoir,
-    pump_battery_percentage,
+    pump_battery_percent,
     pump_charging_state,
 
     utc_offset_minutes,
@@ -85,7 +85,7 @@ INSERT INTO pump_states (
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type CreatePumpStateParams struct {
@@ -94,7 +94,7 @@ type CreatePumpStateParams struct {
 	PumpTimestamp         *int64
 	PumpInsertionTime     *int64
 	PumpReservoir         *float64
-	PumpBatteryPercentage *float64
+	PumpBatteryPercent    *float64
 	PumpChargingState     *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -114,7 +114,7 @@ func (q *Queries) CreatePumpState(ctx context.Context, arg CreatePumpStateParams
 		arg.PumpTimestamp,
 		arg.PumpInsertionTime,
 		arg.PumpReservoir,
-		arg.PumpBatteryPercentage,
+		arg.PumpBatteryPercent,
 		arg.PumpChargingState,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
@@ -130,7 +130,7 @@ func (q *Queries) CreatePumpState(ctx context.Context, arg CreatePumpStateParams
 		&i.PumpTimestamp,
 		&i.PumpInsertionTime,
 		&i.PumpReservoir,
-		&i.PumpBatteryPercentage,
+		&i.PumpBatteryPercent,
 		&i.PumpChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -147,7 +147,7 @@ func (q *Queries) CreatePumpState(ctx context.Context, arg CreatePumpStateParams
 }
 
 const getPumpState = `-- name: GetPumpState :one
-SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states WHERE id = ?
+SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states WHERE id = ?
 `
 
 type GetPumpStateParams struct {
@@ -163,7 +163,7 @@ func (q *Queries) GetPumpState(ctx context.Context, arg GetPumpStateParams) (*Pu
 		&i.PumpTimestamp,
 		&i.PumpInsertionTime,
 		&i.PumpReservoir,
-		&i.PumpBatteryPercentage,
+		&i.PumpBatteryPercent,
 		&i.PumpChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -180,7 +180,7 @@ func (q *Queries) GetPumpState(ctx context.Context, arg GetPumpStateParams) (*Pu
 }
 
 const hardDeletePumpState = `-- name: HardDeletePumpState :one
-DELETE FROM pump_states WHERE id = ? RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+DELETE FROM pump_states WHERE id = ? RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type HardDeletePumpStateParams struct {
@@ -196,7 +196,7 @@ func (q *Queries) HardDeletePumpState(ctx context.Context, arg HardDeletePumpSta
 		&i.PumpTimestamp,
 		&i.PumpInsertionTime,
 		&i.PumpReservoir,
-		&i.PumpBatteryPercentage,
+		&i.PumpBatteryPercent,
 		&i.PumpChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -213,7 +213,7 @@ func (q *Queries) HardDeletePumpState(ctx context.Context, arg HardDeletePumpSta
 }
 
 const searchWithDefaultSortPumpStates = `-- name: SearchWithDefaultSortPumpStates :many
-SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states
+SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -298,7 +298,7 @@ func (q *Queries) SearchWithDefaultSortPumpStates(ctx context.Context, arg Searc
 			&i.PumpTimestamp,
 			&i.PumpInsertionTime,
 			&i.PumpReservoir,
-			&i.PumpBatteryPercentage,
+			&i.PumpBatteryPercent,
 			&i.PumpChargingState,
 			&i.RawJsonData,
 			&i.DeletedAt,
@@ -330,7 +330,7 @@ UPDATE pump_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type SoftDeletePumpStateParams struct {
@@ -350,7 +350,7 @@ func (q *Queries) SoftDeletePumpState(ctx context.Context, arg SoftDeletePumpSta
 		&i.PumpTimestamp,
 		&i.PumpInsertionTime,
 		&i.PumpReservoir,
-		&i.PumpBatteryPercentage,
+		&i.PumpBatteryPercent,
 		&i.PumpChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,
@@ -373,7 +373,7 @@ UPDATE pump_states SET
     pump_timestamp = COALESCE(?4, pump_timestamp),
     pump_insertion_time = COALESCE(?5, pump_insertion_time),
     pump_reservoir = COALESCE(?6, pump_reservoir),
-    pump_battery_percentage = COALESCE(?7, pump_battery_percentage),
+    pump_battery_percent = COALESCE(?7, pump_battery_percent),
     pump_charging_state = COALESCE(?8, pump_charging_state),
     
     occurred_at = COALESCE(?9, occurred_at),
@@ -381,7 +381,7 @@ UPDATE pump_states SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percentage, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type UpdatePumpStateParams struct {
@@ -389,7 +389,7 @@ type UpdatePumpStateParams struct {
 	PumpTimestamp         *int64
 	PumpInsertionTime     *int64
 	PumpReservoir         *float64
-	PumpBatteryPercentage *float64
+	PumpBatteryPercent    *float64
 	PumpChargingState     *string
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
@@ -406,7 +406,7 @@ func (q *Queries) UpdatePumpState(ctx context.Context, arg UpdatePumpStateParams
 		arg.PumpTimestamp,
 		arg.PumpInsertionTime,
 		arg.PumpReservoir,
-		arg.PumpBatteryPercentage,
+		arg.PumpBatteryPercent,
 		arg.PumpChargingState,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
@@ -420,7 +420,7 @@ func (q *Queries) UpdatePumpState(ctx context.Context, arg UpdatePumpStateParams
 		&i.PumpTimestamp,
 		&i.PumpInsertionTime,
 		&i.PumpReservoir,
-		&i.PumpBatteryPercentage,
+		&i.PumpBatteryPercent,
 		&i.PumpChargingState,
 		&i.RawJsonData,
 		&i.DeletedAt,

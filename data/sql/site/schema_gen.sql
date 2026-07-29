@@ -75,7 +75,7 @@ CREATE TABLE device_states (
     device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
     device_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
-    device_battery_percentage REAL,
+    device_battery_percent REAL,
     device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
 
     -- Default Stuff
@@ -326,7 +326,7 @@ CREATE TABLE pump_states (
 
     pump_reservoir REAL,
 
-    pump_battery_percentage REAL,
+    pump_battery_percent REAL,
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
     -- Default Stuff
@@ -377,7 +377,7 @@ CREATE TABLE temp_basals (
 
     duration_minutes INTEGER NOT NULL,
     absolute REAL NOT NULL,
-    percentage REAL, -- This is optional, but absolute is not
+    percent REAL, -- This is optional, but absolute is not
     
 
     -- Default Stuff

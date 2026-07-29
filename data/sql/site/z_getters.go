@@ -242,9 +242,9 @@ func (m *DeviceState) GetDeviceTimestamp() *int64 {
 	return m.DeviceTimestamp
 }
 
-// GetDeviceBatteryPercentage returns the DeviceBatteryPercentage value.
-func (m *DeviceState) GetDeviceBatteryPercentage() *float64 {
-	return m.DeviceBatteryPercentage
+// GetDeviceBatteryPercent returns the DeviceBatteryPercent value.
+func (m *DeviceState) GetDeviceBatteryPercent() *float64 {
+	return m.DeviceBatteryPercent
 }
 
 // GetDeviceChargingState returns the DeviceChargingState value.
@@ -1042,9 +1042,9 @@ func (m *PumpState) GetPumpReservoir() *float64 {
 	return m.PumpReservoir
 }
 
-// GetPumpBatteryPercentage returns the PumpBatteryPercentage value.
-func (m *PumpState) GetPumpBatteryPercentage() *float64 {
-	return m.PumpBatteryPercentage
+// GetPumpBatteryPercent returns the PumpBatteryPercent value.
+func (m *PumpState) GetPumpBatteryPercent() *float64 {
+	return m.PumpBatteryPercent
 }
 
 // GetPumpChargingState returns the PumpChargingState value.
@@ -1182,9 +1182,9 @@ func (m *TempBasal) GetAbsolute() float64 {
 	return m.Absolute
 }
 
-// GetPercentage returns the Percentage value.
-func (m *TempBasal) GetPercentage() *float64 {
-	return m.Percentage
+// GetPercent returns the Percent value.
+func (m *TempBasal) GetPercent() *float64 {
+	return m.Percent
 }
 
 // GetRawJsonData returns the RawJsonData value.
