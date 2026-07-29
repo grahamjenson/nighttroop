@@ -12,14 +12,9 @@ func (m *Activity) GetName() *string {
 	return m.Name
 }
 
-// GetType returns the Type value.
-func (m *Activity) GetType() *string {
-	return m.Type
-}
-
-// GetNotes returns the Notes value.
-func (m *Activity) GetNotes() *string {
-	return m.Notes
+// GetActivityType returns the ActivityType value.
+func (m *Activity) GetActivityType() *string {
+	return m.ActivityType
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -93,332 +88,502 @@ func (m *Activity) GetCreatedByIdentityName() string {
 }
 
 // GetID returns the ID value.
-func (m *Bolus) GetID() string {
-	return m.ID
-}
-
-// GetValue returns the Value value.
-func (m *Bolus) GetValue() float64 {
-	return m.Value
-}
-
-// GetType returns the Type value.
-func (m *Bolus) GetType() string {
-	return m.Type
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m *Bolus) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *Bolus) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m *Bolus) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m *Bolus) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *Bolus) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m *Bolus) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m *Bolus) GetCreatedByAppName() string {
-	return m.CreatedByAppName
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m *Bolus) GetCreatedByDeviceName() string {
-	return m.CreatedByDeviceName
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *Bolus) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *Bolus) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetID returns the ID value.
-func (m *Carb) GetID() string {
-	return m.ID
-}
-
-// GetAmount returns the Amount value.
-func (m *Carb) GetAmount() float64 {
-	return m.Amount
-}
-
-// GetType returns the Type value.
-func (m *Carb) GetType() string {
-	return m.Type
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m *Carb) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *Carb) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m *Carb) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m *Carb) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *Carb) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m *Carb) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m *Carb) GetCreatedByAppName() string {
-	return m.CreatedByAppName
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m *Carb) GetCreatedByDeviceName() string {
-	return m.CreatedByDeviceName
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *Carb) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *Carb) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetID returns the ID value.
-func (m *DeviceStatus) GetID() string {
-	return m.ID
-}
-
-// GetType returns the Type value.
-func (m *DeviceStatus) GetType() string {
-	return m.Type
-}
-
-// GetBatteryPercentage returns the BatteryPercentage value.
-func (m *DeviceStatus) GetBatteryPercentage() *float64 {
-	return m.BatteryPercentage
-}
-
-// GetChargingState returns the ChargingState value.
-func (m *DeviceStatus) GetChargingState() *string {
-	return m.ChargingState
-}
-
-// GetStatus returns the Status value.
-func (m *DeviceStatus) GetStatus() *string {
-	return m.Status
-}
-
-// GetInsertionTime returns the InsertionTime value.
-func (m *DeviceStatus) GetInsertionTime() *int64 {
-	return m.InsertionTime
-}
-
-// GetTimestamp returns the Timestamp value.
-func (m *DeviceStatus) GetTimestamp() *int64 {
-	return m.Timestamp
-}
-
-// GetIob returns the Iob value.
-func (m *DeviceStatus) GetIob() *float64 {
-	return m.Iob
-}
-
-// GetCob returns the Cob value.
-func (m *DeviceStatus) GetCob() *float64 {
-	return m.Cob
-}
-
-// GetBasaliob returns the Basaliob value.
-func (m *DeviceStatus) GetBasaliob() *float64 {
-	return m.Basaliob
-}
-
-// GetTreatmentiob returns the Treatmentiob value.
-func (m *DeviceStatus) GetTreatmentiob() *float64 {
-	return m.Treatmentiob
-}
-
-// GetPumpReservoir returns the PumpReservoir value.
-func (m *DeviceStatus) GetPumpReservoir() *float64 {
-	return m.PumpReservoir
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m *DeviceStatus) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m *DeviceStatus) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m *DeviceStatus) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m *DeviceStatus) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m *DeviceStatus) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m *DeviceStatus) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *DeviceStatus) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m *DeviceStatus) GetCreatedByAppName() string {
-	return m.CreatedByAppName
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m *DeviceStatus) GetCreatedByDeviceName() string {
-	return m.CreatedByDeviceName
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *DeviceStatus) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetID returns the ID value.
-func (m *Event) GetID() int64 {
-	return m.ID
-}
-
-// GetType returns the Type value.
-func (m *Event) GetType() *string {
-	return m.Type
-}
-
-// GetDetails returns the Details value.
-func (m *Event) GetDetails() *string {
-	return m.Details
-}
-
-// GetStartAt returns the StartAt value.
-func (m *Event) GetStartAt() int64 {
-	return m.StartAt
-}
-
-// GetEndAt returns the EndAt value.
-func (m *Event) GetEndAt() *int64 {
-	return m.EndAt
-}
-
-// GetID returns the ID value.
-func (m *Food) GetID() string {
+func (m *ActivityPreset) GetID() string {
 	return m.ID
 }
 
 // GetName returns the Name value.
-func (m *Food) GetName() string {
+func (m *ActivityPreset) GetName() string {
 	return m.Name
 }
 
-// GetCategory returns the Category value.
-func (m *Food) GetCategory() string {
-	return m.Category
+// GetActivityType returns the ActivityType value.
+func (m *ActivityPreset) GetActivityType() *string {
+	return m.ActivityType
 }
 
-// GetCarbs returns the Carbs value.
-func (m *Food) GetCarbs() *float64 {
-	return m.Carbs
+// GetDurationMinutes returns the DurationMinutes value.
+func (m *ActivityPreset) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
 }
 
 // GetCalories returns the Calories value.
-func (m *Food) GetCalories() *float64 {
+func (m *ActivityPreset) GetCalories() *int64 {
 	return m.Calories
 }
 
+// GetSteps returns the Steps value.
+func (m *ActivityPreset) GetSteps() *int64 {
+	return m.Steps
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m *ActivityPreset) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
 // GetRawJsonData returns the RawJsonData value.
-func (m *Food) GetRawJsonData() *string {
+func (m *ActivityPreset) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
-// GetDeletedAt returns the DeletedAt value.
-func (m *Food) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
 // GetCreatedAt returns the CreatedAt value.
-func (m *Food) GetCreatedAt() int64 {
+func (m *ActivityPreset) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
-func (m *Food) GetUpdatedAt() int64 {
+func (m *ActivityPreset) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m *Food) GetCreatedByAppName() string {
+func (m *ActivityPreset) GetCreatedByAppName() string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m *Food) GetCreatedByDeviceName() string {
+func (m *ActivityPreset) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *Food) GetUpdatedByIdentityName() *string {
+func (m *ActivityPreset) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *Food) GetCreatedByIdentityName() string {
+func (m *ActivityPreset) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *CgmState) GetID() string {
+	return m.ID
+}
+
+// GetCgmState returns the CgmState value.
+func (m *CgmState) GetCgmState() *string {
+	return m.CgmState
+}
+
+// GetCgmTimestamp returns the CgmTimestamp value.
+func (m *CgmState) GetCgmTimestamp() *int64 {
+	return m.CgmTimestamp
+}
+
+// GetCgmInsertionTime returns the CgmInsertionTime value.
+func (m *CgmState) GetCgmInsertionTime() *int64 {
+	return m.CgmInsertionTime
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *CgmState) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *CgmState) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *CgmState) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *CgmState) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *CgmState) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *CgmState) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *CgmState) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *CgmState) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *CgmState) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *CgmState) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *DeviceState) GetID() string {
+	return m.ID
+}
+
+// GetDeviceState returns the DeviceState value.
+func (m *DeviceState) GetDeviceState() *string {
+	return m.DeviceState
+}
+
+// GetDeviceTimestamp returns the DeviceTimestamp value.
+func (m *DeviceState) GetDeviceTimestamp() *int64 {
+	return m.DeviceTimestamp
+}
+
+// GetDeviceBatteryPercentage returns the DeviceBatteryPercentage value.
+func (m *DeviceState) GetDeviceBatteryPercentage() *float64 {
+	return m.DeviceBatteryPercentage
+}
+
+// GetDeviceChargingState returns the DeviceChargingState value.
+func (m *DeviceState) GetDeviceChargingState() *string {
+	return m.DeviceChargingState
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *DeviceState) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *DeviceState) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *DeviceState) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *DeviceState) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *DeviceState) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *DeviceState) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *DeviceState) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *DeviceState) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *DeviceState) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *DeviceState) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *EventGroup) GetID() string {
+	return m.ID
+}
+
+// GetGroupType returns the GroupType value.
+func (m *EventGroup) GetGroupType() string {
+	return m.GroupType
+}
+
+// GetGlucoseReadingID returns the GlucoseReadingID value.
+func (m *EventGroup) GetGlucoseReadingID() *string {
+	return m.GlucoseReadingID
+}
+
+// GetInsulinDoseID returns the InsulinDoseID value.
+func (m *EventGroup) GetInsulinDoseID() *string {
+	return m.InsulinDoseID
+}
+
+// GetFoodIntakeID returns the FoodIntakeID value.
+func (m *EventGroup) GetFoodIntakeID() *string {
+	return m.FoodIntakeID
+}
+
+// GetTempBasalID returns the TempBasalID value.
+func (m *EventGroup) GetTempBasalID() *string {
+	return m.TempBasalID
+}
+
+// GetTempTargetID returns the TempTargetID value.
+func (m *EventGroup) GetTempTargetID() *string {
+	return m.TempTargetID
+}
+
+// GetProfileSwitchID returns the ProfileSwitchID value.
+func (m *EventGroup) GetProfileSwitchID() *string {
+	return m.ProfileSwitchID
+}
+
+// GetDeviceStateID returns the DeviceStateID value.
+func (m *EventGroup) GetDeviceStateID() *string {
+	return m.DeviceStateID
+}
+
+// GetLoopStateID returns the LoopStateID value.
+func (m *EventGroup) GetLoopStateID() *string {
+	return m.LoopStateID
+}
+
+// GetPumpStateID returns the PumpStateID value.
+func (m *EventGroup) GetPumpStateID() *string {
+	return m.PumpStateID
+}
+
+// GetCgmStateID returns the CgmStateID value.
+func (m *EventGroup) GetCgmStateID() *string {
+	return m.CgmStateID
+}
+
+// GetActivityID returns the ActivityID value.
+func (m *EventGroup) GetActivityID() *string {
+	return m.ActivityID
+}
+
+// GetNoteID returns the NoteID value.
+func (m *EventGroup) GetNoteID() *string {
+	return m.NoteID
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *EventGroup) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *EventGroup) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *EventGroup) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *EventGroup) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *EventGroup) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *EventGroup) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *EventGroup) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *EventGroup) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *EventGroup) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *EventGroup) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *FoodIntake) GetID() string {
+	return m.ID
+}
+
+// GetName returns the Name value.
+func (m *FoodIntake) GetName() *string {
+	return m.Name
+}
+
+// GetFoodType returns the FoodType value.
+func (m *FoodIntake) GetFoodType() *string {
+	return m.FoodType
+}
+
+// GetCarbs returns the Carbs value.
+func (m *FoodIntake) GetCarbs() *float64 {
+	return m.Carbs
+}
+
+// GetFat returns the Fat value.
+func (m *FoodIntake) GetFat() *float64 {
+	return m.Fat
+}
+
+// GetProtein returns the Protein value.
+func (m *FoodIntake) GetProtein() *float64 {
+	return m.Protein
+}
+
+// GetFibre returns the Fibre value.
+func (m *FoodIntake) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// GetCalories returns the Calories value.
+func (m *FoodIntake) GetCalories() *float64 {
+	return m.Calories
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *FoodIntake) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *FoodIntake) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *FoodIntake) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *FoodIntake) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *FoodIntake) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *FoodIntake) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *FoodIntake) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *FoodIntake) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *FoodIntake) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *FoodIntake) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *FoodPreset) GetID() string {
+	return m.ID
+}
+
+// GetName returns the Name value.
+func (m *FoodPreset) GetName() string {
+	return m.Name
+}
+
+// GetFoodType returns the FoodType value.
+func (m *FoodPreset) GetFoodType() string {
+	return m.FoodType
+}
+
+// GetCarbs returns the Carbs value.
+func (m *FoodPreset) GetCarbs() *float64 {
+	return m.Carbs
+}
+
+// GetFat returns the Fat value.
+func (m *FoodPreset) GetFat() *float64 {
+	return m.Fat
+}
+
+// GetProtein returns the Protein value.
+func (m *FoodPreset) GetProtein() *float64 {
+	return m.Protein
+}
+
+// GetFibre returns the Fibre value.
+func (m *FoodPreset) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// GetCalories returns the Calories value.
+func (m *FoodPreset) GetCalories() *float64 {
+	return m.Calories
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *FoodPreset) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *FoodPreset) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *FoodPreset) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *FoodPreset) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *FoodPreset) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *FoodPreset) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *FoodPreset) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
@@ -427,14 +592,14 @@ func (m *GlucoseReading) GetID() string {
 	return m.ID
 }
 
-// GetValue returns the Value value.
-func (m *GlucoseReading) GetValue() float64 {
-	return m.Value
+// GetReading returns the Reading value.
+func (m *GlucoseReading) GetReading() float64 {
+	return m.Reading
 }
 
-// GetType returns the Type value.
-func (m *GlucoseReading) GetType() string {
-	return m.Type
+// GetReadingType returns the ReadingType value.
+func (m *GlucoseReading) GetReadingType() string {
+	return m.ReadingType
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -484,6 +649,156 @@ func (m *GlucoseReading) GetUpdatedByIdentityName() *string {
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m *GlucoseReading) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *InsulinDose) GetID() string {
+	return m.ID
+}
+
+// GetDose returns the Dose value.
+func (m *InsulinDose) GetDose() float64 {
+	return m.Dose
+}
+
+// GetDoseType returns the DoseType value.
+func (m *InsulinDose) GetDoseType() string {
+	return m.DoseType
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *InsulinDose) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *InsulinDose) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *InsulinDose) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *InsulinDose) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *InsulinDose) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *InsulinDose) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *InsulinDose) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *InsulinDose) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *InsulinDose) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *InsulinDose) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *LoopState) GetID() string {
+	return m.ID
+}
+
+// GetLoopState returns the LoopState value.
+func (m *LoopState) GetLoopState() *string {
+	return m.LoopState
+}
+
+// GetLoopTimestamp returns the LoopTimestamp value.
+func (m *LoopState) GetLoopTimestamp() *int64 {
+	return m.LoopTimestamp
+}
+
+// GetIob returns the Iob value.
+func (m *LoopState) GetIob() *float64 {
+	return m.Iob
+}
+
+// GetIobBasal returns the IobBasal value.
+func (m *LoopState) GetIobBasal() *float64 {
+	return m.IobBasal
+}
+
+// GetIobTreatment returns the IobTreatment value.
+func (m *LoopState) GetIobTreatment() *float64 {
+	return m.IobTreatment
+}
+
+// GetCob returns the Cob value.
+func (m *LoopState) GetCob() *float64 {
+	return m.Cob
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *LoopState) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *LoopState) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *LoopState) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *LoopState) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *LoopState) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *LoopState) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *LoopState) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *LoopState) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *LoopState) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *LoopState) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
@@ -548,128 +863,308 @@ func (m *Note) GetCreatedByIdentityName() string {
 }
 
 // GetID returns the ID value.
-func (m *Profile) GetID() string {
+func (m *ProfilePreset) GetID() string {
 	return m.ID
 }
 
 // GetName returns the Name value.
-func (m *Profile) GetName() string {
+func (m *ProfilePreset) GetName() string {
 	return m.Name
 }
 
-// GetStart returns the Start value.
-func (m *Profile) GetStart() *int64 {
-	return m.Start
-}
-
-// GetDurationMinutes returns the DurationMinutes value.
-func (m *Profile) GetDurationMinutes() *int64 {
-	return m.DurationMinutes
-}
-
-// GetSource returns the Source value.
-func (m *Profile) GetSource() *string {
-	return m.Source
-}
-
-// GetPercent returns the Percent value.
-func (m *Profile) GetPercent() *int64 {
-	return m.Percent
-}
-
-// GetDia returns the Dia value.
-func (m *Profile) GetDia() *int64 {
-	return m.Dia
-}
-
-// GetUnits returns the Units value.
-func (m *Profile) GetUnits() *string {
-	return m.Units
-}
-
-// GetTimezone returns the Timezone value.
-func (m *Profile) GetTimezone() *string {
-	return m.Timezone
-}
-
 // GetCarbRatiosJson returns the CarbRatiosJson value.
-func (m *Profile) GetCarbRatiosJson() *string {
+func (m *ProfilePreset) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
 }
 
 // GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
-func (m *Profile) GetInsulinSensitivitiesJson() *string {
+func (m *ProfilePreset) GetInsulinSensitivitiesJson() *string {
 	return m.InsulinSensitivitiesJson
 }
 
 // GetBasalRatesJson returns the BasalRatesJson value.
-func (m *Profile) GetBasalRatesJson() *string {
+func (m *ProfilePreset) GetBasalRatesJson() *string {
 	return m.BasalRatesJson
 }
 
 // GetTargetsJson returns the TargetsJson value.
-func (m *Profile) GetTargetsJson() *string {
+func (m *ProfilePreset) GetTargetsJson() *string {
 	return m.TargetsJson
 }
 
 // GetRawJsonData returns the RawJsonData value.
-func (m *Profile) GetRawJsonData() *string {
+func (m *ProfilePreset) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
-// GetDeletedAt returns the DeletedAt value.
-func (m *Profile) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m *Profile) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m *Profile) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
 // GetCreatedAt returns the CreatedAt value.
-func (m *Profile) GetCreatedAt() int64 {
+func (m *ProfilePreset) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
-func (m *Profile) GetUpdatedAt() int64 {
+func (m *ProfilePreset) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m *Profile) GetCreatedByAppName() string {
+func (m *ProfilePreset) GetCreatedByAppName() string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m *Profile) GetCreatedByDeviceName() string {
+func (m *ProfilePreset) GetCreatedByDeviceName() string {
 	return m.CreatedByDeviceName
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m *Profile) GetUpdatedByIdentityName() *string {
+func (m *ProfilePreset) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m *Profile) GetCreatedByIdentityName() string {
+func (m *ProfilePreset) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// GetID returns the ID value.
+func (m *ProfileSwitch) GetID() string {
+	return m.ID
+}
+
 // GetName returns the Name value.
-func (m *SqliteSequence) GetName() interface{} {
+func (m *ProfileSwitch) GetName() string {
 	return m.Name
 }
 
-// GetSeq returns the Seq value.
-func (m *SqliteSequence) GetSeq() interface{} {
-	return m.Seq
+// GetDurationMinutes returns the DurationMinutes value.
+func (m *ProfileSwitch) GetDurationMinutes() int64 {
+	return m.DurationMinutes
+}
+
+// GetPercent returns the Percent value.
+func (m *ProfileSwitch) GetPercent() *int64 {
+	return m.Percent
+}
+
+// GetCarbRatiosJson returns the CarbRatiosJson value.
+func (m *ProfileSwitch) GetCarbRatiosJson() *string {
+	return m.CarbRatiosJson
+}
+
+// GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
+func (m *ProfileSwitch) GetInsulinSensitivitiesJson() *string {
+	return m.InsulinSensitivitiesJson
+}
+
+// GetBasalRatesJson returns the BasalRatesJson value.
+func (m *ProfileSwitch) GetBasalRatesJson() *string {
+	return m.BasalRatesJson
+}
+
+// GetTargetsJson returns the TargetsJson value.
+func (m *ProfileSwitch) GetTargetsJson() *string {
+	return m.TargetsJson
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *ProfileSwitch) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *ProfileSwitch) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *ProfileSwitch) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *ProfileSwitch) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *ProfileSwitch) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *ProfileSwitch) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *ProfileSwitch) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *ProfileSwitch) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *ProfileSwitch) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *ProfileSwitch) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *PumpState) GetID() string {
+	return m.ID
+}
+
+// GetPumpState returns the PumpState value.
+func (m *PumpState) GetPumpState() *string {
+	return m.PumpState
+}
+
+// GetPumpTimestamp returns the PumpTimestamp value.
+func (m *PumpState) GetPumpTimestamp() *int64 {
+	return m.PumpTimestamp
+}
+
+// GetPumpInsertionTime returns the PumpInsertionTime value.
+func (m *PumpState) GetPumpInsertionTime() *int64 {
+	return m.PumpInsertionTime
+}
+
+// GetPumpReservoir returns the PumpReservoir value.
+func (m *PumpState) GetPumpReservoir() *float64 {
+	return m.PumpReservoir
+}
+
+// GetPumpBatteryPercentage returns the PumpBatteryPercentage value.
+func (m *PumpState) GetPumpBatteryPercentage() *float64 {
+	return m.PumpBatteryPercentage
+}
+
+// GetPumpChargingState returns the PumpChargingState value.
+func (m *PumpState) GetPumpChargingState() *string {
+	return m.PumpChargingState
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m *PumpState) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m *PumpState) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m *PumpState) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *PumpState) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m *PumpState) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *PumpState) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *PumpState) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m *PumpState) GetCreatedByAppName() string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m *PumpState) GetCreatedByDeviceName() string {
+	return m.CreatedByDeviceName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m *PumpState) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
+func (m *SiteSetting) GetID() int64 {
+	return m.ID
+}
+
+// GetUnits returns the Units value.
+func (m *SiteSetting) GetUnits() string {
+	return m.Units
+}
+
+// GetTimezone returns the Timezone value.
+func (m *SiteSetting) GetTimezone() string {
+	return m.Timezone
+}
+
+// GetBolusDiaHours returns the BolusDiaHours value.
+func (m *SiteSetting) GetBolusDiaHours() float64 {
+	return m.BolusDiaHours
+}
+
+// GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
+func (m *SiteSetting) GetBolusOnsetMinutes() float64 {
+	return m.BolusOnsetMinutes
+}
+
+// GetBolusPeakMinutes returns the BolusPeakMinutes value.
+func (m *SiteSetting) GetBolusPeakMinutes() float64 {
+	return m.BolusPeakMinutes
+}
+
+// GetBasalDiaHours returns the BasalDiaHours value.
+func (m *SiteSetting) GetBasalDiaHours() float64 {
+	return m.BasalDiaHours
+}
+
+// GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
+func (m *SiteSetting) GetBasalOnsetMinutes() float64 {
+	return m.BasalOnsetMinutes
+}
+
+// GetBasalPeakMinutes returns the BasalPeakMinutes value.
+func (m *SiteSetting) GetBasalPeakMinutes() float64 {
+	return m.BasalPeakMinutes
+}
+
+// GetCarbMaxAbsortionHours returns the CarbMaxAbsortionHours value.
+func (m *SiteSetting) GetCarbMaxAbsortionHours() float64 {
+	return m.CarbMaxAbsortionHours
+}
+
+// GetCarbMin5mImpact returns the CarbMin5mImpact value.
+func (m *SiteSetting) GetCarbMin5mImpact() float64 {
+	return m.CarbMin5mImpact
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m *SiteSetting) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m *SiteSetting) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
 }
 
 // GetID returns the ID value.
@@ -677,19 +1172,19 @@ func (m *TempBasal) GetID() string {
 	return m.ID
 }
 
-// GetStart returns the Start value.
-func (m *TempBasal) GetStart() int64 {
-	return m.Start
-}
-
 // GetDurationMinutes returns the DurationMinutes value.
 func (m *TempBasal) GetDurationMinutes() int64 {
 	return m.DurationMinutes
 }
 
-// GetValue returns the Value value.
-func (m *TempBasal) GetValue() float64 {
-	return m.Value
+// GetAbsolute returns the Absolute value.
+func (m *TempBasal) GetAbsolute() float64 {
+	return m.Absolute
+}
+
+// GetPercentage returns the Percentage value.
+func (m *TempBasal) GetPercentage() *float64 {
+	return m.Percentage
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -705,6 +1200,11 @@ func (m *TempBasal) GetDeletedAt() *int64 {
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m *TempBasal) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *TempBasal) GetOccurredAt() int64 {
+	return m.OccurredAt
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -742,11 +1242,6 @@ func (m *TempTarget) GetID() string {
 	return m.ID
 }
 
-// GetStart returns the Start value.
-func (m *TempTarget) GetStart() int64 {
-	return m.Start
-}
-
 // GetDurationMinutes returns the DurationMinutes value.
 func (m *TempTarget) GetDurationMinutes() int64 {
 	return m.DurationMinutes
@@ -775,6 +1270,11 @@ func (m *TempTarget) GetDeletedAt() *int64 {
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m *TempTarget) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m *TempTarget) GetOccurredAt() int64 {
+	return m.OccurredAt
 }
 
 // GetCreatedAt returns the CreatedAt value.

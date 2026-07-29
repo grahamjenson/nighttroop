@@ -5,21 +5,21 @@
 INSERT INTO food_intakes (
     id,
     name,
+    food_type,
     carbs,
     fat,
     protein,
     fibre,
     calories,
 
-    occurred_at,
-
     utc_offset_minutes,
+    occurred_at,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -62,6 +62,11 @@ WHERE
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
     
+    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR food_type = sqlc.narg('TypeEq'))
+    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR food_type != sqlc.narg('TypeNeq'))
+    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR food_type IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
+    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR food_type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
+
     AND (CAST(sqlc.narg('CarbsEQ') AS INTEGER) IS NULL OR carbs = sqlc.narg('CarbsEQ'))
     AND (CAST(sqlc.narg('CarbsGTE') AS INTEGER) IS NULL OR carbs >= sqlc.narg('CarbsGTE'))
     AND (CAST(sqlc.narg('CarbsGT') AS INTEGER) IS NULL OR carbs > sqlc.narg('CarbsGT'))
@@ -78,13 +83,15 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateFoodIntake :one
 UPDATE food_intakes SET
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     name = COALESCE(sqlc.narg('Name'), name),
+    food_type = COALESCE(sqlc.narg('FoodType'), food_type),
     carbs = COALESCE(sqlc.narg('Carbs'), carbs),
     fat = COALESCE(sqlc.narg('Fat'), fat),
     protein = COALESCE(sqlc.narg('Protein'), protein),
     fibre = COALESCE(sqlc.narg('Fibre'), fibre),
     calories = COALESCE(sqlc.narg('Calories'), calories),
+
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?

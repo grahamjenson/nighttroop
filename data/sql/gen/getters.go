@@ -26,8 +26,7 @@ type Options struct {
 }
 
 var TableNameMap = map[string]string{
-	"Bolu":        "Bolus",
-	"DeviceStatu": "DeviceStatus",
+	"InsulinDos": "InsulinDose",
 }
 
 var AttributeNameMap = map[string]string{}
@@ -124,11 +123,23 @@ package %s
 
 func tableNameLookup(name string) string {
 	name = snakeToCamel(name)
-	if strings.HasSuffix(name, "ies") {
-		name = name[:len(name)-3] + "y"
-	}
 
-	name = strings.TrimSuffix(name, "s")
+	switch {
+	case strings.HasSuffix(name, "ies"):
+		name = name[:len(name)-3] + "y"
+
+	case strings.HasSuffix(name, "ses"):
+		name = name[:len(name)-2]
+
+	case strings.HasSuffix(name, "xes"),
+		strings.HasSuffix(name, "zes"),
+		strings.HasSuffix(name, "ches"),
+		strings.HasSuffix(name, "shes"):
+		name = name[:len(name)-2]
+
+	case strings.HasSuffix(name, "s") && !strings.HasSuffix(name, "ss"):
+		name = name[:len(name)-1]
+	}
 
 	if newName, ok := TableNameMap[name]; ok {
 		return newName

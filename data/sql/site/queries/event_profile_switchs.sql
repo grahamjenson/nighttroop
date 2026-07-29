@@ -19,7 +19,7 @@ INSERT INTO profile_switches (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -78,7 +78,6 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateProfileSwitch :one
 UPDATE profile_switches SET
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     name = COALESCE(sqlc.narg('Name'), name),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     percent = COALESCE(sqlc.narg('Percent'), percent),
@@ -86,6 +85,8 @@ UPDATE profile_switches SET
     insulin_sensitivities_json = COALESCE(sqlc.narg('InsulinSensitivitiesJson'), insulin_sensitivities_json),
     basal_rates_json = COALESCE(sqlc.narg('BasalRatesJson'), basal_rates_json),
     targets_json = COALESCE(sqlc.narg('TargetsJson'), targets_json),
+
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?

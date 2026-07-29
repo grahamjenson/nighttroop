@@ -6,16 +6,14 @@
 -- name: CreateGlucoseReading :one
 INSERT INTO glucose_readings (
     id,
-    
     reading,
     reading_type,
     
-    occurred_at,
-    
-    raw_json_data,
     utc_offset_minutes,
+    occurred_at,
+    raw_json_data,
     created_by_app_name,
-    created_by_device_name, 
+    created_by_device_name,
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -87,9 +85,10 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     reading = COALESCE(sqlc.narg('Reading'), reading),
     reading_type = COALESCE(sqlc.narg('ReadingType'), reading_type),
+
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?

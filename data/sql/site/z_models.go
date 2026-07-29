@@ -7,8 +7,7 @@ package site
 type Activity struct {
 	ID                    string
 	Name                  *string
-	Type                  *string
-	Notes                 *string
+	ActivityType          *string
 	DurationMinutes       *int64
 	Calories              *int64
 	Steps                 *int64
@@ -25,79 +24,116 @@ type Activity struct {
 	CreatedByIdentityName string
 }
 
-type Bolus struct {
-	ID                    string
-	Value                 float64
-	Type                  string
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	UpdatedByIdentityName *string
-	CreatedByIdentityName string
-}
-
-type Carb struct {
-	ID                    string
-	Amount                float64
-	Type                  string
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	UpdatedByIdentityName *string
-	CreatedByIdentityName string
-}
-
-type DeviceStatus struct {
-	ID                    string
-	Type                  string
-	BatteryPercentage     *float64
-	ChargingState         *string
-	Status                *string
-	InsertionTime         *int64
-	Timestamp             *int64
-	Iob                   *float64
-	Cob                   *float64
-	Basaliob              *float64
-	Treatmentiob          *float64
-	PumpReservoir         *float64
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	CreatedByIdentityName string
-}
-
-type Event struct {
-	ID      int64
-	Type    *string
-	Details *string
-	StartAt int64
-	EndAt   *int64
-}
-
-type Food struct {
+type ActivityPreset struct {
 	ID                    string
 	Name                  string
-	Category              string
+	ActivityType          *string
+	DurationMinutes       *int64
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
+	RawJsonData           *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName string
+}
+
+type CgmState struct {
+	ID                    string
+	CgmState              *string
+	CgmTimestamp          *int64
+	CgmInsertionTime      *int64
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	UpdatedByIdentityName *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
+}
+
+type DeviceState struct {
+	ID                      string
+	DeviceState             *string
+	DeviceTimestamp         *int64
+	DeviceBatteryPercentage *float64
+	DeviceChargingState     *string
+	RawJsonData             *string
+	DeletedAt               *int64
+	UtcOffsetMinutes        *int64
+	OccurredAt              int64
+	CreatedAt               int64
+	UpdatedAt               int64
+	UpdatedByIdentityName   *string
+	CreatedByAppName        string
+	CreatedByDeviceName     string
+	CreatedByIdentityName   string
+}
+
+type EventGroup struct {
+	ID                    string
+	GroupType             string
+	GlucoseReadingID      *string
+	InsulinDoseID         *string
+	FoodIntakeID          *string
+	TempBasalID           *string
+	TempTargetID          *string
+	ProfileSwitchID       *string
+	DeviceStateID         *string
+	LoopStateID           *string
+	PumpStateID           *string
+	CgmStateID            *string
+	ActivityID            *string
+	NoteID                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName string
+}
+
+type FoodIntake struct {
+	ID                    string
+	Name                  *string
+	FoodType              *string
 	Carbs                 *float64
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
 	Calories              *float64
 	RawJsonData           *string
 	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName string
+}
+
+type FoodPreset struct {
+	ID                    string
+	Name                  string
+	FoodType              string
+	Carbs                 *float64
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Calories              *float64
+	RawJsonData           *string
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      string
@@ -108,8 +144,8 @@ type Food struct {
 
 type GlucoseReading struct {
 	ID                    string
-	Value                 float64
-	Type                  string
+	Reading               float64
+	ReadingType           string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -119,6 +155,42 @@ type GlucoseReading struct {
 	CreatedByAppName      string
 	CreatedByDeviceName   string
 	UpdatedByIdentityName *string
+	CreatedByIdentityName string
+}
+
+type InsulinDose struct {
+	ID                    string
+	Dose                  float64
+	DoseType              string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName string
+}
+
+type LoopState struct {
+	ID                    string
+	LoopState             *string
+	LoopTimestamp         *int64
+	Iob                   *float64
+	IobBasal              *float64
+	IobTreatment          *float64
+	Cob                   *float64
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	UpdatedByIdentityName *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
 	CreatedByIdentityName string
 }
 
@@ -137,16 +209,27 @@ type Note struct {
 	CreatedByIdentityName string
 }
 
-type Profile struct {
+type ProfilePreset struct {
 	ID                       string
 	Name                     string
-	Start                    *int64
-	DurationMinutes          *int64
-	Source                   *string
+	CarbRatiosJson           *string
+	InsulinSensitivitiesJson *string
+	BasalRatesJson           *string
+	TargetsJson              *string
+	RawJsonData              *string
+	CreatedAt                int64
+	UpdatedAt                int64
+	CreatedByAppName         string
+	CreatedByDeviceName      string
+	UpdatedByIdentityName    *string
+	CreatedByIdentityName    string
+}
+
+type ProfileSwitch struct {
+	ID                       string
+	Name                     string
+	DurationMinutes          int64
 	Percent                  *int64
-	Dia                      *int64
-	Units                    *string
-	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -163,19 +246,51 @@ type Profile struct {
 	CreatedByIdentityName    string
 }
 
-type SqliteSequence struct {
-	Name interface{}
-	Seq  interface{}
+type PumpState struct {
+	ID                    string
+	PumpState             *string
+	PumpTimestamp         *int64
+	PumpInsertionTime     *int64
+	PumpReservoir         *float64
+	PumpBatteryPercentage *float64
+	PumpChargingState     *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	UpdatedByIdentityName *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
+}
+
+type SiteSetting struct {
+	ID                    int64
+	Units                 string
+	Timezone              string
+	BolusDiaHours         float64
+	BolusOnsetMinutes     float64
+	BolusPeakMinutes      float64
+	BasalDiaHours         float64
+	BasalOnsetMinutes     float64
+	BasalPeakMinutes      float64
+	CarbMaxAbsortionHours float64
+	CarbMin5mImpact       float64
+	UpdatedAt             int64
+	UpdatedByIdentityName *string
 }
 
 type TempBasal struct {
 	ID                    string
-	Start                 int64
 	DurationMinutes       int64
-	Value                 float64
+	Absolute              float64
+	Percentage            *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      string
@@ -186,13 +301,13 @@ type TempBasal struct {
 
 type TempTarget struct {
 	ID                    string
-	Start                 int64
 	DurationMinutes       int64
 	HighTarget            float64
 	LowTarget             float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
+	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      string

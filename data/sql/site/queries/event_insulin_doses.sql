@@ -7,15 +7,14 @@ INSERT INTO insulin_doses (
     dose,
     dose_type,
 
-    occurred_at,
-
     utc_offset_minutes,
+    occurred_at,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -78,9 +77,10 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateInsulinDose :one
 UPDATE insulin_doses SET
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     dose_type = COALESCE(sqlc.narg('DoseType'), dose_type),
     dose = COALESCE(sqlc.narg('Dose'), dose),
+
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?

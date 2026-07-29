@@ -110,6 +110,10 @@ func CarbsSearchDefaultOrder(source Query) site.SearchWithDefaultSortCarbsParams
 }
 func GlucoseSearchAll(source Query) site.AllGlucoseReadingsParams {
 	var siteAllGlucoseReadingsParams site.AllGlucoseReadingsParams
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteAllGlucoseReadingsParams.IncludeDeleted = &xbool
+	}
 	siteAllGlucoseReadingsParams.Skip = source.Skip
 	siteAllGlucoseReadingsParams.Limit = source.Limit
 	return siteAllGlucoseReadingsParams
@@ -467,6 +471,26 @@ func QueryValueToQuery(source QueryValues) Query {
 	if source.InsulinLT != nil {
 		xint6427 := nightscoutFlexibleInt64ToInt64(*source.InsulinLT)
 		nsqueryQuery.InsulinLT = &xint6427
+	}
+	if source.DurationEQ != nil {
+		xint6428 := nightscoutFlexibleInt64ToInt64(*source.DurationEQ)
+		nsqueryQuery.DurationEQ = &xint6428
+	}
+	if source.DurationGTE != nil {
+		xint6429 := nightscoutFlexibleInt64ToInt64(*source.DurationGTE)
+		nsqueryQuery.DurationGTE = &xint6429
+	}
+	if source.DurationGT != nil {
+		xint6430 := nightscoutFlexibleInt64ToInt64(*source.DurationGT)
+		nsqueryQuery.DurationGT = &xint6430
+	}
+	if source.DurationLTE != nil {
+		xint6431 := nightscoutFlexibleInt64ToInt64(*source.DurationLTE)
+		nsqueryQuery.DurationLTE = &xint6431
+	}
+	if source.DurationLT != nil {
+		xint6432 := nightscoutFlexibleInt64ToInt64(*source.DurationLT)
+		nsqueryQuery.DurationLT = &xint6432
 	}
 	if source.NameEq != nil {
 		xstring6 := nightscoutShortStringToString(*source.NameEq)

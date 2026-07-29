@@ -12,14 +12,13 @@ INSERT INTO activities (
     heart_rate,
 
     occurred_at,
-
     utc_offset_minutes,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -83,13 +82,14 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateActivity :one
 UPDATE activities SET
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     name = COALESCE(sqlc.narg('Name'), name),
     activity_type = COALESCE(sqlc.narg('ActivityType'), activity_type),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     calories = COALESCE(sqlc.narg('Calories'), calories),
     steps = COALESCE(sqlc.narg('Steps'), steps),
     heart_rate = COALESCE(sqlc.narg('HeartRate'), heart_rate),
+
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?

@@ -27,29 +27,44 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allActivitiesStmt, err = db.PrepareContext(ctx, allActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllActivities: %w", err)
 	}
-	if q.allBolusesStmt, err = db.PrepareContext(ctx, allBoluses); err != nil {
-		return nil, fmt.Errorf("error preparing query AllBoluses: %w", err)
+	if q.allActivityPresetsStmt, err = db.PrepareContext(ctx, allActivityPresets); err != nil {
+		return nil, fmt.Errorf("error preparing query AllActivityPresets: %w", err)
 	}
-	if q.allCarbsStmt, err = db.PrepareContext(ctx, allCarbs); err != nil {
-		return nil, fmt.Errorf("error preparing query AllCarbs: %w", err)
+	if q.allCGMStatesStmt, err = db.PrepareContext(ctx, allCGMStates); err != nil {
+		return nil, fmt.Errorf("error preparing query AllCGMStates: %w", err)
 	}
-	if q.allDeviceStatusStmt, err = db.PrepareContext(ctx, allDeviceStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query AllDeviceStatus: %w", err)
+	if q.allDeviceStatesStmt, err = db.PrepareContext(ctx, allDeviceStates); err != nil {
+		return nil, fmt.Errorf("error preparing query AllDeviceStates: %w", err)
 	}
-	if q.allEventsStmt, err = db.PrepareContext(ctx, allEvents); err != nil {
-		return nil, fmt.Errorf("error preparing query AllEvents: %w", err)
+	if q.allEventGroupsStmt, err = db.PrepareContext(ctx, allEventGroups); err != nil {
+		return nil, fmt.Errorf("error preparing query AllEventGroups: %w", err)
 	}
-	if q.allFoodsStmt, err = db.PrepareContext(ctx, allFoods); err != nil {
-		return nil, fmt.Errorf("error preparing query AllFoods: %w", err)
+	if q.allFoodIntakesStmt, err = db.PrepareContext(ctx, allFoodIntakes); err != nil {
+		return nil, fmt.Errorf("error preparing query AllFoodIntakes: %w", err)
+	}
+	if q.allFoodPresetsStmt, err = db.PrepareContext(ctx, allFoodPresets); err != nil {
+		return nil, fmt.Errorf("error preparing query AllFoodPresets: %w", err)
 	}
 	if q.allGlucoseReadingsStmt, err = db.PrepareContext(ctx, allGlucoseReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query AllGlucoseReadings: %w", err)
 	}
+	if q.allInsulinDosesStmt, err = db.PrepareContext(ctx, allInsulinDoses); err != nil {
+		return nil, fmt.Errorf("error preparing query AllInsulinDoses: %w", err)
+	}
+	if q.allLoopStatesStmt, err = db.PrepareContext(ctx, allLoopStates); err != nil {
+		return nil, fmt.Errorf("error preparing query AllLoopStates: %w", err)
+	}
 	if q.allNotesStmt, err = db.PrepareContext(ctx, allNotes); err != nil {
 		return nil, fmt.Errorf("error preparing query AllNotes: %w", err)
 	}
-	if q.allProfilesStmt, err = db.PrepareContext(ctx, allProfiles); err != nil {
-		return nil, fmt.Errorf("error preparing query AllProfiles: %w", err)
+	if q.allProfilePresetsStmt, err = db.PrepareContext(ctx, allProfilePresets); err != nil {
+		return nil, fmt.Errorf("error preparing query AllProfilePresets: %w", err)
+	}
+	if q.allProfileSwitchesStmt, err = db.PrepareContext(ctx, allProfileSwitches); err != nil {
+		return nil, fmt.Errorf("error preparing query AllProfileSwitches: %w", err)
+	}
+	if q.allPumpStatesStmt, err = db.PrepareContext(ctx, allPumpStates); err != nil {
+		return nil, fmt.Errorf("error preparing query AllPumpStates: %w", err)
 	}
 	if q.allTempBasalsStmt, err = db.PrepareContext(ctx, allTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempBasals: %w", err)
@@ -60,29 +75,44 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
 	}
-	if q.createBolusStmt, err = db.PrepareContext(ctx, createBolus); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateBolus: %w", err)
+	if q.createActivityPresetStmt, err = db.PrepareContext(ctx, createActivityPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateActivityPreset: %w", err)
 	}
-	if q.createCarbStmt, err = db.PrepareContext(ctx, createCarb); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateCarb: %w", err)
+	if q.createCGMStateStmt, err = db.PrepareContext(ctx, createCGMState); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateCGMState: %w", err)
 	}
-	if q.createDeviceStatusStmt, err = db.PrepareContext(ctx, createDeviceStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateDeviceStatus: %w", err)
+	if q.createDeviceStateStmt, err = db.PrepareContext(ctx, createDeviceState); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateDeviceState: %w", err)
 	}
-	if q.createEventStmt, err = db.PrepareContext(ctx, createEvent); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateEvent: %w", err)
+	if q.createEventGroupStmt, err = db.PrepareContext(ctx, createEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateEventGroup: %w", err)
 	}
-	if q.createFoodStmt, err = db.PrepareContext(ctx, createFood); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateFood: %w", err)
+	if q.createFoodIntakeStmt, err = db.PrepareContext(ctx, createFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateFoodIntake: %w", err)
+	}
+	if q.createFoodPresetStmt, err = db.PrepareContext(ctx, createFoodPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateFoodPreset: %w", err)
 	}
 	if q.createGlucoseReadingStmt, err = db.PrepareContext(ctx, createGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateGlucoseReading: %w", err)
 	}
+	if q.createInsulinDoseStmt, err = db.PrepareContext(ctx, createInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateInsulinDose: %w", err)
+	}
+	if q.createLoopStateStmt, err = db.PrepareContext(ctx, createLoopState); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateLoopState: %w", err)
+	}
 	if q.createNoteStmt, err = db.PrepareContext(ctx, createNote); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateNote: %w", err)
 	}
-	if q.createProfileStmt, err = db.PrepareContext(ctx, createProfile); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateProfile: %w", err)
+	if q.createProfilePresetStmt, err = db.PrepareContext(ctx, createProfilePreset); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateProfilePreset: %w", err)
+	}
+	if q.createProfileSwitchStmt, err = db.PrepareContext(ctx, createProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateProfileSwitch: %w", err)
+	}
+	if q.createPumpStateStmt, err = db.PrepareContext(ctx, createPumpState); err != nil {
+		return nil, fmt.Errorf("error preparing query CreatePumpState: %w", err)
 	}
 	if q.createTempBasalStmt, err = db.PrepareContext(ctx, createTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempBasal: %w", err)
@@ -90,41 +120,53 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
-	if q.deleteGlucoseReadingStmt, err = db.PrepareContext(ctx, deleteGlucoseReading); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteGlucoseReading: %w", err)
-	}
 	if q.deleteGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, deleteGlucoseReadingsByType); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteGlucoseReadingsByType: %w", err)
-	}
-	if q.deletePermanentGlucoseReadingStmt, err = db.PrepareContext(ctx, deletePermanentGlucoseReading); err != nil {
-		return nil, fmt.Errorf("error preparing query DeletePermanentGlucoseReading: %w", err)
-	}
-	if q.deletePermanentGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, deletePermanentGlucoseReadingsByType); err != nil {
-		return nil, fmt.Errorf("error preparing query DeletePermanentGlucoseReadingsByType: %w", err)
 	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
-	if q.getBolusStmt, err = db.PrepareContext(ctx, getBolus); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBolus: %w", err)
+	if q.getActivityPresetStmt, err = db.PrepareContext(ctx, getActivityPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query GetActivityPreset: %w", err)
 	}
-	if q.getCarbStmt, err = db.PrepareContext(ctx, getCarb); err != nil {
-		return nil, fmt.Errorf("error preparing query GetCarb: %w", err)
+	if q.getCGMStateStmt, err = db.PrepareContext(ctx, getCGMState); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCGMState: %w", err)
 	}
-	if q.getDeviceStatusStmt, err = db.PrepareContext(ctx, getDeviceStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query GetDeviceStatus: %w", err)
+	if q.getDeviceStateStmt, err = db.PrepareContext(ctx, getDeviceState); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDeviceState: %w", err)
 	}
-	if q.getFoodStmt, err = db.PrepareContext(ctx, getFood); err != nil {
-		return nil, fmt.Errorf("error preparing query GetFood: %w", err)
+	if q.getEventGroupStmt, err = db.PrepareContext(ctx, getEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEventGroup: %w", err)
+	}
+	if q.getFoodIntakeStmt, err = db.PrepareContext(ctx, getFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query GetFoodIntake: %w", err)
+	}
+	if q.getFoodPresetStmt, err = db.PrepareContext(ctx, getFoodPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query GetFoodPreset: %w", err)
 	}
 	if q.getGlucoseReadingStmt, err = db.PrepareContext(ctx, getGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query GetGlucoseReading: %w", err)
 	}
+	if q.getInsulinDoseStmt, err = db.PrepareContext(ctx, getInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query GetInsulinDose: %w", err)
+	}
+	if q.getLoopStateStmt, err = db.PrepareContext(ctx, getLoopState); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLoopState: %w", err)
+	}
 	if q.getNoteStmt, err = db.PrepareContext(ctx, getNote); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNote: %w", err)
 	}
-	if q.getProfileStmt, err = db.PrepareContext(ctx, getProfile); err != nil {
-		return nil, fmt.Errorf("error preparing query GetProfile: %w", err)
+	if q.getProfilePresetStmt, err = db.PrepareContext(ctx, getProfilePreset); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfilePreset: %w", err)
+	}
+	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
+	}
+	if q.getPumpStateStmt, err = db.PrepareContext(ctx, getPumpState); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPumpState: %w", err)
+	}
+	if q.getSiteSettingsStmt, err = db.PrepareContext(ctx, getSiteSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteSettings: %w", err)
 	}
 	if q.getTempBasalStmt, err = db.PrepareContext(ctx, getTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempBasal: %w", err)
@@ -132,26 +174,185 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
-	if q.searchWithDefaultSortCarbsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortCarbs); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortCarbs: %w", err)
+	if q.hardDeleteActivityStmt, err = db.PrepareContext(ctx, hardDeleteActivity); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteActivity: %w", err)
+	}
+	if q.hardDeleteActivityPresetStmt, err = db.PrepareContext(ctx, hardDeleteActivityPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteActivityPreset: %w", err)
+	}
+	if q.hardDeleteCGMStateStmt, err = db.PrepareContext(ctx, hardDeleteCGMState); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteCGMState: %w", err)
+	}
+	if q.hardDeleteDeviceStateStmt, err = db.PrepareContext(ctx, hardDeleteDeviceState); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteDeviceState: %w", err)
+	}
+	if q.hardDeleteEventGroupStmt, err = db.PrepareContext(ctx, hardDeleteEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteEventGroup: %w", err)
+	}
+	if q.hardDeleteFoodIntakeStmt, err = db.PrepareContext(ctx, hardDeleteFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteFoodIntake: %w", err)
+	}
+	if q.hardDeleteFoodPresetStmt, err = db.PrepareContext(ctx, hardDeleteFoodPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteFoodPreset: %w", err)
+	}
+	if q.hardDeleteGlucoseReadingStmt, err = db.PrepareContext(ctx, hardDeleteGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteGlucoseReading: %w", err)
+	}
+	if q.hardDeleteGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, hardDeleteGlucoseReadingsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteGlucoseReadingsByType: %w", err)
+	}
+	if q.hardDeleteInsulinDoseStmt, err = db.PrepareContext(ctx, hardDeleteInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteInsulinDose: %w", err)
+	}
+	if q.hardDeleteLoopStateStmt, err = db.PrepareContext(ctx, hardDeleteLoopState); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteLoopState: %w", err)
+	}
+	if q.hardDeleteNoteStmt, err = db.PrepareContext(ctx, hardDeleteNote); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteNote: %w", err)
+	}
+	if q.hardDeleteProfilePresetStmt, err = db.PrepareContext(ctx, hardDeleteProfilePreset); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteProfilePreset: %w", err)
+	}
+	if q.hardDeleteProfileSwitchStmt, err = db.PrepareContext(ctx, hardDeleteProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteProfileSwitch: %w", err)
+	}
+	if q.hardDeletePumpStateStmt, err = db.PrepareContext(ctx, hardDeletePumpState); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeletePumpState: %w", err)
+	}
+	if q.hardDeleteTempBasalStmt, err = db.PrepareContext(ctx, hardDeleteTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteTempBasal: %w", err)
+	}
+	if q.hardDeleteTempTargetStmt, err = db.PrepareContext(ctx, hardDeleteTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteTempTarget: %w", err)
+	}
+	if q.searchWithDefaultSortActivitiesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortActivities); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortActivities: %w", err)
+	}
+	if q.searchWithDefaultSortActivityPresetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortActivityPresets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortActivityPresets: %w", err)
+	}
+	if q.searchWithDefaultSortCGMStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortCGMStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortCGMStates: %w", err)
+	}
+	if q.searchWithDefaultSortDeviceStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortDeviceStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortDeviceStates: %w", err)
+	}
+	if q.searchWithDefaultSortFoodIntakesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortFoodIntakes); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortFoodIntakes: %w", err)
+	}
+	if q.searchWithDefaultSortFoodPresetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortFoodPresets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortFoodPresets: %w", err)
 	}
 	if q.searchWithDefaultSortGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortGlucoseReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortGlucoseReadings: %w", err)
 	}
-	if q.searchWithNonDefaultSortGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchWithNonDefaultSortGlucoseReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithNonDefaultSortGlucoseReadings: %w", err)
+	if q.searchWithDefaultSortInsulinDosesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortInsulinDoses); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortInsulinDoses: %w", err)
 	}
-	if q.updateBolusStmt, err = db.PrepareContext(ctx, updateBolus); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateBolus: %w", err)
+	if q.searchWithDefaultSortLoopStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortLoopStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortLoopStates: %w", err)
 	}
-	if q.updateCarbStmt, err = db.PrepareContext(ctx, updateCarb); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateCarb: %w", err)
+	if q.searchWithDefaultSortNotesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortNotes); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortNotes: %w", err)
+	}
+	if q.searchWithDefaultSortProfilePresetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortProfilePresets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortProfilePresets: %w", err)
+	}
+	if q.searchWithDefaultSortProfileSwitchesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortProfileSwitches); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortProfileSwitches: %w", err)
+	}
+	if q.searchWithDefaultSortPumpStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortPumpStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortPumpStates: %w", err)
+	}
+	if q.searchWithDefaultSortTempBasalsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortTempBasals); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortTempBasals: %w", err)
+	}
+	if q.searchWithDefaultSortTempTargetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortTempTargets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortTempTargets: %w", err)
+	}
+	if q.softDeleteActivityStmt, err = db.PrepareContext(ctx, softDeleteActivity); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteActivity: %w", err)
+	}
+	if q.softDeleteCGMStateStmt, err = db.PrepareContext(ctx, softDeleteCGMState); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteCGMState: %w", err)
+	}
+	if q.softDeleteDeviceStateStmt, err = db.PrepareContext(ctx, softDeleteDeviceState); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteDeviceState: %w", err)
+	}
+	if q.softDeleteEventGroupStmt, err = db.PrepareContext(ctx, softDeleteEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteEventGroup: %w", err)
+	}
+	if q.softDeleteFoodIntakeStmt, err = db.PrepareContext(ctx, softDeleteFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteFoodIntake: %w", err)
+	}
+	if q.softDeleteGlucoseReadingStmt, err = db.PrepareContext(ctx, softDeleteGlucoseReading); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteGlucoseReading: %w", err)
+	}
+	if q.softDeleteInsulinDoseStmt, err = db.PrepareContext(ctx, softDeleteInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteInsulinDose: %w", err)
+	}
+	if q.softDeleteLoopStateStmt, err = db.PrepareContext(ctx, softDeleteLoopState); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteLoopState: %w", err)
+	}
+	if q.softDeleteNoteStmt, err = db.PrepareContext(ctx, softDeleteNote); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteNote: %w", err)
+	}
+	if q.softDeleteProfileSwitchStmt, err = db.PrepareContext(ctx, softDeleteProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteProfileSwitch: %w", err)
+	}
+	if q.softDeletePumpStateStmt, err = db.PrepareContext(ctx, softDeletePumpState); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeletePumpState: %w", err)
+	}
+	if q.softDeleteTempBasalStmt, err = db.PrepareContext(ctx, softDeleteTempBasal); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteTempBasal: %w", err)
+	}
+	if q.softDeleteTempTargetStmt, err = db.PrepareContext(ctx, softDeleteTempTarget); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteTempTarget: %w", err)
+	}
+	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
+	}
+	if q.updateActivityPresetStmt, err = db.PrepareContext(ctx, updateActivityPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateActivityPreset: %w", err)
+	}
+	if q.updateCGMStateStmt, err = db.PrepareContext(ctx, updateCGMState); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateCGMState: %w", err)
+	}
+	if q.updateDeviceStateStmt, err = db.PrepareContext(ctx, updateDeviceState); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateDeviceState: %w", err)
+	}
+	if q.updateEventGroupStmt, err = db.PrepareContext(ctx, updateEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateEventGroup: %w", err)
+	}
+	if q.updateFoodIntakeStmt, err = db.PrepareContext(ctx, updateFoodIntake); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateFoodIntake: %w", err)
+	}
+	if q.updateFoodPresetStmt, err = db.PrepareContext(ctx, updateFoodPreset); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateFoodPreset: %w", err)
 	}
 	if q.updateGlucoseReadingStmt, err = db.PrepareContext(ctx, updateGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateGlucoseReading: %w", err)
 	}
+	if q.updateInsulinDoseStmt, err = db.PrepareContext(ctx, updateInsulinDose); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateInsulinDose: %w", err)
+	}
+	if q.updateLoopStateStmt, err = db.PrepareContext(ctx, updateLoopState); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateLoopState: %w", err)
+	}
 	if q.updateNoteStmt, err = db.PrepareContext(ctx, updateNote); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateNote: %w", err)
+	}
+	if q.updateProfilePresetStmt, err = db.PrepareContext(ctx, updateProfilePreset); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateProfilePreset: %w", err)
+	}
+	if q.updateProfileSwitchStmt, err = db.PrepareContext(ctx, updateProfileSwitch); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateProfileSwitch: %w", err)
+	}
+	if q.updatePumpStateStmt, err = db.PrepareContext(ctx, updatePumpState); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdatePumpState: %w", err)
+	}
+	if q.updateSiteSettingsStmt, err = db.PrepareContext(ctx, updateSiteSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteSettings: %w", err)
 	}
 	if q.updateTempBasalStmt, err = db.PrepareContext(ctx, updateTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempBasal: %w", err)
@@ -169,29 +370,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allActivitiesStmt: %w", cerr)
 		}
 	}
-	if q.allBolusesStmt != nil {
-		if cerr := q.allBolusesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allBolusesStmt: %w", cerr)
+	if q.allActivityPresetsStmt != nil {
+		if cerr := q.allActivityPresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allActivityPresetsStmt: %w", cerr)
 		}
 	}
-	if q.allCarbsStmt != nil {
-		if cerr := q.allCarbsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allCarbsStmt: %w", cerr)
+	if q.allCGMStatesStmt != nil {
+		if cerr := q.allCGMStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allCGMStatesStmt: %w", cerr)
 		}
 	}
-	if q.allDeviceStatusStmt != nil {
-		if cerr := q.allDeviceStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allDeviceStatusStmt: %w", cerr)
+	if q.allDeviceStatesStmt != nil {
+		if cerr := q.allDeviceStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allDeviceStatesStmt: %w", cerr)
 		}
 	}
-	if q.allEventsStmt != nil {
-		if cerr := q.allEventsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allEventsStmt: %w", cerr)
+	if q.allEventGroupsStmt != nil {
+		if cerr := q.allEventGroupsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allEventGroupsStmt: %w", cerr)
 		}
 	}
-	if q.allFoodsStmt != nil {
-		if cerr := q.allFoodsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allFoodsStmt: %w", cerr)
+	if q.allFoodIntakesStmt != nil {
+		if cerr := q.allFoodIntakesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allFoodIntakesStmt: %w", cerr)
+		}
+	}
+	if q.allFoodPresetsStmt != nil {
+		if cerr := q.allFoodPresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allFoodPresetsStmt: %w", cerr)
 		}
 	}
 	if q.allGlucoseReadingsStmt != nil {
@@ -199,14 +405,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allGlucoseReadingsStmt: %w", cerr)
 		}
 	}
+	if q.allInsulinDosesStmt != nil {
+		if cerr := q.allInsulinDosesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allInsulinDosesStmt: %w", cerr)
+		}
+	}
+	if q.allLoopStatesStmt != nil {
+		if cerr := q.allLoopStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allLoopStatesStmt: %w", cerr)
+		}
+	}
 	if q.allNotesStmt != nil {
 		if cerr := q.allNotesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allNotesStmt: %w", cerr)
 		}
 	}
-	if q.allProfilesStmt != nil {
-		if cerr := q.allProfilesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allProfilesStmt: %w", cerr)
+	if q.allProfilePresetsStmt != nil {
+		if cerr := q.allProfilePresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allProfilePresetsStmt: %w", cerr)
+		}
+	}
+	if q.allProfileSwitchesStmt != nil {
+		if cerr := q.allProfileSwitchesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allProfileSwitchesStmt: %w", cerr)
+		}
+	}
+	if q.allPumpStatesStmt != nil {
+		if cerr := q.allPumpStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allPumpStatesStmt: %w", cerr)
 		}
 	}
 	if q.allTempBasalsStmt != nil {
@@ -224,29 +450,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createActivityStmt: %w", cerr)
 		}
 	}
-	if q.createBolusStmt != nil {
-		if cerr := q.createBolusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createBolusStmt: %w", cerr)
+	if q.createActivityPresetStmt != nil {
+		if cerr := q.createActivityPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createActivityPresetStmt: %w", cerr)
 		}
 	}
-	if q.createCarbStmt != nil {
-		if cerr := q.createCarbStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createCarbStmt: %w", cerr)
+	if q.createCGMStateStmt != nil {
+		if cerr := q.createCGMStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createCGMStateStmt: %w", cerr)
 		}
 	}
-	if q.createDeviceStatusStmt != nil {
-		if cerr := q.createDeviceStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createDeviceStatusStmt: %w", cerr)
+	if q.createDeviceStateStmt != nil {
+		if cerr := q.createDeviceStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createDeviceStateStmt: %w", cerr)
 		}
 	}
-	if q.createEventStmt != nil {
-		if cerr := q.createEventStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createEventStmt: %w", cerr)
+	if q.createEventGroupStmt != nil {
+		if cerr := q.createEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createEventGroupStmt: %w", cerr)
 		}
 	}
-	if q.createFoodStmt != nil {
-		if cerr := q.createFoodStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createFoodStmt: %w", cerr)
+	if q.createFoodIntakeStmt != nil {
+		if cerr := q.createFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.createFoodPresetStmt != nil {
+		if cerr := q.createFoodPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createFoodPresetStmt: %w", cerr)
 		}
 	}
 	if q.createGlucoseReadingStmt != nil {
@@ -254,14 +485,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createGlucoseReadingStmt: %w", cerr)
 		}
 	}
+	if q.createInsulinDoseStmt != nil {
+		if cerr := q.createInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.createLoopStateStmt != nil {
+		if cerr := q.createLoopStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createLoopStateStmt: %w", cerr)
+		}
+	}
 	if q.createNoteStmt != nil {
 		if cerr := q.createNoteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createNoteStmt: %w", cerr)
 		}
 	}
-	if q.createProfileStmt != nil {
-		if cerr := q.createProfileStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createProfileStmt: %w", cerr)
+	if q.createProfilePresetStmt != nil {
+		if cerr := q.createProfilePresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createProfilePresetStmt: %w", cerr)
+		}
+	}
+	if q.createProfileSwitchStmt != nil {
+		if cerr := q.createProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.createPumpStateStmt != nil {
+		if cerr := q.createPumpStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createPumpStateStmt: %w", cerr)
 		}
 	}
 	if q.createTempBasalStmt != nil {
@@ -274,24 +525,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.deleteGlucoseReadingStmt != nil {
-		if cerr := q.deleteGlucoseReadingStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteGlucoseReadingStmt: %w", cerr)
-		}
-	}
 	if q.deleteGlucoseReadingsByTypeStmt != nil {
 		if cerr := q.deleteGlucoseReadingsByTypeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteGlucoseReadingsByTypeStmt: %w", cerr)
-		}
-	}
-	if q.deletePermanentGlucoseReadingStmt != nil {
-		if cerr := q.deletePermanentGlucoseReadingStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deletePermanentGlucoseReadingStmt: %w", cerr)
-		}
-	}
-	if q.deletePermanentGlucoseReadingsByTypeStmt != nil {
-		if cerr := q.deletePermanentGlucoseReadingsByTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deletePermanentGlucoseReadingsByTypeStmt: %w", cerr)
 		}
 	}
 	if q.getActivityStmt != nil {
@@ -299,24 +535,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
 		}
 	}
-	if q.getBolusStmt != nil {
-		if cerr := q.getBolusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBolusStmt: %w", cerr)
+	if q.getActivityPresetStmt != nil {
+		if cerr := q.getActivityPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getActivityPresetStmt: %w", cerr)
 		}
 	}
-	if q.getCarbStmt != nil {
-		if cerr := q.getCarbStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getCarbStmt: %w", cerr)
+	if q.getCGMStateStmt != nil {
+		if cerr := q.getCGMStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCGMStateStmt: %w", cerr)
 		}
 	}
-	if q.getDeviceStatusStmt != nil {
-		if cerr := q.getDeviceStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getDeviceStatusStmt: %w", cerr)
+	if q.getDeviceStateStmt != nil {
+		if cerr := q.getDeviceStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDeviceStateStmt: %w", cerr)
 		}
 	}
-	if q.getFoodStmt != nil {
-		if cerr := q.getFoodStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getFoodStmt: %w", cerr)
+	if q.getEventGroupStmt != nil {
+		if cerr := q.getEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.getFoodIntakeStmt != nil {
+		if cerr := q.getFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.getFoodPresetStmt != nil {
+		if cerr := q.getFoodPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getFoodPresetStmt: %w", cerr)
 		}
 	}
 	if q.getGlucoseReadingStmt != nil {
@@ -324,14 +570,39 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getGlucoseReadingStmt: %w", cerr)
 		}
 	}
+	if q.getInsulinDoseStmt != nil {
+		if cerr := q.getInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.getLoopStateStmt != nil {
+		if cerr := q.getLoopStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLoopStateStmt: %w", cerr)
+		}
+	}
 	if q.getNoteStmt != nil {
 		if cerr := q.getNoteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getNoteStmt: %w", cerr)
 		}
 	}
-	if q.getProfileStmt != nil {
-		if cerr := q.getProfileStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getProfileStmt: %w", cerr)
+	if q.getProfilePresetStmt != nil {
+		if cerr := q.getProfilePresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfilePresetStmt: %w", cerr)
+		}
+	}
+	if q.getProfileSwitchStmt != nil {
+		if cerr := q.getProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.getPumpStateStmt != nil {
+		if cerr := q.getPumpStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPumpStateStmt: %w", cerr)
+		}
+	}
+	if q.getSiteSettingsStmt != nil {
+		if cerr := q.getSiteSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteSettingsStmt: %w", cerr)
 		}
 	}
 	if q.getTempBasalStmt != nil {
@@ -344,9 +615,119 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortCarbsStmt != nil {
-		if cerr := q.searchWithDefaultSortCarbsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortCarbsStmt: %w", cerr)
+	if q.hardDeleteActivityStmt != nil {
+		if cerr := q.hardDeleteActivityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteActivityStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteActivityPresetStmt != nil {
+		if cerr := q.hardDeleteActivityPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteActivityPresetStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteCGMStateStmt != nil {
+		if cerr := q.hardDeleteCGMStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteCGMStateStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteDeviceStateStmt != nil {
+		if cerr := q.hardDeleteDeviceStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteDeviceStateStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteEventGroupStmt != nil {
+		if cerr := q.hardDeleteEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteFoodIntakeStmt != nil {
+		if cerr := q.hardDeleteFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteFoodPresetStmt != nil {
+		if cerr := q.hardDeleteFoodPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteFoodPresetStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteGlucoseReadingStmt != nil {
+		if cerr := q.hardDeleteGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteGlucoseReadingStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteGlucoseReadingsByTypeStmt != nil {
+		if cerr := q.hardDeleteGlucoseReadingsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteGlucoseReadingsByTypeStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteInsulinDoseStmt != nil {
+		if cerr := q.hardDeleteInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteLoopStateStmt != nil {
+		if cerr := q.hardDeleteLoopStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteLoopStateStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteNoteStmt != nil {
+		if cerr := q.hardDeleteNoteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteNoteStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteProfilePresetStmt != nil {
+		if cerr := q.hardDeleteProfilePresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteProfilePresetStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteProfileSwitchStmt != nil {
+		if cerr := q.hardDeleteProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.hardDeletePumpStateStmt != nil {
+		if cerr := q.hardDeletePumpStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeletePumpStateStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteTempBasalStmt != nil {
+		if cerr := q.hardDeleteTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteTempBasalStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteTempTargetStmt != nil {
+		if cerr := q.hardDeleteTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteTempTargetStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortActivitiesStmt != nil {
+		if cerr := q.searchWithDefaultSortActivitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortActivitiesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortActivityPresetsStmt != nil {
+		if cerr := q.searchWithDefaultSortActivityPresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortActivityPresetsStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortCGMStatesStmt != nil {
+		if cerr := q.searchWithDefaultSortCGMStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortCGMStatesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortDeviceStatesStmt != nil {
+		if cerr := q.searchWithDefaultSortDeviceStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortDeviceStatesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortFoodIntakesStmt != nil {
+		if cerr := q.searchWithDefaultSortFoodIntakesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortFoodIntakesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortFoodPresetsStmt != nil {
+		if cerr := q.searchWithDefaultSortFoodPresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortFoodPresetsStmt: %w", cerr)
 		}
 	}
 	if q.searchWithDefaultSortGlucoseReadingsStmt != nil {
@@ -354,19 +735,144 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchWithDefaultSortGlucoseReadingsStmt: %w", cerr)
 		}
 	}
-	if q.searchWithNonDefaultSortGlucoseReadingsStmt != nil {
-		if cerr := q.searchWithNonDefaultSortGlucoseReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithNonDefaultSortGlucoseReadingsStmt: %w", cerr)
+	if q.searchWithDefaultSortInsulinDosesStmt != nil {
+		if cerr := q.searchWithDefaultSortInsulinDosesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortInsulinDosesStmt: %w", cerr)
 		}
 	}
-	if q.updateBolusStmt != nil {
-		if cerr := q.updateBolusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateBolusStmt: %w", cerr)
+	if q.searchWithDefaultSortLoopStatesStmt != nil {
+		if cerr := q.searchWithDefaultSortLoopStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortLoopStatesStmt: %w", cerr)
 		}
 	}
-	if q.updateCarbStmt != nil {
-		if cerr := q.updateCarbStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateCarbStmt: %w", cerr)
+	if q.searchWithDefaultSortNotesStmt != nil {
+		if cerr := q.searchWithDefaultSortNotesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortNotesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortProfilePresetsStmt != nil {
+		if cerr := q.searchWithDefaultSortProfilePresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortProfilePresetsStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortProfileSwitchesStmt != nil {
+		if cerr := q.searchWithDefaultSortProfileSwitchesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortProfileSwitchesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortPumpStatesStmt != nil {
+		if cerr := q.searchWithDefaultSortPumpStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortPumpStatesStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortTempBasalsStmt != nil {
+		if cerr := q.searchWithDefaultSortTempBasalsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortTempBasalsStmt: %w", cerr)
+		}
+	}
+	if q.searchWithDefaultSortTempTargetsStmt != nil {
+		if cerr := q.searchWithDefaultSortTempTargetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchWithDefaultSortTempTargetsStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteActivityStmt != nil {
+		if cerr := q.softDeleteActivityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteActivityStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteCGMStateStmt != nil {
+		if cerr := q.softDeleteCGMStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteCGMStateStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteDeviceStateStmt != nil {
+		if cerr := q.softDeleteDeviceStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteDeviceStateStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteEventGroupStmt != nil {
+		if cerr := q.softDeleteEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteFoodIntakeStmt != nil {
+		if cerr := q.softDeleteFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteGlucoseReadingStmt != nil {
+		if cerr := q.softDeleteGlucoseReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteGlucoseReadingStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteInsulinDoseStmt != nil {
+		if cerr := q.softDeleteInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteLoopStateStmt != nil {
+		if cerr := q.softDeleteLoopStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteLoopStateStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteNoteStmt != nil {
+		if cerr := q.softDeleteNoteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteNoteStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteProfileSwitchStmt != nil {
+		if cerr := q.softDeleteProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.softDeletePumpStateStmt != nil {
+		if cerr := q.softDeletePumpStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeletePumpStateStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteTempBasalStmt != nil {
+		if cerr := q.softDeleteTempBasalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteTempBasalStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteTempTargetStmt != nil {
+		if cerr := q.softDeleteTempTargetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteTempTargetStmt: %w", cerr)
+		}
+	}
+	if q.updateActivityStmt != nil {
+		if cerr := q.updateActivityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
+		}
+	}
+	if q.updateActivityPresetStmt != nil {
+		if cerr := q.updateActivityPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateActivityPresetStmt: %w", cerr)
+		}
+	}
+	if q.updateCGMStateStmt != nil {
+		if cerr := q.updateCGMStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateCGMStateStmt: %w", cerr)
+		}
+	}
+	if q.updateDeviceStateStmt != nil {
+		if cerr := q.updateDeviceStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateDeviceStateStmt: %w", cerr)
+		}
+	}
+	if q.updateEventGroupStmt != nil {
+		if cerr := q.updateEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.updateFoodIntakeStmt != nil {
+		if cerr := q.updateFoodIntakeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.updateFoodPresetStmt != nil {
+		if cerr := q.updateFoodPresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateFoodPresetStmt: %w", cerr)
 		}
 	}
 	if q.updateGlucoseReadingStmt != nil {
@@ -374,9 +880,39 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateGlucoseReadingStmt: %w", cerr)
 		}
 	}
+	if q.updateInsulinDoseStmt != nil {
+		if cerr := q.updateInsulinDoseStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.updateLoopStateStmt != nil {
+		if cerr := q.updateLoopStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateLoopStateStmt: %w", cerr)
+		}
+	}
 	if q.updateNoteStmt != nil {
 		if cerr := q.updateNoteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateNoteStmt: %w", cerr)
+		}
+	}
+	if q.updateProfilePresetStmt != nil {
+		if cerr := q.updateProfilePresetStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateProfilePresetStmt: %w", cerr)
+		}
+	}
+	if q.updateProfileSwitchStmt != nil {
+		if cerr := q.updateProfileSwitchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateProfileSwitchStmt: %w", cerr)
+		}
+	}
+	if q.updatePumpStateStmt != nil {
+		if cerr := q.updatePumpStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updatePumpStateStmt: %w", cerr)
+		}
+	}
+	if q.updateSiteSettingsStmt != nil {
+		if cerr := q.updateSiteSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteSettingsStmt: %w", cerr)
 		}
 	}
 	if q.updateTempBasalStmt != nil {
@@ -426,53 +962,120 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                          DBTX
-	tx                                          *sql.Tx
-	allActivitiesStmt                           *sql.Stmt
-	allBolusesStmt                              *sql.Stmt
-	allCarbsStmt                                *sql.Stmt
-	allDeviceStatusStmt                         *sql.Stmt
-	allEventsStmt                               *sql.Stmt
-	allFoodsStmt                                *sql.Stmt
-	allGlucoseReadingsStmt                      *sql.Stmt
-	allNotesStmt                                *sql.Stmt
-	allProfilesStmt                             *sql.Stmt
-	allTempBasalsStmt                           *sql.Stmt
-	allTempTargetsStmt                          *sql.Stmt
-	createActivityStmt                          *sql.Stmt
-	createBolusStmt                             *sql.Stmt
-	createCarbStmt                              *sql.Stmt
-	createDeviceStatusStmt                      *sql.Stmt
-	createEventStmt                             *sql.Stmt
-	createFoodStmt                              *sql.Stmt
-	createGlucoseReadingStmt                    *sql.Stmt
-	createNoteStmt                              *sql.Stmt
-	createProfileStmt                           *sql.Stmt
-	createTempBasalStmt                         *sql.Stmt
-	createTempTargetStmt                        *sql.Stmt
-	deleteGlucoseReadingStmt                    *sql.Stmt
-	deleteGlucoseReadingsByTypeStmt             *sql.Stmt
-	deletePermanentGlucoseReadingStmt           *sql.Stmt
-	deletePermanentGlucoseReadingsByTypeStmt    *sql.Stmt
-	getActivityStmt                             *sql.Stmt
-	getBolusStmt                                *sql.Stmt
-	getCarbStmt                                 *sql.Stmt
-	getDeviceStatusStmt                         *sql.Stmt
-	getFoodStmt                                 *sql.Stmt
-	getGlucoseReadingStmt                       *sql.Stmt
-	getNoteStmt                                 *sql.Stmt
-	getProfileStmt                              *sql.Stmt
-	getTempBasalStmt                            *sql.Stmt
-	getTempTargetStmt                           *sql.Stmt
-	searchWithDefaultSortCarbsStmt              *sql.Stmt
-	searchWithDefaultSortGlucoseReadingsStmt    *sql.Stmt
-	searchWithNonDefaultSortGlucoseReadingsStmt *sql.Stmt
-	updateBolusStmt                             *sql.Stmt
-	updateCarbStmt                              *sql.Stmt
-	updateGlucoseReadingStmt                    *sql.Stmt
-	updateNoteStmt                              *sql.Stmt
-	updateTempBasalStmt                         *sql.Stmt
-	updateTempTargetStmt                        *sql.Stmt
+	db                                       DBTX
+	tx                                       *sql.Tx
+	allActivitiesStmt                        *sql.Stmt
+	allActivityPresetsStmt                   *sql.Stmt
+	allCGMStatesStmt                         *sql.Stmt
+	allDeviceStatesStmt                      *sql.Stmt
+	allEventGroupsStmt                       *sql.Stmt
+	allFoodIntakesStmt                       *sql.Stmt
+	allFoodPresetsStmt                       *sql.Stmt
+	allGlucoseReadingsStmt                   *sql.Stmt
+	allInsulinDosesStmt                      *sql.Stmt
+	allLoopStatesStmt                        *sql.Stmt
+	allNotesStmt                             *sql.Stmt
+	allProfilePresetsStmt                    *sql.Stmt
+	allProfileSwitchesStmt                   *sql.Stmt
+	allPumpStatesStmt                        *sql.Stmt
+	allTempBasalsStmt                        *sql.Stmt
+	allTempTargetsStmt                       *sql.Stmt
+	createActivityStmt                       *sql.Stmt
+	createActivityPresetStmt                 *sql.Stmt
+	createCGMStateStmt                       *sql.Stmt
+	createDeviceStateStmt                    *sql.Stmt
+	createEventGroupStmt                     *sql.Stmt
+	createFoodIntakeStmt                     *sql.Stmt
+	createFoodPresetStmt                     *sql.Stmt
+	createGlucoseReadingStmt                 *sql.Stmt
+	createInsulinDoseStmt                    *sql.Stmt
+	createLoopStateStmt                      *sql.Stmt
+	createNoteStmt                           *sql.Stmt
+	createProfilePresetStmt                  *sql.Stmt
+	createProfileSwitchStmt                  *sql.Stmt
+	createPumpStateStmt                      *sql.Stmt
+	createTempBasalStmt                      *sql.Stmt
+	createTempTargetStmt                     *sql.Stmt
+	deleteGlucoseReadingsByTypeStmt          *sql.Stmt
+	getActivityStmt                          *sql.Stmt
+	getActivityPresetStmt                    *sql.Stmt
+	getCGMStateStmt                          *sql.Stmt
+	getDeviceStateStmt                       *sql.Stmt
+	getEventGroupStmt                        *sql.Stmt
+	getFoodIntakeStmt                        *sql.Stmt
+	getFoodPresetStmt                        *sql.Stmt
+	getGlucoseReadingStmt                    *sql.Stmt
+	getInsulinDoseStmt                       *sql.Stmt
+	getLoopStateStmt                         *sql.Stmt
+	getNoteStmt                              *sql.Stmt
+	getProfilePresetStmt                     *sql.Stmt
+	getProfileSwitchStmt                     *sql.Stmt
+	getPumpStateStmt                         *sql.Stmt
+	getSiteSettingsStmt                      *sql.Stmt
+	getTempBasalStmt                         *sql.Stmt
+	getTempTargetStmt                        *sql.Stmt
+	hardDeleteActivityStmt                   *sql.Stmt
+	hardDeleteActivityPresetStmt             *sql.Stmt
+	hardDeleteCGMStateStmt                   *sql.Stmt
+	hardDeleteDeviceStateStmt                *sql.Stmt
+	hardDeleteEventGroupStmt                 *sql.Stmt
+	hardDeleteFoodIntakeStmt                 *sql.Stmt
+	hardDeleteFoodPresetStmt                 *sql.Stmt
+	hardDeleteGlucoseReadingStmt             *sql.Stmt
+	hardDeleteGlucoseReadingsByTypeStmt      *sql.Stmt
+	hardDeleteInsulinDoseStmt                *sql.Stmt
+	hardDeleteLoopStateStmt                  *sql.Stmt
+	hardDeleteNoteStmt                       *sql.Stmt
+	hardDeleteProfilePresetStmt              *sql.Stmt
+	hardDeleteProfileSwitchStmt              *sql.Stmt
+	hardDeletePumpStateStmt                  *sql.Stmt
+	hardDeleteTempBasalStmt                  *sql.Stmt
+	hardDeleteTempTargetStmt                 *sql.Stmt
+	searchWithDefaultSortActivitiesStmt      *sql.Stmt
+	searchWithDefaultSortActivityPresetsStmt *sql.Stmt
+	searchWithDefaultSortCGMStatesStmt       *sql.Stmt
+	searchWithDefaultSortDeviceStatesStmt    *sql.Stmt
+	searchWithDefaultSortFoodIntakesStmt     *sql.Stmt
+	searchWithDefaultSortFoodPresetsStmt     *sql.Stmt
+	searchWithDefaultSortGlucoseReadingsStmt *sql.Stmt
+	searchWithDefaultSortInsulinDosesStmt    *sql.Stmt
+	searchWithDefaultSortLoopStatesStmt      *sql.Stmt
+	searchWithDefaultSortNotesStmt           *sql.Stmt
+	searchWithDefaultSortProfilePresetsStmt  *sql.Stmt
+	searchWithDefaultSortProfileSwitchesStmt *sql.Stmt
+	searchWithDefaultSortPumpStatesStmt      *sql.Stmt
+	searchWithDefaultSortTempBasalsStmt      *sql.Stmt
+	searchWithDefaultSortTempTargetsStmt     *sql.Stmt
+	softDeleteActivityStmt                   *sql.Stmt
+	softDeleteCGMStateStmt                   *sql.Stmt
+	softDeleteDeviceStateStmt                *sql.Stmt
+	softDeleteEventGroupStmt                 *sql.Stmt
+	softDeleteFoodIntakeStmt                 *sql.Stmt
+	softDeleteGlucoseReadingStmt             *sql.Stmt
+	softDeleteInsulinDoseStmt                *sql.Stmt
+	softDeleteLoopStateStmt                  *sql.Stmt
+	softDeleteNoteStmt                       *sql.Stmt
+	softDeleteProfileSwitchStmt              *sql.Stmt
+	softDeletePumpStateStmt                  *sql.Stmt
+	softDeleteTempBasalStmt                  *sql.Stmt
+	softDeleteTempTargetStmt                 *sql.Stmt
+	updateActivityStmt                       *sql.Stmt
+	updateActivityPresetStmt                 *sql.Stmt
+	updateCGMStateStmt                       *sql.Stmt
+	updateDeviceStateStmt                    *sql.Stmt
+	updateEventGroupStmt                     *sql.Stmt
+	updateFoodIntakeStmt                     *sql.Stmt
+	updateFoodPresetStmt                     *sql.Stmt
+	updateGlucoseReadingStmt                 *sql.Stmt
+	updateInsulinDoseStmt                    *sql.Stmt
+	updateLoopStateStmt                      *sql.Stmt
+	updateNoteStmt                           *sql.Stmt
+	updateProfilePresetStmt                  *sql.Stmt
+	updateProfileSwitchStmt                  *sql.Stmt
+	updatePumpStateStmt                      *sql.Stmt
+	updateSiteSettingsStmt                   *sql.Stmt
+	updateTempBasalStmt                      *sql.Stmt
+	updateTempTargetStmt                     *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -480,49 +1083,116 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                                       tx,
 		tx:                                       tx,
 		allActivitiesStmt:                        q.allActivitiesStmt,
-		allBolusesStmt:                           q.allBolusesStmt,
-		allCarbsStmt:                             q.allCarbsStmt,
-		allDeviceStatusStmt:                      q.allDeviceStatusStmt,
-		allEventsStmt:                            q.allEventsStmt,
-		allFoodsStmt:                             q.allFoodsStmt,
+		allActivityPresetsStmt:                   q.allActivityPresetsStmt,
+		allCGMStatesStmt:                         q.allCGMStatesStmt,
+		allDeviceStatesStmt:                      q.allDeviceStatesStmt,
+		allEventGroupsStmt:                       q.allEventGroupsStmt,
+		allFoodIntakesStmt:                       q.allFoodIntakesStmt,
+		allFoodPresetsStmt:                       q.allFoodPresetsStmt,
 		allGlucoseReadingsStmt:                   q.allGlucoseReadingsStmt,
+		allInsulinDosesStmt:                      q.allInsulinDosesStmt,
+		allLoopStatesStmt:                        q.allLoopStatesStmt,
 		allNotesStmt:                             q.allNotesStmt,
-		allProfilesStmt:                          q.allProfilesStmt,
+		allProfilePresetsStmt:                    q.allProfilePresetsStmt,
+		allProfileSwitchesStmt:                   q.allProfileSwitchesStmt,
+		allPumpStatesStmt:                        q.allPumpStatesStmt,
 		allTempBasalsStmt:                        q.allTempBasalsStmt,
 		allTempTargetsStmt:                       q.allTempTargetsStmt,
 		createActivityStmt:                       q.createActivityStmt,
-		createBolusStmt:                          q.createBolusStmt,
-		createCarbStmt:                           q.createCarbStmt,
-		createDeviceStatusStmt:                   q.createDeviceStatusStmt,
-		createEventStmt:                          q.createEventStmt,
-		createFoodStmt:                           q.createFoodStmt,
+		createActivityPresetStmt:                 q.createActivityPresetStmt,
+		createCGMStateStmt:                       q.createCGMStateStmt,
+		createDeviceStateStmt:                    q.createDeviceStateStmt,
+		createEventGroupStmt:                     q.createEventGroupStmt,
+		createFoodIntakeStmt:                     q.createFoodIntakeStmt,
+		createFoodPresetStmt:                     q.createFoodPresetStmt,
 		createGlucoseReadingStmt:                 q.createGlucoseReadingStmt,
+		createInsulinDoseStmt:                    q.createInsulinDoseStmt,
+		createLoopStateStmt:                      q.createLoopStateStmt,
 		createNoteStmt:                           q.createNoteStmt,
-		createProfileStmt:                        q.createProfileStmt,
+		createProfilePresetStmt:                  q.createProfilePresetStmt,
+		createProfileSwitchStmt:                  q.createProfileSwitchStmt,
+		createPumpStateStmt:                      q.createPumpStateStmt,
 		createTempBasalStmt:                      q.createTempBasalStmt,
 		createTempTargetStmt:                     q.createTempTargetStmt,
-		deleteGlucoseReadingStmt:                 q.deleteGlucoseReadingStmt,
 		deleteGlucoseReadingsByTypeStmt:          q.deleteGlucoseReadingsByTypeStmt,
-		deletePermanentGlucoseReadingStmt:        q.deletePermanentGlucoseReadingStmt,
-		deletePermanentGlucoseReadingsByTypeStmt: q.deletePermanentGlucoseReadingsByTypeStmt,
 		getActivityStmt:                          q.getActivityStmt,
-		getBolusStmt:                             q.getBolusStmt,
-		getCarbStmt:                              q.getCarbStmt,
-		getDeviceStatusStmt:                      q.getDeviceStatusStmt,
-		getFoodStmt:                              q.getFoodStmt,
+		getActivityPresetStmt:                    q.getActivityPresetStmt,
+		getCGMStateStmt:                          q.getCGMStateStmt,
+		getDeviceStateStmt:                       q.getDeviceStateStmt,
+		getEventGroupStmt:                        q.getEventGroupStmt,
+		getFoodIntakeStmt:                        q.getFoodIntakeStmt,
+		getFoodPresetStmt:                        q.getFoodPresetStmt,
 		getGlucoseReadingStmt:                    q.getGlucoseReadingStmt,
+		getInsulinDoseStmt:                       q.getInsulinDoseStmt,
+		getLoopStateStmt:                         q.getLoopStateStmt,
 		getNoteStmt:                              q.getNoteStmt,
-		getProfileStmt:                           q.getProfileStmt,
+		getProfilePresetStmt:                     q.getProfilePresetStmt,
+		getProfileSwitchStmt:                     q.getProfileSwitchStmt,
+		getPumpStateStmt:                         q.getPumpStateStmt,
+		getSiteSettingsStmt:                      q.getSiteSettingsStmt,
 		getTempBasalStmt:                         q.getTempBasalStmt,
 		getTempTargetStmt:                        q.getTempTargetStmt,
-		searchWithDefaultSortCarbsStmt:           q.searchWithDefaultSortCarbsStmt,
+		hardDeleteActivityStmt:                   q.hardDeleteActivityStmt,
+		hardDeleteActivityPresetStmt:             q.hardDeleteActivityPresetStmt,
+		hardDeleteCGMStateStmt:                   q.hardDeleteCGMStateStmt,
+		hardDeleteDeviceStateStmt:                q.hardDeleteDeviceStateStmt,
+		hardDeleteEventGroupStmt:                 q.hardDeleteEventGroupStmt,
+		hardDeleteFoodIntakeStmt:                 q.hardDeleteFoodIntakeStmt,
+		hardDeleteFoodPresetStmt:                 q.hardDeleteFoodPresetStmt,
+		hardDeleteGlucoseReadingStmt:             q.hardDeleteGlucoseReadingStmt,
+		hardDeleteGlucoseReadingsByTypeStmt:      q.hardDeleteGlucoseReadingsByTypeStmt,
+		hardDeleteInsulinDoseStmt:                q.hardDeleteInsulinDoseStmt,
+		hardDeleteLoopStateStmt:                  q.hardDeleteLoopStateStmt,
+		hardDeleteNoteStmt:                       q.hardDeleteNoteStmt,
+		hardDeleteProfilePresetStmt:              q.hardDeleteProfilePresetStmt,
+		hardDeleteProfileSwitchStmt:              q.hardDeleteProfileSwitchStmt,
+		hardDeletePumpStateStmt:                  q.hardDeletePumpStateStmt,
+		hardDeleteTempBasalStmt:                  q.hardDeleteTempBasalStmt,
+		hardDeleteTempTargetStmt:                 q.hardDeleteTempTargetStmt,
+		searchWithDefaultSortActivitiesStmt:      q.searchWithDefaultSortActivitiesStmt,
+		searchWithDefaultSortActivityPresetsStmt: q.searchWithDefaultSortActivityPresetsStmt,
+		searchWithDefaultSortCGMStatesStmt:       q.searchWithDefaultSortCGMStatesStmt,
+		searchWithDefaultSortDeviceStatesStmt:    q.searchWithDefaultSortDeviceStatesStmt,
+		searchWithDefaultSortFoodIntakesStmt:     q.searchWithDefaultSortFoodIntakesStmt,
+		searchWithDefaultSortFoodPresetsStmt:     q.searchWithDefaultSortFoodPresetsStmt,
 		searchWithDefaultSortGlucoseReadingsStmt: q.searchWithDefaultSortGlucoseReadingsStmt,
-		searchWithNonDefaultSortGlucoseReadingsStmt: q.searchWithNonDefaultSortGlucoseReadingsStmt,
-		updateBolusStmt:          q.updateBolusStmt,
-		updateCarbStmt:           q.updateCarbStmt,
-		updateGlucoseReadingStmt: q.updateGlucoseReadingStmt,
-		updateNoteStmt:           q.updateNoteStmt,
-		updateTempBasalStmt:      q.updateTempBasalStmt,
-		updateTempTargetStmt:     q.updateTempTargetStmt,
+		searchWithDefaultSortInsulinDosesStmt:    q.searchWithDefaultSortInsulinDosesStmt,
+		searchWithDefaultSortLoopStatesStmt:      q.searchWithDefaultSortLoopStatesStmt,
+		searchWithDefaultSortNotesStmt:           q.searchWithDefaultSortNotesStmt,
+		searchWithDefaultSortProfilePresetsStmt:  q.searchWithDefaultSortProfilePresetsStmt,
+		searchWithDefaultSortProfileSwitchesStmt: q.searchWithDefaultSortProfileSwitchesStmt,
+		searchWithDefaultSortPumpStatesStmt:      q.searchWithDefaultSortPumpStatesStmt,
+		searchWithDefaultSortTempBasalsStmt:      q.searchWithDefaultSortTempBasalsStmt,
+		searchWithDefaultSortTempTargetsStmt:     q.searchWithDefaultSortTempTargetsStmt,
+		softDeleteActivityStmt:                   q.softDeleteActivityStmt,
+		softDeleteCGMStateStmt:                   q.softDeleteCGMStateStmt,
+		softDeleteDeviceStateStmt:                q.softDeleteDeviceStateStmt,
+		softDeleteEventGroupStmt:                 q.softDeleteEventGroupStmt,
+		softDeleteFoodIntakeStmt:                 q.softDeleteFoodIntakeStmt,
+		softDeleteGlucoseReadingStmt:             q.softDeleteGlucoseReadingStmt,
+		softDeleteInsulinDoseStmt:                q.softDeleteInsulinDoseStmt,
+		softDeleteLoopStateStmt:                  q.softDeleteLoopStateStmt,
+		softDeleteNoteStmt:                       q.softDeleteNoteStmt,
+		softDeleteProfileSwitchStmt:              q.softDeleteProfileSwitchStmt,
+		softDeletePumpStateStmt:                  q.softDeletePumpStateStmt,
+		softDeleteTempBasalStmt:                  q.softDeleteTempBasalStmt,
+		softDeleteTempTargetStmt:                 q.softDeleteTempTargetStmt,
+		updateActivityStmt:                       q.updateActivityStmt,
+		updateActivityPresetStmt:                 q.updateActivityPresetStmt,
+		updateCGMStateStmt:                       q.updateCGMStateStmt,
+		updateDeviceStateStmt:                    q.updateDeviceStateStmt,
+		updateEventGroupStmt:                     q.updateEventGroupStmt,
+		updateFoodIntakeStmt:                     q.updateFoodIntakeStmt,
+		updateFoodPresetStmt:                     q.updateFoodPresetStmt,
+		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
+		updateInsulinDoseStmt:                    q.updateInsulinDoseStmt,
+		updateLoopStateStmt:                      q.updateLoopStateStmt,
+		updateNoteStmt:                           q.updateNoteStmt,
+		updateProfilePresetStmt:                  q.updateProfilePresetStmt,
+		updateProfileSwitchStmt:                  q.updateProfileSwitchStmt,
+		updatePumpStateStmt:                      q.updatePumpStateStmt,
+		updateSiteSettingsStmt:                   q.updateSiteSettingsStmt,
+		updateTempBasalStmt:                      q.updateTempBasalStmt,
+		updateTempTargetStmt:                     q.updateTempTargetStmt,
 	}
 }

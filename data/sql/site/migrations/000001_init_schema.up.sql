@@ -52,6 +52,7 @@ CREATE TABLE insulin_doses (
 CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     name TEXT CHECK(length(name) <= 64), -- this could be a reference to a preset
+    food_type TEXT CHECK(length(food_type) <= 32), -- this could be like hypo treatment, meal, snack, etc
 
     carbs REAL,
     fat REAL,
@@ -74,6 +75,52 @@ CREATE TABLE food_intakes (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+
+CREATE TABLE activities (
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+
+    name TEXT CHECK(length(name) <= 64),
+    activity_type TEXT CHECK(length(activity_type) <= 32),
+
+    duration_minutes INTEGER,
+    calories INTEGER,
+    steps INTEGER,
+    heart_rate INTEGER,
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
+);
+
+
+CREATE TABLE notes (
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    content TEXT CHECK(length(content) <= 1024) NOT NULL,
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
+);
 
 -- temp_basals, temp_targets and profile_switches are all ranges over a time period so start is occured_at until duration (unless another overide happens)
 -- activity also has a duration
@@ -126,11 +173,9 @@ CREATE TABLE temp_targets (
 -- Profile Switches are tricksy, they have a percent, but the values stored in here already contain that percent
 CREATE TABLE profile_switches (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-
     name TEXT NOT NULL CHECK(length(name) <= 64),
     
     -- Date stuff
-    start INTEGER NOT NULL,
     duration_minutes INTEGER NOT NULL default 0, -- e.g. 0 means it is forever unless another profile overrides it
 
     -- ratios
@@ -156,19 +201,20 @@ CREATE TABLE profile_switches (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+
 -- STATE TABLES (recording states of things over time)
 
 CREATE TABLE pump_states (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    status TEXT CHECK(length(status) <= 32), -- This is the status of the device, like "ok", "error", "warning", etc
-    timestamp INTEGER, -- This is the timestamp of the device status, like the time of the last reading
+    pump_state TEXT CHECK(length(pump_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    pump_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
-    insertion_time INTEGER,
+    pump_insertion_time INTEGER,
 
     pump_reservoir REAL,
 
-    battery_percentage REAL,
-    charging_state TEXT CHECK(length(charging_state) <= 32),
+    pump_battery_percentage REAL,
+    pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -188,10 +234,11 @@ CREATE TABLE pump_states (
 
 CREATE TABLE cgm_states (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    status TEXT CHECK(length(status) <= 32), -- This is the status of the device, like "ok", "error", "warning", etc
-    timestamp INTEGER, -- This is the timestamp of the device status, like the time of the last reading
+    cgm_state TEXT CHECK(length(cgm_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", "insertion" etc
+    cgm_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
-    insertion_time INTEGER,
+    cgm_insertion_time INTEGER,
+
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
@@ -210,8 +257,8 @@ CREATE TABLE cgm_states (
 
 CREATE TABLE loop_states (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    status TEXT CHECK(length(status) <= 32), -- This is the status of the device, like "ok", "error", "warning", etc
-    timestamp INTEGER, -- This is the timestamp of the device status, like the time of the last reading
+    loop_state TEXT CHECK(length(loop_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    loop_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
     iob REAL,
     iob_basal REAL,
@@ -237,11 +284,11 @@ CREATE TABLE loop_states (
 
 CREATE TABLE device_states (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    status TEXT CHECK(length(status) <= 32), -- This is the status of the device, like "ok", "error", "warning", etc
-    timestamp INTEGER, -- This is the timestamp of the device status, like the time of the last reading
+    device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    device_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
-    battery_percentage REAL,
-    charging_state TEXT CHECK(length(charging_state) <= 32),
+    device_battery_percentage REAL,
+    device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -260,57 +307,9 @@ CREATE TABLE device_states (
 );
 
 
-CREATE TABLE activities (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-
-    name TEXT CHECK(length(name) <= 64),
-    activity_type TEXT CHECK(length(activity_type) <= 32),
-
-    duration_minutes INTEGER,
-    calories INTEGER,
-    steps INTEGER,
-    heart_rate INTEGER,
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
-
-CREATE TABLE notes (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    content TEXT CHECK(length(content) <= 1024) NOT NULL,
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
-
 
 -- EventGroup is when multiple events happen together, like a meal with insulin and glucose reading
-
-CREATE TABLE event_group (
+CREATE TABLE event_groups (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     group_type TEXT NOT NULL CHECK(length(group_type) <= 32),
 
@@ -351,21 +350,17 @@ CREATE TABLE event_group (
 CREATE TABLE food_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
-    category TEXT NOT NULL CHECK(length(category) <= 32) DEFAULT 'meal',
+    food_type TEXT NOT NULL CHECK(length(food_type) <= 32),
 
-    carbs REAL NOT NULL DEFAULT 0,
-    fat REAL NOT NULL DEFAULT 0,
-    protein REAL NOT NULL DEFAULT 0,
-    calories REAL NOT NULL DEFAULT 0,
-
-    glycemic_index REAL NOT NULL DEFAULT 100,
-    onset_minutes REAL NOT NULL DEFAULT 20,
-    absorption_minutes REAL NOT NULL DEFAULT 120,
+    carbs REAL,
+    fat REAL,
+    protein REAL,
+    fibre REAL,
+    calories REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
 
-    deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -378,12 +373,17 @@ CREATE TABLE food_presets (
 CREATE TABLE activity_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
-    category TEXT NOT NULL CHECK(length(category) <= 32) DEFAULT 'exercise',
 
+    activity_type TEXT CHECK(length(activity_type) <= 32),
+
+    duration_minutes INTEGER,
+    calories INTEGER,
+    steps INTEGER,
+    heart_rate INTEGER,
+    
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
 
-    deleted_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -398,7 +398,6 @@ CREATE TABLE profile_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
 
-
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- { [1,2] },
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
     basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {[1,2]},
@@ -407,8 +406,6 @@ CREATE TABLE profile_presets (
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
 
-    deleted_at INTEGER,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     

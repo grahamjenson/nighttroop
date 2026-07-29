@@ -15,7 +15,7 @@ INSERT INTO temp_basals (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -72,10 +72,11 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateTempBasal :one
 UPDATE temp_basals SET
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     absolute = COALESCE(sqlc.narg('Absolute'), absolute),
     percentage = COALESCE(sqlc.narg('Percentage'), percentage),
+
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
