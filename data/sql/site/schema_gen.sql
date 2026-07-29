@@ -24,29 +24,6 @@ CREATE TABLE activities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-CREATE TABLE activity_presets (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
-
-    activity_type TEXT CHECK(length(activity_type) <= 32),
-
-    duration_minutes INTEGER,
-    calories INTEGER,
-    steps INTEGER,
-    heart_rate INTEGER,
-    
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
-
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
 CREATE TABLE cgm_states (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     cgm_state TEXT CHECK(length(cgm_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", "insertion" etc

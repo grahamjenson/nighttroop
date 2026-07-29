@@ -27,9 +27,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allActivitiesStmt, err = db.PrepareContext(ctx, allActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllActivities: %w", err)
 	}
-	if q.allActivityPresetsStmt, err = db.PrepareContext(ctx, allActivityPresets); err != nil {
-		return nil, fmt.Errorf("error preparing query AllActivityPresets: %w", err)
-	}
 	if q.allCGMStatesStmt, err = db.PrepareContext(ctx, allCGMStates); err != nil {
 		return nil, fmt.Errorf("error preparing query AllCGMStates: %w", err)
 	}
@@ -74,9 +71,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
-	}
-	if q.createActivityPresetStmt, err = db.PrepareContext(ctx, createActivityPreset); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateActivityPreset: %w", err)
 	}
 	if q.createCGMStateStmt, err = db.PrepareContext(ctx, createCGMState); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateCGMState: %w", err)
@@ -126,9 +120,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
-	if q.getActivityPresetStmt, err = db.PrepareContext(ctx, getActivityPreset); err != nil {
-		return nil, fmt.Errorf("error preparing query GetActivityPreset: %w", err)
-	}
 	if q.getCGMStateStmt, err = db.PrepareContext(ctx, getCGMState); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCGMState: %w", err)
 	}
@@ -177,9 +168,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteActivityStmt, err = db.PrepareContext(ctx, hardDeleteActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteActivity: %w", err)
 	}
-	if q.hardDeleteActivityPresetStmt, err = db.PrepareContext(ctx, hardDeleteActivityPreset); err != nil {
-		return nil, fmt.Errorf("error preparing query HardDeleteActivityPreset: %w", err)
-	}
 	if q.hardDeleteCGMStateStmt, err = db.PrepareContext(ctx, hardDeleteCGMState); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteCGMState: %w", err)
 	}
@@ -225,53 +213,50 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteTempTargetStmt, err = db.PrepareContext(ctx, hardDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteTempTarget: %w", err)
 	}
-	if q.searchWithDefaultSortActivitiesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortActivities); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortActivities: %w", err)
+	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
 	}
-	if q.searchWithDefaultSortActivityPresetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortActivityPresets); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortActivityPresets: %w", err)
+	if q.searchCGMStatesStmt, err = db.PrepareContext(ctx, searchCGMStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchCGMStates: %w", err)
 	}
-	if q.searchWithDefaultSortCGMStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortCGMStates); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortCGMStates: %w", err)
+	if q.searchDeviceStatesStmt, err = db.PrepareContext(ctx, searchDeviceStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchDeviceStates: %w", err)
 	}
-	if q.searchWithDefaultSortDeviceStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortDeviceStates); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortDeviceStates: %w", err)
+	if q.searchEventGroupsStmt, err = db.PrepareContext(ctx, searchEventGroups); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchEventGroups: %w", err)
 	}
-	if q.searchWithDefaultSortEventGroupsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortEventGroups); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortEventGroups: %w", err)
+	if q.searchFoodIntakesStmt, err = db.PrepareContext(ctx, searchFoodIntakes); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchFoodIntakes: %w", err)
 	}
-	if q.searchWithDefaultSortFoodIntakesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortFoodIntakes); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortFoodIntakes: %w", err)
+	if q.searchFoodPresetsStmt, err = db.PrepareContext(ctx, searchFoodPresets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchFoodPresets: %w", err)
 	}
-	if q.searchWithDefaultSortFoodPresetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortFoodPresets); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortFoodPresets: %w", err)
+	if q.searchGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchGlucoseReadings: %w", err)
 	}
-	if q.searchWithDefaultSortGlucoseReadingsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortGlucoseReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortGlucoseReadings: %w", err)
+	if q.searchInsulinDosesStmt, err = db.PrepareContext(ctx, searchInsulinDoses); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchInsulinDoses: %w", err)
 	}
-	if q.searchWithDefaultSortInsulinDosesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortInsulinDoses); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortInsulinDoses: %w", err)
+	if q.searchLoopStatesStmt, err = db.PrepareContext(ctx, searchLoopStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchLoopStates: %w", err)
 	}
-	if q.searchWithDefaultSortLoopStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortLoopStates); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortLoopStates: %w", err)
+	if q.searchNotesStmt, err = db.PrepareContext(ctx, searchNotes); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchNotes: %w", err)
 	}
-	if q.searchWithDefaultSortNotesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortNotes); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortNotes: %w", err)
+	if q.searchProfilePresetsStmt, err = db.PrepareContext(ctx, searchProfilePresets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchProfilePresets: %w", err)
 	}
-	if q.searchWithDefaultSortProfilePresetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortProfilePresets); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortProfilePresets: %w", err)
+	if q.searchProfileSwitchesStmt, err = db.PrepareContext(ctx, searchProfileSwitches); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchProfileSwitches: %w", err)
 	}
-	if q.searchWithDefaultSortProfileSwitchesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortProfileSwitches); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortProfileSwitches: %w", err)
+	if q.searchPumpStatesStmt, err = db.PrepareContext(ctx, searchPumpStates); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchPumpStates: %w", err)
 	}
-	if q.searchWithDefaultSortPumpStatesStmt, err = db.PrepareContext(ctx, searchWithDefaultSortPumpStates); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortPumpStates: %w", err)
+	if q.searchTempBasalsStmt, err = db.PrepareContext(ctx, searchTempBasals); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchTempBasals: %w", err)
 	}
-	if q.searchWithDefaultSortTempBasalsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortTempBasals); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortTempBasals: %w", err)
-	}
-	if q.searchWithDefaultSortTempTargetsStmt, err = db.PrepareContext(ctx, searchWithDefaultSortTempTargets); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchWithDefaultSortTempTargets: %w", err)
+	if q.searchTempTargetsStmt, err = db.PrepareContext(ctx, searchTempTargets); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchTempTargets: %w", err)
 	}
 	if q.softDeleteActivityStmt, err = db.PrepareContext(ctx, softDeleteActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteActivity: %w", err)
@@ -314,9 +299,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
-	}
-	if q.updateActivityPresetStmt, err = db.PrepareContext(ctx, updateActivityPreset); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateActivityPreset: %w", err)
 	}
 	if q.updateCGMStateStmt, err = db.PrepareContext(ctx, updateCGMState); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateCGMState: %w", err)
@@ -371,11 +353,6 @@ func (q *Queries) Close() error {
 	if q.allActivitiesStmt != nil {
 		if cerr := q.allActivitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allActivitiesStmt: %w", cerr)
-		}
-	}
-	if q.allActivityPresetsStmt != nil {
-		if cerr := q.allActivityPresetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allActivityPresetsStmt: %w", cerr)
 		}
 	}
 	if q.allCGMStatesStmt != nil {
@@ -451,11 +428,6 @@ func (q *Queries) Close() error {
 	if q.createActivityStmt != nil {
 		if cerr := q.createActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createActivityStmt: %w", cerr)
-		}
-	}
-	if q.createActivityPresetStmt != nil {
-		if cerr := q.createActivityPresetStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createActivityPresetStmt: %w", cerr)
 		}
 	}
 	if q.createCGMStateStmt != nil {
@@ -538,11 +510,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
 		}
 	}
-	if q.getActivityPresetStmt != nil {
-		if cerr := q.getActivityPresetStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getActivityPresetStmt: %w", cerr)
-		}
-	}
 	if q.getCGMStateStmt != nil {
 		if cerr := q.getCGMStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getCGMStateStmt: %w", cerr)
@@ -623,11 +590,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteActivityStmt: %w", cerr)
 		}
 	}
-	if q.hardDeleteActivityPresetStmt != nil {
-		if cerr := q.hardDeleteActivityPresetStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing hardDeleteActivityPresetStmt: %w", cerr)
-		}
-	}
 	if q.hardDeleteCGMStateStmt != nil {
 		if cerr := q.hardDeleteCGMStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteCGMStateStmt: %w", cerr)
@@ -703,84 +665,79 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortActivitiesStmt != nil {
-		if cerr := q.searchWithDefaultSortActivitiesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortActivitiesStmt: %w", cerr)
+	if q.searchActivitiesStmt != nil {
+		if cerr := q.searchActivitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchActivitiesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortActivityPresetsStmt != nil {
-		if cerr := q.searchWithDefaultSortActivityPresetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortActivityPresetsStmt: %w", cerr)
+	if q.searchCGMStatesStmt != nil {
+		if cerr := q.searchCGMStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchCGMStatesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortCGMStatesStmt != nil {
-		if cerr := q.searchWithDefaultSortCGMStatesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortCGMStatesStmt: %w", cerr)
+	if q.searchDeviceStatesStmt != nil {
+		if cerr := q.searchDeviceStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchDeviceStatesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortDeviceStatesStmt != nil {
-		if cerr := q.searchWithDefaultSortDeviceStatesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortDeviceStatesStmt: %w", cerr)
+	if q.searchEventGroupsStmt != nil {
+		if cerr := q.searchEventGroupsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchEventGroupsStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortEventGroupsStmt != nil {
-		if cerr := q.searchWithDefaultSortEventGroupsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortEventGroupsStmt: %w", cerr)
+	if q.searchFoodIntakesStmt != nil {
+		if cerr := q.searchFoodIntakesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchFoodIntakesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortFoodIntakesStmt != nil {
-		if cerr := q.searchWithDefaultSortFoodIntakesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortFoodIntakesStmt: %w", cerr)
+	if q.searchFoodPresetsStmt != nil {
+		if cerr := q.searchFoodPresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchFoodPresetsStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortFoodPresetsStmt != nil {
-		if cerr := q.searchWithDefaultSortFoodPresetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortFoodPresetsStmt: %w", cerr)
+	if q.searchGlucoseReadingsStmt != nil {
+		if cerr := q.searchGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchGlucoseReadingsStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortGlucoseReadingsStmt != nil {
-		if cerr := q.searchWithDefaultSortGlucoseReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortGlucoseReadingsStmt: %w", cerr)
+	if q.searchInsulinDosesStmt != nil {
+		if cerr := q.searchInsulinDosesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchInsulinDosesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortInsulinDosesStmt != nil {
-		if cerr := q.searchWithDefaultSortInsulinDosesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortInsulinDosesStmt: %w", cerr)
+	if q.searchLoopStatesStmt != nil {
+		if cerr := q.searchLoopStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchLoopStatesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortLoopStatesStmt != nil {
-		if cerr := q.searchWithDefaultSortLoopStatesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortLoopStatesStmt: %w", cerr)
+	if q.searchNotesStmt != nil {
+		if cerr := q.searchNotesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchNotesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortNotesStmt != nil {
-		if cerr := q.searchWithDefaultSortNotesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortNotesStmt: %w", cerr)
+	if q.searchProfilePresetsStmt != nil {
+		if cerr := q.searchProfilePresetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchProfilePresetsStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortProfilePresetsStmt != nil {
-		if cerr := q.searchWithDefaultSortProfilePresetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortProfilePresetsStmt: %w", cerr)
+	if q.searchProfileSwitchesStmt != nil {
+		if cerr := q.searchProfileSwitchesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchProfileSwitchesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortProfileSwitchesStmt != nil {
-		if cerr := q.searchWithDefaultSortProfileSwitchesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortProfileSwitchesStmt: %w", cerr)
+	if q.searchPumpStatesStmt != nil {
+		if cerr := q.searchPumpStatesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchPumpStatesStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortPumpStatesStmt != nil {
-		if cerr := q.searchWithDefaultSortPumpStatesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortPumpStatesStmt: %w", cerr)
+	if q.searchTempBasalsStmt != nil {
+		if cerr := q.searchTempBasalsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchTempBasalsStmt: %w", cerr)
 		}
 	}
-	if q.searchWithDefaultSortTempBasalsStmt != nil {
-		if cerr := q.searchWithDefaultSortTempBasalsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortTempBasalsStmt: %w", cerr)
-		}
-	}
-	if q.searchWithDefaultSortTempTargetsStmt != nil {
-		if cerr := q.searchWithDefaultSortTempTargetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchWithDefaultSortTempTargetsStmt: %w", cerr)
+	if q.searchTempTargetsStmt != nil {
+		if cerr := q.searchTempTargetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchTempTargetsStmt: %w", cerr)
 		}
 	}
 	if q.softDeleteActivityStmt != nil {
@@ -851,11 +808,6 @@ func (q *Queries) Close() error {
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
-		}
-	}
-	if q.updateActivityPresetStmt != nil {
-		if cerr := q.updateActivityPresetStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateActivityPresetStmt: %w", cerr)
 		}
 	}
 	if q.updateCGMStateStmt != nil {
@@ -970,239 +922,227 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                       DBTX
-	tx                                       *sql.Tx
-	allActivitiesStmt                        *sql.Stmt
-	allActivityPresetsStmt                   *sql.Stmt
-	allCGMStatesStmt                         *sql.Stmt
-	allDeviceStatesStmt                      *sql.Stmt
-	allEventGroupsStmt                       *sql.Stmt
-	allFoodIntakesStmt                       *sql.Stmt
-	allFoodPresetsStmt                       *sql.Stmt
-	allGlucoseReadingsStmt                   *sql.Stmt
-	allInsulinDosesStmt                      *sql.Stmt
-	allLoopStatesStmt                        *sql.Stmt
-	allNotesStmt                             *sql.Stmt
-	allProfilePresetsStmt                    *sql.Stmt
-	allProfileSwitchesStmt                   *sql.Stmt
-	allPumpStatesStmt                        *sql.Stmt
-	allTempBasalsStmt                        *sql.Stmt
-	allTempTargetsStmt                       *sql.Stmt
-	createActivityStmt                       *sql.Stmt
-	createActivityPresetStmt                 *sql.Stmt
-	createCGMStateStmt                       *sql.Stmt
-	createDeviceStateStmt                    *sql.Stmt
-	createEventGroupStmt                     *sql.Stmt
-	createFoodIntakeStmt                     *sql.Stmt
-	createFoodPresetStmt                     *sql.Stmt
-	createGlucoseReadingStmt                 *sql.Stmt
-	createInsulinDoseStmt                    *sql.Stmt
-	createLoopStateStmt                      *sql.Stmt
-	createNoteStmt                           *sql.Stmt
-	createProfilePresetStmt                  *sql.Stmt
-	createProfileSwitchStmt                  *sql.Stmt
-	createPumpStateStmt                      *sql.Stmt
-	createTempBasalStmt                      *sql.Stmt
-	createTempTargetStmt                     *sql.Stmt
-	deleteGlucoseReadingsByTypeStmt          *sql.Stmt
-	getActivityStmt                          *sql.Stmt
-	getActivityPresetStmt                    *sql.Stmt
-	getCGMStateStmt                          *sql.Stmt
-	getDeviceStateStmt                       *sql.Stmt
-	getEventGroupStmt                        *sql.Stmt
-	getFoodIntakeStmt                        *sql.Stmt
-	getFoodPresetStmt                        *sql.Stmt
-	getGlucoseReadingStmt                    *sql.Stmt
-	getInsulinDoseStmt                       *sql.Stmt
-	getLoopStateStmt                         *sql.Stmt
-	getNoteStmt                              *sql.Stmt
-	getProfilePresetStmt                     *sql.Stmt
-	getProfileSwitchStmt                     *sql.Stmt
-	getPumpStateStmt                         *sql.Stmt
-	getSiteSettingsStmt                      *sql.Stmt
-	getTempBasalStmt                         *sql.Stmt
-	getTempTargetStmt                        *sql.Stmt
-	hardDeleteActivityStmt                   *sql.Stmt
-	hardDeleteActivityPresetStmt             *sql.Stmt
-	hardDeleteCGMStateStmt                   *sql.Stmt
-	hardDeleteDeviceStateStmt                *sql.Stmt
-	hardDeleteEventGroupStmt                 *sql.Stmt
-	hardDeleteFoodIntakeStmt                 *sql.Stmt
-	hardDeleteFoodPresetStmt                 *sql.Stmt
-	hardDeleteGlucoseReadingStmt             *sql.Stmt
-	hardDeleteGlucoseReadingsByTypeStmt      *sql.Stmt
-	hardDeleteInsulinDoseStmt                *sql.Stmt
-	hardDeleteLoopStateStmt                  *sql.Stmt
-	hardDeleteNoteStmt                       *sql.Stmt
-	hardDeleteProfilePresetStmt              *sql.Stmt
-	hardDeleteProfileSwitchStmt              *sql.Stmt
-	hardDeletePumpStateStmt                  *sql.Stmt
-	hardDeleteTempBasalStmt                  *sql.Stmt
-	hardDeleteTempTargetStmt                 *sql.Stmt
-	searchWithDefaultSortActivitiesStmt      *sql.Stmt
-	searchWithDefaultSortActivityPresetsStmt *sql.Stmt
-	searchWithDefaultSortCGMStatesStmt       *sql.Stmt
-	searchWithDefaultSortDeviceStatesStmt    *sql.Stmt
-	searchWithDefaultSortEventGroupsStmt     *sql.Stmt
-	searchWithDefaultSortFoodIntakesStmt     *sql.Stmt
-	searchWithDefaultSortFoodPresetsStmt     *sql.Stmt
-	searchWithDefaultSortGlucoseReadingsStmt *sql.Stmt
-	searchWithDefaultSortInsulinDosesStmt    *sql.Stmt
-	searchWithDefaultSortLoopStatesStmt      *sql.Stmt
-	searchWithDefaultSortNotesStmt           *sql.Stmt
-	searchWithDefaultSortProfilePresetsStmt  *sql.Stmt
-	searchWithDefaultSortProfileSwitchesStmt *sql.Stmt
-	searchWithDefaultSortPumpStatesStmt      *sql.Stmt
-	searchWithDefaultSortTempBasalsStmt      *sql.Stmt
-	searchWithDefaultSortTempTargetsStmt     *sql.Stmt
-	softDeleteActivityStmt                   *sql.Stmt
-	softDeleteCGMStateStmt                   *sql.Stmt
-	softDeleteDeviceStateStmt                *sql.Stmt
-	softDeleteEventGroupStmt                 *sql.Stmt
-	softDeleteFoodIntakeStmt                 *sql.Stmt
-	softDeleteGlucoseReadingStmt             *sql.Stmt
-	softDeleteInsulinDoseStmt                *sql.Stmt
-	softDeleteLoopStateStmt                  *sql.Stmt
-	softDeleteNoteStmt                       *sql.Stmt
-	softDeleteProfileSwitchStmt              *sql.Stmt
-	softDeletePumpStateStmt                  *sql.Stmt
-	softDeleteTempBasalStmt                  *sql.Stmt
-	softDeleteTempTargetStmt                 *sql.Stmt
-	updateActivityStmt                       *sql.Stmt
-	updateActivityPresetStmt                 *sql.Stmt
-	updateCGMStateStmt                       *sql.Stmt
-	updateDeviceStateStmt                    *sql.Stmt
-	updateEventGroupStmt                     *sql.Stmt
-	updateFoodIntakeStmt                     *sql.Stmt
-	updateFoodPresetStmt                     *sql.Stmt
-	updateGlucoseReadingStmt                 *sql.Stmt
-	updateInsulinDoseStmt                    *sql.Stmt
-	updateLoopStateStmt                      *sql.Stmt
-	updateNoteStmt                           *sql.Stmt
-	updateProfilePresetStmt                  *sql.Stmt
-	updateProfileSwitchStmt                  *sql.Stmt
-	updatePumpStateStmt                      *sql.Stmt
-	updateSiteSettingsStmt                   *sql.Stmt
-	updateTempBasalStmt                      *sql.Stmt
-	updateTempTargetStmt                     *sql.Stmt
+	db                                  DBTX
+	tx                                  *sql.Tx
+	allActivitiesStmt                   *sql.Stmt
+	allCGMStatesStmt                    *sql.Stmt
+	allDeviceStatesStmt                 *sql.Stmt
+	allEventGroupsStmt                  *sql.Stmt
+	allFoodIntakesStmt                  *sql.Stmt
+	allFoodPresetsStmt                  *sql.Stmt
+	allGlucoseReadingsStmt              *sql.Stmt
+	allInsulinDosesStmt                 *sql.Stmt
+	allLoopStatesStmt                   *sql.Stmt
+	allNotesStmt                        *sql.Stmt
+	allProfilePresetsStmt               *sql.Stmt
+	allProfileSwitchesStmt              *sql.Stmt
+	allPumpStatesStmt                   *sql.Stmt
+	allTempBasalsStmt                   *sql.Stmt
+	allTempTargetsStmt                  *sql.Stmt
+	createActivityStmt                  *sql.Stmt
+	createCGMStateStmt                  *sql.Stmt
+	createDeviceStateStmt               *sql.Stmt
+	createEventGroupStmt                *sql.Stmt
+	createFoodIntakeStmt                *sql.Stmt
+	createFoodPresetStmt                *sql.Stmt
+	createGlucoseReadingStmt            *sql.Stmt
+	createInsulinDoseStmt               *sql.Stmt
+	createLoopStateStmt                 *sql.Stmt
+	createNoteStmt                      *sql.Stmt
+	createProfilePresetStmt             *sql.Stmt
+	createProfileSwitchStmt             *sql.Stmt
+	createPumpStateStmt                 *sql.Stmt
+	createTempBasalStmt                 *sql.Stmt
+	createTempTargetStmt                *sql.Stmt
+	deleteGlucoseReadingsByTypeStmt     *sql.Stmt
+	getActivityStmt                     *sql.Stmt
+	getCGMStateStmt                     *sql.Stmt
+	getDeviceStateStmt                  *sql.Stmt
+	getEventGroupStmt                   *sql.Stmt
+	getFoodIntakeStmt                   *sql.Stmt
+	getFoodPresetStmt                   *sql.Stmt
+	getGlucoseReadingStmt               *sql.Stmt
+	getInsulinDoseStmt                  *sql.Stmt
+	getLoopStateStmt                    *sql.Stmt
+	getNoteStmt                         *sql.Stmt
+	getProfilePresetStmt                *sql.Stmt
+	getProfileSwitchStmt                *sql.Stmt
+	getPumpStateStmt                    *sql.Stmt
+	getSiteSettingsStmt                 *sql.Stmt
+	getTempBasalStmt                    *sql.Stmt
+	getTempTargetStmt                   *sql.Stmt
+	hardDeleteActivityStmt              *sql.Stmt
+	hardDeleteCGMStateStmt              *sql.Stmt
+	hardDeleteDeviceStateStmt           *sql.Stmt
+	hardDeleteEventGroupStmt            *sql.Stmt
+	hardDeleteFoodIntakeStmt            *sql.Stmt
+	hardDeleteFoodPresetStmt            *sql.Stmt
+	hardDeleteGlucoseReadingStmt        *sql.Stmt
+	hardDeleteGlucoseReadingsByTypeStmt *sql.Stmt
+	hardDeleteInsulinDoseStmt           *sql.Stmt
+	hardDeleteLoopStateStmt             *sql.Stmt
+	hardDeleteNoteStmt                  *sql.Stmt
+	hardDeleteProfilePresetStmt         *sql.Stmt
+	hardDeleteProfileSwitchStmt         *sql.Stmt
+	hardDeletePumpStateStmt             *sql.Stmt
+	hardDeleteTempBasalStmt             *sql.Stmt
+	hardDeleteTempTargetStmt            *sql.Stmt
+	searchActivitiesStmt                *sql.Stmt
+	searchCGMStatesStmt                 *sql.Stmt
+	searchDeviceStatesStmt              *sql.Stmt
+	searchEventGroupsStmt               *sql.Stmt
+	searchFoodIntakesStmt               *sql.Stmt
+	searchFoodPresetsStmt               *sql.Stmt
+	searchGlucoseReadingsStmt           *sql.Stmt
+	searchInsulinDosesStmt              *sql.Stmt
+	searchLoopStatesStmt                *sql.Stmt
+	searchNotesStmt                     *sql.Stmt
+	searchProfilePresetsStmt            *sql.Stmt
+	searchProfileSwitchesStmt           *sql.Stmt
+	searchPumpStatesStmt                *sql.Stmt
+	searchTempBasalsStmt                *sql.Stmt
+	searchTempTargetsStmt               *sql.Stmt
+	softDeleteActivityStmt              *sql.Stmt
+	softDeleteCGMStateStmt              *sql.Stmt
+	softDeleteDeviceStateStmt           *sql.Stmt
+	softDeleteEventGroupStmt            *sql.Stmt
+	softDeleteFoodIntakeStmt            *sql.Stmt
+	softDeleteGlucoseReadingStmt        *sql.Stmt
+	softDeleteInsulinDoseStmt           *sql.Stmt
+	softDeleteLoopStateStmt             *sql.Stmt
+	softDeleteNoteStmt                  *sql.Stmt
+	softDeleteProfileSwitchStmt         *sql.Stmt
+	softDeletePumpStateStmt             *sql.Stmt
+	softDeleteTempBasalStmt             *sql.Stmt
+	softDeleteTempTargetStmt            *sql.Stmt
+	updateActivityStmt                  *sql.Stmt
+	updateCGMStateStmt                  *sql.Stmt
+	updateDeviceStateStmt               *sql.Stmt
+	updateEventGroupStmt                *sql.Stmt
+	updateFoodIntakeStmt                *sql.Stmt
+	updateFoodPresetStmt                *sql.Stmt
+	updateGlucoseReadingStmt            *sql.Stmt
+	updateInsulinDoseStmt               *sql.Stmt
+	updateLoopStateStmt                 *sql.Stmt
+	updateNoteStmt                      *sql.Stmt
+	updateProfilePresetStmt             *sql.Stmt
+	updateProfileSwitchStmt             *sql.Stmt
+	updatePumpStateStmt                 *sql.Stmt
+	updateSiteSettingsStmt              *sql.Stmt
+	updateTempBasalStmt                 *sql.Stmt
+	updateTempTargetStmt                *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                       tx,
-		tx:                                       tx,
-		allActivitiesStmt:                        q.allActivitiesStmt,
-		allActivityPresetsStmt:                   q.allActivityPresetsStmt,
-		allCGMStatesStmt:                         q.allCGMStatesStmt,
-		allDeviceStatesStmt:                      q.allDeviceStatesStmt,
-		allEventGroupsStmt:                       q.allEventGroupsStmt,
-		allFoodIntakesStmt:                       q.allFoodIntakesStmt,
-		allFoodPresetsStmt:                       q.allFoodPresetsStmt,
-		allGlucoseReadingsStmt:                   q.allGlucoseReadingsStmt,
-		allInsulinDosesStmt:                      q.allInsulinDosesStmt,
-		allLoopStatesStmt:                        q.allLoopStatesStmt,
-		allNotesStmt:                             q.allNotesStmt,
-		allProfilePresetsStmt:                    q.allProfilePresetsStmt,
-		allProfileSwitchesStmt:                   q.allProfileSwitchesStmt,
-		allPumpStatesStmt:                        q.allPumpStatesStmt,
-		allTempBasalsStmt:                        q.allTempBasalsStmt,
-		allTempTargetsStmt:                       q.allTempTargetsStmt,
-		createActivityStmt:                       q.createActivityStmt,
-		createActivityPresetStmt:                 q.createActivityPresetStmt,
-		createCGMStateStmt:                       q.createCGMStateStmt,
-		createDeviceStateStmt:                    q.createDeviceStateStmt,
-		createEventGroupStmt:                     q.createEventGroupStmt,
-		createFoodIntakeStmt:                     q.createFoodIntakeStmt,
-		createFoodPresetStmt:                     q.createFoodPresetStmt,
-		createGlucoseReadingStmt:                 q.createGlucoseReadingStmt,
-		createInsulinDoseStmt:                    q.createInsulinDoseStmt,
-		createLoopStateStmt:                      q.createLoopStateStmt,
-		createNoteStmt:                           q.createNoteStmt,
-		createProfilePresetStmt:                  q.createProfilePresetStmt,
-		createProfileSwitchStmt:                  q.createProfileSwitchStmt,
-		createPumpStateStmt:                      q.createPumpStateStmt,
-		createTempBasalStmt:                      q.createTempBasalStmt,
-		createTempTargetStmt:                     q.createTempTargetStmt,
-		deleteGlucoseReadingsByTypeStmt:          q.deleteGlucoseReadingsByTypeStmt,
-		getActivityStmt:                          q.getActivityStmt,
-		getActivityPresetStmt:                    q.getActivityPresetStmt,
-		getCGMStateStmt:                          q.getCGMStateStmt,
-		getDeviceStateStmt:                       q.getDeviceStateStmt,
-		getEventGroupStmt:                        q.getEventGroupStmt,
-		getFoodIntakeStmt:                        q.getFoodIntakeStmt,
-		getFoodPresetStmt:                        q.getFoodPresetStmt,
-		getGlucoseReadingStmt:                    q.getGlucoseReadingStmt,
-		getInsulinDoseStmt:                       q.getInsulinDoseStmt,
-		getLoopStateStmt:                         q.getLoopStateStmt,
-		getNoteStmt:                              q.getNoteStmt,
-		getProfilePresetStmt:                     q.getProfilePresetStmt,
-		getProfileSwitchStmt:                     q.getProfileSwitchStmt,
-		getPumpStateStmt:                         q.getPumpStateStmt,
-		getSiteSettingsStmt:                      q.getSiteSettingsStmt,
-		getTempBasalStmt:                         q.getTempBasalStmt,
-		getTempTargetStmt:                        q.getTempTargetStmt,
-		hardDeleteActivityStmt:                   q.hardDeleteActivityStmt,
-		hardDeleteActivityPresetStmt:             q.hardDeleteActivityPresetStmt,
-		hardDeleteCGMStateStmt:                   q.hardDeleteCGMStateStmt,
-		hardDeleteDeviceStateStmt:                q.hardDeleteDeviceStateStmt,
-		hardDeleteEventGroupStmt:                 q.hardDeleteEventGroupStmt,
-		hardDeleteFoodIntakeStmt:                 q.hardDeleteFoodIntakeStmt,
-		hardDeleteFoodPresetStmt:                 q.hardDeleteFoodPresetStmt,
-		hardDeleteGlucoseReadingStmt:             q.hardDeleteGlucoseReadingStmt,
-		hardDeleteGlucoseReadingsByTypeStmt:      q.hardDeleteGlucoseReadingsByTypeStmt,
-		hardDeleteInsulinDoseStmt:                q.hardDeleteInsulinDoseStmt,
-		hardDeleteLoopStateStmt:                  q.hardDeleteLoopStateStmt,
-		hardDeleteNoteStmt:                       q.hardDeleteNoteStmt,
-		hardDeleteProfilePresetStmt:              q.hardDeleteProfilePresetStmt,
-		hardDeleteProfileSwitchStmt:              q.hardDeleteProfileSwitchStmt,
-		hardDeletePumpStateStmt:                  q.hardDeletePumpStateStmt,
-		hardDeleteTempBasalStmt:                  q.hardDeleteTempBasalStmt,
-		hardDeleteTempTargetStmt:                 q.hardDeleteTempTargetStmt,
-		searchWithDefaultSortActivitiesStmt:      q.searchWithDefaultSortActivitiesStmt,
-		searchWithDefaultSortActivityPresetsStmt: q.searchWithDefaultSortActivityPresetsStmt,
-		searchWithDefaultSortCGMStatesStmt:       q.searchWithDefaultSortCGMStatesStmt,
-		searchWithDefaultSortDeviceStatesStmt:    q.searchWithDefaultSortDeviceStatesStmt,
-		searchWithDefaultSortEventGroupsStmt:     q.searchWithDefaultSortEventGroupsStmt,
-		searchWithDefaultSortFoodIntakesStmt:     q.searchWithDefaultSortFoodIntakesStmt,
-		searchWithDefaultSortFoodPresetsStmt:     q.searchWithDefaultSortFoodPresetsStmt,
-		searchWithDefaultSortGlucoseReadingsStmt: q.searchWithDefaultSortGlucoseReadingsStmt,
-		searchWithDefaultSortInsulinDosesStmt:    q.searchWithDefaultSortInsulinDosesStmt,
-		searchWithDefaultSortLoopStatesStmt:      q.searchWithDefaultSortLoopStatesStmt,
-		searchWithDefaultSortNotesStmt:           q.searchWithDefaultSortNotesStmt,
-		searchWithDefaultSortProfilePresetsStmt:  q.searchWithDefaultSortProfilePresetsStmt,
-		searchWithDefaultSortProfileSwitchesStmt: q.searchWithDefaultSortProfileSwitchesStmt,
-		searchWithDefaultSortPumpStatesStmt:      q.searchWithDefaultSortPumpStatesStmt,
-		searchWithDefaultSortTempBasalsStmt:      q.searchWithDefaultSortTempBasalsStmt,
-		searchWithDefaultSortTempTargetsStmt:     q.searchWithDefaultSortTempTargetsStmt,
-		softDeleteActivityStmt:                   q.softDeleteActivityStmt,
-		softDeleteCGMStateStmt:                   q.softDeleteCGMStateStmt,
-		softDeleteDeviceStateStmt:                q.softDeleteDeviceStateStmt,
-		softDeleteEventGroupStmt:                 q.softDeleteEventGroupStmt,
-		softDeleteFoodIntakeStmt:                 q.softDeleteFoodIntakeStmt,
-		softDeleteGlucoseReadingStmt:             q.softDeleteGlucoseReadingStmt,
-		softDeleteInsulinDoseStmt:                q.softDeleteInsulinDoseStmt,
-		softDeleteLoopStateStmt:                  q.softDeleteLoopStateStmt,
-		softDeleteNoteStmt:                       q.softDeleteNoteStmt,
-		softDeleteProfileSwitchStmt:              q.softDeleteProfileSwitchStmt,
-		softDeletePumpStateStmt:                  q.softDeletePumpStateStmt,
-		softDeleteTempBasalStmt:                  q.softDeleteTempBasalStmt,
-		softDeleteTempTargetStmt:                 q.softDeleteTempTargetStmt,
-		updateActivityStmt:                       q.updateActivityStmt,
-		updateActivityPresetStmt:                 q.updateActivityPresetStmt,
-		updateCGMStateStmt:                       q.updateCGMStateStmt,
-		updateDeviceStateStmt:                    q.updateDeviceStateStmt,
-		updateEventGroupStmt:                     q.updateEventGroupStmt,
-		updateFoodIntakeStmt:                     q.updateFoodIntakeStmt,
-		updateFoodPresetStmt:                     q.updateFoodPresetStmt,
-		updateGlucoseReadingStmt:                 q.updateGlucoseReadingStmt,
-		updateInsulinDoseStmt:                    q.updateInsulinDoseStmt,
-		updateLoopStateStmt:                      q.updateLoopStateStmt,
-		updateNoteStmt:                           q.updateNoteStmt,
-		updateProfilePresetStmt:                  q.updateProfilePresetStmt,
-		updateProfileSwitchStmt:                  q.updateProfileSwitchStmt,
-		updatePumpStateStmt:                      q.updatePumpStateStmt,
-		updateSiteSettingsStmt:                   q.updateSiteSettingsStmt,
-		updateTempBasalStmt:                      q.updateTempBasalStmt,
-		updateTempTargetStmt:                     q.updateTempTargetStmt,
+		db:                                  tx,
+		tx:                                  tx,
+		allActivitiesStmt:                   q.allActivitiesStmt,
+		allCGMStatesStmt:                    q.allCGMStatesStmt,
+		allDeviceStatesStmt:                 q.allDeviceStatesStmt,
+		allEventGroupsStmt:                  q.allEventGroupsStmt,
+		allFoodIntakesStmt:                  q.allFoodIntakesStmt,
+		allFoodPresetsStmt:                  q.allFoodPresetsStmt,
+		allGlucoseReadingsStmt:              q.allGlucoseReadingsStmt,
+		allInsulinDosesStmt:                 q.allInsulinDosesStmt,
+		allLoopStatesStmt:                   q.allLoopStatesStmt,
+		allNotesStmt:                        q.allNotesStmt,
+		allProfilePresetsStmt:               q.allProfilePresetsStmt,
+		allProfileSwitchesStmt:              q.allProfileSwitchesStmt,
+		allPumpStatesStmt:                   q.allPumpStatesStmt,
+		allTempBasalsStmt:                   q.allTempBasalsStmt,
+		allTempTargetsStmt:                  q.allTempTargetsStmt,
+		createActivityStmt:                  q.createActivityStmt,
+		createCGMStateStmt:                  q.createCGMStateStmt,
+		createDeviceStateStmt:               q.createDeviceStateStmt,
+		createEventGroupStmt:                q.createEventGroupStmt,
+		createFoodIntakeStmt:                q.createFoodIntakeStmt,
+		createFoodPresetStmt:                q.createFoodPresetStmt,
+		createGlucoseReadingStmt:            q.createGlucoseReadingStmt,
+		createInsulinDoseStmt:               q.createInsulinDoseStmt,
+		createLoopStateStmt:                 q.createLoopStateStmt,
+		createNoteStmt:                      q.createNoteStmt,
+		createProfilePresetStmt:             q.createProfilePresetStmt,
+		createProfileSwitchStmt:             q.createProfileSwitchStmt,
+		createPumpStateStmt:                 q.createPumpStateStmt,
+		createTempBasalStmt:                 q.createTempBasalStmt,
+		createTempTargetStmt:                q.createTempTargetStmt,
+		deleteGlucoseReadingsByTypeStmt:     q.deleteGlucoseReadingsByTypeStmt,
+		getActivityStmt:                     q.getActivityStmt,
+		getCGMStateStmt:                     q.getCGMStateStmt,
+		getDeviceStateStmt:                  q.getDeviceStateStmt,
+		getEventGroupStmt:                   q.getEventGroupStmt,
+		getFoodIntakeStmt:                   q.getFoodIntakeStmt,
+		getFoodPresetStmt:                   q.getFoodPresetStmt,
+		getGlucoseReadingStmt:               q.getGlucoseReadingStmt,
+		getInsulinDoseStmt:                  q.getInsulinDoseStmt,
+		getLoopStateStmt:                    q.getLoopStateStmt,
+		getNoteStmt:                         q.getNoteStmt,
+		getProfilePresetStmt:                q.getProfilePresetStmt,
+		getProfileSwitchStmt:                q.getProfileSwitchStmt,
+		getPumpStateStmt:                    q.getPumpStateStmt,
+		getSiteSettingsStmt:                 q.getSiteSettingsStmt,
+		getTempBasalStmt:                    q.getTempBasalStmt,
+		getTempTargetStmt:                   q.getTempTargetStmt,
+		hardDeleteActivityStmt:              q.hardDeleteActivityStmt,
+		hardDeleteCGMStateStmt:              q.hardDeleteCGMStateStmt,
+		hardDeleteDeviceStateStmt:           q.hardDeleteDeviceStateStmt,
+		hardDeleteEventGroupStmt:            q.hardDeleteEventGroupStmt,
+		hardDeleteFoodIntakeStmt:            q.hardDeleteFoodIntakeStmt,
+		hardDeleteFoodPresetStmt:            q.hardDeleteFoodPresetStmt,
+		hardDeleteGlucoseReadingStmt:        q.hardDeleteGlucoseReadingStmt,
+		hardDeleteGlucoseReadingsByTypeStmt: q.hardDeleteGlucoseReadingsByTypeStmt,
+		hardDeleteInsulinDoseStmt:           q.hardDeleteInsulinDoseStmt,
+		hardDeleteLoopStateStmt:             q.hardDeleteLoopStateStmt,
+		hardDeleteNoteStmt:                  q.hardDeleteNoteStmt,
+		hardDeleteProfilePresetStmt:         q.hardDeleteProfilePresetStmt,
+		hardDeleteProfileSwitchStmt:         q.hardDeleteProfileSwitchStmt,
+		hardDeletePumpStateStmt:             q.hardDeletePumpStateStmt,
+		hardDeleteTempBasalStmt:             q.hardDeleteTempBasalStmt,
+		hardDeleteTempTargetStmt:            q.hardDeleteTempTargetStmt,
+		searchActivitiesStmt:                q.searchActivitiesStmt,
+		searchCGMStatesStmt:                 q.searchCGMStatesStmt,
+		searchDeviceStatesStmt:              q.searchDeviceStatesStmt,
+		searchEventGroupsStmt:               q.searchEventGroupsStmt,
+		searchFoodIntakesStmt:               q.searchFoodIntakesStmt,
+		searchFoodPresetsStmt:               q.searchFoodPresetsStmt,
+		searchGlucoseReadingsStmt:           q.searchGlucoseReadingsStmt,
+		searchInsulinDosesStmt:              q.searchInsulinDosesStmt,
+		searchLoopStatesStmt:                q.searchLoopStatesStmt,
+		searchNotesStmt:                     q.searchNotesStmt,
+		searchProfilePresetsStmt:            q.searchProfilePresetsStmt,
+		searchProfileSwitchesStmt:           q.searchProfileSwitchesStmt,
+		searchPumpStatesStmt:                q.searchPumpStatesStmt,
+		searchTempBasalsStmt:                q.searchTempBasalsStmt,
+		searchTempTargetsStmt:               q.searchTempTargetsStmt,
+		softDeleteActivityStmt:              q.softDeleteActivityStmt,
+		softDeleteCGMStateStmt:              q.softDeleteCGMStateStmt,
+		softDeleteDeviceStateStmt:           q.softDeleteDeviceStateStmt,
+		softDeleteEventGroupStmt:            q.softDeleteEventGroupStmt,
+		softDeleteFoodIntakeStmt:            q.softDeleteFoodIntakeStmt,
+		softDeleteGlucoseReadingStmt:        q.softDeleteGlucoseReadingStmt,
+		softDeleteInsulinDoseStmt:           q.softDeleteInsulinDoseStmt,
+		softDeleteLoopStateStmt:             q.softDeleteLoopStateStmt,
+		softDeleteNoteStmt:                  q.softDeleteNoteStmt,
+		softDeleteProfileSwitchStmt:         q.softDeleteProfileSwitchStmt,
+		softDeletePumpStateStmt:             q.softDeletePumpStateStmt,
+		softDeleteTempBasalStmt:             q.softDeleteTempBasalStmt,
+		softDeleteTempTargetStmt:            q.softDeleteTempTargetStmt,
+		updateActivityStmt:                  q.updateActivityStmt,
+		updateCGMStateStmt:                  q.updateCGMStateStmt,
+		updateDeviceStateStmt:               q.updateDeviceStateStmt,
+		updateEventGroupStmt:                q.updateEventGroupStmt,
+		updateFoodIntakeStmt:                q.updateFoodIntakeStmt,
+		updateFoodPresetStmt:                q.updateFoodPresetStmt,
+		updateGlucoseReadingStmt:            q.updateGlucoseReadingStmt,
+		updateInsulinDoseStmt:               q.updateInsulinDoseStmt,
+		updateLoopStateStmt:                 q.updateLoopStateStmt,
+		updateNoteStmt:                      q.updateNoteStmt,
+		updateProfilePresetStmt:             q.updateProfilePresetStmt,
+		updateProfileSwitchStmt:             q.updateProfileSwitchStmt,
+		updatePumpStateStmt:                 q.updatePumpStateStmt,
+		updateSiteSettingsStmt:              q.updateSiteSettingsStmt,
+		updateTempBasalStmt:                 q.updateTempBasalStmt,
+		updateTempTargetStmt:                q.updateTempTargetStmt,
 	}
 }

@@ -30,7 +30,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetNote :one
 SELECT * FROM notes WHERE id = ?;
 
--- name: SearchWithDefaultSortNotes :many
+-- name: SearchNotes :many
 SELECT * FROM notes
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

@@ -35,7 +35,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetLoopState :one
 SELECT * FROM loop_states WHERE id = ?;
 
--- name: SearchWithDefaultSortLoopStates :many
+-- name: SearchLoopStates :many
 SELECT * FROM loop_states
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

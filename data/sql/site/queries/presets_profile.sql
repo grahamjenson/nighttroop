@@ -31,7 +31,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetProfilePreset :one
 SELECT * FROM profile_presets WHERE id = ?;
 
--- name: SearchWithDefaultSortProfilePresets :many
+-- name: SearchProfilePresets :many
 SELECT * FROM profile_presets
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR created_at >= sqlc.narg('DateGTE'))

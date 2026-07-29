@@ -191,7 +191,7 @@ func (q *Queries) HardDeleteCGMState(ctx context.Context, arg HardDeleteCGMState
 	return &i, err
 }
 
-const searchWithDefaultSortCGMStates = `-- name: SearchWithDefaultSortCGMStates :many
+const searchCGMStates = `-- name: SearchCGMStates :many
 SELECT id, cgm_state, cgm_timestamp, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM cgm_states
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -220,7 +220,7 @@ ORDER BY occurred_at DESC
 LIMIT ?19 OFFSET ?18
 `
 
-type SearchWithDefaultSortCGMStatesParams struct {
+type SearchCGMStatesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -242,8 +242,8 @@ type SearchWithDefaultSortCGMStatesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortCGMStates(ctx context.Context, arg SearchWithDefaultSortCGMStatesParams) ([]*CgmState, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortCGMStatesStmt, searchWithDefaultSortCGMStates,
+func (q *Queries) SearchCGMStates(ctx context.Context, arg SearchCGMStatesParams) ([]*CgmState, error) {
+	rows, err := q.query(ctx, q.searchCGMStatesStmt, searchCGMStates,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

@@ -219,7 +219,7 @@ func (q *Queries) HardDeleteFoodIntake(ctx context.Context, arg HardDeleteFoodIn
 	return &i, err
 }
 
-const searchWithDefaultSortFoodIntakes = `-- name: SearchWithDefaultSortFoodIntakes :many
+const searchFoodIntakes = `-- name: SearchFoodIntakes :many
 SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -261,7 +261,7 @@ ORDER BY occurred_at DESC
 LIMIT ?29 OFFSET ?28
 `
 
-type SearchWithDefaultSortFoodIntakesParams struct {
+type SearchFoodIntakesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -293,8 +293,8 @@ type SearchWithDefaultSortFoodIntakesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortFoodIntakes(ctx context.Context, arg SearchWithDefaultSortFoodIntakesParams) ([]*FoodIntake, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortFoodIntakesStmt, searchWithDefaultSortFoodIntakes,
+func (q *Queries) SearchFoodIntakes(ctx context.Context, arg SearchFoodIntakesParams) ([]*FoodIntake, error) {
+	rows, err := q.query(ctx, q.searchFoodIntakesStmt, searchFoodIntakes,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

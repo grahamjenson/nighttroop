@@ -184,7 +184,7 @@ func (q *Queries) HardDeleteInsulinDose(ctx context.Context, arg HardDeleteInsul
 	return &i, err
 }
 
-const searchWithDefaultSortInsulinDoses = `-- name: SearchWithDefaultSortInsulinDoses :many
+const searchInsulinDoses = `-- name: SearchInsulinDoses :many
 SELECT id, dose, dose_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM insulin_doses
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -225,7 +225,7 @@ ORDER BY occurred_at DESC
 LIMIT ?28 OFFSET ?27
 `
 
-type SearchWithDefaultSortInsulinDosesParams struct {
+type SearchInsulinDosesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -256,8 +256,8 @@ type SearchWithDefaultSortInsulinDosesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortInsulinDoses(ctx context.Context, arg SearchWithDefaultSortInsulinDosesParams) ([]*InsulinDose, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortInsulinDosesStmt, searchWithDefaultSortInsulinDoses,
+func (q *Queries) SearchInsulinDoses(ctx context.Context, arg SearchInsulinDosesParams) ([]*InsulinDose, error) {
+	rows, err := q.query(ctx, q.searchInsulinDosesStmt, searchInsulinDoses,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

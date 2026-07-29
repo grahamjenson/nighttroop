@@ -177,7 +177,7 @@ func (q *Queries) HardDeleteNote(ctx context.Context, arg HardDeleteNoteParams) 
 	return &i, err
 }
 
-const searchWithDefaultSortNotes = `-- name: SearchWithDefaultSortNotes :many
+const searchNotes = `-- name: SearchNotes :many
 SELECT id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM notes
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -208,7 +208,7 @@ ORDER BY occurred_at DESC
 LIMIT ?20 OFFSET ?19
 `
 
-type SearchWithDefaultSortNotesParams struct {
+type SearchNotesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -231,8 +231,8 @@ type SearchWithDefaultSortNotesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortNotes(ctx context.Context, arg SearchWithDefaultSortNotesParams) ([]*Note, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortNotesStmt, searchWithDefaultSortNotes,
+func (q *Queries) SearchNotes(ctx context.Context, arg SearchNotesParams) ([]*Note, error) {
+	rows, err := q.query(ctx, q.searchNotesStmt, searchNotes,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

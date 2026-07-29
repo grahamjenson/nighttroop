@@ -34,7 +34,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetDeviceState :one
 SELECT * FROM device_states WHERE id = ?;
 
--- name: SearchWithDefaultSortDeviceStates :many
+-- name: SearchDeviceStates :many
 SELECT * FROM device_states
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

@@ -219,7 +219,7 @@ func (q *Queries) HardDeleteProfileSwitch(ctx context.Context, arg HardDeletePro
 	return &i, err
 }
 
-const searchWithDefaultSortProfileSwitches = `-- name: SearchWithDefaultSortProfileSwitches :many
+const searchProfileSwitches = `-- name: SearchProfileSwitches :many
 SELECT id, name, duration_minutes, percent, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -256,7 +256,7 @@ ORDER BY occurred_at DESC
 LIMIT ?25 OFFSET ?24
 `
 
-type SearchWithDefaultSortProfileSwitchesParams struct {
+type SearchProfileSwitchesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -284,8 +284,8 @@ type SearchWithDefaultSortProfileSwitchesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortProfileSwitches(ctx context.Context, arg SearchWithDefaultSortProfileSwitchesParams) ([]*ProfileSwitch, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortProfileSwitchesStmt, searchWithDefaultSortProfileSwitches,
+func (q *Queries) SearchProfileSwitches(ctx context.Context, arg SearchProfileSwitchesParams) ([]*ProfileSwitch, error) {
+	rows, err := q.query(ctx, q.searchProfileSwitchesStmt, searchProfileSwitches,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

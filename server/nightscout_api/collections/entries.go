@@ -79,7 +79,7 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 	if defaultSortOrder && !query.HasFilters {
 		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
 	} else if defaultSortOrder && query.HasFilters {
-		entries, rerr = siteContext.SiteDB.Queries.SearchWithDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
+		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	} else {
 		entries, rerr = siteContext.SiteDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchNonDefaultOrder(query))
 	}

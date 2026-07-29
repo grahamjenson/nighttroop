@@ -191,7 +191,7 @@ func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBas
 	return &i, err
 }
 
-const searchWithDefaultSortTempBasals = `-- name: SearchWithDefaultSortTempBasals :many
+const searchTempBasals = `-- name: SearchTempBasals :many
 SELECT id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_basals
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -226,7 +226,7 @@ ORDER BY occurred_at DESC
 LIMIT ?24 OFFSET ?23
 `
 
-type SearchWithDefaultSortTempBasalsParams struct {
+type SearchTempBasalsParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -253,8 +253,8 @@ type SearchWithDefaultSortTempBasalsParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortTempBasals(ctx context.Context, arg SearchWithDefaultSortTempBasalsParams) ([]*TempBasal, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortTempBasalsStmt, searchWithDefaultSortTempBasals,
+func (q *Queries) SearchTempBasals(ctx context.Context, arg SearchTempBasalsParams) ([]*TempBasal, error) {
+	rows, err := q.query(ctx, q.searchTempBasalsStmt, searchTempBasals,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

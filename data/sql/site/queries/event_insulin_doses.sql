@@ -31,7 +31,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetInsulinDose :one
 SELECT * FROM insulin_doses WHERE id = ?;
 
--- name: SearchWithDefaultSortInsulinDoses :many
+-- name: SearchInsulinDoses :many
 SELECT * FROM insulin_doses
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

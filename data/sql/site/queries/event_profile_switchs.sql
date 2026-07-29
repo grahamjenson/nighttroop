@@ -36,7 +36,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetProfileSwitch :one
 SELECT * FROM profile_switches WHERE id = ?;
 
--- name: SearchWithDefaultSortProfileSwitches :many
+-- name: SearchProfileSwitches :many
 SELECT * FROM profile_switches
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

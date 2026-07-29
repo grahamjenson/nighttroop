@@ -285,7 +285,7 @@ func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardD
 	return items, nil
 }
 
-const searchWithDefaultSortGlucoseReadings = `-- name: SearchWithDefaultSortGlucoseReadings :many
+const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
 SELECT id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -325,7 +325,7 @@ ORDER BY occurred_at DESC
 LIMIT ?28 OFFSET ?27
 `
 
-type SearchWithDefaultSortGlucoseReadingsParams struct {
+type SearchGlucoseReadingsParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -356,8 +356,8 @@ type SearchWithDefaultSortGlucoseReadingsParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortGlucoseReadings(ctx context.Context, arg SearchWithDefaultSortGlucoseReadingsParams) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortGlucoseReadingsStmt, searchWithDefaultSortGlucoseReadings,
+func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseReadingsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.searchGlucoseReadingsStmt, searchGlucoseReadings,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

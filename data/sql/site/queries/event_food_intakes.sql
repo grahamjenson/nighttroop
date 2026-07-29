@@ -36,7 +36,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetFoodIntake :one
 SELECT * FROM food_intakes WHERE id = ?;
 
--- name: SearchWithDefaultSortFoodIntakes :many
+-- name: SearchFoodIntakes :many
 SELECT * FROM food_intakes
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

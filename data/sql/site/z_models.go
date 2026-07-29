@@ -24,23 +24,6 @@ type Activity struct {
 	CreatedByIdentityName string
 }
 
-type ActivityPreset struct {
-	ID                    string
-	Name                  string
-	ActivityType          *string
-	DurationMinutes       *int64
-	Calories              *int64
-	Steps                 *int64
-	HeartRate             *int64
-	RawJsonData           *string
-	CreatedAt             int64
-	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	UpdatedByIdentityName *string
-	CreatedByIdentityName string
-}
-
 type CgmState struct {
 	ID                    string
 	CgmState              *string

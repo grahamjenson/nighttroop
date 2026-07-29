@@ -32,7 +32,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetTempBasal :one
 SELECT * FROM temp_basals WHERE id = ?;
 
--- name: SearchWithDefaultSortTempBasals :many
+-- name: SearchTempBasals :many
 SELECT * FROM temp_basals
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

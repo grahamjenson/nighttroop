@@ -212,7 +212,7 @@ func (q *Queries) HardDeletePumpState(ctx context.Context, arg HardDeletePumpSta
 	return &i, err
 }
 
-const searchWithDefaultSortPumpStates = `-- name: SearchWithDefaultSortPumpStates :many
+const searchPumpStates = `-- name: SearchPumpStates :many
 SELECT id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM pump_states
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -241,7 +241,7 @@ ORDER BY occurred_at DESC
 LIMIT ?19 OFFSET ?18
 `
 
-type SearchWithDefaultSortPumpStatesParams struct {
+type SearchPumpStatesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -263,8 +263,8 @@ type SearchWithDefaultSortPumpStatesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortPumpStates(ctx context.Context, arg SearchWithDefaultSortPumpStatesParams) ([]*PumpState, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortPumpStatesStmt, searchWithDefaultSortPumpStates,
+func (q *Queries) SearchPumpStates(ctx context.Context, arg SearchPumpStatesParams) ([]*PumpState, error) {
+	rows, err := q.query(ctx, q.searchPumpStatesStmt, searchPumpStates,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

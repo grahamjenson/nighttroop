@@ -212,7 +212,7 @@ func (q *Queries) HardDeleteLoopState(ctx context.Context, arg HardDeleteLoopSta
 	return &i, err
 }
 
-const searchWithDefaultSortLoopStates = `-- name: SearchWithDefaultSortLoopStates :many
+const searchLoopStates = `-- name: SearchLoopStates :many
 SELECT id, loop_state, loop_timestamp, iob, iob_basal, iob_treatment, cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM loop_states
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -241,7 +241,7 @@ ORDER BY occurred_at DESC
 LIMIT ?19 OFFSET ?18
 `
 
-type SearchWithDefaultSortLoopStatesParams struct {
+type SearchLoopStatesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -263,8 +263,8 @@ type SearchWithDefaultSortLoopStatesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortLoopStates(ctx context.Context, arg SearchWithDefaultSortLoopStatesParams) ([]*LoopState, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortLoopStatesStmt, searchWithDefaultSortLoopStates,
+func (q *Queries) SearchLoopStates(ctx context.Context, arg SearchLoopStatesParams) ([]*LoopState, error) {
+	rows, err := q.query(ctx, q.searchLoopStatesStmt, searchLoopStates,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

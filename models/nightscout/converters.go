@@ -28,7 +28,6 @@ type MapConverter interface {
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:map ActivityType Type
 	// goverter:map Identifier ID
 	// goverter:map Date OccurredAt
 	// goverter:map Duration DurationMinutes
@@ -40,12 +39,18 @@ type MapConverter interface {
 	ActivityToCreate(source Activity, ctx CreateContext) site.CreateActivityParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	ActivityToUpdate(source Activity, ctx UpdateContext) site.UpdateActivityParams
+
+	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
-	// goverter:map Type ActivityType
 	// goverter:map OccurredAt Date
 	// goverter:map DurationMinutes Duration
 	// goverter:map CreatedAt SrvCreated
@@ -53,36 +58,7 @@ type MapConverter interface {
 	DBModelToActivity(source *site.Activity) Activity
 
 	///////
-	// DEVICE STATUS TODO
-	///////
-
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore InsertionTime Type Status ChargingState Timestamp Iob Cob Basaliob Treatmentiob PumpReservoir
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UploaderBattery BatteryPercentage
-	// goverter:map  App CreatedByAppName
-	// goverter:map  Device CreatedByDeviceName
-	// goverter:context ctx
-	// goverter:map  Date ID                | AssignID
-	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	DeviceStatusToCreate(source DeviceStatus, ctx CreateContext) site.CreateDeviceStatusParams
-
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Uploader Loop Pump OpenAPS
-	// goverter:map ID Identifier
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByAppName App
-	// goverter:map CreatedByDeviceName Device
-	// goverter:map OccurredAt Date
-	// goverter:map BatteryPercentage UploaderBattery
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	DBModelToDeviceStatus(source *site.DeviceStatus) DeviceStatus
-
-	///////
-	// ENTRIES
+	// ENTRIES TO GLUCOSE READINGS
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
@@ -117,7 +93,7 @@ type MapConverter interface {
 	DBModelToEntry(source *site.GlucoseReading) Entry
 
 	///////
-	// FOOD TODO
+	// FOOD TO FOOD PRESET
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
@@ -127,7 +103,14 @@ type MapConverter interface {
 	// goverter:map  Device CreatedByDeviceName
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodParams
+	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodPresetParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	FoodToUpdate(source Food, ctx UpdateContext) site.UpdateFoodPresetParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore Device App Subject Food Portions HideAfterUse Hidden Position
@@ -135,10 +118,10 @@ type MapConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToFood(source *site.Food) Food
+	DBModelToFood(source *site.FoodPreset) Food
 
 	///////
-	// Profile TODO
+	// Profile To Profile Preset
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
@@ -149,7 +132,14 @@ type MapConverter interface {
 	// goverter:map  Date ID                | AssignID
 	// goverter:map  DefaultProfile Name
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	ProfileToCreate(source Profile, ctx CreateContext) site.CreateProfileParams
+	ProfileToCreate(source Profile, ctx CreateContext) site.CreateProfilePresetParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	ProfileToUpdate(source Profile, ctx UpdateContext) site.UpdateProfilePresetParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore Device App Subject
@@ -160,49 +150,31 @@ type MapConverter interface {
 	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	DBModelToProfile(source *site.Profile) Profile
+	DBModelToProfile(source *site.GetProfilePresetParams) Profile
+
+	//
+	//
+	//
+
+	////////////////////////////////////////
+	// TREATMENT TO CREATE/UPDATE
+	////////////////////////////////////////
 
 	///////
-	// TREATMENTS
-	///////
-
-	///////
-	// Bolus
+	// EventGroup
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context ctx
-	// goverter:map  App CreatedByAppName
-	// goverter:map  Device CreatedByDeviceName
-	// goverter:map  Date ID                | AssignID
-	// goverter:map  Date OccurredAt
-	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
-	// goverter:map  Insulin Value
-	TreatmentToCreateBolus(source Treatment, ctx CreateContext) site.CreateBolusParams
-
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:map  Identifier ID
-	// goverter:map  Date OccurredAt
-	// goverter:map  Insulin Value
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// goverter:context ctx
-	TreatmentToUpdateBolus(source Treatment, ctx UpdateContext) site.UpdateBolusParams
-
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Carbs Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
 	// goverter:map ID Identifier
-	// goverter:map Value Insulin
-	// goverter:map CreatedByIdentityName EnteredBy
-	// goverter:map . EventType  	    | DBTypeToTreatmentType
-	// goverter:map . CreatedAt         | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map OccurredAt Mills
 	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
-	BolusDBModelToTreatment(source *site.Bolus) Treatment
+	DBModelToTreatment(source *site.SearchEventGroupsRow) Treatment
 
 	///////
-	// Carbs
+	// Food Intake
 	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
@@ -214,7 +186,7 @@ type MapConverter interface {
 	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
 	// goverter:map  Carbs Amount
-	TreatmentToCreateCarb(source Treatment, ctx CreateContext) site.CreateCarbParams
+	TreatmentToCreateFoodIntake(source Treatment, ctx CreateContext) site.CreateFoodIntakeParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
@@ -222,19 +194,97 @@ type MapConverter interface {
 	// goverter:map  Carbs Amount
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:context ctx
-	TreatmentToUpdateCarbs(source Treatment, ctx UpdateContext) site.UpdateCarbParams
+	TreatmentToUpdateFoodIntake(source Treatment, ctx UpdateContext) site.UpdateFoodIntakeParams
+
+	///////
+	// Glucose Reading
+	///////
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Insulin Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
-	// goverter:map ID Identifier
-	// goverter:map Amount Carbs
-	// goverter:map CreatedByIdentityName EnteredBy
-	// goverter:map . EventType  	    | DBTypeToTreatmentType
-	// goverter:map . CreatedAt         | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map OccurredAt Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	CarbsDBModelToTreatment(source *site.Carb) Treatment
+	// goverter:context ctx
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
+	// goverter:map  Carbs Amount
+	TreatmentToCreateGlucoseReading(source Treatment, ctx CreateContext) site.CreateGlucoseReadingParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Carbs Amount
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToUpdateGlucoseReading(source Treatment, ctx UpdateContext) site.UpdateGlucoseReadingParams
+
+	///////
+	// Insulin Dose
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context ctx
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
+	// goverter:map  Insulin Value
+	TreatmentToCreateInsulinDose(source Treatment, ctx CreateContext) site.CreateInsulinDoseParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Insulin Value
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToUpdateInsulinDose(source Treatment, ctx UpdateContext) site.UpdateInsulinDoseParams
+
+	///////
+	// Notes
+	///////
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context ctx
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  Notes Content
+	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Notes Content
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToUpdateNote(source Treatment, ctx UpdateContext) site.UpdateNoteParams
+
+	///////
+	// Profile Switch
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:context ctx
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  Date OccurredAt
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map  EventType Type 	    | TreatmentTypeToDBType
+	// goverter:map  Insulin Value
+	TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date OccurredAt
+	// goverter:map  Insulin Value
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToUpdateProfileSwitch(source Treatment, ctx UpdateContext) site.UpdateProfileSwitchParams
 
 	///////
 	// Temp Basal
@@ -259,19 +309,6 @@ type MapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:context ctx
 	TreatmentToUpdateTempBasal(source Treatment, ctx UpdateContext) site.UpdateTempBasalParams
-
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Insulin Carbs Duration Notes Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
-	// goverter:map ID Identifier
-	// goverter:map Value Rate
-	// goverter:map Value Absolute
-	// goverter:map CreatedByIdentityName EnteredBy
-	// goverter:map . EventType  	    | DBTypeToTreatmentType
-	// goverter:map . CreatedAt         | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map Start Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	TempBasalDBModelToTreatment(source *site.TempBasal) Treatment
 
 	///////
 	// Temp Targets
@@ -299,41 +336,122 @@ type MapConverter interface {
 	// goverter:context ctx
 	TreatmentToUpdateTempTarget(source Treatment, ctx UpdateContext) site.UpdateTempTargetParams
 
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore Glucose GlucoseType Insulin Carbs Duration Notes Profile Percentage Rate Absolute Reason Units Protein Fat PreBolus SplitNow SplitExt Device App Subject
-	// goverter:map ID Identifier
-	// goverter:map Value Rate
-	// goverter:map Value Absolute
-	// goverter:map CreatedByIdentityName EnteredBy
-	// goverter:map . EventType  	    | DBTypeToTreatmentType
-	// goverter:map . CreatedAt         | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map Start Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	// goverter:map HighTarget TargetTop
-	// goverter:map LowTarget TargetBottom
-	TempTargetDBModelToTreatment(source *site.TempTarget) Treatment
-
 	///////
-	// Notes
+	// Pump States
 	///////
-	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:context ctx
-	// goverter:map  App CreatedByAppName
-	// goverter:map  Device CreatedByDeviceName
-	// goverter:map  Date ID                | AssignID
-	// goverter:map  Date OccurredAt
-	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
-	// goverter:map  Notes Content
-	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:map  Identifier ID
-	// goverter:map  Date OccurredAt
-	// goverter:map  Notes Content
+	// goverter:map  Date Start
+	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:context ctx
-	TreatmentToUpdateNote(source Treatment, ctx UpdateContext) site.UpdateNoteParams
+	TreatmentToCreatePumpState(source Treatment, ctx CreateContext) site.CreatePumpStateParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date Start
+	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToUpdatePumpState(source Treatment, ctx UpdateContext) site.UpdatePumpStateParams
+
+	///////
+	// CGM States
+	///////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date Start
+	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToCreateCGMState(source Treatment, ctx CreateContext) site.CreateCGMStateParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map  Identifier ID
+	// goverter:map  Date Start
+	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:context ctx
+	TreatmentToUpdateCGMState(source Treatment, ctx UpdateContext) site.UpdateCGMStateParams
+
+	//
+	//
+	//
+
+	////////////////////////////////////////
+	// DEVICE STATUS TO CREATE/UPDATE
+	////////////////////////////////////////
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore InsertionTime Type Status ChargingState Timestamp Iob Cob Basaliob Treatmentiob PumpReservoir
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UploaderBattery BatteryPercentage
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:context ctx
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	DeviceStatusToCreateDevice(source DeviceStatus, ctx CreateContext) site.CreateDeviceStateParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore InsertionTime Type Status ChargingState Timestamp Iob Cob Basaliob Treatmentiob PumpReservoir
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UploaderBattery BatteryPercentage
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:context ctx
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	DeviceStatusToCreateLoop(source DeviceStatus, ctx CreateContext) site.CreateLoopStateParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore InsertionTime Type Status ChargingState Timestamp Iob Cob Basaliob Treatmentiob PumpReservoir
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UploaderBattery BatteryPercentage
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:context ctx
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	DeviceStatusToCreateCGM(source DeviceStatus, ctx CreateContext) site.CreateCGMStateParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore InsertionTime Type Status ChargingState Timestamp Iob Cob Basaliob Treatmentiob PumpReservoir
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UploaderBattery BatteryPercentage
+	// goverter:map  App CreatedByAppName
+	// goverter:map  Device CreatedByDeviceName
+	// goverter:context ctx
+	// goverter:map  Date ID                | AssignID
+	// goverter:map  CreatedByIdentityName  | AssignCreatedByName
+	DeviceStatusToCreatePump(source DeviceStatus, ctx CreateContext) site.CreatePumpStateParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore Uploader Loop Pump OpenAPS
+	// goverter:map ID Identifier
+	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map CreatedByIdentityName Subject
+	// goverter:map CreatedByAppName App
+	// goverter:map CreatedByDeviceName Device
+	// goverter:map OccurredAt Date
+	// goverter:map BatteryPercentage UploaderBattery
+	// goverter:map CreatedAt SrvCreated
+	// goverter:map UpdatedAt SrvModified
+	DBModelToDeviceStatus(source *site.SearchEventGroupsRow) DeviceStatus
 
 	////////
 	// SETTINGS
@@ -370,16 +488,16 @@ func ToDateInt(createdAt int64) *DateInt {
 // GlucoseReading
 // ////
 func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
-	if gr.Type == "sgv" {
-		return ptr(FlexibleFloat64(gr.Value))
+	if gr.ReadingType == "sgv" {
+		return ptr(FlexibleFloat64(gr.Reading))
 	}
 	return nil
 
 }
 
 func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
-	if gr.Type == "mbg" {
-		return ptr(FlexibleFloat64(gr.Value))
+	if gr.ReadingType == "mbg" {
+		return ptr(FlexibleFloat64(gr.Reading))
 	}
 	return nil
 
@@ -439,58 +557,4 @@ func TreatmentTypeToDBType(t *TreatmentEventType) string {
 	}
 
 	return t.ToLocalTypeString()
-}
-
-func DBTypeToTreatmentType(m interface{}) *TreatmentEventType {
-	if m == nil {
-		return nil
-	}
-
-	cb := CorrectionBolus
-	tt := TemporaryTarget
-	tb := TempBasal
-	n := Note
-	cc := CarbCorrection
-
-	switch v := m.(type) {
-	case site.Bolus:
-		x := FromLocalTypeString(v.Type)
-		if x == nil {
-			return &cb
-		}
-		return x
-	case *site.Bolus:
-		x := FromLocalTypeString(v.Type)
-		if x == nil {
-			return &cb
-		}
-		return x
-	case site.Carb:
-		x := FromLocalTypeString(v.Type)
-		if x == nil {
-			return &cc
-		}
-		return x
-	case *site.Carb:
-		x := FromLocalTypeString(v.Type)
-		if x == nil {
-			return &cc
-		}
-		return x
-	case site.TempBasal:
-		return &tb
-	case *site.TempBasal:
-		return &tb
-	case site.TempTarget:
-		return &tt
-	case *site.TempTarget:
-		return &tt
-	case site.Note:
-		return &n
-	case *site.Note:
-		return &n
-	default:
-		return nil
-	}
-
 }

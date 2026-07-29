@@ -35,7 +35,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetActivity :one
 SELECT * FROM activities WHERE id = ?;
 
--- name: SearchWithDefaultSortActivities :many
+-- name: SearchActivities :many
 SELECT * FROM activities
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

@@ -35,7 +35,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetPumpState :one
 SELECT * FROM pump_states WHERE id = ?;
 
--- name: SearchWithDefaultSortPumpStates :many
+-- name: SearchPumpStates :many
 SELECT * FROM pump_states
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

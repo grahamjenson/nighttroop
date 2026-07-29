@@ -191,7 +191,7 @@ func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTa
 	return &i, err
 }
 
-const searchWithDefaultSortTempTargets = `-- name: SearchWithDefaultSortTempTargets :many
+const searchTempTargets = `-- name: SearchTempTargets :many
 SELECT id, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -226,7 +226,7 @@ ORDER BY occurred_at DESC
 LIMIT ?24 OFFSET ?23
 `
 
-type SearchWithDefaultSortTempTargetsParams struct {
+type SearchTempTargetsParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -253,8 +253,8 @@ type SearchWithDefaultSortTempTargetsParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortTempTargets(ctx context.Context, arg SearchWithDefaultSortTempTargetsParams) ([]*TempTarget, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortTempTargetsStmt, searchWithDefaultSortTempTargets,
+func (q *Queries) SearchTempTargets(ctx context.Context, arg SearchTempTargetsParams) ([]*TempTarget, error) {
+	rows, err := q.query(ctx, q.searchTempTargetsStmt, searchTempTargets,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

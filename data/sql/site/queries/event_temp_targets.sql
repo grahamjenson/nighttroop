@@ -32,7 +32,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetTempTarget :one
 SELECT * FROM temp_targets WHERE id = ?;
 
--- name: SearchWithDefaultSortTempTargets :many
+-- name: SearchTempTargets :many
 SELECT * FROM temp_targets
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

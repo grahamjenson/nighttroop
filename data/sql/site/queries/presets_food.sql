@@ -33,7 +33,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetFoodPreset :one
 SELECT * FROM food_presets WHERE id = ?;
 
--- name: SearchWithDefaultSortFoodPresets :many
+-- name: SearchFoodPresets :many
 SELECT * FROM food_presets
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR created_at >= sqlc.narg('DateGTE'))

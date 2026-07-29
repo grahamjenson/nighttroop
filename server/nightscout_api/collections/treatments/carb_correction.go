@@ -26,7 +26,7 @@ func (c CarbsCorrection) GetPrefix() string {
 }
 
 func (c CarbsCorrection) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.CreateCarb(ctx,
+	dbModel, err := siteContext.SiteDB.Queries.CreateFoodIntake(ctx,
 		nightscout.TreatmentToCreateCarb(treatment, nightscout.CreateContext{
 			IDPrefix:              c.GetPrefix(),
 			CreatedByIdentityID:   siteContext.IdentityModel.ID,
@@ -52,7 +52,7 @@ func (c CarbsCorrection) Search(ctx context.Context, siteContext *httputils.Site
 	if !query.HasFilters {
 		carbs, rerr = siteContext.SiteDB.Queries.AllCarbs(ctx, nsquery.CarbsSearchAll(query))
 	} else {
-		carbs, rerr = siteContext.SiteDB.Queries.SearchWithDefaultSortCarbs(ctx, nsquery.CarbsSearchDefaultOrder(query))
+		carbs, rerr = siteContext.SiteDB.Queries.SearchCarbs(ctx, nsquery.CarbsSearchDefaultOrder(query))
 	}
 
 	if rerr != nil {

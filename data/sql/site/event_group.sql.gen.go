@@ -464,7 +464,7 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 	return &i, err
 }
 
-const searchWithDefaultSortEventGroups = `-- name: SearchWithDefaultSortEventGroups :many
+const searchEventGroups = `-- name: SearchEventGroups :many
 SELECT 
     eg.id as id,
     eg.group_type as group_type,
@@ -640,7 +640,7 @@ ORDER BY eg.occurred_at DESC
 LIMIT ?44 OFFSET ?43
 `
 
-type SearchWithDefaultSortEventGroupsParams struct {
+type SearchEventGroupsParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -687,7 +687,7 @@ type SearchWithDefaultSortEventGroupsParams struct {
 	Limit          int64
 }
 
-type SearchWithDefaultSortEventGroupsRow struct {
+type SearchEventGroupsRow struct {
 	ID                                    string
 	GroupType                             string
 	GlucoseReading                        *float64
@@ -751,8 +751,8 @@ type SearchWithDefaultSortEventGroupsRow struct {
 	CreatedByIdentityName                 string
 }
 
-func (q *Queries) SearchWithDefaultSortEventGroups(ctx context.Context, arg SearchWithDefaultSortEventGroupsParams) ([]*SearchWithDefaultSortEventGroupsRow, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortEventGroupsStmt, searchWithDefaultSortEventGroups,
+func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsParams) ([]*SearchEventGroupsRow, error) {
+	rows, err := q.query(ctx, q.searchEventGroupsStmt, searchEventGroups,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,
@@ -802,9 +802,9 @@ func (q *Queries) SearchWithDefaultSortEventGroups(ctx context.Context, arg Sear
 		return nil, err
 	}
 	defer rows.Close()
-	var items []*SearchWithDefaultSortEventGroupsRow
+	var items []*SearchEventGroupsRow
 	for rows.Next() {
-		var i SearchWithDefaultSortEventGroupsRow
+		var i SearchEventGroupsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.GroupType,

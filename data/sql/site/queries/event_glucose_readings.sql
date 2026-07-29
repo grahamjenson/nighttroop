@@ -39,7 +39,7 @@ ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
--- name: SearchWithDefaultSortGlucoseReadings :many
+-- name: SearchGlucoseReadings :many
 SELECT * FROM glucose_readings
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

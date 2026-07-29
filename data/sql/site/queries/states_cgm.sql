@@ -32,7 +32,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetCGMState :one
 SELECT * FROM cgm_states WHERE id = ?;
 
--- name: SearchWithDefaultSortCGMStates :many
+-- name: SearchCGMStates :many
 SELECT * FROM cgm_states
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))

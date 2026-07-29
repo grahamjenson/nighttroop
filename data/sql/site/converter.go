@@ -43,9 +43,6 @@ type ToCreateParams interface {
 	PumpStateToUpdate(source PumpState) UpdatePumpStateParams
 
 	// PRESETS
-	ActivityPresetToCreate(source ActivityPreset) CreateActivityPresetParams
-	ActivityPresetToUpdate(source ActivityPreset) UpdateActivityPresetParams
-
 	FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams
 	FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams
 

@@ -190,7 +190,7 @@ func (q *Queries) HardDeleteProfilePreset(ctx context.Context, arg HardDeletePro
 	return &i, err
 }
 
-const searchWithDefaultSortProfilePresets = `-- name: SearchWithDefaultSortProfilePresets :many
+const searchProfilePresets = `-- name: SearchProfilePresets :many
 SELECT id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR created_at >= ?1)
@@ -219,7 +219,7 @@ ORDER BY created_at DESC
 LIMIT ?19 OFFSET ?18
 `
 
-type SearchWithDefaultSortProfilePresetsParams struct {
+type SearchProfilePresetsParams struct {
 	DateGTE      *int64
 	DateLTE      *int64
 	DateGT       *int64
@@ -241,8 +241,8 @@ type SearchWithDefaultSortProfilePresetsParams struct {
 	Limit        int64
 }
 
-func (q *Queries) SearchWithDefaultSortProfilePresets(ctx context.Context, arg SearchWithDefaultSortProfilePresetsParams) ([]*ProfilePreset, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortProfilePresetsStmt, searchWithDefaultSortProfilePresets,
+func (q *Queries) SearchProfilePresets(ctx context.Context, arg SearchProfilePresetsParams) ([]*ProfilePreset, error) {
+	rows, err := q.query(ctx, q.searchProfilePresetsStmt, searchProfilePresets,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

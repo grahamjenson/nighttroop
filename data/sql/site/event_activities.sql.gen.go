@@ -212,7 +212,7 @@ func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivity
 	return &i, err
 }
 
-const searchWithDefaultSortActivities = `-- name: SearchWithDefaultSortActivities :many
+const searchActivities = `-- name: SearchActivities :many
 SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -254,7 +254,7 @@ ORDER BY occurred_at DESC
 LIMIT ?29 OFFSET ?28
 `
 
-type SearchWithDefaultSortActivitiesParams struct {
+type SearchActivitiesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -286,8 +286,8 @@ type SearchWithDefaultSortActivitiesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortActivities(ctx context.Context, arg SearchWithDefaultSortActivitiesParams) ([]*Activity, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortActivitiesStmt, searchWithDefaultSortActivities,
+func (q *Queries) SearchActivities(ctx context.Context, arg SearchActivitiesParams) ([]*Activity, error) {
+	rows, err := q.query(ctx, q.searchActivitiesStmt, searchActivities,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

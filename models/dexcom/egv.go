@@ -28,7 +28,7 @@ func EGVToCreate(e EGV, idPrefix string, createdByIdentityID int64, createdByIde
 	return site.CreateGlucoseReadingParams{
 		ID:                    utils.NextDateID(idPrefix, e.SystemTime.UnixMilli()),
 		OccurredAt:            e.SystemTime.UnixMilli(),
-		Value:                 float64(e.Value),
+		Reading:               float64(e.Value),
 		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
 		UtcOffsetMinutes:      ptr(int64(e.UTCOffsetInMinutes())),

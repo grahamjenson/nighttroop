@@ -199,7 +199,7 @@ func (q *Queries) HardDeleteDeviceState(ctx context.Context, arg HardDeleteDevic
 	return &i, err
 }
 
-const searchWithDefaultSortDeviceStates = `-- name: SearchWithDefaultSortDeviceStates :many
+const searchDeviceStates = `-- name: SearchDeviceStates :many
 SELECT id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_states
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
@@ -228,7 +228,7 @@ ORDER BY occurred_at DESC
 LIMIT ?19 OFFSET ?18
 `
 
-type SearchWithDefaultSortDeviceStatesParams struct {
+type SearchDeviceStatesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
 	DateGT         *int64
@@ -250,8 +250,8 @@ type SearchWithDefaultSortDeviceStatesParams struct {
 	Limit          int64
 }
 
-func (q *Queries) SearchWithDefaultSortDeviceStates(ctx context.Context, arg SearchWithDefaultSortDeviceStatesParams) ([]*DeviceState, error) {
-	rows, err := q.query(ctx, q.searchWithDefaultSortDeviceStatesStmt, searchWithDefaultSortDeviceStates,
+func (q *Queries) SearchDeviceStates(ctx context.Context, arg SearchDeviceStatesParams) ([]*DeviceState, error) {
+	rows, err := q.query(ctx, q.searchDeviceStatesStmt, searchDeviceStates,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

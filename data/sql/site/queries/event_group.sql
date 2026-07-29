@@ -144,7 +144,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetEventGroup :one
 SELECT * FROM event_groups WHERE id = ?;
 
--- name: SearchWithDefaultSortEventGroups :many
+-- name: SearchEventGroups :many
 SELECT 
     eg.id as id,
     eg.group_type as group_type,
