@@ -387,8 +387,6 @@ type MapConverter interface {
 	////////////////////////////////////////
 
 	// goverter:map ID Identifier
-	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map OccurredAt Mills
 	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
