@@ -2,6 +2,7 @@ CREATE TABLE activities (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     name TEXT CHECK(length(name) <= 64),
+    notes TEXT CHECK(length(notes) <= 1024),
     activity_type TEXT CHECK(length(activity_type) <= 32),
 
     duration_minutes INTEGER,

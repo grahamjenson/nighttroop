@@ -12,6 +12,11 @@ func (m *Activity) GetName() *string {
 	return m.Name
 }
 
+// GetNotes returns the Notes value.
+func (m *Activity) GetNotes() *string {
+	return m.Notes
+}
+
 // GetActivityType returns the ActivityType value.
 func (m *Activity) GetActivityType() *string {
 	return m.ActivityType

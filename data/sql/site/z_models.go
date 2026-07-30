@@ -7,6 +7,7 @@ package site
 type Activity struct {
 	ID                    string
 	Name                  *string
+	Notes                 *string
 	ActivityType          *string
 	DurationMinutes       *int64
 	Calories              *int64

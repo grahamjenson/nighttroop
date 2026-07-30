@@ -11,7 +11,7 @@ import (
 
 const allActivities = `-- name: AllActivities :many
 
-SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
+SELECT id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -38,6 +38,7 @@ func (q *Queries) AllActivities(ctx context.Context, arg AllActivitiesParams) ([
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Notes,
 			&i.ActivityType,
 			&i.DurationMinutes,
 			&i.Calories,
@@ -85,7 +86,7 @@ INSERT INTO activities (
     created_by_identity_name
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateActivityParams struct {
@@ -127,6 +128,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Notes,
 		&i.ActivityType,
 		&i.DurationMinutes,
 		&i.Calories,
@@ -147,7 +149,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 }
 
 const getActivity = `-- name: GetActivity :one
-SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities WHERE id = ?
+SELECT id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities WHERE id = ?
 `
 
 type GetActivityParams struct {
@@ -160,6 +162,7 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Notes,
 		&i.ActivityType,
 		&i.DurationMinutes,
 		&i.Calories,
@@ -180,7 +183,7 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 }
 
 const hardDeleteActivity = `-- name: HardDeleteActivity :one
-DELETE FROM activities WHERE id = ? RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM activities WHERE id = ? RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type HardDeleteActivityParams struct {
@@ -193,6 +196,7 @@ func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivity
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Notes,
 		&i.ActivityType,
 		&i.DurationMinutes,
 		&i.Calories,
@@ -213,7 +217,7 @@ func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivity
 }
 
 const searchActivities = `-- name: SearchActivities :many
-SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
+SELECT id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -328,6 +332,7 @@ func (q *Queries) SearchActivities(ctx context.Context, arg SearchActivitiesPara
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Notes,
 			&i.ActivityType,
 			&i.DurationMinutes,
 			&i.Calories,
@@ -363,7 +368,7 @@ UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteActivityParams struct {
@@ -380,6 +385,7 @@ func (q *Queries) SoftDeleteActivity(ctx context.Context, arg SoftDeleteActivity
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Notes,
 		&i.ActivityType,
 		&i.DurationMinutes,
 		&i.Calories,
@@ -414,7 +420,7 @@ UPDATE activities SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateActivityParams struct {
@@ -450,6 +456,7 @@ func (q *Queries) UpdateActivity(ctx context.Context, arg UpdateActivityParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Notes,
 		&i.ActivityType,
 		&i.DurationMinutes,
 		&i.Calories,
