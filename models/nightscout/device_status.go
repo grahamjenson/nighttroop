@@ -34,6 +34,7 @@ type DeviceStatus struct {
 	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
 	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
 	RawJsonData      string         `json:"-"`
+	MergedLoopStatus *LoopStatus    `json:"-"`
 }
 
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
@@ -67,6 +68,78 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 
+	if t.Loop != nil && t.OpenAPS != nil {
+		t.MergedLoopStatus = t.OpenAPS
+		if t.Loop.Timestamp != nil {
+			t.MergedLoopStatus.Timestamp = t.Loop.Timestamp
+		}
+		if t.Loop.Name != nil {
+			t.MergedLoopStatus.Name = t.Loop.Name
+		}
+		if t.Loop.Version != nil {
+			t.MergedLoopStatus.Version = t.Loop.Version
+		}
+		if t.Loop.Predicted != nil {
+			t.MergedLoopStatus.Predicted = t.Loop.Predicted
+		}
+		if t.Loop.Enacted != nil {
+			t.MergedLoopStatus.Enacted = t.Loop.Enacted
+		}
+		if t.Loop.Suggested != nil {
+			t.MergedLoopStatus.Suggested = t.Loop.Suggested
+		}
+		if t.Loop.AutomaticDoseRecommendation != nil {
+			t.MergedLoopStatus.AutomaticDoseRecommendation = t.Loop.AutomaticDoseRecommendation
+		}
+		if t.Loop.RecommendedBolus != nil {
+			t.MergedLoopStatus.RecommendedBolus = t.Loop.RecommendedBolus
+		}
+		if t.Loop.FailureReason != nil {
+			t.MergedLoopStatus.FailureReason = t.Loop.FailureReason
+		}
+
+		if t.Loop.IOB != nil {
+			// not nil merge
+			if t.MergedLoopStatus.IOB == nil {
+				t.MergedLoopStatus.IOB = t.Loop.IOB
+			} else {
+				if t.Loop.IOB.IOB != nil {
+					t.MergedLoopStatus.IOB.IOB = t.Loop.IOB.IOB
+				}
+				if t.Loop.IOB.BasalIOB != nil {
+					t.MergedLoopStatus.IOB.BasalIOB = t.Loop.IOB.BasalIOB
+				}
+				if t.Loop.IOB.Activity != nil {
+					t.MergedLoopStatus.IOB.Activity = t.Loop.IOB.Activity
+				}
+				if t.Loop.IOB.Time != nil {
+					t.MergedLoopStatus.IOB.Time = t.Loop.IOB.Time
+				}
+				if t.Loop.IOB.Timestamp != nil {
+					t.MergedLoopStatus.IOB.Timestamp = t.Loop.IOB.Timestamp
+				}
+			}
+
+		}
+		if t.Loop.COB != nil {
+			if t.MergedLoopStatus.COB == nil {
+				t.MergedLoopStatus.COB = t.Loop.COB
+			} else {
+				// not nil merge
+				if t.Loop.COB.COB != nil {
+					t.MergedLoopStatus.COB.COB = t.Loop.COB.COB
+				}
+				if t.Loop.COB.Timestamp != nil {
+					t.MergedLoopStatus.COB.Timestamp = t.Loop.COB.Timestamp
+				}
+			}
+		}
+
+	} else if t.Loop != nil {
+		t.MergedLoopStatus = t.Loop
+	} else if t.OpenAPS != nil {
+		t.MergedLoopStatus = t.OpenAPS
+	}
 	return nil
 }
 

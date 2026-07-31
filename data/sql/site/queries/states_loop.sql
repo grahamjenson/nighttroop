@@ -87,12 +87,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteLoopState :one
+-- name: SoftDeleteLoopState :execresult
 UPDATE loop_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteLoopState :one
+-- name: HardDeleteLoopState :execresult
 DELETE FROM loop_states WHERE id = ? RETURNING *;

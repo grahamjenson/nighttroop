@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allProfilePresets = `-- name: AllProfilePresets :many
@@ -156,7 +157,7 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 	return &i, err
 }
 
-const hardDeleteProfilePreset = `-- name: HardDeleteProfilePreset :one
+const hardDeleteProfilePreset = `-- name: HardDeleteProfilePreset :execresult
 
 
 DELETE FROM profile_presets WHERE id = ? RETURNING id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
@@ -169,25 +170,8 @@ type HardDeleteProfilePresetParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) HardDeleteProfilePreset(ctx context.Context, arg HardDeleteProfilePresetParams) (*ProfilePreset, error) {
-	row := q.queryRow(ctx, q.hardDeleteProfilePresetStmt, hardDeleteProfilePreset, arg.ID)
-	var i ProfilePreset
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.CarbRatiosJson,
-		&i.InsulinSensitivitiesJson,
-		&i.BasalRatesJson,
-		&i.TargetsJson,
-		&i.RawJsonData,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteProfilePreset(ctx context.Context, arg HardDeleteProfilePresetParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteProfilePresetStmt, hardDeleteProfilePreset, arg.ID)
 }
 
 const searchProfilePresets = `-- name: SearchProfilePresets :many

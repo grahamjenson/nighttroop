@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allEventGroups = `-- name: AllEventGroups :many
@@ -424,7 +425,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 	return &i, err
 }
 
-const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :one
+const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :execresult
 DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -432,36 +433,8 @@ type HardDeleteEventGroupParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventGroupParams) (*EventGroup, error) {
-	row := q.queryRow(ctx, q.hardDeleteEventGroupStmt, hardDeleteEventGroup, arg.ID)
-	var i EventGroup
-	err := row.Scan(
-		&i.ID,
-		&i.GroupType,
-		&i.GlucoseReadingID,
-		&i.InsulinDoseID,
-		&i.FoodIntakeID,
-		&i.TempBasalID,
-		&i.TempTargetID,
-		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
-		&i.ActivityID,
-		&i.NoteID,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventGroupParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteEventGroupStmt, hardDeleteEventGroup, arg.ID)
 }
 
 const searchEventGroups = `-- name: SearchEventGroups :many
@@ -881,7 +854,7 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 	return items, nil
 }
 
-const softDeleteEventGroup = `-- name: SoftDeleteEventGroup :one
+const softDeleteEventGroup = `-- name: SoftDeleteEventGroup :execresult
 
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -898,36 +871,8 @@ type SoftDeleteEventGroupParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventGroupParams) (*EventGroup, error) {
-	row := q.queryRow(ctx, q.softDeleteEventGroupStmt, softDeleteEventGroup, arg.UpdatedByIdentityName, arg.ID)
-	var i EventGroup
-	err := row.Scan(
-		&i.ID,
-		&i.GroupType,
-		&i.GlucoseReadingID,
-		&i.InsulinDoseID,
-		&i.FoodIntakeID,
-		&i.TempBasalID,
-		&i.TempTargetID,
-		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
-		&i.ActivityID,
-		&i.NoteID,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventGroupParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteEventGroupStmt, softDeleteEventGroup, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateEventGroup = `-- name: UpdateEventGroup :one

@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allCGMStates = `-- name: AllCGMStates :many
@@ -161,7 +162,7 @@ func (q *Queries) GetCGMState(ctx context.Context, arg GetCGMStateParams) (*CgmS
 	return &i, err
 }
 
-const hardDeleteCGMState = `-- name: HardDeleteCGMState :one
+const hardDeleteCGMState = `-- name: HardDeleteCGMState :execresult
 DELETE FROM cgm_states WHERE id = ? RETURNING id, cgm_state, cgm_timestamp, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
@@ -169,26 +170,8 @@ type HardDeleteCGMStateParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteCGMState(ctx context.Context, arg HardDeleteCGMStateParams) (*CgmState, error) {
-	row := q.queryRow(ctx, q.hardDeleteCGMStateStmt, hardDeleteCGMState, arg.ID)
-	var i CgmState
-	err := row.Scan(
-		&i.ID,
-		&i.CgmState,
-		&i.CgmTimestamp,
-		&i.CgmInsertionTime,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteCGMState(ctx context.Context, arg HardDeleteCGMStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteCGMStateStmt, hardDeleteCGMState, arg.ID)
 }
 
 const searchCGMStates = `-- name: SearchCGMStates :many
@@ -300,7 +283,7 @@ func (q *Queries) SearchCGMStates(ctx context.Context, arg SearchCGMStatesParams
 	return items, nil
 }
 
-const softDeleteCGMState = `-- name: SoftDeleteCGMState :one
+const softDeleteCGMState = `-- name: SoftDeleteCGMState :execresult
 
 UPDATE cgm_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -317,26 +300,8 @@ type SoftDeleteCGMStateParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteCGMState(ctx context.Context, arg SoftDeleteCGMStateParams) (*CgmState, error) {
-	row := q.queryRow(ctx, q.softDeleteCGMStateStmt, softDeleteCGMState, arg.UpdatedByIdentityName, arg.ID)
-	var i CgmState
-	err := row.Scan(
-		&i.ID,
-		&i.CgmState,
-		&i.CgmTimestamp,
-		&i.CgmInsertionTime,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteCGMState(ctx context.Context, arg SoftDeleteCGMStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteCGMStateStmt, softDeleteCGMState, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateCGMState = `-- name: UpdateCGMState :one

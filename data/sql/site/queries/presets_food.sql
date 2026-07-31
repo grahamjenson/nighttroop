@@ -96,5 +96,5 @@ RETURNING *;
 --------
 
 
--- name: HardDeleteFoodPreset :one
+-- name: HardDeleteFoodPreset :execresult
 DELETE FROM food_presets WHERE id = ? RETURNING *;

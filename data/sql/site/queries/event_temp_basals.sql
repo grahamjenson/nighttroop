@@ -87,12 +87,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteTempBasal :one
+-- name: SoftDeleteTempBasal :execresult
 UPDATE temp_basals SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteTempBasal :one
+-- name: HardDeleteTempBasal :execresult
 DELETE FROM temp_basals WHERE id = ? RETURNING *;

@@ -87,12 +87,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteTempTarget :one
+-- name: SoftDeleteTempTarget :execresult
 UPDATE temp_targets SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteTempTarget :one
+-- name: HardDeleteTempTarget :execresult
 DELETE FROM temp_targets WHERE id = ? RETURNING *;

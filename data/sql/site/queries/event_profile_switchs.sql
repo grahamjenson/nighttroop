@@ -97,12 +97,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteProfileSwitch :one
+-- name: SoftDeleteProfileSwitch :execresult
 UPDATE profile_switches SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteProfileSwitch :one
+-- name: HardDeleteProfileSwitch :execresult
 DELETE FROM profile_switches WHERE id = ? RETURNING *;

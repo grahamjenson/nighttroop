@@ -100,12 +100,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteActivity :one
+-- name: SoftDeleteActivity :execresult
 UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteActivity :one
+-- name: HardDeleteActivity :execresult
 DELETE FROM activities WHERE id = ? RETURNING *;

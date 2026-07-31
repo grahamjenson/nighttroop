@@ -91,12 +91,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteInsulinDose :one
+-- name: SoftDeleteInsulinDose :execresult
 UPDATE insulin_doses SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteInsulinDose :one
+-- name: HardDeleteInsulinDose :execresult
 DELETE FROM insulin_doses WHERE id = ? RETURNING *;

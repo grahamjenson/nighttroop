@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allFoodIntakes = `-- name: AllFoodIntakes :many
@@ -185,7 +186,7 @@ func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*
 	return &i, err
 }
 
-const hardDeleteFoodIntake = `-- name: HardDeleteFoodIntake :one
+const hardDeleteFoodIntake = `-- name: HardDeleteFoodIntake :execresult
 DELETE FROM food_intakes WHERE id = ? RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -193,30 +194,8 @@ type HardDeleteFoodIntakeParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteFoodIntake(ctx context.Context, arg HardDeleteFoodIntakeParams) (*FoodIntake, error) {
-	row := q.queryRow(ctx, q.hardDeleteFoodIntakeStmt, hardDeleteFoodIntake, arg.ID)
-	var i FoodIntake
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.FoodType,
-		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Calories,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteFoodIntake(ctx context.Context, arg HardDeleteFoodIntakeParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteFoodIntakeStmt, hardDeleteFoodIntake, arg.ID)
 }
 
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
@@ -365,7 +344,7 @@ func (q *Queries) SearchFoodIntakes(ctx context.Context, arg SearchFoodIntakesPa
 	return items, nil
 }
 
-const softDeleteFoodIntake = `-- name: SoftDeleteFoodIntake :one
+const softDeleteFoodIntake = `-- name: SoftDeleteFoodIntake :execresult
 
 UPDATE food_intakes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -382,30 +361,8 @@ type SoftDeleteFoodIntakeParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteFoodIntake(ctx context.Context, arg SoftDeleteFoodIntakeParams) (*FoodIntake, error) {
-	row := q.queryRow(ctx, q.softDeleteFoodIntakeStmt, softDeleteFoodIntake, arg.UpdatedByIdentityName, arg.ID)
-	var i FoodIntake
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.FoodType,
-		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Calories,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteFoodIntake(ctx context.Context, arg SoftDeleteFoodIntakeParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteFoodIntakeStmt, softDeleteFoodIntake, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateFoodIntake = `-- name: UpdateFoodIntake :one

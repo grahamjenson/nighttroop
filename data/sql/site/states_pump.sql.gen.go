@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allPumpStates = `-- name: AllPumpStates :many
@@ -179,7 +180,7 @@ func (q *Queries) GetPumpState(ctx context.Context, arg GetPumpStateParams) (*Pu
 	return &i, err
 }
 
-const hardDeletePumpState = `-- name: HardDeletePumpState :one
+const hardDeletePumpState = `-- name: HardDeletePumpState :execresult
 DELETE FROM pump_states WHERE id = ? RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
@@ -187,29 +188,8 @@ type HardDeletePumpStateParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeletePumpState(ctx context.Context, arg HardDeletePumpStateParams) (*PumpState, error) {
-	row := q.queryRow(ctx, q.hardDeletePumpStateStmt, hardDeletePumpState, arg.ID)
-	var i PumpState
-	err := row.Scan(
-		&i.ID,
-		&i.PumpState,
-		&i.PumpTimestamp,
-		&i.PumpInsertionTime,
-		&i.PumpReservoir,
-		&i.PumpBatteryPercent,
-		&i.PumpChargingState,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeletePumpState(ctx context.Context, arg HardDeletePumpStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeletePumpStateStmt, hardDeletePumpState, arg.ID)
 }
 
 const searchPumpStates = `-- name: SearchPumpStates :many
@@ -324,7 +304,7 @@ func (q *Queries) SearchPumpStates(ctx context.Context, arg SearchPumpStatesPara
 	return items, nil
 }
 
-const softDeletePumpState = `-- name: SoftDeletePumpState :one
+const softDeletePumpState = `-- name: SoftDeletePumpState :execresult
 
 UPDATE pump_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -341,29 +321,8 @@ type SoftDeletePumpStateParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeletePumpState(ctx context.Context, arg SoftDeletePumpStateParams) (*PumpState, error) {
-	row := q.queryRow(ctx, q.softDeletePumpStateStmt, softDeletePumpState, arg.UpdatedByIdentityName, arg.ID)
-	var i PumpState
-	err := row.Scan(
-		&i.ID,
-		&i.PumpState,
-		&i.PumpTimestamp,
-		&i.PumpInsertionTime,
-		&i.PumpReservoir,
-		&i.PumpBatteryPercent,
-		&i.PumpChargingState,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeletePumpState(ctx context.Context, arg SoftDeletePumpStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeletePumpStateStmt, softDeletePumpState, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updatePumpState = `-- name: UpdatePumpState :one

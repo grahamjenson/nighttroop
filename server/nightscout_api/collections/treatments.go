@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/collections/treatments"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
@@ -14,8 +15,6 @@ import (
 )
 
 type TreatmentTypeCollection interface {
-	GetPrefix() string
-
 	Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError)
 	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
@@ -25,6 +24,7 @@ type TreatmentTypeCollection interface {
 }
 
 type TreatmentCollection struct {
+	converter                func(c *site.EventGroup) nsutils.Record
 	treatmentCollectionTypes map[nightscout.TreatmentEventType]TreatmentTypeCollection
 }
 
@@ -77,7 +77,11 @@ func NewTreatmentCollection() TreatmentCollection {
 		nightscout.TemporaryTarget:   treatments.NewTempTarget(),
 		nightscout.Unknown:           treatments.Unknown{},
 	}
-	return TreatmentCollection{treatmentCollectionTypes: typeMap}
+
+	return TreatmentCollection{
+		converter:                nsutils.DBModelToRecord(nsutils.Treatments, nightscout.DBModelToTreatment),
+		treatmentCollectionTypes: typeMap,
+	}
 }
 
 func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
@@ -132,38 +136,23 @@ func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.Sit
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	records := []nsutils.Record{}
-	for typeKind, typeCollect := range c.treatmentCollectionTypes {
 
-		// Check that the type is not excluded by query
-		if query.TypeEq != nil && *query.TypeEq != typeKind.String() {
-			continue
-		}
+	var entries []*site.GlucoseReading
+	var rerr error
 
-		if query.TypeNeq != nil && *query.TypeNeq == typeKind.String() {
-			continue
-		}
-
-		if query.TypeIn != nil && !strings.Contains(*query.TypeIn, typeKind.String()) {
-			continue
-		}
-
-		if query.TypeNin != nil && strings.Contains(*query.TypeNin, typeKind.String()) {
-			continue
-		}
-
-		typeRecords, rerr := typeCollect.Search(ctx, siteContext, query)
-		if rerr != nil {
-			slog.Error("failed to search treatments from database", "error", rerr)
-			return nil, rerr
-		}
-		if typeRecords == nil {
-			slog.Error("treatment search returned nil value", "typePrefix", typeCollect.GetPrefix())
-			return nil, nsutils.ErrInternal
-		}
-		records = append(records, typeRecords...)
+	// There are three options,
+	if !query.HasFilters {
+		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
+	} else {
+		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	}
-	return records, nil
+
+	if rerr != nil {
+		slog.Error("failed to query glucose readings from database", "error", rerr)
+		return nil, nsutils.ErrInternal
+	}
+
+	return nsutils.CreateRecordSlice(entries, c.converter), nil
 }
 
 func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {

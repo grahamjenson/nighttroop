@@ -14,7 +14,7 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *site.Profile) nsutils.Record
+	converter func(c *site.ProfilePreset) nsutils.Record
 }
 
 func NewProfileCollection() ProfileCollection {
@@ -37,7 +37,7 @@ func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.Si
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := siteContext.SiteDB.Queries.CreateProfile(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateProfilePreset(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create profile in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,7 +50,7 @@ func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetProfile(ctx, site.GetProfileParams{
+	dbModel, err := siteContext.SiteDB.Queries.GetProfilePreset(ctx, site.GetProfilePresetParams{
 		ID: identifier,
 	})
 

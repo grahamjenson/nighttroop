@@ -81,12 +81,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteCGMState :one
+-- name: SoftDeleteCGMState :execresult
 UPDATE cgm_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteCGMState :one
+-- name: HardDeleteCGMState :execresult
 DELETE FROM cgm_states WHERE id = ? RETURNING *;

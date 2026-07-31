@@ -19,6 +19,7 @@ type Food struct {
 	Carbs    *FlexibleFloat64 `json:"carbs,omitempty"`
 	Fat      *FlexibleFloat64 `json:"fat,omitempty"`
 	Protein  *FlexibleFloat64 `json:"protein,omitempty"`
+	Fibre    *FlexibleFloat64 `json:"fibre,omitempty"`
 	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
 	GI       *FlexibleFloat64 `json:"gi,omitempty"`
 	Portions FlexibleFloat64  `json:"portions,omitempty"`

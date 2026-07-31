@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allInsulinDoses = `-- name: AllInsulinDoses :many
@@ -155,7 +156,7 @@ func (q *Queries) GetInsulinDose(ctx context.Context, arg GetInsulinDoseParams) 
 	return &i, err
 }
 
-const hardDeleteInsulinDose = `-- name: HardDeleteInsulinDose :one
+const hardDeleteInsulinDose = `-- name: HardDeleteInsulinDose :execresult
 DELETE FROM insulin_doses WHERE id = ? RETURNING id, dose, dose_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -163,25 +164,8 @@ type HardDeleteInsulinDoseParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteInsulinDose(ctx context.Context, arg HardDeleteInsulinDoseParams) (*InsulinDose, error) {
-	row := q.queryRow(ctx, q.hardDeleteInsulinDoseStmt, hardDeleteInsulinDose, arg.ID)
-	var i InsulinDose
-	err := row.Scan(
-		&i.ID,
-		&i.Dose,
-		&i.DoseType,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteInsulinDose(ctx context.Context, arg HardDeleteInsulinDoseParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteInsulinDoseStmt, hardDeleteInsulinDose, arg.ID)
 }
 
 const searchInsulinDoses = `-- name: SearchInsulinDoses :many
@@ -322,7 +306,7 @@ func (q *Queries) SearchInsulinDoses(ctx context.Context, arg SearchInsulinDoses
 	return items, nil
 }
 
-const softDeleteInsulinDose = `-- name: SoftDeleteInsulinDose :one
+const softDeleteInsulinDose = `-- name: SoftDeleteInsulinDose :execresult
 
 UPDATE insulin_doses SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -339,25 +323,8 @@ type SoftDeleteInsulinDoseParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteInsulinDose(ctx context.Context, arg SoftDeleteInsulinDoseParams) (*InsulinDose, error) {
-	row := q.queryRow(ctx, q.softDeleteInsulinDoseStmt, softDeleteInsulinDose, arg.UpdatedByIdentityName, arg.ID)
-	var i InsulinDose
-	err := row.Scan(
-		&i.ID,
-		&i.Dose,
-		&i.DoseType,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteInsulinDose(ctx context.Context, arg SoftDeleteInsulinDoseParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteInsulinDoseStmt, softDeleteInsulinDose, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateInsulinDose = `-- name: UpdateInsulinDose :one

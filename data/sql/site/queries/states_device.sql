@@ -84,12 +84,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteDeviceState :one
+-- name: SoftDeleteDeviceState :execresult
 UPDATE device_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteDeviceState :one
+-- name: HardDeleteDeviceState :execresult
 DELETE FROM device_states WHERE id = ? RETURNING *;

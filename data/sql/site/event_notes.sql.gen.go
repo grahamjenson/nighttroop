@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allNotes = `-- name: AllNotes :many
@@ -149,7 +150,7 @@ func (q *Queries) GetNote(ctx context.Context, arg GetNoteParams) (*Note, error)
 	return &i, err
 }
 
-const hardDeleteNote = `-- name: HardDeleteNote :one
+const hardDeleteNote = `-- name: HardDeleteNote :execresult
 DELETE FROM notes WHERE id = ? RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -157,24 +158,8 @@ type HardDeleteNoteParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteNote(ctx context.Context, arg HardDeleteNoteParams) (*Note, error) {
-	row := q.queryRow(ctx, q.hardDeleteNoteStmt, hardDeleteNote, arg.ID)
-	var i Note
-	err := row.Scan(
-		&i.ID,
-		&i.Content,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteNote(ctx context.Context, arg HardDeleteNoteParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteNoteStmt, hardDeleteNote, arg.ID)
 }
 
 const searchNotes = `-- name: SearchNotes :many
@@ -288,7 +273,7 @@ func (q *Queries) SearchNotes(ctx context.Context, arg SearchNotesParams) ([]*No
 	return items, nil
 }
 
-const softDeleteNote = `-- name: SoftDeleteNote :one
+const softDeleteNote = `-- name: SoftDeleteNote :execresult
 
 UPDATE notes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -305,24 +290,8 @@ type SoftDeleteNoteParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteNote(ctx context.Context, arg SoftDeleteNoteParams) (*Note, error) {
-	row := q.queryRow(ctx, q.softDeleteNoteStmt, softDeleteNote, arg.UpdatedByIdentityName, arg.ID)
-	var i Note
-	err := row.Scan(
-		&i.ID,
-		&i.Content,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteNote(ctx context.Context, arg SoftDeleteNoteParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteNoteStmt, softDeleteNote, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateNote = `-- name: UpdateNote :one

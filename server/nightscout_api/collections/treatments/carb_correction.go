@@ -21,10 +21,6 @@ func NewCarbsCorrection() CarbsCorrection {
 	}
 }
 
-func (c CarbsCorrection) GetPrefix() string {
-	return "cc"
-}
-
 func (c CarbsCorrection) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
 	dbModel, err := siteContext.SiteDB.Queries.CreateFoodIntake(ctx,
 		nightscout.TreatmentToCreateCarb(treatment, nightscout.CreateContext{

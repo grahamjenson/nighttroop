@@ -114,9 +114,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
-	if q.deleteGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, deleteGlucoseReadingsByType); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteGlucoseReadingsByType: %w", err)
-	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
@@ -275,6 +272,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.softDeleteGlucoseReadingStmt, err = db.PrepareContext(ctx, softDeleteGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteGlucoseReading: %w", err)
+	}
+	if q.softDeleteGlucoseReadingsByTypeStmt, err = db.PrepareContext(ctx, softDeleteGlucoseReadingsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteGlucoseReadingsByType: %w", err)
 	}
 	if q.softDeleteInsulinDoseStmt, err = db.PrepareContext(ctx, softDeleteInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteInsulinDose: %w", err)
@@ -498,11 +498,6 @@ func (q *Queries) Close() error {
 	if q.createTempTargetStmt != nil {
 		if cerr := q.createTempTargetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
-		}
-	}
-	if q.deleteGlucoseReadingsByTypeStmt != nil {
-		if cerr := q.deleteGlucoseReadingsByTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteGlucoseReadingsByTypeStmt: %w", cerr)
 		}
 	}
 	if q.getActivityStmt != nil {
@@ -770,6 +765,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteGlucoseReadingStmt: %w", cerr)
 		}
 	}
+	if q.softDeleteGlucoseReadingsByTypeStmt != nil {
+		if cerr := q.softDeleteGlucoseReadingsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteGlucoseReadingsByTypeStmt: %w", cerr)
+		}
+	}
 	if q.softDeleteInsulinDoseStmt != nil {
 		if cerr := q.softDeleteInsulinDoseStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing softDeleteInsulinDoseStmt: %w", cerr)
@@ -954,7 +954,6 @@ type Queries struct {
 	createPumpStateStmt                 *sql.Stmt
 	createTempBasalStmt                 *sql.Stmt
 	createTempTargetStmt                *sql.Stmt
-	deleteGlucoseReadingsByTypeStmt     *sql.Stmt
 	getActivityStmt                     *sql.Stmt
 	getCGMStateStmt                     *sql.Stmt
 	getDeviceStateStmt                  *sql.Stmt
@@ -1008,6 +1007,7 @@ type Queries struct {
 	softDeleteEventGroupStmt            *sql.Stmt
 	softDeleteFoodIntakeStmt            *sql.Stmt
 	softDeleteGlucoseReadingStmt        *sql.Stmt
+	softDeleteGlucoseReadingsByTypeStmt *sql.Stmt
 	softDeleteInsulinDoseStmt           *sql.Stmt
 	softDeleteLoopStateStmt             *sql.Stmt
 	softDeleteNoteStmt                  *sql.Stmt
@@ -1067,7 +1067,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createPumpStateStmt:                 q.createPumpStateStmt,
 		createTempBasalStmt:                 q.createTempBasalStmt,
 		createTempTargetStmt:                q.createTempTargetStmt,
-		deleteGlucoseReadingsByTypeStmt:     q.deleteGlucoseReadingsByTypeStmt,
 		getActivityStmt:                     q.getActivityStmt,
 		getCGMStateStmt:                     q.getCGMStateStmt,
 		getDeviceStateStmt:                  q.getDeviceStateStmt,
@@ -1121,6 +1120,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteEventGroupStmt:            q.softDeleteEventGroupStmt,
 		softDeleteFoodIntakeStmt:            q.softDeleteFoodIntakeStmt,
 		softDeleteGlucoseReadingStmt:        q.softDeleteGlucoseReadingStmt,
+		softDeleteGlucoseReadingsByTypeStmt: q.softDeleteGlucoseReadingsByTypeStmt,
 		softDeleteInsulinDoseStmt:           q.softDeleteInsulinDoseStmt,
 		softDeleteLoopStateStmt:             q.softDeleteLoopStateStmt,
 		softDeleteNoteStmt:                  q.softDeleteNoteStmt,

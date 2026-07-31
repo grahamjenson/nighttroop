@@ -15,7 +15,6 @@ import (
 
 type EntriesCollection struct {
 	converter func(c *site.GlucoseReading) nsutils.Record
-	creator   func(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 }
 
 func NewEntriesCollection() EntriesCollection {
@@ -67,21 +66,14 @@ func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	// Declare the support orders
-	so := query.SortOrder.Support(nsquery.SortOccurredAtDesc, nsquery.SortOccurredAtAsc, nsquery.SortCreatedAtDesc, nsquery.SortCreatedAtAsc, nsquery.SortUpdatedAtDesc, nsquery.SortUpdatedAtAsc)
-	// check against default sort order
-	defaultSortOrder := so == nsquery.SortOccurredAtDesc
-
 	var entries []*site.GlucoseReading
 	var rerr error
 
 	// There are three options,
-	if defaultSortOrder && !query.HasFilters {
+	if !query.HasFilters {
 		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
-	} else if defaultSortOrder && query.HasFilters {
-		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	} else {
-		entries, rerr = siteContext.SiteDB.Queries.SearchWithNonDefaultSortGlucoseReadings(ctx, nsquery.GlucoseSearchNonDefaultOrder(query))
+		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
 	}
 
 	if rerr != nil {
@@ -125,7 +117,7 @@ func (c EntriesCollection) Update(ctx context.Context, siteContext *httputils.Si
 func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 
 	if permanent {
-		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReading(ctx, site.DeletePermanentGlucoseReadingParams{ID: identifier})
+		res, err := siteContext.SiteDB.Queries.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -141,7 +133,7 @@ func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.Si
 		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
 
 	} else {
-		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReading(ctx, site.DeleteGlucoseReadingParams{ID: identifier})
+		res, err := siteContext.SiteDB.Queries.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: identifier})
 		if err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err)
 			return nsutils.ErrInternal
@@ -162,7 +154,7 @@ func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.Si
 
 func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	if permanent {
-		res, err := siteContext.SiteDB.Queries.DeletePermanentGlucoseReadingsByType(ctx, site.DeletePermanentGlucoseReadingsByTypeParams{Type: typeString})
+		res, err := siteContext.SiteDB.Queries.HardDeleteGlucoseReadingsByType(ctx, site.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 		if err != nil {
 			slog.Error("failed to permanently delete glucose readings by type", "error", err)
 			return 0, nsutils.ErrInternal
@@ -174,7 +166,7 @@ func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputil
 		}
 		return int(rowsAffected), nil
 	} else {
-		res, err := siteContext.SiteDB.Queries.DeleteGlucoseReadingsByType(ctx, site.DeleteGlucoseReadingsByTypeParams{Type: typeString})
+		res, err := siteContext.SiteDB.Queries.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 		if err != nil {
 			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
 			return 0, nsutils.ErrInternal

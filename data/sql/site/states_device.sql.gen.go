@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allDeviceStates = `-- name: AllDeviceStates :many
@@ -168,7 +169,7 @@ func (q *Queries) GetDeviceState(ctx context.Context, arg GetDeviceStateParams) 
 	return &i, err
 }
 
-const hardDeleteDeviceState = `-- name: HardDeleteDeviceState :one
+const hardDeleteDeviceState = `-- name: HardDeleteDeviceState :execresult
 DELETE FROM device_states WHERE id = ? RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
@@ -176,27 +177,8 @@ type HardDeleteDeviceStateParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteDeviceState(ctx context.Context, arg HardDeleteDeviceStateParams) (*DeviceState, error) {
-	row := q.queryRow(ctx, q.hardDeleteDeviceStateStmt, hardDeleteDeviceState, arg.ID)
-	var i DeviceState
-	err := row.Scan(
-		&i.ID,
-		&i.DeviceState,
-		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercent,
-		&i.DeviceChargingState,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteDeviceState(ctx context.Context, arg HardDeleteDeviceStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteDeviceStateStmt, hardDeleteDeviceState, arg.ID)
 }
 
 const searchDeviceStates = `-- name: SearchDeviceStates :many
@@ -309,7 +291,7 @@ func (q *Queries) SearchDeviceStates(ctx context.Context, arg SearchDeviceStates
 	return items, nil
 }
 
-const softDeleteDeviceState = `-- name: SoftDeleteDeviceState :one
+const softDeleteDeviceState = `-- name: SoftDeleteDeviceState :execresult
 
 UPDATE device_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -326,27 +308,8 @@ type SoftDeleteDeviceStateParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteDeviceState(ctx context.Context, arg SoftDeleteDeviceStateParams) (*DeviceState, error) {
-	row := q.queryRow(ctx, q.softDeleteDeviceStateStmt, softDeleteDeviceState, arg.UpdatedByIdentityName, arg.ID)
-	var i DeviceState
-	err := row.Scan(
-		&i.ID,
-		&i.DeviceState,
-		&i.DeviceTimestamp,
-		&i.DeviceBatteryPercent,
-		&i.DeviceChargingState,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteDeviceState(ctx context.Context, arg SoftDeleteDeviceStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteDeviceStateStmt, softDeleteDeviceState, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateDeviceState = `-- name: UpdateDeviceState :one

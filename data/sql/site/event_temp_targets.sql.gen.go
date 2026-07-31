@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allTempTargets = `-- name: AllTempTargets :many
@@ -161,7 +162,7 @@ func (q *Queries) GetTempTarget(ctx context.Context, arg GetTempTargetParams) (*
 	return &i, err
 }
 
-const hardDeleteTempTarget = `-- name: HardDeleteTempTarget :one
+const hardDeleteTempTarget = `-- name: HardDeleteTempTarget :execresult
 DELETE FROM temp_targets WHERE id = ? RETURNING id, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -169,26 +170,8 @@ type HardDeleteTempTargetParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTargetParams) (*TempTarget, error) {
-	row := q.queryRow(ctx, q.hardDeleteTempTargetStmt, hardDeleteTempTarget, arg.ID)
-	var i TempTarget
-	err := row.Scan(
-		&i.ID,
-		&i.DurationMinutes,
-		&i.HighTarget,
-		&i.LowTarget,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTargetParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteTempTargetStmt, hardDeleteTempTarget, arg.ID)
 }
 
 const searchTempTargets = `-- name: SearchTempTargets :many
@@ -316,7 +299,7 @@ func (q *Queries) SearchTempTargets(ctx context.Context, arg SearchTempTargetsPa
 	return items, nil
 }
 
-const softDeleteTempTarget = `-- name: SoftDeleteTempTarget :one
+const softDeleteTempTarget = `-- name: SoftDeleteTempTarget :execresult
 
 UPDATE temp_targets SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -333,26 +316,8 @@ type SoftDeleteTempTargetParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteTempTarget(ctx context.Context, arg SoftDeleteTempTargetParams) (*TempTarget, error) {
-	row := q.queryRow(ctx, q.softDeleteTempTargetStmt, softDeleteTempTarget, arg.UpdatedByIdentityName, arg.ID)
-	var i TempTarget
-	err := row.Scan(
-		&i.ID,
-		&i.DurationMinutes,
-		&i.HighTarget,
-		&i.LowTarget,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteTempTarget(ctx context.Context, arg SoftDeleteTempTargetParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteTempTargetStmt, softDeleteTempTarget, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateTempTarget = `-- name: UpdateTempTarget :one

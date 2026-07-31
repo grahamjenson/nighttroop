@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allLoopStates = `-- name: AllLoopStates :many
@@ -179,7 +180,7 @@ func (q *Queries) GetLoopState(ctx context.Context, arg GetLoopStateParams) (*Lo
 	return &i, err
 }
 
-const hardDeleteLoopState = `-- name: HardDeleteLoopState :one
+const hardDeleteLoopState = `-- name: HardDeleteLoopState :execresult
 DELETE FROM loop_states WHERE id = ? RETURNING id, loop_state, loop_timestamp, iob, iob_basal, iob_treatment, cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
@@ -187,29 +188,8 @@ type HardDeleteLoopStateParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteLoopState(ctx context.Context, arg HardDeleteLoopStateParams) (*LoopState, error) {
-	row := q.queryRow(ctx, q.hardDeleteLoopStateStmt, hardDeleteLoopState, arg.ID)
-	var i LoopState
-	err := row.Scan(
-		&i.ID,
-		&i.LoopState,
-		&i.LoopTimestamp,
-		&i.Iob,
-		&i.IobBasal,
-		&i.IobTreatment,
-		&i.Cob,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteLoopState(ctx context.Context, arg HardDeleteLoopStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteLoopStateStmt, hardDeleteLoopState, arg.ID)
 }
 
 const searchLoopStates = `-- name: SearchLoopStates :many
@@ -324,7 +304,7 @@ func (q *Queries) SearchLoopStates(ctx context.Context, arg SearchLoopStatesPara
 	return items, nil
 }
 
-const softDeleteLoopState = `-- name: SoftDeleteLoopState :one
+const softDeleteLoopState = `-- name: SoftDeleteLoopState :execresult
 
 UPDATE loop_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -341,29 +321,8 @@ type SoftDeleteLoopStateParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteLoopState(ctx context.Context, arg SoftDeleteLoopStateParams) (*LoopState, error) {
-	row := q.queryRow(ctx, q.softDeleteLoopStateStmt, softDeleteLoopState, arg.UpdatedByIdentityName, arg.ID)
-	var i LoopState
-	err := row.Scan(
-		&i.ID,
-		&i.LoopState,
-		&i.LoopTimestamp,
-		&i.Iob,
-		&i.IobBasal,
-		&i.IobTreatment,
-		&i.Cob,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteLoopState(ctx context.Context, arg SoftDeleteLoopStateParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteLoopStateStmt, softDeleteLoopState, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateLoopState = `-- name: UpdateLoopState :one

@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allFoodPresets = `-- name: AllFoodPresets :many
@@ -168,7 +169,7 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 	return &i, err
 }
 
-const hardDeleteFoodPreset = `-- name: HardDeleteFoodPreset :one
+const hardDeleteFoodPreset = `-- name: HardDeleteFoodPreset :execresult
 
 
 DELETE FROM food_presets WHERE id = ? RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
@@ -181,27 +182,8 @@ type HardDeleteFoodPresetParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) HardDeleteFoodPreset(ctx context.Context, arg HardDeleteFoodPresetParams) (*FoodPreset, error) {
-	row := q.queryRow(ctx, q.hardDeleteFoodPresetStmt, hardDeleteFoodPreset, arg.ID)
-	var i FoodPreset
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.FoodType,
-		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Calories,
-		&i.RawJsonData,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteFoodPreset(ctx context.Context, arg HardDeleteFoodPresetParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteFoodPresetStmt, hardDeleteFoodPreset, arg.ID)
 }
 
 const searchFoodPresets = `-- name: SearchFoodPresets :many

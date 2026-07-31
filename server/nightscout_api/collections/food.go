@@ -14,7 +14,7 @@ import (
 )
 
 type FoodCollection struct {
-	converter func(c *site.Food) nsutils.Record
+	converter func(c *site.FoodPreset) nsutils.Record
 }
 
 func NewFoodCollection() FoodCollection {
@@ -37,7 +37,7 @@ func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteC
 		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
-	dbModel, err := siteContext.SiteDB.Queries.CreateFood(ctx, createParams)
+	dbModel, err := siteContext.SiteDB.Queries.CreateFoodPreset(ctx, createParams)
 	if err != nil {
 		slog.Error("failed to create food in database", "error", err)
 		return nil, nsutils.ErrInternal
@@ -50,7 +50,7 @@ func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetFood(ctx, site.GetFoodParams{
+	dbModel, err := siteContext.SiteDB.Queries.GetFoodPreset(ctx, site.GetFoodPresetParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows {

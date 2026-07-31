@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
@@ -128,56 +129,6 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 	return &i, err
 }
 
-const deleteGlucoseReadingsByType = `-- name: DeleteGlucoseReadingsByType :many
-UPDATE glucose_readings SET 
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE reading_type = ? AND deleted_at IS NULL
-RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
-`
-
-type DeleteGlucoseReadingsByTypeParams struct {
-	UpdatedByIdentityName *string
-	ReadingType           string
-}
-
-func (q *Queries) DeleteGlucoseReadingsByType(ctx context.Context, arg DeleteGlucoseReadingsByTypeParams) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.deleteGlucoseReadingsByTypeStmt, deleteGlucoseReadingsByType, arg.UpdatedByIdentityName, arg.ReadingType)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*GlucoseReading
-	for rows.Next() {
-		var i GlucoseReading
-		if err := rows.Scan(
-			&i.ID,
-			&i.Reading,
-			&i.ReadingType,
-			&i.RawJsonData,
-			&i.DeletedAt,
-			&i.UtcOffsetMinutes,
-			&i.OccurredAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.CreatedByAppName,
-			&i.CreatedByDeviceName,
-			&i.UpdatedByIdentityName,
-			&i.CreatedByIdentityName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
 SELECT id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE id = ?
@@ -211,7 +162,7 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 	return &i, err
 }
 
-const hardDeleteGlucoseReading = `-- name: HardDeleteGlucoseReading :one
+const hardDeleteGlucoseReading = `-- name: HardDeleteGlucoseReading :execresult
 DELETE FROM glucose_readings WHERE id = ? RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -219,28 +170,11 @@ type HardDeleteGlucoseReadingParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteGlucoseReading(ctx context.Context, arg HardDeleteGlucoseReadingParams) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.hardDeleteGlucoseReadingStmt, hardDeleteGlucoseReading, arg.ID)
-	var i GlucoseReading
-	err := row.Scan(
-		&i.ID,
-		&i.Reading,
-		&i.ReadingType,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteGlucoseReading(ctx context.Context, arg HardDeleteGlucoseReadingParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteGlucoseReadingStmt, hardDeleteGlucoseReading, arg.ID)
 }
 
-const hardDeleteGlucoseReadingsByType = `-- name: HardDeleteGlucoseReadingsByType :many
+const hardDeleteGlucoseReadingsByType = `-- name: HardDeleteGlucoseReadingsByType :execresult
 DELETE FROM glucose_readings WHERE reading_type = ? RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -248,41 +182,8 @@ type HardDeleteGlucoseReadingsByTypeParams struct {
 	ReadingType string
 }
 
-func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardDeleteGlucoseReadingsByTypeParams) ([]*GlucoseReading, error) {
-	rows, err := q.query(ctx, q.hardDeleteGlucoseReadingsByTypeStmt, hardDeleteGlucoseReadingsByType, arg.ReadingType)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*GlucoseReading
-	for rows.Next() {
-		var i GlucoseReading
-		if err := rows.Scan(
-			&i.ID,
-			&i.Reading,
-			&i.ReadingType,
-			&i.RawJsonData,
-			&i.DeletedAt,
-			&i.UtcOffsetMinutes,
-			&i.OccurredAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.CreatedByAppName,
-			&i.CreatedByDeviceName,
-			&i.UpdatedByIdentityName,
-			&i.CreatedByIdentityName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardDeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteGlucoseReadingsByTypeStmt, hardDeleteGlucoseReadingsByType, arg.ReadingType)
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
@@ -422,7 +323,7 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 	return items, nil
 }
 
-const softDeleteGlucoseReading = `-- name: SoftDeleteGlucoseReading :one
+const softDeleteGlucoseReading = `-- name: SoftDeleteGlucoseReading :execresult
 
 UPDATE glucose_readings SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -439,25 +340,25 @@ type SoftDeleteGlucoseReadingParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteGlucoseReading(ctx context.Context, arg SoftDeleteGlucoseReadingParams) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.softDeleteGlucoseReadingStmt, softDeleteGlucoseReading, arg.UpdatedByIdentityName, arg.ID)
-	var i GlucoseReading
-	err := row.Scan(
-		&i.ID,
-		&i.Reading,
-		&i.ReadingType,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteGlucoseReading(ctx context.Context, arg SoftDeleteGlucoseReadingParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteGlucoseReadingStmt, softDeleteGlucoseReading, arg.UpdatedByIdentityName, arg.ID)
+}
+
+const softDeleteGlucoseReadingsByType = `-- name: SoftDeleteGlucoseReadingsByType :execresult
+UPDATE glucose_readings SET 
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE reading_type = ? AND deleted_at IS NULL
+RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+`
+
+type SoftDeleteGlucoseReadingsByTypeParams struct {
+	UpdatedByIdentityName *string
+	ReadingType           string
+}
+
+func (q *Queries) SoftDeleteGlucoseReadingsByType(ctx context.Context, arg SoftDeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteGlucoseReadingsByTypeStmt, softDeleteGlucoseReadingsByType, arg.UpdatedByIdentityName, arg.ReadingType)
 }
 
 const updateGlucoseReading = `-- name: UpdateGlucoseReading :one

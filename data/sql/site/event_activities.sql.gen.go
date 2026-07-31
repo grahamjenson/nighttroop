@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allActivities = `-- name: AllActivities :many
@@ -182,7 +183,7 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 	return &i, err
 }
 
-const hardDeleteActivity = `-- name: HardDeleteActivity :one
+const hardDeleteActivity = `-- name: HardDeleteActivity :execresult
 DELETE FROM activities WHERE id = ? RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -190,30 +191,8 @@ type HardDeleteActivityParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivityParams) (*Activity, error) {
-	row := q.queryRow(ctx, q.hardDeleteActivityStmt, hardDeleteActivity, arg.ID)
-	var i Activity
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Notes,
-		&i.ActivityType,
-		&i.DurationMinutes,
-		&i.Calories,
-		&i.Steps,
-		&i.HeartRate,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivityParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteActivityStmt, hardDeleteActivity, arg.ID)
 }
 
 const searchActivities = `-- name: SearchActivities :many
@@ -362,7 +341,7 @@ func (q *Queries) SearchActivities(ctx context.Context, arg SearchActivitiesPara
 	return items, nil
 }
 
-const softDeleteActivity = `-- name: SoftDeleteActivity :one
+const softDeleteActivity = `-- name: SoftDeleteActivity :execresult
 
 UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -379,30 +358,8 @@ type SoftDeleteActivityParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteActivity(ctx context.Context, arg SoftDeleteActivityParams) (*Activity, error) {
-	row := q.queryRow(ctx, q.softDeleteActivityStmt, softDeleteActivity, arg.UpdatedByIdentityName, arg.ID)
-	var i Activity
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Notes,
-		&i.ActivityType,
-		&i.DurationMinutes,
-		&i.Calories,
-		&i.Steps,
-		&i.HeartRate,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteActivity(ctx context.Context, arg SoftDeleteActivityParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteActivityStmt, softDeleteActivity, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateActivity = `-- name: UpdateActivity :one

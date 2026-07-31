@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allProfileSwitches = `-- name: AllProfileSwitches :many
@@ -185,7 +186,7 @@ func (q *Queries) GetProfileSwitch(ctx context.Context, arg GetProfileSwitchPara
 	return &i, err
 }
 
-const hardDeleteProfileSwitch = `-- name: HardDeleteProfileSwitch :one
+const hardDeleteProfileSwitch = `-- name: HardDeleteProfileSwitch :execresult
 DELETE FROM profile_switches WHERE id = ? RETURNING id, name, duration_minutes, percent, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -193,30 +194,8 @@ type HardDeleteProfileSwitchParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteProfileSwitch(ctx context.Context, arg HardDeleteProfileSwitchParams) (*ProfileSwitch, error) {
-	row := q.queryRow(ctx, q.hardDeleteProfileSwitchStmt, hardDeleteProfileSwitch, arg.ID)
-	var i ProfileSwitch
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.DurationMinutes,
-		&i.Percent,
-		&i.CarbRatiosJson,
-		&i.InsulinSensitivitiesJson,
-		&i.BasalRatesJson,
-		&i.TargetsJson,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteProfileSwitch(ctx context.Context, arg HardDeleteProfileSwitchParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteProfileSwitchStmt, hardDeleteProfileSwitch, arg.ID)
 }
 
 const searchProfileSwitches = `-- name: SearchProfileSwitches :many
@@ -352,7 +331,7 @@ func (q *Queries) SearchProfileSwitches(ctx context.Context, arg SearchProfileSw
 	return items, nil
 }
 
-const softDeleteProfileSwitch = `-- name: SoftDeleteProfileSwitch :one
+const softDeleteProfileSwitch = `-- name: SoftDeleteProfileSwitch :execresult
 
 UPDATE profile_switches SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -369,30 +348,8 @@ type SoftDeleteProfileSwitchParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteProfileSwitch(ctx context.Context, arg SoftDeleteProfileSwitchParams) (*ProfileSwitch, error) {
-	row := q.queryRow(ctx, q.softDeleteProfileSwitchStmt, softDeleteProfileSwitch, arg.UpdatedByIdentityName, arg.ID)
-	var i ProfileSwitch
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.DurationMinutes,
-		&i.Percent,
-		&i.CarbRatiosJson,
-		&i.InsulinSensitivitiesJson,
-		&i.BasalRatesJson,
-		&i.TargetsJson,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteProfileSwitch(ctx context.Context, arg SoftDeleteProfileSwitchParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteProfileSwitchStmt, softDeleteProfileSwitch, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateProfileSwitch = `-- name: UpdateProfileSwitch :one

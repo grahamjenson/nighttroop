@@ -102,12 +102,12 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteFoodIntake :one
+-- name: SoftDeleteFoodIntake :execresult
 UPDATE food_intakes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
 RETURNING *;
 
--- name: HardDeleteFoodIntake :one
+-- name: HardDeleteFoodIntake :execresult
 DELETE FROM food_intakes WHERE id = ? RETURNING *;

@@ -48,7 +48,7 @@ type Entry struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Value       *FlexibleFloat64 `json:"-"`
+	Reading     *FlexibleFloat64 `json:"-"`
 	RawJsonData string           `json:"-"`
 }
 
@@ -74,7 +74,7 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	}
 
 	// Setting the value
-	if t.Value == nil {
+	if t.Reading == nil {
 		var res FlexibleFloat64
 		if t.SGV != nil {
 			res = *t.SGV
@@ -82,7 +82,7 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 			res = *t.MBG
 		}
 		res = FlexibleFloat64(t.Units.ToMGDLMultiplier() * res.Float64())
-		t.Value = &res
+		t.Reading = &res
 	}
 
 	// Cleaning Updates

@@ -7,6 +7,7 @@ package site
 
 import (
 	"context"
+	"database/sql"
 )
 
 const allTempBasals = `-- name: AllTempBasals :many
@@ -161,7 +162,7 @@ func (q *Queries) GetTempBasal(ctx context.Context, arg GetTempBasalParams) (*Te
 	return &i, err
 }
 
-const hardDeleteTempBasal = `-- name: HardDeleteTempBasal :one
+const hardDeleteTempBasal = `-- name: HardDeleteTempBasal :execresult
 DELETE FROM temp_basals WHERE id = ? RETURNING id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -169,26 +170,8 @@ type HardDeleteTempBasalParams struct {
 	ID string
 }
 
-func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBasalParams) (*TempBasal, error) {
-	row := q.queryRow(ctx, q.hardDeleteTempBasalStmt, hardDeleteTempBasal, arg.ID)
-	var i TempBasal
-	err := row.Scan(
-		&i.ID,
-		&i.DurationMinutes,
-		&i.Absolute,
-		&i.Percent,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBasalParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteTempBasalStmt, hardDeleteTempBasal, arg.ID)
 }
 
 const searchTempBasals = `-- name: SearchTempBasals :many
@@ -316,7 +299,7 @@ func (q *Queries) SearchTempBasals(ctx context.Context, arg SearchTempBasalsPara
 	return items, nil
 }
 
-const softDeleteTempBasal = `-- name: SoftDeleteTempBasal :one
+const softDeleteTempBasal = `-- name: SoftDeleteTempBasal :execresult
 
 UPDATE temp_basals SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -333,26 +316,8 @@ type SoftDeleteTempBasalParams struct {
 // ------
 // DELETE
 // ------
-func (q *Queries) SoftDeleteTempBasal(ctx context.Context, arg SoftDeleteTempBasalParams) (*TempBasal, error) {
-	row := q.queryRow(ctx, q.softDeleteTempBasalStmt, softDeleteTempBasal, arg.UpdatedByIdentityName, arg.ID)
-	var i TempBasal
-	err := row.Scan(
-		&i.ID,
-		&i.DurationMinutes,
-		&i.Absolute,
-		&i.Percent,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
+func (q *Queries) SoftDeleteTempBasal(ctx context.Context, arg SoftDeleteTempBasalParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteTempBasalStmt, softDeleteTempBasal, arg.UpdatedByIdentityName, arg.ID)
 }
 
 const updateTempBasal = `-- name: UpdateTempBasal :one
