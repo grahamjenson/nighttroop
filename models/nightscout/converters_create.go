@@ -12,7 +12,6 @@ type CreateContext struct {
 }
 
 // goverter:converter
-// goverter:output:format function
 // goverter:output:file ./z_create_converters.go
 // goverter:useZeroValueOnPointerInconsistency
 type CreateMapConverter interface {
@@ -91,7 +90,8 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore Name
+	// goverter:ignore Name FoodType
+	// goverter:map Energy Calories
 	TreatmentToCreateFoodIntake(source Treatment, ctx CreateContext) site.CreateFoodIntakeParams
 
 	///////
@@ -105,7 +105,8 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:map Duration DurationMinutes
+	// goverter:map Glucose Reading
+	// goverter:map GlucoseType ReadingType
 	TreatmentToCreateGlucoseReading(source Treatment, ctx CreateContext) site.CreateGlucoseReadingParams
 
 	///////
@@ -119,7 +120,8 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:map Duration DurationMinutes
+	// goverter:ignore DoseType
+	// goverter:map Insulin Dose
 	TreatmentToCreateInsulinDose(source Treatment, ctx CreateContext) site.CreateInsulinDoseParams
 
 	///////
@@ -133,22 +135,22 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:map Duration DurationMinutes
+	// goverter:map Notes Content
 	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
 
 	///////
 	// Profile
 	///////
 
-	// goverter:context ctx
-	// goverter:map Date OccurredAt
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	TreatmentToCreateProfile(source Treatment, ctx CreateContext) site.CreateProfilePresetParams
+	// // goverter:context ctx
+	// // goverter:map Date OccurredAt
+	// // goverter:map App CreatedByAppName
+	// // goverter:map Device CreatedByDeviceName
+	// // goverter:map Date ID                | AssignID
+	// // goverter:map CreatedByIdentityName  | AssignCreatedByName
+	// //
+	// // goverter:ignore Name
+	// TreatmentToCreateProfile(source Treatment, ctx CreateContext) site.CreateProfilePresetParams
 
 	///////
 	// Profile Switch
@@ -162,7 +164,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
-	TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams
+	// TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams
 
 	///////
 	// Temp Basal
@@ -176,6 +178,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
+	// goverter:map Percentage Percent
 	TreatmentToCreateTempBasal(source Treatment, ctx CreateContext) site.CreateTempBasalParams
 
 	///////
@@ -190,36 +193,9 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
+	// goverter:map TargetTop HighTarget
+	// goverter:map TargetBottom LowTarget
 	TreatmentToCreateTempTarget(source Treatment, ctx CreateContext) site.CreateTempTargetParams
-
-	///////
-	// Pump States
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	TreatmentToCreatePumpState(source Treatment, ctx CreateContext) site.CreatePumpStateParams
-
-	///////
-	// CGM States
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore CgmState CgmTimestamp
-	// goverter:map Date CgmInsertionTime
-	TreatmentToCreateCGMState(source Treatment, ctx CreateContext) site.CreateCGMStateParams
 
 	//
 	//
@@ -264,12 +240,6 @@ type CreateMapConverter interface {
 	// goverter:ignore PumpState PumpChargingState PumpTimestamp PumpInsertionTime PumpBatteryPercent
 	// goverter:map Pump.Reservoir PumpReservoir
 	DeviceStatusToCreatePump(source DeviceStatus, ctx CreateContext) site.CreatePumpStateParams
-
-	////////
-	// SETTINGS
-	////////
-
-	// Cant Create Settings, Only Update
 }
 
 // //

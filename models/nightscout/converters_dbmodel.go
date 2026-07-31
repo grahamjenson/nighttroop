@@ -5,7 +5,6 @@ import (
 )
 
 // goverter:converter
-// goverter:output:format function
 // goverter:output:file ./z_dbmodel_converters.go
 // goverter:useZeroValueOnPointerInconsistency
 type DBModelConverter interface {
@@ -43,40 +42,38 @@ type DBModelConverter interface {
 	// goverter:map UpdatedAt SrvModified
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
-	// goverter:map Reading Value
 	DBModelToEntry(source *site.GlucoseReading) Entry
 
 	///////
 	// FOOD TO FOOD PRESET
 	///////
 
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
-	// goverter:map OccurredAt Date
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	//
-	// goverter:map DurationMinutes Duration
+	// goverter:ignore Food Category Subcategory Portion Unit GI Portions HideAfterUse Hidden Position Date
+	// goverter:map Calories Energy
 	DBModelToFood(source *site.FoodPreset) Food
 
 	///////
 	// Profile To Profile Preset
 	///////
 
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByAppName App
-	// goverter:map CreatedByDeviceName Device
-	// goverter:map ID Identifier
-	// goverter:map OccurredAt Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	//
-	// goverter:map DurationMinutes Duration
-	DBModelToProfile(source *site.ProfilePreset) Profile
+	// // goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// // goverter:map CreatedByIdentityName Subject
+	// // goverter:map CreatedByAppName App
+	// // goverter:map CreatedByDeviceName Device
+	// // goverter:map ID Identifier
+	// // goverter:map OccurredAt Date
+	// // goverter:map CreatedAt SrvCreated
+	// // goverter:map UpdatedAt SrvModified
+	// //
+	// // goverter:ignore DefaultProfile Store StartDate Mills
+	// DBModelToProfile(source *site.ProfilePreset) Profile
 
 	//
 	//
@@ -99,7 +96,8 @@ type DBModelConverter interface {
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	//
-	// goverter:map DurationMinutes Duration
+	// goverter:ignore Glucose GlucoseType Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:map GroupType EventType
 	DBModelToTreatment(source *site.SearchEventGroupsRow) Treatment
 
 	////////////////////////////////////////
@@ -115,24 +113,8 @@ type DBModelConverter interface {
 	// goverter:map CreatedAt SrvCreated
 	// goverter:map UpdatedAt SrvModified
 	//
-	// goverter:map DurationMinutes Duration
+	// goverter:ignore Uploader Loop OpenAPS Pump UploaderBattery MergedLoopStatus
 	DBModelToDeviceStatus(source *site.SearchEventGroupsRow) DeviceStatus
-
-	////////
-	// SETTINGS
-	////////
-
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByAppName App
-	// goverter:map CreatedByDeviceName Device
-	// goverter:map ID Identifier
-	// goverter:map OccurredAt Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
-	//
-	// goverter:map DurationMinutes Duration
-	DBModelToSettings(source *site.SearchEventGroupsRow) []Setting
 }
 
 // //

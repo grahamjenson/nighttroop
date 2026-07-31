@@ -145,7 +145,7 @@ type GlucoseReading struct {
 type InsulinDose struct {
 	ID                    string
 	Dose                  float64
-	DoseType              string
+	DoseType              *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

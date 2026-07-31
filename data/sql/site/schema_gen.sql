@@ -181,7 +181,7 @@ CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
 
     dose REAL NOT NULL,
-    dose_type TEXT NOT NULL CHECK (dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
+    dose_type TEXT CHECK (dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly

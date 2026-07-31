@@ -598,7 +598,7 @@ func (m *InsulinDose) GetDose() float64 {
 }
 
 // GetDoseType returns the DoseType value.
-func (m *InsulinDose) GetDoseType() string {
+func (m *InsulinDose) GetDoseType() *string {
 	return m.DoseType
 }
 

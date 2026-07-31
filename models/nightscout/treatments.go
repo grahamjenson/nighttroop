@@ -22,6 +22,8 @@ type Treatment struct {
 	Insulin  *FlexibleFloat64 `json:"insulin"`
 	Protein  *FlexibleFloat64 `json:"protein"`
 	Fat      *FlexibleFloat64 `json:"fat"`
+	Fibre    *FlexibleFloat64 `json:"fibre"`
+	Energy   *FlexibleFloat64 `json:"energy"`
 	PreBolus *FlexibleFloat64 `json:"preBolus"`
 
 	SplitNow *FlexibleFloat64 `json:"splitNow"`

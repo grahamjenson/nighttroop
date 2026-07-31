@@ -400,15 +400,18 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 	var siteCreateInsulinDoseParams CreateInsulinDoseParams
 	siteCreateInsulinDoseParams.ID = source.ID
 	siteCreateInsulinDoseParams.Dose = source.Dose
-	siteCreateInsulinDoseParams.DoseType = source.DoseType
+	if source.DoseType != nil {
+		xstring := *source.DoseType
+		siteCreateInsulinDoseParams.DoseType = &xstring
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
 	siteCreateInsulinDoseParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteCreateInsulinDoseParams.RawJsonData = &xstring
+		xstring2 := *source.RawJsonData
+		siteCreateInsulinDoseParams.RawJsonData = &xstring2
 	}
 	siteCreateInsulinDoseParams.CreatedByAppName = source.CreatedByAppName
 	siteCreateInsulinDoseParams.CreatedByDeviceName = source.CreatedByDeviceName
@@ -417,8 +420,10 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 }
 func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	var siteUpdateInsulinDoseParams UpdateInsulinDoseParams
-	pString := source.DoseType
-	siteUpdateInsulinDoseParams.DoseType = &pString
+	if source.DoseType != nil {
+		xstring := *source.DoseType
+		siteUpdateInsulinDoseParams.DoseType = &xstring
+	}
 	pFloat64 := source.Dose
 	siteUpdateInsulinDoseParams.Dose = &pFloat64
 	pInt64 := source.OccurredAt
@@ -428,8 +433,8 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 		siteUpdateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring := *source.UpdatedByIdentityName
-		siteUpdateInsulinDoseParams.UpdatedByIdentityName = &xstring
+		xstring2 := *source.UpdatedByIdentityName
+		siteUpdateInsulinDoseParams.UpdatedByIdentityName = &xstring2
 	}
 	siteUpdateInsulinDoseParams.ID = source.ID
 	return siteUpdateInsulinDoseParams

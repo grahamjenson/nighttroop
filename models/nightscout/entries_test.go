@@ -35,8 +35,8 @@ func Test_entryToCreateParams(t *testing.T) {
 	var entry Entry
 	err := json.Unmarshal([]byte(EntryFixture), &entry)
 	assert.NoError(t, err)
-
-	createParams := EntryToCreate(entry, CreateContext{"prefix", 123, "identityName"})
+	x := &CreateMapConverterImpl{}
+	createParams := x.EntryToCreate(entry, CreateContext{"prefix", 123, "identityName"})
 
 	assert.NotNil(t, createParams)
 
