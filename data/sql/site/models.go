@@ -35,3 +35,7 @@ func (model *SearchEventGroupsRow) GetUpdatedAt() int64 {
 func (model *SearchEventGroupsRow) GetCreatedByIdentityName() string {
 	return model.CreatedByIdentityName
 }
+
+func (model *FoodPreset) GetDeletedAt() *int64 {
+	return nil
+}

@@ -110,7 +110,7 @@ SELECT
     eg.created_by_app_name as created_by_app_name,
     eg.created_by_device_name as created_by_device_name,
     eg.created_by_identity_name as created_by_identity_name
-    
+
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
 LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
@@ -282,3 +282,13 @@ RETURNING *;
 
 -- name: HardDeleteEventGroup :execresult
 DELETE FROM event_groups WHERE id = ? RETURNING *;
+
+
+-- name: SoftDeleteEventGroupsByType :execresult
+UPDATE event_groups SET
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE group_type = ? AND deleted_at IS NULL;
+
+-- name: HardDeleteEventGroupsByType :execresult
+DELETE FROM event_groups WHERE group_type = ?;

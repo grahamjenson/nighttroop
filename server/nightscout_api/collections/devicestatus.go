@@ -2,7 +2,6 @@ package collections
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log/slog"
 
@@ -46,48 +45,36 @@ func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputi
 
 	return ptr(c.converter(dbModel)), nil
 }
-
-func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetEventGroup(ctx, site.GetEventGroupParams{
-		ID: identifier,
-	})
-	if err == sql.ErrNoRows || dbModel == nil {
-		return nil, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("failed to get device status", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-
-	seg := site.GetEventGroupToSearchEventGroup(*dbModel)
-	record := c.converter(&seg)
-	return &record, nil
-}
-
-func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	if query.TypeIn == nil {
-		// TODO list all supportted types so we can limit to those that NS DeviceStatus expects
-	}
-
-	treatments, rerr := siteContext.SiteDB.Queries.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
-	if rerr != nil {
-		slog.Error("failed to query event groups from database", "error", rerr)
-		return nil, nsutils.ErrInternal
-	}
-
-	return nsutils.CreateRecordSlice(treatments, c.converter), nil
-}
-
 func (c DeviceStatusCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 
+// ///////
+// Default EventGroup stuff
+// ///////
+func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	seg, rerr := EventGroupGet(ctx, siteContext, identifier)
+	if rerr != nil {
+		return nil, rerr
+	}
+	return ptr(c.converter(seg)), nil
+}
+
+func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+	deviceStatuses, rerr := EventGroupSearch(ctx, siteContext, query)
+	if rerr != nil {
+		return nil, rerr
+	}
+
+	return nsutils.CreateRecordSlice(deviceStatuses, c.converter), nil
+}
+
 func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nsutils.ErrNotImplemented
+	return EventGroupDelete(ctx, siteContext, identifier, permanent)
 }
 
 func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
+	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
 }
 
 func createDeviceStatus(ctx context.Context, siteContext *httputils.SiteContext, deviceStatusModel nightscout.DeviceStatus) (*site.SearchEventGroupsRow, error) {

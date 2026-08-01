@@ -174,6 +174,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteEventGroupStmt, err = db.PrepareContext(ctx, hardDeleteEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteEventGroup: %w", err)
 	}
+	if q.hardDeleteEventGroupsByTypeStmt, err = db.PrepareContext(ctx, hardDeleteEventGroupsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteEventGroupsByType: %w", err)
+	}
 	if q.hardDeleteFoodIntakeStmt, err = db.PrepareContext(ctx, hardDeleteFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteFoodIntake: %w", err)
 	}
@@ -266,6 +269,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.softDeleteEventGroupStmt, err = db.PrepareContext(ctx, softDeleteEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteEventGroup: %w", err)
+	}
+	if q.softDeleteEventGroupsByTypeStmt, err = db.PrepareContext(ctx, softDeleteEventGroupsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteEventGroupsByType: %w", err)
 	}
 	if q.softDeleteFoodIntakeStmt, err = db.PrepareContext(ctx, softDeleteFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteFoodIntake: %w", err)
@@ -600,6 +606,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteEventGroupStmt: %w", cerr)
 		}
 	}
+	if q.hardDeleteEventGroupsByTypeStmt != nil {
+		if cerr := q.hardDeleteEventGroupsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteEventGroupsByTypeStmt: %w", cerr)
+		}
+	}
 	if q.hardDeleteFoodIntakeStmt != nil {
 		if cerr := q.hardDeleteFoodIntakeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteFoodIntakeStmt: %w", cerr)
@@ -753,6 +764,11 @@ func (q *Queries) Close() error {
 	if q.softDeleteEventGroupStmt != nil {
 		if cerr := q.softDeleteEventGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing softDeleteEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteEventGroupsByTypeStmt != nil {
+		if cerr := q.softDeleteEventGroupsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteEventGroupsByTypeStmt: %w", cerr)
 		}
 	}
 	if q.softDeleteFoodIntakeStmt != nil {
@@ -974,6 +990,7 @@ type Queries struct {
 	hardDeleteCGMStateStmt              *sql.Stmt
 	hardDeleteDeviceStateStmt           *sql.Stmt
 	hardDeleteEventGroupStmt            *sql.Stmt
+	hardDeleteEventGroupsByTypeStmt     *sql.Stmt
 	hardDeleteFoodIntakeStmt            *sql.Stmt
 	hardDeleteFoodPresetStmt            *sql.Stmt
 	hardDeleteGlucoseReadingStmt        *sql.Stmt
@@ -1005,6 +1022,7 @@ type Queries struct {
 	softDeleteCGMStateStmt              *sql.Stmt
 	softDeleteDeviceStateStmt           *sql.Stmt
 	softDeleteEventGroupStmt            *sql.Stmt
+	softDeleteEventGroupsByTypeStmt     *sql.Stmt
 	softDeleteFoodIntakeStmt            *sql.Stmt
 	softDeleteGlucoseReadingStmt        *sql.Stmt
 	softDeleteGlucoseReadingsByTypeStmt *sql.Stmt
@@ -1087,6 +1105,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteCGMStateStmt:              q.hardDeleteCGMStateStmt,
 		hardDeleteDeviceStateStmt:           q.hardDeleteDeviceStateStmt,
 		hardDeleteEventGroupStmt:            q.hardDeleteEventGroupStmt,
+		hardDeleteEventGroupsByTypeStmt:     q.hardDeleteEventGroupsByTypeStmt,
 		hardDeleteFoodIntakeStmt:            q.hardDeleteFoodIntakeStmt,
 		hardDeleteFoodPresetStmt:            q.hardDeleteFoodPresetStmt,
 		hardDeleteGlucoseReadingStmt:        q.hardDeleteGlucoseReadingStmt,
@@ -1118,6 +1137,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteCGMStateStmt:              q.softDeleteCGMStateStmt,
 		softDeleteDeviceStateStmt:           q.softDeleteDeviceStateStmt,
 		softDeleteEventGroupStmt:            q.softDeleteEventGroupStmt,
+		softDeleteEventGroupsByTypeStmt:     q.softDeleteEventGroupsByTypeStmt,
 		softDeleteFoodIntakeStmt:            q.softDeleteFoodIntakeStmt,
 		softDeleteGlucoseReadingStmt:        q.softDeleteGlucoseReadingStmt,
 		softDeleteGlucoseReadingsByTypeStmt: q.softDeleteGlucoseReadingsByTypeStmt,

@@ -474,7 +474,7 @@ SELECT
     eg.created_by_app_name as created_by_app_name,
     eg.created_by_device_name as created_by_device_name,
     eg.created_by_identity_name as created_by_identity_name
-    
+
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
 LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
@@ -759,6 +759,18 @@ type HardDeleteEventGroupParams struct {
 
 func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventGroupParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteEventGroupStmt, hardDeleteEventGroup, arg.ID)
+}
+
+const hardDeleteEventGroupsByType = `-- name: HardDeleteEventGroupsByType :execresult
+DELETE FROM event_groups WHERE group_type = ?
+`
+
+type HardDeleteEventGroupsByTypeParams struct {
+	GroupType string
+}
+
+func (q *Queries) HardDeleteEventGroupsByType(ctx context.Context, arg HardDeleteEventGroupsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteEventGroupsByTypeStmt, hardDeleteEventGroupsByType, arg.GroupType)
 }
 
 const searchEventGroups = `-- name: SearchEventGroups :many
@@ -1257,6 +1269,22 @@ type SoftDeleteEventGroupParams struct {
 // ------
 func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventGroupParams) (sql.Result, error) {
 	return q.exec(ctx, q.softDeleteEventGroupStmt, softDeleteEventGroup, arg.UpdatedByIdentityName, arg.ID)
+}
+
+const softDeleteEventGroupsByType = `-- name: SoftDeleteEventGroupsByType :execresult
+UPDATE event_groups SET
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE group_type = ? AND deleted_at IS NULL
+`
+
+type SoftDeleteEventGroupsByTypeParams struct {
+	UpdatedByIdentityName *string
+	GroupType             string
+}
+
+func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDeleteEventGroupsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteEventGroupsByTypeStmt, softDeleteEventGroupsByType, arg.UpdatedByIdentityName, arg.GroupType)
 }
 
 const updateEventGroup = `-- name: UpdateEventGroup :one

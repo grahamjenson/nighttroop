@@ -2,7 +2,6 @@ package collections
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 	"strings"
 
@@ -54,7 +53,7 @@ func NewTreatmentCollection() TreatmentCollection {
 		nightscout.Announcement:      treatments.Announcement{},
 		nightscout.BGCheck:           treatments.BGCheck{},
 		nightscout.BolusWizard:       treatments.BolusWizard{},
-		nightscout.CarbCorrection:    treatments.NewCarbsCorrection(),
+		nightscout.CarbCorrection:    treatments.CarbsCorrection{},
 		nightscout.ComboBolus:        treatments.ComboBolus{},
 		nightscout.CorrectionBolus:   treatments.CorrectionBolus{},
 		nightscout.DADAlert:          treatments.DADAlert{},
@@ -112,37 +111,6 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	return record, nil
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetEventGroup(ctx, site.GetEventGroupParams{
-		ID: identifier,
-	})
-	if err == sql.ErrNoRows || dbModel == nil {
-		return nil, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("failed to get device status", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-
-	seg := site.GetEventGroupToSearchEventGroup(*dbModel)
-	record := c.converter(&seg)
-	return &record, nil
-}
-
-func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	if query.TypeIn == nil {
-		// TODO list all supportted types so we can limit to those that NS Treatment expects
-	}
-
-	treatments, rerr := siteContext.SiteDB.Queries.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
-	if rerr != nil {
-		slog.Error("failed to query event groups from database", "error", rerr)
-		return nil, nsutils.ErrInternal
-	}
-
-	return nsutils.CreateRecordSlice(treatments, c.converter), nil
-}
-
 func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	for _, typeCollect := range c.treatmentCollectionTypes {
 		if strings.HasPrefix(identifier, typeCollect.GetPrefix()) {
@@ -163,33 +131,31 @@ func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.
 	return nil, nsutils.ErrInternal
 }
 
-func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	for _, typeCollect := range c.treatmentCollectionTypes {
-		if strings.HasPrefix(identifier, typeCollect.GetPrefix()) {
-			rerr := typeCollect.Delete(ctx, siteContext, identifier, permanent)
-			if rerr != nil {
-				slog.Error("failed to delete treatment from database", "error", rerr)
-				return rerr
-			}
-			return nil
-		}
+// ///////
+// Default EventGroup stuff
+// ///////
+
+func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	seg, rerr := EventGroupGet(ctx, siteContext, identifier)
+	if rerr != nil {
+		return nil, rerr
+	}
+	return ptr(c.converter(seg)), nil
+}
+
+func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+	treatments, rerr := EventGroupSearch(ctx, siteContext, query)
+	if rerr != nil {
+		return nil, rerr
 	}
 
-	slog.Error("unsupported treatment event type for identifier", "identifier", identifier)
-	return nsutils.ErrInternal
+	return nsutils.CreateRecordSlice(treatments, c.converter), nil
+}
+
+func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+	return EventGroupDelete(ctx, siteContext, identifier, permanent)
 }
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	nightscoutType := nightscout.TreatmentEventType(typeString)
-	typeCollect, ok := c.treatmentCollectionTypes[nightscoutType]
-	if !ok {
-		slog.Error("unsupported treatment event type for deletion", "typeString", typeString)
-		return 0, nsutils.ErrInternal
-	}
-	count, rerr := typeCollect.DeleteAll(ctx, siteContext, permanent)
-	if rerr != nil {
-		slog.Error("failed to delete treatments of type from database", "error", rerr)
-		return 0, rerr
-	}
-	return count, nil
+	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
 }
