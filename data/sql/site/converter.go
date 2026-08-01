@@ -4,8 +4,8 @@ package site
 // goverter:output:format function
 // goverter:output:file ./z_converter.go
 type ToCreateParams interface {
-	// EVENTS
 
+	// EVENTS
 	ActivityToCreate(source Activity) CreateActivityParams
 	ActivityToUpdate(source Activity) UpdateActivityParams
 
@@ -51,4 +51,11 @@ type ToCreateParams interface {
 
 	// SITE SETTINGS
 	SiteSettingsToUpdate(source SiteSetting) UpdateSiteSettingsParams
+
+	// EVENT GROUP
+	GetEventGroupToSearchEventGroup(source GetEventGroupRow) SearchEventGroupsRow
+
+	//goverter:map . EventGroup
+	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch DeviceState LoopState PumpState CgmState Activity Note
+	EventGroupToSearchEventGroup(source EventGroup) SearchEventGroupsRow
 }

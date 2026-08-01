@@ -13,82 +13,22 @@ import (
 const allEventGroups = `-- name: AllEventGroups :many
 
 SELECT 
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_state_id, eg.loop_state_id, eg.pump_state_id, eg.cgm_state_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    gr.id, gr.reading, gr.reading_type, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_name, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_name, idose.created_by_identity_name,
+    fi.id, fi.name, fi.food_type, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.calories, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_name, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.absolute, tb.percent, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_name, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target, tt.low_target, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_name, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.percent, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_json, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_name, ps.created_by_identity_name,
+    ds.id, ds.device_state, ds.device_timestamp, ds.device_battery_percent, ds.device_charging_state, ds.raw_json_data, ds.deleted_at, ds.utc_offset_minutes, ds.occurred_at, ds.created_at, ds.updated_at, ds.updated_by_identity_name, ds.created_by_app_name, ds.created_by_device_name, ds.created_by_identity_name,
+    ls.id, ls.loop_state, ls.loop_timestamp, ls.iob, ls.iob_basal, ls.iob_treatment, ls.cob, ls.raw_json_data, ls.deleted_at, ls.utc_offset_minutes, ls.occurred_at, ls.created_at, ls.updated_at, ls.updated_by_identity_name, ls.created_by_app_name, ls.created_by_device_name, ls.created_by_identity_name,
+    ps2.id, ps2.pump_state, ps2.pump_timestamp, ps2.pump_insertion_time, ps2.pump_reservoir, ps2.pump_battery_percent, ps2.pump_charging_state, ps2.raw_json_data, ps2.deleted_at, ps2.utc_offset_minutes, ps2.occurred_at, ps2.created_at, ps2.updated_at, ps2.updated_by_identity_name, ps2.created_by_app_name, ps2.created_by_device_name, ps2.created_by_identity_name,
+    cs.id, cs.cgm_state, cs.cgm_timestamp, cs.cgm_insertion_time, cs.raw_json_data, cs.deleted_at, cs.utc_offset_minutes, cs.occurred_at, cs.created_at, cs.updated_at, cs.updated_by_identity_name, cs.created_by_app_name, cs.created_by_device_name, cs.created_by_identity_name,
+    a.id, a.name, a.notes, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
+    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name,
+
     eg.id as id,
     eg.group_type as group_type,
-
-    -- Glucose Reading
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
-
-    -- Insulin Dose
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    -- Food Intake
-    fi.name as food_name,
-    fi.food_type as food_type,
-    fi.carbs as food_carbs,
-    fi.fat as food_fat,
-    fi.protein as food_protein,
-    fi.fibre as food_fibre,
-    fi.calories as food_calories,
-
-    -- Activities
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    -- Notes
-    n.content as note_content,
-
-    -- Temp Basals
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,
-    tb.percent as temp_basal_percent,
-
-    -- Temp Targets
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    -- Profile Switches
-    ps.name as profile_switch_name,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_json as profile_switch_targets_json,
-
-    -- Pump States
-    ps2.pump_state as pump_state,
-    ps2.pump_timestamp as pump_timestamp,
-    ps2.pump_insertion_time as pump_insertion_time,
-    ps2.pump_reservoir as pump_reservoir,
-    ps2.pump_battery_percent as pump_battery_percent,
-    ps2.pump_charging_state as pump_charging_state,
-
-    -- CGM States
-    cs.cgm_state as cgm_state,
-    cs.cgm_timestamp as cgm_timestamp,
-    cs.cgm_insertion_time as cgm_insertion_time,
-
-    -- Loop States
-    ls.loop_state as loop_state,
-    ls.loop_timestamp as loop_timestamp,
-    ls.iob as loop_iob,
-    ls.iob_basal as loop_iob_basal,
-    ls.iob_treatment as loop_iob_treatment,
-    ls.cob as loop_cob,
-
-    -- Device States
-    ds.device_state as device_state,
-    ds.device_timestamp as device_timestamp,
-    ds.device_battery_percent as device_battery_percent,
-    ds.device_charging_state as device_charging_state,
 
     -- Default stuff
     eg.occurred_at as occurred_at,
@@ -127,67 +67,30 @@ type AllEventGroupsParams struct {
 }
 
 type AllEventGroupsRow struct {
-	ID                                    string
-	GroupType                             string
-	GlucoseReading                        *float64
-	GlucoseReadingType                    *string
-	InsulinDose                           *float64
-	InsulinDoseType                       *string
-	FoodName                              *string
-	FoodType                              *string
-	FoodCarbs                             *float64
-	FoodFat                               *float64
-	FoodProtein                           *float64
-	FoodFibre                             *float64
-	FoodCalories                          *float64
-	ActivityName                          *string
-	ActivityType                          *string
-	ActivityDurationMinutes               *int64
-	ActivityCalories                      *int64
-	ActivitySteps                         *int64
-	ActivityHeartRate                     *int64
-	NoteContent                           *string
-	TempBasalDurationMinutes              *int64
-	TempBasalAbsolute                     *float64
-	TempBasalPercent                      *float64
-	TempTargetDurationMinutes             *int64
-	TempTargetHighTarget                  *float64
-	TempTargetLowTarget                   *float64
-	ProfileSwitchName                     *string
-	ProfileSwitchDurationMinutes          *int64
-	ProfileSwitchPercent                  *int64
-	ProfileSwitchCarbRatiosJson           *string
-	ProfileSwitchInsulinSensitivitiesJson *string
-	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsJson              *string
-	PumpState                             *string
-	PumpTimestamp                         *int64
-	PumpInsertionTime                     *int64
-	PumpReservoir                         *float64
-	PumpBatteryPercent                    *float64
-	PumpChargingState                     *string
-	CgmState                              *string
-	CgmTimestamp                          *int64
-	CgmInsertionTime                      *int64
-	LoopState                             *string
-	LoopTimestamp                         *int64
-	LoopIob                               *float64
-	LoopIobBasal                          *float64
-	LoopIobTreatment                      *float64
-	LoopCob                               *float64
-	DeviceState                           *string
-	DeviceTimestamp                       *int64
-	DeviceBatteryPercent                  *float64
-	DeviceChargingState                   *string
-	OccurredAt                            int64
-	UtcOffsetMinutes                      *int64
-	CreatedAt                             int64
-	UpdatedAt                             int64
-	DeletedAt                             *int64
-	RawJsonData                           *string
-	CreatedByAppName                      string
-	CreatedByDeviceName                   string
-	CreatedByIdentityName                 string
+	EventGroup            EventGroup
+	GlucoseReading        GlucoseReading
+	InsulinDose           InsulinDose
+	FoodIntake            FoodIntake
+	TempBasal             TempBasal
+	TempTarget            TempTarget
+	ProfileSwitch         ProfileSwitch
+	DeviceState           DeviceState
+	LoopState             LoopState
+	PumpState             PumpState
+	CgmState              CgmState
+	Activity              Activity
+	Note                  Note
+	ID                    string
+	GroupType             string
+	OccurredAt            int64
+	UtcOffsetMinutes      *int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	DeletedAt             *int64
+	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
 }
 
 // ------
@@ -203,58 +106,215 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 	for rows.Next() {
 		var i AllEventGroupsRow
 		if err := rows.Scan(
+			&i.EventGroup.ID,
+			&i.EventGroup.GroupType,
+			&i.EventGroup.GlucoseReadingID,
+			&i.EventGroup.InsulinDoseID,
+			&i.EventGroup.FoodIntakeID,
+			&i.EventGroup.TempBasalID,
+			&i.EventGroup.TempTargetID,
+			&i.EventGroup.ProfileSwitchID,
+			&i.EventGroup.DeviceStateID,
+			&i.EventGroup.LoopStateID,
+			&i.EventGroup.PumpStateID,
+			&i.EventGroup.CgmStateID,
+			&i.EventGroup.ActivityID,
+			&i.EventGroup.NoteID,
+			&i.EventGroup.RawJsonData,
+			&i.EventGroup.DeletedAt,
+			&i.EventGroup.UtcOffsetMinutes,
+			&i.EventGroup.OccurredAt,
+			&i.EventGroup.CreatedAt,
+			&i.EventGroup.UpdatedAt,
+			&i.EventGroup.CreatedByAppName,
+			&i.EventGroup.CreatedByDeviceName,
+			&i.EventGroup.UpdatedByIdentityName,
+			&i.EventGroup.CreatedByIdentityName,
+			&i.GlucoseReading.ID,
+			&i.GlucoseReading.Reading,
+			&i.GlucoseReading.ReadingType,
+			&i.GlucoseReading.RawJsonData,
+			&i.GlucoseReading.DeletedAt,
+			&i.GlucoseReading.UtcOffsetMinutes,
+			&i.GlucoseReading.OccurredAt,
+			&i.GlucoseReading.CreatedAt,
+			&i.GlucoseReading.UpdatedAt,
+			&i.GlucoseReading.CreatedByAppName,
+			&i.GlucoseReading.CreatedByDeviceName,
+			&i.GlucoseReading.UpdatedByIdentityName,
+			&i.GlucoseReading.CreatedByIdentityName,
+			&i.InsulinDose.ID,
+			&i.InsulinDose.Dose,
+			&i.InsulinDose.DoseType,
+			&i.InsulinDose.RawJsonData,
+			&i.InsulinDose.DeletedAt,
+			&i.InsulinDose.UtcOffsetMinutes,
+			&i.InsulinDose.OccurredAt,
+			&i.InsulinDose.CreatedAt,
+			&i.InsulinDose.UpdatedAt,
+			&i.InsulinDose.CreatedByAppName,
+			&i.InsulinDose.CreatedByDeviceName,
+			&i.InsulinDose.UpdatedByIdentityName,
+			&i.InsulinDose.CreatedByIdentityName,
+			&i.FoodIntake.ID,
+			&i.FoodIntake.Name,
+			&i.FoodIntake.FoodType,
+			&i.FoodIntake.Carbs,
+			&i.FoodIntake.Fat,
+			&i.FoodIntake.Protein,
+			&i.FoodIntake.Fibre,
+			&i.FoodIntake.Calories,
+			&i.FoodIntake.RawJsonData,
+			&i.FoodIntake.DeletedAt,
+			&i.FoodIntake.UtcOffsetMinutes,
+			&i.FoodIntake.OccurredAt,
+			&i.FoodIntake.CreatedAt,
+			&i.FoodIntake.UpdatedAt,
+			&i.FoodIntake.CreatedByAppName,
+			&i.FoodIntake.CreatedByDeviceName,
+			&i.FoodIntake.UpdatedByIdentityName,
+			&i.FoodIntake.CreatedByIdentityName,
+			&i.TempBasal.ID,
+			&i.TempBasal.DurationMinutes,
+			&i.TempBasal.Absolute,
+			&i.TempBasal.Percent,
+			&i.TempBasal.RawJsonData,
+			&i.TempBasal.DeletedAt,
+			&i.TempBasal.UtcOffsetMinutes,
+			&i.TempBasal.OccurredAt,
+			&i.TempBasal.CreatedAt,
+			&i.TempBasal.UpdatedAt,
+			&i.TempBasal.CreatedByAppName,
+			&i.TempBasal.CreatedByDeviceName,
+			&i.TempBasal.UpdatedByIdentityName,
+			&i.TempBasal.CreatedByIdentityName,
+			&i.TempTarget.ID,
+			&i.TempTarget.DurationMinutes,
+			&i.TempTarget.HighTarget,
+			&i.TempTarget.LowTarget,
+			&i.TempTarget.RawJsonData,
+			&i.TempTarget.DeletedAt,
+			&i.TempTarget.UtcOffsetMinutes,
+			&i.TempTarget.OccurredAt,
+			&i.TempTarget.CreatedAt,
+			&i.TempTarget.UpdatedAt,
+			&i.TempTarget.CreatedByAppName,
+			&i.TempTarget.CreatedByDeviceName,
+			&i.TempTarget.UpdatedByIdentityName,
+			&i.TempTarget.CreatedByIdentityName,
+			&i.ProfileSwitch.ID,
+			&i.ProfileSwitch.Name,
+			&i.ProfileSwitch.DurationMinutes,
+			&i.ProfileSwitch.Percent,
+			&i.ProfileSwitch.CarbRatiosJson,
+			&i.ProfileSwitch.InsulinSensitivitiesJson,
+			&i.ProfileSwitch.BasalRatesJson,
+			&i.ProfileSwitch.TargetsJson,
+			&i.ProfileSwitch.RawJsonData,
+			&i.ProfileSwitch.DeletedAt,
+			&i.ProfileSwitch.UtcOffsetMinutes,
+			&i.ProfileSwitch.OccurredAt,
+			&i.ProfileSwitch.CreatedAt,
+			&i.ProfileSwitch.UpdatedAt,
+			&i.ProfileSwitch.CreatedByAppName,
+			&i.ProfileSwitch.CreatedByDeviceName,
+			&i.ProfileSwitch.UpdatedByIdentityName,
+			&i.ProfileSwitch.CreatedByIdentityName,
+			&i.DeviceState.ID,
+			&i.DeviceState.DeviceState,
+			&i.DeviceState.DeviceTimestamp,
+			&i.DeviceState.DeviceBatteryPercent,
+			&i.DeviceState.DeviceChargingState,
+			&i.DeviceState.RawJsonData,
+			&i.DeviceState.DeletedAt,
+			&i.DeviceState.UtcOffsetMinutes,
+			&i.DeviceState.OccurredAt,
+			&i.DeviceState.CreatedAt,
+			&i.DeviceState.UpdatedAt,
+			&i.DeviceState.UpdatedByIdentityName,
+			&i.DeviceState.CreatedByAppName,
+			&i.DeviceState.CreatedByDeviceName,
+			&i.DeviceState.CreatedByIdentityName,
+			&i.LoopState.ID,
+			&i.LoopState.LoopState,
+			&i.LoopState.LoopTimestamp,
+			&i.LoopState.Iob,
+			&i.LoopState.IobBasal,
+			&i.LoopState.IobTreatment,
+			&i.LoopState.Cob,
+			&i.LoopState.RawJsonData,
+			&i.LoopState.DeletedAt,
+			&i.LoopState.UtcOffsetMinutes,
+			&i.LoopState.OccurredAt,
+			&i.LoopState.CreatedAt,
+			&i.LoopState.UpdatedAt,
+			&i.LoopState.UpdatedByIdentityName,
+			&i.LoopState.CreatedByAppName,
+			&i.LoopState.CreatedByDeviceName,
+			&i.LoopState.CreatedByIdentityName,
+			&i.PumpState.ID,
+			&i.PumpState.PumpState,
+			&i.PumpState.PumpTimestamp,
+			&i.PumpState.PumpInsertionTime,
+			&i.PumpState.PumpReservoir,
+			&i.PumpState.PumpBatteryPercent,
+			&i.PumpState.PumpChargingState,
+			&i.PumpState.RawJsonData,
+			&i.PumpState.DeletedAt,
+			&i.PumpState.UtcOffsetMinutes,
+			&i.PumpState.OccurredAt,
+			&i.PumpState.CreatedAt,
+			&i.PumpState.UpdatedAt,
+			&i.PumpState.UpdatedByIdentityName,
+			&i.PumpState.CreatedByAppName,
+			&i.PumpState.CreatedByDeviceName,
+			&i.PumpState.CreatedByIdentityName,
+			&i.CgmState.ID,
+			&i.CgmState.CgmState,
+			&i.CgmState.CgmTimestamp,
+			&i.CgmState.CgmInsertionTime,
+			&i.CgmState.RawJsonData,
+			&i.CgmState.DeletedAt,
+			&i.CgmState.UtcOffsetMinutes,
+			&i.CgmState.OccurredAt,
+			&i.CgmState.CreatedAt,
+			&i.CgmState.UpdatedAt,
+			&i.CgmState.UpdatedByIdentityName,
+			&i.CgmState.CreatedByAppName,
+			&i.CgmState.CreatedByDeviceName,
+			&i.CgmState.CreatedByIdentityName,
+			&i.Activity.ID,
+			&i.Activity.Name,
+			&i.Activity.Notes,
+			&i.Activity.ActivityType,
+			&i.Activity.DurationMinutes,
+			&i.Activity.Calories,
+			&i.Activity.Steps,
+			&i.Activity.HeartRate,
+			&i.Activity.RawJsonData,
+			&i.Activity.DeletedAt,
+			&i.Activity.UtcOffsetMinutes,
+			&i.Activity.OccurredAt,
+			&i.Activity.CreatedAt,
+			&i.Activity.UpdatedAt,
+			&i.Activity.CreatedByAppName,
+			&i.Activity.CreatedByDeviceName,
+			&i.Activity.UpdatedByIdentityName,
+			&i.Activity.CreatedByIdentityName,
+			&i.Note.ID,
+			&i.Note.Content,
+			&i.Note.RawJsonData,
+			&i.Note.DeletedAt,
+			&i.Note.UtcOffsetMinutes,
+			&i.Note.OccurredAt,
+			&i.Note.CreatedAt,
+			&i.Note.UpdatedAt,
+			&i.Note.CreatedByAppName,
+			&i.Note.CreatedByDeviceName,
+			&i.Note.UpdatedByIdentityName,
+			&i.Note.CreatedByIdentityName,
 			&i.ID,
 			&i.GroupType,
-			&i.GlucoseReading,
-			&i.GlucoseReadingType,
-			&i.InsulinDose,
-			&i.InsulinDoseType,
-			&i.FoodName,
-			&i.FoodType,
-			&i.FoodCarbs,
-			&i.FoodFat,
-			&i.FoodProtein,
-			&i.FoodFibre,
-			&i.FoodCalories,
-			&i.ActivityName,
-			&i.ActivityType,
-			&i.ActivityDurationMinutes,
-			&i.ActivityCalories,
-			&i.ActivitySteps,
-			&i.ActivityHeartRate,
-			&i.NoteContent,
-			&i.TempBasalDurationMinutes,
-			&i.TempBasalAbsolute,
-			&i.TempBasalPercent,
-			&i.TempTargetDurationMinutes,
-			&i.TempTargetHighTarget,
-			&i.TempTargetLowTarget,
-			&i.ProfileSwitchName,
-			&i.ProfileSwitchDurationMinutes,
-			&i.ProfileSwitchPercent,
-			&i.ProfileSwitchCarbRatiosJson,
-			&i.ProfileSwitchInsulinSensitivitiesJson,
-			&i.ProfileSwitchBasalRatesJson,
-			&i.ProfileSwitchTargetsJson,
-			&i.PumpState,
-			&i.PumpTimestamp,
-			&i.PumpInsertionTime,
-			&i.PumpReservoir,
-			&i.PumpBatteryPercent,
-			&i.PumpChargingState,
-			&i.CgmState,
-			&i.CgmTimestamp,
-			&i.CgmInsertionTime,
-			&i.LoopState,
-			&i.LoopTimestamp,
-			&i.LoopIob,
-			&i.LoopIobBasal,
-			&i.LoopIobTreatment,
-			&i.LoopCob,
-			&i.DeviceState,
-			&i.DeviceTimestamp,
-			&i.DeviceBatteryPercent,
-			&i.DeviceChargingState,
 			&i.OccurredAt,
 			&i.UtcOffsetMinutes,
 			&i.CreatedAt,
@@ -386,40 +446,304 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 }
 
 const getEventGroup = `-- name: GetEventGroup :one
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM event_groups WHERE id = ?
+SELECT   
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_state_id, eg.loop_state_id, eg.pump_state_id, eg.cgm_state_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    gr.id, gr.reading, gr.reading_type, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_name, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_name, idose.created_by_identity_name,
+    fi.id, fi.name, fi.food_type, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.calories, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_name, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.absolute, tb.percent, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_name, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target, tt.low_target, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_name, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.percent, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_json, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_name, ps.created_by_identity_name,
+    ds.id, ds.device_state, ds.device_timestamp, ds.device_battery_percent, ds.device_charging_state, ds.raw_json_data, ds.deleted_at, ds.utc_offset_minutes, ds.occurred_at, ds.created_at, ds.updated_at, ds.updated_by_identity_name, ds.created_by_app_name, ds.created_by_device_name, ds.created_by_identity_name,
+    ls.id, ls.loop_state, ls.loop_timestamp, ls.iob, ls.iob_basal, ls.iob_treatment, ls.cob, ls.raw_json_data, ls.deleted_at, ls.utc_offset_minutes, ls.occurred_at, ls.created_at, ls.updated_at, ls.updated_by_identity_name, ls.created_by_app_name, ls.created_by_device_name, ls.created_by_identity_name,
+    ps2.id, ps2.pump_state, ps2.pump_timestamp, ps2.pump_insertion_time, ps2.pump_reservoir, ps2.pump_battery_percent, ps2.pump_charging_state, ps2.raw_json_data, ps2.deleted_at, ps2.utc_offset_minutes, ps2.occurred_at, ps2.created_at, ps2.updated_at, ps2.updated_by_identity_name, ps2.created_by_app_name, ps2.created_by_device_name, ps2.created_by_identity_name,
+    cs.id, cs.cgm_state, cs.cgm_timestamp, cs.cgm_insertion_time, cs.raw_json_data, cs.deleted_at, cs.utc_offset_minutes, cs.occurred_at, cs.created_at, cs.updated_at, cs.updated_by_identity_name, cs.created_by_app_name, cs.created_by_device_name, cs.created_by_identity_name,
+    a.id, a.name, a.notes, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
+    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name,
+
+    eg.id as id,
+    eg.group_type as group_type,
+
+    -- Default stuff
+    eg.occurred_at as occurred_at,
+    eg.utc_offset_minutes as utc_offset_minutes,
+    eg.created_at as created_at,
+    eg.updated_at as updated_at,
+    eg.deleted_at as deleted_at,
+    eg.raw_json_data as raw_json_data,
+    eg.created_by_app_name as created_by_app_name,
+    eg.created_by_device_name as created_by_device_name,
+    eg.created_by_identity_name as created_by_identity_name
+    
+FROM event_groups eg
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
+LEFT JOIN device_states ds ON eg.device_state_id = ds.id
+LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
+LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
+LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN activities a ON eg.activity_id = a.id
+LEFT JOIN notes n ON eg.note_id = n.id
+
+WHERE eg.id = ?
 `
 
 type GetEventGroupParams struct {
 	ID string
 }
 
-func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*EventGroup, error) {
+type GetEventGroupRow struct {
+	EventGroup            EventGroup
+	GlucoseReading        GlucoseReading
+	InsulinDose           InsulinDose
+	FoodIntake            FoodIntake
+	TempBasal             TempBasal
+	TempTarget            TempTarget
+	ProfileSwitch         ProfileSwitch
+	DeviceState           DeviceState
+	LoopState             LoopState
+	PumpState             PumpState
+	CgmState              CgmState
+	Activity              Activity
+	Note                  Note
+	ID                    string
+	GroupType             string
+	OccurredAt            int64
+	UtcOffsetMinutes      *int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	DeletedAt             *int64
+	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
+}
+
+func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*GetEventGroupRow, error) {
 	row := q.queryRow(ctx, q.getEventGroupStmt, getEventGroup, arg.ID)
-	var i EventGroup
+	var i GetEventGroupRow
 	err := row.Scan(
+		&i.EventGroup.ID,
+		&i.EventGroup.GroupType,
+		&i.EventGroup.GlucoseReadingID,
+		&i.EventGroup.InsulinDoseID,
+		&i.EventGroup.FoodIntakeID,
+		&i.EventGroup.TempBasalID,
+		&i.EventGroup.TempTargetID,
+		&i.EventGroup.ProfileSwitchID,
+		&i.EventGroup.DeviceStateID,
+		&i.EventGroup.LoopStateID,
+		&i.EventGroup.PumpStateID,
+		&i.EventGroup.CgmStateID,
+		&i.EventGroup.ActivityID,
+		&i.EventGroup.NoteID,
+		&i.EventGroup.RawJsonData,
+		&i.EventGroup.DeletedAt,
+		&i.EventGroup.UtcOffsetMinutes,
+		&i.EventGroup.OccurredAt,
+		&i.EventGroup.CreatedAt,
+		&i.EventGroup.UpdatedAt,
+		&i.EventGroup.CreatedByAppName,
+		&i.EventGroup.CreatedByDeviceName,
+		&i.EventGroup.UpdatedByIdentityName,
+		&i.EventGroup.CreatedByIdentityName,
+		&i.GlucoseReading.ID,
+		&i.GlucoseReading.Reading,
+		&i.GlucoseReading.ReadingType,
+		&i.GlucoseReading.RawJsonData,
+		&i.GlucoseReading.DeletedAt,
+		&i.GlucoseReading.UtcOffsetMinutes,
+		&i.GlucoseReading.OccurredAt,
+		&i.GlucoseReading.CreatedAt,
+		&i.GlucoseReading.UpdatedAt,
+		&i.GlucoseReading.CreatedByAppName,
+		&i.GlucoseReading.CreatedByDeviceName,
+		&i.GlucoseReading.UpdatedByIdentityName,
+		&i.GlucoseReading.CreatedByIdentityName,
+		&i.InsulinDose.ID,
+		&i.InsulinDose.Dose,
+		&i.InsulinDose.DoseType,
+		&i.InsulinDose.RawJsonData,
+		&i.InsulinDose.DeletedAt,
+		&i.InsulinDose.UtcOffsetMinutes,
+		&i.InsulinDose.OccurredAt,
+		&i.InsulinDose.CreatedAt,
+		&i.InsulinDose.UpdatedAt,
+		&i.InsulinDose.CreatedByAppName,
+		&i.InsulinDose.CreatedByDeviceName,
+		&i.InsulinDose.UpdatedByIdentityName,
+		&i.InsulinDose.CreatedByIdentityName,
+		&i.FoodIntake.ID,
+		&i.FoodIntake.Name,
+		&i.FoodIntake.FoodType,
+		&i.FoodIntake.Carbs,
+		&i.FoodIntake.Fat,
+		&i.FoodIntake.Protein,
+		&i.FoodIntake.Fibre,
+		&i.FoodIntake.Calories,
+		&i.FoodIntake.RawJsonData,
+		&i.FoodIntake.DeletedAt,
+		&i.FoodIntake.UtcOffsetMinutes,
+		&i.FoodIntake.OccurredAt,
+		&i.FoodIntake.CreatedAt,
+		&i.FoodIntake.UpdatedAt,
+		&i.FoodIntake.CreatedByAppName,
+		&i.FoodIntake.CreatedByDeviceName,
+		&i.FoodIntake.UpdatedByIdentityName,
+		&i.FoodIntake.CreatedByIdentityName,
+		&i.TempBasal.ID,
+		&i.TempBasal.DurationMinutes,
+		&i.TempBasal.Absolute,
+		&i.TempBasal.Percent,
+		&i.TempBasal.RawJsonData,
+		&i.TempBasal.DeletedAt,
+		&i.TempBasal.UtcOffsetMinutes,
+		&i.TempBasal.OccurredAt,
+		&i.TempBasal.CreatedAt,
+		&i.TempBasal.UpdatedAt,
+		&i.TempBasal.CreatedByAppName,
+		&i.TempBasal.CreatedByDeviceName,
+		&i.TempBasal.UpdatedByIdentityName,
+		&i.TempBasal.CreatedByIdentityName,
+		&i.TempTarget.ID,
+		&i.TempTarget.DurationMinutes,
+		&i.TempTarget.HighTarget,
+		&i.TempTarget.LowTarget,
+		&i.TempTarget.RawJsonData,
+		&i.TempTarget.DeletedAt,
+		&i.TempTarget.UtcOffsetMinutes,
+		&i.TempTarget.OccurredAt,
+		&i.TempTarget.CreatedAt,
+		&i.TempTarget.UpdatedAt,
+		&i.TempTarget.CreatedByAppName,
+		&i.TempTarget.CreatedByDeviceName,
+		&i.TempTarget.UpdatedByIdentityName,
+		&i.TempTarget.CreatedByIdentityName,
+		&i.ProfileSwitch.ID,
+		&i.ProfileSwitch.Name,
+		&i.ProfileSwitch.DurationMinutes,
+		&i.ProfileSwitch.Percent,
+		&i.ProfileSwitch.CarbRatiosJson,
+		&i.ProfileSwitch.InsulinSensitivitiesJson,
+		&i.ProfileSwitch.BasalRatesJson,
+		&i.ProfileSwitch.TargetsJson,
+		&i.ProfileSwitch.RawJsonData,
+		&i.ProfileSwitch.DeletedAt,
+		&i.ProfileSwitch.UtcOffsetMinutes,
+		&i.ProfileSwitch.OccurredAt,
+		&i.ProfileSwitch.CreatedAt,
+		&i.ProfileSwitch.UpdatedAt,
+		&i.ProfileSwitch.CreatedByAppName,
+		&i.ProfileSwitch.CreatedByDeviceName,
+		&i.ProfileSwitch.UpdatedByIdentityName,
+		&i.ProfileSwitch.CreatedByIdentityName,
+		&i.DeviceState.ID,
+		&i.DeviceState.DeviceState,
+		&i.DeviceState.DeviceTimestamp,
+		&i.DeviceState.DeviceBatteryPercent,
+		&i.DeviceState.DeviceChargingState,
+		&i.DeviceState.RawJsonData,
+		&i.DeviceState.DeletedAt,
+		&i.DeviceState.UtcOffsetMinutes,
+		&i.DeviceState.OccurredAt,
+		&i.DeviceState.CreatedAt,
+		&i.DeviceState.UpdatedAt,
+		&i.DeviceState.UpdatedByIdentityName,
+		&i.DeviceState.CreatedByAppName,
+		&i.DeviceState.CreatedByDeviceName,
+		&i.DeviceState.CreatedByIdentityName,
+		&i.LoopState.ID,
+		&i.LoopState.LoopState,
+		&i.LoopState.LoopTimestamp,
+		&i.LoopState.Iob,
+		&i.LoopState.IobBasal,
+		&i.LoopState.IobTreatment,
+		&i.LoopState.Cob,
+		&i.LoopState.RawJsonData,
+		&i.LoopState.DeletedAt,
+		&i.LoopState.UtcOffsetMinutes,
+		&i.LoopState.OccurredAt,
+		&i.LoopState.CreatedAt,
+		&i.LoopState.UpdatedAt,
+		&i.LoopState.UpdatedByIdentityName,
+		&i.LoopState.CreatedByAppName,
+		&i.LoopState.CreatedByDeviceName,
+		&i.LoopState.CreatedByIdentityName,
+		&i.PumpState.ID,
+		&i.PumpState.PumpState,
+		&i.PumpState.PumpTimestamp,
+		&i.PumpState.PumpInsertionTime,
+		&i.PumpState.PumpReservoir,
+		&i.PumpState.PumpBatteryPercent,
+		&i.PumpState.PumpChargingState,
+		&i.PumpState.RawJsonData,
+		&i.PumpState.DeletedAt,
+		&i.PumpState.UtcOffsetMinutes,
+		&i.PumpState.OccurredAt,
+		&i.PumpState.CreatedAt,
+		&i.PumpState.UpdatedAt,
+		&i.PumpState.UpdatedByIdentityName,
+		&i.PumpState.CreatedByAppName,
+		&i.PumpState.CreatedByDeviceName,
+		&i.PumpState.CreatedByIdentityName,
+		&i.CgmState.ID,
+		&i.CgmState.CgmState,
+		&i.CgmState.CgmTimestamp,
+		&i.CgmState.CgmInsertionTime,
+		&i.CgmState.RawJsonData,
+		&i.CgmState.DeletedAt,
+		&i.CgmState.UtcOffsetMinutes,
+		&i.CgmState.OccurredAt,
+		&i.CgmState.CreatedAt,
+		&i.CgmState.UpdatedAt,
+		&i.CgmState.UpdatedByIdentityName,
+		&i.CgmState.CreatedByAppName,
+		&i.CgmState.CreatedByDeviceName,
+		&i.CgmState.CreatedByIdentityName,
+		&i.Activity.ID,
+		&i.Activity.Name,
+		&i.Activity.Notes,
+		&i.Activity.ActivityType,
+		&i.Activity.DurationMinutes,
+		&i.Activity.Calories,
+		&i.Activity.Steps,
+		&i.Activity.HeartRate,
+		&i.Activity.RawJsonData,
+		&i.Activity.DeletedAt,
+		&i.Activity.UtcOffsetMinutes,
+		&i.Activity.OccurredAt,
+		&i.Activity.CreatedAt,
+		&i.Activity.UpdatedAt,
+		&i.Activity.CreatedByAppName,
+		&i.Activity.CreatedByDeviceName,
+		&i.Activity.UpdatedByIdentityName,
+		&i.Activity.CreatedByIdentityName,
+		&i.Note.ID,
+		&i.Note.Content,
+		&i.Note.RawJsonData,
+		&i.Note.DeletedAt,
+		&i.Note.UtcOffsetMinutes,
+		&i.Note.OccurredAt,
+		&i.Note.CreatedAt,
+		&i.Note.UpdatedAt,
+		&i.Note.CreatedByAppName,
+		&i.Note.CreatedByDeviceName,
+		&i.Note.UpdatedByIdentityName,
+		&i.Note.CreatedByIdentityName,
 		&i.ID,
 		&i.GroupType,
-		&i.GlucoseReadingID,
-		&i.InsulinDoseID,
-		&i.FoodIntakeID,
-		&i.TempBasalID,
-		&i.TempTargetID,
-		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
-		&i.ActivityID,
-		&i.NoteID,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
+		&i.UtcOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.RawJsonData,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
@@ -438,83 +762,23 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 }
 
 const searchEventGroups = `-- name: SearchEventGroups :many
-SELECT 
+SELECT
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_state_id, eg.loop_state_id, eg.pump_state_id, eg.cgm_state_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    gr.id, gr.reading, gr.reading_type, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_name, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_name, idose.created_by_identity_name,
+    fi.id, fi.name, fi.food_type, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.calories, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_name, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.absolute, tb.percent, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_name, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target, tt.low_target, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_name, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.percent, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_json, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_name, ps.created_by_identity_name,
+    ds.id, ds.device_state, ds.device_timestamp, ds.device_battery_percent, ds.device_charging_state, ds.raw_json_data, ds.deleted_at, ds.utc_offset_minutes, ds.occurred_at, ds.created_at, ds.updated_at, ds.updated_by_identity_name, ds.created_by_app_name, ds.created_by_device_name, ds.created_by_identity_name,
+    ls.id, ls.loop_state, ls.loop_timestamp, ls.iob, ls.iob_basal, ls.iob_treatment, ls.cob, ls.raw_json_data, ls.deleted_at, ls.utc_offset_minutes, ls.occurred_at, ls.created_at, ls.updated_at, ls.updated_by_identity_name, ls.created_by_app_name, ls.created_by_device_name, ls.created_by_identity_name,
+    ps2.id, ps2.pump_state, ps2.pump_timestamp, ps2.pump_insertion_time, ps2.pump_reservoir, ps2.pump_battery_percent, ps2.pump_charging_state, ps2.raw_json_data, ps2.deleted_at, ps2.utc_offset_minutes, ps2.occurred_at, ps2.created_at, ps2.updated_at, ps2.updated_by_identity_name, ps2.created_by_app_name, ps2.created_by_device_name, ps2.created_by_identity_name,
+    cs.id, cs.cgm_state, cs.cgm_timestamp, cs.cgm_insertion_time, cs.raw_json_data, cs.deleted_at, cs.utc_offset_minutes, cs.occurred_at, cs.created_at, cs.updated_at, cs.updated_by_identity_name, cs.created_by_app_name, cs.created_by_device_name, cs.created_by_identity_name,
+    a.id, a.name, a.notes, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
+    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name,
+
     eg.id as id,
     eg.group_type as group_type,
-
-    -- Glucose Reading
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
-
-    -- Insulin Dose
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    -- Food Intake
-    fi.name as food_name,
-    fi.food_type as food_type,
-    fi.carbs as food_carbs,
-    fi.fat as food_fat,
-    fi.protein as food_protein,
-    fi.fibre as food_fibre,
-    fi.calories as food_calories,
-
-    -- Activities
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    -- Notes
-    n.content as note_content,
-
-    -- Temp Basals
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,
-    tb.percent as temp_basal_percent,
-
-    -- Temp Targets
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    -- Profile Switches
-    ps.name as profile_switch_name,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_json as profile_switch_targets_json,
-
-    -- Pump States
-    ps2.pump_state as pump_state,
-    ps2.pump_timestamp as pump_timestamp,
-    ps2.pump_insertion_time as pump_insertion_time,
-    ps2.pump_reservoir as pump_reservoir,
-    ps2.pump_battery_percent as pump_battery_percent,
-    ps2.pump_charging_state as pump_charging_state,
-
-    -- CGM States
-    cs.cgm_state as cgm_state,
-    cs.cgm_timestamp as cgm_timestamp,
-    cs.cgm_insertion_time as cgm_insertion_time,
-
-    -- Loop States
-    ls.loop_state as loop_state,
-    ls.loop_timestamp as loop_timestamp,
-    ls.iob as loop_iob,
-    ls.iob_basal as loop_iob_basal,
-    ls.iob_treatment as loop_iob_treatment,
-    ls.cob as loop_cob,
-
-    -- Device States
-    ds.device_state as device_state,
-    ds.device_timestamp as device_timestamp,
-    ds.device_battery_percent as device_battery_percent,
-    ds.device_charging_state as device_charging_state,
 
     -- Default stuff
     eg.occurred_at as occurred_at,
@@ -572,40 +836,40 @@ WHERE
 
     -- model specific stuff
 
-    AND (CAST(?21 AS TEXT) IS NULL OR food_name = ?21 OR activity_name = ?21 OR profile_switch_name = ?21)
+    AND (CAST(?21 AS TEXT) IS NULL OR fi.name = ?21 OR a.name = ?21 OR ps.name = ?21)
 
 
     -- glucose readings
-    AND (CAST(?22 AS INTEGER) IS NULL OR glucose_reading = ?22)
-    AND (CAST(?23 AS INTEGER) IS NULL OR glucose_reading >= ?23)
-    AND (CAST(?24 AS INTEGER) IS NULL OR glucose_reading > ?24)
-    AND (CAST(?25 AS INTEGER) IS NULL OR glucose_reading <= ?25)
-    AND (CAST(?26 AS INTEGER) IS NULL OR glucose_reading < ?26)
+    AND (CAST(?22 AS INTEGER) IS NULL OR gr.reading = ?22)
+    AND (CAST(?23 AS INTEGER) IS NULL OR gr.reading >= ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR gr.reading > ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR gr.reading <= ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR gr.reading < ?26)
     
     -- food intake
 
-    AND (CAST(?27 AS INTEGER) IS NULL OR food_carbs = ?27)
-    AND (CAST(?28 AS INTEGER) IS NULL OR food_carbs >= ?28)
-    AND (CAST(?29 AS INTEGER) IS NULL OR food_carbs > ?29)
-    AND (CAST(?30 AS INTEGER) IS NULL OR food_carbs <= ?30)
-    AND (CAST(?31 AS INTEGER) IS NULL OR food_carbs < ?31)
+    AND (CAST(?27 AS INTEGER) IS NULL OR fi.carbs = ?27)
+    AND (CAST(?28 AS INTEGER) IS NULL OR fi.carbs >= ?28)
+    AND (CAST(?29 AS INTEGER) IS NULL OR fi.carbs > ?29)
+    AND (CAST(?30 AS INTEGER) IS NULL OR fi.carbs <= ?30)
+    AND (CAST(?31 AS INTEGER) IS NULL OR fi.carbs < ?31)
     
 
     -- insulin doses
-    AND (CAST(?32 AS INTEGER) IS NULL OR insulin_dose = ?32)
-    AND (CAST(?33 AS INTEGER) IS NULL OR insulin_dose >= ?33)
-    AND (CAST(?34 AS INTEGER) IS NULL OR insulin_dose > ?34)
-    AND (CAST(?35 AS INTEGER) IS NULL OR insulin_dose <= ?35)
-    AND (CAST(?36 AS INTEGER) IS NULL OR insulin_dose < ?36)
+    AND (CAST(?32 AS INTEGER) IS NULL OR idose.dose = ?32)
+    AND (CAST(?33 AS INTEGER) IS NULL OR idose.dose >= ?33)
+    AND (CAST(?34 AS INTEGER) IS NULL OR idose.dose > ?34)
+    AND (CAST(?35 AS INTEGER) IS NULL OR idose.dose <= ?35)
+    AND (CAST(?36 AS INTEGER) IS NULL OR idose.dose < ?36)
 
 
 
     -- range values
-    AND (CAST(?37 AS INTEGER) IS NULL OR activity_duration_minutes = ?37) OR temp_basal_duration_minutes = ?37 OR temp_target_duration_minutes = ?37 OR profile_switch_duration_minutes = ?37
-    AND (CAST(?38 AS INTEGER) IS NULL OR activity_duration_minutes >= ?38) OR temp_basal_duration_minutes >= ?38 OR temp_target_duration_minutes >= ?38 OR profile_switch_duration_minutes >= ?38
-    AND (CAST(?39 AS INTEGER) IS NULL OR activity_duration_minutes > ?39) OR temp_basal_duration_minutes > ?39 OR temp_target_duration_minutes > ?39 OR profile_switch_duration_minutes > ?39
-    AND (CAST(?40 AS INTEGER) IS NULL OR activity_duration_minutes <= ?40) OR temp_basal_duration_minutes <= ?40 OR temp_target_duration_minutes <= ?40 OR profile_switch_duration_minutes <= ?40
-    AND (CAST(?41 AS INTEGER) IS NULL OR activity_duration_minutes < ?41) OR temp_basal_duration_minutes < ?41 OR temp_target_duration_minutes < ?41 OR profile_switch_duration_minutes < ?41
+    AND (CAST(?37 AS INTEGER) IS NULL OR a.duration_minutes = ?37) OR tb.duration_minutes = ?37 OR tt.duration_minutes = ?37 OR ps.duration_minutes = ?37
+    AND (CAST(?38 AS INTEGER) IS NULL OR a.duration_minutes >= ?38) OR tb.duration_minutes >= ?38 OR tt.duration_minutes >= ?38 OR ps.duration_minutes >= ?38
+    AND (CAST(?39 AS INTEGER) IS NULL OR a.duration_minutes > ?39) OR tb.duration_minutes > ?39 OR tt.duration_minutes > ?39 OR ps.duration_minutes > ?39
+    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes <= ?40) OR tb.duration_minutes <= ?40 OR tt.duration_minutes <= ?40 OR ps.duration_minutes <= ?40
+    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes < ?41) OR tb.duration_minutes < ?41 OR tt.duration_minutes < ?41 OR ps.duration_minutes < ?41
 
 
     AND (CAST(?42 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
@@ -661,67 +925,30 @@ type SearchEventGroupsParams struct {
 }
 
 type SearchEventGroupsRow struct {
-	ID                                    string
-	GroupType                             string
-	GlucoseReading                        *float64
-	GlucoseReadingType                    *string
-	InsulinDose                           *float64
-	InsulinDoseType                       *string
-	FoodName                              *string
-	FoodType                              *string
-	FoodCarbs                             *float64
-	FoodFat                               *float64
-	FoodProtein                           *float64
-	FoodFibre                             *float64
-	FoodCalories                          *float64
-	ActivityName                          *string
-	ActivityType                          *string
-	ActivityDurationMinutes               *int64
-	ActivityCalories                      *int64
-	ActivitySteps                         *int64
-	ActivityHeartRate                     *int64
-	NoteContent                           *string
-	TempBasalDurationMinutes              *int64
-	TempBasalAbsolute                     *float64
-	TempBasalPercent                      *float64
-	TempTargetDurationMinutes             *int64
-	TempTargetHighTarget                  *float64
-	TempTargetLowTarget                   *float64
-	ProfileSwitchName                     *string
-	ProfileSwitchDurationMinutes          *int64
-	ProfileSwitchPercent                  *int64
-	ProfileSwitchCarbRatiosJson           *string
-	ProfileSwitchInsulinSensitivitiesJson *string
-	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsJson              *string
-	PumpState                             *string
-	PumpTimestamp                         *int64
-	PumpInsertionTime                     *int64
-	PumpReservoir                         *float64
-	PumpBatteryPercent                    *float64
-	PumpChargingState                     *string
-	CgmState                              *string
-	CgmTimestamp                          *int64
-	CgmInsertionTime                      *int64
-	LoopState                             *string
-	LoopTimestamp                         *int64
-	LoopIob                               *float64
-	LoopIobBasal                          *float64
-	LoopIobTreatment                      *float64
-	LoopCob                               *float64
-	DeviceState                           *string
-	DeviceTimestamp                       *int64
-	DeviceBatteryPercent                  *float64
-	DeviceChargingState                   *string
-	OccurredAt                            int64
-	UtcOffsetMinutes                      *int64
-	CreatedAt                             int64
-	UpdatedAt                             int64
-	DeletedAt                             *int64
-	RawJsonData                           *string
-	CreatedByAppName                      string
-	CreatedByDeviceName                   string
-	CreatedByIdentityName                 string
+	EventGroup            EventGroup
+	GlucoseReading        GlucoseReading
+	InsulinDose           InsulinDose
+	FoodIntake            FoodIntake
+	TempBasal             TempBasal
+	TempTarget            TempTarget
+	ProfileSwitch         ProfileSwitch
+	DeviceState           DeviceState
+	LoopState             LoopState
+	PumpState             PumpState
+	CgmState              CgmState
+	Activity              Activity
+	Note                  Note
+	ID                    string
+	GroupType             string
+	OccurredAt            int64
+	UtcOffsetMinutes      *int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	DeletedAt             *int64
+	RawJsonData           *string
+	CreatedByAppName      string
+	CreatedByDeviceName   string
+	CreatedByIdentityName string
 }
 
 func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsParams) ([]*SearchEventGroupsRow, error) {
@@ -779,58 +1006,215 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 	for rows.Next() {
 		var i SearchEventGroupsRow
 		if err := rows.Scan(
+			&i.EventGroup.ID,
+			&i.EventGroup.GroupType,
+			&i.EventGroup.GlucoseReadingID,
+			&i.EventGroup.InsulinDoseID,
+			&i.EventGroup.FoodIntakeID,
+			&i.EventGroup.TempBasalID,
+			&i.EventGroup.TempTargetID,
+			&i.EventGroup.ProfileSwitchID,
+			&i.EventGroup.DeviceStateID,
+			&i.EventGroup.LoopStateID,
+			&i.EventGroup.PumpStateID,
+			&i.EventGroup.CgmStateID,
+			&i.EventGroup.ActivityID,
+			&i.EventGroup.NoteID,
+			&i.EventGroup.RawJsonData,
+			&i.EventGroup.DeletedAt,
+			&i.EventGroup.UtcOffsetMinutes,
+			&i.EventGroup.OccurredAt,
+			&i.EventGroup.CreatedAt,
+			&i.EventGroup.UpdatedAt,
+			&i.EventGroup.CreatedByAppName,
+			&i.EventGroup.CreatedByDeviceName,
+			&i.EventGroup.UpdatedByIdentityName,
+			&i.EventGroup.CreatedByIdentityName,
+			&i.GlucoseReading.ID,
+			&i.GlucoseReading.Reading,
+			&i.GlucoseReading.ReadingType,
+			&i.GlucoseReading.RawJsonData,
+			&i.GlucoseReading.DeletedAt,
+			&i.GlucoseReading.UtcOffsetMinutes,
+			&i.GlucoseReading.OccurredAt,
+			&i.GlucoseReading.CreatedAt,
+			&i.GlucoseReading.UpdatedAt,
+			&i.GlucoseReading.CreatedByAppName,
+			&i.GlucoseReading.CreatedByDeviceName,
+			&i.GlucoseReading.UpdatedByIdentityName,
+			&i.GlucoseReading.CreatedByIdentityName,
+			&i.InsulinDose.ID,
+			&i.InsulinDose.Dose,
+			&i.InsulinDose.DoseType,
+			&i.InsulinDose.RawJsonData,
+			&i.InsulinDose.DeletedAt,
+			&i.InsulinDose.UtcOffsetMinutes,
+			&i.InsulinDose.OccurredAt,
+			&i.InsulinDose.CreatedAt,
+			&i.InsulinDose.UpdatedAt,
+			&i.InsulinDose.CreatedByAppName,
+			&i.InsulinDose.CreatedByDeviceName,
+			&i.InsulinDose.UpdatedByIdentityName,
+			&i.InsulinDose.CreatedByIdentityName,
+			&i.FoodIntake.ID,
+			&i.FoodIntake.Name,
+			&i.FoodIntake.FoodType,
+			&i.FoodIntake.Carbs,
+			&i.FoodIntake.Fat,
+			&i.FoodIntake.Protein,
+			&i.FoodIntake.Fibre,
+			&i.FoodIntake.Calories,
+			&i.FoodIntake.RawJsonData,
+			&i.FoodIntake.DeletedAt,
+			&i.FoodIntake.UtcOffsetMinutes,
+			&i.FoodIntake.OccurredAt,
+			&i.FoodIntake.CreatedAt,
+			&i.FoodIntake.UpdatedAt,
+			&i.FoodIntake.CreatedByAppName,
+			&i.FoodIntake.CreatedByDeviceName,
+			&i.FoodIntake.UpdatedByIdentityName,
+			&i.FoodIntake.CreatedByIdentityName,
+			&i.TempBasal.ID,
+			&i.TempBasal.DurationMinutes,
+			&i.TempBasal.Absolute,
+			&i.TempBasal.Percent,
+			&i.TempBasal.RawJsonData,
+			&i.TempBasal.DeletedAt,
+			&i.TempBasal.UtcOffsetMinutes,
+			&i.TempBasal.OccurredAt,
+			&i.TempBasal.CreatedAt,
+			&i.TempBasal.UpdatedAt,
+			&i.TempBasal.CreatedByAppName,
+			&i.TempBasal.CreatedByDeviceName,
+			&i.TempBasal.UpdatedByIdentityName,
+			&i.TempBasal.CreatedByIdentityName,
+			&i.TempTarget.ID,
+			&i.TempTarget.DurationMinutes,
+			&i.TempTarget.HighTarget,
+			&i.TempTarget.LowTarget,
+			&i.TempTarget.RawJsonData,
+			&i.TempTarget.DeletedAt,
+			&i.TempTarget.UtcOffsetMinutes,
+			&i.TempTarget.OccurredAt,
+			&i.TempTarget.CreatedAt,
+			&i.TempTarget.UpdatedAt,
+			&i.TempTarget.CreatedByAppName,
+			&i.TempTarget.CreatedByDeviceName,
+			&i.TempTarget.UpdatedByIdentityName,
+			&i.TempTarget.CreatedByIdentityName,
+			&i.ProfileSwitch.ID,
+			&i.ProfileSwitch.Name,
+			&i.ProfileSwitch.DurationMinutes,
+			&i.ProfileSwitch.Percent,
+			&i.ProfileSwitch.CarbRatiosJson,
+			&i.ProfileSwitch.InsulinSensitivitiesJson,
+			&i.ProfileSwitch.BasalRatesJson,
+			&i.ProfileSwitch.TargetsJson,
+			&i.ProfileSwitch.RawJsonData,
+			&i.ProfileSwitch.DeletedAt,
+			&i.ProfileSwitch.UtcOffsetMinutes,
+			&i.ProfileSwitch.OccurredAt,
+			&i.ProfileSwitch.CreatedAt,
+			&i.ProfileSwitch.UpdatedAt,
+			&i.ProfileSwitch.CreatedByAppName,
+			&i.ProfileSwitch.CreatedByDeviceName,
+			&i.ProfileSwitch.UpdatedByIdentityName,
+			&i.ProfileSwitch.CreatedByIdentityName,
+			&i.DeviceState.ID,
+			&i.DeviceState.DeviceState,
+			&i.DeviceState.DeviceTimestamp,
+			&i.DeviceState.DeviceBatteryPercent,
+			&i.DeviceState.DeviceChargingState,
+			&i.DeviceState.RawJsonData,
+			&i.DeviceState.DeletedAt,
+			&i.DeviceState.UtcOffsetMinutes,
+			&i.DeviceState.OccurredAt,
+			&i.DeviceState.CreatedAt,
+			&i.DeviceState.UpdatedAt,
+			&i.DeviceState.UpdatedByIdentityName,
+			&i.DeviceState.CreatedByAppName,
+			&i.DeviceState.CreatedByDeviceName,
+			&i.DeviceState.CreatedByIdentityName,
+			&i.LoopState.ID,
+			&i.LoopState.LoopState,
+			&i.LoopState.LoopTimestamp,
+			&i.LoopState.Iob,
+			&i.LoopState.IobBasal,
+			&i.LoopState.IobTreatment,
+			&i.LoopState.Cob,
+			&i.LoopState.RawJsonData,
+			&i.LoopState.DeletedAt,
+			&i.LoopState.UtcOffsetMinutes,
+			&i.LoopState.OccurredAt,
+			&i.LoopState.CreatedAt,
+			&i.LoopState.UpdatedAt,
+			&i.LoopState.UpdatedByIdentityName,
+			&i.LoopState.CreatedByAppName,
+			&i.LoopState.CreatedByDeviceName,
+			&i.LoopState.CreatedByIdentityName,
+			&i.PumpState.ID,
+			&i.PumpState.PumpState,
+			&i.PumpState.PumpTimestamp,
+			&i.PumpState.PumpInsertionTime,
+			&i.PumpState.PumpReservoir,
+			&i.PumpState.PumpBatteryPercent,
+			&i.PumpState.PumpChargingState,
+			&i.PumpState.RawJsonData,
+			&i.PumpState.DeletedAt,
+			&i.PumpState.UtcOffsetMinutes,
+			&i.PumpState.OccurredAt,
+			&i.PumpState.CreatedAt,
+			&i.PumpState.UpdatedAt,
+			&i.PumpState.UpdatedByIdentityName,
+			&i.PumpState.CreatedByAppName,
+			&i.PumpState.CreatedByDeviceName,
+			&i.PumpState.CreatedByIdentityName,
+			&i.CgmState.ID,
+			&i.CgmState.CgmState,
+			&i.CgmState.CgmTimestamp,
+			&i.CgmState.CgmInsertionTime,
+			&i.CgmState.RawJsonData,
+			&i.CgmState.DeletedAt,
+			&i.CgmState.UtcOffsetMinutes,
+			&i.CgmState.OccurredAt,
+			&i.CgmState.CreatedAt,
+			&i.CgmState.UpdatedAt,
+			&i.CgmState.UpdatedByIdentityName,
+			&i.CgmState.CreatedByAppName,
+			&i.CgmState.CreatedByDeviceName,
+			&i.CgmState.CreatedByIdentityName,
+			&i.Activity.ID,
+			&i.Activity.Name,
+			&i.Activity.Notes,
+			&i.Activity.ActivityType,
+			&i.Activity.DurationMinutes,
+			&i.Activity.Calories,
+			&i.Activity.Steps,
+			&i.Activity.HeartRate,
+			&i.Activity.RawJsonData,
+			&i.Activity.DeletedAt,
+			&i.Activity.UtcOffsetMinutes,
+			&i.Activity.OccurredAt,
+			&i.Activity.CreatedAt,
+			&i.Activity.UpdatedAt,
+			&i.Activity.CreatedByAppName,
+			&i.Activity.CreatedByDeviceName,
+			&i.Activity.UpdatedByIdentityName,
+			&i.Activity.CreatedByIdentityName,
+			&i.Note.ID,
+			&i.Note.Content,
+			&i.Note.RawJsonData,
+			&i.Note.DeletedAt,
+			&i.Note.UtcOffsetMinutes,
+			&i.Note.OccurredAt,
+			&i.Note.CreatedAt,
+			&i.Note.UpdatedAt,
+			&i.Note.CreatedByAppName,
+			&i.Note.CreatedByDeviceName,
+			&i.Note.UpdatedByIdentityName,
+			&i.Note.CreatedByIdentityName,
 			&i.ID,
 			&i.GroupType,
-			&i.GlucoseReading,
-			&i.GlucoseReadingType,
-			&i.InsulinDose,
-			&i.InsulinDoseType,
-			&i.FoodName,
-			&i.FoodType,
-			&i.FoodCarbs,
-			&i.FoodFat,
-			&i.FoodProtein,
-			&i.FoodFibre,
-			&i.FoodCalories,
-			&i.ActivityName,
-			&i.ActivityType,
-			&i.ActivityDurationMinutes,
-			&i.ActivityCalories,
-			&i.ActivitySteps,
-			&i.ActivityHeartRate,
-			&i.NoteContent,
-			&i.TempBasalDurationMinutes,
-			&i.TempBasalAbsolute,
-			&i.TempBasalPercent,
-			&i.TempTargetDurationMinutes,
-			&i.TempTargetHighTarget,
-			&i.TempTargetLowTarget,
-			&i.ProfileSwitchName,
-			&i.ProfileSwitchDurationMinutes,
-			&i.ProfileSwitchPercent,
-			&i.ProfileSwitchCarbRatiosJson,
-			&i.ProfileSwitchInsulinSensitivitiesJson,
-			&i.ProfileSwitchBasalRatesJson,
-			&i.ProfileSwitchTargetsJson,
-			&i.PumpState,
-			&i.PumpTimestamp,
-			&i.PumpInsertionTime,
-			&i.PumpReservoir,
-			&i.PumpBatteryPercent,
-			&i.PumpChargingState,
-			&i.CgmState,
-			&i.CgmTimestamp,
-			&i.CgmInsertionTime,
-			&i.LoopState,
-			&i.LoopTimestamp,
-			&i.LoopIob,
-			&i.LoopIobBasal,
-			&i.LoopIobTreatment,
-			&i.LoopCob,
-			&i.DeviceState,
-			&i.DeviceTimestamp,
-			&i.DeviceBatteryPercent,
-			&i.DeviceChargingState,
 			&i.OccurredAt,
 			&i.UtcOffsetMinutes,
 			&i.CreatedAt,

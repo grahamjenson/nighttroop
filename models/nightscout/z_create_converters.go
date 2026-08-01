@@ -5,83 +5,102 @@ package nightscout
 
 import site "nighttroop.t1d.nz/data/sql/site"
 
-type CreateMapConverterImpl struct{}
-
-func (c *CreateMapConverterImpl) ActivityToCreate(source Activity, context CreateContext) site.CreateActivityParams {
+func ActivityToCreate(source Activity, context CreateContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
 	siteCreateActivityParams.ID = AssignID(source.Date, context)
 	if source.Name != nil {
-		xstring := c.nightscoutShortStringToString(*source.Name)
+		xstring := ShortStringToString(*source.Name)
 		siteCreateActivityParams.Name = &xstring
 	}
 	if source.ActivityType != nil {
-		xstring2 := c.nightscoutShortStringToString(*source.ActivityType)
+		xstring2 := ShortStringToString(*source.ActivityType)
 		siteCreateActivityParams.ActivityType = &xstring2
 	}
 	if source.Duration != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		xint64 := FlexibleInt64ToInt64(*source.Duration)
 		siteCreateActivityParams.DurationMinutes = &xint64
 	}
 	if source.Calories != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.Calories)
+		xint642 := FlexibleInt64ToInt64(*source.Calories)
 		siteCreateActivityParams.Calories = &xint642
 	}
 	if source.Steps != nil {
-		xint643 := c.nightscoutFlexibleInt64ToInt64(*source.Steps)
+		xint643 := FlexibleInt64ToInt64(*source.Steps)
 		siteCreateActivityParams.Steps = &xint643
 	}
 	if source.HeartRate != nil {
-		xint644 := c.nightscoutFlexibleInt64ToInt64(*source.HeartRate)
+		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
 		siteCreateActivityParams.HeartRate = &xint644
 	}
 	if source.Date != nil {
-		siteCreateActivityParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateActivityParams.OccurredAt = int64(*source.Date)
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint645 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateActivityParams.UtcOffsetMinutes = &xint645
 	}
 	pString := source.RawJsonData
 	siteCreateActivityParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateActivityParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateActivityParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateActivityParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateActivityParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateActivityParams
 }
-func (c *CreateMapConverterImpl) DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site.CreateDeviceStateParams {
+func DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site.CreateDeviceStateParams {
 	var siteCreateDeviceStateParams site.CreateDeviceStateParams
 	siteCreateDeviceStateParams.ID = AssignID(source.Date, context)
 	if source.Date != nil {
-		xint64 := c.nightscoutDateIntToInt64(*source.Date)
+		xint64 := nightscoutDateIntToInt64(*source.Date)
 		siteCreateDeviceStateParams.DeviceTimestamp = &xint64
 	}
 	if source.UploaderBattery != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.UploaderBattery)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.UploaderBattery)
 		siteCreateDeviceStateParams.DeviceBatteryPercent = &xfloat64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateDeviceStateParams.UtcOffsetMinutes = &xint642
 	}
 	if source.Date != nil {
-		siteCreateDeviceStateParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateDeviceStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateDeviceStateParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateDeviceStateParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateDeviceStateParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateDeviceStateParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateDeviceStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateDeviceStateParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateDeviceStateParams
 }
-func (c *CreateMapConverterImpl) DeviceStatusToCreateLoop(source DeviceStatus, context CreateContext) site.CreateLoopStateParams {
+func DeviceStatusToCreateEventGroup(source DeviceStatus, context CreateContext) site.CreateEventGroupParams {
+	var siteCreateEventGroupParams site.CreateEventGroupParams
+	siteCreateEventGroupParams.ID = AssignID(source.Date, context)
+	if source.Date != nil {
+		siteCreateEventGroupParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
+	}
+	pString := source.RawJsonData
+	siteCreateEventGroupParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateEventGroupParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateEventGroupParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateEventGroupParams
+}
+func DeviceStatusToCreateLoop(source DeviceStatus, context CreateContext) site.CreateLoopStateParams {
 	var siteCreateLoopStateParams site.CreateLoopStateParams
 	siteCreateLoopStateParams.ID = AssignID(source.Date, context)
 	var pNightscoutFlexibleFloat64 *FlexibleFloat64
@@ -89,7 +108,7 @@ func (c *CreateMapConverterImpl) DeviceStatusToCreateLoop(source DeviceStatus, c
 		pNightscoutFlexibleFloat64 = source.MergedLoopStatus.IOB.IOB
 	}
 	if pNightscoutFlexibleFloat64 != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat64)
+		xfloat64 := FlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat64)
 		siteCreateLoopStateParams.Iob = &xfloat64
 	}
 	var pNightscoutFlexibleFloat642 *FlexibleFloat64
@@ -97,7 +116,7 @@ func (c *CreateMapConverterImpl) DeviceStatusToCreateLoop(source DeviceStatus, c
 		pNightscoutFlexibleFloat642 = source.MergedLoopStatus.IOB.BasalIOB
 	}
 	if pNightscoutFlexibleFloat642 != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat642)
+		xfloat642 := FlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat642)
 		siteCreateLoopStateParams.IobBasal = &xfloat642
 	}
 	var pNightscoutFlexibleFloat643 *FlexibleFloat64
@@ -105,28 +124,28 @@ func (c *CreateMapConverterImpl) DeviceStatusToCreateLoop(source DeviceStatus, c
 		pNightscoutFlexibleFloat643 = source.MergedLoopStatus.COB.COB
 	}
 	if pNightscoutFlexibleFloat643 != nil {
-		xfloat643 := c.nightscoutFlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat643)
+		xfloat643 := FlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat643)
 		siteCreateLoopStateParams.Cob = &xfloat643
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateLoopStateParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateLoopStateParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateLoopStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateLoopStateParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateLoopStateParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateLoopStateParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateLoopStateParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateLoopStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateLoopStateParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateLoopStateParams
 }
-func (c *CreateMapConverterImpl) DeviceStatusToCreatePump(source DeviceStatus, context CreateContext) site.CreatePumpStateParams {
+func DeviceStatusToCreatePump(source DeviceStatus, context CreateContext) site.CreatePumpStateParams {
 	var siteCreatePumpStateParams site.CreatePumpStateParams
 	siteCreatePumpStateParams.ID = AssignID(source.Date, context)
 	var pNightscoutFlexibleFloat64 *FlexibleFloat64
@@ -134,280 +153,292 @@ func (c *CreateMapConverterImpl) DeviceStatusToCreatePump(source DeviceStatus, c
 		pNightscoutFlexibleFloat64 = source.Pump.Reservoir
 	}
 	if pNightscoutFlexibleFloat64 != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat64)
+		xfloat64 := FlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat64)
 		siteCreatePumpStateParams.PumpReservoir = &xfloat64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreatePumpStateParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreatePumpStateParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreatePumpStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreatePumpStateParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreatePumpStateParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreatePumpStateParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreatePumpStateParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreatePumpStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreatePumpStateParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreatePumpStateParams
 }
-func (c *CreateMapConverterImpl) EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadingParams {
+func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
 	siteCreateGlucoseReadingParams.ID = AssignID(source.Date, context)
 	if source.Reading != nil {
-		siteCreateGlucoseReadingParams.Reading = c.nightscoutFlexibleFloat64ToFloat64(*source.Reading)
+		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Reading)
 	}
 	if source.Type != nil {
 		siteCreateGlucoseReadingParams.ReadingType = string(*source.Type)
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateGlucoseReadingParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateGlucoseReadingParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateGlucoseReadingParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateGlucoseReadingParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams
 }
-func (c *CreateMapConverterImpl) FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParams {
+func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParams {
 	var siteCreateFoodPresetParams site.CreateFoodPresetParams
 	siteCreateFoodPresetParams.ID = AssignID(source.Date, context)
 	if source.Name != nil {
-		siteCreateFoodPresetParams.Name = c.nightscoutShortStringToString(*source.Name)
+		siteCreateFoodPresetParams.Name = ShortStringToString(*source.Name)
 	}
 	if source.Food != nil {
-		siteCreateFoodPresetParams.FoodType = c.nightscoutShortStringToString(*source.Food)
+		siteCreateFoodPresetParams.FoodType = ShortStringToString(*source.Food)
 	}
 	if source.Carbs != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Carbs)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteCreateFoodPresetParams.Carbs = &xfloat64
 	}
 	if source.Fat != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fat)
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
 		siteCreateFoodPresetParams.Fat = &xfloat642
 	}
 	if source.Protein != nil {
-		xfloat643 := c.nightscoutFlexibleFloat64ToFloat64(*source.Protein)
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
 		siteCreateFoodPresetParams.Protein = &xfloat643
 	}
 	if source.Fibre != nil {
-		xfloat644 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fibre)
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
 		siteCreateFoodPresetParams.Fibre = &xfloat644
 	}
 	if source.Energy != nil {
-		xfloat645 := c.nightscoutFlexibleFloat64ToFloat64(*source.Energy)
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
 		siteCreateFoodPresetParams.Calories = &xfloat645
 	}
 	pString := source.RawJsonData
 	siteCreateFoodPresetParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateFoodPresetParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateFoodPresetParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateFoodPresetParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateFoodPresetParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodPresetParams
 }
-func (c *CreateMapConverterImpl) TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.CreateFoodIntakeParams {
+func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.CreateEventGroupParams {
+	var siteCreateEventGroupParams site.CreateEventGroupParams
+	siteCreateEventGroupParams.ID = AssignID(source.Date, context)
+	if source.Date != nil {
+		siteCreateEventGroupParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
+	}
+	pString := source.RawJsonData
+	siteCreateEventGroupParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateEventGroupParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateEventGroupParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateEventGroupParams
+}
+func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.CreateFoodIntakeParams {
 	var siteCreateFoodIntakeParams site.CreateFoodIntakeParams
 	siteCreateFoodIntakeParams.ID = AssignID(source.Date, context)
 	if source.Carbs != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Carbs)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteCreateFoodIntakeParams.Carbs = &xfloat64
 	}
 	if source.Fat != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fat)
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
 		siteCreateFoodIntakeParams.Fat = &xfloat642
 	}
 	if source.Protein != nil {
-		xfloat643 := c.nightscoutFlexibleFloat64ToFloat64(*source.Protein)
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
 		siteCreateFoodIntakeParams.Protein = &xfloat643
 	}
 	if source.Fibre != nil {
-		xfloat644 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fibre)
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
 		siteCreateFoodIntakeParams.Fibre = &xfloat644
 	}
 	if source.Energy != nil {
-		xfloat645 := c.nightscoutFlexibleFloat64ToFloat64(*source.Energy)
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
 		siteCreateFoodIntakeParams.Calories = &xfloat645
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateFoodIntakeParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateFoodIntakeParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateFoodIntakeParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateFoodIntakeParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateFoodIntakeParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateFoodIntakeParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateFoodIntakeParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateFoodIntakeParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateFoodIntakeParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodIntakeParams
 }
-func (c *CreateMapConverterImpl) TreatmentToCreateGlucoseReading(source Treatment, context CreateContext) site.CreateGlucoseReadingParams {
+func TreatmentToCreateGlucoseReading(source Treatment, context CreateContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
 	siteCreateGlucoseReadingParams.ID = AssignID(source.Date, context)
 	if source.Glucose != nil {
-		siteCreateGlucoseReadingParams.Reading = c.nightscoutFlexibleFloat64ToFloat64(*source.Glucose)
+		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Glucose)
 	}
 	if source.GlucoseType != nil {
 		siteCreateGlucoseReadingParams.ReadingType = string(*source.GlucoseType)
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateGlucoseReadingParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateGlucoseReadingParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateGlucoseReadingParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateGlucoseReadingParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams
 }
-func (c *CreateMapConverterImpl) TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.CreateInsulinDoseParams {
+func TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.CreateInsulinDoseParams {
 	var siteCreateInsulinDoseParams site.CreateInsulinDoseParams
 	siteCreateInsulinDoseParams.ID = AssignID(source.Date, context)
 	if source.Insulin != nil {
-		siteCreateInsulinDoseParams.Dose = c.nightscoutFlexibleFloat64ToFloat64(*source.Insulin)
+		siteCreateInsulinDoseParams.Dose = FlexibleFloat64ToFloat64(*source.Insulin)
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateInsulinDoseParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateInsulinDoseParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateInsulinDoseParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateInsulinDoseParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateInsulinDoseParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateInsulinDoseParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateInsulinDoseParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateInsulinDoseParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateInsulinDoseParams
 }
-func (c *CreateMapConverterImpl) TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateNoteParams {
+func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateNoteParams {
 	var siteCreateNoteParams site.CreateNoteParams
 	siteCreateNoteParams.ID = AssignID(source.Date, context)
 	if source.Notes != nil {
 		siteCreateNoteParams.Content = string(*source.Notes)
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateNoteParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateNoteParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateNoteParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateNoteParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateNoteParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateNoteParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateNoteParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateNoteParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateNoteParams
 }
-func (c *CreateMapConverterImpl) TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.CreateTempBasalParams {
+func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.CreateTempBasalParams {
 	var siteCreateTempBasalParams site.CreateTempBasalParams
 	siteCreateTempBasalParams.ID = AssignID(source.Date, context)
 	if source.Duration != nil {
-		siteCreateTempBasalParams.DurationMinutes = c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		siteCreateTempBasalParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
 	}
 	if source.Absolute != nil {
-		siteCreateTempBasalParams.Absolute = c.nightscoutFlexibleFloat64ToFloat64(*source.Absolute)
+		siteCreateTempBasalParams.Absolute = FlexibleFloat64ToFloat64(*source.Absolute)
 	}
 	if source.Percentage != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Percentage)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Percentage)
 		siteCreateTempBasalParams.Percent = &xfloat64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateTempBasalParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateTempBasalParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateTempBasalParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateTempBasalParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateTempBasalParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateTempBasalParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateTempBasalParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateTempBasalParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateTempBasalParams
 }
-func (c *CreateMapConverterImpl) TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.CreateTempTargetParams {
+func TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.CreateTempTargetParams {
 	var siteCreateTempTargetParams site.CreateTempTargetParams
 	siteCreateTempTargetParams.ID = AssignID(source.Date, context)
 	if source.Duration != nil {
-		siteCreateTempTargetParams.DurationMinutes = c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		siteCreateTempTargetParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
 	}
 	if source.TargetTop != nil {
-		siteCreateTempTargetParams.HighTarget = c.nightscoutFlexibleFloat64ToFloat64(*source.TargetTop)
+		siteCreateTempTargetParams.HighTarget = FlexibleFloat64ToFloat64(*source.TargetTop)
 	}
 	if source.TargetBottom != nil {
-		siteCreateTempTargetParams.LowTarget = c.nightscoutFlexibleFloat64ToFloat64(*source.TargetBottom)
+		siteCreateTempTargetParams.LowTarget = FlexibleFloat64ToFloat64(*source.TargetBottom)
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateTempTargetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.Date != nil {
-		siteCreateTempTargetParams.OccurredAt = c.nightscoutDateIntToInt64(*source.Date)
+		siteCreateTempTargetParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
 	pString := source.RawJsonData
 	siteCreateTempTargetParams.RawJsonData = &pString
 	if source.App != nil {
-		siteCreateTempTargetParams.CreatedByAppName = c.nightscoutShortStringToString(*source.App)
+		siteCreateTempTargetParams.CreatedByAppName = ShortStringToString(*source.App)
 	}
 	if source.Device != nil {
-		siteCreateTempTargetParams.CreatedByDeviceName = c.nightscoutShortStringToString(*source.Device)
+		siteCreateTempTargetParams.CreatedByDeviceName = ShortStringToString(*source.Device)
 	}
 	siteCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateTempTargetParams
 }
-func (c *CreateMapConverterImpl) nightscoutDateIntToInt64(source DateInt) int64 {
+func nightscoutDateIntToInt64(source DateInt) int64 {
 	return int64(source)
-}
-func (c *CreateMapConverterImpl) nightscoutFlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {
-	return float64(source)
-}
-func (c *CreateMapConverterImpl) nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
-	return int64(source)
-}
-func (c *CreateMapConverterImpl) nightscoutShortStringToString(source ShortString) string {
-	return string(source)
 }

@@ -5,32 +5,30 @@ package nightscout
 
 import site "nighttroop.t1d.nz/data/sql/site"
 
-type UpdateMapConverterImpl struct{}
-
-func (c *UpdateMapConverterImpl) ActivityToUpdate(source Activity, context UpdateContext) site.UpdateActivityParams {
+func ActivityToUpdate(source Activity, context UpdateContext) site.UpdateActivityParams {
 	var siteUpdateActivityParams site.UpdateActivityParams
 	if source.Name != nil {
-		xstring := c.nightscoutShortStringToString(*source.Name)
+		xstring := ShortStringToString(*source.Name)
 		siteUpdateActivityParams.Name = &xstring
 	}
 	if source.ActivityType != nil {
-		xstring2 := c.nightscoutShortStringToString(*source.ActivityType)
+		xstring2 := ShortStringToString(*source.ActivityType)
 		siteUpdateActivityParams.ActivityType = &xstring2
 	}
 	if source.Duration != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		xint64 := FlexibleInt64ToInt64(*source.Duration)
 		siteUpdateActivityParams.DurationMinutes = &xint64
 	}
 	if source.Calories != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.Calories)
+		xint642 := FlexibleInt64ToInt64(*source.Calories)
 		siteUpdateActivityParams.Calories = &xint642
 	}
 	if source.Steps != nil {
-		xint643 := c.nightscoutFlexibleInt64ToInt64(*source.Steps)
+		xint643 := FlexibleInt64ToInt64(*source.Steps)
 		siteUpdateActivityParams.Steps = &xint643
 	}
 	if source.HeartRate != nil {
-		xint644 := c.nightscoutFlexibleInt64ToInt64(*source.HeartRate)
+		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
 		siteUpdateActivityParams.HeartRate = &xint644
 	}
 	if source.Date != nil {
@@ -38,7 +36,7 @@ func (c *UpdateMapConverterImpl) ActivityToUpdate(source Activity, context Updat
 		siteUpdateActivityParams.OccurredAt = &xint645
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint646 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint646 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateActivityParams.UtcOffsetMinutes = &xint646
 	}
 	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -47,14 +45,14 @@ func (c *UpdateMapConverterImpl) ActivityToUpdate(source Activity, context Updat
 	}
 	return siteUpdateActivityParams
 }
-func (c *UpdateMapConverterImpl) DeviceStatusToUpdateDevice(source DeviceStatus, context UpdateContext) site.UpdateDeviceStateParams {
+func DeviceStatusToUpdateDevice(source DeviceStatus, context UpdateContext) site.UpdateDeviceStateParams {
 	var siteUpdateDeviceStateParams site.UpdateDeviceStateParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
 		siteUpdateDeviceStateParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateDeviceStateParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateDeviceStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -63,14 +61,14 @@ func (c *UpdateMapConverterImpl) DeviceStatusToUpdateDevice(source DeviceStatus,
 	}
 	return siteUpdateDeviceStateParams
 }
-func (c *UpdateMapConverterImpl) DeviceStatusToUpdateLoop(source DeviceStatus, context UpdateContext) site.UpdateLoopStateParams {
+func DeviceStatusToUpdateLoop(source DeviceStatus, context UpdateContext) site.UpdateLoopStateParams {
 	var siteUpdateLoopStateParams site.UpdateLoopStateParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
 		siteUpdateLoopStateParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateLoopStateParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateLoopStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -79,14 +77,14 @@ func (c *UpdateMapConverterImpl) DeviceStatusToUpdateLoop(source DeviceStatus, c
 	}
 	return siteUpdateLoopStateParams
 }
-func (c *UpdateMapConverterImpl) DeviceStatusToUpdatePump(source DeviceStatus, context UpdateContext) site.UpdatePumpStateParams {
+func DeviceStatusToUpdatePump(source DeviceStatus, context UpdateContext) site.UpdatePumpStateParams {
 	var siteUpdatePumpStateParams site.UpdatePumpStateParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
 		siteUpdatePumpStateParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdatePumpStateParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdatePumpStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -95,10 +93,10 @@ func (c *UpdateMapConverterImpl) DeviceStatusToUpdatePump(source DeviceStatus, c
 	}
 	return siteUpdatePumpStateParams
 }
-func (c *UpdateMapConverterImpl) EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadingParams {
+func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
 	if source.Reading != nil {
-		xfloat64 := float64(*source.Reading)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Reading)
 		siteUpdateGlucoseReadingParams.Reading = &xfloat64
 	}
 	if source.Type != nil {
@@ -110,7 +108,7 @@ func (c *UpdateMapConverterImpl) EntryToUpdate(source Entry, context UpdateConte
 		siteUpdateGlucoseReadingParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -119,34 +117,34 @@ func (c *UpdateMapConverterImpl) EntryToUpdate(source Entry, context UpdateConte
 	}
 	return siteUpdateGlucoseReadingParams
 }
-func (c *UpdateMapConverterImpl) FoodToUpdate(source Food, context UpdateContext) site.UpdateFoodPresetParams {
+func FoodToUpdate(source Food, context UpdateContext) site.UpdateFoodPresetParams {
 	var siteUpdateFoodPresetParams site.UpdateFoodPresetParams
 	if source.Food != nil {
-		xstring := c.nightscoutShortStringToString(*source.Food)
+		xstring := ShortStringToString(*source.Food)
 		siteUpdateFoodPresetParams.Name = &xstring
 	}
 	if source.Category != nil {
-		xstring2 := c.nightscoutShortStringToString(*source.Category)
+		xstring2 := ShortStringToString(*source.Category)
 		siteUpdateFoodPresetParams.FoodType = &xstring2
 	}
 	if source.Carbs != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Carbs)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteUpdateFoodPresetParams.Carbs = &xfloat64
 	}
 	if source.Fat != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fat)
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
 		siteUpdateFoodPresetParams.Fat = &xfloat642
 	}
 	if source.Protein != nil {
-		xfloat643 := c.nightscoutFlexibleFloat64ToFloat64(*source.Protein)
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
 		siteUpdateFoodPresetParams.Protein = &xfloat643
 	}
 	if source.Fibre != nil {
-		xfloat644 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fibre)
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
 		siteUpdateFoodPresetParams.Fibre = &xfloat644
 	}
 	if source.Energy != nil {
-		xfloat645 := c.nightscoutFlexibleFloat64ToFloat64(*source.Energy)
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
 		siteUpdateFoodPresetParams.Calories = &xfloat645
 	}
 	siteUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -155,26 +153,26 @@ func (c *UpdateMapConverterImpl) FoodToUpdate(source Food, context UpdateContext
 	}
 	return siteUpdateFoodPresetParams
 }
-func (c *UpdateMapConverterImpl) TreatmentToUpdateFoodIntake(source Treatment, context UpdateContext) site.UpdateFoodIntakeParams {
+func TreatmentToUpdateFoodIntake(source Treatment, context UpdateContext) site.UpdateFoodIntakeParams {
 	var siteUpdateFoodIntakeParams site.UpdateFoodIntakeParams
 	if source.Carbs != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Carbs)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteUpdateFoodIntakeParams.Carbs = &xfloat64
 	}
 	if source.Fat != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fat)
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
 		siteUpdateFoodIntakeParams.Fat = &xfloat642
 	}
 	if source.Protein != nil {
-		xfloat643 := c.nightscoutFlexibleFloat64ToFloat64(*source.Protein)
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
 		siteUpdateFoodIntakeParams.Protein = &xfloat643
 	}
 	if source.Fibre != nil {
-		xfloat644 := c.nightscoutFlexibleFloat64ToFloat64(*source.Fibre)
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
 		siteUpdateFoodIntakeParams.Fibre = &xfloat644
 	}
 	if source.Energy != nil {
-		xfloat645 := c.nightscoutFlexibleFloat64ToFloat64(*source.Energy)
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
 		siteUpdateFoodIntakeParams.Calories = &xfloat645
 	}
 	if source.Date != nil {
@@ -182,7 +180,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateFoodIntake(source Treatment, c
 		siteUpdateFoodIntakeParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateFoodIntakeParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateFoodIntakeParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -191,10 +189,10 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateFoodIntake(source Treatment, c
 	}
 	return siteUpdateFoodIntakeParams
 }
-func (c *UpdateMapConverterImpl) TreatmentToUpdateGlucoseReading(source Treatment, context UpdateContext) site.UpdateGlucoseReadingParams {
+func TreatmentToUpdateGlucoseReading(source Treatment, context UpdateContext) site.UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
 	if source.Glucose != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Glucose)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Glucose)
 		siteUpdateGlucoseReadingParams.Reading = &xfloat64
 	}
 	if source.GlucoseType != nil {
@@ -206,7 +204,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateGlucoseReading(source Treatmen
 		siteUpdateGlucoseReadingParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -215,10 +213,10 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateGlucoseReading(source Treatmen
 	}
 	return siteUpdateGlucoseReadingParams
 }
-func (c *UpdateMapConverterImpl) TreatmentToUpdateInsulinDose(source Treatment, context UpdateContext) site.UpdateInsulinDoseParams {
+func TreatmentToUpdateInsulinDose(source Treatment, context UpdateContext) site.UpdateInsulinDoseParams {
 	var siteUpdateInsulinDoseParams site.UpdateInsulinDoseParams
 	if source.Insulin != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Insulin)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Insulin)
 		siteUpdateInsulinDoseParams.Dose = &xfloat64
 	}
 	if source.Date != nil {
@@ -226,7 +224,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateInsulinDose(source Treatment, 
 		siteUpdateInsulinDoseParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateInsulinDoseParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateInsulinDoseParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -235,7 +233,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateInsulinDose(source Treatment, 
 	}
 	return siteUpdateInsulinDoseParams
 }
-func (c *UpdateMapConverterImpl) TreatmentToUpdateNote(source Treatment, context UpdateContext) site.UpdateNoteParams {
+func TreatmentToUpdateNote(source Treatment, context UpdateContext) site.UpdateNoteParams {
 	var siteUpdateNoteParams site.UpdateNoteParams
 	if source.Notes != nil {
 		xstring := string(*source.Notes)
@@ -246,7 +244,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateNote(source Treatment, context
 		siteUpdateNoteParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateNoteParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateNoteParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -255,18 +253,18 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateNote(source Treatment, context
 	}
 	return siteUpdateNoteParams
 }
-func (c *UpdateMapConverterImpl) TreatmentToUpdateTempBasal(source Treatment, context UpdateContext) site.UpdateTempBasalParams {
+func TreatmentToUpdateTempBasal(source Treatment, context UpdateContext) site.UpdateTempBasalParams {
 	var siteUpdateTempBasalParams site.UpdateTempBasalParams
 	if source.Duration != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		xint64 := FlexibleInt64ToInt64(*source.Duration)
 		siteUpdateTempBasalParams.DurationMinutes = &xint64
 	}
 	if source.Absolute != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.Absolute)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Absolute)
 		siteUpdateTempBasalParams.Absolute = &xfloat64
 	}
 	if source.Percentage != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*source.Percentage)
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Percentage)
 		siteUpdateTempBasalParams.Percent = &xfloat642
 	}
 	if source.Date != nil {
@@ -274,7 +272,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateTempBasal(source Treatment, co
 		siteUpdateTempBasalParams.OccurredAt = &xint642
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint643 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint643 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateTempBasalParams.UtcOffsetMinutes = &xint643
 	}
 	siteUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -283,18 +281,18 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateTempBasal(source Treatment, co
 	}
 	return siteUpdateTempBasalParams
 }
-func (c *UpdateMapConverterImpl) TreatmentToUpdateTempTarget(source Treatment, context UpdateContext) site.UpdateTempTargetParams {
+func TreatmentToUpdateTempTarget(source Treatment, context UpdateContext) site.UpdateTempTargetParams {
 	var siteUpdateTempTargetParams site.UpdateTempTargetParams
 	if source.Duration != nil {
-		xint64 := c.nightscoutFlexibleInt64ToInt64(*source.Duration)
+		xint64 := FlexibleInt64ToInt64(*source.Duration)
 		siteUpdateTempTargetParams.DurationMinutes = &xint64
 	}
 	if source.TargetTop != nil {
-		xfloat64 := c.nightscoutFlexibleFloat64ToFloat64(*source.TargetTop)
+		xfloat64 := FlexibleFloat64ToFloat64(*source.TargetTop)
 		siteUpdateTempTargetParams.HighTarget = &xfloat64
 	}
 	if source.TargetBottom != nil {
-		xfloat642 := c.nightscoutFlexibleFloat64ToFloat64(*source.TargetBottom)
+		xfloat642 := FlexibleFloat64ToFloat64(*source.TargetBottom)
 		siteUpdateTempTargetParams.LowTarget = &xfloat642
 	}
 	if source.Date != nil {
@@ -302,7 +300,7 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateTempTarget(source Treatment, c
 		siteUpdateTempTargetParams.OccurredAt = &xint642
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint643 := c.nightscoutFlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		xint643 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteUpdateTempTargetParams.UtcOffsetMinutes = &xint643
 	}
 	siteUpdateTempTargetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -310,13 +308,4 @@ func (c *UpdateMapConverterImpl) TreatmentToUpdateTempTarget(source Treatment, c
 		siteUpdateTempTargetParams.ID = string(*source.Identifier)
 	}
 	return siteUpdateTempTargetParams
-}
-func (c *UpdateMapConverterImpl) nightscoutFlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {
-	return float64(source)
-}
-func (c *UpdateMapConverterImpl) nightscoutFlexibleInt64ToInt64(source FlexibleInt64) int64 {
-	return int64(source)
-}
-func (c *UpdateMapConverterImpl) nightscoutShortStringToString(source ShortString) string {
-	return string(source)
 }

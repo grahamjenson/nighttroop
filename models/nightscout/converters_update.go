@@ -10,8 +10,12 @@ type UpdateContext struct {
 }
 
 // goverter:converter
+// goverter:output:format function
 // goverter:output:file ./z_update_converters.go
 // goverter:useZeroValueOnPointerInconsistency
+// goverter:extend FlexibleFloat64ToFloat64
+// goverter:extend FlexibleInt64ToInt64
+// goverter:extend ShortStringToString
 type UpdateMapConverter interface {
 
 	///////

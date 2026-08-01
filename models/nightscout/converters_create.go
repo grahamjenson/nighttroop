@@ -12,8 +12,12 @@ type CreateContext struct {
 }
 
 // goverter:converter
+// goverter:output:format function
 // goverter:output:file ./z_create_converters.go
 // goverter:useZeroValueOnPointerInconsistency
+// goverter:extend FlexibleFloat64ToFloat64
+// goverter:extend FlexibleInt64ToInt64
+// goverter:extend ShortStringToString
 type CreateMapConverter interface {
 
 	///////
@@ -78,6 +82,16 @@ type CreateMapConverter interface {
 	////////////////////////////////////////
 	// TREATMENT TO CREATE/UPDATE
 	////////////////////////////////////////
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore GroupType GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
+	TreatmentToCreateEventGroup(source Treatment, ctx CreateContext) site.CreateEventGroupParams
 
 	///////
 	// Food Intake
@@ -212,6 +226,16 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
+	// goverter:ignore GroupType GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
+	DeviceStatusToCreateEventGroup(source DeviceStatus, ctx CreateContext) site.CreateEventGroupParams
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
 	// goverter:ignore DeviceState DeviceChargingState
 	// goverter:map Date DeviceTimestamp
 	// goverter:map UploaderBattery DeviceBatteryPercent
@@ -294,4 +318,15 @@ func TreatmentTypeToDBType(t *TreatmentEventType) string {
 	}
 
 	return t.ToLocalTypeString()
+}
+
+func FlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {
+	return float64(source)
+}
+
+func FlexibleInt64ToInt64(source FlexibleInt64) int64 {
+	return int64(source)
+}
+func ShortStringToString(source ShortString) string {
+	return string(source)
 }

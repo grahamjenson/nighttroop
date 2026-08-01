@@ -5,9 +5,7 @@ package nightscout
 
 import site "nighttroop.t1d.nz/data/sql/site"
 
-type DBModelConverterImpl struct{}
-
-func (c *DBModelConverterImpl) DBModelToActivity(source *site.Activity) Activity {
+func DBModelToActivity(source *site.Activity) Activity {
 	var nightscoutActivity Activity
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -63,7 +61,7 @@ func (c *DBModelConverterImpl) DBModelToActivity(source *site.Activity) Activity
 	}
 	return nightscoutActivity
 }
-func (c *DBModelConverterImpl) DBModelToDeviceStatus(source *site.SearchEventGroupsRow) DeviceStatus {
+func DBModelToDeviceStatus(source *site.SearchEventGroupsRow) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -91,7 +89,7 @@ func (c *DBModelConverterImpl) DBModelToDeviceStatus(source *site.SearchEventGro
 	}
 	return nightscoutDeviceStatus
 }
-func (c *DBModelConverterImpl) DBModelToEntry(source *site.GlucoseReading) Entry {
+func DBModelToEntry(source *site.GlucoseReading) Entry {
 	var nightscoutEntry Entry
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -127,7 +125,7 @@ func (c *DBModelConverterImpl) DBModelToEntry(source *site.GlucoseReading) Entry
 	}
 	return nightscoutEntry
 }
-func (c *DBModelConverterImpl) DBModelToFood(source *site.FoodPreset) Food {
+func DBModelToFood(source *site.FoodPreset) Food {
 	var nightscoutFood Food
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -170,7 +168,7 @@ func (c *DBModelConverterImpl) DBModelToFood(source *site.FoodPreset) Food {
 	}
 	return nightscoutFood
 }
-func (c *DBModelConverterImpl) DBModelToTreatment(source *site.SearchEventGroupsRow) Treatment {
+func DBModelToTreatment(source *site.SearchEventGroupsRow) Treatment {
 	var nightscoutTreatment Treatment
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)

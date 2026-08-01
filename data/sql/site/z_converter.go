@@ -203,6 +203,31 @@ func DeviceStateToUpdate(source DeviceState) UpdateDeviceStateParams {
 	siteUpdateDeviceStateParams.ID = source.ID
 	return siteUpdateDeviceStateParams
 }
+func EventGroupToSearchEventGroup(source EventGroup) SearchEventGroupsRow {
+	var siteSearchEventGroupsRow SearchEventGroupsRow
+	siteSearchEventGroupsRow.EventGroup = siteEventGroupToSiteEventGroup(source)
+	siteSearchEventGroupsRow.ID = source.ID
+	siteSearchEventGroupsRow.GroupType = source.GroupType
+	siteSearchEventGroupsRow.OccurredAt = source.OccurredAt
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		siteSearchEventGroupsRow.UtcOffsetMinutes = &xint64
+	}
+	siteSearchEventGroupsRow.CreatedAt = source.CreatedAt
+	siteSearchEventGroupsRow.UpdatedAt = source.UpdatedAt
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteSearchEventGroupsRow.DeletedAt = &xint642
+	}
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteSearchEventGroupsRow.RawJsonData = &xstring
+	}
+	siteSearchEventGroupsRow.CreatedByAppName = source.CreatedByAppName
+	siteSearchEventGroupsRow.CreatedByDeviceName = source.CreatedByDeviceName
+	siteSearchEventGroupsRow.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteSearchEventGroupsRow
+}
 func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 	var siteCreateFoodIntakeParams CreateFoodIntakeParams
 	siteCreateFoodIntakeParams.ID = source.ID
@@ -357,6 +382,43 @@ func FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams {
 	}
 	siteUpdateFoodPresetParams.ID = source.ID
 	return siteUpdateFoodPresetParams
+}
+func GetEventGroupToSearchEventGroup(source GetEventGroupRow) SearchEventGroupsRow {
+	var siteSearchEventGroupsRow SearchEventGroupsRow
+	siteSearchEventGroupsRow.EventGroup = siteEventGroupToSiteEventGroup(source.EventGroup)
+	siteSearchEventGroupsRow.GlucoseReading = siteGlucoseReadingToSiteGlucoseReading(source.GlucoseReading)
+	siteSearchEventGroupsRow.InsulinDose = siteInsulinDoseToSiteInsulinDose(source.InsulinDose)
+	siteSearchEventGroupsRow.FoodIntake = siteFoodIntakeToSiteFoodIntake(source.FoodIntake)
+	siteSearchEventGroupsRow.TempBasal = siteTempBasalToSiteTempBasal(source.TempBasal)
+	siteSearchEventGroupsRow.TempTarget = siteTempTargetToSiteTempTarget(source.TempTarget)
+	siteSearchEventGroupsRow.ProfileSwitch = siteProfileSwitchToSiteProfileSwitch(source.ProfileSwitch)
+	siteSearchEventGroupsRow.DeviceState = siteDeviceStateToSiteDeviceState(source.DeviceState)
+	siteSearchEventGroupsRow.LoopState = siteLoopStateToSiteLoopState(source.LoopState)
+	siteSearchEventGroupsRow.PumpState = sitePumpStateToSitePumpState(source.PumpState)
+	siteSearchEventGroupsRow.CgmState = siteCgmStateToSiteCgmState(source.CgmState)
+	siteSearchEventGroupsRow.Activity = siteActivityToSiteActivity(source.Activity)
+	siteSearchEventGroupsRow.Note = siteNoteToSiteNote(source.Note)
+	siteSearchEventGroupsRow.ID = source.ID
+	siteSearchEventGroupsRow.GroupType = source.GroupType
+	siteSearchEventGroupsRow.OccurredAt = source.OccurredAt
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		siteSearchEventGroupsRow.UtcOffsetMinutes = &xint64
+	}
+	siteSearchEventGroupsRow.CreatedAt = source.CreatedAt
+	siteSearchEventGroupsRow.UpdatedAt = source.UpdatedAt
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteSearchEventGroupsRow.DeletedAt = &xint642
+	}
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteSearchEventGroupsRow.RawJsonData = &xstring
+	}
+	siteSearchEventGroupsRow.CreatedByAppName = source.CreatedByAppName
+	siteSearchEventGroupsRow.CreatedByDeviceName = source.CreatedByDeviceName
+	siteSearchEventGroupsRow.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteSearchEventGroupsRow
 }
 func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams CreateGlucoseReadingParams
@@ -883,4 +945,575 @@ func TempTargetToUpdate(source TempTarget) UpdateTempTargetParams {
 	}
 	siteUpdateTempTargetParams.ID = source.ID
 	return siteUpdateTempTargetParams
+}
+func siteActivityToSiteActivity(source Activity) Activity {
+	var siteActivity Activity
+	siteActivity.ID = source.ID
+	if source.Name != nil {
+		xstring := *source.Name
+		siteActivity.Name = &xstring
+	}
+	if source.Notes != nil {
+		xstring2 := *source.Notes
+		siteActivity.Notes = &xstring2
+	}
+	if source.ActivityType != nil {
+		xstring3 := *source.ActivityType
+		siteActivity.ActivityType = &xstring3
+	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteActivity.DurationMinutes = &xint64
+	}
+	if source.Calories != nil {
+		xint642 := *source.Calories
+		siteActivity.Calories = &xint642
+	}
+	if source.Steps != nil {
+		xint643 := *source.Steps
+		siteActivity.Steps = &xint643
+	}
+	if source.HeartRate != nil {
+		xint644 := *source.HeartRate
+		siteActivity.HeartRate = &xint644
+	}
+	if source.RawJsonData != nil {
+		xstring4 := *source.RawJsonData
+		siteActivity.RawJsonData = &xstring4
+	}
+	if source.DeletedAt != nil {
+		xint645 := *source.DeletedAt
+		siteActivity.DeletedAt = &xint645
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint646 := *source.UtcOffsetMinutes
+		siteActivity.UtcOffsetMinutes = &xint646
+	}
+	siteActivity.OccurredAt = source.OccurredAt
+	siteActivity.CreatedAt = source.CreatedAt
+	siteActivity.UpdatedAt = source.UpdatedAt
+	siteActivity.CreatedByAppName = source.CreatedByAppName
+	siteActivity.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring5 := *source.UpdatedByIdentityName
+		siteActivity.UpdatedByIdentityName = &xstring5
+	}
+	siteActivity.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteActivity
+}
+func siteCgmStateToSiteCgmState(source CgmState) CgmState {
+	var siteCgmState CgmState
+	siteCgmState.ID = source.ID
+	if source.CgmState != nil {
+		xstring := *source.CgmState
+		siteCgmState.CgmState = &xstring
+	}
+	if source.CgmTimestamp != nil {
+		xint64 := *source.CgmTimestamp
+		siteCgmState.CgmTimestamp = &xint64
+	}
+	if source.CgmInsertionTime != nil {
+		xint642 := *source.CgmInsertionTime
+		siteCgmState.CgmInsertionTime = &xint642
+	}
+	if source.RawJsonData != nil {
+		xstring2 := *source.RawJsonData
+		siteCgmState.RawJsonData = &xstring2
+	}
+	if source.DeletedAt != nil {
+		xint643 := *source.DeletedAt
+		siteCgmState.DeletedAt = &xint643
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint644 := *source.UtcOffsetMinutes
+		siteCgmState.UtcOffsetMinutes = &xint644
+	}
+	siteCgmState.OccurredAt = source.OccurredAt
+	siteCgmState.CreatedAt = source.CreatedAt
+	siteCgmState.UpdatedAt = source.UpdatedAt
+	if source.UpdatedByIdentityName != nil {
+		xstring3 := *source.UpdatedByIdentityName
+		siteCgmState.UpdatedByIdentityName = &xstring3
+	}
+	siteCgmState.CreatedByAppName = source.CreatedByAppName
+	siteCgmState.CreatedByDeviceName = source.CreatedByDeviceName
+	siteCgmState.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteCgmState
+}
+func siteDeviceStateToSiteDeviceState(source DeviceState) DeviceState {
+	var siteDeviceState DeviceState
+	siteDeviceState.ID = source.ID
+	if source.DeviceState != nil {
+		xstring := *source.DeviceState
+		siteDeviceState.DeviceState = &xstring
+	}
+	if source.DeviceTimestamp != nil {
+		xint64 := *source.DeviceTimestamp
+		siteDeviceState.DeviceTimestamp = &xint64
+	}
+	if source.DeviceBatteryPercent != nil {
+		xfloat64 := *source.DeviceBatteryPercent
+		siteDeviceState.DeviceBatteryPercent = &xfloat64
+	}
+	if source.DeviceChargingState != nil {
+		xstring2 := *source.DeviceChargingState
+		siteDeviceState.DeviceChargingState = &xstring2
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteDeviceState.RawJsonData = &xstring3
+	}
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteDeviceState.DeletedAt = &xint642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := *source.UtcOffsetMinutes
+		siteDeviceState.UtcOffsetMinutes = &xint643
+	}
+	siteDeviceState.OccurredAt = source.OccurredAt
+	siteDeviceState.CreatedAt = source.CreatedAt
+	siteDeviceState.UpdatedAt = source.UpdatedAt
+	if source.UpdatedByIdentityName != nil {
+		xstring4 := *source.UpdatedByIdentityName
+		siteDeviceState.UpdatedByIdentityName = &xstring4
+	}
+	siteDeviceState.CreatedByAppName = source.CreatedByAppName
+	siteDeviceState.CreatedByDeviceName = source.CreatedByDeviceName
+	siteDeviceState.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteDeviceState
+}
+func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
+	var siteEventGroup EventGroup
+	siteEventGroup.ID = source.ID
+	siteEventGroup.GroupType = source.GroupType
+	if source.GlucoseReadingID != nil {
+		xstring := *source.GlucoseReadingID
+		siteEventGroup.GlucoseReadingID = &xstring
+	}
+	if source.InsulinDoseID != nil {
+		xstring2 := *source.InsulinDoseID
+		siteEventGroup.InsulinDoseID = &xstring2
+	}
+	if source.FoodIntakeID != nil {
+		xstring3 := *source.FoodIntakeID
+		siteEventGroup.FoodIntakeID = &xstring3
+	}
+	if source.TempBasalID != nil {
+		xstring4 := *source.TempBasalID
+		siteEventGroup.TempBasalID = &xstring4
+	}
+	if source.TempTargetID != nil {
+		xstring5 := *source.TempTargetID
+		siteEventGroup.TempTargetID = &xstring5
+	}
+	if source.ProfileSwitchID != nil {
+		xstring6 := *source.ProfileSwitchID
+		siteEventGroup.ProfileSwitchID = &xstring6
+	}
+	if source.DeviceStateID != nil {
+		xstring7 := *source.DeviceStateID
+		siteEventGroup.DeviceStateID = &xstring7
+	}
+	if source.LoopStateID != nil {
+		xstring8 := *source.LoopStateID
+		siteEventGroup.LoopStateID = &xstring8
+	}
+	if source.PumpStateID != nil {
+		xstring9 := *source.PumpStateID
+		siteEventGroup.PumpStateID = &xstring9
+	}
+	if source.CgmStateID != nil {
+		xstring10 := *source.CgmStateID
+		siteEventGroup.CgmStateID = &xstring10
+	}
+	if source.ActivityID != nil {
+		xstring11 := *source.ActivityID
+		siteEventGroup.ActivityID = &xstring11
+	}
+	if source.NoteID != nil {
+		xstring12 := *source.NoteID
+		siteEventGroup.NoteID = &xstring12
+	}
+	if source.RawJsonData != nil {
+		xstring13 := *source.RawJsonData
+		siteEventGroup.RawJsonData = &xstring13
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteEventGroup.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteEventGroup.UtcOffsetMinutes = &xint642
+	}
+	siteEventGroup.OccurredAt = source.OccurredAt
+	siteEventGroup.CreatedAt = source.CreatedAt
+	siteEventGroup.UpdatedAt = source.UpdatedAt
+	siteEventGroup.CreatedByAppName = source.CreatedByAppName
+	siteEventGroup.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring14 := *source.UpdatedByIdentityName
+		siteEventGroup.UpdatedByIdentityName = &xstring14
+	}
+	siteEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteEventGroup
+}
+func siteFoodIntakeToSiteFoodIntake(source FoodIntake) FoodIntake {
+	var siteFoodIntake FoodIntake
+	siteFoodIntake.ID = source.ID
+	if source.Name != nil {
+		xstring := *source.Name
+		siteFoodIntake.Name = &xstring
+	}
+	if source.FoodType != nil {
+		xstring2 := *source.FoodType
+		siteFoodIntake.FoodType = &xstring2
+	}
+	if source.Carbs != nil {
+		xfloat64 := *source.Carbs
+		siteFoodIntake.Carbs = &xfloat64
+	}
+	if source.Fat != nil {
+		xfloat642 := *source.Fat
+		siteFoodIntake.Fat = &xfloat642
+	}
+	if source.Protein != nil {
+		xfloat643 := *source.Protein
+		siteFoodIntake.Protein = &xfloat643
+	}
+	if source.Fibre != nil {
+		xfloat644 := *source.Fibre
+		siteFoodIntake.Fibre = &xfloat644
+	}
+	if source.Calories != nil {
+		xfloat645 := *source.Calories
+		siteFoodIntake.Calories = &xfloat645
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteFoodIntake.RawJsonData = &xstring3
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteFoodIntake.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteFoodIntake.UtcOffsetMinutes = &xint642
+	}
+	siteFoodIntake.OccurredAt = source.OccurredAt
+	siteFoodIntake.CreatedAt = source.CreatedAt
+	siteFoodIntake.UpdatedAt = source.UpdatedAt
+	siteFoodIntake.CreatedByAppName = source.CreatedByAppName
+	siteFoodIntake.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring4 := *source.UpdatedByIdentityName
+		siteFoodIntake.UpdatedByIdentityName = &xstring4
+	}
+	siteFoodIntake.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteFoodIntake
+}
+func siteGlucoseReadingToSiteGlucoseReading(source GlucoseReading) GlucoseReading {
+	var siteGlucoseReading GlucoseReading
+	siteGlucoseReading.ID = source.ID
+	siteGlucoseReading.Reading = source.Reading
+	siteGlucoseReading.ReadingType = source.ReadingType
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteGlucoseReading.RawJsonData = &xstring
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteGlucoseReading.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteGlucoseReading.UtcOffsetMinutes = &xint642
+	}
+	siteGlucoseReading.OccurredAt = source.OccurredAt
+	siteGlucoseReading.CreatedAt = source.CreatedAt
+	siteGlucoseReading.UpdatedAt = source.UpdatedAt
+	siteGlucoseReading.CreatedByAppName = source.CreatedByAppName
+	siteGlucoseReading.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring2 := *source.UpdatedByIdentityName
+		siteGlucoseReading.UpdatedByIdentityName = &xstring2
+	}
+	siteGlucoseReading.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteGlucoseReading
+}
+func siteInsulinDoseToSiteInsulinDose(source InsulinDose) InsulinDose {
+	var siteInsulinDose InsulinDose
+	siteInsulinDose.ID = source.ID
+	siteInsulinDose.Dose = source.Dose
+	if source.DoseType != nil {
+		xstring := *source.DoseType
+		siteInsulinDose.DoseType = &xstring
+	}
+	if source.RawJsonData != nil {
+		xstring2 := *source.RawJsonData
+		siteInsulinDose.RawJsonData = &xstring2
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteInsulinDose.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteInsulinDose.UtcOffsetMinutes = &xint642
+	}
+	siteInsulinDose.OccurredAt = source.OccurredAt
+	siteInsulinDose.CreatedAt = source.CreatedAt
+	siteInsulinDose.UpdatedAt = source.UpdatedAt
+	siteInsulinDose.CreatedByAppName = source.CreatedByAppName
+	siteInsulinDose.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring3 := *source.UpdatedByIdentityName
+		siteInsulinDose.UpdatedByIdentityName = &xstring3
+	}
+	siteInsulinDose.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteInsulinDose
+}
+func siteLoopStateToSiteLoopState(source LoopState) LoopState {
+	var siteLoopState LoopState
+	siteLoopState.ID = source.ID
+	if source.LoopState != nil {
+		xstring := *source.LoopState
+		siteLoopState.LoopState = &xstring
+	}
+	if source.LoopTimestamp != nil {
+		xint64 := *source.LoopTimestamp
+		siteLoopState.LoopTimestamp = &xint64
+	}
+	if source.Iob != nil {
+		xfloat64 := *source.Iob
+		siteLoopState.Iob = &xfloat64
+	}
+	if source.IobBasal != nil {
+		xfloat642 := *source.IobBasal
+		siteLoopState.IobBasal = &xfloat642
+	}
+	if source.IobTreatment != nil {
+		xfloat643 := *source.IobTreatment
+		siteLoopState.IobTreatment = &xfloat643
+	}
+	if source.Cob != nil {
+		xfloat644 := *source.Cob
+		siteLoopState.Cob = &xfloat644
+	}
+	if source.RawJsonData != nil {
+		xstring2 := *source.RawJsonData
+		siteLoopState.RawJsonData = &xstring2
+	}
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteLoopState.DeletedAt = &xint642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := *source.UtcOffsetMinutes
+		siteLoopState.UtcOffsetMinutes = &xint643
+	}
+	siteLoopState.OccurredAt = source.OccurredAt
+	siteLoopState.CreatedAt = source.CreatedAt
+	siteLoopState.UpdatedAt = source.UpdatedAt
+	if source.UpdatedByIdentityName != nil {
+		xstring3 := *source.UpdatedByIdentityName
+		siteLoopState.UpdatedByIdentityName = &xstring3
+	}
+	siteLoopState.CreatedByAppName = source.CreatedByAppName
+	siteLoopState.CreatedByDeviceName = source.CreatedByDeviceName
+	siteLoopState.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteLoopState
+}
+func siteNoteToSiteNote(source Note) Note {
+	var siteNote Note
+	siteNote.ID = source.ID
+	siteNote.Content = source.Content
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteNote.RawJsonData = &xstring
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteNote.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteNote.UtcOffsetMinutes = &xint642
+	}
+	siteNote.OccurredAt = source.OccurredAt
+	siteNote.CreatedAt = source.CreatedAt
+	siteNote.UpdatedAt = source.UpdatedAt
+	siteNote.CreatedByAppName = source.CreatedByAppName
+	siteNote.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring2 := *source.UpdatedByIdentityName
+		siteNote.UpdatedByIdentityName = &xstring2
+	}
+	siteNote.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteNote
+}
+func siteProfileSwitchToSiteProfileSwitch(source ProfileSwitch) ProfileSwitch {
+	var siteProfileSwitch ProfileSwitch
+	siteProfileSwitch.ID = source.ID
+	siteProfileSwitch.Name = source.Name
+	siteProfileSwitch.DurationMinutes = source.DurationMinutes
+	if source.Percent != nil {
+		xint64 := *source.Percent
+		siteProfileSwitch.Percent = &xint64
+	}
+	if source.CarbRatiosJson != nil {
+		xstring := *source.CarbRatiosJson
+		siteProfileSwitch.CarbRatiosJson = &xstring
+	}
+	if source.InsulinSensitivitiesJson != nil {
+		xstring2 := *source.InsulinSensitivitiesJson
+		siteProfileSwitch.InsulinSensitivitiesJson = &xstring2
+	}
+	if source.BasalRatesJson != nil {
+		xstring3 := *source.BasalRatesJson
+		siteProfileSwitch.BasalRatesJson = &xstring3
+	}
+	if source.TargetsJson != nil {
+		xstring4 := *source.TargetsJson
+		siteProfileSwitch.TargetsJson = &xstring4
+	}
+	if source.RawJsonData != nil {
+		xstring5 := *source.RawJsonData
+		siteProfileSwitch.RawJsonData = &xstring5
+	}
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteProfileSwitch.DeletedAt = &xint642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := *source.UtcOffsetMinutes
+		siteProfileSwitch.UtcOffsetMinutes = &xint643
+	}
+	siteProfileSwitch.OccurredAt = source.OccurredAt
+	siteProfileSwitch.CreatedAt = source.CreatedAt
+	siteProfileSwitch.UpdatedAt = source.UpdatedAt
+	siteProfileSwitch.CreatedByAppName = source.CreatedByAppName
+	siteProfileSwitch.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring6 := *source.UpdatedByIdentityName
+		siteProfileSwitch.UpdatedByIdentityName = &xstring6
+	}
+	siteProfileSwitch.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteProfileSwitch
+}
+func sitePumpStateToSitePumpState(source PumpState) PumpState {
+	var sitePumpState PumpState
+	sitePumpState.ID = source.ID
+	if source.PumpState != nil {
+		xstring := *source.PumpState
+		sitePumpState.PumpState = &xstring
+	}
+	if source.PumpTimestamp != nil {
+		xint64 := *source.PumpTimestamp
+		sitePumpState.PumpTimestamp = &xint64
+	}
+	if source.PumpInsertionTime != nil {
+		xint642 := *source.PumpInsertionTime
+		sitePumpState.PumpInsertionTime = &xint642
+	}
+	if source.PumpReservoir != nil {
+		xfloat64 := *source.PumpReservoir
+		sitePumpState.PumpReservoir = &xfloat64
+	}
+	if source.PumpBatteryPercent != nil {
+		xfloat642 := *source.PumpBatteryPercent
+		sitePumpState.PumpBatteryPercent = &xfloat642
+	}
+	if source.PumpChargingState != nil {
+		xstring2 := *source.PumpChargingState
+		sitePumpState.PumpChargingState = &xstring2
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		sitePumpState.RawJsonData = &xstring3
+	}
+	if source.DeletedAt != nil {
+		xint643 := *source.DeletedAt
+		sitePumpState.DeletedAt = &xint643
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint644 := *source.UtcOffsetMinutes
+		sitePumpState.UtcOffsetMinutes = &xint644
+	}
+	sitePumpState.OccurredAt = source.OccurredAt
+	sitePumpState.CreatedAt = source.CreatedAt
+	sitePumpState.UpdatedAt = source.UpdatedAt
+	if source.UpdatedByIdentityName != nil {
+		xstring4 := *source.UpdatedByIdentityName
+		sitePumpState.UpdatedByIdentityName = &xstring4
+	}
+	sitePumpState.CreatedByAppName = source.CreatedByAppName
+	sitePumpState.CreatedByDeviceName = source.CreatedByDeviceName
+	sitePumpState.CreatedByIdentityName = source.CreatedByIdentityName
+	return sitePumpState
+}
+func siteTempBasalToSiteTempBasal(source TempBasal) TempBasal {
+	var siteTempBasal TempBasal
+	siteTempBasal.ID = source.ID
+	siteTempBasal.DurationMinutes = source.DurationMinutes
+	siteTempBasal.Absolute = source.Absolute
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteTempBasal.Percent = &xfloat64
+	}
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteTempBasal.RawJsonData = &xstring
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteTempBasal.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteTempBasal.UtcOffsetMinutes = &xint642
+	}
+	siteTempBasal.OccurredAt = source.OccurredAt
+	siteTempBasal.CreatedAt = source.CreatedAt
+	siteTempBasal.UpdatedAt = source.UpdatedAt
+	siteTempBasal.CreatedByAppName = source.CreatedByAppName
+	siteTempBasal.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring2 := *source.UpdatedByIdentityName
+		siteTempBasal.UpdatedByIdentityName = &xstring2
+	}
+	siteTempBasal.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteTempBasal
+}
+func siteTempTargetToSiteTempTarget(source TempTarget) TempTarget {
+	var siteTempTarget TempTarget
+	siteTempTarget.ID = source.ID
+	siteTempTarget.DurationMinutes = source.DurationMinutes
+	siteTempTarget.HighTarget = source.HighTarget
+	siteTempTarget.LowTarget = source.LowTarget
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteTempTarget.RawJsonData = &xstring
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteTempTarget.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteTempTarget.UtcOffsetMinutes = &xint642
+	}
+	siteTempTarget.OccurredAt = source.OccurredAt
+	siteTempTarget.CreatedAt = source.CreatedAt
+	siteTempTarget.UpdatedAt = source.UpdatedAt
+	siteTempTarget.CreatedByAppName = source.CreatedByAppName
+	siteTempTarget.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.UpdatedByIdentityName != nil {
+		xstring2 := *source.UpdatedByIdentityName
+		siteTempTarget.UpdatedByIdentityName = &xstring2
+	}
+	siteTempTarget.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteTempTarget
 }

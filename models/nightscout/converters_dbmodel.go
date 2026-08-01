@@ -5,6 +5,7 @@ import (
 )
 
 // goverter:converter
+// goverter:output:format function
 // goverter:output:file ./z_dbmodel_converters.go
 // goverter:useZeroValueOnPointerInconsistency
 type DBModelConverter interface {
