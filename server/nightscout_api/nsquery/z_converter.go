@@ -8,7 +8,191 @@ import (
 	nightscout "nighttroop.t1d.nz/models/nightscout"
 )
 
-func FoodIntakeSearchAll(source Query) site.AllFoodIntakesParams {
+func EventGroupAll(source Query) site.AllEventGroupsParams {
+	var siteAllEventGroupsParams site.AllEventGroupsParams
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteAllEventGroupsParams.IncludeDeleted = &xbool
+	}
+	siteAllEventGroupsParams.Skip = source.Skip
+	siteAllEventGroupsParams.Limit = source.Limit
+	return siteAllEventGroupsParams
+}
+func EventGroupSearch(source Query) site.SearchEventGroupsParams {
+	var siteSearchEventGroupsParams site.SearchEventGroupsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		siteSearchEventGroupsParams.DateGTE = &xint64
+	}
+	if source.DateLTE != nil {
+		xint642 := *source.DateLTE
+		siteSearchEventGroupsParams.DateLTE = &xint642
+	}
+	if source.DateGT != nil {
+		xint643 := *source.DateGT
+		siteSearchEventGroupsParams.DateGT = &xint643
+	}
+	if source.DateLT != nil {
+		xint644 := *source.DateLT
+		siteSearchEventGroupsParams.DateLT = &xint644
+	}
+	if source.CreatedAtGTE != nil {
+		xint645 := *source.CreatedAtGTE
+		siteSearchEventGroupsParams.CreatedAtGTE = &xint645
+	}
+	if source.CreatedAtLTE != nil {
+		xint646 := *source.CreatedAtLTE
+		siteSearchEventGroupsParams.CreatedAtLTE = &xint646
+	}
+	if source.CreatedAtGT != nil {
+		xint647 := *source.CreatedAtGT
+		siteSearchEventGroupsParams.CreatedAtGT = &xint647
+	}
+	if source.CreatedAtLT != nil {
+		xint648 := *source.CreatedAtLT
+		siteSearchEventGroupsParams.CreatedAtLT = &xint648
+	}
+	if source.UpdatedGTE != nil {
+		xint649 := *source.UpdatedGTE
+		siteSearchEventGroupsParams.UpdatedGTE = &xint649
+	}
+	if source.UpdatedLTE != nil {
+		xint6410 := *source.UpdatedLTE
+		siteSearchEventGroupsParams.UpdatedLTE = &xint6410
+	}
+	if source.UpdatedGT != nil {
+		xint6411 := *source.UpdatedGT
+		siteSearchEventGroupsParams.UpdatedGT = &xint6411
+	}
+	if source.UpdatedLT != nil {
+		xint6412 := *source.UpdatedLT
+		siteSearchEventGroupsParams.UpdatedLT = &xint6412
+	}
+	if source.TypeEq != nil {
+		xstring := *source.TypeEq
+		siteSearchEventGroupsParams.TypeEq = &xstring
+	}
+	if source.TypeNeq != nil {
+		xstring2 := *source.TypeNeq
+		siteSearchEventGroupsParams.TypeNeq = &xstring2
+	}
+	if source.TypeIn != nil {
+		xstring3 := *source.TypeIn
+		siteSearchEventGroupsParams.TypeIn = &xstring3
+	}
+	if source.TypeNin != nil {
+		xstring4 := *source.TypeNin
+		siteSearchEventGroupsParams.TypeNin = &xstring4
+	}
+	if source.IDEq != nil {
+		xstring5 := *source.IDEq
+		siteSearchEventGroupsParams.IDEq = &xstring5
+	}
+	if source.IDIn != nil {
+		xstring6 := *source.IDIn
+		siteSearchEventGroupsParams.IDIn = &xstring6
+	}
+	if source.DeviceEq != nil {
+		xstring7 := *source.DeviceEq
+		siteSearchEventGroupsParams.DeviceEq = &xstring7
+	}
+	if source.AppEq != nil {
+		xstring8 := *source.AppEq
+		siteSearchEventGroupsParams.AppEq = &xstring8
+	}
+	if source.NameEq != nil {
+		xstring9 := *source.NameEq
+		siteSearchEventGroupsParams.NameEq = &xstring9
+	}
+	if source.SgvEQ != nil {
+		xint6413 := *source.SgvEQ
+		siteSearchEventGroupsParams.SgvEQ = &xint6413
+	}
+	if source.SgvGTE != nil {
+		xint6414 := *source.SgvGTE
+		siteSearchEventGroupsParams.SgvGTE = &xint6414
+	}
+	if source.SgvGT != nil {
+		xint6415 := *source.SgvGT
+		siteSearchEventGroupsParams.SgvGT = &xint6415
+	}
+	if source.SgvLTE != nil {
+		xint6416 := *source.SgvLTE
+		siteSearchEventGroupsParams.SgvLTE = &xint6416
+	}
+	if source.SgvLT != nil {
+		xint6417 := *source.SgvLT
+		siteSearchEventGroupsParams.SgvLT = &xint6417
+	}
+	if source.CarbsEQ != nil {
+		xint6418 := *source.CarbsEQ
+		siteSearchEventGroupsParams.CarbsEQ = &xint6418
+	}
+	if source.CarbsGTE != nil {
+		xint6419 := *source.CarbsGTE
+		siteSearchEventGroupsParams.CarbsGTE = &xint6419
+	}
+	if source.CarbsGT != nil {
+		xint6420 := *source.CarbsGT
+		siteSearchEventGroupsParams.CarbsGT = &xint6420
+	}
+	if source.CarbsLTE != nil {
+		xint6421 := *source.CarbsLTE
+		siteSearchEventGroupsParams.CarbsLTE = &xint6421
+	}
+	if source.CarbsLT != nil {
+		xint6422 := *source.CarbsLT
+		siteSearchEventGroupsParams.CarbsLT = &xint6422
+	}
+	if source.InsulinEQ != nil {
+		xint6423 := *source.InsulinEQ
+		siteSearchEventGroupsParams.InsulinEQ = &xint6423
+	}
+	if source.InsulinGTE != nil {
+		xint6424 := *source.InsulinGTE
+		siteSearchEventGroupsParams.InsulinGTE = &xint6424
+	}
+	if source.InsulinGT != nil {
+		xint6425 := *source.InsulinGT
+		siteSearchEventGroupsParams.InsulinGT = &xint6425
+	}
+	if source.InsulinLTE != nil {
+		xint6426 := *source.InsulinLTE
+		siteSearchEventGroupsParams.InsulinLTE = &xint6426
+	}
+	if source.InsulinLT != nil {
+		xint6427 := *source.InsulinLT
+		siteSearchEventGroupsParams.InsulinLT = &xint6427
+	}
+	if source.DurationEQ != nil {
+		xint6428 := *source.DurationEQ
+		siteSearchEventGroupsParams.DurationEQ = &xint6428
+	}
+	if source.DurationGTE != nil {
+		xint6429 := *source.DurationGTE
+		siteSearchEventGroupsParams.DurationGTE = &xint6429
+	}
+	if source.DurationGT != nil {
+		xint6430 := *source.DurationGT
+		siteSearchEventGroupsParams.DurationGT = &xint6430
+	}
+	if source.DurationLTE != nil {
+		xint6431 := *source.DurationLTE
+		siteSearchEventGroupsParams.DurationLTE = &xint6431
+	}
+	if source.DurationLT != nil {
+		xint6432 := *source.DurationLT
+		siteSearchEventGroupsParams.DurationLT = &xint6432
+	}
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteSearchEventGroupsParams.IncludeDeleted = &xbool
+	}
+	siteSearchEventGroupsParams.Skip = source.Skip
+	siteSearchEventGroupsParams.Limit = source.Limit
+	return siteSearchEventGroupsParams
+}
+func FoodIntakeAll(source Query) site.AllFoodIntakesParams {
 	var siteAllFoodIntakesParams site.AllFoodIntakesParams
 	if source.IncludeDeleted != nil {
 		xbool := *source.IncludeDeleted
@@ -18,7 +202,7 @@ func FoodIntakeSearchAll(source Query) site.AllFoodIntakesParams {
 	siteAllFoodIntakesParams.Limit = source.Limit
 	return siteAllFoodIntakesParams
 }
-func FoodIntakeSearchDefaultOrder(source Query) site.SearchFoodIntakesParams {
+func FoodIntakeSearch(source Query) site.SearchFoodIntakesParams {
 	var siteSearchFoodIntakesParams site.SearchFoodIntakesParams
 	if source.DateGTE != nil {
 		xint64 := *source.DateGTE
@@ -132,7 +316,7 @@ func FoodIntakeSearchDefaultOrder(source Query) site.SearchFoodIntakesParams {
 	siteSearchFoodIntakesParams.Limit = source.Limit
 	return siteSearchFoodIntakesParams
 }
-func GlucoseSearchAll(source Query) site.AllGlucoseReadingsParams {
+func GlucoseAll(source Query) site.AllGlucoseReadingsParams {
 	var siteAllGlucoseReadingsParams site.AllGlucoseReadingsParams
 	if source.IncludeDeleted != nil {
 		xbool := *source.IncludeDeleted
@@ -142,7 +326,7 @@ func GlucoseSearchAll(source Query) site.AllGlucoseReadingsParams {
 	siteAllGlucoseReadingsParams.Limit = source.Limit
 	return siteAllGlucoseReadingsParams
 }
-func GlucoseSearchDefaultOrder(source Query) site.SearchGlucoseReadingsParams {
+func GlucoseSearch(source Query) site.SearchGlucoseReadingsParams {
 	var siteSearchGlucoseReadingsParams site.SearchGlucoseReadingsParams
 	if source.DateGTE != nil {
 		xint64 := *source.DateGTE

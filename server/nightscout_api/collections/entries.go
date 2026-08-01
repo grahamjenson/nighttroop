@@ -71,9 +71,9 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 
 	// There are three options,
 	if !query.HasFilters {
-		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseSearchAll(query))
+		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseAll(query))
 	} else {
-		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearchDefaultOrder(query))
+		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearch(query))
 	}
 
 	if rerr != nil {

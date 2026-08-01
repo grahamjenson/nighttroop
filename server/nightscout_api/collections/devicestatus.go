@@ -65,7 +65,17 @@ func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.
 }
 
 func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
+	if query.TypeIn == nil {
+		// TODO list all supportted types so we can limit to those that NS DeviceStatus expects
+	}
+
+	treatments, rerr := siteContext.SiteDB.Queries.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
+	if rerr != nil {
+		slog.Error("failed to query event groups from database", "error", rerr)
+		return nil, nsutils.ErrInternal
+	}
+
+	return nsutils.CreateRecordSlice(treatments, c.converter), nil
 }
 
 func (c DeviceStatusCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
