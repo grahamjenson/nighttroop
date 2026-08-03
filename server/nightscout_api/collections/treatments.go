@@ -66,10 +66,10 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 		CreatedByIdentityName: siteContext.IdentityModel.Name,
 	}
 
-	dbModel, err := EventGroupCreate(ctx, siteContext, TreatmentEventGroupCreate(ctx, cc, treatmentModel))
-	if err != nil {
-		slog.Error("failed to create treatment in database", "error", err)
-		return nil, nsutils.ErrInternal
+	dbModel, rerr := EventGroupCreate(ctx, siteContext, TreatmentEventGroupCreate(ctx, cc, treatmentModel))
+	if rerr != nil {
+		slog.Error("failed to create treatment in database", "error", rerr)
+		return nil, rerr
 	}
 	if dbModel == nil {
 		slog.Error("failed to create treatment in database, dbModel is nil")
@@ -93,10 +93,10 @@ func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.
 		UpdatedByIdentityName: siteContext.IdentityModel.Name,
 	}
 
-	dbModel, err := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
-	if err != nil {
-		slog.Error("failed to update treatment in database", "error", err)
-		return nil, nsutils.ErrInternal
+	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
+	if rerr != nil {
+		slog.Error("failed to update treatment in database", "error", rerr)
+		return nil, rerr
 	}
 	if dbModel == nil {
 		slog.Error("failed to update treatment in database, dbModel is nil")
@@ -136,7 +136,6 @@ func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httput
 }
 
 func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext, treatment nightscout.Treatment) site.CreateEventGroupBundle {
-
 	eventGroup := nightscout.TreatmentToCreateEventGroup(treatment, cc)
 
 	glucoseReading := nightscout.TreatmentToCreateGlucoseReading(treatment, cc)
@@ -145,7 +144,7 @@ func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext,
 	tempBasal := nightscout.TreatmentToCreateTempBasal(treatment, cc)
 	tempTarget := nightscout.TreatmentToCreateTempTarget(treatment, cc)
 	profileSwitch := nightscout.TreatmentToCreateProfileSwitch(treatment, cc)
-	deviceState := nightscout.TreatmentToCreateDeviceState(treatment, cc)
+	//deviceState := nightscout.TreatmentToCreateDeviceState(treatment, cc)
 	loopState := nightscout.TreatmentToCreateLoopState(treatment, cc)
 	pumpState := nightscout.TreatmentToCreatePumpState(treatment, cc)
 	cgmState := nightscout.TreatmentToCreateCgmState(treatment, cc)
@@ -154,48 +153,141 @@ func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext,
 
 	switch *treatment.EventType {
 	case nightscout.Announcement:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
 	case nightscout.BGCheck:
+		return site.CreateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			Note:           &note,
+		}
 	case nightscout.BolusWizard:
+		return site.CreateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
 	case nightscout.CarbCorrection:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			FoodIntake: &foodIntake,
+			Note:       &note,
+		}
 	case nightscout.ComboBolus:
+		return site.CreateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
 	case nightscout.CorrectionBolus:
+		return site.CreateEventGroupBundle{
+			EventGroup:  eventGroup,
+			InsulinDose: &insulinDose,
+			Note:        &note,
+		}
 	case nightscout.DADAlert:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
 	case nightscout.Exercise:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			Activity:   &activity,
+			Note:       &note,
+		}
 	case nightscout.InsulinChange:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			PumpState:  &pumpState,
+			Note:       &note,
+		}
 	case nightscout.MealBolus:
+		return site.CreateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
 	case nightscout.Note:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
 	case nightscout.OpenAPSOffline:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			LoopState:  &loopState,
+			Note:       &note,
+		}
 	case nightscout.ProfileSwitch:
+		return site.CreateEventGroupBundle{
+			EventGroup:    eventGroup,
+			ProfileSwitch: &profileSwitch,
+			Note:          &note,
+		}
 	case nightscout.PumpBatteryChange:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			PumpState:  &pumpState,
+			Note:       &note,
+		}
 	case nightscout.Question:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
 	case nightscout.SensorChange:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			CgmState:   &cgmState,
+			Note:       &note,
+		}
 	case nightscout.SensorStart:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			CgmState:   &cgmState,
+			Note:       &note,
+		}
 	case nightscout.SiteChange:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			PumpState:  &pumpState,
+			Note:       &note,
+		}
 	case nightscout.SnackBolus:
+		return site.CreateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
 	case nightscout.TempBasal:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			TempBasal:  &tempBasal,
+			Note:       &note,
+		}
 	case nightscout.TemporaryTarget:
-	case nightscout.Unknown:
+		return site.CreateEventGroupBundle{
+			EventGroup: eventGroup,
+			TempTarget: &tempTarget,
+			Note:       &note,
+		}
 	}
 
-	return site.CreateEventGroupBundle{
-		EventGroup:     eventGroup,
-		GlucoseReading: &glucoseReading,
-		InsulinDose:    &insulinDose,
-		FoodIntake:     &foodIntake,
-		TempBasal:      &tempBasal,
-		TempTarget:     &tempTarget,
-		ProfileSwitch:  &profileSwitch,
-		DeviceState:    &deviceState,
-		LoopState:      &loopState,
-		PumpState:      &pumpState,
-		CgmState:       &cgmState,
-		Activity:       &activity,
-		Note:           &note,
-	}
+	return site.CreateEventGroupBundle{}
 }
 
 func TreatmentEventGroupUpdate(ctx context.Context, cc nightscout.UpdateContext, treatment nightscout.Treatment) site.UpdateEventGroupBundle {
-
 	eventGroup := nightscout.TreatmentToUpdateEventGroup(treatment, cc)
 
 	glucoseReading := nightscout.TreatmentToUpdateGlucoseReading(treatment, cc)
@@ -204,26 +296,145 @@ func TreatmentEventGroupUpdate(ctx context.Context, cc nightscout.UpdateContext,
 	tempBasal := nightscout.TreatmentToUpdateTempBasal(treatment, cc)
 	tempTarget := nightscout.TreatmentToUpdateTempTarget(treatment, cc)
 	profileSwitch := nightscout.TreatmentToUpdateProfileSwitch(treatment, cc)
-	deviceState := nightscout.TreatmentToUpdateDeviceState(treatment, cc)
+	//deviceState := nightscout.TreatmentToUpdateDeviceState(treatment, cc)
 	loopState := nightscout.TreatmentToUpdateLoopState(treatment, cc)
 	pumpState := nightscout.TreatmentToUpdatePumpState(treatment, cc)
 	cgmState := nightscout.TreatmentToUpdateCgmState(treatment, cc)
 	activity := nightscout.TreatmentToUpdateActivity(treatment, cc)
 	note := nightscout.TreatmentToUpdateNote(treatment, cc)
 
-	return site.UpdateEventGroupBundle{
-		EventGroup:     eventGroup,
-		GlucoseReading: &glucoseReading,
-		InsulinDose:    &insulinDose,
-		FoodIntake:     &foodIntake,
-		TempBasal:      &tempBasal,
-		TempTarget:     &tempTarget,
-		ProfileSwitch:  &profileSwitch,
-		DeviceState:    &deviceState,
-		LoopState:      &loopState,
-		PumpState:      &pumpState,
-		CgmState:       &cgmState,
-		Activity:       &activity,
-		Note:           &note,
+	switch *treatment.EventType {
+	case nightscout.Announcement:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
+	case nightscout.BGCheck:
+		return site.UpdateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			Note:           &note,
+		}
+	case nightscout.BolusWizard:
+		return site.UpdateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
+	case nightscout.CarbCorrection:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			FoodIntake: &foodIntake,
+			Note:       &note,
+		}
+	case nightscout.ComboBolus:
+		return site.UpdateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
+	case nightscout.CorrectionBolus:
+		return site.UpdateEventGroupBundle{
+			EventGroup:  eventGroup,
+			InsulinDose: &insulinDose,
+			Note:        &note,
+		}
+	case nightscout.DADAlert:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
+	case nightscout.Exercise:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			Activity:   &activity,
+			Note:       &note,
+		}
+	case nightscout.InsulinChange:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			PumpState:  &pumpState,
+			Note:       &note,
+		}
+	case nightscout.MealBolus:
+		return site.UpdateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
+	case nightscout.Note:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
+	case nightscout.OpenAPSOffline:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			LoopState:  &loopState,
+			Note:       &note,
+		}
+	case nightscout.ProfileSwitch:
+		return site.UpdateEventGroupBundle{
+			EventGroup:    eventGroup,
+			ProfileSwitch: &profileSwitch,
+			Note:          &note,
+		}
+	case nightscout.PumpBatteryChange:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			PumpState:  &pumpState,
+			Note:       &note,
+		}
+	case nightscout.Question:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			Note:       &note,
+		}
+	case nightscout.SensorChange:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			CgmState:   &cgmState,
+			Note:       &note,
+		}
+	case nightscout.SensorStart:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			CgmState:   &cgmState,
+			Note:       &note,
+		}
+	case nightscout.SiteChange:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			PumpState:  &pumpState,
+			Note:       &note,
+		}
+	case nightscout.SnackBolus:
+		return site.UpdateEventGroupBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: &glucoseReading,
+			InsulinDose:    &insulinDose,
+			FoodIntake:     &foodIntake,
+			Note:           &note,
+		}
+	case nightscout.TempBasal:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			TempBasal:  &tempBasal,
+			Note:       &note,
+		}
+	case nightscout.TemporaryTarget:
+		return site.UpdateEventGroupBundle{
+			EventGroup: eventGroup,
+			TempTarget: &tempTarget,
+			Note:       &note,
+		}
 	}
+
+	return site.UpdateEventGroupBundle{}
 }

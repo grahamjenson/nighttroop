@@ -25,7 +25,6 @@ func NewDeviceStatusCollection() DeviceStatusCollection {
 func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	deviceStatusModel := nightscout.DeviceStatus{}
 	err := utils.FromMap(data, &deviceStatusModel)
-
 	if err != nil {
 		slog.Error("failed to map data to device status model", "error", err)
 		return nil, nsutils.BadDataBodyError
@@ -42,16 +41,16 @@ func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputi
 	createPump := nightscout.DeviceStatusToCreatePump(deviceStatusModel, cc)
 	createEventGroup := nightscout.DeviceStatusToCreateEventGroup(deviceStatusModel, cc)
 
-	dbModel, err := EventGroupCreate(ctx, siteContext, site.CreateEventGroupBundle{
+	dbModel, rerr := EventGroupCreate(ctx, siteContext, site.CreateEventGroupBundle{
 		DeviceState: &createDevice,
 		LoopState:   &createLoop,
 		PumpState:   &createPump,
 		EventGroup:  createEventGroup,
 	})
 
-	if err != nil {
-		slog.Error("failed to create device status in database", "error", err)
-		return nil, nsutils.ErrInternal
+	if rerr != nil {
+		slog.Error("failed to create device status in database", "error", rerr)
+		return nil, rerr
 	}
 	if dbModel == nil {
 		slog.Error("failed to create device status in database, dbModel is nil")
@@ -79,16 +78,16 @@ func (c DeviceStatusCollection) Update(ctx context.Context, siteContext *httputi
 	createPump := nightscout.DeviceStatusToUpdatePump(deviceStatusModel, cc)
 	createEventGroup := nightscout.DeviceStatusToUpdateEventGroup(deviceStatusModel, cc)
 
-	dbModel, err := EventGroupUpdate(ctx, siteContext, site.UpdateEventGroupBundle{
+	dbModel, rerr := EventGroupUpdate(ctx, siteContext, site.UpdateEventGroupBundle{
 		DeviceState: &createDevice,
 		LoopState:   &createLoop,
 		PumpState:   &createPump,
 		EventGroup:  createEventGroup,
 	})
 
-	if err != nil {
-		slog.Error("failed to update device status in database", "error", err)
-		return nil, nsutils.ErrInternal
+	if rerr != nil {
+		slog.Error("failed to update device status in database", "error", rerr)
+		return nil, rerr
 	}
 	if dbModel == nil {
 		slog.Error("failed to update device status in database, dbModel is nil")
