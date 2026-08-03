@@ -1,5 +1,6 @@
 NAME create_new_site
 POST http://localhost/site
+ASSERT_STATUS 200
 
 # Assign the token to a variable
 NAME token
@@ -9,8 +10,37 @@ NAME site
 SET {{ .create_new_site.site_subdomain }}
 
 NAME jwtauth
-GET http://{{ .site }}.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
 
 # Auth with JWT
 NAME jwt
 SET {{ .jwtauth.token }}
+
+NAME create_treatments_v1
+POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Meal Bolus",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 148,
+  "glucoseType": "Sensor",
+
+  "carbs": 45,
+  "insulin": 4.2,
+
+  "duration": 0,
+
+  "notes": "Lunch pasta + insulin pre-bolus",
+  "enteredBy": "aaps-loop",
+
+  "treatments": "treatments_1",
+  "percentage": 10,
+  "absolute": null,
+
+  "reason": "lunch",
+  "targetTop": 110,
+  "targetBottom": 85
+ }
+ASSERT_STATUS 201
+ASSERT {{ }}

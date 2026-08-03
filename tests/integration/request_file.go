@@ -3,13 +3,16 @@ package integration_test
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 )
 
@@ -20,6 +23,9 @@ type Request struct {
 	Headers    http.Header
 	Body       string
 	IsFunction bool
+
+	AssertStatus int
+	Assert       string
 }
 
 func (r Request) ToFlatString() string {
@@ -121,7 +127,7 @@ func parseFile(r io.Reader) ([]Request, error) {
 			}
 
 			current.Method = parts[0]
-			current.URL = parts[1]
+			current.URL = strings.TrimSpace(parts[1])
 		case strings.HasPrefix(line, "SET "):
 			// THIS IS A SPECIAL CASE FOR SETTING CONTEXT VARIABLES WITHOUT MAKING A REQUEST
 			if current == nil {
@@ -135,8 +141,27 @@ func parseFile(r io.Reader) ([]Request, error) {
 
 			//
 			current.Method = parts[0]
-			current.URL = parts[1]
+			current.URL = strings.TrimSpace(parts[1])
 			current.IsFunction = true
+		case strings.HasPrefix(line, "ASSERT_STATUS "):
+			if current == nil {
+				return nil, fmt.Errorf("assert_status before NAME")
+			}
+
+			statusStr := strings.TrimSpace(strings.TrimPrefix(line, "ASSERT_STATUS "))
+			statusCode, err := strconv.Atoi(statusStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid assert_status: %q", statusStr)
+			}
+			current.AssertStatus = statusCode
+
+		case strings.HasPrefix(line, "ASSERT "):
+			if current == nil {
+				return nil, fmt.Errorf("assert before NAME")
+			}
+
+			assert := strings.TrimSpace(strings.TrimPrefix(line, "ASSERT "))
+			current.Assert = assert
 		case strings.HasPrefix(line, "H "):
 			if current == nil {
 				return nil, fmt.Errorf("header before NAME")
@@ -220,13 +245,56 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 		r.Headers.Set("Accept", "application/json")
 	}
 	return Request{
-		Name:       r.Name,
-		Method:     r.Method,
-		URL:        url,
-		Headers:    renderedHeaders,
-		Body:       bodyStr,
-		IsFunction: r.IsFunction,
+		Name:         r.Name,
+		Method:       r.Method,
+		URL:          url,
+		Headers:      renderedHeaders,
+		Body:         bodyStr,
+		IsFunction:   r.IsFunction,
+		AssertStatus: r.AssertStatus,
+		Assert:       r.Assert,
 	}, nil
+}
+
+func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[string]any) (int, map[string]any, http.Header, map[string]any) {
+	var buf bytes.Buffer
+	if r.Body != "" {
+		if err := json.NewEncoder(&buf).Encode(r.Body); err != nil {
+			t.Fatalf("failed to encode json: %v", err)
+		}
+	}
+
+	req := httptest.NewRequest(r.Method, r.URL, &buf)
+	req.Header.Set("Content-Type", "application/json")
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	var out map[string]any
+
+	if err := json.NewDecoder(rr.Body).Decode(&out); err != nil {
+		fmt.Println("failed to decode json for", r.Name, "error:", err)
+	}
+
+	context[r.Name] = out
+	context[r.Name+"_status"] = rr.Code
+
+	fmt.Println("Executed request", r.Name, "status", rr.Code, "output", out, "fsasfsaf", r.AssertStatus)
+	if r.AssertStatus != 0 && rr.Code != r.AssertStatus {
+		t.Fatalf("request %s expected status %d but got %d", r.Name, r.AssertStatus, rr.Code)
+	}
+
+	if r.Assert != "" {
+		assertValue, err := renderTemplate(r.Assert, context)
+		if err != nil {
+			t.Fatalf("request %s assert render failed: %v", r.Name, err)
+		}
+		if assertValue != "true" {
+			t.Fatalf("request %s assert failed: %s", r.Name, r.Assert)
+		}
+	}
+
+	return rr.Code, out, rr.Header(), context
 }
 
 func (r Request) ExecuteFunction(ctx map[string]any) (map[string]any, error) {
