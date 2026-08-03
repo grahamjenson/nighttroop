@@ -1,0 +1,2 @@
+NAME create_new_user
+POST http://localhost:8080/site

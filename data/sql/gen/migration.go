@@ -30,12 +30,12 @@ var migrations embed.FS
 func MigrateUp(name string, db *sql.DB) error {
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	d, err := iofs.New(migrations, "migrations")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	m, err := migrate.NewWithInstance(
@@ -45,12 +45,12 @@ func MigrateUp(name string, db *sql.DB) error {
 		driver,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = m.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Println("{{.PkgName}}." + name + " migrations applied")
@@ -61,12 +61,12 @@ func MigrateUp(name string, db *sql.DB) error {
 func MigrateDown(name string, db *sql.DB) error {
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	d, err := iofs.New(migrations, "migrations")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	m, err := migrate.NewWithInstance(
@@ -76,12 +76,12 @@ func MigrateDown(name string, db *sql.DB) error {
 		driver,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = m.Down()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Println("{{.PkgName}}." + name + " migrations rolled back")

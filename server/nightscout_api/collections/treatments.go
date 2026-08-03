@@ -17,29 +17,6 @@ type TreatmentCollection struct {
 }
 
 // There is a list of incoming types, but we only support a few, and some we break apart into simpler types
-
-// Announcement
-// BGCheck
-// BolusWizard
-// CarbCorrection
-// ComboBolus
-// CorrectionBolus
-// DADAlert
-// Exercise
-// InsulinChange
-// MealBolus
-// Note
-// OpenAPSOffline
-// ProfileSwitch
-// PumpBatteryChange
-// Question
-// SensorChange
-// SensorStart
-// SiteChange
-// SnackBolus
-// TempBasal
-// TemporaryTarget
-
 // Treatments are a constallation of DB types and no more.
 func NewTreatmentCollection() TreatmentCollection {
 	return TreatmentCollection{

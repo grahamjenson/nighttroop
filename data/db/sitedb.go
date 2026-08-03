@@ -45,6 +45,7 @@ func NewSiteDB(ctx context.Context, subdomain string, mustExist bool, cfg config
 
 	err = site.MigrateUp(subdomain, sqldb)
 	if err != nil {
+		fmt.Println("dsfsdfdsf", err)
 		sqldb.Close()
 		return siteDB, fmt.Errorf("Migration Error Occurred site db: %s %w", subdomain, err)
 	}

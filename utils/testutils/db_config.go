@@ -2,8 +2,6 @@ package testutils
 
 import (
 	"fmt"
-	"log/slog"
-	"os"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
@@ -15,10 +13,8 @@ func GetTestServerConfig() config.ServerConfig {
 	if storedServerConfig != nil {
 		return *storedServerConfig
 	}
-	logger := slog.New(
-		slog.NewTextHandler(os.Stdout, nil),
-	)
-	cfg, err := config.NewServerConfig(logger)
+
+	cfg, err := config.NewServerConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -26,18 +22,18 @@ func GetTestServerConfig() config.ServerConfig {
 	return *storedServerConfig
 }
 
-func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteDB) {
+func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteDB, error) {
 	cfg := GetTestServerConfig()
 
 	controlDB, err := db.NewControlDB(cfg)
 	if err != nil {
-		panic(fmt.Errorf("cannot create control db: %w", err))
+		return cfg, nil, nil, fmt.Errorf("cannot create control db: %w", err)
 	}
 
 	identityValues, err := controlDB.CreateSite()
 	if err != nil {
-		panic(fmt.Errorf("cannot create site db: %w", err))
+		return cfg, nil, nil, fmt.Errorf("cannot create site db: %w", err)
 	}
 
-	return cfg, controlDB, identityValues.SiteDB
+	return cfg, controlDB, identityValues.SiteDB, nil
 }

@@ -244,6 +244,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 	ret.EventGroup = *dbModel
 
 	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit create event group in database", "error", err, "dbModel", dbModel)
 		return nil, nsutils.ErrInternal
 	}
 
@@ -368,6 +369,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 	ret.EventGroup = *dbModel
 
 	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit update event group in database", "error", err, "dbModel", dbModel)
 		return nil, nsutils.ErrInternal
 	}
 

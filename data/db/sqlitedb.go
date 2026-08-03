@@ -15,12 +15,13 @@ func OpenSqliteDB(path string, cacheSize int, inMemory bool) (*sql.DB, error) {
 	}
 
 	if inMemory {
-		path = ":memory:"
-
-		sqldb, err := sql.Open("sqlite3", "file::memory:?cache=shared")
+		sqldb, err := sql.Open("sqlite3", ":memory:")
 		if err != nil {
 			return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 		}
+
+		sqldb.SetMaxOpenConns(1)
+		sqldb.SetMaxIdleConns(1)
 
 		return sqldb, nil
 	}

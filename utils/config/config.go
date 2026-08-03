@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -106,115 +107,100 @@ const SITE_POST_LIMIT = 60
 // Priority is
 // 1. Args
 // 2. ENVAR
-// 3. .env.dev
 // 4. .env
 // 5. Default
-func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
+func NewServerConfig() (ServerConfig, error) {
 
-	dotenvdev, err := readDotEnvFile(".env.dev")
+	flagsnev := compileFlags()
+
+	mode := findMode(flagsnev)
+	dotenv, err := compileDotEnvFile(mode)
 	if err != nil {
 		return ServerConfig{}, err
 	}
 
-	// If .env.dev exists then isDev = true
-	// Override with .env
-	dotenv, err := readDotEnvFile(".env")
-	if err != nil {
-		return ServerConfig{}, err
-	}
+	dotenv = MergeMaps(dotenv, flagsnev) // flags override .env
 
 	// DEFAULTS
 	serverConfig := ServerConfig{
-		Logger: logger,
-		Mode:   consts.ServerMode(configStringSelect(dotenvdev, dotenv, "MODE", "development")),
+		Logger: setupLogging(),
+		Mode:   mode,
 
 		// Host config
-		HostName:     configStringSelect(dotenvdev, dotenv, "HOST_NAME", "nt.local.t1d.nz"),
-		HostPort:     configIntSelect(dotenvdev, dotenv, "HOST_PORT", 3000),
-		HostProtocol: configStringSelect(dotenvdev, dotenv, "HOST_PROTOCOL", "https"),
+		HostName:     configStringSelect(dotenv, "HOST_NAME", "nt.local.t1d.nz"),
+		HostPort:     configIntSelect(dotenv, "HOST_PORT", 3000),
+		HostProtocol: configStringSelect(dotenv, "HOST_PROTOCOL", "https"),
 
 		// s3 config
-		S3Bucket:          configStringSelect(dotenvdev, dotenv, "S3_BUCKET", "mybucket"),
-		S3URL:             configStringSelect(dotenvdev, dotenv, "S3_URL", "http://localhost:9000"),
-		S3AccessKeyID:     configStringSelect(dotenvdev, dotenv, "S3_ACCESS_KEY", "minioadmin"),
-		S3AccessSecretKey: configStringSelect(dotenvdev, dotenv, "S3_SECRET_KEY", "minioadmin"),
+		S3Bucket:          configStringSelect(dotenv, "S3_BUCKET", "mybucket"),
+		S3URL:             configStringSelect(dotenv, "S3_URL", "http://localhost:9000"),
+		S3AccessKeyID:     configStringSelect(dotenv, "S3_ACCESS_KEY", "minioadmin"),
+		S3AccessSecretKey: configStringSelect(dotenv, "S3_SECRET_KEY", "minioadmin"),
 
 		// sentry
-		SentryDSN: configStringSelect(dotenvdev, dotenv, "SENTRY_DSN", ""),
+		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
 
 		// security
-		RawKeySets: configStringSelect(dotenvdev, dotenv, consts.KEY_SETS_ENV_KEY, ""),
+		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
 
 		// paths
-		SqlitePath: configStringSelect(dotenvdev, dotenv, "SQLITE_PATH", "./data"),
+		SqlitePath: configStringSelect(dotenv, "SQLITE_PATH", "./data"),
 
 		// RATE LIMTERS TODO fine tune these a bit more
 
 		// Public RateLimits
-		GlobalRateLimit:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_LIMIT", 100000), // Stop DDOS doing downloads
-		GlobalRateBurst:        configIntSelect(dotenvdev, dotenv, "GLOBAL_RATE_BURST", 100000),
-		GlobalIPPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", SITE_GET_LIMIT*4), // Single IP can fully manage 4 sites
-		GlobalIPPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "GLOBAL_IP_PER_MINUTE_BURST", SITE_GET_LIMIT*8),
+		GlobalRateLimit:        configIntSelect(dotenv, "GLOBAL_RATE_LIMIT", 100000), // Stop DDOS doing downloads
+		GlobalRateBurst:        configIntSelect(dotenv, "GLOBAL_RATE_BURST", 100000),
+		GlobalIPPerMinuteLimit: configIntSelect(dotenv, "GLOBAL_IP_PER_MINUTE_LIMIT", SITE_GET_LIMIT*4), // Single IP can fully manage 4 sites
+		GlobalIPPerMinuteBurst: configIntSelect(dotenv, "GLOBAL_IP_PER_MINUTE_BURST", SITE_GET_LIMIT*8),
 
-		SiteLoginPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "SITE_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
-		SiteLoginPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "SITE_LOGIN_PER_MINUTE_BURST", 10),
+		SiteLoginPerMinuteLimit: configIntSelect(dotenv, "SITE_LOGIN_PER_MINUTE_LIMIT", 1), // Stop credential stuffing
+		SiteLoginPerMinuteBurst: configIntSelect(dotenv, "SITE_LOGIN_PER_MINUTE_BURST", 10),
 
 		// Site Create Rate Limits
-		SiteCreateGlobalPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT", 7), // If maxed out this filles up in a day
-		SiteCreateGlobalPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
-		SiteCreateIPPerMinuteLimit:     configFloatSelect(dotenvdev, dotenv, "SITE_CREATE_IP_PER_MINUTE_LIMIT", 0.1), // 1 event every 10 minutes
-		SiteCreateIPPerMinuteBurst:     configIntSelect(dotenvdev, dotenv, "SITE_CREATE_IP_PER_MINUTE_BURST", 1),
+		SiteCreateGlobalPerMinuteLimit: configIntSelect(dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT", 7), // If maxed out this filles up in a day
+		SiteCreateGlobalPerMinuteBurst: configIntSelect(dotenv, "SITE_CREATE_GLOBAL_PER_MINUTE_BURST", 20),
+		SiteCreateIPPerMinuteLimit:     configFloatSelect(dotenv, "SITE_CREATE_IP_PER_MINUTE_LIMIT", 0.1), // 1 event every 10 minutes
+		SiteCreateIPPerMinuteBurst:     configIntSelect(dotenv, "SITE_CREATE_IP_PER_MINUTE_BURST", 1),
 
 		// Authed
 		// Site Rate Limits
-		SiteGETPerMinuteLimit:        configIntSelect(dotenvdev, dotenv, "SITE_GET_PER_MINUTE_LIMIT", SITE_GET_LIMIT),
-		SiteGETPerMinuteBurst:        configIntSelect(dotenvdev, dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
-		SitePOSTPerMinuteLimit:       configIntSelect(dotenvdev, dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
-		SitePOSTPerMinuteBurst:       configIntSelect(dotenvdev, dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
-		SiteUpdateSyncPerMinuteLimit: configIntSelect(dotenvdev, dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop sites from updating sync settings too much
-		SiteUpdateSyncPerMinuteBurst: configIntSelect(dotenvdev, dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_BURST", 4),
+		SiteGETPerMinuteLimit:        configIntSelect(dotenv, "SITE_GET_PER_MINUTE_LIMIT", SITE_GET_LIMIT),
+		SiteGETPerMinuteBurst:        configIntSelect(dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
+		SitePOSTPerMinuteLimit:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
+		SitePOSTPerMinuteBurst:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
+		SiteUpdateSyncPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop sites from updating sync settings too much
+		SiteUpdateSyncPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_BURST", 4),
 
 		//
 		// Site Limits
-		MaxSites:             configIntSelect(dotenvdev, dotenv, "MAX_SITES", 10000),
-		MaxIdentitiesPerSite: configIntSelect(dotenvdev, dotenv, "MAX_IDENTITIES_PER_USER", 10),
+		MaxSites:             configIntSelect(dotenv, "MAX_SITES", 10000),
+		MaxIdentitiesPerSite: configIntSelect(dotenv, "MAX_IDENTITIES_PER_USER", 10),
 
 		// Truncate Config
-		MaxSiteDBSizeKB:           configIntSelect(dotenvdev, dotenv, "MAX_SITE_DB_SIZE_KB", 3000),
-		MaxControlDBSizeKB:        configIntSelect(dotenvdev, dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
-		TruncateIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
+		MaxSiteDBSizeKB:           configIntSelect(dotenv, "MAX_SITE_DB_SIZE_KB", 3000),
+		MaxControlDBSizeKB:        configIntSelect(dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
+		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 
 		// Archiving limits
-		MaxSiteLastSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_SITE_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
-		MaxSiteLastWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_SITE_LAST_WRITTEN_IN_MINS", 60*24*7), // 1 week
+		MaxSiteLastSeenInMins:    configIntSelect(dotenv, "MAX_SITE_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
+		MaxSiteLastWrittenInMins: configIntSelect(dotenv, "MAX_SITE_LAST_WRITTEN_IN_MINS", 60*24*7), // 1 week
 
-		MaxSiteNeverSeenInMins:    configIntSelect(dotenvdev, dotenv, "MAX_SITE_NEVER_SEEN_IN_MINS", 30),       // 30 minutes to login first time
-		MaxSiteNeverWrittenInMins: configIntSelect(dotenvdev, dotenv, "MAX_SITE_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
+		MaxSiteNeverSeenInMins:    configIntSelect(dotenv, "MAX_SITE_NEVER_SEEN_IN_MINS", 30),       // 30 minutes to login first time
+		MaxSiteNeverWrittenInMins: configIntSelect(dotenv, "MAX_SITE_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
 
 		// Backup Config
-		ControlBackupIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
-		BatchBackupIntervalInSeconds:   configIntSelect(dotenvdev, dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
-		ArchiveIntervalInSeconds:       configIntSelect(dotenvdev, dotenv, "ARCHIVE_INTERVAL_IN_SECONDS", 3600),    // 1 hour
+		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
+		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
+		ArchiveIntervalInSeconds:       configIntSelect(dotenv, "ARCHIVE_INTERVAL_IN_SECONDS", 3600),    // 1 hour
 
 		// Sync Config
-		BackgroundSyncWorkers: configIntSelect(dotenvdev, dotenv, "BACKGROUND_SYNC_WORKERS", 5),
-		SyncIntervalInSeconds: configIntSelect(dotenvdev, dotenv, "SYNC_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
+		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),
+		SyncIntervalInSeconds: configIntSelect(dotenv, "SYNC_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
 
 		// Dexcom Config
-		DexcomClientID:     configStringSelect(dotenvdev, dotenv, "DEXCOM_CLIENT_ID", ""),
-		DexcomClientSecret: configStringSelect(dotenvdev, dotenv, "DEXCOM_CLIENT_SECRET", ""),
-	}
-
-	// Error out if unknown ENVARS are found in .env.dev or .env
-	if len(dotenvdev) > 0 {
-		slog.Error("Unknown .env.dev variables: ", "variables", func() []string {
-			var keys []string
-			for k := range dotenvdev {
-				keys = append(keys, k)
-			}
-			return keys
-		}())
-		return ServerConfig{}, fmt.Errorf("unknown .env.dev variables")
+		DexcomClientID:     configStringSelect(dotenv, "DEXCOM_CLIENT_ID", ""),
+		DexcomClientSecret: configStringSelect(dotenv, "DEXCOM_CLIENT_SECRET", ""),
 	}
 
 	if len(dotenv) > 0 {
@@ -226,20 +212,6 @@ func NewServerConfig(logger *slog.Logger) (ServerConfig, error) {
 			return keys
 		}())
 		return ServerConfig{}, fmt.Errorf("unknown .env variables")
-	}
-
-	// Override with flags some common settings
-	flagmode := ""
-	flag.StringVar(&flagmode, "mode", "", "developmen or production")
-	// host config
-	flag.StringVar(&serverConfig.HostName, "host", serverConfig.HostName, "Host name for the server")
-	flag.IntVar(&serverConfig.HostPort, "port", serverConfig.HostPort, "Host port for the server")
-	flag.StringVar(&serverConfig.HostProtocol, "protocol", serverConfig.HostProtocol, "Host protocol for the server (http or https)")
-
-	flag.Parse()
-
-	if flagmode != "" {
-		serverConfig.Mode = consts.ServerMode(flagmode)
 	}
 
 	// Validate the config
@@ -273,13 +245,6 @@ func (config *ServerConfig) IsTest() bool {
 }
 
 func (config *ServerConfig) ValidateClean() error {
-	// Deal with mode
-	mode, err := config.Mode.Normalize()
-	if err != nil {
-		return err
-	}
-	config.Mode = mode
-
 	config.HostProtocol = strings.ToLower(config.HostProtocol)
 	if config.HostProtocol != "http" && config.HostProtocol != "https" {
 		return fmt.Errorf("invalid host protocol: %s", config.HostProtocol)
@@ -292,13 +257,8 @@ func (config *ServerConfig) ValidateClean() error {
 	return nil
 }
 
-func configStringSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue string) string {
+func configStringSelect(dotenv map[string]string, envVar string, defaultValue string) string {
 	returnval := defaultValue
-
-	if val, ok := dotenvdev[envVar]; ok {
-		returnval = val
-		delete(dotenvdev, envVar) // delete so we can find unknown keys later
-	}
 
 	if val, ok := dotenv[envVar]; ok {
 		returnval = val
@@ -312,18 +272,13 @@ func configStringSelect(dotenvdev map[string]string, dotenv map[string]string, e
 	return returnval
 }
 
-func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue int) int {
+func configIntSelect(dotenv map[string]string, envVar string, defaultValue int) int {
 
 	returnval := fmt.Sprintf("%d", defaultValue)
 
 	if val, ok := dotenv[envVar]; ok {
 		returnval = val
 		delete(dotenv, envVar) // delete so we can find unknown keys later
-	}
-
-	if val, ok := dotenvdev[envVar]; ok {
-		returnval = val
-		delete(dotenvdev, envVar) // delete so we can find unknown keys later
 	}
 
 	if val, ok := os.LookupEnv(envVar); ok {
@@ -340,18 +295,13 @@ func configIntSelect(dotenvdev map[string]string, dotenv map[string]string, envV
 	return intVal
 }
 
-func configFloatSelect(dotenvdev map[string]string, dotenv map[string]string, envVar string, defaultValue float64) float64 {
+func configFloatSelect(dotenv map[string]string, envVar string, defaultValue float64) float64 {
 
 	returnval := fmt.Sprintf("%f", defaultValue)
 
 	if val, ok := dotenv[envVar]; ok {
 		returnval = val
 		delete(dotenv, envVar) // delete so we can find unknown keys later
-	}
-
-	if val, ok := dotenvdev[envVar]; ok {
-		returnval = val
-		delete(dotenvdev, envVar) // delete so we can find unknown keys later
 	}
 
 	if val, ok := os.LookupEnv(envVar); ok {
@@ -366,6 +316,80 @@ func configFloatSelect(dotenvdev map[string]string, dotenv map[string]string, en
 	}
 
 	return floatVal
+}
+
+// 1. check explicit settings, the flag and envar
+// 2. Guess, if go is running test
+// 3. return default dev
+func findMode(flags map[string]string) consts.ServerMode {
+	if modeStr, ok := flags["MODE"]; ok {
+		mode, err := consts.ServerMode(modeStr).Normalize()
+		if err != nil {
+			slog.Error("Invalid mode in flags", "mode", modeStr, "error", err)
+			return consts.Development
+		}
+		return mode
+	}
+
+	if modeStr, ok := os.LookupEnv("MODE"); ok {
+		mode, err := consts.ServerMode(modeStr).Normalize()
+		if err != nil {
+			slog.Error("Invalid mode in env", "mode", modeStr, "error", err)
+			return consts.Development
+		}
+		return mode
+	}
+
+	// If go test is running then it is test mode
+	if strings.HasSuffix(os.Args[0], ".test") {
+		return consts.Test
+	}
+
+	return consts.Development
+}
+
+func compileFlags() map[string]string {
+	var mode string
+	var hostName string
+	var hostPort int
+	var hostProtocol string
+
+	flag.StringVar(&mode, "MODE", "", "development or production")
+	flag.StringVar(&hostName, "HOST_NAME", "", "Host name for the server")
+	flag.IntVar(&hostPort, "HOST_PORT", 0, "Host port for the server")
+	flag.StringVar(&hostProtocol, "HOST_PROTOCOL", "", "Host protocol for the server (http or https)")
+
+	flag.Parse()
+
+	ret := map[string]string{}
+	flag.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "MODE":
+			ret["MODE"] = mode
+		case "HOST_NAME":
+			ret["HOST_NAME"] = hostName
+		case "HOST_PORT":
+			ret["HOST_PORT"] = fmt.Sprintf("%d", hostPort)
+		case "HOST_PROTOCOL":
+			ret["HOST_PROTOCOL"] = hostProtocol
+		}
+	})
+	return ret
+}
+
+func compileDotEnvFile(mode consts.ServerMode) (map[string]string, error) {
+	filename := ".env"
+	switch mode {
+	case consts.Development:
+		filename = ".env.dev"
+	case consts.Test:
+		projectRoot := FindProjectRoot()
+		filename = filepath.Join(projectRoot, ".env.test")
+	case consts.Production:
+		filename = ".env"
+	}
+
+	return readDotEnvFile(filename)
 }
 
 func readDotEnvFile(filename string) (map[string]string, error) {
@@ -433,4 +457,38 @@ func (config *ServerConfig) IsHTTPS() bool {
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func MergeMaps(a, b map[string]string) map[string]string {
+	result := make(map[string]string, len(a)+len(b))
+
+	for k, v := range a {
+		result[k] = v
+	}
+
+	for k, v := range b {
+		result[k] = v // overrides existing keys
+	}
+
+	return result
+}
+
+func FindProjectRoot() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+
+		dir = parent
+	}
 }

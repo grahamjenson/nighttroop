@@ -60,7 +60,8 @@ func RelPathBetween(newBasePath string, targetPath string) string {
 
 	relPath, err := filepath.Rel(absBase, absFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error calculating relative path from %s to %s: %v", absBase, absFile, err)
+		return absFile
 	}
 
 	return relPath

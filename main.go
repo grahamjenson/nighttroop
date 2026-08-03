@@ -14,8 +14,6 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	_ "github.com/mattn/go-sqlite3"
-	slogmulti "github.com/samber/slog-multi"
-	slogsentry "github.com/samber/slog-sentry/v2"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/background/backup"
 	"nighttroop.t1d.nz/data/db"
@@ -35,10 +33,8 @@ func main() {
 func run() error {
 	var err error
 
-	logger := setupLogging()
-
 	// Make all envars and config in one struct
-	serverConfig, err := config.NewServerConfig(logger)
+	serverConfig, err := config.NewServerConfig()
 	if err != nil {
 		return fmt.Errorf("cannot create server config: %w", err)
 	}
@@ -148,22 +144,6 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 	}()
 
 	return httpServer
-}
-
-func setupLogging() *slog.Logger {
-	// 1. Create a JSON handler writing to standard output
-	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug, // Set minimum log level
-	})
-
-	sentryHandler := slogsentry.Option{
-		Level: slog.LevelError, // Only send errors to Sentry
-	}.NewSentryHandler()
-
-	logger := slog.New(slogmulti.Fanout(jsonHandler, sentryHandler))
-
-	slog.SetDefault(logger)
-	return logger
 }
 
 func ValidateServer(c *s3utils.S3Client) error {
