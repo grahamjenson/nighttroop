@@ -61,7 +61,7 @@ func DBModelToActivity(source *site.Activity) Activity {
 	}
 	return nightscoutActivity
 }
-func DBModelToDeviceStatus(source *site.SearchEventGroupsRow) DeviceStatus {
+func DBModelToDeviceStatus(source *site.GetEventGroupRow) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -168,7 +168,7 @@ func DBModelToFood(source *site.FoodPreset) Food {
 	}
 	return nightscoutFood
 }
-func DBModelToTreatment(source *site.SearchEventGroupsRow) Treatment {
+func DBModelToTreatment(source *site.GetEventGroupRow) Treatment {
 	var nightscoutTreatment Treatment
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)

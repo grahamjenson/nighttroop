@@ -11,7 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*site.SearchEventGroupsRow, *nsutils.HTTPError) {
+func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*site.GetEventGroupRow, *nsutils.HTTPError) {
 	dbModel, err := siteContext.SiteDB.Queries.GetEventGroup(ctx, site.GetEventGroupParams{
 		ID: identifier,
 	})
@@ -19,16 +19,14 @@ func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, iden
 		return nil, nsutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("failed to get device status", "error", err)
+		slog.Error("failed to get event group", "error", err)
 		return nil, nsutils.ErrInternal
 	}
 
-	seg := site.GetEventGroupToSearchEventGroup(*dbModel)
-
-	return &seg, nil
+	return dbModel, nil
 }
 
-func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.SearchEventGroupsRow, *nsutils.HTTPError) {
+func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.GetEventGroupRow, *nsutils.HTTPError) {
 	if query.TypeIn == nil {
 		// TODO list all supportted types so we can limit to those that NS Treatment expects
 	}
@@ -39,7 +37,14 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 		return nil, nsutils.ErrInternal
 	}
 
-	return eventGroups, nil
+	res := []*site.GetEventGroupRow{}
+	for _, eg := range eventGroups {
+		if eg != nil {
+			gEG := site.SearchEventGroupToGetEventGroup(*eg)
+			res = append(res, &gEG)
+		}
+	}
+	return res, nil
 
 }
 

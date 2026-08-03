@@ -53,9 +53,9 @@ type ToCreateParams interface {
 	SiteSettingsToUpdate(source SiteSetting) UpdateSiteSettingsParams
 
 	// EVENT GROUP
-	GetEventGroupToSearchEventGroup(source GetEventGroupRow) SearchEventGroupsRow
+	SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow
 
 	//goverter:map . EventGroup
 	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch DeviceState LoopState PumpState CgmState Activity Note
-	EventGroupToSearchEventGroup(source EventGroup) SearchEventGroupsRow
+	EventGroupToSearchEventGroup(source EventGroup) GetEventGroupRow
 }

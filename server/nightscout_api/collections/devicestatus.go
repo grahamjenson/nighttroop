@@ -14,7 +14,7 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	converter func(c *site.SearchEventGroupsRow) nsutils.Record
+	converter func(c *site.GetEventGroupRow) nsutils.Record
 }
 
 func NewDeviceStatusCollection() DeviceStatusCollection {
@@ -77,7 +77,7 @@ func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *htt
 	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
 }
 
-func createDeviceStatus(ctx context.Context, siteContext *httputils.SiteContext, deviceStatusModel nightscout.DeviceStatus) (*site.SearchEventGroupsRow, error) {
+func createDeviceStatus(ctx context.Context, siteContext *httputils.SiteContext, deviceStatusModel nightscout.DeviceStatus) (*site.GetEventGroupRow, error) {
 	db := siteContext.SiteDB.SQLiteDB
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {

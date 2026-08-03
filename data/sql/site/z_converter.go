@@ -203,30 +203,30 @@ func DeviceStateToUpdate(source DeviceState) UpdateDeviceStateParams {
 	siteUpdateDeviceStateParams.ID = source.ID
 	return siteUpdateDeviceStateParams
 }
-func EventGroupToSearchEventGroup(source EventGroup) SearchEventGroupsRow {
-	var siteSearchEventGroupsRow SearchEventGroupsRow
-	siteSearchEventGroupsRow.EventGroup = siteEventGroupToSiteEventGroup(source)
-	siteSearchEventGroupsRow.ID = source.ID
-	siteSearchEventGroupsRow.GroupType = source.GroupType
-	siteSearchEventGroupsRow.OccurredAt = source.OccurredAt
+func EventGroupToSearchEventGroup(source EventGroup) GetEventGroupRow {
+	var siteGetEventGroupRow GetEventGroupRow
+	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source)
+	siteGetEventGroupRow.ID = source.ID
+	siteGetEventGroupRow.GroupType = source.GroupType
+	siteGetEventGroupRow.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
-		siteSearchEventGroupsRow.UtcOffsetMinutes = &xint64
+		siteGetEventGroupRow.UtcOffsetMinutes = &xint64
 	}
-	siteSearchEventGroupsRow.CreatedAt = source.CreatedAt
-	siteSearchEventGroupsRow.UpdatedAt = source.UpdatedAt
+	siteGetEventGroupRow.CreatedAt = source.CreatedAt
+	siteGetEventGroupRow.UpdatedAt = source.UpdatedAt
 	if source.DeletedAt != nil {
 		xint642 := *source.DeletedAt
-		siteSearchEventGroupsRow.DeletedAt = &xint642
+		siteGetEventGroupRow.DeletedAt = &xint642
 	}
 	if source.RawJsonData != nil {
 		xstring := *source.RawJsonData
-		siteSearchEventGroupsRow.RawJsonData = &xstring
+		siteGetEventGroupRow.RawJsonData = &xstring
 	}
-	siteSearchEventGroupsRow.CreatedByAppName = source.CreatedByAppName
-	siteSearchEventGroupsRow.CreatedByDeviceName = source.CreatedByDeviceName
-	siteSearchEventGroupsRow.CreatedByIdentityName = source.CreatedByIdentityName
-	return siteSearchEventGroupsRow
+	siteGetEventGroupRow.CreatedByAppName = source.CreatedByAppName
+	siteGetEventGroupRow.CreatedByDeviceName = source.CreatedByDeviceName
+	siteGetEventGroupRow.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteGetEventGroupRow
 }
 func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 	var siteCreateFoodIntakeParams CreateFoodIntakeParams
@@ -382,43 +382,6 @@ func FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams {
 	}
 	siteUpdateFoodPresetParams.ID = source.ID
 	return siteUpdateFoodPresetParams
-}
-func GetEventGroupToSearchEventGroup(source GetEventGroupRow) SearchEventGroupsRow {
-	var siteSearchEventGroupsRow SearchEventGroupsRow
-	siteSearchEventGroupsRow.EventGroup = siteEventGroupToSiteEventGroup(source.EventGroup)
-	siteSearchEventGroupsRow.GlucoseReading = siteGlucoseReadingToSiteGlucoseReading(source.GlucoseReading)
-	siteSearchEventGroupsRow.InsulinDose = siteInsulinDoseToSiteInsulinDose(source.InsulinDose)
-	siteSearchEventGroupsRow.FoodIntake = siteFoodIntakeToSiteFoodIntake(source.FoodIntake)
-	siteSearchEventGroupsRow.TempBasal = siteTempBasalToSiteTempBasal(source.TempBasal)
-	siteSearchEventGroupsRow.TempTarget = siteTempTargetToSiteTempTarget(source.TempTarget)
-	siteSearchEventGroupsRow.ProfileSwitch = siteProfileSwitchToSiteProfileSwitch(source.ProfileSwitch)
-	siteSearchEventGroupsRow.DeviceState = siteDeviceStateToSiteDeviceState(source.DeviceState)
-	siteSearchEventGroupsRow.LoopState = siteLoopStateToSiteLoopState(source.LoopState)
-	siteSearchEventGroupsRow.PumpState = sitePumpStateToSitePumpState(source.PumpState)
-	siteSearchEventGroupsRow.CgmState = siteCgmStateToSiteCgmState(source.CgmState)
-	siteSearchEventGroupsRow.Activity = siteActivityToSiteActivity(source.Activity)
-	siteSearchEventGroupsRow.Note = siteNoteToSiteNote(source.Note)
-	siteSearchEventGroupsRow.ID = source.ID
-	siteSearchEventGroupsRow.GroupType = source.GroupType
-	siteSearchEventGroupsRow.OccurredAt = source.OccurredAt
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteSearchEventGroupsRow.UtcOffsetMinutes = &xint64
-	}
-	siteSearchEventGroupsRow.CreatedAt = source.CreatedAt
-	siteSearchEventGroupsRow.UpdatedAt = source.UpdatedAt
-	if source.DeletedAt != nil {
-		xint642 := *source.DeletedAt
-		siteSearchEventGroupsRow.DeletedAt = &xint642
-	}
-	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteSearchEventGroupsRow.RawJsonData = &xstring
-	}
-	siteSearchEventGroupsRow.CreatedByAppName = source.CreatedByAppName
-	siteSearchEventGroupsRow.CreatedByDeviceName = source.CreatedByDeviceName
-	siteSearchEventGroupsRow.CreatedByIdentityName = source.CreatedByIdentityName
-	return siteSearchEventGroupsRow
 }
 func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams CreateGlucoseReadingParams
@@ -829,6 +792,43 @@ func PumpStateToUpdate(source PumpState) UpdatePumpStateParams {
 	}
 	siteUpdatePumpStateParams.ID = source.ID
 	return siteUpdatePumpStateParams
+}
+func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow {
+	var siteGetEventGroupRow GetEventGroupRow
+	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source.EventGroup)
+	siteGetEventGroupRow.GlucoseReading = siteGlucoseReadingToSiteGlucoseReading(source.GlucoseReading)
+	siteGetEventGroupRow.InsulinDose = siteInsulinDoseToSiteInsulinDose(source.InsulinDose)
+	siteGetEventGroupRow.FoodIntake = siteFoodIntakeToSiteFoodIntake(source.FoodIntake)
+	siteGetEventGroupRow.TempBasal = siteTempBasalToSiteTempBasal(source.TempBasal)
+	siteGetEventGroupRow.TempTarget = siteTempTargetToSiteTempTarget(source.TempTarget)
+	siteGetEventGroupRow.ProfileSwitch = siteProfileSwitchToSiteProfileSwitch(source.ProfileSwitch)
+	siteGetEventGroupRow.DeviceState = siteDeviceStateToSiteDeviceState(source.DeviceState)
+	siteGetEventGroupRow.LoopState = siteLoopStateToSiteLoopState(source.LoopState)
+	siteGetEventGroupRow.PumpState = sitePumpStateToSitePumpState(source.PumpState)
+	siteGetEventGroupRow.CgmState = siteCgmStateToSiteCgmState(source.CgmState)
+	siteGetEventGroupRow.Activity = siteActivityToSiteActivity(source.Activity)
+	siteGetEventGroupRow.Note = siteNoteToSiteNote(source.Note)
+	siteGetEventGroupRow.ID = source.ID
+	siteGetEventGroupRow.GroupType = source.GroupType
+	siteGetEventGroupRow.OccurredAt = source.OccurredAt
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		siteGetEventGroupRow.UtcOffsetMinutes = &xint64
+	}
+	siteGetEventGroupRow.CreatedAt = source.CreatedAt
+	siteGetEventGroupRow.UpdatedAt = source.UpdatedAt
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteGetEventGroupRow.DeletedAt = &xint642
+	}
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteGetEventGroupRow.RawJsonData = &xstring
+	}
+	siteGetEventGroupRow.CreatedByAppName = source.CreatedByAppName
+	siteGetEventGroupRow.CreatedByDeviceName = source.CreatedByDeviceName
+	siteGetEventGroupRow.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteGetEventGroupRow
 }
 func SiteSettingsToUpdate(source SiteSetting) UpdateSiteSettingsParams {
 	var siteUpdateSiteSettingsParams UpdateSiteSettingsParams

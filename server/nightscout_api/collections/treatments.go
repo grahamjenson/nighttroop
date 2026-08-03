@@ -2,8 +2,8 @@ package collections
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
-	"strings"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -16,11 +16,11 @@ import (
 
 type TreatmentTypeCollection interface {
 	Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError)
-	Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Update(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError)
 }
 
 type TreatmentCollection struct {
-	converter                func(c *site.SearchEventGroupsRow) nsutils.Record
+	converter                func(c *site.GetEventGroupRow) nsutils.Record
 	treatmentCollectionTypes map[nightscout.TreatmentEventType]TreatmentTypeCollection
 }
 
@@ -48,6 +48,7 @@ type TreatmentCollection struct {
 // TempBasal
 // TemporaryTarget
 
+// Treatments are a constallation of DB types and no more.
 func NewTreatmentCollection() TreatmentCollection {
 	typeMap := map[nightscout.TreatmentEventType]TreatmentTypeCollection{
 		nightscout.Announcement:      treatments.Announcement{},
@@ -98,6 +99,7 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 		slog.Error("unsupported treatment event type", "eventType", et)
 		return nil, nsutils.ErrInternal
 	}
+
 	record, rerr := typeCollect.Create(ctx, siteContext, treatmentModel)
 	if rerr != nil {
 		slog.Error("failed to create treatment in database", "error", rerr)
@@ -111,21 +113,25 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	return record, nil
 }
 
+// Update will not create a new DB record, and only update existing records on the event group.
 func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	for _, typeCollect := range c.treatmentCollectionTypes {
-		if strings.HasPrefix(identifier, typeCollect.GetPrefix()) {
-			record, rerr := typeCollect.Update(ctx, siteContext, identifier, patch)
-			if rerr != nil {
-				slog.Error("failed to update treatment in database", "error", rerr)
-				return nil, rerr
-			}
-			if record == nil {
-				slog.Error("treatment update returned nil value", "identifier", identifier)
-				return nil, nsutils.ErrInternal
-			}
-			return record, nil
-		}
+	treatmentModel := nightscout.Treatment{}
+	err := utils.FromMap(patch, &treatmentModel)
+	if err != nil {
+		slog.Error("failed to map patch to treatment model", "error", err)
+		return nil, nsutils.ErrInternal
 	}
+
+	eg, rerr := EventGroupGet(ctx, siteContext, identifier)
+	if rerr != nil {
+		return nil, rerr
+	}
+
+	if !ok {
+		slog.Error("unsupported treatment event type for identifier", "identifier", identifier, "eventType", eg.GroupType)
+		return nil, nsutils.ErrInternal
+	}
+	typeCollect.Update(ctx, siteContext, treatment)
 
 	slog.Error("unsupported treatment event type for identifier", "identifier", identifier)
 	return nil, nsutils.ErrInternal
@@ -158,4 +164,56 @@ func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
+}
+
+func TreatmentEventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, egrows *site.GetEventGroupRow) error {
+	db := siteContext.SiteDB.SQLiteDB
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	cc := nightscout.CreateContext{
+		IDPrefix:              "ns",
+		CreatedByIdentityID:   siteContext.IdentityModel.ID,
+		CreatedByIdentityName: siteContext.IdentityModel.Name,
+	}
+
+	defer tx.Rollback()
+	q := siteContext.SiteDB.Queries.WithTx(tx)
+
+	if egrows.DeviceState.ID != "" {
+		createDevice := site.DeviceStateToCreate(egrows.DeviceState)
+		ds, err := q.CreateDeviceState(ctx, createDevice)
+		if err != nil {
+			return err
+		}
+		egrows.DeviceState = *ds
+	}
+
+	// Finaly Create the EventGroup
+	createEventGroup := site.EventGroupToCreate(egrows.EventGroup)
+	dbEG, err := q.CreateEventGroup(ctx, createEventGroup)
+	if err != nil {
+		return nil, err
+	}
+
+	if dbEG == nil || ds == nil || ls == nil || ps == nil {
+		return nil, fmt.Errorf("create Treatment has failed")
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	sEG := site.EventGroupToSearchEventGroup(*dbEG)
+	sEG.EventGroup = *dbEG
+	sEG.LoopState = *ls
+	sEG.PumpState = *ps
+	sEG.DeviceState = *ds
+	return &sEG, nil
+}
+
+func TreatmentToEventGroupRows(t nightscout.TreatmentEventType, treatment nightscout.Treatment) *site.GetEventGroupRow {
+	treatment := nightscout.TreatmentToDeviceState(treatment)
+
 }

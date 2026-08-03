@@ -16,23 +16,23 @@ func IsDuplicateID(err error) bool {
 	return strings.Contains(err.Error(), "UNIQUE constraint failed") && strings.Contains(err.Error(), ".id")
 }
 
-func (model *SearchEventGroupsRow) GetID() string {
+func (model *GetEventGroupRow) GetID() string {
 	return model.ID
 }
 
-func (model *SearchEventGroupsRow) GetDeletedAt() *int64 {
+func (model *GetEventGroupRow) GetDeletedAt() *int64 {
 	return model.DeletedAt
 }
 
-func (model *SearchEventGroupsRow) GetCreatedAt() int64 {
+func (model *GetEventGroupRow) GetCreatedAt() int64 {
 	return model.CreatedAt
 }
 
-func (model *SearchEventGroupsRow) GetUpdatedAt() int64 {
+func (model *GetEventGroupRow) GetUpdatedAt() int64 {
 	return model.UpdatedAt
 }
 
-func (model *SearchEventGroupsRow) GetCreatedByIdentityName() string {
+func (model *GetEventGroupRow) GetCreatedByIdentityName() string {
 	return model.CreatedByIdentityName
 }
 

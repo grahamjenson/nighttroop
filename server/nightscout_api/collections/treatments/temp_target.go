@@ -2,7 +2,6 @@ package treatments
 
 import (
 	"context"
-	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -15,30 +14,12 @@ type TempTarget struct {
 	converter func(c *site.TempTarget) nsutils.Record
 }
 
-func NewTempTarget() TempTarget {
-	return TempTarget{
-		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.TempTargetDBModelToTreatment),
-	}
-}
-
 func (c TempTarget) GetPrefix() string {
 	return "tt"
 }
 
 func (c TempTarget) Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.CreateTempTarget(ctx,
-		nightscout.TreatmentToCreateTempTarget(treatment, nightscout.CreateContext{
-			IDPrefix:              c.GetPrefix(),
-			CreatedByIdentityID:   siteContext.IdentityModel.ID,
-			CreatedByIdentityName: siteContext.IdentityModel.Name,
-		},
-		),
-	)
-	if err != nil {
-		slog.Error("failed to create temp target in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	return ptr(c.converter(dbModel)), nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c TempTarget) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {

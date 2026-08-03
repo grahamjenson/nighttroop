@@ -99,7 +99,7 @@ type DBModelConverter interface {
 	//
 	// goverter:ignore Glucose GlucoseType Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
 	// goverter:map GroupType EventType
-	DBModelToTreatment(source *site.SearchEventGroupsRow) Treatment
+	DBModelToTreatment(source *site.GetEventGroupRow) Treatment
 
 	////////////////////////////////////////
 	// DEVICE STATUS TO CREATE/UPDATE
@@ -115,7 +115,7 @@ type DBModelConverter interface {
 	// goverter:map UpdatedAt SrvModified
 	//
 	// goverter:ignore Uploader Loop OpenAPS Pump UploaderBattery MergedLoopStatus
-	DBModelToDeviceStatus(source *site.SearchEventGroupsRow) DeviceStatus
+	DBModelToDeviceStatus(source *site.GetEventGroupRow) DeviceStatus
 }
 
 // //
