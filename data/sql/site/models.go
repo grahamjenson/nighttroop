@@ -17,25 +17,61 @@ func IsDuplicateID(err error) bool {
 }
 
 func (model *GetEventGroupRow) GetID() string {
-	return model.ID
+	return model.EventGroup.ID
 }
 
 func (model *GetEventGroupRow) GetDeletedAt() *int64 {
-	return model.DeletedAt
+	return model.EventGroup.DeletedAt
 }
 
 func (model *GetEventGroupRow) GetCreatedAt() int64 {
-	return model.CreatedAt
+	return model.EventGroup.CreatedAt
 }
 
 func (model *GetEventGroupRow) GetUpdatedAt() int64 {
-	return model.UpdatedAt
+	return model.EventGroup.UpdatedAt
 }
 
 func (model *GetEventGroupRow) GetCreatedByIdentityName() string {
-	return model.CreatedByIdentityName
+	return model.EventGroup.CreatedByIdentityName
 }
 
 func (model *FoodPreset) GetDeletedAt() *int64 {
 	return nil
+}
+
+/////////
+// Event Group Stuff
+/////////
+
+type CreateEventGroupBundle struct {
+	EventGroup     CreateEventGroupParams
+	GlucoseReading *CreateGlucoseReadingParams
+	InsulinDose    *CreateInsulinDoseParams
+	FoodIntake     *CreateFoodIntakeParams
+	TempBasal      *CreateTempBasalParams
+	TempTarget     *CreateTempTargetParams
+	ProfileSwitch  *CreateProfileSwitchParams
+	DeviceState    *CreateDeviceStateParams
+	LoopState      *CreateLoopStateParams
+	PumpState      *CreatePumpStateParams
+	CgmState       *CreateCGMStateParams
+	Activity       *CreateActivityParams
+	Note           *CreateNoteParams
+}
+
+type UpdateEventGroupBundle struct {
+	EventGroup     UpdateEventGroupParams
+	GlucoseReading *UpdateGlucoseReadingParams
+	InsulinDose    *UpdateInsulinDoseParams
+	FoodIntake     *UpdateFoodIntakeParams
+	TempBasal      *UpdateTempBasalParams
+	TempTarget     *UpdateTempTargetParams
+	ProfileSwitch  *UpdateProfileSwitchParams
+	DeviceState    *UpdateDeviceStateParams
+	LoopState      *UpdateLoopStateParams
+	PumpState      *UpdatePumpStateParams
+	CgmState       *UpdateCGMStateParams
+	Activity       *UpdateActivityParams
+	Note           *UpdateNoteParams
 }

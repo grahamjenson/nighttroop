@@ -213,7 +213,7 @@ type ProfileSwitch struct {
 	ID                       string
 	Name                     string
 	DurationMinutes          int64
-	Percent                  *int64
+	Percent                  float64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string

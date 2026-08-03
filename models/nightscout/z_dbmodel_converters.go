@@ -64,27 +64,27 @@ func DBModelToActivity(source *site.Activity) Activity {
 func DBModelToDeviceStatus(source *site.GetEventGroupRow) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
 	if source != nil {
-		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		pNightscoutIdentifierString := IdentifierString((*source).EventGroup.ID)
 		nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
-		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
+		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByDeviceName)
 		nightscoutDeviceStatus.Device = &pNightscoutShortString
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutDateInt := DateInt((*source).CreatedAt)
+		pNightscoutDateInt := DateInt((*source).EventGroup.CreatedAt)
 		nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
-		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
+		pNightscoutDateInt2 := DateInt((*source).EventGroup.UpdatedAt)
 		nightscoutDeviceStatus.SrvModified = &pNightscoutDateInt2
-		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
+		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByAppName)
 		nightscoutDeviceStatus.App = &pNightscoutShortString2
-		pNightscoutShortString3 := ShortString((*source).CreatedByIdentityName)
+		pNightscoutShortString3 := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutDeviceStatus.Subject = &pNightscoutShortString3
-		pNightscoutDateInt3 := DateInt((*source).OccurredAt)
+		pNightscoutDateInt3 := DateInt((*source).EventGroup.OccurredAt)
 		nightscoutDeviceStatus.Date = &pNightscoutDateInt3
-		if (*source).UtcOffsetMinutes != nil {
-			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+		if (*source).EventGroup.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
 			nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
 		}
-		if (*source).RawJsonData != nil {
-			nightscoutDeviceStatus.RawJsonData = *(*source).RawJsonData
+		if (*source).EventGroup.RawJsonData != nil {
+			nightscoutDeviceStatus.RawJsonData = *(*source).EventGroup.RawJsonData
 		}
 	}
 	return nightscoutDeviceStatus
@@ -171,29 +171,29 @@ func DBModelToFood(source *site.FoodPreset) Food {
 func DBModelToTreatment(source *site.GetEventGroupRow) Treatment {
 	var nightscoutTreatment Treatment
 	if source != nil {
-		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		pNightscoutIdentifierString := IdentifierString((*source).EventGroup.ID)
 		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
-		pNightscoutTreatmentEventType := TreatmentEventType((*source).GroupType)
+		pNightscoutTreatmentEventType := TreatmentEventType((*source).EventGroup.GroupType)
 		nightscoutTreatment.EventType = &pNightscoutTreatmentEventType
-		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
+		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByDeviceName)
 		nightscoutTreatment.Device = &pNightscoutShortString
-		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
+		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByAppName)
 		nightscoutTreatment.App = &pNightscoutShortString2
-		pNightscoutShortString3 := ShortString((*source).CreatedByIdentityName)
+		pNightscoutShortString3 := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutTreatment.Subject = &pNightscoutShortString3
 		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		pNightscoutDateInt := DateInt((*source).EventGroup.OccurredAt)
 		nightscoutTreatment.Date = &pNightscoutDateInt
-		if (*source).UtcOffsetMinutes != nil {
-			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+		if (*source).EventGroup.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
 			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
 		}
-		pNightscoutDateInt2 := DateInt((*source).CreatedAt)
+		pNightscoutDateInt2 := DateInt((*source).EventGroup.CreatedAt)
 		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
-		pNightscoutDateInt3 := DateInt((*source).UpdatedAt)
+		pNightscoutDateInt3 := DateInt((*source).EventGroup.UpdatedAt)
 		nightscoutTreatment.SrvModified = &pNightscoutDateInt3
-		if (*source).RawJsonData != nil {
-			nightscoutTreatment.RawJsonData = *(*source).RawJsonData
+		if (*source).EventGroup.RawJsonData != nil {
+			nightscoutTreatment.RawJsonData = *(*source).EventGroup.RawJsonData
 		}
 	}
 	return nightscoutTreatment

@@ -78,6 +78,17 @@ type UpdateMapConverter interface {
 	////////////////////////////////////////
 
 	///////
+	// EventGroup
+	///////
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore
+	TreatmentToUpdateEventGroup(source Treatment, ctx UpdateContext) site.UpdateEventGroupParams
+
+	///////
 	// Food Intake
 	///////
 
@@ -133,25 +144,26 @@ type UpdateMapConverter interface {
 	// Profile
 	///////
 
-	// // goverter:context ctx
-	// // goverter:map Identifier ID
-	// // goverter:map Date OccurredAt
-	// // goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// //
-	// // goverter:map Duration DurationMinutes
-	// TreatmentToUpdateProfile(source Treatment, ctx UpdateContext) site.UpdateProfilePresetParams
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
+	TreatmentToUpdateProfile(source Treatment, ctx UpdateContext) site.UpdateProfilePresetParams
 
 	///////
 	// Profile Switch
 	///////
 
-	// // goverter:context ctx
-	// // goverter:map Identifier ID
-	// // goverter:map Date OccurredAt
-	// // goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	// //
-	// // goverter:map Duration DurationMinutes
-	// TreatmentToUpdateProfileSwitch(source Treatment, ctx UpdateContext) site.UpdateProfileSwitchParams
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
+	// goverter:map Duration DurationMinutes
+	// goverter:map Percentage Percent
+	TreatmentToUpdateProfileSwitch(source Treatment, ctx UpdateContext) site.UpdateProfileSwitchParams
 
 	///////
 	// Temp Basal
@@ -180,6 +192,47 @@ type UpdateMapConverter interface {
 	// goverter:map TargetBottom LowTarget
 	TreatmentToUpdateTempTarget(source Treatment, ctx UpdateContext) site.UpdateTempTargetParams
 
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore DeviceState DeviceTimestamp DeviceBatteryPercent DeviceChargingState
+	TreatmentToUpdateDeviceState(source Treatment, ctx UpdateContext) site.UpdateDeviceStateParams
+
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore LoopState LoopTimestamp Iob IobBasal IobTreatment Cob
+	TreatmentToUpdateLoopState(source Treatment, ctx UpdateContext) site.UpdateLoopStateParams
+
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore PumpState PumpTimestamp PumpInsertionTime PumpReservoir PumpBatteryPercent PumpChargingState
+	TreatmentToUpdatePumpState(source Treatment, ctx UpdateContext) site.UpdatePumpStateParams
+
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore CgmState CgmTimestamp CgmInsertionTime
+	TreatmentToUpdateCgmState(source Treatment, ctx UpdateContext) site.UpdateCGMStateParams
+
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore
+	// goverter:map Duration DurationMinutes
+	TreatmentToUpdateActivity(source Treatment, ctx UpdateContext) site.UpdateActivityParams
+
 	//
 	//
 	//
@@ -187,6 +240,14 @@ type UpdateMapConverter interface {
 	////////////////////////////////////////
 	// DEVICE STATUS TO CREATE/UPDATE
 	////////////////////////////////////////
+
+	// goverter:context ctx
+	// goverter:map Identifier ID
+	// goverter:map Date OccurredAt
+	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	//
+	// goverter:ignore
+	DeviceStatusToUpdateEventGroup(source DeviceStatus, ctx UpdateContext) site.UpdateEventGroupParams
 
 	// goverter:context ctx
 	// goverter:map Identifier ID

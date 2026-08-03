@@ -46,21 +46,7 @@ SELECT
     sqlc.embed(ps2),
     sqlc.embed(cs),
     sqlc.embed(a),
-    sqlc.embed(n),
-
-    eg.id as id,
-    eg.group_type as group_type,
-
-    -- Default stuff
-    eg.occurred_at as occurred_at,
-    eg.utc_offset_minutes as utc_offset_minutes,
-    eg.created_at as created_at,
-    eg.updated_at as updated_at,
-    eg.deleted_at as deleted_at,
-    eg.raw_json_data as raw_json_data,
-    eg.created_by_app_name as created_by_app_name,
-    eg.created_by_device_name as created_by_device_name,
-    eg.created_by_identity_name as created_by_identity_name
+    sqlc.embed(n)
 
 
 FROM event_groups eg
@@ -95,21 +81,7 @@ SELECT
     sqlc.embed(ps2),
     sqlc.embed(cs),
     sqlc.embed(a),
-    sqlc.embed(n),
-
-    eg.id as id,
-    eg.group_type as group_type,
-
-    -- Default stuff
-    eg.occurred_at as occurred_at,
-    eg.utc_offset_minutes as utc_offset_minutes,
-    eg.created_at as created_at,
-    eg.updated_at as updated_at,
-    eg.deleted_at as deleted_at,
-    eg.raw_json_data as raw_json_data,
-    eg.created_by_app_name as created_by_app_name,
-    eg.created_by_device_name as created_by_device_name,
-    eg.created_by_identity_name as created_by_identity_name
+    sqlc.embed(n)
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -141,22 +113,7 @@ SELECT
     sqlc.embed(ps2),
     sqlc.embed(cs),
     sqlc.embed(a),
-    sqlc.embed(n),
-
-    eg.id as id,
-    eg.group_type as group_type,
-
-    -- Default stuff
-    eg.occurred_at as occurred_at,
-    eg.utc_offset_minutes as utc_offset_minutes,
-    eg.created_at as created_at,
-    eg.updated_at as updated_at,
-    eg.deleted_at as deleted_at,
-    eg.raw_json_data as raw_json_data,
-    eg.created_by_app_name as created_by_app_name,
-    eg.created_by_device_name as created_by_device_name,
-    eg.created_by_identity_name as created_by_identity_name
-
+    sqlc.embed(n)
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -248,20 +205,6 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateEventGroup :one
 UPDATE event_groups SET
-    group_type = COALESCE(sqlc.narg('GroupType'), group_type),
-    glucose_reading_id = COALESCE(sqlc.narg('GlucoseReadingID'), glucose_reading_id),
-    insulin_dose_id = COALESCE(sqlc.narg('InsulinDoseID'), insulin_dose_id),
-    food_intake_id = COALESCE(sqlc.narg('FoodIntakeID'), food_intake_id),
-    temp_basal_id = COALESCE(sqlc.narg('TempBasalID'), temp_basal_id),
-    temp_target_id = COALESCE(sqlc.narg('TempTargetID'), temp_target_id),
-    profile_switch_id = COALESCE(sqlc.narg('ProfileSwitchID'), profile_switch_id),
-    device_state_id = COALESCE(sqlc.narg('DeviceStateID'), device_state_id),
-    loop_state_id = COALESCE(sqlc.narg('LoopStateID'), loop_state_id),
-    pump_state_id = COALESCE(sqlc.narg('PumpStateID'), pump_state_id),
-    cgm_state_id = COALESCE(sqlc.narg('CgmStateID'), cgm_state_id),
-    activity_id = COALESCE(sqlc.narg('ActivityID'), activity_id),
-    note_id = COALESCE(sqlc.narg('NoteID'), note_id),
-
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

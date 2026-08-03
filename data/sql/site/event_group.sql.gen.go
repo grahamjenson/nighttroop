@@ -25,21 +25,7 @@ SELECT
     ps2.id, ps2.pump_state, ps2.pump_timestamp, ps2.pump_insertion_time, ps2.pump_reservoir, ps2.pump_battery_percent, ps2.pump_charging_state, ps2.raw_json_data, ps2.deleted_at, ps2.utc_offset_minutes, ps2.occurred_at, ps2.created_at, ps2.updated_at, ps2.updated_by_identity_name, ps2.created_by_app_name, ps2.created_by_device_name, ps2.created_by_identity_name,
     cs.id, cs.cgm_state, cs.cgm_timestamp, cs.cgm_insertion_time, cs.raw_json_data, cs.deleted_at, cs.utc_offset_minutes, cs.occurred_at, cs.created_at, cs.updated_at, cs.updated_by_identity_name, cs.created_by_app_name, cs.created_by_device_name, cs.created_by_identity_name,
     a.id, a.name, a.notes, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
-    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name,
-
-    eg.id as id,
-    eg.group_type as group_type,
-
-    -- Default stuff
-    eg.occurred_at as occurred_at,
-    eg.utc_offset_minutes as utc_offset_minutes,
-    eg.created_at as created_at,
-    eg.updated_at as updated_at,
-    eg.deleted_at as deleted_at,
-    eg.raw_json_data as raw_json_data,
-    eg.created_by_app_name as created_by_app_name,
-    eg.created_by_device_name as created_by_device_name,
-    eg.created_by_identity_name as created_by_identity_name
+    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 
 FROM event_groups eg
@@ -67,30 +53,19 @@ type AllEventGroupsParams struct {
 }
 
 type AllEventGroupsRow struct {
-	EventGroup            EventGroup
-	GlucoseReading        GlucoseReading
-	InsulinDose           InsulinDose
-	FoodIntake            FoodIntake
-	TempBasal             TempBasal
-	TempTarget            TempTarget
-	ProfileSwitch         ProfileSwitch
-	DeviceState           DeviceState
-	LoopState             LoopState
-	PumpState             PumpState
-	CgmState              CgmState
-	Activity              Activity
-	Note                  Note
-	ID                    string
-	GroupType             string
-	OccurredAt            int64
-	UtcOffsetMinutes      *int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	DeletedAt             *int64
-	RawJsonData           *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	CreatedByIdentityName string
+	EventGroup     EventGroup
+	GlucoseReading GlucoseReading
+	InsulinDose    InsulinDose
+	FoodIntake     FoodIntake
+	TempBasal      TempBasal
+	TempTarget     TempTarget
+	ProfileSwitch  ProfileSwitch
+	DeviceState    DeviceState
+	LoopState      LoopState
+	PumpState      PumpState
+	CgmState       CgmState
+	Activity       Activity
+	Note           Note
 }
 
 // ------
@@ -313,17 +288,6 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.Note.CreatedByDeviceName,
 			&i.Note.UpdatedByIdentityName,
 			&i.Note.CreatedByIdentityName,
-			&i.ID,
-			&i.GroupType,
-			&i.OccurredAt,
-			&i.UtcOffsetMinutes,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-			&i.RawJsonData,
-			&i.CreatedByAppName,
-			&i.CreatedByDeviceName,
-			&i.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
 		}
@@ -459,21 +423,7 @@ SELECT
     ps2.id, ps2.pump_state, ps2.pump_timestamp, ps2.pump_insertion_time, ps2.pump_reservoir, ps2.pump_battery_percent, ps2.pump_charging_state, ps2.raw_json_data, ps2.deleted_at, ps2.utc_offset_minutes, ps2.occurred_at, ps2.created_at, ps2.updated_at, ps2.updated_by_identity_name, ps2.created_by_app_name, ps2.created_by_device_name, ps2.created_by_identity_name,
     cs.id, cs.cgm_state, cs.cgm_timestamp, cs.cgm_insertion_time, cs.raw_json_data, cs.deleted_at, cs.utc_offset_minutes, cs.occurred_at, cs.created_at, cs.updated_at, cs.updated_by_identity_name, cs.created_by_app_name, cs.created_by_device_name, cs.created_by_identity_name,
     a.id, a.name, a.notes, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
-    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name,
-
-    eg.id as id,
-    eg.group_type as group_type,
-
-    -- Default stuff
-    eg.occurred_at as occurred_at,
-    eg.utc_offset_minutes as utc_offset_minutes,
-    eg.created_at as created_at,
-    eg.updated_at as updated_at,
-    eg.deleted_at as deleted_at,
-    eg.raw_json_data as raw_json_data,
-    eg.created_by_app_name as created_by_app_name,
-    eg.created_by_device_name as created_by_device_name,
-    eg.created_by_identity_name as created_by_identity_name
+    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -497,30 +447,19 @@ type GetEventGroupParams struct {
 }
 
 type GetEventGroupRow struct {
-	EventGroup            EventGroup
-	GlucoseReading        GlucoseReading
-	InsulinDose           InsulinDose
-	FoodIntake            FoodIntake
-	TempBasal             TempBasal
-	TempTarget            TempTarget
-	ProfileSwitch         ProfileSwitch
-	DeviceState           DeviceState
-	LoopState             LoopState
-	PumpState             PumpState
-	CgmState              CgmState
-	Activity              Activity
-	Note                  Note
-	ID                    string
-	GroupType             string
-	OccurredAt            int64
-	UtcOffsetMinutes      *int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	DeletedAt             *int64
-	RawJsonData           *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	CreatedByIdentityName string
+	EventGroup     EventGroup
+	GlucoseReading GlucoseReading
+	InsulinDose    InsulinDose
+	FoodIntake     FoodIntake
+	TempBasal      TempBasal
+	TempTarget     TempTarget
+	ProfileSwitch  ProfileSwitch
+	DeviceState    DeviceState
+	LoopState      LoopState
+	PumpState      PumpState
+	CgmState       CgmState
+	Activity       Activity
+	Note           Note
 }
 
 func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*GetEventGroupRow, error) {
@@ -734,17 +673,6 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.Note.CreatedByDeviceName,
 		&i.Note.UpdatedByIdentityName,
 		&i.Note.CreatedByIdentityName,
-		&i.ID,
-		&i.GroupType,
-		&i.OccurredAt,
-		&i.UtcOffsetMinutes,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-		&i.RawJsonData,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
 	)
 	return &i, err
 }
@@ -787,22 +715,7 @@ SELECT
     ps2.id, ps2.pump_state, ps2.pump_timestamp, ps2.pump_insertion_time, ps2.pump_reservoir, ps2.pump_battery_percent, ps2.pump_charging_state, ps2.raw_json_data, ps2.deleted_at, ps2.utc_offset_minutes, ps2.occurred_at, ps2.created_at, ps2.updated_at, ps2.updated_by_identity_name, ps2.created_by_app_name, ps2.created_by_device_name, ps2.created_by_identity_name,
     cs.id, cs.cgm_state, cs.cgm_timestamp, cs.cgm_insertion_time, cs.raw_json_data, cs.deleted_at, cs.utc_offset_minutes, cs.occurred_at, cs.created_at, cs.updated_at, cs.updated_by_identity_name, cs.created_by_app_name, cs.created_by_device_name, cs.created_by_identity_name,
     a.id, a.name, a.notes, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
-    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name,
-
-    eg.id as id,
-    eg.group_type as group_type,
-
-    -- Default stuff
-    eg.occurred_at as occurred_at,
-    eg.utc_offset_minutes as utc_offset_minutes,
-    eg.created_at as created_at,
-    eg.updated_at as updated_at,
-    eg.deleted_at as deleted_at,
-    eg.raw_json_data as raw_json_data,
-    eg.created_by_app_name as created_by_app_name,
-    eg.created_by_device_name as created_by_device_name,
-    eg.created_by_identity_name as created_by_identity_name
-
+    n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -937,30 +850,19 @@ type SearchEventGroupsParams struct {
 }
 
 type SearchEventGroupsRow struct {
-	EventGroup            EventGroup
-	GlucoseReading        GlucoseReading
-	InsulinDose           InsulinDose
-	FoodIntake            FoodIntake
-	TempBasal             TempBasal
-	TempTarget            TempTarget
-	ProfileSwitch         ProfileSwitch
-	DeviceState           DeviceState
-	LoopState             LoopState
-	PumpState             PumpState
-	CgmState              CgmState
-	Activity              Activity
-	Note                  Note
-	ID                    string
-	GroupType             string
-	OccurredAt            int64
-	UtcOffsetMinutes      *int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	DeletedAt             *int64
-	RawJsonData           *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
-	CreatedByIdentityName string
+	EventGroup     EventGroup
+	GlucoseReading GlucoseReading
+	InsulinDose    InsulinDose
+	FoodIntake     FoodIntake
+	TempBasal      TempBasal
+	TempTarget     TempTarget
+	ProfileSwitch  ProfileSwitch
+	DeviceState    DeviceState
+	LoopState      LoopState
+	PumpState      PumpState
+	CgmState       CgmState
+	Activity       Activity
+	Note           Note
 }
 
 func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsParams) ([]*SearchEventGroupsRow, error) {
@@ -1225,17 +1127,6 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.Note.CreatedByDeviceName,
 			&i.Note.UpdatedByIdentityName,
 			&i.Note.CreatedByIdentityName,
-			&i.ID,
-			&i.GroupType,
-			&i.OccurredAt,
-			&i.UtcOffsetMinutes,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-			&i.RawJsonData,
-			&i.CreatedByAppName,
-			&i.CreatedByDeviceName,
-			&i.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
 		}
@@ -1290,22 +1181,8 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 const updateEventGroup = `-- name: UpdateEventGroup :one
 
 UPDATE event_groups SET
-    group_type = COALESCE(?3, group_type),
-    glucose_reading_id = COALESCE(?4, glucose_reading_id),
-    insulin_dose_id = COALESCE(?5, insulin_dose_id),
-    food_intake_id = COALESCE(?6, food_intake_id),
-    temp_basal_id = COALESCE(?7, temp_basal_id),
-    temp_target_id = COALESCE(?8, temp_target_id),
-    profile_switch_id = COALESCE(?9, profile_switch_id),
-    device_state_id = COALESCE(?10, device_state_id),
-    loop_state_id = COALESCE(?11, loop_state_id),
-    pump_state_id = COALESCE(?12, pump_state_id),
-    cgm_state_id = COALESCE(?13, cgm_state_id),
-    activity_id = COALESCE(?14, activity_id),
-    note_id = COALESCE(?15, note_id),
-
-    occurred_at = COALESCE(?16, occurred_at),
-    utc_offset_minutes = COALESCE(?17, utc_offset_minutes),
+    occurred_at = COALESCE(?3, occurred_at),
+    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
@@ -1313,19 +1190,6 @@ RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, t
 `
 
 type UpdateEventGroupParams struct {
-	GroupType             *string
-	GlucoseReadingID      *string
-	InsulinDoseID         *string
-	FoodIntakeID          *string
-	TempBasalID           *string
-	TempTargetID          *string
-	ProfileSwitchID       *string
-	DeviceStateID         *string
-	LoopStateID           *string
-	PumpStateID           *string
-	CgmStateID            *string
-	ActivityID            *string
-	NoteID                *string
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -1337,19 +1201,6 @@ type UpdateEventGroupParams struct {
 // ------
 func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupParams) (*EventGroup, error) {
 	row := q.queryRow(ctx, q.updateEventGroupStmt, updateEventGroup,
-		arg.GroupType,
-		arg.GlucoseReadingID,
-		arg.InsulinDoseID,
-		arg.FoodIntakeID,
-		arg.TempBasalID,
-		arg.TempTargetID,
-		arg.ProfileSwitchID,
-		arg.DeviceStateID,
-		arg.LoopStateID,
-		arg.PumpStateID,
-		arg.CgmStateID,
-		arg.ActivityID,
-		arg.NoteID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,

@@ -273,7 +273,7 @@ CREATE TABLE profile_switches (
     duration_minutes INTEGER NOT NULL default 0, -- e.g. 0 means it is forever unless another profile overrides it
 
     -- ratios
-    percent INTEGER,
+    percent REAL NOT NULL default 100, 
 
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- { [1,2] },
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },

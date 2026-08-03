@@ -2,26 +2,18 @@ package collections
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
-	"nighttroop.t1d.nz/server/nightscout_api/collections/treatments"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type TreatmentTypeCollection interface {
-	Create(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError)
-	Update(ctx context.Context, siteContext *httputils.SiteContext, treatment nightscout.Treatment) (*nsutils.Record, *nsutils.HTTPError)
-}
-
 type TreatmentCollection struct {
-	converter                func(c *site.GetEventGroupRow) nsutils.Record
-	treatmentCollectionTypes map[nightscout.TreatmentEventType]TreatmentTypeCollection
+	converter func(c *site.GetEventGroupRow) nsutils.Record
 }
 
 // There is a list of incoming types, but we only support a few, and some we break apart into simpler types
@@ -50,34 +42,8 @@ type TreatmentCollection struct {
 
 // Treatments are a constallation of DB types and no more.
 func NewTreatmentCollection() TreatmentCollection {
-	typeMap := map[nightscout.TreatmentEventType]TreatmentTypeCollection{
-		nightscout.Announcement:      treatments.Announcement{},
-		nightscout.BGCheck:           treatments.BGCheck{},
-		nightscout.BolusWizard:       treatments.BolusWizard{},
-		nightscout.CarbCorrection:    treatments.CarbsCorrection{},
-		nightscout.ComboBolus:        treatments.ComboBolus{},
-		nightscout.CorrectionBolus:   treatments.CorrectionBolus{},
-		nightscout.DADAlert:          treatments.DADAlert{},
-		nightscout.Exercise:          treatments.Exercise{},
-		nightscout.InsulinChange:     treatments.InsulinChange{},
-		nightscout.MealBolus:         treatments.MealBolus{},
-		nightscout.Note:              treatments.Note{},
-		nightscout.OpenAPSOffline:    treatments.OpenAPSOffline{},
-		nightscout.ProfileSwitch:     treatments.ProfileSwitch{},
-		nightscout.PumpBatteryChange: treatments.PumpBatteryChange{},
-		nightscout.Question:          treatments.Question{},
-		nightscout.SensorChange:      treatments.SensorChange{},
-		nightscout.SensorStart:       treatments.SensorStart{},
-		nightscout.SiteChange:        treatments.SiteChange{},
-		nightscout.SnackBolus:        treatments.SnackBolus{},
-		nightscout.TempBasal:         treatments.NewTempBasal(),
-		nightscout.TemporaryTarget:   treatments.NewTempTarget(),
-		nightscout.Unknown:           treatments.Unknown{},
-	}
-
 	return TreatmentCollection{
-		converter:                nsutils.DBModelToRecord(nsutils.Treatments, nightscout.DBModelToTreatment),
-		treatmentCollectionTypes: typeMap,
+		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.DBModelToTreatment),
 	}
 }
 
@@ -88,29 +54,29 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 		slog.Error("failed to map data to treatment model", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	if treatmentModel.EventType == nil {
-		slog.Error("treatment model event type is nil")
-		return nil, nsutils.ErrInternal
-	}
-	et := *treatmentModel.EventType
 
-	typeCollect, ok := c.treatmentCollectionTypes[et]
-	if !ok {
-		slog.Error("unsupported treatment event type", "eventType", et)
+	if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
+		slog.Error("treatment event type is nil")
 		return nil, nsutils.ErrInternal
 	}
 
-	record, rerr := typeCollect.Create(ctx, siteContext, treatmentModel)
-	if rerr != nil {
-		slog.Error("failed to create treatment in database", "error", rerr)
-		return nil, rerr
+	cc := nightscout.CreateContext{
+		IDPrefix:              "ns",
+		CreatedByIdentityID:   siteContext.IdentityModel.ID,
+		CreatedByIdentityName: siteContext.IdentityModel.Name,
 	}
-	if record == nil {
-		slog.Error("treatment creation returned nil value", "eventType", et)
+
+	dbModel, err := EventGroupCreate(ctx, siteContext, TreatmentEventGroupCreate(ctx, cc, treatmentModel))
+	if err != nil {
+		slog.Error("failed to create treatment in database", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		slog.Error("failed to create treatment in database, dbModel is nil")
 		return nil, nsutils.ErrInternal
 	}
 
-	return record, nil
+	return ptr(c.converter(dbModel)), nil
 }
 
 // Update will not create a new DB record, and only update existing records on the event group.
@@ -122,19 +88,22 @@ func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.
 		return nil, nsutils.ErrInternal
 	}
 
-	eg, rerr := EventGroupGet(ctx, siteContext, identifier)
-	if rerr != nil {
-		return nil, rerr
+	cc := nightscout.UpdateContext{
+		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
+		UpdatedByIdentityName: siteContext.IdentityModel.Name,
 	}
 
-	if !ok {
-		slog.Error("unsupported treatment event type for identifier", "identifier", identifier, "eventType", eg.GroupType)
+	dbModel, err := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
+	if err != nil {
+		slog.Error("failed to update treatment in database", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-	typeCollect.Update(ctx, siteContext, treatment)
+	if dbModel == nil {
+		slog.Error("failed to update treatment in database, dbModel is nil")
+		return nil, nsutils.ErrInternal
+	}
 
-	slog.Error("unsupported treatment event type for identifier", "identifier", identifier)
-	return nil, nsutils.ErrInternal
+	return ptr(c.converter(dbModel)), nil
 }
 
 // ///////
@@ -166,54 +135,95 @@ func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httput
 	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
 }
 
-func TreatmentEventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, egrows *site.GetEventGroupRow) error {
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	cc := nightscout.CreateContext{
-		IDPrefix:              "ns",
-		CreatedByIdentityID:   siteContext.IdentityModel.ID,
-		CreatedByIdentityName: siteContext.IdentityModel.Name,
+func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext, treatment nightscout.Treatment) site.CreateEventGroupBundle {
+
+	eventGroup := nightscout.TreatmentToCreateEventGroup(treatment, cc)
+
+	glucoseReading := nightscout.TreatmentToCreateGlucoseReading(treatment, cc)
+	insulinDose := nightscout.TreatmentToCreateInsulinDose(treatment, cc)
+	foodIntake := nightscout.TreatmentToCreateFoodIntake(treatment, cc)
+	tempBasal := nightscout.TreatmentToCreateTempBasal(treatment, cc)
+	tempTarget := nightscout.TreatmentToCreateTempTarget(treatment, cc)
+	profileSwitch := nightscout.TreatmentToCreateProfileSwitch(treatment, cc)
+	deviceState := nightscout.TreatmentToCreateDeviceState(treatment, cc)
+	loopState := nightscout.TreatmentToCreateLoopState(treatment, cc)
+	pumpState := nightscout.TreatmentToCreatePumpState(treatment, cc)
+	cgmState := nightscout.TreatmentToCreateCgmState(treatment, cc)
+	activity := nightscout.TreatmentToCreateActivity(treatment, cc)
+	note := nightscout.TreatmentToCreateNote(treatment, cc)
+
+	switch *treatment.EventType {
+	case nightscout.Announcement:
+	case nightscout.BGCheck:
+	case nightscout.BolusWizard:
+	case nightscout.CarbCorrection:
+	case nightscout.ComboBolus:
+	case nightscout.CorrectionBolus:
+	case nightscout.DADAlert:
+	case nightscout.Exercise:
+	case nightscout.InsulinChange:
+	case nightscout.MealBolus:
+	case nightscout.Note:
+	case nightscout.OpenAPSOffline:
+	case nightscout.ProfileSwitch:
+	case nightscout.PumpBatteryChange:
+	case nightscout.Question:
+	case nightscout.SensorChange:
+	case nightscout.SensorStart:
+	case nightscout.SiteChange:
+	case nightscout.SnackBolus:
+	case nightscout.TempBasal:
+	case nightscout.TemporaryTarget:
+	case nightscout.Unknown:
 	}
 
-	defer tx.Rollback()
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-
-	if egrows.DeviceState.ID != "" {
-		createDevice := site.DeviceStateToCreate(egrows.DeviceState)
-		ds, err := q.CreateDeviceState(ctx, createDevice)
-		if err != nil {
-			return err
-		}
-		egrows.DeviceState = *ds
+	return site.CreateEventGroupBundle{
+		EventGroup:     eventGroup,
+		GlucoseReading: &glucoseReading,
+		InsulinDose:    &insulinDose,
+		FoodIntake:     &foodIntake,
+		TempBasal:      &tempBasal,
+		TempTarget:     &tempTarget,
+		ProfileSwitch:  &profileSwitch,
+		DeviceState:    &deviceState,
+		LoopState:      &loopState,
+		PumpState:      &pumpState,
+		CgmState:       &cgmState,
+		Activity:       &activity,
+		Note:           &note,
 	}
-
-	// Finaly Create the EventGroup
-	createEventGroup := site.EventGroupToCreate(egrows.EventGroup)
-	dbEG, err := q.CreateEventGroup(ctx, createEventGroup)
-	if err != nil {
-		return nil, err
-	}
-
-	if dbEG == nil || ds == nil || ls == nil || ps == nil {
-		return nil, fmt.Errorf("create Treatment has failed")
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-
-	sEG := site.EventGroupToSearchEventGroup(*dbEG)
-	sEG.EventGroup = *dbEG
-	sEG.LoopState = *ls
-	sEG.PumpState = *ps
-	sEG.DeviceState = *ds
-	return &sEG, nil
 }
 
-func TreatmentToEventGroupRows(t nightscout.TreatmentEventType, treatment nightscout.Treatment) *site.GetEventGroupRow {
-	treatment := nightscout.TreatmentToDeviceState(treatment)
+func TreatmentEventGroupUpdate(ctx context.Context, cc nightscout.UpdateContext, treatment nightscout.Treatment) site.UpdateEventGroupBundle {
 
+	eventGroup := nightscout.TreatmentToUpdateEventGroup(treatment, cc)
+
+	glucoseReading := nightscout.TreatmentToUpdateGlucoseReading(treatment, cc)
+	insulinDose := nightscout.TreatmentToUpdateInsulinDose(treatment, cc)
+	foodIntake := nightscout.TreatmentToUpdateFoodIntake(treatment, cc)
+	tempBasal := nightscout.TreatmentToUpdateTempBasal(treatment, cc)
+	tempTarget := nightscout.TreatmentToUpdateTempTarget(treatment, cc)
+	profileSwitch := nightscout.TreatmentToUpdateProfileSwitch(treatment, cc)
+	deviceState := nightscout.TreatmentToUpdateDeviceState(treatment, cc)
+	loopState := nightscout.TreatmentToUpdateLoopState(treatment, cc)
+	pumpState := nightscout.TreatmentToUpdatePumpState(treatment, cc)
+	cgmState := nightscout.TreatmentToUpdateCgmState(treatment, cc)
+	activity := nightscout.TreatmentToUpdateActivity(treatment, cc)
+	note := nightscout.TreatmentToUpdateNote(treatment, cc)
+
+	return site.UpdateEventGroupBundle{
+		EventGroup:     eventGroup,
+		GlucoseReading: &glucoseReading,
+		InsulinDose:    &insulinDose,
+		FoodIntake:     &foodIntake,
+		TempBasal:      &tempBasal,
+		TempTarget:     &tempTarget,
+		ProfileSwitch:  &profileSwitch,
+		DeviceState:    &deviceState,
+		LoopState:      &loopState,
+		PumpState:      &pumpState,
+		CgmState:       &cgmState,
+		Activity:       &activity,
+		Note:           &note,
+	}
 }

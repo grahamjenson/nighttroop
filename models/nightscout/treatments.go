@@ -15,33 +15,43 @@ type Treatment struct {
 
 	EventType *TreatmentEventType `json:"eventType,omitempty"`
 
-	Glucose     *FlexibleFloat64 `json:"glucose"`
-	GlucoseType *GlucoseType     `json:"glucoseType"` // "Sensor" or "Finger"
+	Name *ShortString `json:"name,omitempty"` // Name of the activity
 
-	Carbs    *FlexibleFloat64 `json:"carbs"`
-	Insulin  *FlexibleFloat64 `json:"insulin"`
-	Protein  *FlexibleFloat64 `json:"protein"`
-	Fat      *FlexibleFloat64 `json:"fat"`
-	Fibre    *FlexibleFloat64 `json:"fibre"`
-	Energy   *FlexibleFloat64 `json:"energy"`
-	PreBolus *FlexibleFloat64 `json:"preBolus"`
+	// GlucoseReading
+	Glucose     *FlexibleFloat64 `json:"glucose,omitempty"`
+	GlucoseType *GlucoseType     `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
 
-	SplitNow *FlexibleFloat64 `json:"splitNow"`
-	SplitExt *FlexibleFloat64 `json:"splitExt"`
+	// Food
+	Carbs    *FlexibleFloat64 `json:"carbs,omitempty"`
+	Insulin  *FlexibleFloat64 `json:"insulin,omitempty"`
+	Protein  *FlexibleFloat64 `json:"protein,omitempty"`
+	Fat      *FlexibleFloat64 `json:"fat,omitempty"`
+	Fibre    *FlexibleFloat64 `json:"fibre,omitempty"`
+	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
+	PreBolus *FlexibleFloat64 `json:"preBolus,omitempty"`
 
-	Duration *FlexibleInt64 `json:"duration"` // minutes
+	// Exercise
+	ActivityType *ShortString   `json:"activityType,omitempty"` // Type of activity
+	Steps        *FlexibleInt64 `json:"steps,omitempty"`        // Step count
+	Calories     *FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
+	HeartRate    *FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
 
-	Notes     *SanitizedString `json:"notes"`
-	EnteredBy *ShortString     `json:"enteredBy"`
+	SplitNow *FlexibleFloat64 `json:"splitNow,omitempty"`
+	SplitExt *FlexibleFloat64 `json:"splitExt,omitempty"`
+
+	Duration *FlexibleInt64 `json:"duration,omitempty"` // minutes
+
+	Notes     *SanitizedString `json:"notes,omitempty"`
+	EnteredBy *ShortString     `json:"enteredBy,omitempty"`
 
 	// Treatment-specific fields
-	Profile      *ShortString     `json:"profile"`
-	Percentage   *FlexibleFloat64 `json:"percentage"`
-	Rate         *FlexibleFloat64 `json:"rate"`
-	Absolute     *FlexibleFloat64 `json:"absolute"`
-	Reason       *ShortString     `json:"reason"`
-	TargetTop    *FlexibleFloat64 `json:"targetTop"`
-	TargetBottom *FlexibleFloat64 `json:"targetBottom"`
+	Profile      *ShortString     `json:"profile,omitempty"`
+	Percentage   *FlexibleFloat64 `json:"percentage,omitempty"`
+	Rate         *FlexibleFloat64 `json:"rate,omitempty"`
+	Absolute     *FlexibleFloat64 `json:"absolute,omitempty"`
+	Reason       *ShortString     `json:"reason,omitempty"`
+	TargetTop    *FlexibleFloat64 `json:"targetTop,omitempty"`
+	TargetBottom *FlexibleFloat64 `json:"targetBottom,omitempty"`
 	Units        *Units           `json:"units,omitempty"`
 
 	// Default String Fields
@@ -50,11 +60,11 @@ type Treatment struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Fields
-	CreatedAt        *DateString    `json:"created_at"`     // ISO8601 -> time.Time
-	Date             *DateInt       `json:"date,omitempty"` // Unix timestamp in milliseconds, only used for some treatment types
+	CreatedAt        *DateString    `json:"created_at,omitempty"` // ISO8601 -> time.Time
+	Date             *DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds, only used for some treatment types
 	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
-	SrvCreated       *DateInt       `json:"srvCreated"`
-	SrvModified      *DateInt       `json:"srvModified"`
+	SrvCreated       *DateInt       `json:"srvCreated,omitempty"`
+	SrvModified      *DateInt       `json:"srvModified,omitempty"`
 
 	// Non-JSON values to make mapping easier
 	RawJsonData string `json:"-"`
@@ -138,88 +148,11 @@ func (t TreatmentEventType) String() string {
 	return string(t)
 }
 
-func (t TreatmentEventType) ToLocalTypeString() string {
-	switch t {
-	case CorrectionBolus:
-		return "correction_bolus"
-	case ComboBolus:
-		return "combo_bolus"
-	case TemporaryTarget:
-		return "temporary_target"
-	case MealBolus:
-		return "meal_bolus"
-	case TempBasal:
-		return "temp_basal"
-	case Note:
-		return "note"
-	case ProfileSwitch:
-		return "profile_switch"
-	case CarbCorrection:
-		return "carb_correction"
-	case DADAlert:
-		return "dad_alert"
-	case OpenAPSOffline:
-		return "openaps_offline"
-	case BolusWizard:
-		return "bolus_wizard"
-	case Announcement:
-		return "announcement"
-	case BGCheck:
-		return "bg_check"
-	case SnackBolus:
-		return "snack_bolus"
-	case Exercise:
-		return "exercise"
-	case SiteChange:
-		return "site_change"
-	case SensorStart:
-		return "sensor_start"
-	case SensorChange:
-		return "sensor_change"
-	case InsulinChange:
-		return "insulin_change"
-	case PumpBatteryChange:
-		return "pump_battery_change"
-	case Question:
-		return "question"
-	default:
-		return "unknown"
-	}
+func ToSnakeCase(s string) string {
+	return strings.ToLower(strings.Join(strings.Fields(s), "_"))
 }
 
-func FromLocalTypeString(s string) *TreatmentEventType {
-	cb := CorrectionBolus
-	cob := ComboBolus
-	tt := TemporaryTarget
-	mb := MealBolus
-	tb := TempBasal
-	n := Note
-	ps := ProfileSwitch
-	cc := CarbCorrection
-
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "correction_bolus":
-		return &cb
-	case "combo_bolus":
-		return &cob
-	case "temporary_target":
-		return &tt
-	case "meal_bolus":
-		return &mb
-	case "temp_basal":
-		return &tb
-	case "note":
-		return &n
-	case "profile_switch":
-		return &ps
-	case "carb_correction":
-		return &cc
-	}
-
-	return nil
-}
-
-var TreatmentEventTypes = []TreatmentEventType{CorrectionBolus, ComboBolus, TemporaryTarget, MealBolus, TempBasal, Note, ProfileSwitch, CarbCorrection}
+var TreatmentEventTypes = []TreatmentEventType{Announcement, BGCheck, BolusWizard, CarbCorrection, ComboBolus, CorrectionBolus, DADAlert, Exercise, InsulinChange, MealBolus, Note, OpenAPSOffline, ProfileSwitch, PumpBatteryChange, Question, SensorChange, SensorStart, SiteChange, SnackBolus, TempBasal, TemporaryTarget}
 
 func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 	var s string
@@ -227,21 +160,49 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "correction bolus":
+	switch ToSnakeCase(strings.TrimSpace(s)) {
+	case "announcement":
+		*t = Announcement
+	case "bg_check":
+		*t = BGCheck
+	case "bolus_wizard":
+		*t = BolusWizard
+	case "carb_correction":
+		*t = CarbCorrection
+	case "combo_bolus":
+		*t = ComboBolus
+	case "correction_bolus":
 		*t = CorrectionBolus
-	case "temporary target":
-		*t = TemporaryTarget
-	case "meal bolus":
+	case "d.a.d._alert":
+		*t = DADAlert
+	case "exercise":
+		*t = Exercise
+	case "insulin_change":
+		*t = InsulinChange
+	case "meal_bolus":
 		*t = MealBolus
-	case "temp basal":
-		*t = TempBasal
 	case "note":
 		*t = Note
-	case "profile switch":
+	case "openaps_offline":
+		*t = OpenAPSOffline
+	case "profile_switch":
 		*t = ProfileSwitch
-	case "carb correction":
-		*t = CarbCorrection
+	case "pump_battery_change":
+		*t = PumpBatteryChange
+	case "question":
+		*t = Question
+	case "sensor_change":
+		*t = SensorChange
+	case "sensor_start":
+		*t = SensorStart
+	case "site_change":
+		*t = SiteChange
+	case "snack_bolus":
+		*t = SnackBolus
+	case "temp_basal":
+		*t = TempBasal
+	case "temporary_target":
+		*t = TemporaryTarget
 	default:
 		return fmt.Errorf("unknown treatment event type: %s", s)
 	}

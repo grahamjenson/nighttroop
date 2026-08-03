@@ -2,87 +2,25 @@ package collections
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type SettingsCollection struct {
-	converter func(c *control.Setting) nsutils.Record
-}
-
-func DBModelToSetting(c *control.Setting) nightscout.Setting {
-	return nightscout.Setting{
-		Identifier: ptr(nightscout.IdentifierString(c.Key)),
-		Value:      ptr(nightscout.ShortString(c.Value)),
-	}
 }
 
 func NewSettingsCollection() SettingsCollection {
-	return SettingsCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Settings, DBModelToSetting),
-	}
+	return SettingsCollection{}
 }
 
 func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	settingModel := &nightscout.Setting{}
-	err := utils.FromMap(data, settingModel)
-
-	if err != nil {
-		slog.Error("failed to map data to setting model", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	key := settingModel.Identifier
-	stringValue := settingModel.Value
-	settingValue, ok := control.GetSettingTypeFromKey(key.String())
-	if !ok {
-		slog.Error("invalid setting key", "key", key)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	value, err := settingValue.CreateValue(stringValue.String())
-	if err != nil {
-		slog.Error("failed to create setting value from string", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-	dbModel, err := settingValue.UpsertValue(ctx, siteContext.Subdomain, siteContext.ControlDB.Queries, value)
-
-	if err != nil {
-		slog.Error("failed to create setting in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to create setting in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-	return ptr(c.converter(dbModel)), nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	setting, ok := control.GetSettingTypeFromKey(identifier)
-	if !ok {
-		return nil, nsutils.ErrNotFound
-	}
-	dbModel, err := setting.GetValueModel(ctx, siteContext.Subdomain, siteContext.ControlDB.Queries)
-	if err == sql.ErrNoRows {
-		return nil, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("failed to get setting", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		return nil, nsutils.ErrNotFound
-	}
-	record := c.converter(dbModel)
-	return &record, nil
+	return nil, nsutils.ErrNotImplemented
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

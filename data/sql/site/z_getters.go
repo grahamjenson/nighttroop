@@ -878,7 +878,7 @@ func (m *ProfileSwitch) GetDurationMinutes() int64 {
 }
 
 // GetPercent returns the Percent value.
-func (m *ProfileSwitch) GetPercent() *int64 {
+func (m *ProfileSwitch) GetPercent() float64 {
 	return m.Percent
 }
 

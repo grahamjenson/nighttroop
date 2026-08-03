@@ -241,6 +241,93 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParam
 	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodPresetParams
 }
+func TreatmentToCreateActivity(source Treatment, context CreateContext) site.CreateActivityParams {
+	var siteCreateActivityParams site.CreateActivityParams
+	siteCreateActivityParams.ID = AssignID(source.Date, context)
+	if source.Name != nil {
+		xstring := ShortStringToString(*source.Name)
+		siteCreateActivityParams.Name = &xstring
+	}
+	if source.ActivityType != nil {
+		xstring2 := ShortStringToString(*source.ActivityType)
+		siteCreateActivityParams.ActivityType = &xstring2
+	}
+	if source.Duration != nil {
+		xint64 := FlexibleInt64ToInt64(*source.Duration)
+		siteCreateActivityParams.DurationMinutes = &xint64
+	}
+	if source.Calories != nil {
+		xint642 := FlexibleInt64ToInt64(*source.Calories)
+		siteCreateActivityParams.Calories = &xint642
+	}
+	if source.Steps != nil {
+		xint643 := FlexibleInt64ToInt64(*source.Steps)
+		siteCreateActivityParams.Steps = &xint643
+	}
+	if source.HeartRate != nil {
+		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
+		siteCreateActivityParams.HeartRate = &xint644
+	}
+	if source.Date != nil {
+		siteCreateActivityParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateActivityParams.UtcOffsetMinutes = &xint645
+	}
+	pString := source.RawJsonData
+	siteCreateActivityParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateActivityParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateActivityParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateActivityParams
+}
+func TreatmentToCreateCgmState(source Treatment, context CreateContext) site.CreateCGMStateParams {
+	var siteCreateCGMStateParams site.CreateCGMStateParams
+	siteCreateCGMStateParams.ID = AssignID(source.Date, context)
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateCGMStateParams.UtcOffsetMinutes = &xint64
+	}
+	if source.Date != nil {
+		siteCreateCGMStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	pString := source.RawJsonData
+	siteCreateCGMStateParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateCGMStateParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateCGMStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateCGMStateParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateCGMStateParams
+}
+func TreatmentToCreateDeviceState(source Treatment, context CreateContext) site.CreateDeviceStateParams {
+	var siteCreateDeviceStateParams site.CreateDeviceStateParams
+	siteCreateDeviceStateParams.ID = AssignID(source.Date, context)
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateDeviceStateParams.UtcOffsetMinutes = &xint64
+	}
+	if source.Date != nil {
+		siteCreateDeviceStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	pString := source.RawJsonData
+	siteCreateDeviceStateParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateDeviceStateParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateDeviceStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateDeviceStateParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateDeviceStateParams
+}
 func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.CreateEventGroupParams {
 	var siteCreateEventGroupParams site.CreateEventGroupParams
 	siteCreateEventGroupParams.ID = AssignID(source.Date, context)
@@ -354,6 +441,27 @@ func TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.
 	siteCreateInsulinDoseParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateInsulinDoseParams
 }
+func TreatmentToCreateLoopState(source Treatment, context CreateContext) site.CreateLoopStateParams {
+	var siteCreateLoopStateParams site.CreateLoopStateParams
+	siteCreateLoopStateParams.ID = AssignID(source.Date, context)
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateLoopStateParams.UtcOffsetMinutes = &xint64
+	}
+	if source.Date != nil {
+		siteCreateLoopStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	pString := source.RawJsonData
+	siteCreateLoopStateParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateLoopStateParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateLoopStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateLoopStateParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateLoopStateParams
+}
 func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateNoteParams {
 	var siteCreateNoteParams site.CreateNoteParams
 	siteCreateNoteParams.ID = AssignID(source.Date, context)
@@ -377,6 +485,74 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateN
 	}
 	siteCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateNoteParams
+}
+func TreatmentToCreateProfile(source Treatment, context CreateContext) site.CreateProfilePresetParams {
+	var siteCreateProfilePresetParams site.CreateProfilePresetParams
+	siteCreateProfilePresetParams.ID = AssignID(source.Date, context)
+	if source.Name != nil {
+		siteCreateProfilePresetParams.Name = ShortStringToString(*source.Name)
+	}
+	pString := source.RawJsonData
+	siteCreateProfilePresetParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateProfilePresetParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateProfilePresetParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateProfilePresetParams
+}
+func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) site.CreateProfileSwitchParams {
+	var siteCreateProfileSwitchParams site.CreateProfileSwitchParams
+	siteCreateProfileSwitchParams.ID = AssignID(source.Date, context)
+	if source.Name != nil {
+		siteCreateProfileSwitchParams.Name = ShortStringToString(*source.Name)
+	}
+	if source.Duration != nil {
+		siteCreateProfileSwitchParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
+	}
+	if source.Percentage != nil {
+		siteCreateProfileSwitchParams.Percent = FlexibleFloat64ToFloat64(*source.Percentage)
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint64
+	}
+	if source.Date != nil {
+		siteCreateProfileSwitchParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	pString := source.RawJsonData
+	siteCreateProfileSwitchParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreateProfileSwitchParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreateProfileSwitchParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreateProfileSwitchParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateProfileSwitchParams
+}
+func TreatmentToCreatePumpState(source Treatment, context CreateContext) site.CreatePumpStateParams {
+	var siteCreatePumpStateParams site.CreatePumpStateParams
+	siteCreatePumpStateParams.ID = AssignID(source.Date, context)
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreatePumpStateParams.UtcOffsetMinutes = &xint64
+	}
+	if source.Date != nil {
+		siteCreatePumpStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
+	}
+	pString := source.RawJsonData
+	siteCreatePumpStateParams.RawJsonData = &pString
+	if source.App != nil {
+		siteCreatePumpStateParams.CreatedByAppName = ShortStringToString(*source.App)
+	}
+	if source.Device != nil {
+		siteCreatePumpStateParams.CreatedByDeviceName = ShortStringToString(*source.Device)
+	}
+	siteCreatePumpStateParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreatePumpStateParams
 }
 func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.CreateTempBasalParams {
 	var siteCreateTempBasalParams site.CreateTempBasalParams

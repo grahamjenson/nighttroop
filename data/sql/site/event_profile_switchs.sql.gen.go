@@ -95,7 +95,7 @@ type CreateProfileSwitchParams struct {
 	ID                       string
 	Name                     string
 	DurationMinutes          int64
-	Percent                  *int64
+	Percent                  float64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -374,7 +374,7 @@ RETURNING id, name, duration_minutes, percent, carb_ratios_json, insulin_sensiti
 type UpdateProfileSwitchParams struct {
 	Name                     *string
 	DurationMinutes          *int64
-	Percent                  *int64
+	Percent                  *float64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string

@@ -89,16 +89,18 @@ type DBModelConverter interface {
 	///////
 
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByAppName App
-	// goverter:map CreatedByDeviceName Device
-	// goverter:map ID Identifier
-	// goverter:map OccurredAt Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
+	// goverter:map EventGroup.UtcOffsetMinutes UtcOffsetMinutes
+	// goverter:map EventGroup.RawJsonData RawJsonData
+	// goverter:map EventGroup.CreatedByIdentityName Subject
+	// goverter:map EventGroup.CreatedByAppName App
+	// goverter:map EventGroup.CreatedByDeviceName Device
+	// goverter:map EventGroup.ID Identifier
+	// goverter:map EventGroup.OccurredAt Date
+	// goverter:map EventGroup.CreatedAt SrvCreated
+	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
-	// goverter:ignore Glucose GlucoseType Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
-	// goverter:map GroupType EventType
+	// goverter:ignore Name ActivityType Steps Calories HeartRate Glucose GlucoseType Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:map EventGroup.GroupType EventType
 	DBModelToTreatment(source *site.GetEventGroupRow) Treatment
 
 	////////////////////////////////////////
@@ -106,13 +108,15 @@ type DBModelConverter interface {
 	////////////////////////////////////////
 
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByAppName App
-	// goverter:map CreatedByDeviceName Device
-	// goverter:map ID Identifier
-	// goverter:map OccurredAt Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
+	// goverter:map EventGroup.UtcOffsetMinutes UtcOffsetMinutes
+	// goverter:map EventGroup.RawJsonData RawJsonData
+	// goverter:map EventGroup.CreatedByIdentityName Subject
+	// goverter:map EventGroup.CreatedByAppName App
+	// goverter:map EventGroup.CreatedByDeviceName Device
+	// goverter:map EventGroup.ID Identifier
+	// goverter:map EventGroup.OccurredAt Date
+	// goverter:map EventGroup.CreatedAt SrvCreated
+	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
 	// goverter:ignore Uploader Loop OpenAPS Pump UploaderBattery MergedLoopStatus
 	DBModelToDeviceStatus(source *site.GetEventGroupRow) DeviceStatus

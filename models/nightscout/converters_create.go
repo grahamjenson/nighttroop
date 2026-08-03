@@ -156,15 +156,14 @@ type CreateMapConverter interface {
 	// Profile
 	///////
 
-	// // goverter:context ctx
-	// // goverter:map Date OccurredAt
-	// // goverter:map App CreatedByAppName
-	// // goverter:map Device CreatedByDeviceName
-	// // goverter:map Date ID                | AssignID
-	// // goverter:map CreatedByIdentityName  | AssignCreatedByName
-	// //
-	// // goverter:ignore Name
-	// TreatmentToCreateProfile(source Treatment, ctx CreateContext) site.CreateProfilePresetParams
+	// goverter:context ctx
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
+	TreatmentToCreateProfile(source Treatment, ctx CreateContext) site.CreateProfilePresetParams
 
 	///////
 	// Profile Switch
@@ -177,8 +176,10 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
+	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
 	// goverter:map Duration DurationMinutes
-	// TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams
+	// goverter:map Percentage Percent
+	TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams
 
 	///////
 	// Temp Basal
@@ -210,6 +211,57 @@ type CreateMapConverter interface {
 	// goverter:map TargetTop HighTarget
 	// goverter:map TargetBottom LowTarget
 	TreatmentToCreateTempTarget(source Treatment, ctx CreateContext) site.CreateTempTargetParams
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore DeviceState DeviceTimestamp DeviceBatteryPercent DeviceChargingState
+	TreatmentToCreateDeviceState(source Treatment, ctx CreateContext) site.CreateDeviceStateParams
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore LoopState LoopTimestamp Iob IobBasal IobTreatment Cob
+	TreatmentToCreateLoopState(source Treatment, ctx CreateContext) site.CreateLoopStateParams
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore PumpState PumpTimestamp PumpInsertionTime PumpReservoir PumpBatteryPercent PumpChargingState
+	TreatmentToCreatePumpState(source Treatment, ctx CreateContext) site.CreatePumpStateParams
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore CgmState CgmTimestamp CgmInsertionTime
+	TreatmentToCreateCgmState(source Treatment, ctx CreateContext) site.CreateCGMStateParams
+
+	// goverter:context ctx
+	// goverter:map Date OccurredAt
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map Date ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore
+	// goverter:map Duration DurationMinutes
+	TreatmentToCreateActivity(source Treatment, ctx CreateContext) site.CreateActivityParams
 
 	//
 	//
@@ -310,14 +362,6 @@ func TempBasalValuePtr(t Treatment) *float64 {
 	}
 	// TODO handle t.Percent
 	return nil
-}
-
-func TreatmentTypeToDBType(t *TreatmentEventType) string {
-	if t == nil {
-		return ""
-	}
-
-	return t.ToLocalTypeString()
 }
 
 func FlexibleFloat64ToFloat64(source FlexibleFloat64) float64 {

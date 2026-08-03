@@ -203,30 +203,91 @@ func DeviceStateToUpdate(source DeviceState) UpdateDeviceStateParams {
 	siteUpdateDeviceStateParams.ID = source.ID
 	return siteUpdateDeviceStateParams
 }
-func EventGroupToSearchEventGroup(source EventGroup) GetEventGroupRow {
-	var siteGetEventGroupRow GetEventGroupRow
-	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source)
-	siteGetEventGroupRow.ID = source.ID
-	siteGetEventGroupRow.GroupType = source.GroupType
-	siteGetEventGroupRow.OccurredAt = source.OccurredAt
+func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
+	var siteCreateEventGroupParams CreateEventGroupParams
+	siteCreateEventGroupParams.ID = source.ID
+	siteCreateEventGroupParams.GroupType = source.GroupType
+	if source.GlucoseReadingID != nil {
+		xstring := *source.GlucoseReadingID
+		siteCreateEventGroupParams.GlucoseReadingID = &xstring
+	}
+	if source.InsulinDoseID != nil {
+		xstring2 := *source.InsulinDoseID
+		siteCreateEventGroupParams.InsulinDoseID = &xstring2
+	}
+	if source.FoodIntakeID != nil {
+		xstring3 := *source.FoodIntakeID
+		siteCreateEventGroupParams.FoodIntakeID = &xstring3
+	}
+	if source.TempBasalID != nil {
+		xstring4 := *source.TempBasalID
+		siteCreateEventGroupParams.TempBasalID = &xstring4
+	}
+	if source.TempTargetID != nil {
+		xstring5 := *source.TempTargetID
+		siteCreateEventGroupParams.TempTargetID = &xstring5
+	}
+	if source.ProfileSwitchID != nil {
+		xstring6 := *source.ProfileSwitchID
+		siteCreateEventGroupParams.ProfileSwitchID = &xstring6
+	}
+	if source.DeviceStateID != nil {
+		xstring7 := *source.DeviceStateID
+		siteCreateEventGroupParams.DeviceStateID = &xstring7
+	}
+	if source.LoopStateID != nil {
+		xstring8 := *source.LoopStateID
+		siteCreateEventGroupParams.LoopStateID = &xstring8
+	}
+	if source.PumpStateID != nil {
+		xstring9 := *source.PumpStateID
+		siteCreateEventGroupParams.PumpStateID = &xstring9
+	}
+	if source.CgmStateID != nil {
+		xstring10 := *source.CgmStateID
+		siteCreateEventGroupParams.CgmStateID = &xstring10
+	}
+	if source.ActivityID != nil {
+		xstring11 := *source.ActivityID
+		siteCreateEventGroupParams.ActivityID = &xstring11
+	}
+	if source.NoteID != nil {
+		xstring12 := *source.NoteID
+		siteCreateEventGroupParams.NoteID = &xstring12
+	}
+	siteCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
-		siteGetEventGroupRow.UtcOffsetMinutes = &xint64
-	}
-	siteGetEventGroupRow.CreatedAt = source.CreatedAt
-	siteGetEventGroupRow.UpdatedAt = source.UpdatedAt
-	if source.DeletedAt != nil {
-		xint642 := *source.DeletedAt
-		siteGetEventGroupRow.DeletedAt = &xint642
+		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
 	}
 	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteGetEventGroupRow.RawJsonData = &xstring
+		xstring13 := *source.RawJsonData
+		siteCreateEventGroupParams.RawJsonData = &xstring13
 	}
-	siteGetEventGroupRow.CreatedByAppName = source.CreatedByAppName
-	siteGetEventGroupRow.CreatedByDeviceName = source.CreatedByDeviceName
-	siteGetEventGroupRow.CreatedByIdentityName = source.CreatedByIdentityName
+	siteCreateEventGroupParams.CreatedByAppName = source.CreatedByAppName
+	siteCreateEventGroupParams.CreatedByDeviceName = source.CreatedByDeviceName
+	siteCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteCreateEventGroupParams
+}
+func EventGroupToGetEventGroup(source EventGroup) GetEventGroupRow {
+	var siteGetEventGroupRow GetEventGroupRow
+	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source)
 	return siteGetEventGroupRow
+}
+func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
+	var siteUpdateEventGroupParams UpdateEventGroupParams
+	pInt64 := source.OccurredAt
+	siteUpdateEventGroupParams.OccurredAt = &pInt64
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		siteUpdateEventGroupParams.UtcOffsetMinutes = &xint64
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring := *source.UpdatedByIdentityName
+		siteUpdateEventGroupParams.UpdatedByIdentityName = &xstring
+	}
+	siteUpdateEventGroupParams.ID = source.ID
+	return siteUpdateEventGroupParams
 }
 func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 	var siteCreateFoodIntakeParams CreateFoodIntakeParams
@@ -640,10 +701,7 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 	siteCreateProfileSwitchParams.ID = source.ID
 	siteCreateProfileSwitchParams.Name = source.Name
 	siteCreateProfileSwitchParams.DurationMinutes = source.DurationMinutes
-	if source.Percent != nil {
-		xint64 := *source.Percent
-		siteCreateProfileSwitchParams.Percent = &xint64
-	}
+	siteCreateProfileSwitchParams.Percent = source.Percent
 	if source.CarbRatiosJson != nil {
 		xstring := *source.CarbRatiosJson
 		siteCreateProfileSwitchParams.CarbRatiosJson = &xstring
@@ -661,8 +719,8 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 		siteCreateProfileSwitchParams.TargetsJson = &xstring4
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint642
+		xint64 := *source.UtcOffsetMinutes
+		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint64
 	}
 	siteCreateProfileSwitchParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
@@ -680,10 +738,8 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	siteUpdateProfileSwitchParams.Name = &pString
 	pInt64 := source.DurationMinutes
 	siteUpdateProfileSwitchParams.DurationMinutes = &pInt64
-	if source.Percent != nil {
-		xint64 := *source.Percent
-		siteUpdateProfileSwitchParams.Percent = &xint64
-	}
+	pFloat64 := source.Percent
+	siteUpdateProfileSwitchParams.Percent = &pFloat64
 	if source.CarbRatiosJson != nil {
 		xstring := *source.CarbRatiosJson
 		siteUpdateProfileSwitchParams.CarbRatiosJson = &xstring
@@ -703,8 +759,8 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	pInt642 := source.OccurredAt
 	siteUpdateProfileSwitchParams.OccurredAt = &pInt642
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteUpdateProfileSwitchParams.UtcOffsetMinutes = &xint642
+		xint64 := *source.UtcOffsetMinutes
+		siteUpdateProfileSwitchParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring5 := *source.UpdatedByIdentityName
@@ -808,26 +864,6 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 	siteGetEventGroupRow.CgmState = siteCgmStateToSiteCgmState(source.CgmState)
 	siteGetEventGroupRow.Activity = siteActivityToSiteActivity(source.Activity)
 	siteGetEventGroupRow.Note = siteNoteToSiteNote(source.Note)
-	siteGetEventGroupRow.ID = source.ID
-	siteGetEventGroupRow.GroupType = source.GroupType
-	siteGetEventGroupRow.OccurredAt = source.OccurredAt
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteGetEventGroupRow.UtcOffsetMinutes = &xint64
-	}
-	siteGetEventGroupRow.CreatedAt = source.CreatedAt
-	siteGetEventGroupRow.UpdatedAt = source.UpdatedAt
-	if source.DeletedAt != nil {
-		xint642 := *source.DeletedAt
-		siteGetEventGroupRow.DeletedAt = &xint642
-	}
-	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteGetEventGroupRow.RawJsonData = &xstring
-	}
-	siteGetEventGroupRow.CreatedByAppName = source.CreatedByAppName
-	siteGetEventGroupRow.CreatedByDeviceName = source.CreatedByDeviceName
-	siteGetEventGroupRow.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteGetEventGroupRow
 }
 func SiteSettingsToUpdate(source SiteSetting) UpdateSiteSettingsParams {
@@ -1359,10 +1395,7 @@ func siteProfileSwitchToSiteProfileSwitch(source ProfileSwitch) ProfileSwitch {
 	siteProfileSwitch.ID = source.ID
 	siteProfileSwitch.Name = source.Name
 	siteProfileSwitch.DurationMinutes = source.DurationMinutes
-	if source.Percent != nil {
-		xint64 := *source.Percent
-		siteProfileSwitch.Percent = &xint64
-	}
+	siteProfileSwitch.Percent = source.Percent
 	if source.CarbRatiosJson != nil {
 		xstring := *source.CarbRatiosJson
 		siteProfileSwitch.CarbRatiosJson = &xstring
@@ -1384,12 +1417,12 @@ func siteProfileSwitchToSiteProfileSwitch(source ProfileSwitch) ProfileSwitch {
 		siteProfileSwitch.RawJsonData = &xstring5
 	}
 	if source.DeletedAt != nil {
-		xint642 := *source.DeletedAt
-		siteProfileSwitch.DeletedAt = &xint642
+		xint64 := *source.DeletedAt
+		siteProfileSwitch.DeletedAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		siteProfileSwitch.UtcOffsetMinutes = &xint643
+		xint642 := *source.UtcOffsetMinutes
+		siteProfileSwitch.UtcOffsetMinutes = &xint642
 	}
 	siteProfileSwitch.OccurredAt = source.OccurredAt
 	siteProfileSwitch.CreatedAt = source.CreatedAt
