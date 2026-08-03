@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -48,7 +50,11 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		var body any
+		// bodyBytes, _ := ioutil.ReadAll(r.Body)
+		// fmt.Println("asfoiahfihaisfu", r.Method, r.URL, r.Header, string(bodyBytes))
 		if err := nsutils.ReadJSON(r, &body); err != nil {
+			slog.Error("Collection Create failed to read JSON body", "error", err)
+			fmt.Println("hisdfuhdfiusfuidhshfudssdfhui", err)
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}
@@ -62,6 +68,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		case []any:
 			arrayOfModels = typed
 		default:
+			slog.Error("Collection Create JSON type error", "type", typed)
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}

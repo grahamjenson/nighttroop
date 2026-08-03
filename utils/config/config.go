@@ -123,7 +123,7 @@ func NewServerConfig() (ServerConfig, error) {
 
 	// DEFAULTS
 	serverConfig := ServerConfig{
-		Logger: setupLogging(),
+		Logger: setupLogging(mode),
 		Mode:   mode,
 
 		// Host config

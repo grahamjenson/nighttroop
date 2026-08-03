@@ -28,8 +28,6 @@ func TestUserTreatments(t *testing.T) {
 	router := server.GetMainHandler(controlDB, config)
 
 	for _, request := range requestFile.Requests {
-
-		fmt.Println("THISSS", requestContext)
 		realRequest, err := request.BuildRealRequest(requestContext)
 		if err != nil {
 			t.Fatalf("failed to build real request: %v", err)

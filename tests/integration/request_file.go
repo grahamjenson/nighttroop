@@ -257,31 +257,33 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 }
 
 func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[string]any) (int, map[string]any, http.Header, map[string]any) {
-	var buf bytes.Buffer
+
 	if r.Body != "" {
-		if err := json.NewEncoder(&buf).Encode(r.Body); err != nil {
-			t.Fatalf("failed to encode json: %v", err)
+		// Making Sure the body is JSON
+		err := json.Unmarshal([]byte(r.Body), new(any))
+		if err != nil {
+			t.Fatalf("request %s body is not valid JSON: %v", r.Name, err)
 		}
+
 	}
 
-	req := httptest.NewRequest(r.Method, r.URL, &buf)
+	req := httptest.NewRequest(r.Method, r.URL, strings.NewReader(r.Body))
 	req.Header.Set("Content-Type", "application/json")
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
 	var out map[string]any
-
-	if err := json.NewDecoder(rr.Body).Decode(&out); err != nil {
+	bodyOut := rr.Body.String()
+	if err := json.NewDecoder(strings.NewReader(bodyOut)).Decode(&out); err != nil {
 		fmt.Println("failed to decode json for", r.Name, "error:", err)
 	}
 
 	context[r.Name] = out
 	context[r.Name+"_status"] = rr.Code
 
-	fmt.Println("Executed request", r.Name, "status", rr.Code, "output", out, "fsasfsaf", r.AssertStatus)
 	if r.AssertStatus != 0 && rr.Code != r.AssertStatus {
-		t.Fatalf("request %s expected status %d but got %d", r.Name, r.AssertStatus, rr.Code)
+		t.Fatalf("request %s expected status %d but got %d with body %s and headers %v", r.Name, r.AssertStatus, rr.Code, bodyOut, rr.Header())
 	}
 
 	if r.Assert != "" {

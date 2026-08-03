@@ -6,9 +6,17 @@ import (
 
 	slogmulti "github.com/samber/slog-multi"
 	slogsentry "github.com/samber/slog-sentry/v2"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
-func setupLogging() *slog.Logger {
+func setupLogging(mode consts.ServerMode) *slog.Logger {
+	if mode == consts.Test {
+		// In test mode, use a no-op logger to avoid cluttering test output.
+		return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug, // Set minimum log level
+		}))
+	}
+
 	// 1. Create a JSON handler writing to standard output
 	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug, // Set minimum log level
