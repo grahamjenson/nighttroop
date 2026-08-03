@@ -13,11 +13,11 @@ import (
 )
 
 type CreateUserResponse struct {
-	UserID     string `json:"userID"`
-	APIKey     string `json:"apiKey"`
-	TOTPSecret string `json:"totpSecret"`
-	BackupKey  string `json:"backupKey"`
-	PWDNSToken string `json:"pwdNSToken"`
+	SiteSubdomain string `json:"site_subdomain"`
+	APIKey        string `json:"api_key"`
+	TOTPSecret    string `json:"totp_secret"`
+	BackupKey     string `json:"backup_key"`
+	PWDNSToken    string `json:"pwd_nstoken"`
 }
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
@@ -54,11 +54,11 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		}
 
 		responseModel := CreateUserResponse{
-			UserID:     siteCreateResult.SiteDB.Subdomain,
-			APIKey:     siteCreateResult.AdminPassword,
-			BackupKey:  siteCreateResult.BackupPassword,
-			TOTPSecret: siteCreateResult.TotpSecret,
-			PWDNSToken: siteCreateResult.PwdNSToken,
+			SiteSubdomain: siteCreateResult.SiteDB.Subdomain,
+			APIKey:        siteCreateResult.AdminPassword,
+			BackupKey:     siteCreateResult.BackupPassword,
+			TOTPSecret:    siteCreateResult.TotpSecret,
+			PWDNSToken:    siteCreateResult.PwdNSToken,
 		}
 
 		slog.Info("Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func JSONRequest[T any](t *testing.T, handler http.Handler, method, path string, body any) (int, T, http.Header) {
+func JSONRequest[T any](t *testing.T, handler http.Handler, method, path_or_url string, body any) (int, T, http.Header) {
 	t.Helper()
 
 	var buf bytes.Buffer
@@ -18,7 +18,8 @@ func JSONRequest[T any](t *testing.T, handler http.Handler, method, path string,
 		}
 	}
 
-	req := httptest.NewRequest(method, path, &buf)
+	// If PATH then host is exmaple.com, if URL then host is from URL
+	req := httptest.NewRequest(method, path_or_url, &buf)
 	req.Header.Set("Content-Type", "application/json")
 
 	rr := httptest.NewRecorder()

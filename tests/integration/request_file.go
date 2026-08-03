@@ -2,31 +2,33 @@ package integration_test
 
 import (
 	"bufio"
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
-	"net/url"
-	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
-	"unicode"
 )
 
 type Request struct {
-	Name     string
-	Method   string
-	Path     string
-	URL      string
-	Headers  http.Header
-	Body     string
-	IsMethod bool
+	Name       string
+	Method     string
+	URL        string
+	Headers    http.Header
+	Body       string
+	IsFunction bool
 }
 
-func (r Request) PrintReqeust() {
+func (r Request) ToFlatString() string {
+	return fmt.Sprintf("NAME %s METHOD %s URL %s", r.Name, r.Method, r.URL)
+}
+
+func (r Request) PrintRequest() {
 	fmt.Printf("NAME %s\n", r.Name)
-	fmt.Printf("%s %s\n", r.Method, r.Path)
+	fmt.Printf("%s %s\n", r.Method, r.URL)
 	for k, vv := range r.Headers {
 		for _, v := range vv {
 			fmt.Printf("H %s: %s\n", k, v)
@@ -39,19 +41,8 @@ func (r Request) PrintReqeust() {
 }
 
 type RequestFile struct {
-	Name      string
-	Requests  []Request
-	Responses []Response
-	CTX       map[string]any
-}
-
-type Response struct {
-	Request    Request
-	Name       string
-	StatusCode int
-	Headers    http.Header
-	Body       []byte
-	Duration   time.Duration
+	Name     string
+	Requests []Request
 }
 
 func ParseRequestFile(file string, ctx map[string]any) (*RequestFile, error) {
@@ -65,7 +56,6 @@ func ParseRequestFile(file string, ctx map[string]any) (*RequestFile, error) {
 	return &RequestFile{
 		Name:     name,
 		Requests: requests,
-		CTX:      ctx,
 	}, nil
 }
 
@@ -132,20 +122,6 @@ func parseFile(r io.Reader) ([]Request, error) {
 
 			current.Method = parts[0]
 			current.URL = parts[1]
-			// We split the URL into / and just take the first three parts
-
-			u, err := url.Parse(parts[1])
-			if err != nil {
-				fmt.Println("invalid URL in line", line, ":", err)
-			} else {
-				cleanPath := strings.TrimSuffix(strings.TrimSuffix(u.Path, "/"), ".json")
-				pathParts := strings.Split(cleanPath, "/")
-				if len(pathParts) >= 4 {
-					current.Path = strings.Join(pathParts[:4], "/")
-				} else {
-					current.Path = u.Path
-				}
-			}
 		case strings.HasPrefix(line, "SET "):
 			// THIS IS A SPECIAL CASE FOR SETTING CONTEXT VARIABLES WITHOUT MAKING A REQUEST
 			if current == nil {
@@ -157,10 +133,10 @@ func parseFile(r io.Reader) ([]Request, error) {
 				return nil, fmt.Errorf("invalid request line: %q", line)
 			}
 
+			//
 			current.Method = parts[0]
-			current.Path = parts[1]
 			current.URL = parts[1]
-			current.IsMethod = true
+			current.IsFunction = true
 		case strings.HasPrefix(line, "H "):
 			if current == nil {
 				return nil, fmt.Errorf("header before NAME")
@@ -199,108 +175,155 @@ func parseFile(r io.Reader) ([]Request, error) {
 	return requests, nil
 }
 
-func (rf *RequestFile) nonMethodRequestLength() int {
-	count := 0
-	for _, r := range rf.Requests {
-		if !r.IsMethod {
-			count += 1
-		}
-	}
-	return count
-}
+func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 
-type savedResponse struct {
-	Request    savedRequest `json:"request"`
-	StatusCode int          `json:"statusCode"`
-	Headers    http.Header  `json:"headers"`
-	Body       any          `json:"body"`
-	DurationMs int64        `json:"durationMs"`
-}
-
-type savedRequest struct {
-	Method  string      `json:"method"`
-	Path    string      `json:"path"`
-	URL     string      `json:"url"`
-	Headers http.Header `json:"headers"`
-	Body    any         `json:"body"`
-}
-
-func (rf *RequestFile) WriteResponsesToFolder(name string) error {
-	folder := fmt.Sprintf("results/%s/%s", name, rf.Name)
-	if err := os.MkdirAll(folder, 0o755); err != nil {
-		return err
+	url, err := renderTemplate(r.URL, ctx)
+	if err != nil {
+		return Request{}, fmt.Errorf("request %s url render failed: %w", r.Name, err)
 	}
 
-	for i, resp := range rf.Responses {
+	if r.IsFunction {
+		return Request{
+			Name:       r.Name,
+			Method:     r.Method,
+			URL:        url,
+			Headers:    r.Headers.Clone(),
+			Body:       r.Body,
+			IsFunction: true,
+		}, nil
+	}
 
-		out := savedResponse{
-			Request:    createSavedRequest(resp.Request),
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Headers,
-			DurationMs: resp.Duration.Milliseconds(),
-		}
+	// ---- render body ----
+	bodyStr, err := renderTemplate(string(r.Body), ctx)
+	if err != nil {
+		return Request{}, fmt.Errorf("request %s body render failed: %w", r.Name, err)
+	}
 
-		// If the body is JSON, embed it as JSON.
-		// Otherwise store it as a string.
-		if len(resp.Body) > 0 {
-			var body any
-			if err := json.Unmarshal(resp.Body, &body); err == nil {
-				out.Body = body
-			} else {
-				out.Body = string(resp.Body)
+	// -- render headers ----
+	renderedHeaders := make(http.Header)
+	for k, vv := range r.Headers {
+		for _, v := range vv {
+			renderedValue, err := renderTemplate(v, ctx)
+			if err != nil {
+				return Request{}, fmt.Errorf("request %s header %s render failed: %w", r.Name, k, err)
 			}
-		}
-
-		data, err := json.MarshalIndent(out, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		filename := filepath.Join(
-			folder,
-			fmt.Sprintf("%03d.%s.json", i+1, sanitizeFilename(resp.Name)),
-		)
-
-		data = []byte(strings.ReplaceAll(string(data), `\u0026`, "&"))
-		if err := os.WriteFile(filename, data, 0o644); err != nil {
-			return err
+			renderedHeaders.Add(k, renderedValue)
 		}
 	}
+	r.Headers = renderedHeaders
 
-	return nil
-}
-func createSavedRequest(req Request) savedRequest {
-
-	var body any
-	if len(req.Body) > 0 {
-		if err := json.Unmarshal([]byte(req.Body), &body); err != nil {
-			body = string(req.Body)
-		}
+	// Default content and accept types
+	if r.Headers.Get("Content-Type") == "" {
+		r.Headers.Set("Content-Type", "application/json")
 	}
-
-	return savedRequest{
-		Method:  req.Method,
-		Path:    req.Path,
-		URL:     req.URL,
-		Headers: req.Headers,
-		Body:    body,
+	if r.Headers.Get("Accept") == "" {
+		r.Headers.Set("Accept", "application/json")
 	}
+	return Request{
+		Name:       r.Name,
+		Method:     r.Method,
+		URL:        url,
+		Headers:    renderedHeaders,
+		Body:       bodyStr,
+		IsFunction: r.IsFunction,
+	}, nil
 }
 
-func sanitizeFilename(s string) string {
-	s = strings.ToLower(s)
-	s = strings.ReplaceAll(s, " ", "-")
+func (r Request) ExecuteFunction(ctx map[string]any) (map[string]any, error) {
+	if !r.IsFunction {
+		return ctx, nil
+	}
 
-	var b strings.Builder
+	if r.Method == "SET" {
+		ctx[r.Name] = r.URL
+		return ctx, nil
+	}
 
-	for _, r := range s {
-		if unicode.IsLetter(r) ||
-			unicode.IsDigit(r) ||
-			r == '-' ||
-			r == '_' {
-			b.WriteRune(r)
+	return ctx, fmt.Errorf("unsupported method %q", r.Method)
+}
+
+func templateTime(offset int) string {
+	// top of the minute
+	t := time.Now().Add(-time.Duration(offset) * time.Minute)
+	return t.Format(time.RFC3339)
+}
+
+func templateITime(offset int) int64 {
+	// top of the minute
+	t := time.Now().Add(-time.Duration(offset) * time.Minute)
+	return t.UnixMilli()
+}
+
+func templateDig(root any, path string) any {
+	parts := strings.Split(path, ".")
+	var cur any = root
+
+	for _, p := range parts {
+		switch v := cur.(type) {
+
+		case map[string]any:
+			next, ok := v[p]
+			if !ok {
+				return nil
+			}
+			cur = next
+
+		case []any:
+			// allow numeric indexing into slices
+			i, err := strconv.Atoi(p)
+			if err != nil || i < 0 || i >= len(v) {
+				return nil
+			}
+			cur = v[i]
+
+		default:
+			return nil
 		}
 	}
 
-	return b.String()
+	return cur
+}
+
+func renderTemplate(input string, ctx map[string]any) (string, error) {
+	tmpl, err := template.New("req").
+		Option("missingkey=error").
+		Funcs(template.FuncMap{
+			"dig": func(path string) any {
+				return templateDig(ctx, path)
+			},
+			"token": func() string {
+				return ctx["token"].(string)
+			},
+			"read_token": func() string {
+				return ctx["read_token"].(string)
+			},
+			"jwt": func() string {
+				return ctx["jwt"].(string)
+			},
+			"read_jwt": func() string {
+				return ctx["read_jwt"].(string)
+			},
+			"time":  templateTime,
+			"itime": templateITime,
+			"tokenByName": func(list []any, name string) string {
+				for _, item := range list {
+					m := item.(map[string]any)
+					if m["name"] == name {
+						return m["accessToken"].(string)
+					}
+				}
+				return ""
+			},
+		}).
+		Parse(input)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, ctx); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

@@ -1,2 +1,16 @@
-NAME create_new_user
-POST http://localhost:8080/site
+NAME create_new_site
+POST http://localhost/site
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+NAME jwtauth
+GET http://{{ .site }}.localhost/api/v2/authorization/request/token={{ .token }}
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
