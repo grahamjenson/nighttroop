@@ -88,8 +88,8 @@ type CreateProfilePresetParams struct {
 	BasalRatesJson           *string
 	TargetsJson              *string
 	RawJsonData              *string
-	CreatedByAppName         string
-	CreatedByDeviceName      string
+	CreatedByAppName         *string
+	CreatedByDeviceName      *string
 	CreatedByIdentityName    string
 }
 

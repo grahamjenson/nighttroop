@@ -1,7 +1,7 @@
 package nsutils
 
 import (
-	"fmt"
+	"time"
 
 	"nighttroop.t1d.nz/utils"
 )
@@ -13,71 +13,43 @@ type Record struct {
 	Data        map[string]any
 	SrvCreated  int64
 	SrvModified int64
+	UTCOffset   int64
 	Subject     string
-	IsValid     bool
 	DeletedAt   *int64
-}
-
-// Clone returns a deep copy of the record and its payload map.
-func (r Record) Clone() Record {
-	clone := r
-	clone.Data = CloneMap(r.Data)
-	return clone
+	OccuredAt   int64
 }
 
 // Identifier returns the stable public identifier for the record.
 func (r Record) Identifier() string {
-	if r.Data == nil {
-		return r.ID
-	}
-	keys := []string{"identifier", "_id"}
-	// Just checking these values first
-	for _, k := range keys {
-		if v, ok := r.Data[k]; ok && v != nil {
-			s := fmt.Sprintf("%v", v)
-			if s != "" && s != "<nil>" {
-				return s
-			}
-		}
-	}
-
 	return r.ID
-}
-
-// WithData returns a cloned record with replaced payload data.
-func (r Record) WithData(data map[string]any) Record {
-	clone := r.Clone()
-	clone.Data = CloneMap(data)
-	return clone
 }
 
 // ToMap converts the record into a JSON-friendly map.
 //
 // When version3 is true, server-managed metadata fields are included.
 func (r Record) ToMap(version3 bool) map[string]any {
-	out := CloneMap(r.Data)
+	out := utils.DeepCloneMap(r.Data)
+
+	out["created_at"] = time.UnixMilli(r.OccuredAt).UTC().Format(time.RFC3339Nano)
+	out["utcOffset"] = r.UTCOffset
 	id := r.Identifier()
 	if version3 {
-		delete(out, "_id")
 		out["identifier"] = id
+		out["date"] = r.OccuredAt
 		out["srvCreated"] = r.SrvCreated
 		out["srvModified"] = r.SrvModified
 		out["subject"] = r.Subject
-		out["isValid"] = r.IsValid
-		if r.DeletedAt != nil {
-			out["deletedAt"] = *r.DeletedAt
-		}
+		out["isValid"] = r.DeletedAt == nil
 	} else {
 		out["_id"] = id
-		delete(out, "identifier")
 	}
 
 	return out
 }
 
 // SelectFields projects a record to the requested fields.
-func (record Record) SelectFields(fields []string, version3 bool) map[string]any {
-	full := record.ToMap(version3)
+func (r Record) SelectFields(fields []string, version3 bool) map[string]any {
+	full := r.ToMap(version3)
 	if len(fields) == 0 {
 		return full
 	}
@@ -109,6 +81,8 @@ func DBModelToRecord[T any, PT interface {
 	GetCreatedAt() int64
 	GetUpdatedAt() int64
 	GetCreatedByIdentityName() string
+	GetUtcOffsetMinutes() *int64
+	GetOccurredAt() int64
 }, S any](collectionName Collection, convertFunc func(PT) S) ConverterToRecordFN[T, PT] {
 	return func(dbModel PT) Record {
 		if dbModel == nil {
@@ -121,6 +95,10 @@ func DBModelToRecord[T any, PT interface {
 		if err != nil {
 			return Record{}
 		}
+		utcOffset := int64(0)
+		if dbModel.GetUtcOffsetMinutes() != nil {
+			utcOffset = *dbModel.GetUtcOffsetMinutes()
+		}
 
 		record := Record{
 			Collection:  string(collectionName),
@@ -129,8 +107,9 @@ func DBModelToRecord[T any, PT interface {
 			SrvCreated:  dbModel.GetCreatedAt(),
 			SrvModified: dbModel.GetUpdatedAt(),
 			Subject:     dbModel.GetCreatedByIdentityName(),
-			IsValid:     true,
 			DeletedAt:   dbModel.GetDeletedAt(),
+			UTCOffset:   utcOffset,
+			OccuredAt:   dbModel.GetOccurredAt(),
 		}
 		return record
 	}

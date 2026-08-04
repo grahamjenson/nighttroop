@@ -13,7 +13,8 @@ const SITE_CHAR_SET = "abcdefghijklmnopqrstuvwxyz"
 const SITE_BATCH_LENGTH = 26
 const SITE_ID_LENGTH = 8
 
-const ID_LENGTH = 16
+const ID_CHAR_SET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567891234567890"
+const ID_LENGTH = 8
 
 const DB_FOLDER = ".dbs/db"
 const CONTROL_DB_PATH = ".dbs/db/control.sqlite"
@@ -75,5 +76,5 @@ func SyntacticallyValidateSiteID(siteID string) bool {
 }
 
 func NextID() string {
-	return security.SecureRandomString(ID_LENGTH, SITE_CHAR_SET)
+	return security.InsecureRandomString(ID_LENGTH, ID_CHAR_SET)
 }

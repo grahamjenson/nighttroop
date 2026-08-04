@@ -39,8 +39,14 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 		xstring3 := *source.RawJsonData
 		siteCreateActivityParams.RawJsonData = &xstring3
 	}
-	siteCreateActivityParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateActivityParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring4 := *source.CreatedByAppName
+		siteCreateActivityParams.CreatedByAppName = &xstring4
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateActivityParams.CreatedByDeviceName = &xstring5
+	}
 	siteCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateActivityParams
 }
@@ -107,8 +113,14 @@ func CGMStateToCreate(source CgmState) CreateCGMStateParams {
 		xstring2 := *source.RawJsonData
 		siteCreateCGMStateParams.RawJsonData = &xstring2
 	}
-	siteCreateCGMStateParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateCGMStateParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring3 := *source.CreatedByAppName
+		siteCreateCGMStateParams.CreatedByAppName = &xstring3
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring4 := *source.CreatedByDeviceName
+		siteCreateCGMStateParams.CreatedByDeviceName = &xstring4
+	}
 	siteCreateCGMStateParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateCGMStateParams
 }
@@ -167,8 +179,14 @@ func DeviceStateToCreate(source DeviceState) CreateDeviceStateParams {
 		xstring3 := *source.RawJsonData
 		siteCreateDeviceStateParams.RawJsonData = &xstring3
 	}
-	siteCreateDeviceStateParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateDeviceStateParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring4 := *source.CreatedByAppName
+		siteCreateDeviceStateParams.CreatedByAppName = &xstring4
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateDeviceStateParams.CreatedByDeviceName = &xstring5
+	}
 	siteCreateDeviceStateParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateDeviceStateParams
 }
@@ -264,8 +282,14 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring13 := *source.RawJsonData
 		siteCreateEventGroupParams.RawJsonData = &xstring13
 	}
-	siteCreateEventGroupParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateEventGroupParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring14 := *source.CreatedByAppName
+		siteCreateEventGroupParams.CreatedByAppName = &xstring14
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring15 := *source.CreatedByDeviceName
+		siteCreateEventGroupParams.CreatedByDeviceName = &xstring15
+	}
 	siteCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateEventGroupParams
 }
@@ -329,8 +353,14 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 		xstring3 := *source.RawJsonData
 		siteCreateFoodIntakeParams.RawJsonData = &xstring3
 	}
-	siteCreateFoodIntakeParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateFoodIntakeParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring4 := *source.CreatedByAppName
+		siteCreateFoodIntakeParams.CreatedByAppName = &xstring4
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring5
+	}
 	siteCreateFoodIntakeParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateFoodIntakeParams
 }
@@ -406,8 +436,14 @@ func FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams {
 		xstring := *source.RawJsonData
 		siteCreateFoodPresetParams.RawJsonData = &xstring
 	}
-	siteCreateFoodPresetParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateFoodPresetParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring2 := *source.CreatedByAppName
+		siteCreateFoodPresetParams.CreatedByAppName = &xstring2
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring3 := *source.CreatedByDeviceName
+		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring3
+	}
 	siteCreateFoodPresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateFoodPresetParams
 }
@@ -458,8 +494,14 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 		xstring := *source.RawJsonData
 		siteCreateGlucoseReadingParams.RawJsonData = &xstring
 	}
-	siteCreateGlucoseReadingParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateGlucoseReadingParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring2 := *source.CreatedByAppName
+		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring2
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring3 := *source.CreatedByDeviceName
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
+	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateGlucoseReadingParams
 }
@@ -499,8 +541,14 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		xstring2 := *source.RawJsonData
 		siteCreateInsulinDoseParams.RawJsonData = &xstring2
 	}
-	siteCreateInsulinDoseParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateInsulinDoseParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring3 := *source.CreatedByAppName
+		siteCreateInsulinDoseParams.CreatedByAppName = &xstring3
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring4 := *source.CreatedByDeviceName
+		siteCreateInsulinDoseParams.CreatedByDeviceName = &xstring4
+	}
 	siteCreateInsulinDoseParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateInsulinDoseParams
 }
@@ -561,8 +609,14 @@ func LoopStateToCreate(source LoopState) CreateLoopStateParams {
 		xstring2 := *source.RawJsonData
 		siteCreateLoopStateParams.RawJsonData = &xstring2
 	}
-	siteCreateLoopStateParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateLoopStateParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring3 := *source.CreatedByAppName
+		siteCreateLoopStateParams.CreatedByAppName = &xstring3
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring4 := *source.CreatedByDeviceName
+		siteCreateLoopStateParams.CreatedByDeviceName = &xstring4
+	}
 	siteCreateLoopStateParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateLoopStateParams
 }
@@ -622,8 +676,14 @@ func NoteToCreate(source Note) CreateNoteParams {
 		xstring2 := *source.RawJsonData
 		siteCreateNoteParams.RawJsonData = &xstring2
 	}
-	siteCreateNoteParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateNoteParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring3 := *source.CreatedByAppName
+		siteCreateNoteParams.CreatedByAppName = &xstring3
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring4 := *source.CreatedByDeviceName
+		siteCreateNoteParams.CreatedByDeviceName = &xstring4
+	}
 	siteCreateNoteParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateNoteParams
 }
@@ -672,8 +732,14 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring5 := *source.RawJsonData
 		siteCreateProfilePresetParams.RawJsonData = &xstring5
 	}
-	siteCreateProfilePresetParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateProfilePresetParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring6 := *source.CreatedByAppName
+		siteCreateProfilePresetParams.CreatedByAppName = &xstring6
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring7 := *source.CreatedByDeviceName
+		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring7
+	}
 	siteCreateProfilePresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateProfilePresetParams
 }
@@ -735,8 +801,14 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 		xstring5 := *source.RawJsonData
 		siteCreateProfileSwitchParams.RawJsonData = &xstring5
 	}
-	siteCreateProfileSwitchParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateProfileSwitchParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring6 := *source.CreatedByAppName
+		siteCreateProfileSwitchParams.CreatedByAppName = &xstring6
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring7 := *source.CreatedByDeviceName
+		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring7
+	}
 	siteCreateProfileSwitchParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateProfileSwitchParams
 }
@@ -813,8 +885,14 @@ func PumpStateToCreate(source PumpState) CreatePumpStateParams {
 		xstring3 := *source.RawJsonData
 		siteCreatePumpStateParams.RawJsonData = &xstring3
 	}
-	siteCreatePumpStateParams.CreatedByAppName = source.CreatedByAppName
-	siteCreatePumpStateParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring4 := *source.CreatedByAppName
+		siteCreatePumpStateParams.CreatedByAppName = &xstring4
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring5 := *source.CreatedByDeviceName
+		siteCreatePumpStateParams.CreatedByDeviceName = &xstring5
+	}
 	siteCreatePumpStateParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreatePumpStateParams
 }
@@ -1157,8 +1235,14 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		xstring := *source.RawJsonData
 		siteCreateTempBasalParams.RawJsonData = &xstring
 	}
-	siteCreateTempBasalParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateTempBasalParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring2 := *source.CreatedByAppName
+		siteCreateTempBasalParams.CreatedByAppName = &xstring2
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring3 := *source.CreatedByDeviceName
+		siteCreateTempBasalParams.CreatedByDeviceName = &xstring3
+	}
 	siteCreateTempBasalParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateTempBasalParams
 }
@@ -1200,8 +1284,14 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 		xstring := *source.RawJsonData
 		siteCreateTempTargetParams.RawJsonData = &xstring
 	}
-	siteCreateTempTargetParams.CreatedByAppName = source.CreatedByAppName
-	siteCreateTempTargetParams.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring2 := *source.CreatedByAppName
+		siteCreateTempTargetParams.CreatedByAppName = &xstring2
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring3 := *source.CreatedByDeviceName
+		siteCreateTempTargetParams.CreatedByDeviceName = &xstring3
+	}
 	siteCreateTempTargetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateTempTargetParams
 }
@@ -1293,11 +1383,17 @@ func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
 	siteEventGroup.OccurredAt = source.OccurredAt
 	siteEventGroup.CreatedAt = source.CreatedAt
 	siteEventGroup.UpdatedAt = source.UpdatedAt
-	siteEventGroup.CreatedByAppName = source.CreatedByAppName
-	siteEventGroup.CreatedByDeviceName = source.CreatedByDeviceName
+	if source.CreatedByAppName != nil {
+		xstring14 := *source.CreatedByAppName
+		siteEventGroup.CreatedByAppName = &xstring14
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring15 := *source.CreatedByDeviceName
+		siteEventGroup.CreatedByDeviceName = &xstring15
+	}
 	if source.UpdatedByIdentityName != nil {
-		xstring14 := *source.UpdatedByIdentityName
-		siteEventGroup.UpdatedByIdentityName = &xstring14
+		xstring16 := *source.UpdatedByIdentityName
+		siteEventGroup.UpdatedByIdentityName = &xstring16
 	}
 	siteEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteEventGroup

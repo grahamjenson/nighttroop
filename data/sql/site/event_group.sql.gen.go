@@ -337,8 +337,8 @@ type CreateEventGroupParams struct {
 	OccurredAt            int64
 	UtcOffsetMinutes      *int64
 	RawJsonData           *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	CreatedByIdentityName string
 }
 

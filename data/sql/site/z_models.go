@@ -19,8 +19,8 @@ type Activity struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -37,8 +37,8 @@ type CgmState struct {
 	CreatedAt             int64
 	UpdatedAt             int64
 	UpdatedByIdentityName *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	CreatedByIdentityName string
 }
 
@@ -55,8 +55,8 @@ type DeviceState struct {
 	CreatedAt             int64
 	UpdatedAt             int64
 	UpdatedByIdentityName *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	CreatedByIdentityName string
 }
 
@@ -81,8 +81,8 @@ type EventGroup struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -102,8 +102,8 @@ type FoodIntake struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -120,8 +120,8 @@ type FoodPreset struct {
 	RawJsonData           *string
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -136,8 +136,8 @@ type GlucoseReading struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -152,8 +152,8 @@ type InsulinDose struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -173,8 +173,8 @@ type LoopState struct {
 	CreatedAt             int64
 	UpdatedAt             int64
 	UpdatedByIdentityName *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	CreatedByIdentityName string
 }
 
@@ -188,8 +188,8 @@ type Note struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -204,8 +204,8 @@ type ProfilePreset struct {
 	RawJsonData              *string
 	CreatedAt                int64
 	UpdatedAt                int64
-	CreatedByAppName         string
-	CreatedByDeviceName      string
+	CreatedByAppName         *string
+	CreatedByDeviceName      *string
 	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
 }
@@ -225,8 +225,8 @@ type ProfileSwitch struct {
 	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
-	CreatedByAppName         string
-	CreatedByDeviceName      string
+	CreatedByAppName         *string
+	CreatedByDeviceName      *string
 	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
 }
@@ -246,8 +246,8 @@ type PumpState struct {
 	CreatedAt             int64
 	UpdatedAt             int64
 	UpdatedByIdentityName *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	CreatedByIdentityName string
 }
 
@@ -278,8 +278,8 @@ type TempBasal struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }
@@ -295,8 +295,8 @@ type TempTarget struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
 }

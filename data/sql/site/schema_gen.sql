@@ -19,8 +19,8 @@ CREATE TABLE activities (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -43,8 +43,8 @@ CREATE TABLE cgm_states (
 
 
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
@@ -67,8 +67,8 @@ CREATE TABLE device_states (
 
 
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
@@ -100,8 +100,8 @@ CREATE TABLE event_groups (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -126,8 +126,8 @@ CREATE TABLE food_intakes (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -149,8 +149,8 @@ CREATE TABLE food_presets (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -171,8 +171,8 @@ CREATE TABLE glucose_readings (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -192,8 +192,8 @@ CREATE TABLE insulin_doses (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -220,8 +220,8 @@ CREATE TABLE loop_states (
 
 
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
@@ -239,8 +239,8 @@ CREATE TABLE notes (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -260,8 +260,8 @@ CREATE TABLE profile_presets (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -290,8 +290,8 @@ CREATE TABLE profile_switches (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -319,8 +319,8 @@ CREATE TABLE pump_states (
 
 
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
@@ -368,8 +368,8 @@ CREATE TABLE temp_basals (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
@@ -390,8 +390,8 @@ CREATE TABLE temp_targets (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
-    created_by_app_name TEXT NOT NULL CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT NOT NULL CHECK(length(created_by_device_name)  <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );

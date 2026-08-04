@@ -100,8 +100,8 @@ type CreatePumpStateParams struct {
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	RawJsonData           *string
-	CreatedByAppName      string
-	CreatedByDeviceName   string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
 	CreatedByIdentityName string
 }
 

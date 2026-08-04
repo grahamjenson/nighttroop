@@ -16,8 +16,17 @@ func IsDuplicateID(err error) bool {
 	return strings.Contains(err.Error(), "UNIQUE constraint failed") && strings.Contains(err.Error(), ".id")
 }
 
-func (model *FoodPreset) GetDeletedAt() *int64 {
+func (model FoodPreset) GetDeletedAt() *int64 {
 	return nil
+}
+
+func (model FoodPreset) GetUtcOffsetMinutes() *int64 {
+	utcOffset := int64(0)
+	return &utcOffset
+}
+
+func (model FoodPreset) GetOccurredAt() int64 {
+	return model.CreatedAt
 }
 
 /////////

@@ -34,20 +34,29 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
 ASSERT {{ assertEquals "lunch" "@0.reason" }}
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME get_treatments_v1
 GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT {{ assertEquals 45 "@0.carbs" }}
+ASSERT {{ assertEquals 4.2 "@0.insulin" }}
+ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
+ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME get_treatments_type_v1
 GET http://{{ .site }}.ns.localhost/api/v1/treatments/Meal%20Bolus?token={{ token }}
@@ -79,11 +88,17 @@ B {
   "reason": "lunch"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Bolus Wizard" "@0.eventType" }}
-ASSERT {{ assertEquals 150 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals 46 "@0.carbs" }}
-ASSERT {{ assertEquals 4.3 "@0.insulin" }}
-ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
-ASSERT {{ assertEquals "lunch" "@0.reason" }}
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
+ASSERT {{ assertExists "@result.created_at" }}
+ASSERT {{ assertEquals 150 "@result.glucose" }}
+ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
+ASSERT {{ assertEquals 46 "@result.carbs" }}
+ASSERT {{ assertEquals 4.3 "@result.insulin" }}
+ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}
+ASSERT {{ assertEquals "lunch" "@result.reason" }}
+ASSERT {{ assertExists "@result.identifier" }}
+ASSERT {{ assertExists "@result.date" }}
+ASSERT {{ assertExists "@result.subject" }}
+ASSERT {{ assertExists "@result.utcOffset" }}
+ASSERT {{ assertExists "@result.srvCreated" }}
+ASSERT {{ assertExists "@result.srvModified" }}

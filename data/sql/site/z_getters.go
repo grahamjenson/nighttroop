@@ -73,12 +73,12 @@ func (m Activity) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m Activity) GetCreatedByAppName() string {
+func (m Activity) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m Activity) GetCreatedByDeviceName() string {
+func (m Activity) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -148,12 +148,12 @@ func (m CgmState) GetUpdatedByIdentityName() *string {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m CgmState) GetCreatedByAppName() string {
+func (m CgmState) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m CgmState) GetCreatedByDeviceName() string {
+func (m CgmState) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -223,12 +223,12 @@ func (m DeviceState) GetUpdatedByIdentityName() *string {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m DeviceState) GetCreatedByAppName() string {
+func (m DeviceState) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m DeviceState) GetCreatedByDeviceName() string {
+func (m DeviceState) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -338,12 +338,12 @@ func (m EventGroup) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m EventGroup) GetCreatedByAppName() string {
+func (m EventGroup) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m EventGroup) GetCreatedByDeviceName() string {
+func (m EventGroup) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -428,12 +428,12 @@ func (m FoodIntake) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m FoodIntake) GetCreatedByAppName() string {
+func (m FoodIntake) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m FoodIntake) GetCreatedByDeviceName() string {
+func (m FoodIntake) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -503,12 +503,12 @@ func (m FoodPreset) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m FoodPreset) GetCreatedByAppName() string {
+func (m FoodPreset) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m FoodPreset) GetCreatedByDeviceName() string {
+func (m FoodPreset) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -568,12 +568,12 @@ func (m GlucoseReading) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m GlucoseReading) GetCreatedByAppName() string {
+func (m GlucoseReading) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m GlucoseReading) GetCreatedByDeviceName() string {
+func (m GlucoseReading) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -633,12 +633,12 @@ func (m InsulinDose) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m InsulinDose) GetCreatedByAppName() string {
+func (m InsulinDose) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m InsulinDose) GetCreatedByDeviceName() string {
+func (m InsulinDose) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -723,12 +723,12 @@ func (m LoopState) GetUpdatedByIdentityName() *string {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m LoopState) GetCreatedByAppName() string {
+func (m LoopState) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m LoopState) GetCreatedByDeviceName() string {
+func (m LoopState) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -783,12 +783,12 @@ func (m Note) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m Note) GetCreatedByAppName() string {
+func (m Note) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m Note) GetCreatedByDeviceName() string {
+func (m Note) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -848,12 +848,12 @@ func (m ProfilePreset) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m ProfilePreset) GetCreatedByAppName() string {
+func (m ProfilePreset) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m ProfilePreset) GetCreatedByDeviceName() string {
+func (m ProfilePreset) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -938,12 +938,12 @@ func (m ProfileSwitch) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m ProfileSwitch) GetCreatedByAppName() string {
+func (m ProfileSwitch) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m ProfileSwitch) GetCreatedByDeviceName() string {
+func (m ProfileSwitch) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -1028,12 +1028,12 @@ func (m PumpState) GetUpdatedByIdentityName() *string {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m PumpState) GetCreatedByAppName() string {
+func (m PumpState) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m PumpState) GetCreatedByDeviceName() string {
+func (m PumpState) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -1158,12 +1158,12 @@ func (m TempBasal) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m TempBasal) GetCreatedByAppName() string {
+func (m TempBasal) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m TempBasal) GetCreatedByDeviceName() string {
+func (m TempBasal) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
@@ -1228,12 +1228,12 @@ func (m TempTarget) GetUpdatedAt() int64 {
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m TempTarget) GetCreatedByAppName() string {
+func (m TempTarget) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m TempTarget) GetCreatedByDeviceName() string {
+func (m TempTarget) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
