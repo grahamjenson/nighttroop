@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"text/template"
 	"time"
 )
 
@@ -202,7 +202,7 @@ func parseFile(r io.Reader) ([]Request, error) {
 
 func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 
-	url, err := renderTemplate(r.URL, ctx)
+	url, err := renderTemplate(r.URL, ctx, nil)
 	if err != nil {
 		return Request{}, fmt.Errorf("request %s url render failed: %w", r.Name, err)
 	}
@@ -219,7 +219,7 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	}
 
 	// ---- render body ----
-	bodyStr, err := renderTemplate(string(r.Body), ctx)
+	bodyStr, err := renderTemplate(string(r.Body), ctx, nil)
 	if err != nil {
 		return Request{}, fmt.Errorf("request %s body render failed: %w", r.Name, err)
 	}
@@ -228,7 +228,7 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	renderedHeaders := make(http.Header)
 	for k, vv := range r.Headers {
 		for _, v := range vv {
-			renderedValue, err := renderTemplate(v, ctx)
+			renderedValue, err := renderTemplate(v, ctx, nil)
 			if err != nil {
 				return Request{}, fmt.Errorf("request %s header %s render failed: %w", r.Name, k, err)
 			}
@@ -256,7 +256,7 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	}, nil
 }
 
-func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[string]any) (int, map[string]any, http.Header, map[string]any) {
+func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[string]any) (int, any, http.Header, map[string]any) {
 
 	if r.Body != "" {
 		// Making Sure the body is JSON
@@ -273,7 +273,7 @@ func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	var out map[string]any
+	var out any
 	bodyOut := rr.Body.String()
 	if err := json.NewDecoder(strings.NewReader(bodyOut)).Decode(&out); err != nil {
 		fmt.Println("failed to decode json for", r.Name, "error:", err)
@@ -287,9 +287,10 @@ func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[
 	}
 
 	if r.Assert != "" {
-		assertValue, err := renderTemplate(r.Assert, context)
+		fmt.Println("SFHAIFOIASHFHOIAS", context)
+		assertValue, err := renderTemplate(r.Assert, context, t)
 		if err != nil {
-			t.Fatalf("request %s assert render failed: %v", r.Name, err)
+			t.Fatalf("request %s assert %s context %v render failed: %v, assertValue: %s", r.Name, r.Assert, context, err, assertValue)
 		}
 		if assertValue != "true" {
 			t.Fatalf("request %s assert failed: %s", r.Name, r.Assert)
@@ -354,13 +355,14 @@ func templateDig(root any, path string) any {
 	return cur
 }
 
-func renderTemplate(input string, ctx map[string]any) (string, error) {
+func renderTemplate(input string, ctx map[string]any, t *testing.T) (string, error) {
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
 			"dig": func(path string) any {
 				return templateDig(ctx, path)
 			},
+
 			"token": func() string {
 				return ctx["token"].(string)
 			},
@@ -383,6 +385,24 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 					}
 				}
 				return ""
+			},
+			// TESTING FUNCTIONS
+			"assertEquals": func(expected, actual any) string {
+				if s, ok := actual.(string); ok && strings.HasPrefix(s, "#") {
+					// handle template path/reference case
+					actual = templateDig(ctx, s[1:])
+				}
+
+				if s, ok := expected.(string); ok && strings.HasPrefix(s, "#") {
+					// handle template path/reference case
+					expected = templateDig(ctx, s[1:])
+				}
+
+				if expected == actual {
+					return "true"
+				}
+				t.Fatalf("assertEquals failed: expected %v, got %v", expected, actual)
+				return "false"
 			},
 		}).
 		Parse(input)

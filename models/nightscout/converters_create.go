@@ -90,7 +90,8 @@ type CreateMapConverter interface {
 	// goverter:map Date ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore GroupType GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
+	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
+	// goverter:map EventType GroupType
 	TreatmentToCreateEventGroup(source Treatment, ctx CreateContext) site.CreateEventGroupParams
 
 	///////

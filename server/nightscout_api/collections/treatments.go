@@ -29,12 +29,12 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	err := utils.FromMap(data, &treatmentModel)
 	if err != nil {
 		slog.Error("failed to map data to treatment model", "error", err)
-		return nil, nsutils.ErrInternal
+		return nil, nsutils.BadDataBodyError
 	}
 
 	if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
 		slog.Error("treatment event type is nil")
-		return nil, nsutils.ErrInternal
+		return nil, nsutils.BadDataBodyError
 	}
 
 	cc := nightscout.CreateContext{
@@ -62,7 +62,7 @@ func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.
 	err := utils.FromMap(patch, &treatmentModel)
 	if err != nil {
 		slog.Error("failed to map patch to treatment model", "error", err)
-		return nil, nsutils.ErrInternal
+		return nil, nsutils.BadDataBodyError
 	}
 
 	cc := nightscout.UpdateContext{
@@ -186,6 +186,7 @@ func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext,
 			Note:       &note,
 		}
 	case nightscout.MealBolus:
+
 		return site.CreateEventGroupBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: &glucoseReading,

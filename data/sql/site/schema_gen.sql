@@ -74,7 +74,7 @@ CREATE TABLE device_states (
 
 CREATE TABLE event_groups (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
-    group_type TEXT NOT NULL CHECK(length(group_type) <= 32),
+    group_type TEXT NOT NULL CHECK(length(group_type) > 0 AND length(group_type) <= 32),
 
     glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
     insulin_dose_id TEXT UNIQUE REFERENCES insulin_doses(id) ON DELETE RESTRICT,

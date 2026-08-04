@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -383,7 +384,7 @@ func compileDotEnvFile(mode consts.ServerMode) (map[string]string, error) {
 	case consts.Development:
 		filename = ".env.dev"
 	case consts.Test:
-		projectRoot := FindProjectRoot()
+		projectRoot := utils.FindProjectRoot()
 		filename = filepath.Join(projectRoot, ".env.test")
 	case consts.Production:
 		filename = ".env"
@@ -471,24 +472,4 @@ func MergeMaps(a, b map[string]string) map[string]string {
 	}
 
 	return result
-}
-
-func FindProjectRoot() string {
-	dir, err := os.Getwd()
-	if err != nil {
-		return ""
-	}
-
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return ""
-		}
-
-		dir = parent
-	}
 }

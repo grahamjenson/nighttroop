@@ -2,5 +2,6 @@
 /.dbs
 .env
 tmp
+.tmp
 master_key.bin
 bin

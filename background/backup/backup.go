@@ -34,7 +34,7 @@ func (b *BackupJobManager) BackupToS3() {
 func (b *BackupJobManager) BackupControl() error {
 
 	// Backup the Database
-	err := utils.SqliteBackup(b.ctx, b.controlDB.SQLiteDB, utils.CONTROL_DB_PATH, utils.CONTROL_DB_BACKUP_PATH)
+	err := utils.SqliteBackup(b.ctx, b.controlDB.SQLiteDB, utils.CONTROL_DB_BACKUP_PATH)
 	if err != nil {
 		return fmt.Errorf("cannot backup control db: %w", err)
 	}
@@ -74,10 +74,10 @@ func (b *BackupJobManager) BackupSiteBatch(char string) error {
 		if site.Subdomain == "" {
 			continue
 		}
-		path, backupPath := utils.SiteDBPaths(site.Subdomain)
+		_, backupPath := utils.SiteDBPaths(site.Subdomain)
 
 		// Have to add it anyway because we need all paths
-		err := utils.SqliteBackup(ctx, site.SQLiteDB, path, backupPath)
+		err := utils.SqliteBackup(ctx, site.SQLiteDB, backupPath)
 		if err != nil {
 			return fmt.Errorf("cannot backup site db %s: %w", site.Subdomain, err)
 		}

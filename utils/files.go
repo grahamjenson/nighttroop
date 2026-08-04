@@ -88,3 +88,23 @@ func (c *CountingReader) Read(p []byte) (int, error) {
 	c.Bytes += int64(n)
 	return n, err
 }
+
+func FindProjectRoot() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+
+		dir = parent
+	}
+}

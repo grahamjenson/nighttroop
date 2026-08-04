@@ -22,6 +22,17 @@ func GetTestServerConfig() config.ServerConfig {
 	return *storedServerConfig
 }
 
+func GetConfigControlDBForTest() (config.ServerConfig, *db.ControlDB, error) {
+	cfg := GetTestServerConfig()
+
+	controlDB, err := db.NewControlDB(cfg)
+	if err != nil {
+		return cfg, nil, fmt.Errorf("cannot create control db: %w", err)
+	}
+
+	return cfg, controlDB, nil
+}
+
 func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteDB, error) {
 	cfg := GetTestServerConfig()
 

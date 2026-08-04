@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -50,14 +49,11 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		var body any
-		// bodyBytes, _ := ioutil.ReadAll(r.Body)
-		// fmt.Println("asfoiahfihaisfu", r.Method, r.URL, r.Header, string(bodyBytes))
 		if err := nsutils.ReadJSON(r, &body); err != nil {
-			slog.Error("Collection Create failed to read JSON body", "error", err)
-			fmt.Println("hisdfuhdfiusfuidhshfudssdfhui", err)
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}
+
 		var created []nsutils.Record
 
 		// Deal with one record being sent or an array being sent

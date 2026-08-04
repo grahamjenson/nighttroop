@@ -331,6 +331,9 @@ func TreatmentToCreateDeviceState(source Treatment, context CreateContext) site.
 func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.CreateEventGroupParams {
 	var siteCreateEventGroupParams site.CreateEventGroupParams
 	siteCreateEventGroupParams.ID = AssignID(source.Date, context)
+	if source.EventType != nil {
+		siteCreateEventGroupParams.GroupType = string(*source.EventType)
+	}
 	if source.Date != nil {
 		siteCreateEventGroupParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}

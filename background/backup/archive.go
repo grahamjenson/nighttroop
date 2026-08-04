@@ -87,10 +87,10 @@ func (b *BackupJobManager) archiveSites(archiveList []*db.SiteDB) ([]string, err
 		if site.Subdomain == "" {
 			continue
 		}
-		path, backupPath := utils.SiteDBPaths(site.Subdomain)
+		_, backupPath := utils.SiteDBPaths(site.Subdomain)
 
 		// Last Backup
-		err := utils.SqliteBackup(b.ctx, site.SQLiteDB, path, backupPath)
+		err := utils.SqliteBackup(b.ctx, site.SQLiteDB, backupPath)
 		if err != nil {
 			return nil, fmt.Errorf("cannot backup site db %s: %w", site.Subdomain, err)
 		}
