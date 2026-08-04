@@ -44,3 +44,5 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "#create_treatments_v1.0.eventType" }}
+ASSERT {{ assertEquals 148 "#create_treatments_v1.0.glucose" }}
+ASSERT {{ assertEquals "Sensor" "#create_treatments_v1.0.glucoseType" }}

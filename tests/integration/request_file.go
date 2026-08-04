@@ -14,6 +14,8 @@ import (
 	"testing"
 	"text/template"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type Request struct {
@@ -25,7 +27,7 @@ type Request struct {
 	IsFunction bool
 
 	AssertStatus int
-	Assert       string
+	Assert       []string
 }
 
 func (r Request) ToFlatString() string {
@@ -161,7 +163,7 @@ func parseFile(r io.Reader) ([]Request, error) {
 			}
 
 			assert := strings.TrimSpace(strings.TrimPrefix(line, "ASSERT "))
-			current.Assert = assert
+			current.Assert = append(current.Assert, assert)
 		case strings.HasPrefix(line, "H "):
 			if current == nil {
 				return nil, fmt.Errorf("header before NAME")
@@ -202,7 +204,7 @@ func parseFile(r io.Reader) ([]Request, error) {
 
 func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 
-	url, err := renderTemplate(r.URL, ctx, nil)
+	url, err := renderTemplate(r.URL, ctx)
 	if err != nil {
 		return Request{}, fmt.Errorf("request %s url render failed: %w", r.Name, err)
 	}
@@ -219,7 +221,7 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	}
 
 	// ---- render body ----
-	bodyStr, err := renderTemplate(string(r.Body), ctx, nil)
+	bodyStr, err := renderTemplate(string(r.Body), ctx)
 	if err != nil {
 		return Request{}, fmt.Errorf("request %s body render failed: %w", r.Name, err)
 	}
@@ -228,7 +230,7 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	renderedHeaders := make(http.Header)
 	for k, vv := range r.Headers {
 		for _, v := range vv {
-			renderedValue, err := renderTemplate(v, ctx, nil)
+			renderedValue, err := renderTemplate(v, ctx)
 			if err != nil {
 				return Request{}, fmt.Errorf("request %s header %s render failed: %w", r.Name, k, err)
 			}
@@ -279,6 +281,8 @@ func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[
 		fmt.Println("failed to decode json for", r.Name, "error:", err)
 	}
 
+	prettyOutput, _ := json.MarshalIndent(out, "", "  ")
+
 	context[r.Name] = out
 	context[r.Name+"_status"] = rr.Code
 
@@ -286,14 +290,10 @@ func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[
 		t.Fatalf("request %s expected status %d but got %d with body %s and headers %v", r.Name, r.AssertStatus, rr.Code, bodyOut, rr.Header())
 	}
 
-	if r.Assert != "" {
-		fmt.Println("SFHAIFOIASHFHOIAS", context)
-		assertValue, err := renderTemplate(r.Assert, context, t)
+	for _, assert := range r.Assert {
+		_, err := assertTemplateCheck(assert, context, t, string(prettyOutput))
 		if err != nil {
-			t.Fatalf("request %s assert %s context %v render failed: %v, assertValue: %s", r.Name, r.Assert, context, err, assertValue)
-		}
-		if assertValue != "true" {
-			t.Fatalf("request %s assert failed: %s", r.Name, r.Assert)
+			t.Fatalf("assert Template Error %s assert %s output %s render failed: %v", r.Name, assert, prettyOutput, err)
 		}
 	}
 
@@ -355,7 +355,7 @@ func templateDig(root any, path string) any {
 	return cur
 }
 
-func renderTemplate(input string, ctx map[string]any, t *testing.T) (string, error) {
+func renderTemplate(input string, ctx map[string]any) (string, error) {
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
@@ -386,6 +386,27 @@ func renderTemplate(input string, ctx map[string]any, t *testing.T) (string, err
 				}
 				return ""
 			},
+		}).
+		Parse(input)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, ctx); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+func assertTemplateCheck(input string, ctx map[string]any, t *testing.T, prettyOutput string) (string, error) {
+	tmpl, err := template.New("req").
+		Option("missingkey=error").
+		Funcs(template.FuncMap{
+			"dig": func(path string) any {
+				return templateDig(ctx, path)
+			},
 			// TESTING FUNCTIONS
 			"assertEquals": func(expected, actual any) string {
 				if s, ok := actual.(string); ok && strings.HasPrefix(s, "#") {
@@ -397,12 +418,22 @@ func renderTemplate(input string, ctx map[string]any, t *testing.T) (string, err
 					// handle template path/reference case
 					expected = templateDig(ctx, s[1:])
 				}
+				expected = normalizeValue(expected)
+				actual = normalizeValue(actual)
 
-				if expected == actual {
-					return "true"
-				}
-				t.Fatalf("assertEquals failed: expected %v, got %v", expected, actual)
-				return "false"
+				assert.Equal(
+					t,
+					expected,
+					actual,
+					"assertEquals failed: expected %v:%T, got %v:%T, output: %s",
+					expected,
+					expected,
+					actual,
+					actual,
+					prettyOutput,
+				)
+
+				return "true"
 			},
 		}).
 		Parse(input)
@@ -416,4 +447,48 @@ func renderTemplate(input string, ctx map[string]any, t *testing.T) (string, err
 	}
 
 	return buf.String(), nil
+}
+
+func normalizeValue(v any) any {
+	switch x := v.(type) {
+	case int:
+		return float64(x)
+	case int8:
+		return float64(x)
+	case int16:
+		return float64(x)
+	case int32:
+		return float64(x)
+	case int64:
+		return float64(x)
+
+	case uint:
+		return float64(x)
+	case uint8:
+		return float64(x)
+	case uint16:
+		return float64(x)
+	case uint32:
+		return float64(x)
+	case uint64:
+		return float64(x)
+
+	case float32:
+		return float64(x)
+
+	case []any:
+		for i := range x {
+			x[i] = normalizeValue(x[i])
+		}
+		return x
+
+	case map[string]any:
+		for k, v := range x {
+			x[k] = normalizeValue(v)
+		}
+		return x
+
+	default:
+		return v
+	}
 }

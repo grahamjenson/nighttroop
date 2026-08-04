@@ -175,6 +175,10 @@ func DBModelToTreatment(source *site.GetEventGroupRow) Treatment {
 		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
 		pNightscoutTreatmentEventType := TreatmentEventType((*source).EventGroup.GroupType)
 		nightscoutTreatment.EventType = &pNightscoutTreatmentEventType
+		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).GlucoseReading.Reading)
+		nightscoutTreatment.Glucose = &pNightscoutFlexibleFloat64
+		pNightscoutGlucoseType := GlucoseType((*source).GlucoseReading.ReadingType)
+		nightscoutTreatment.GlucoseType = &pNightscoutGlucoseType
 		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByDeviceName)
 		nightscoutTreatment.Device = &pNightscoutShortString
 		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByAppName)

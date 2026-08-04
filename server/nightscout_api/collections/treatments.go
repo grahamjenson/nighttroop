@@ -186,7 +186,6 @@ func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext,
 			Note:       &note,
 		}
 	case nightscout.MealBolus:
-
 		return site.CreateEventGroupBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: &glucoseReading,

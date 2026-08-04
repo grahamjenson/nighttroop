@@ -99,8 +99,10 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.CreatedAt SrvCreated
 	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
-	// goverter:ignore Name ActivityType Steps Calories HeartRate Glucose GlucoseType Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:ignore Name ActivityType Steps Calories HeartRate Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
 	// goverter:map EventGroup.GroupType EventType
+	// goverter:map GlucoseReading.Reading Glucose
+	// goverter:map GlucoseReading.ReadingType GlucoseType
 	DBModelToTreatment(source *site.GetEventGroupRow) Treatment
 
 	////////////////////////////////////////
