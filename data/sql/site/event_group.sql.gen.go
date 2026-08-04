@@ -11,7 +11,6 @@ import (
 )
 
 const allEventGroups = `-- name: AllEventGroups :many
-
 SELECT 
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
@@ -182,9 +181,6 @@ type AllEventGroupsRow struct {
 	NoteReason                            *string
 }
 
-// ------
-// READ
-// ------
 func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) ([]*AllEventGroupsRow, error) {
 	rows, err := q.query(ctx, q.allEventGroupsStmt, allEventGroups, arg.IncludeDeleted, arg.Skip, arg.Limit)
 	if err != nil {
@@ -660,6 +656,50 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.NoteID,
 		&i.NoteContent,
 		&i.NoteReason,
+	)
+	return &i, err
+}
+
+const getEventGroupWithoutJoins = `-- name: GetEventGroupWithoutJoins :one
+
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?
+`
+
+type GetEventGroupWithoutJoinsParams struct {
+	ID string
+}
+
+// ------
+// READ
+// ------
+func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGroupWithoutJoinsParams) (*EventGroup, error) {
+	row := q.queryRow(ctx, q.getEventGroupWithoutJoinsStmt, getEventGroupWithoutJoins, arg.ID)
+	var i EventGroup
+	err := row.Scan(
+		&i.ID,
+		&i.GroupType,
+		&i.GlucoseReadingID,
+		&i.InsulinDoseID,
+		&i.FoodIntakeID,
+		&i.TempBasalID,
+		&i.TempTargetID,
+		&i.ProfileSwitchID,
+		&i.DeviceStateID,
+		&i.LoopStateID,
+		&i.PumpStateID,
+		&i.CgmStateID,
+		&i.ActivityID,
+		&i.NoteID,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityName,
 	)
 	return &i, err
 }

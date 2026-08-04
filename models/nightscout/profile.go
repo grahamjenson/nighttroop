@@ -18,10 +18,8 @@ type Profile struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Feilds
-	StartDate   *DateString `json:"startDate,omitempty"`
-	Mills       *DateInt    `json:"mills,omitempty"`
-	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
-	SrvModified *DateInt    `json:"srvModified,omitempty"`
+	StartDate *DateString `json:"startDate,omitempty"`
+	Mills     *DateInt    `json:"mills,omitempty"`
 
 	// Non-JSON values to make mapping easier
 	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds

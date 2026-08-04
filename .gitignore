@@ -3,5 +3,6 @@
 .env
 tmp
 .tmp
+.test
 master_key.bin
 bin

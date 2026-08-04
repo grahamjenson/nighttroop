@@ -199,7 +199,7 @@ func generateGetters(modelName string, columns []*plugin.Column) string {
 		fieldType := getSQLiteGoType(col, modelName, fieldName)
 
 		sb.WriteString(fmt.Sprintf("// Get%s returns the %s value.\n", fieldName, fieldName))
-		sb.WriteString(fmt.Sprintf("func (m *%s) Get%s() %s {\n", modelName, fieldName, fieldType))
+		sb.WriteString(fmt.Sprintf("func (m %s) Get%s() %s {\n", modelName, fieldName, fieldType))
 		sb.WriteString(fmt.Sprintf("	return m.%s\n", fieldName))
 		sb.WriteString("}\n\n")
 	}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -35,17 +36,25 @@ func (r Request) ToFlatString() string {
 }
 
 func (r Request) PrintRequest() {
-	fmt.Printf("NAME %s\n", r.Name)
-	fmt.Printf("%s %s\n", r.Method, r.URL)
-	for k, vv := range r.Headers {
-		for _, v := range vv {
-			fmt.Printf("H %s: %s\n", k, v)
-		}
+	// String URL of token param
+	urlToPrint := r.URL
+	u, err := url.Parse(r.URL)
+	if err == nil {
+		q := u.Query()
+		q.Del("token")
+		u.RawQuery = q.Encode()
+		urlToPrint = u.String()
 	}
+	fmt.Printf("REQUEST %s: %s %s\n", r.Name, r.Method, urlToPrint)
 	if len(r.Body) > 0 {
-		fmt.Printf("B %s\n", string(r.Body))
+		fmt.Printf("BODY %s\n", strings.ReplaceAll(string(r.Body), "\n", " "))
 	}
-	fmt.Println()
+	for k, v := range r.Headers {
+		if k == "Accept" || k == "Content-Type" {
+			continue
+		}
+		fmt.Printf("H %s: %s\n", k, strings.Join(v, ", "))
+	}
 }
 
 type RequestFile struct {
@@ -225,6 +234,13 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	if err != nil {
 		return Request{}, fmt.Errorf("request %s body render failed: %w", r.Name, err)
 	}
+	// check body is valid JSON
+	if bodyStr != "" {
+		var js any
+		if err := json.Unmarshal([]byte(bodyStr), &js); err != nil {
+			return Request{}, fmt.Errorf("request %s body is not valid JSON: %w", r.Name, err)
+		}
+	}
 
 	// -- render headers ----
 	renderedHeaders := make(http.Header)
@@ -258,19 +274,23 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	}, nil
 }
 
-func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[string]any) (int, any, http.Header, map[string]any) {
+func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (int, any, http.Header, map[string]any) {
 
 	if r.Body != "" {
 		// Making Sure the body is JSON
 		err := json.Unmarshal([]byte(r.Body), new(any))
 		if err != nil {
-			t.Fatalf("request %s body is not valid JSON: %v", r.Name, err)
+			panic(fmt.Sprintf("request %s body %s is not valid JSON: %v", r.Name, r.Body, err))
 		}
 
 	}
 
 	req := httptest.NewRequest(r.Method, r.URL, strings.NewReader(r.Body))
-	req.Header.Set("Content-Type", "application/json")
+	for k, vv := range r.Headers {
+		for _, v := range vv {
+			req.Header.Add(k, v)
+		}
+	}
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -281,23 +301,23 @@ func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[
 		fmt.Println("failed to decode json for", r.Name, "error:", err)
 	}
 
-	prettyOutput, _ := json.MarshalIndent(out, "", "  ")
-
 	context[r.Name] = out
 	context[r.Name+"_status"] = rr.Code
 
-	if r.AssertStatus != 0 && rr.Code != r.AssertStatus {
-		t.Fatalf("request %s expected status %d but got %d with body %s and headers %v", r.Name, r.AssertStatus, rr.Code, bodyOut, rr.Header())
+	return rr.Code, out, rr.Header(), context
+}
+
+func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, ctx map[string]any) {
+	if r.AssertStatus != 0 && statusCode != r.AssertStatus {
+		t.Fatalf("request %s expected status %d but got %d with body %v", r.Name, r.AssertStatus, statusCode, output)
 	}
 
 	for _, assert := range r.Assert {
-		_, err := assertTemplateCheck(assert, context, out, t)
+		_, err := assertTemplateCheck(assert, ctx, output, t)
 		if err != nil {
-			t.Fatalf("assert Template Error %s assert %s output %s render failed: %v", r.Name, assert, prettyOutput, err)
+			t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", r.Name, assert, output, err)
 		}
 	}
-
-	return rr.Code, out, rr.Header(), context
 }
 
 func (r Request) ExecuteFunction(ctx map[string]any) (map[string]any, error) {
@@ -409,31 +429,14 @@ func assertTemplateCheck(input string, ctx map[string]any, localResult any, t *t
 				return templateDig(ctx, path)
 			},
 			// TESTING FUNCTIONS
-			"assertEquals": func(expected, actual any) string {
-				if s, ok := actual.(string); ok && strings.HasPrefix(s, "@") {
-					// handle template path/reference case
-					actual = templateDig(localResult, s[1:])
-				}
-
-				if s, ok := expected.(string); ok && strings.HasPrefix(s, "@") {
-					// handle template path/reference case
-					expected = templateDig(localResult, s[1:])
-				}
-				expected = normalizeValue(expected)
-				actual = normalizeValue(actual)
-
-				assert.Equal(
-					t,
-					expected,
-					actual,
-					"assertEquals failed: expected %v:%T, got %v:%T, output: %s",
-					expected,
-					expected,
-					actual,
-					actual,
-					prettyOutput,
-				)
-
+			"assertEquals": func(rawExpected, rawActual any) string {
+				expected, actual := normalizeExpectedAndAcutal(rawExpected, rawActual, localResult)
+				assert.Equal(t, expected, actual, "assertEquals failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
+				return "true"
+			},
+			"assertExists": func(rawActual any) string {
+				_, actual := normalizeExpectedAndAcutal(rawActual, rawActual, localResult)
+				assert.NotNil(t, actual, "assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
 				return "true"
 			},
 		}).
@@ -450,6 +453,20 @@ func assertTemplateCheck(input string, ctx map[string]any, localResult any, t *t
 	return buf.String(), nil
 }
 
+func normalizeExpectedAndAcutal(expected, actual, localResult any) (any, any) {
+	if s, ok := actual.(string); ok && strings.HasPrefix(s, "@") {
+		// handle template path/reference case
+		actual = templateDig(localResult, s[1:])
+	}
+
+	if s, ok := expected.(string); ok && strings.HasPrefix(s, "@") {
+		// handle template path/reference case
+		expected = templateDig(localResult, s[1:])
+	}
+	expected = normalizeValue(expected)
+	actual = normalizeValue(actual)
+	return expected, actual
+}
 func normalizeValue(v any) any {
 	switch x := v.(type) {
 	case int:

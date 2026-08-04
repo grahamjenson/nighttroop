@@ -22,9 +22,7 @@ type DeviceStatus struct {
 	UploaderBattery *FlexibleFloat64 `json:"uploaderBattery,omitempty"`
 
 	// Date Fields
-	CreatedAt   *DateString `json:"created_at,omitempty"`
-	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
-	SrvModified *DateInt    `json:"srvModified,omitempty"`
+	CreatedAt *DateString `json:"created_at,omitempty"`
 
 	// Default String Fields
 	App     *ShortString `json:"app,omitempty"`     // App used for the activity

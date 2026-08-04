@@ -126,6 +126,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getEventGroupStmt, err = db.PrepareContext(ctx, getEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEventGroup: %w", err)
 	}
+	if q.getEventGroupWithoutJoinsStmt, err = db.PrepareContext(ctx, getEventGroupWithoutJoins); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEventGroupWithoutJoins: %w", err)
+	}
 	if q.getFoodIntakeStmt, err = db.PrepareContext(ctx, getFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query GetFoodIntake: %w", err)
 	}
@@ -524,6 +527,11 @@ func (q *Queries) Close() error {
 	if q.getEventGroupStmt != nil {
 		if cerr := q.getEventGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.getEventGroupWithoutJoinsStmt != nil {
+		if cerr := q.getEventGroupWithoutJoinsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEventGroupWithoutJoinsStmt: %w", cerr)
 		}
 	}
 	if q.getFoodIntakeStmt != nil {
@@ -974,6 +982,7 @@ type Queries struct {
 	getCGMStateStmt                     *sql.Stmt
 	getDeviceStateStmt                  *sql.Stmt
 	getEventGroupStmt                   *sql.Stmt
+	getEventGroupWithoutJoinsStmt       *sql.Stmt
 	getFoodIntakeStmt                   *sql.Stmt
 	getFoodPresetStmt                   *sql.Stmt
 	getGlucoseReadingStmt               *sql.Stmt
@@ -1089,6 +1098,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getCGMStateStmt:                     q.getCGMStateStmt,
 		getDeviceStateStmt:                  q.getDeviceStateStmt,
 		getEventGroupStmt:                   q.getEventGroupStmt,
+		getEventGroupWithoutJoinsStmt:       q.getEventGroupWithoutJoinsStmt,
 		getFoodIntakeStmt:                   q.getFoodIntakeStmt,
 		getFoodPresetStmt:                   q.getFoodPresetStmt,
 		getGlucoseReadingStmt:               q.getGlucoseReadingStmt,

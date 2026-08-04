@@ -32,6 +32,9 @@ RETURNING *;
 -- READ
 --------
 
+-- name: GetEventGroupWithoutJoins :one
+SELECT * from event_groups WHERE id = ?;
+
 -- name: AllEventGroups :many
 SELECT 
     -- It would be awesome if sqlc worked with embed null objects

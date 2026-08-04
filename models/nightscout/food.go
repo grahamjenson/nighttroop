@@ -34,10 +34,6 @@ type Food struct {
 	App     *ShortString `json:"app,omitempty"`     // App used for the activity
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
-	// API v3 additions
-	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
-	SrvModified *DateInt `json:"srvModified,omitempty"`
-
 	// Non-JSON values to make mapping easier
 	Date        *DateInt `json:"-"` // Unix timestamp in milliseconds
 	RawJsonData string   `json:"-"`

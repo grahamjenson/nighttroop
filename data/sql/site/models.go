@@ -16,26 +16,6 @@ func IsDuplicateID(err error) bool {
 	return strings.Contains(err.Error(), "UNIQUE constraint failed") && strings.Contains(err.Error(), ".id")
 }
 
-func (model *EventGroupsBundle) GetID() string {
-	return model.EventGroup.ID
-}
-
-func (model *EventGroupsBundle) GetDeletedAt() *int64 {
-	return model.EventGroup.DeletedAt
-}
-
-func (model *EventGroupsBundle) GetCreatedAt() int64 {
-	return model.EventGroup.CreatedAt
-}
-
-func (model *EventGroupsBundle) GetUpdatedAt() int64 {
-	return model.EventGroup.UpdatedAt
-}
-
-func (model *EventGroupsBundle) GetCreatedByIdentityName() string {
-	return model.EventGroup.CreatedByIdentityName
-}
-
 func (model *FoodPreset) GetDeletedAt() *int64 {
 	return nil
 }
@@ -43,6 +23,34 @@ func (model *FoodPreset) GetDeletedAt() *int64 {
 /////////
 // Event Group Stuff
 /////////
+
+func (model EventGroupsBundle) GetID() string {
+	return model.EventGroup.ID
+}
+
+func (model EventGroupsBundle) GetDeletedAt() *int64 {
+	return model.EventGroup.DeletedAt
+}
+
+func (model EventGroupsBundle) GetCreatedAt() int64 {
+	return model.EventGroup.CreatedAt
+}
+
+func (model EventGroupsBundle) GetUpdatedAt() int64 {
+	return model.EventGroup.UpdatedAt
+}
+
+func (model EventGroupsBundle) GetCreatedByIdentityName() string {
+	return model.EventGroup.CreatedByIdentityName
+}
+
+func (model EventGroupsBundle) GetOccurredAt() int64 {
+	return model.EventGroup.OccurredAt
+}
+
+func (model EventGroupsBundle) GetUtcOffsetMinutes() *int64 {
+	return model.EventGroup.UtcOffsetMinutes
+}
 
 type CreateEventGroupBundle struct {
 	EventGroup     CreateEventGroupParams

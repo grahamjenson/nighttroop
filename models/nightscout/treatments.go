@@ -62,9 +62,7 @@ type Treatment struct {
 	// Date Fields
 	CreatedAt        *DateString    `json:"created_at,omitempty"` // ISO8601 -> time.Time
 	Date             *DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds, only used for some treatment types
-	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
-	SrvCreated       *DateInt       `json:"srvCreated,omitempty"`
-	SrvModified      *DateInt       `json:"srvModified,omitempty"`
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffsetMinutes,omitempty"`
 
 	// Non-JSON values to make mapping easier
 	RawJsonData string `json:"-"`

@@ -39,18 +39,14 @@ func DBModelToActivity(source *site.Activity) Activity {
 			nightscoutActivity.Notes = &nightscoutSanitizedString
 		}
 		nightscoutActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutDateInt := DateInt((*source).CreatedAt)
-		nightscoutActivity.SrvCreated = &pNightscoutDateInt
-		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
-		nightscoutActivity.SrvModified = &pNightscoutDateInt2
 		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
 		nightscoutActivity.Device = &pNightscoutShortString
 		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
 		nightscoutActivity.App = &pNightscoutShortString2
 		pNightscoutShortString3 := ShortString((*source).CreatedByIdentityName)
 		nightscoutActivity.Subject = &pNightscoutShortString3
-		pNightscoutDateInt3 := DateInt((*source).OccurredAt)
-		nightscoutActivity.Date = &pNightscoutDateInt3
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutActivity.Date = &pNightscoutDateInt
 		if (*source).UtcOffsetMinutes != nil {
 			nightscoutFlexibleInt645 := FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutActivity.UtcOffsetMinutes = &nightscoutFlexibleInt645
@@ -69,16 +65,12 @@ func DBModelToDeviceStatus(source *site.EventGroupsBundle) DeviceStatus {
 		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByDeviceName)
 		nightscoutDeviceStatus.Device = &pNightscoutShortString
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutDateInt := DateInt((*source).EventGroup.CreatedAt)
-		nightscoutDeviceStatus.SrvCreated = &pNightscoutDateInt
-		pNightscoutDateInt2 := DateInt((*source).EventGroup.UpdatedAt)
-		nightscoutDeviceStatus.SrvModified = &pNightscoutDateInt2
 		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByAppName)
 		nightscoutDeviceStatus.App = &pNightscoutShortString2
 		pNightscoutShortString3 := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutDeviceStatus.Subject = &pNightscoutShortString3
-		pNightscoutDateInt3 := DateInt((*source).EventGroup.OccurredAt)
-		nightscoutDeviceStatus.Date = &pNightscoutDateInt3
+		pNightscoutDateInt := DateInt((*source).EventGroup.OccurredAt)
+		nightscoutDeviceStatus.Date = &pNightscoutDateInt
 		if (*source).EventGroup.UtcOffsetMinutes != nil {
 			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
 			nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
@@ -107,10 +99,6 @@ func DBModelToEntry(source *site.GlucoseReading) Entry {
 			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutEntry.UtcOffsetMinutes = &nightscoutFlexibleInt64
 		}
-		pNightscoutDateInt3 := DateInt((*source).CreatedAt)
-		nightscoutEntry.SrvCreated = &pNightscoutDateInt3
-		pNightscoutDateInt4 := DateInt((*source).UpdatedAt)
-		nightscoutEntry.SrvModified = &pNightscoutDateInt4
 		pNightscoutShortString := ShortString((*source).CreatedByDeviceName)
 		nightscoutEntry.Device = &pNightscoutShortString
 		pNightscoutShortString2 := ShortString((*source).CreatedByAppName)
@@ -158,10 +146,6 @@ func DBModelToFood(source *site.FoodPreset) Food {
 		nightscoutFood.App = &pNightscoutShortString3
 		pNightscoutShortString4 := ShortString((*source).CreatedByIdentityName)
 		nightscoutFood.Subject = &pNightscoutShortString4
-		pNightscoutDateInt := DateInt((*source).CreatedAt)
-		nightscoutFood.SrvCreated = &pNightscoutDateInt
-		pNightscoutDateInt2 := DateInt((*source).UpdatedAt)
-		nightscoutFood.SrvModified = &pNightscoutDateInt2
 		if (*source).RawJsonData != nil {
 			nightscoutFood.RawJsonData = *(*source).RawJsonData
 		}
@@ -321,6 +305,14 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutFlexibleFloat6410 := FlexibleFloat64(*pFloat6410)
 			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6410
 		}
+		var pString5 *string
+		if (*source).Note != nil {
+			pString5 = (*source).Note.Reason
+		}
+		if pString5 != nil {
+			nightscoutShortString3 := ShortString(*pString5)
+			nightscoutTreatment.Reason = &nightscoutShortString3
+		}
 		var pFloat6411 *float64
 		if (*source).TempTarget != nil {
 			pFloat6411 = &(*source).TempTarget.HighTarget
@@ -350,10 +342,6 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutFlexibleInt645 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
 			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt645
 		}
-		pNightscoutDateInt2 := DateInt((*source).EventGroup.CreatedAt)
-		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2
-		pNightscoutDateInt3 := DateInt((*source).EventGroup.UpdatedAt)
-		nightscoutTreatment.SrvModified = &pNightscoutDateInt3
 		if (*source).EventGroup.RawJsonData != nil {
 			nightscoutTreatment.RawJsonData = *(*source).EventGroup.RawJsonData
 		}

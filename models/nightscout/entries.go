@@ -39,8 +39,6 @@ type Entry struct {
 	DateString       *DateString    `json:"dateString,omitempty"`
 	Mills            *DateInt       `json:"mills,omitempty"`
 	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
-	SrvCreated       *DateInt       `json:"srvCreated,omitempty"`
-	SrvModified      *DateInt       `json:"srvModified,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity

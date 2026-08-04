@@ -7,10 +7,6 @@ type Setting struct {
 	Type       *ShortString      `json:"type,omitempty"`
 
 	Value *ShortString `json:"value,omitempty"`
-
-	// Date Fields
-	SrvCreated  *DateInt `json:"srvCreated,omitempty"`
-	SrvModified *DateInt `json:"srvModified,omitempty"`
 }
 
 func (t *Setting) UnmarshalJSON(data []byte) error {

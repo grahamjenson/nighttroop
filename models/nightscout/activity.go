@@ -17,9 +17,7 @@ type Activity struct {
 	Notes        *SanitizedString `json:"notes,omitempty"`        // Notes
 
 	// Date fields
-	CreatedAt   *DateString `json:"created_at,omitempty"` // ISO 8601 string
-	SrvCreated  *DateInt    `json:"srvCreated,omitempty"`
-	SrvModified *DateInt    `json:"srvModified,omitempty"`
+	CreatedAt *DateString `json:"created_at,omitempty"` // ISO 8601 string
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity

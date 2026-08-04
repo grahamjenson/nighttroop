@@ -47,17 +47,22 @@ func TestUserTreatments(t *testing.T) {
 			}
 
 		} else {
+			fmt.Println()
+			fmt.Println("===============================")
 			realRequest.PrintRequest()
-
-			statusCode, output, headers, newContext := realRequest.ExecuteRequest(t, router, requestContext)
+			fmt.Println()
+			fmt.Println("- - - - - - - - - - - - - - - - ")
+			fmt.Println()
+			statusCode, output, _, newContext := realRequest.ExecuteRequest(router, requestContext)
 			requestContext = newContext
-
-			fmt.Printf("Request: %s %s\n", realRequest.Method, realRequest.URL)
-			fmt.Printf("Status Code: %d\n", statusCode)
+			fmt.Println()
+			fmt.Println("- - - - - - - - - - - - - - - - ")
+			fmt.Println()
+			fmt.Printf("STATUS CODE: %d\n", statusCode)
 			prettyOutput, _ := json.MarshalIndent(output, "", "  ")
-			fmt.Printf("Output: %+v\n", string(prettyOutput))
-			fmt.Printf("Headers: %+v\n", headers)
-
+			fmt.Printf("RESPONSE: %+v\n", string(prettyOutput))
+			fmt.Println("===============================")
+			realRequest.ExecuteAsserts(t, statusCode, output, requestContext)
 		}
 
 	}
@@ -69,7 +74,7 @@ func TestUserTreatments(t *testing.T) {
 func DumpOnFailure(t *testing.T, controlDB *db.ControlDB, filePrefix string) {
 	t.Helper()
 
-	dumpFolder := filepath.Join(utils.FindProjectRoot(), "tmp/test_db_dumps/", filePrefix+"_"+t.Name())
+	dumpFolder := filepath.Join(utils.FindProjectRoot(), ".test/dumps/", filePrefix+"_"+t.Name())
 	// delete folder if it exists
 	_ = os.RemoveAll(dumpFolder)
 

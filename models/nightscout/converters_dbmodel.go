@@ -1,6 +1,8 @@
 package nightscout
 
 import (
+	"fmt"
+
 	"nighttroop.t1d.nz/data/sql/site"
 )
 
@@ -20,8 +22,6 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
 	//
 	// goverter:map DurationMinutes Duration
 	DBModelToActivity(source *site.Activity) Activity
@@ -39,8 +39,6 @@ type DBModelConverter interface {
 	// goverter:map . MBG | MBGGlucoseReadingTypeToValue
 	// goverter:map OccurredAt Date
 	// goverter:map OccurredAt Mills
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
 	DBModelToEntry(source *site.GlucoseReading) Entry
@@ -53,8 +51,6 @@ type DBModelConverter interface {
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
-	// goverter:map CreatedAt SrvCreated
-	// goverter:map UpdatedAt SrvModified
 	//
 	// goverter:ignore Food Category Subcategory Portion Unit GI Portions HideAfterUse Hidden Position Date
 	// goverter:map Calories Energy
@@ -70,8 +66,6 @@ type DBModelConverter interface {
 	// // goverter:map CreatedByDeviceName Device
 	// // goverter:map ID Identifier
 	// // goverter:map OccurredAt Date
-	// // goverter:map CreatedAt SrvCreated
-	// // goverter:map UpdatedAt SrvModified
 	// //
 	// // goverter:ignore DefaultProfile Store StartDate Mills
 	// DBModelToProfile(source *site.ProfilePreset) Profile
@@ -97,10 +91,8 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.CreatedByDeviceName Device
 	// goverter:map EventGroup.ID Identifier
 	// goverter:map EventGroup.OccurredAt Date
-	// goverter:map EventGroup.CreatedAt SrvCreated
-	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
-	// goverter:ignore PreBolus SplitNow SplitExt Profile Reason Units
+	// goverter:ignore PreBolus SplitNow SplitExt Profile Units
 	// goverter:map EventGroup.GroupType EventType
 	//
 	// goverter:map GlucoseReading.Reading Glucose
@@ -147,8 +139,6 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.CreatedByDeviceName Device
 	// goverter:map EventGroup.ID Identifier
 	// goverter:map EventGroup.OccurredAt Date
-	// goverter:map EventGroup.CreatedAt SrvCreated
-	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
 	// goverter:ignore Uploader Loop OpenAPS Pump UploaderBattery MergedLoopStatus
 	DBModelToDeviceStatus(source *site.EventGroupsBundle) DeviceStatus
@@ -159,28 +149,30 @@ type DBModelConverter interface {
 // //
 
 func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
+	fmt.Printf("ModelDateStringFromDateIntAndUTCOff`set called with: %v:%T\n", m, m)
 	if m == nil {
 		return nil
 	}
 
-	// TODO this should be mapping to interfaces now we have getters
 	switch v := m.(type) {
 	case interface {
 		GetOccurredAt() int64
 		GetUtcOffsetMinutes() *int64
 	}:
 		ds := DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
+		fmt.Printf("ModelDateStringFromDateIntAndUTCOffset returning: %v\n", ds)
 		return &ds
 	case interface {
 		GetStart() int64
 		GetUtcOffsetMinutes() *int64
 	}:
 		ds := DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
+		fmt.Printf("ModelDateStringFromDateIntAndUTCOffset returning: %v\n", ds)
 		return &ds
-	default:
-		return nil
 	}
 
+	fmt.Printf("ModelDateStringFromDateIntAndUTCOffset returning: nil\n")
+	return nil
 }
 
 func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {

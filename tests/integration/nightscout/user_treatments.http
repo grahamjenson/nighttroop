@@ -17,7 +17,7 @@ ASSERT_STATUS 200
 NAME jwt
 SET {{ .jwtauth.token }}
 
-NAME create_treatments_v1
+NAME create_meal_bolus_v1
 POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Meal Bolus",
@@ -29,28 +29,61 @@ B {
   "carbs": 45,
   "insulin": 4.2,
 
-  "duration": 0,
-
-  "notes": "Lunch pasta + insulin pre-bolus",
-  "enteredBy": "aaps-loop",
-
-  "treatments": "treatments_1",
-  "percentage": 10,
-  "absolute": null,
-
-  "reason": "lunch",
-  "targetTop": 110,
-  "targetBottom": 85
+  "notes": "Here are some notes",
+  "reason": "lunch"
  }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-
+ASSERT {{ assertEquals 45 "@0.carbs" }}
+ASSERT {{ assertEquals 4.2 "@0.insulin" }}
+ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
+ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT {{ assertExists "@0.created_at" }}
 
 NAME get_treatments_v1
-GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_treatments_v1.0._id" }}?token={{ token }}
+GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+
+NAME get_treatments_type_v1
+GET http://{{ .site }}.ns.localhost/api/v1/treatments/Meal%20Bolus?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertEquals 148 "@0.glucose" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+
+
+
+######
+# Version 3 API
+######
+
+NAME create_bolus_wizard_v1
+POST http://{{ .site }}.ns.localhost/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+  "eventType": "Bolus Wizard",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 150,
+  "glucoseType": "Sensor",
+
+  "carbs": 46,
+  "insulin": 4.3,
+
+  "notes": "Here are some notes",
+  "reason": "lunch"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Bolus Wizard" "@0.eventType" }}
+ASSERT {{ assertEquals 150 "@0.glucose" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT {{ assertEquals 46 "@0.carbs" }}
+ASSERT {{ assertEquals 4.3 "@0.insulin" }}
+ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
+ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT {{ assertExists "@0.created_at" }}
