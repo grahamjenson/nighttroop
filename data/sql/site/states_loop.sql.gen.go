@@ -181,7 +181,7 @@ func (q *Queries) GetLoopState(ctx context.Context, arg GetLoopStateParams) (*Lo
 }
 
 const hardDeleteLoopState = `-- name: HardDeleteLoopState :execresult
-DELETE FROM loop_states WHERE id = ? RETURNING id, loop_state, loop_timestamp, iob, iob_basal, iob_treatment, cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+DELETE FROM loop_states WHERE id = ?
 `
 
 type HardDeleteLoopStateParams struct {
@@ -310,7 +310,6 @@ UPDATE loop_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, loop_state, loop_timestamp, iob, iob_basal, iob_treatment, cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type SoftDeleteLoopStateParams struct {

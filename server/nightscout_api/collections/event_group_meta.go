@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -12,13 +13,16 @@ import (
 )
 
 func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*site.GetEventGroupRow, *nsutils.HTTPError) {
+	fmt.Println("sfiosaiofhsaifhisahfiuhasiu")
 	dbModel, err := siteContext.SiteDB.Queries.GetEventGroup(ctx, site.GetEventGroupParams{
 		ID: identifier,
 	})
 	if err == sql.ErrNoRows || dbModel == nil {
+
 		return nil, nsutils.ErrNotFound
 	}
 	if err != nil {
+		fmt.Println("sfiosaiofhsaifhisahfiuhasiu")
 		slog.Error("failed to get event group", "error", err)
 		return nil, nsutils.ErrInternal
 	}
@@ -134,8 +138,8 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 	if err != nil {
 		return nil, nsutils.ErrInternal
 	}
-
 	defer tx.Rollback()
+
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	if bundle.GlucoseReading != nil {

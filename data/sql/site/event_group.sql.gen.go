@@ -29,18 +29,18 @@ SELECT
 
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id IS NOT NULL AND eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id IS NOT NULL AND eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id IS NOT NULL AND eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id IS NOT NULL AND eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id IS NOT NULL AND eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id IS NOT NULL AND eg.profile_switch_id = ps.id
+LEFT JOIN device_states ds ON eg.device_state_id IS NOT NULL AND eg.device_state_id = ds.id
+LEFT JOIN loop_states ls ON eg.loop_state_id IS NOT NULL AND eg.loop_state_id = ls.id
+LEFT JOIN pump_states ps2 ON eg.pump_state_id IS NOT NULL AND eg.pump_state_id = ps2.id
+LEFT JOIN cgm_states cs ON eg.cgm_state_id IS NOT NULL AND eg.cgm_state_id = cs.id
+LEFT JOIN activities a ON eg.activity_id IS NOT NULL AND eg.activity_id = a.id
+LEFT JOIN notes n ON eg.note_id IS NOT NULL AND eg.note_id = n.id
 WHERE (CAST(?1 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -426,18 +426,18 @@ SELECT
     n.id, n.content, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id IS NOT NULL AND eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id IS NOT NULL AND eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id IS NOT NULL AND eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id IS NOT NULL AND eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id IS NOT NULL AND eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id IS NOT NULL AND eg.profile_switch_id = ps.id
+LEFT JOIN device_states ds ON eg.device_state_id IS NOT NULL AND eg.device_state_id = ds.id
+LEFT JOIN loop_states ls ON eg.loop_state_id IS NOT NULL AND eg.loop_state_id = ls.id
+LEFT JOIN pump_states ps2 ON eg.pump_state_id IS NOT NULL AND eg.pump_state_id = ps2.id
+LEFT JOIN cgm_states cs ON eg.cgm_state_id IS NOT NULL AND eg.cgm_state_id = cs.id
+LEFT JOIN activities a ON eg.activity_id IS NOT NULL AND eg.activity_id = a.id
+LEFT JOIN notes n ON eg.note_id IS NOT NULL AND eg.note_id = n.id
 
 WHERE eg.id = ?
 `
@@ -678,7 +678,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 }
 
 const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :execresult
-DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM event_groups WHERE id = ?
 `
 
 type HardDeleteEventGroupParams struct {
@@ -1147,7 +1147,6 @@ UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteEventGroupParams struct {

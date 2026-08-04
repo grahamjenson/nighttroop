@@ -172,7 +172,7 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 const hardDeleteFoodPreset = `-- name: HardDeleteFoodPreset :execresult
 
 
-DELETE FROM food_presets WHERE id = ? RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM food_presets WHERE id = ?
 `
 
 type HardDeleteFoodPresetParams struct {

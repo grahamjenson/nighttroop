@@ -187,7 +187,7 @@ func (q *Queries) GetProfileSwitch(ctx context.Context, arg GetProfileSwitchPara
 }
 
 const hardDeleteProfileSwitch = `-- name: HardDeleteProfileSwitch :execresult
-DELETE FROM profile_switches WHERE id = ? RETURNING id, name, duration_minutes, percent, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM profile_switches WHERE id = ?
 `
 
 type HardDeleteProfileSwitchParams struct {
@@ -337,7 +337,6 @@ UPDATE profile_switches SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, name, duration_minutes, percent, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteProfileSwitchParams struct {

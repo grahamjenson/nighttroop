@@ -181,7 +181,7 @@ func (q *Queries) GetPumpState(ctx context.Context, arg GetPumpStateParams) (*Pu
 }
 
 const hardDeletePumpState = `-- name: HardDeletePumpState :execresult
-DELETE FROM pump_states WHERE id = ? RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+DELETE FROM pump_states WHERE id = ?
 `
 
 type HardDeletePumpStateParams struct {
@@ -310,7 +310,6 @@ UPDATE pump_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type SoftDeletePumpStateParams struct {

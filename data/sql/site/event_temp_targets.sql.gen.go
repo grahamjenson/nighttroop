@@ -163,7 +163,7 @@ func (q *Queries) GetTempTarget(ctx context.Context, arg GetTempTargetParams) (*
 }
 
 const hardDeleteTempTarget = `-- name: HardDeleteTempTarget :execresult
-DELETE FROM temp_targets WHERE id = ? RETURNING id, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM temp_targets WHERE id = ?
 `
 
 type HardDeleteTempTargetParams struct {
@@ -305,7 +305,6 @@ UPDATE temp_targets SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, duration_minutes, high_target, low_target, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteTempTargetParams struct {

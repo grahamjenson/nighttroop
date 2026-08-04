@@ -157,7 +157,7 @@ func (q *Queries) GetInsulinDose(ctx context.Context, arg GetInsulinDoseParams) 
 }
 
 const hardDeleteInsulinDose = `-- name: HardDeleteInsulinDose :execresult
-DELETE FROM insulin_doses WHERE id = ? RETURNING id, dose, dose_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM insulin_doses WHERE id = ?
 `
 
 type HardDeleteInsulinDoseParams struct {
@@ -312,7 +312,6 @@ UPDATE insulin_doses SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, dose, dose_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteInsulinDoseParams struct {

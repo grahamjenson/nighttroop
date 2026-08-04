@@ -104,8 +104,7 @@ RETURNING *;
 UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
-RETURNING *;
+WHERE id = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteActivity :execresult
-DELETE FROM activities WHERE id = ? RETURNING *;
+DELETE FROM activities WHERE id = ?;

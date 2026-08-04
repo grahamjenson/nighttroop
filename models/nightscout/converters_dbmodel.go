@@ -92,6 +92,7 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.UtcOffsetMinutes UtcOffsetMinutes
 	// goverter:map EventGroup.RawJsonData RawJsonData
 	// goverter:map EventGroup.CreatedByIdentityName Subject
+	// goverter:map EventGroup.CreatedByIdentityName EnteredBy
 	// goverter:map EventGroup.CreatedByAppName App
 	// goverter:map EventGroup.CreatedByDeviceName Device
 	// goverter:map EventGroup.ID Identifier
@@ -99,10 +100,38 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.CreatedAt SrvCreated
 	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
-	// goverter:ignore Name ActivityType Steps Calories HeartRate Carbs Insulin Protein Fat Fibre Energy PreBolus SplitNow SplitExt Duration Notes EnteredBy Profile Percentage Rate Absolute Reason TargetTop TargetBottom Units
+	// goverter:ignore PreBolus SplitNow SplitExt Profile Reason Units
 	// goverter:map EventGroup.GroupType EventType
+	//
 	// goverter:map GlucoseReading.Reading Glucose
 	// goverter:map GlucoseReading.ReadingType GlucoseType
+	//
+	// goverter:map InsulinDose.Dose Insulin
+	//
+	// goverter:map FoodIntake.Carbs Carbs
+	// goverter:map FoodIntake.Protein Protein
+	// goverter:map FoodIntake.Fat Fat
+	// goverter:map FoodIntake.Fibre Fibre
+	// goverter:map FoodIntake.Calories Energy
+	//
+	// goverter:map TempBasal.DurationMinutes Duration
+	// goverter:map TempBasal.Percent Rate
+	// goverter:map TempBasal.Absolute Absolute
+	//
+	// goverter:map TempTarget.DurationMinutes Duration
+	// goverter:map TempTarget.HighTarget TargetTop
+	// goverter:map TempTarget.LowTarget TargetBottom
+	//
+	// goverter:map ProfileSwitch.Name Name
+	// goverter:map ProfileSwitch.Percent Percentage
+	//
+	// goverter:map Activity.ActivityType ActivityType
+	// goverter:map Activity.Steps Steps
+	// goverter:map Activity.Calories Calories
+	// goverter:map Activity.DurationMinutes Duration
+	// goverter:map Activity.HeartRate HeartRate
+	//
+	// goverter:map Note.Content Notes
 	DBModelToTreatment(source *site.GetEventGroupRow) Treatment
 
 	////////////////////////////////////////

@@ -97,4 +97,4 @@ RETURNING *;
 
 
 -- name: HardDeleteFoodPreset :execresult
-DELETE FROM food_presets WHERE id = ? RETURNING *;
+DELETE FROM food_presets WHERE id = ?;

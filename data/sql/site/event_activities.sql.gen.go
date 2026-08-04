@@ -184,7 +184,7 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 }
 
 const hardDeleteActivity = `-- name: HardDeleteActivity :execresult
-DELETE FROM activities WHERE id = ? RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM activities WHERE id = ?
 `
 
 type HardDeleteActivityParams struct {
@@ -347,7 +347,6 @@ UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteActivityParams struct {

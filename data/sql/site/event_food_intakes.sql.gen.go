@@ -187,7 +187,7 @@ func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*
 }
 
 const hardDeleteFoodIntake = `-- name: HardDeleteFoodIntake :execresult
-DELETE FROM food_intakes WHERE id = ? RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM food_intakes WHERE id = ?
 `
 
 type HardDeleteFoodIntakeParams struct {
@@ -350,7 +350,6 @@ UPDATE food_intakes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteFoodIntakeParams struct {

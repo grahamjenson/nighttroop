@@ -160,7 +160,7 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 const hardDeleteProfilePreset = `-- name: HardDeleteProfilePreset :execresult
 
 
-DELETE FROM profile_presets WHERE id = ? RETURNING id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM profile_presets WHERE id = ?
 `
 
 type HardDeleteProfilePresetParams struct {

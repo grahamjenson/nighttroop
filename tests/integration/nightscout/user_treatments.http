@@ -43,6 +43,14 @@ B {
   "targetBottom": 85
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Meal Bolus" "#create_treatments_v1.0.eventType" }}
-ASSERT {{ assertEquals 148 "#create_treatments_v1.0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "#create_treatments_v1.0.glucoseType" }}
+ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertEquals 148 "@0.glucose" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+
+
+NAME get_treatments_v1
+GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_treatments_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertEquals 148 "@0.glucose" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}

@@ -170,7 +170,7 @@ func (q *Queries) GetDeviceState(ctx context.Context, arg GetDeviceStateParams) 
 }
 
 const hardDeleteDeviceState = `-- name: HardDeleteDeviceState :execresult
-DELETE FROM device_states WHERE id = ? RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+DELETE FROM device_states WHERE id = ?
 `
 
 type HardDeleteDeviceStateParams struct {
@@ -297,7 +297,6 @@ UPDATE device_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type SoftDeleteDeviceStateParams struct {

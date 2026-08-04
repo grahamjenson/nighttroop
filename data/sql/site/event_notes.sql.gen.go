@@ -151,7 +151,7 @@ func (q *Queries) GetNote(ctx context.Context, arg GetNoteParams) (*Note, error)
 }
 
 const hardDeleteNote = `-- name: HardDeleteNote :execresult
-DELETE FROM notes WHERE id = ? RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM notes WHERE id = ?
 `
 
 type HardDeleteNoteParams struct {
@@ -279,7 +279,6 @@ UPDATE notes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, content, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteNoteParams struct {

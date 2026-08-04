@@ -106,8 +106,7 @@ RETURNING *;
 UPDATE food_intakes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
-RETURNING *;
+WHERE id = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteFoodIntake :execresult
-DELETE FROM food_intakes WHERE id = ? RETURNING *;
+DELETE FROM food_intakes WHERE id = ?;

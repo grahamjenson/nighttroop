@@ -175,22 +175,82 @@ func DBModelToTreatment(source *site.GetEventGroupRow) Treatment {
 		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
 		pNightscoutTreatmentEventType := TreatmentEventType((*source).EventGroup.GroupType)
 		nightscoutTreatment.EventType = &pNightscoutTreatmentEventType
+		pNightscoutShortString := ShortString((*source).ProfileSwitch.Name)
+		nightscoutTreatment.Name = &pNightscoutShortString
 		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).GlucoseReading.Reading)
 		nightscoutTreatment.Glucose = &pNightscoutFlexibleFloat64
 		pNightscoutGlucoseType := GlucoseType((*source).GlucoseReading.ReadingType)
 		nightscoutTreatment.GlucoseType = &pNightscoutGlucoseType
-		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByDeviceName)
-		nightscoutTreatment.Device = &pNightscoutShortString
-		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByAppName)
-		nightscoutTreatment.App = &pNightscoutShortString2
-		pNightscoutShortString3 := ShortString((*source).EventGroup.CreatedByIdentityName)
-		nightscoutTreatment.Subject = &pNightscoutShortString3
+		if (*source).FoodIntake.Carbs != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).FoodIntake.Carbs)
+			nightscoutTreatment.Carbs = &nightscoutFlexibleFloat64
+		}
+		pNightscoutFlexibleFloat642 := FlexibleFloat64((*source).InsulinDose.Dose)
+		nightscoutTreatment.Insulin = &pNightscoutFlexibleFloat642
+		if (*source).FoodIntake.Protein != nil {
+			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).FoodIntake.Protein)
+			nightscoutTreatment.Protein = &nightscoutFlexibleFloat642
+		}
+		if (*source).FoodIntake.Fat != nil {
+			nightscoutFlexibleFloat643 := FlexibleFloat64(*(*source).FoodIntake.Fat)
+			nightscoutTreatment.Fat = &nightscoutFlexibleFloat643
+		}
+		if (*source).FoodIntake.Fibre != nil {
+			nightscoutFlexibleFloat644 := FlexibleFloat64(*(*source).FoodIntake.Fibre)
+			nightscoutTreatment.Fibre = &nightscoutFlexibleFloat644
+		}
+		if (*source).FoodIntake.Calories != nil {
+			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).FoodIntake.Calories)
+			nightscoutTreatment.Energy = &nightscoutFlexibleFloat645
+		}
+		if (*source).Activity.ActivityType != nil {
+			nightscoutShortString := ShortString(*(*source).Activity.ActivityType)
+			nightscoutTreatment.ActivityType = &nightscoutShortString
+		}
+		if (*source).Activity.Steps != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).Activity.Steps)
+			nightscoutTreatment.Steps = &nightscoutFlexibleInt64
+		}
+		if (*source).Activity.Calories != nil {
+			nightscoutFlexibleInt642 := FlexibleInt64(*(*source).Activity.Calories)
+			nightscoutTreatment.Calories = &nightscoutFlexibleInt642
+		}
+		if (*source).Activity.HeartRate != nil {
+			nightscoutFlexibleInt643 := FlexibleInt64(*(*source).Activity.HeartRate)
+			nightscoutTreatment.HeartRate = &nightscoutFlexibleInt643
+		}
+		if (*source).Activity.DurationMinutes != nil {
+			nightscoutFlexibleInt644 := FlexibleInt64(*(*source).Activity.DurationMinutes)
+			nightscoutTreatment.Duration = &nightscoutFlexibleInt644
+		}
+		pNightscoutSanitizedString := SanitizedString((*source).Note.Content)
+		nightscoutTreatment.Notes = &pNightscoutSanitizedString
+		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByIdentityName)
+		nightscoutTreatment.EnteredBy = &pNightscoutShortString2
+		pNightscoutFlexibleFloat643 := FlexibleFloat64((*source).ProfileSwitch.Percent)
+		nightscoutTreatment.Percentage = &pNightscoutFlexibleFloat643
+		if (*source).TempBasal.Percent != nil {
+			nightscoutFlexibleFloat646 := FlexibleFloat64(*(*source).TempBasal.Percent)
+			nightscoutTreatment.Rate = &nightscoutFlexibleFloat646
+		}
+		pNightscoutFlexibleFloat644 := FlexibleFloat64((*source).TempBasal.Absolute)
+		nightscoutTreatment.Absolute = &pNightscoutFlexibleFloat644
+		pNightscoutFlexibleFloat645 := FlexibleFloat64((*source).TempTarget.HighTarget)
+		nightscoutTreatment.TargetTop = &pNightscoutFlexibleFloat645
+		pNightscoutFlexibleFloat646 := FlexibleFloat64((*source).TempTarget.LowTarget)
+		nightscoutTreatment.TargetBottom = &pNightscoutFlexibleFloat646
+		pNightscoutShortString3 := ShortString((*source).EventGroup.CreatedByDeviceName)
+		nightscoutTreatment.Device = &pNightscoutShortString3
+		pNightscoutShortString4 := ShortString((*source).EventGroup.CreatedByAppName)
+		nightscoutTreatment.App = &pNightscoutShortString4
+		pNightscoutShortString5 := ShortString((*source).EventGroup.CreatedByIdentityName)
+		nightscoutTreatment.Subject = &pNightscoutShortString5
 		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		pNightscoutDateInt := DateInt((*source).EventGroup.OccurredAt)
 		nightscoutTreatment.Date = &pNightscoutDateInt
 		if (*source).EventGroup.UtcOffsetMinutes != nil {
-			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
-			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+			nightscoutFlexibleInt645 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
+			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt645
 		}
 		pNightscoutDateInt2 := DateInt((*source).EventGroup.CreatedAt)
 		nightscoutTreatment.SrvCreated = &pNightscoutDateInt2

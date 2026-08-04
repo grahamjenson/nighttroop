@@ -103,19 +103,17 @@ RETURNING *;
 UPDATE glucose_readings SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
-RETURNING *;
+WHERE id = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteGlucoseReading :execresult
-DELETE FROM glucose_readings WHERE id = ? RETURNING *;
+DELETE FROM glucose_readings WHERE id = ?;
 
 
 -- name: SoftDeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE reading_type = ? AND deleted_at IS NULL
-RETURNING *;
+WHERE reading_type = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteGlucoseReadingsByType :execresult
-DELETE FROM glucose_readings WHERE reading_type = ? RETURNING *;
+DELETE FROM glucose_readings WHERE reading_type = ?;

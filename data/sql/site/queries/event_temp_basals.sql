@@ -91,8 +91,7 @@ RETURNING *;
 UPDATE temp_basals SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
-RETURNING *;
+WHERE id = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteTempBasal :execresult
-DELETE FROM temp_basals WHERE id = ? RETURNING *;
+DELETE FROM temp_basals WHERE id = ?;

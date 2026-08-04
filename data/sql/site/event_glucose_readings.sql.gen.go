@@ -163,7 +163,7 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 }
 
 const hardDeleteGlucoseReading = `-- name: HardDeleteGlucoseReading :execresult
-DELETE FROM glucose_readings WHERE id = ? RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM glucose_readings WHERE id = ?
 `
 
 type HardDeleteGlucoseReadingParams struct {
@@ -175,7 +175,7 @@ func (q *Queries) HardDeleteGlucoseReading(ctx context.Context, arg HardDeleteGl
 }
 
 const hardDeleteGlucoseReadingsByType = `-- name: HardDeleteGlucoseReadingsByType :execresult
-DELETE FROM glucose_readings WHERE reading_type = ? RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM glucose_readings WHERE reading_type = ?
 `
 
 type HardDeleteGlucoseReadingsByTypeParams struct {
@@ -329,7 +329,6 @@ UPDATE glucose_readings SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ? AND deleted_at IS NULL
-RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteGlucoseReadingParams struct {
@@ -349,7 +348,6 @@ UPDATE glucose_readings SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE reading_type = ? AND deleted_at IS NULL
-RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteGlucoseReadingsByTypeParams struct {

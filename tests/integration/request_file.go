@@ -291,7 +291,7 @@ func (r Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[
 	}
 
 	for _, assert := range r.Assert {
-		_, err := assertTemplateCheck(assert, context, t, string(prettyOutput))
+		_, err := assertTemplateCheck(assert, context, out, t)
 		if err != nil {
 			t.Fatalf("assert Template Error %s assert %s output %s render failed: %v", r.Name, assert, prettyOutput, err)
 		}
@@ -400,7 +400,8 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 	return buf.String(), nil
 }
 
-func assertTemplateCheck(input string, ctx map[string]any, t *testing.T, prettyOutput string) (string, error) {
+func assertTemplateCheck(input string, ctx map[string]any, localResult any, t *testing.T) (string, error) {
+	prettyOutput, _ := json.MarshalIndent(localResult, "", "  ")
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
@@ -409,14 +410,14 @@ func assertTemplateCheck(input string, ctx map[string]any, t *testing.T, prettyO
 			},
 			// TESTING FUNCTIONS
 			"assertEquals": func(expected, actual any) string {
-				if s, ok := actual.(string); ok && strings.HasPrefix(s, "#") {
+				if s, ok := actual.(string); ok && strings.HasPrefix(s, "@") {
 					// handle template path/reference case
-					actual = templateDig(ctx, s[1:])
+					actual = templateDig(localResult, s[1:])
 				}
 
-				if s, ok := expected.(string); ok && strings.HasPrefix(s, "#") {
+				if s, ok := expected.(string); ok && strings.HasPrefix(s, "@") {
 					// handle template path/reference case
-					expected = templateDig(ctx, s[1:])
+					expected = templateDig(localResult, s[1:])
 				}
 				expected = normalizeValue(expected)
 				actual = normalizeValue(actual)

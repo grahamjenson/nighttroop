@@ -220,11 +220,10 @@ RETURNING *;
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
-RETURNING *;
+WHERE id = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteEventGroup :execresult
-DELETE FROM event_groups WHERE id = ? RETURNING *;
+DELETE FROM event_groups WHERE id = ?;
 
 
 -- name: SoftDeleteEventGroupsByType :execresult

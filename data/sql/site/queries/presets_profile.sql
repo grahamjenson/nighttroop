@@ -82,4 +82,4 @@ RETURNING *;
 
 
 -- name: HardDeleteProfilePreset :execresult
-DELETE FROM profile_presets WHERE id = ? RETURNING *;
+DELETE FROM profile_presets WHERE id = ?;
