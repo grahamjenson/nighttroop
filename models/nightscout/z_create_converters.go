@@ -471,6 +471,10 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateN
 	if source.Notes != nil {
 		siteCreateNoteParams.Content = string(*source.Notes)
 	}
+	if source.Reason != nil {
+		xstring := ShortStringToString(*source.Reason)
+		siteCreateNoteParams.Reason = &xstring
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateNoteParams.UtcOffsetMinutes = &xint64

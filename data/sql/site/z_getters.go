@@ -747,6 +747,11 @@ func (m *Note) GetContent() string {
 	return m.Content
 }
 
+// GetReason returns the Reason value.
+func (m *Note) GetReason() *string {
+	return m.Reason
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m *Note) GetRawJsonData() *string {
 	return m.RawJsonData

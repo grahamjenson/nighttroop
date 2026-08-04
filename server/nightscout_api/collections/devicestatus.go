@@ -13,7 +13,7 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	converter func(c *site.GetEventGroupRow) nsutils.Record
+	converter func(c *site.EventGroupsBundle) nsutils.Record
 }
 
 func NewDeviceStatusCollection() DeviceStatusCollection {

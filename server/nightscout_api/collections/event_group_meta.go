@@ -12,8 +12,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*site.GetEventGroupRow, *nsutils.HTTPError) {
-	fmt.Println("sfiosaiofhsaifhisahfiuhasiu")
+func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*site.EventGroupsBundle, *nsutils.HTTPError) {
 	dbModel, err := siteContext.SiteDB.Queries.GetEventGroup(ctx, site.GetEventGroupParams{
 		ID: identifier,
 	})
@@ -26,11 +25,11 @@ func EventGroupGet(ctx context.Context, siteContext *httputils.SiteContext, iden
 		slog.Error("failed to get event group", "error", err)
 		return nil, nsutils.ErrInternal
 	}
-
-	return dbModel, nil
+	egb := site.GetEventGroupToEventGroupsBundle(*dbModel)
+	return &egb, nil
 }
 
-func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.GetEventGroupRow, *nsutils.HTTPError) {
+func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.EventGroupsBundle, *nsutils.HTTPError) {
 	if query.TypeIn == nil {
 		// TODO list all supportted types so we can limit to those that NS Treatment expects
 	}
@@ -41,11 +40,11 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 		return nil, nsutils.ErrInternal
 	}
 
-	res := []*site.GetEventGroupRow{}
+	res := []*site.EventGroupsBundle{}
 	for _, eg := range eventGroups {
 		if eg != nil {
-			gEG := site.SearchEventGroupToGetEventGroup(*eg)
-			res = append(res, &gEG)
+			egb := site.GetEventGroupToEventGroupsBundle(site.SearchEventGroupToGetEventGroup(*eg))
+			res = append(res, &egb)
 		}
 	}
 	return res, nil
@@ -130,8 +129,8 @@ func EventGroupDeleteType(ctx context.Context, siteContext *httputils.SiteContex
 	return int(rowsAffected), nil
 }
 
-func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, bundle site.CreateEventGroupBundle) (*site.GetEventGroupRow, *nsutils.HTTPError) {
-	ret := site.GetEventGroupRow{}
+func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, bundle site.CreateEventGroupBundle) (*site.EventGroupsBundle, *nsutils.HTTPError) {
+	ret := site.EventGroupsBundle{}
 
 	db := siteContext.SiteDB.SQLiteDB
 	tx, err := db.BeginTx(ctx, nil)
@@ -149,7 +148,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create glucose reading in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.GlucoseReading = *dbModel
+		ret.GlucoseReading = dbModel
 	}
 	if bundle.InsulinDose != nil {
 		bundle.EventGroup.InsulinDoseID = &bundle.InsulinDose.ID
@@ -158,7 +157,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create insulin dose in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.InsulinDose = *dbModel
+		ret.InsulinDose = dbModel
 	}
 	if bundle.FoodIntake != nil {
 		bundle.EventGroup.FoodIntakeID = &bundle.FoodIntake.ID
@@ -167,7 +166,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create food intake in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.FoodIntake = *dbModel
+		ret.FoodIntake = dbModel
 	}
 	if bundle.TempBasal != nil {
 		bundle.EventGroup.TempBasalID = &bundle.TempBasal.ID
@@ -176,7 +175,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create temp basal in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.TempBasal = *dbModel
+		ret.TempBasal = dbModel
 	}
 	if bundle.TempTarget != nil {
 		bundle.EventGroup.TempTargetID = &bundle.TempTarget.ID
@@ -185,7 +184,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create temp target in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.TempTarget = *dbModel
+		ret.TempTarget = dbModel
 	}
 	if bundle.ProfileSwitch != nil {
 		bundle.EventGroup.ProfileSwitchID = &bundle.ProfileSwitch.ID
@@ -194,7 +193,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create profile switch in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.ProfileSwitch = *dbModel
+		ret.ProfileSwitch = dbModel
 	}
 	if bundle.DeviceState != nil {
 		bundle.EventGroup.DeviceStateID = &bundle.DeviceState.ID
@@ -203,7 +202,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create device state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.DeviceState = *dbModel
+		ret.DeviceState = dbModel
 	}
 	if bundle.LoopState != nil {
 		bundle.EventGroup.LoopStateID = &bundle.LoopState.ID
@@ -212,7 +211,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create loop state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.LoopState = *dbModel
+		ret.LoopState = dbModel
 	}
 	if bundle.PumpState != nil {
 		bundle.EventGroup.PumpStateID = &bundle.PumpState.ID
@@ -221,7 +220,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create pump state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.PumpState = *dbModel
+		ret.PumpState = dbModel
 	}
 	if bundle.CgmState != nil {
 		bundle.EventGroup.CgmStateID = &bundle.CgmState.ID
@@ -230,7 +229,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create cgm state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.CgmState = *dbModel
+		ret.CgmState = dbModel
 	}
 	if bundle.Activity != nil {
 		bundle.EventGroup.ActivityID = &bundle.Activity.ID
@@ -239,7 +238,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create activity in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.Activity = *dbModel
+		ret.Activity = dbModel
 	}
 	if bundle.Note != nil {
 		bundle.EventGroup.NoteID = &bundle.Note.ID
@@ -248,7 +247,7 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.Note = *dbModel
+		ret.Note = dbModel
 	}
 
 	// Finaly Create the EventGroup
@@ -267,8 +266,8 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 	return &ret, nil
 }
 
-func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, bundle site.UpdateEventGroupBundle) (*site.GetEventGroupRow, *nsutils.HTTPError) {
-	ret := site.GetEventGroupRow{}
+func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, bundle site.UpdateEventGroupBundle) (*site.EventGroupsBundle, *nsutils.HTTPError) {
+	ret := site.EventGroupsBundle{}
 
 	db := siteContext.SiteDB.SQLiteDB
 	tx, err := db.BeginTx(ctx, nil)
@@ -285,7 +284,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update glucose reading in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.GlucoseReading = *dbModel
+		ret.GlucoseReading = dbModel
 	}
 	if bundle.InsulinDose != nil {
 		dbModel, err := q.UpdateInsulinDose(ctx, *bundle.InsulinDose)
@@ -293,7 +292,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update insulin dose in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.InsulinDose = *dbModel
+		ret.InsulinDose = dbModel
 	}
 	if bundle.FoodIntake != nil {
 		dbModel, err := q.UpdateFoodIntake(ctx, *bundle.FoodIntake)
@@ -301,7 +300,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update food intake in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.FoodIntake = *dbModel
+		ret.FoodIntake = dbModel
 	}
 	if bundle.TempBasal != nil {
 		dbModel, err := q.UpdateTempBasal(ctx, *bundle.TempBasal)
@@ -309,7 +308,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update temp basal in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.TempBasal = *dbModel
+		ret.TempBasal = dbModel
 	}
 	if bundle.TempTarget != nil {
 		dbModel, err := q.UpdateTempTarget(ctx, *bundle.TempTarget)
@@ -317,7 +316,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update temp target in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.TempTarget = *dbModel
+		ret.TempTarget = dbModel
 	}
 	if bundle.ProfileSwitch != nil {
 		dbModel, err := q.UpdateProfileSwitch(ctx, *bundle.ProfileSwitch)
@@ -325,7 +324,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update profile switch in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.ProfileSwitch = *dbModel
+		ret.ProfileSwitch = dbModel
 	}
 	if bundle.DeviceState != nil {
 		dbModel, err := q.UpdateDeviceState(ctx, *bundle.DeviceState)
@@ -333,7 +332,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update device state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.DeviceState = *dbModel
+		ret.DeviceState = dbModel
 	}
 	if bundle.LoopState != nil {
 		dbModel, err := q.UpdateLoopState(ctx, *bundle.LoopState)
@@ -341,7 +340,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update loop state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.LoopState = *dbModel
+		ret.LoopState = dbModel
 	}
 	if bundle.PumpState != nil {
 		dbModel, err := q.UpdatePumpState(ctx, *bundle.PumpState)
@@ -349,7 +348,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update pump state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.PumpState = *dbModel
+		ret.PumpState = dbModel
 	}
 	if bundle.CgmState != nil {
 		dbModel, err := q.UpdateCGMState(ctx, *bundle.CgmState)
@@ -357,7 +356,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update cgm state in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.CgmState = *dbModel
+		ret.CgmState = dbModel
 	}
 	if bundle.Activity != nil {
 		dbModel, err := q.UpdateActivity(ctx, *bundle.Activity)
@@ -365,7 +364,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update activity in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.Activity = *dbModel
+		ret.Activity = dbModel
 	}
 	if bundle.Note != nil {
 		dbModel, err := q.UpdateNote(ctx, *bundle.Note)
@@ -373,7 +372,7 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 			slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
 			return nil, nsutils.ErrInternal
 		}
-		ret.Note = *dbModel
+		ret.Note = dbModel
 	}
 
 	// Finaly Update the EventGroup

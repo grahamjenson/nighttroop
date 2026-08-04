@@ -34,20 +34,84 @@ RETURNING *;
 
 -- name: AllEventGroups :many
 SELECT 
+    -- It would be awesome if sqlc worked with embed null objects
+    -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     sqlc.embed(eg),
-    sqlc.embed(gr),
-    sqlc.embed(idose),
-    sqlc.embed(fi),
-    sqlc.embed(tb),
-    sqlc.embed(tt),
-    sqlc.embed(ps),
-    sqlc.embed(ds),
-    sqlc.embed(ls),
-    sqlc.embed(ps2),
-    sqlc.embed(cs),
-    sqlc.embed(a),
-    sqlc.embed(n)
 
+    gr.id as glucose_reading_id,   
+    gr.reading as glucose_reading,
+    gr.reading_type as glucose_reading_type,
+    
+    idose.id as insulin_dose_id,
+    idose.dose as insulin_dose,
+    idose.dose_type as insulin_dose_type,
+
+    fi.id as food_intake_id,
+    fi.name as food_intake_name,
+    fi.carbs as food_intake_carbs,
+    fi.fat as food_intake_fat,
+    fi.protein as food_intake_protein,
+    fi.fibre as food_intake_fibre,
+    fi.calories as food_intake_calories,
+
+    tb.id as temp_basal_id,
+    tb.duration_minutes as temp_basal_duration_minutes,
+    tb.absolute as temp_basal_absolute,    
+    tb.percent as temp_basal_percent,
+
+    tt.id as temp_target_id,
+    tt.duration_minutes as temp_target_duration_minutes,
+    tt.high_target as temp_target_high_target,
+    tt.low_target as temp_target_low_target,
+
+    ps.id as profile_switch_id,
+    ps.name as profile_switch_name,
+    ps.duration_minutes as profile_switch_duration_minutes,
+    ps.percent as profile_switch_percent,
+    ps.carb_ratios_json as profile_switch_carb_ratios_json,
+    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
+    ps.basal_rates_json as profile_switch_basal_rates_json,
+    ps.targets_json as profile_switch_targets_json,
+
+    ds.id as device_state_id,
+    ds.device_state as device_state_device_state,
+    ds.device_timestamp as device_state_device_timestamp,
+    ds.device_battery_percent as device_state_device_battery_percent,
+    ds.device_charging_state as device_state_device_charging_state,
+
+    ls.id as loop_state_id,
+    ls.loop_state as loop_state_loop_state,
+    ls.loop_timestamp as loop_state_loop_timestamp,
+    ls.iob as loop_state_iob,
+    ls.iob_basal as loop_state_iob_basal,
+    ls.iob_treatment as loop_state_iob_treatment,
+    ls.cob as loop_state_cob,
+
+
+    ps2.id as pump_state_id,
+    ps2.pump_state as pump_state_pump_state,
+    ps2.pump_timestamp as pump_state_pump_timestamp,
+    ps2.pump_insertion_time as pump_state_pump_insertion_time,
+    ps2.pump_reservoir as pump_state_pump_reservoir,
+    ps2.pump_battery_percent as pump_state_pump_battery_percent,
+    ps2.pump_charging_state as pump_state_pump_charging_state,
+
+    cs.id as cgm_state_id,
+    cs.cgm_state as cgm_state_cgm_state,
+    cs.cgm_timestamp as cgm_state_cgm_timestamp,
+    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+
+    a.id as activity_id,
+    a.name as activity_name,
+    a.activity_type as activity_type,
+    a.duration_minutes as activity_duration_minutes,
+    a.calories as activity_calories,
+    a.steps as activity_steps,
+    a.heart_rate as activity_heart_rate,
+
+    n.id as note_id,
+    n.content as note_content,
+    n.reason as note_reason
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -68,20 +132,85 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetEventGroup :one
-SELECT   
+SELECT
+    -- It would be awesome if sqlc worked with embed null objects
+    -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     sqlc.embed(eg),
-    sqlc.embed(gr),
-    sqlc.embed(idose),
-    sqlc.embed(fi),
-    sqlc.embed(tb),
-    sqlc.embed(tt),
-    sqlc.embed(ps),
-    sqlc.embed(ds),
-    sqlc.embed(ls),
-    sqlc.embed(ps2),
-    sqlc.embed(cs),
-    sqlc.embed(a),
-    sqlc.embed(n)
+
+    gr.id as glucose_reading_id,   
+    gr.reading as glucose_reading,
+    gr.reading_type as glucose_reading_type,
+    
+    idose.id as insulin_dose_id,
+    idose.dose as insulin_dose,
+    idose.dose_type as insulin_dose_type,
+
+    fi.id as food_intake_id,
+    fi.name as food_intake_name,
+    fi.carbs as food_intake_carbs,
+    fi.fat as food_intake_fat,
+    fi.protein as food_intake_protein,
+    fi.fibre as food_intake_fibre,
+    fi.calories as food_intake_calories,
+
+    tb.id as temp_basal_id,
+    tb.duration_minutes as temp_basal_duration_minutes,
+    tb.absolute as temp_basal_absolute,    
+    tb.percent as temp_basal_percent,
+
+    tt.id as temp_target_id,
+    tt.duration_minutes as temp_target_duration_minutes,
+    tt.high_target as temp_target_high_target,
+    tt.low_target as temp_target_low_target,
+
+    ps.id as profile_switch_id,
+    ps.name as profile_switch_name,
+    ps.duration_minutes as profile_switch_duration_minutes,
+    ps.percent as profile_switch_percent,
+    ps.carb_ratios_json as profile_switch_carb_ratios_json,
+    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
+    ps.basal_rates_json as profile_switch_basal_rates_json,
+    ps.targets_json as profile_switch_targets_json,
+
+    ds.id as device_state_id,
+    ds.device_state as device_state_device_state,
+    ds.device_timestamp as device_state_device_timestamp,
+    ds.device_battery_percent as device_state_device_battery_percent,
+    ds.device_charging_state as device_state_device_charging_state,
+
+    ls.id as loop_state_id,
+    ls.loop_state as loop_state_loop_state,
+    ls.loop_timestamp as loop_state_loop_timestamp,
+    ls.iob as loop_state_iob,
+    ls.iob_basal as loop_state_iob_basal,
+    ls.iob_treatment as loop_state_iob_treatment,
+    ls.cob as loop_state_cob,
+
+
+    ps2.id as pump_state_id,
+    ps2.pump_state as pump_state_pump_state,
+    ps2.pump_timestamp as pump_state_pump_timestamp,
+    ps2.pump_insertion_time as pump_state_pump_insertion_time,
+    ps2.pump_reservoir as pump_state_pump_reservoir,
+    ps2.pump_battery_percent as pump_state_pump_battery_percent,
+    ps2.pump_charging_state as pump_state_pump_charging_state,
+
+    cs.id as cgm_state_id,
+    cs.cgm_state as cgm_state_cgm_state,
+    cs.cgm_timestamp as cgm_state_cgm_timestamp,
+    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+
+    a.id as activity_id,
+    a.name as activity_name,
+    a.activity_type as activity_type,
+    a.duration_minutes as activity_duration_minutes,
+    a.calories as activity_calories,
+    a.steps as activity_steps,
+    a.heart_rate as activity_heart_rate,
+
+    n.id as note_id,
+    n.content as note_content,
+    n.reason as note_reason
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -101,19 +230,84 @@ WHERE eg.id = ?;
 
 -- name: SearchEventGroups :many
 SELECT
+    -- It would be awesome if sqlc worked with embed null objects
+    -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     sqlc.embed(eg),
-    sqlc.embed(gr),
-    sqlc.embed(idose),
-    sqlc.embed(fi),
-    sqlc.embed(tb),
-    sqlc.embed(tt),
-    sqlc.embed(ps),
-    sqlc.embed(ds),
-    sqlc.embed(ls),
-    sqlc.embed(ps2),
-    sqlc.embed(cs),
-    sqlc.embed(a),
-    sqlc.embed(n)
+
+    gr.id as glucose_reading_id,   
+    gr.reading as glucose_reading,
+    gr.reading_type as glucose_reading_type,
+    
+    idose.id as insulin_dose_id,
+    idose.dose as insulin_dose,
+    idose.dose_type as insulin_dose_type,
+
+    fi.id as food_intake_id,
+    fi.name as food_intake_name,
+    fi.carbs as food_intake_carbs,
+    fi.fat as food_intake_fat,
+    fi.protein as food_intake_protein,
+    fi.fibre as food_intake_fibre,
+    fi.calories as food_intake_calories,
+
+    tb.id as temp_basal_id,
+    tb.duration_minutes as temp_basal_duration_minutes,
+    tb.absolute as temp_basal_absolute,    
+    tb.percent as temp_basal_percent,
+
+    tt.id as temp_target_id,
+    tt.duration_minutes as temp_target_duration_minutes,
+    tt.high_target as temp_target_high_target,
+    tt.low_target as temp_target_low_target,
+
+    ps.id as profile_switch_id,
+    ps.name as profile_switch_name,
+    ps.duration_minutes as profile_switch_duration_minutes,
+    ps.percent as profile_switch_percent,
+    ps.carb_ratios_json as profile_switch_carb_ratios_json,
+    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
+    ps.basal_rates_json as profile_switch_basal_rates_json,
+    ps.targets_json as profile_switch_targets_json,
+
+    ds.id as device_state_id,
+    ds.device_state as device_state_device_state,
+    ds.device_timestamp as device_state_device_timestamp,
+    ds.device_battery_percent as device_state_device_battery_percent,
+    ds.device_charging_state as device_state_device_charging_state,
+
+    ls.id as loop_state_id,
+    ls.loop_state as loop_state_loop_state,
+    ls.loop_timestamp as loop_state_loop_timestamp,
+    ls.iob as loop_state_iob,
+    ls.iob_basal as loop_state_iob_basal,
+    ls.iob_treatment as loop_state_iob_treatment,
+    ls.cob as loop_state_cob,
+
+
+    ps2.id as pump_state_id,
+    ps2.pump_state as pump_state_pump_state,
+    ps2.pump_timestamp as pump_state_pump_timestamp,
+    ps2.pump_insertion_time as pump_state_pump_insertion_time,
+    ps2.pump_reservoir as pump_state_pump_reservoir,
+    ps2.pump_battery_percent as pump_state_pump_battery_percent,
+    ps2.pump_charging_state as pump_state_pump_charging_state,
+
+    cs.id as cgm_state_id,
+    cs.cgm_state as cgm_state_cgm_state,
+    cs.cgm_timestamp as cgm_state_cgm_timestamp,
+    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+
+    a.id as activity_id,
+    a.name as activity_name,
+    a.activity_type as activity_type,
+    a.duration_minutes as activity_duration_minutes,
+    a.calories as activity_calories,
+    a.steps as activity_steps,
+    a.heart_rate as activity_heart_rate,
+
+    n.id as note_id,
+    n.content as note_content,
+    n.reason as note_reason
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id

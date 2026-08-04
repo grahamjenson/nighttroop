@@ -359,6 +359,10 @@ func TreatmentToUpdateNote(source Treatment, context UpdateContext) site.UpdateN
 		xstring := string(*source.Notes)
 		siteUpdateNoteParams.Content = &xstring
 	}
+	if source.Reason != nil {
+		xstring2 := ShortStringToString(*source.Reason)
+		siteUpdateNoteParams.Reason = &xstring2
+	}
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
 		siteUpdateNoteParams.OccurredAt = &xint64

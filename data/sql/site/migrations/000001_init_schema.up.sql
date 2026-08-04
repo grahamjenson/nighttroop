@@ -107,6 +107,7 @@ CREATE TABLE activities (
 CREATE TABLE notes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
     content TEXT CHECK(length(content) <= 1024) NOT NULL,
+    reason TEXT CHECK(length(reason) <= 64), 
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
@@ -264,7 +265,7 @@ CREATE TABLE loop_states (
     iob REAL,
     iob_basal REAL,
     iob_treatment REAL,
-    
+
     cob REAL,
 
     -- Default Stuff

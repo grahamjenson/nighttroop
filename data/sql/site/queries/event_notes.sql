@@ -5,6 +5,7 @@
 INSERT INTO notes (
     id,
     content,
+    reason,
 
     utc_offset_minutes,
     occurred_at,
@@ -13,7 +14,7 @@ INSERT INTO notes (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -67,7 +68,8 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: UpdateNote :one
 UPDATE notes SET
     content = COALESCE(sqlc.narg('Content'), content),
-
+    reason = COALESCE(sqlc.narg('Reason'), reason),
+    
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

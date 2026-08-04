@@ -151,6 +151,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Notes Content
+	// goverter:map Reason Reason
 	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
 
 	///////

@@ -60,5 +60,5 @@ type ToCreateParams interface {
 
 	//goverter:map . EventGroup
 	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch DeviceState LoopState PumpState CgmState Activity Note
-	EventGroupToGetEventGroup(source EventGroup) GetEventGroupRow
+	EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle
 }

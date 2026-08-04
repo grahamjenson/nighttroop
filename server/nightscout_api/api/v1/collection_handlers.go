@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -25,7 +24,6 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 		identifier_or_type := chi.URLParam(r, "identifier_or_type")
 		if identifier_or_type != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
-			fmt.Println("DSHIFHODSGFHOUDSHOUDSOHGDSHOIGODHISOHSIG", identifier_or_type, collection.IsTypeString(identifier_or_type))
 			if collection.IsTypeString(identifier_or_type) {
 				query.TypeEq = ptr(identifier_or_type)
 			} else {

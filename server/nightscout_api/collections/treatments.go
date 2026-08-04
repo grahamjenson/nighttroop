@@ -13,7 +13,7 @@ import (
 )
 
 type TreatmentCollection struct {
-	converter func(c *site.GetEventGroupRow) nsutils.Record
+	converter func(c *site.EventGroupsBundle) nsutils.Record
 }
 
 // There is a list of incoming types, but we only support a few, and some we break apart into simpler types

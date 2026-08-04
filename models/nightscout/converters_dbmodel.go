@@ -132,7 +132,8 @@ type DBModelConverter interface {
 	// goverter:map Activity.HeartRate HeartRate
 	//
 	// goverter:map Note.Content Notes
-	DBModelToTreatment(source *site.GetEventGroupRow) Treatment
+	// goverter:map Note.Reason Reason
+	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
 
 	////////////////////////////////////////
 	// DEVICE STATUS TO CREATE/UPDATE
@@ -150,7 +151,7 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.UpdatedAt SrvModified
 	//
 	// goverter:ignore Uploader Loop OpenAPS Pump UploaderBattery MergedLoopStatus
-	DBModelToDeviceStatus(source *site.GetEventGroupRow) DeviceStatus
+	DBModelToDeviceStatus(source *site.EventGroupsBundle) DeviceStatus
 }
 
 // //

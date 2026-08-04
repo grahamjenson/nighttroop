@@ -181,6 +181,7 @@ type LoopState struct {
 type Note struct {
 	ID                    string
 	Content               string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
