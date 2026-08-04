@@ -34,7 +34,7 @@ func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.Si
 
 	createParams := nightscout.EntryToCreate(
 		*entryModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
+		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
 	dbModel, err := siteContext.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)

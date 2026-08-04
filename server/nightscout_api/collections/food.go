@@ -34,7 +34,7 @@ func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteC
 
 	createParams := nightscout.FoodToCreate(
 		*foodModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
+		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
 	dbModel, err := siteContext.SiteDB.Queries.CreateFoodPreset(ctx, createParams)

@@ -6,7 +6,6 @@ import (
 )
 
 type CreateContext struct {
-	IDPrefix              string
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }
@@ -28,7 +27,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
@@ -42,7 +41,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Type ReadingType
@@ -55,7 +54,7 @@ type CreateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Food FoodType
@@ -69,7 +68,7 @@ type CreateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
@@ -87,7 +86,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
@@ -102,7 +101,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore Name FoodType
@@ -117,7 +116,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Glucose Reading
@@ -132,7 +131,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore DoseType
@@ -147,7 +146,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Notes Content
@@ -161,7 +160,7 @@ type CreateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
@@ -175,7 +174,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
@@ -191,7 +190,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
@@ -206,7 +205,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
@@ -218,7 +217,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore DeviceState DeviceTimestamp DeviceBatteryPercent DeviceChargingState
@@ -228,7 +227,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore LoopState LoopTimestamp Iob IobBasal IobTreatment Cob
@@ -238,7 +237,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore PumpState PumpTimestamp PumpInsertionTime PumpReservoir PumpBatteryPercent PumpChargingState
@@ -248,7 +247,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore CgmState CgmTimestamp CgmInsertionTime
@@ -258,7 +257,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore
@@ -277,7 +276,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore GroupType GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
@@ -287,7 +286,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore DeviceState DeviceChargingState
@@ -299,7 +298,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore LoopState LoopTimestamp IobTreatment
@@ -312,7 +311,7 @@ type CreateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map Date ID                | AssignID
+	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore PumpState PumpChargingState PumpTimestamp PumpInsertionTime PumpBatteryPercent
@@ -324,9 +323,8 @@ type CreateMapConverter interface {
 // Custom Converter Methods
 // //
 
-// goverter:context ctx
-func AssignID(date *DateInt, ctx CreateContext) string {
-	return utils.NextDateID(ctx.IDPrefix, date.Int64())
+func AssignID() string {
+	return utils.NextID()
 }
 
 // goverter:context ctx

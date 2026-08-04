@@ -38,7 +38,6 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	}
 
 	cc := nightscout.CreateContext{
-		IDPrefix:              "ns",
 		CreatedByIdentityID:   siteContext.IdentityModel.ID,
 		CreatedByIdentityName: siteContext.IdentityModel.Name,
 	}

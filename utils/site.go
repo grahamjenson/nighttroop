@@ -13,6 +13,8 @@ const SITE_CHAR_SET = "abcdefghijklmnopqrstuvwxyz"
 const SITE_BATCH_LENGTH = 26
 const SITE_ID_LENGTH = 8
 
+const ID_LENGTH = 16
+
 const DB_FOLDER = ".dbs/db"
 const CONTROL_DB_PATH = ".dbs/db/control.sqlite"
 const CONTROL_DB_BACKUP_PATH = ".dbs/backup/control.sqlite"
@@ -72,6 +74,6 @@ func SyntacticallyValidateSiteID(siteID string) bool {
 	return re.MatchString(siteID)
 }
 
-func NextDateID(prefix string, createdAt int64) string {
-	return fmt.Sprintf("%s:%d", prefix, createdAt)
+func NextID() string {
+	return security.SecureRandomString(ID_LENGTH, SITE_CHAR_SET)
 }

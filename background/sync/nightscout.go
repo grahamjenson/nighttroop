@@ -35,7 +35,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			createParams := nightscout.EntryToCreate(e, nightscout.CreateContext{IDPrefix: "nssync", CreatedByIdentityID: userSyncSource.syncIdentity.ID, CreatedByIdentityName: userSyncSource.syncIdentity.Name})
+			createParams := nightscout.EntryToCreate(e, nightscout.CreateContext{CreatedByIdentityID: userSyncSource.syncIdentity.ID, CreatedByIdentityName: userSyncSource.syncIdentity.Name})
 			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if site.IsDuplicateID(err) {

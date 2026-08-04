@@ -53,6 +53,9 @@ func (r Request) PrintRequest() {
 		if k == "Accept" || k == "Content-Type" {
 			continue
 		}
+		if k == "Authorization" {
+			v = []string{"<REDACTED>"}
+		}
 		fmt.Printf("H %s: %s\n", k, strings.Join(v, ", "))
 	}
 }

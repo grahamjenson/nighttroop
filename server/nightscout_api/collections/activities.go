@@ -34,7 +34,7 @@ func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.S
 
 	createParams := nightscout.ActivityToCreate(
 		*activityModel,
-		nightscout.CreateContext{IDPrefix: "ns", CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
+		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
 	)
 
 	dbModel, err := siteContext.SiteDB.Queries.CreateActivity(ctx, createParams)

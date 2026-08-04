@@ -36,7 +36,7 @@ func Test_entryToCreateParams(t *testing.T) {
 	err := json.Unmarshal([]byte(EntryFixture), &entry)
 	assert.NoError(t, err)
 
-	createParams := EntryToCreate(entry, CreateContext{"prefix", 123, "identityName"})
+	createParams := EntryToCreate(entry, CreateContext{123, "identityName"})
 
 	assert.NotNil(t, createParams)
 

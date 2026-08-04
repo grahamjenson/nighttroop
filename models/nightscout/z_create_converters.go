@@ -7,7 +7,7 @@ import site "nighttroop.t1d.nz/data/sql/site"
 
 func ActivityToCreate(source Activity, context CreateContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
-	siteCreateActivityParams.ID = AssignID(source.Date, context)
+	siteCreateActivityParams.ID = AssignID()
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
 		siteCreateActivityParams.Name = &xstring
@@ -52,7 +52,7 @@ func ActivityToCreate(source Activity, context CreateContext) site.CreateActivit
 }
 func DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site.CreateDeviceStateParams {
 	var siteCreateDeviceStateParams site.CreateDeviceStateParams
-	siteCreateDeviceStateParams.ID = AssignID(source.Date, context)
+	siteCreateDeviceStateParams.ID = AssignID()
 	if source.Date != nil {
 		xint64 := nightscoutDateIntToInt64(*source.Date)
 		siteCreateDeviceStateParams.DeviceTimestamp = &xint64
@@ -81,7 +81,7 @@ func DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site
 }
 func DeviceStatusToCreateEventGroup(source DeviceStatus, context CreateContext) site.CreateEventGroupParams {
 	var siteCreateEventGroupParams site.CreateEventGroupParams
-	siteCreateEventGroupParams.ID = AssignID(source.Date, context)
+	siteCreateEventGroupParams.ID = AssignID()
 	if source.Date != nil {
 		siteCreateEventGroupParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
 	}
@@ -102,7 +102,7 @@ func DeviceStatusToCreateEventGroup(source DeviceStatus, context CreateContext) 
 }
 func DeviceStatusToCreateLoop(source DeviceStatus, context CreateContext) site.CreateLoopStateParams {
 	var siteCreateLoopStateParams site.CreateLoopStateParams
-	siteCreateLoopStateParams.ID = AssignID(source.Date, context)
+	siteCreateLoopStateParams.ID = AssignID()
 	var pNightscoutFlexibleFloat64 *FlexibleFloat64
 	if source.MergedLoopStatus != nil && source.MergedLoopStatus.IOB != nil {
 		pNightscoutFlexibleFloat64 = source.MergedLoopStatus.IOB.IOB
@@ -147,7 +147,7 @@ func DeviceStatusToCreateLoop(source DeviceStatus, context CreateContext) site.C
 }
 func DeviceStatusToCreatePump(source DeviceStatus, context CreateContext) site.CreatePumpStateParams {
 	var siteCreatePumpStateParams site.CreatePumpStateParams
-	siteCreatePumpStateParams.ID = AssignID(source.Date, context)
+	siteCreatePumpStateParams.ID = AssignID()
 	var pNightscoutFlexibleFloat64 *FlexibleFloat64
 	if source.Pump != nil {
 		pNightscoutFlexibleFloat64 = source.Pump.Reservoir
@@ -176,7 +176,7 @@ func DeviceStatusToCreatePump(source DeviceStatus, context CreateContext) site.C
 }
 func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
-	siteCreateGlucoseReadingParams.ID = AssignID(source.Date, context)
+	siteCreateGlucoseReadingParams.ID = AssignID()
 	if source.Reading != nil {
 		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Reading)
 	}
@@ -203,7 +203,7 @@ func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadin
 }
 func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParams {
 	var siteCreateFoodPresetParams site.CreateFoodPresetParams
-	siteCreateFoodPresetParams.ID = AssignID(source.Date, context)
+	siteCreateFoodPresetParams.ID = AssignID()
 	if source.Name != nil {
 		siteCreateFoodPresetParams.Name = ShortStringToString(*source.Name)
 	}
@@ -243,7 +243,7 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParam
 }
 func TreatmentToCreateActivity(source Treatment, context CreateContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
-	siteCreateActivityParams.ID = AssignID(source.Date, context)
+	siteCreateActivityParams.ID = AssignID()
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
 		siteCreateActivityParams.Name = &xstring
@@ -288,7 +288,7 @@ func TreatmentToCreateActivity(source Treatment, context CreateContext) site.Cre
 }
 func TreatmentToCreateCgmState(source Treatment, context CreateContext) site.CreateCGMStateParams {
 	var siteCreateCGMStateParams site.CreateCGMStateParams
-	siteCreateCGMStateParams.ID = AssignID(source.Date, context)
+	siteCreateCGMStateParams.ID = AssignID()
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateCGMStateParams.UtcOffsetMinutes = &xint64
@@ -309,7 +309,7 @@ func TreatmentToCreateCgmState(source Treatment, context CreateContext) site.Cre
 }
 func TreatmentToCreateDeviceState(source Treatment, context CreateContext) site.CreateDeviceStateParams {
 	var siteCreateDeviceStateParams site.CreateDeviceStateParams
-	siteCreateDeviceStateParams.ID = AssignID(source.Date, context)
+	siteCreateDeviceStateParams.ID = AssignID()
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateDeviceStateParams.UtcOffsetMinutes = &xint64
@@ -330,7 +330,7 @@ func TreatmentToCreateDeviceState(source Treatment, context CreateContext) site.
 }
 func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.CreateEventGroupParams {
 	var siteCreateEventGroupParams site.CreateEventGroupParams
-	siteCreateEventGroupParams.ID = AssignID(source.Date, context)
+	siteCreateEventGroupParams.ID = AssignID()
 	if source.EventType != nil {
 		siteCreateEventGroupParams.GroupType = string(*source.EventType)
 	}
@@ -354,7 +354,7 @@ func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.C
 }
 func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.CreateFoodIntakeParams {
 	var siteCreateFoodIntakeParams site.CreateFoodIntakeParams
-	siteCreateFoodIntakeParams.ID = AssignID(source.Date, context)
+	siteCreateFoodIntakeParams.ID = AssignID()
 	if source.Carbs != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteCreateFoodIntakeParams.Carbs = &xfloat64
@@ -395,7 +395,7 @@ func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.C
 }
 func TreatmentToCreateGlucoseReading(source Treatment, context CreateContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
-	siteCreateGlucoseReadingParams.ID = AssignID(source.Date, context)
+	siteCreateGlucoseReadingParams.ID = AssignID()
 	if source.Glucose != nil {
 		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Glucose)
 	}
@@ -422,7 +422,7 @@ func TreatmentToCreateGlucoseReading(source Treatment, context CreateContext) si
 }
 func TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.CreateInsulinDoseParams {
 	var siteCreateInsulinDoseParams site.CreateInsulinDoseParams
-	siteCreateInsulinDoseParams.ID = AssignID(source.Date, context)
+	siteCreateInsulinDoseParams.ID = AssignID()
 	if source.Insulin != nil {
 		siteCreateInsulinDoseParams.Dose = FlexibleFloat64ToFloat64(*source.Insulin)
 	}
@@ -446,7 +446,7 @@ func TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.
 }
 func TreatmentToCreateLoopState(source Treatment, context CreateContext) site.CreateLoopStateParams {
 	var siteCreateLoopStateParams site.CreateLoopStateParams
-	siteCreateLoopStateParams.ID = AssignID(source.Date, context)
+	siteCreateLoopStateParams.ID = AssignID()
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateLoopStateParams.UtcOffsetMinutes = &xint64
@@ -467,7 +467,7 @@ func TreatmentToCreateLoopState(source Treatment, context CreateContext) site.Cr
 }
 func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateNoteParams {
 	var siteCreateNoteParams site.CreateNoteParams
-	siteCreateNoteParams.ID = AssignID(source.Date, context)
+	siteCreateNoteParams.ID = AssignID()
 	if source.Notes != nil {
 		siteCreateNoteParams.Content = string(*source.Notes)
 	}
@@ -495,7 +495,7 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateN
 }
 func TreatmentToCreateProfile(source Treatment, context CreateContext) site.CreateProfilePresetParams {
 	var siteCreateProfilePresetParams site.CreateProfilePresetParams
-	siteCreateProfilePresetParams.ID = AssignID(source.Date, context)
+	siteCreateProfilePresetParams.ID = AssignID()
 	if source.Name != nil {
 		siteCreateProfilePresetParams.Name = ShortStringToString(*source.Name)
 	}
@@ -512,7 +512,7 @@ func TreatmentToCreateProfile(source Treatment, context CreateContext) site.Crea
 }
 func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) site.CreateProfileSwitchParams {
 	var siteCreateProfileSwitchParams site.CreateProfileSwitchParams
-	siteCreateProfileSwitchParams.ID = AssignID(source.Date, context)
+	siteCreateProfileSwitchParams.ID = AssignID()
 	if source.Name != nil {
 		siteCreateProfileSwitchParams.Name = ShortStringToString(*source.Name)
 	}
@@ -542,7 +542,7 @@ func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) sit
 }
 func TreatmentToCreatePumpState(source Treatment, context CreateContext) site.CreatePumpStateParams {
 	var siteCreatePumpStateParams site.CreatePumpStateParams
-	siteCreatePumpStateParams.ID = AssignID(source.Date, context)
+	siteCreatePumpStateParams.ID = AssignID()
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreatePumpStateParams.UtcOffsetMinutes = &xint64
@@ -563,7 +563,7 @@ func TreatmentToCreatePumpState(source Treatment, context CreateContext) site.Cr
 }
 func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.CreateTempBasalParams {
 	var siteCreateTempBasalParams site.CreateTempBasalParams
-	siteCreateTempBasalParams.ID = AssignID(source.Date, context)
+	siteCreateTempBasalParams.ID = AssignID()
 	if source.Duration != nil {
 		siteCreateTempBasalParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
 	}
@@ -594,7 +594,7 @@ func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.Cr
 }
 func TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.CreateTempTargetParams {
 	var siteCreateTempTargetParams site.CreateTempTargetParams
-	siteCreateTempTargetParams.ID = AssignID(source.Date, context)
+	siteCreateTempTargetParams.ID = AssignID()
 	if source.Duration != nil {
 		siteCreateTempTargetParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
 	}
