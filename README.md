@@ -1,8 +1,6 @@
 # TODO
 
 ## Before Alpha Testing
-1. Token cache for speed (so bcrypt doesn't cripple us)
-
 1. Structural
     1. Nightscout models in DB
     1. Separate Device and Identity and App OR Join Them
