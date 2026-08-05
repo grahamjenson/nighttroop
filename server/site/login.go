@@ -90,7 +90,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 		}
 
 		// First thing validate the password
-		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, siteContext.Subdomain, formName, formPassword)
+		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, config.Security, siteContext.Subdomain, formName, formPassword)
 		if err != nil {
 			errors.GenericIdentityLoginError(w, r, err)
 			return
@@ -210,7 +210,7 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	return identity, nil
 }
 
-func loginTheUserPasswordOnly(controlDB *db.ControlDB, subdomain, formName, formPassword string) (*control.Identity, error) {
+func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.SecurityConfig, subdomain, formName, formPassword string) (*control.Identity, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
@@ -223,7 +223,7 @@ func loginTheUserPasswordOnly(controlDB *db.ControlDB, subdomain, formName, form
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
-	if !security.VerifyPassword(formPassword, identity.Password) {
+	if !securityConfig.VerifyPassword(formPassword, identity.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
 
@@ -311,7 +311,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 }
 
 func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg config.ServerConfig, devicename, password, totpToken string) (*control.Identity, error) {
-	device, err := loginTheUserPasswordOnly(controlDB, subdomain, devicename, password)
+	device, err := loginTheUserPasswordOnly(controlDB, cfg.Security, subdomain, devicename, password)
 	if err != nil {
 		return nil, err
 	}

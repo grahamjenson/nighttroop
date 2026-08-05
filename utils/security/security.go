@@ -29,6 +29,13 @@ type SecurityConfig struct {
 	jwtPreAuthValidator *jwt.Validator
 
 	/////
+	// Password Verifier
+	/////
+
+	// Still not sure this is a good idea, but legacy tokens are soooo slow
+	passwordVerifier *PasswordVerifier
+
+	/////
 	// Dangerous Dev Only Configs
 	/////
 
@@ -39,9 +46,10 @@ type SecurityConfig struct {
 
 func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, https bool) *SecurityConfig {
 	cfg := &SecurityConfig{
-		Mode:     mode,
-		HostName: hostname,
-		HTTPS:    https,
+		Mode:             mode,
+		HostName:         hostname,
+		HTTPS:            https,
+		passwordVerifier: NewPasswordVerifier(),
 	}
 
 	if cfg.IsTest() {
@@ -66,6 +74,14 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 	}
 
 	return cfg
+}
+
+func (config *SecurityConfig) VerifyPassword(plainPassword, storedHash string) bool {
+	return config.passwordVerifier.VerifyPassword(plainPassword, storedHash)
+}
+
+func (config *SecurityConfig) VerifyPasswordWithCache(plainPassword, storedHash string) bool {
+	return config.passwordVerifier.VerifyPasswordWithCache(plainPassword, storedHash)
 }
 
 func (config *SecurityConfig) IsDev() bool {

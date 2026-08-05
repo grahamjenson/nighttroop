@@ -13,7 +13,6 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
-	"nighttroop.t1d.nz/utils/security"
 )
 
 func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
@@ -123,7 +122,7 @@ func tryAuthWithLegacyToken(config config.ServerConfig, r *http.Request) (*contr
 		return nil, fmt.Errorf("legacy token cannot be used for admin identities")
 	}
 
-	if !security.VerifyPassword(tokenParamPassword, identity.Password) {
+	if !config.Security.VerifyPasswordWithCache(tokenParamPassword, identity.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
 

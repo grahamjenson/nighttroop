@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
-	"nighttroop.t1d.nz/utils/security"
 )
 
 type LoginRequest struct {
@@ -136,7 +135,7 @@ func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, us
 		return nil, err
 	}
 
-	if !security.VerifyPassword(password, admin.Password) {
+	if !config.Security.VerifyPassword(password, admin.Password) {
 		return nil, fmt.Errorf("invalid password")
 	}
 	if !config.Security.TOTPValidate(totpToken, totpSecret) {
