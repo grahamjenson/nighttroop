@@ -15,12 +15,12 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed nightscout/user_treatments.http
-var userTreatmentsHTTP string
+//go:embed nightscout/site_v1_treatments.http
+var siteV1TreatmentsHTTP string
 
 func TestUserTreatments(t *testing.T) {
 	requestContext := map[string]any{}
-	requestFile, err := ParseRequestFile(userTreatmentsHTTP, requestContext)
+	requestFile, err := ParseRequestFile(siteV1TreatmentsHTTP, requestContext)
 	if err != nil {
 		t.Fatalf("failed to parse request file: %v", err)
 	}

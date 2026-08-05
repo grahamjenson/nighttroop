@@ -154,3 +154,54 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 
 	}
 }
+
+func Update(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+
+		// Identifier can be in the URL param OOR
+		identifier := chi.URLParam(r, "identifier")
+
+		var body map[string]any
+		if err := nsutils.ReadJSON(r, &body); err != nil {
+			nsutils.WriteError(w, nsutils.BadDataBodyError)
+			return
+		}
+
+		if identifier == "" {
+			if uid, ok := body["_id"].(string); ok {
+				identifier = uid
+			}
+			if identifier == "" {
+				if id, ok := body["identifier"].(string); ok {
+					identifier = id
+				}
+			}
+		}
+
+		if identifier == "" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// Deal with one record being sent or an array being sent
+		if identifier != "" {
+			updated, herr := dep.Store.Update(r.Context(), collection, identifier, body)
+			if herr != nil {
+				nsutils.WriteError(w, herr)
+				return
+			}
+			nsutils.WriteRecordsV1(w, []nsutils.Record{updated}, nil)
+			return
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+			return
+
+		}
+
+	}
+}

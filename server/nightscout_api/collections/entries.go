@@ -99,6 +99,8 @@ func (c EntriesCollection) Update(ctx context.Context, siteContext *httputils.Si
 			UpdatedByIdentityName: siteContext.IdentityModel.Name,
 		},
 	)
+	updateParams.ID = identifier
+
 	glucoseReading, err := siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound

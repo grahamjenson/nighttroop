@@ -9,14 +9,6 @@ SET {{ .create_new_site.pwd_nstoken }}
 NAME site
 SET {{ .create_new_site.site_subdomain }}
 
-NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
-ASSERT_STATUS 200
-
-# Auth with JWT
-NAME jwt
-SET {{ .jwtauth.token }}
-
 NAME create_meal_bolus_v1
 POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
 B {
@@ -65,11 +57,39 @@ ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 
+NAME update_treatments_v1
+PUT http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+B {
+  "_id": "{{ dig "create_meal_bolus_v1.0._id" }}",
+  "notes": "Updated notes"
+  }
+ASSERT_STATUS 200
 
+NAME update_treatments_v1
+PUT http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
+B {
+  "reason": "Updated reason"
+  }
+ASSERT_STATUS 200
+
+NAME get_treatments_after_updates_v1
+GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Updated notes" "@0.notes" }}
+ASSERT {{ assertEquals "Updated reason" "@0.reason" }}
 
 ######
 # Version 3 API
 ######
+
+
+NAME jwtauth
+GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
 
 NAME create_bolus_wizard_v1
 POST http://{{ .site }}.ns.localhost/api/v3/treatments
