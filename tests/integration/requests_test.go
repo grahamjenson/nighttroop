@@ -88,7 +88,8 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 
 			} else {
 				fmt.Println()
-				fmt.Println("===============================")
+				fmt.Println("=============== " + request.Name + "  ================")
+				fmt.Println()
 				realRequest.PrintRequest()
 				fmt.Println()
 				fmt.Println("- - - - - - - - - - - - - - - - ")

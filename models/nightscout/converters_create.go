@@ -1,6 +1,8 @@
 package nightscout
 
 import (
+	"time"
+
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 )
@@ -24,7 +26,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -38,11 +40,11 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map ID                         | AssignID
+	// goverter:map CreatedByIdentityName      | AssignCreatedByName
 	//
 	// goverter:map Type ReadingType
 	EntryToCreate(source Entry, ctx CreateContext) site.CreateGlucoseReadingParams
@@ -83,7 +85,7 @@ type CreateMapConverter interface {
 	////////////////////////////////////////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -98,7 +100,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -113,7 +115,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -128,7 +130,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -143,7 +145,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -171,7 +173,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -187,7 +189,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -202,7 +204,7 @@ type CreateMapConverter interface {
 	///////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -214,7 +216,7 @@ type CreateMapConverter interface {
 	TreatmentToCreateTempTarget(source Treatment, ctx CreateContext) site.CreateTempTargetParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -224,7 +226,7 @@ type CreateMapConverter interface {
 	TreatmentToCreateDeviceState(source Treatment, ctx CreateContext) site.CreateDeviceStateParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -234,7 +236,7 @@ type CreateMapConverter interface {
 	TreatmentToCreateLoopState(source Treatment, ctx CreateContext) site.CreateLoopStateParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -244,7 +246,7 @@ type CreateMapConverter interface {
 	TreatmentToCreatePumpState(source Treatment, ctx CreateContext) site.CreatePumpStateParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -254,7 +256,7 @@ type CreateMapConverter interface {
 	TreatmentToCreateCgmState(source Treatment, ctx CreateContext) site.CreateCGMStateParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -273,7 +275,7 @@ type CreateMapConverter interface {
 	////////////////////////////////////////
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -283,7 +285,7 @@ type CreateMapConverter interface {
 	DeviceStatusToCreateEventGroup(source DeviceStatus, ctx CreateContext) site.CreateEventGroupParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -295,7 +297,7 @@ type CreateMapConverter interface {
 	DeviceStatusToCreateDevice(source DeviceStatus, ctx CreateContext) site.CreateDeviceStateParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -308,7 +310,7 @@ type CreateMapConverter interface {
 	DeviceStatusToCreateLoop(source DeviceStatus, ctx CreateContext) site.CreateLoopStateParams
 
 	// goverter:context ctx
-	// goverter:map Date OccurredAt
+	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
@@ -335,6 +337,13 @@ func AssignCreatedByName(ctx CreateContext) string {
 func ToDateInt(createdAt int64) *DateInt {
 	x := DateInt(createdAt)
 	return &x
+}
+
+func OrNow(d *DateInt) int64 {
+	if d != nil {
+		return int64(*d)
+	}
+	return time.Now().UnixMilli()
 }
 
 // ////

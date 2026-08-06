@@ -13,42 +13,92 @@ NAME jwtauth
 GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
-######
-# Version 3 API
-######
-
 # Auth with JWT
 NAME jwt
 SET {{ .jwtauth.token }}
 
-NAME create_bolus_wizard_v1
-POST http://{{ .site }}.ns.localhost/api/v3/treatments
+//////
+// CREATE
+//////
+
+
+NAME create_entry_v1
+POST http://{{ .site }}.ns.localhost/api/v3/entries
 H Authorization: Bearer {{ jwt }}
-B {
-  "eventType": "Bolus Wizard",
-  "created_at": "{{ time 0 }}",
-
-  "glucose": 150,
-  "glucoseType": "Sensor",
-
-  "carbs": 46,
-  "insulin": 4.3,
-
-  "notes": "Here are some notes",
-  "reason": "lunch"
- }
+B { "sgv": 101, "type": "sgv" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
-ASSERT {{ assertExists "@result.created_at" }}
-ASSERT {{ assertEquals 150 "@result.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
-ASSERT {{ assertEquals 46 "@result.carbs" }}
-ASSERT {{ assertEquals 4.3 "@result.insulin" }}
-ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}
-ASSERT {{ assertEquals "lunch" "@result.reason" }}
+ASSERT {{ assertEquals 101 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertExists "@result.identifier" }}
 ASSERT {{ assertExists "@result.date" }}
 ASSERT {{ assertExists "@result.subject" }}
 ASSERT {{ assertExists "@result.utcOffset" }}
 ASSERT {{ assertExists "@result.srvCreated" }}
 ASSERT {{ assertExists "@result.srvModified" }}
+
+
+//////
+// READ
+//////
+
+NAME get_entry_v1
+GET http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 101 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+
+NAME search_gt_sgv_v1
+GET http://{{ .site }}.ns.localhost/api/v3/entries?sgv[gt]=100
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 101 "@result.0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.0.type" }}
+
+//////
+// UPDATE
+//////
+
+NAME put_entry_v1
+PUT http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 102, "type": "sgv" }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 102 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+
+NAME check_put_entry_v1
+GET http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 102 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+
+NAME patch_entry_v1
+PATCH http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 103, "type": "sgv" }
+ASSERT_STATUS 200
+
+NAME check_patch_entry_v1
+GET http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 103 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+
+NAME update_entries_force_create_v3
+PUT http://{{ .site }}.ns.localhost/api/v3/entries/AnotherFunID
+B { "sgv": 103, "type": "sgv" }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 201
+ASSERT {{ assertEquals 103 "@result.sgv" }}
+
+//////
+// DELETE
+//////
+
+NAME delete_entry_v1
+DELETE http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200

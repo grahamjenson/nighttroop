@@ -547,7 +547,7 @@ func AssertEqual(t *testing.T, expected, actual any, message string, file string
 	}
 
 	t.Errorf(
-		"%s:%d: %s\nexpected: %#v\nactual:   %#v",
+		"\n ASSERT FAILED \n %s:%d: %s\nexpected: %#v\nactual:   %#v",
 		file,
 		line,
 		message,
@@ -566,7 +566,7 @@ func AssertNotNil(t *testing.T, actual any, message string, file string, line in
 	}
 
 	t.Errorf(
-		"%s:%d: %s\nactual:   %#v",
+		"\n ASSERT FAILED \n %s:%d: %s\nactual:   %#v",
 		file,
 		line,
 		message,

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 )
 
 ////
@@ -83,11 +82,15 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		t.Reading = &res
 	}
 
-	// Cleaning Updates
+	// We Just need Date and UtcOffset to be populated
 	if t.DateString != nil {
 		if t.Date == nil || t.UtcOffsetMinutes == nil {
 			t.Date, t.UtcOffsetMinutes = t.DateString.MillisUTCOffset()
 		}
+	}
+
+	if t.Mills != nil {
+		t.Date = t.Mills
 	}
 
 	return nil
@@ -99,10 +102,6 @@ func (t *Entry) MarshalJSON() ([]byte, error) {
 	if t.UtcOffsetMinutes == nil {
 		zero := FlexibleInt64(0)
 		t.UtcOffsetMinutes = &zero
-	}
-	if t.Date == nil {
-		now := DateInt(time.Now().UnixMilli())
-		t.Date = &now
 	}
 
 	ds := DateStringFromDateIntAndUTCOffset(*t.Date, *t.UtcOffsetMinutes)

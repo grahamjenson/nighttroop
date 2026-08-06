@@ -224,58 +224,22 @@ func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 		return nil, nsutils.ErrInternal
 	}
 
-	getParams := site.GetGlucoseReadingParams{ID: identifier}
-	deleteParams := site.HardDeleteGlucoseReadingParams{ID: identifier}
-	createParams := nightscout.EntryToCreate(
+	updateParams := nightscout.EntryToUpdate(
 		*entryModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
+		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
 	)
+	updateParams.ID = identifier
 
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
+	ssss, _ := utils.ToMap[site.UpdateGlucoseReadingParams](&updateParams)
+	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
 	if err != nil {
+		slog.Error("failed to update glucose reading in database", "error", err, "updateParams", ssss)
 		return nil, nsutils.ErrInternal
 	}
-	defer tx.Rollback()
-
-	// GET
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-	dbModel, err := q.GetGlucoseReading(ctx, getParams)
-	if err != nil {
-		slog.Error("failed to get glucose reading by ID", "error", err)
+	if dbUpdateModel == nil {
+		slog.Error("failed to update glucose reading in database, dbUpdateModel is nil")
 		return nil, nsutils.ErrInternal
 	}
 
-	// VALIDATE ATTRIBUTES
-	if dbModel != nil {
-		if dbModel.ReadingType != createParams.ReadingType {
-			slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", dbModel.ReadingType, "newReadingType", createParams.ReadingType)
-			return nil, nsutils.ErrCannotChangeReadingType
-		}
-	}
-
-	// DELETE
-	_, err = q.HardDeleteGlucoseReading(ctx, deleteParams)
-	if err != nil {
-		slog.Error("failed to hard delete glucose reading in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-
-	// CREATE
-	dbCreateModel, err := q.CreateGlucoseReading(ctx, createParams)
-	if err != nil {
-		slog.Error("failed to create glucose reading in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbCreateModel == nil {
-		slog.Error("failed to create glucose reading in database, dbCreateModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit create glucose reading in database", "error", err, "entryModel", entryModel)
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbCreateModel)), nil
+	return ptr(c.converter(dbUpdateModel)), nil
 }

@@ -56,6 +56,11 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals 102 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
 
+NAME update_entries_force_create_v1
+PUT http://{{ .site }}.ns.localhost/api/v1/entries?token={{ token }}
+B { "_id": "MyVeryOwnID", "sgv": 102, "type": "sgv" }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals 102 "@sgv" }}
 
 ///////
 // DELETE

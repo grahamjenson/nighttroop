@@ -362,14 +362,14 @@ func (q *Queries) SoftDeleteGlucoseReadingsByType(ctx context.Context, arg SoftD
 const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
 
 UPDATE glucose_readings SET
-    reading = COALESCE(?3, reading),
-    reading_type = COALESCE(?4, reading_type),
+    reading = COALESCE(?1, reading),
+    reading_type = COALESCE(?2, reading_type),
 
-    occurred_at = COALESCE(?5, occurred_at),
-    utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
+    occurred_at = COALESCE(?3, occurred_at),
+    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?5
+WHERE id = ?6 AND deleted_at IS NULL
 RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 

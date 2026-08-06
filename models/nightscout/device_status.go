@@ -1,6 +1,8 @@
 package nightscout
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type DeviceStatus struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`

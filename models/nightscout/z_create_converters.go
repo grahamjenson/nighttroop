@@ -32,9 +32,7 @@ func ActivityToCreate(source Activity, context CreateContext) site.CreateActivit
 		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
 		siteCreateActivityParams.HeartRate = &xint644
 	}
-	if source.Date != nil {
-		siteCreateActivityParams.OccurredAt = int64(*source.Date)
-	}
+	siteCreateActivityParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateActivityParams.UtcOffsetMinutes = &xint645
@@ -56,7 +54,7 @@ func DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site
 	var siteCreateDeviceStateParams site.CreateDeviceStateParams
 	siteCreateDeviceStateParams.ID = AssignID()
 	if source.Date != nil {
-		xint64 := nightscoutDateIntToInt64(*source.Date)
+		xint64 := int64(*source.Date)
 		siteCreateDeviceStateParams.DeviceTimestamp = &xint64
 	}
 	if source.UploaderBattery != nil {
@@ -67,9 +65,7 @@ func DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site
 		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateDeviceStateParams.UtcOffsetMinutes = &xint642
 	}
-	if source.Date != nil {
-		siteCreateDeviceStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateDeviceStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateDeviceStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -86,9 +82,7 @@ func DeviceStatusToCreateDevice(source DeviceStatus, context CreateContext) site
 func DeviceStatusToCreateEventGroup(source DeviceStatus, context CreateContext) site.CreateEventGroupParams {
 	var siteCreateEventGroupParams site.CreateEventGroupParams
 	siteCreateEventGroupParams.ID = AssignID()
-	if source.Date != nil {
-		siteCreateEventGroupParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateEventGroupParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
@@ -137,9 +131,7 @@ func DeviceStatusToCreateLoop(source DeviceStatus, context CreateContext) site.C
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateLoopStateParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateLoopStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateLoopStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateLoopStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -168,9 +160,7 @@ func DeviceStatusToCreatePump(source DeviceStatus, context CreateContext) site.C
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreatePumpStateParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreatePumpStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreatePumpStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreatePumpStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -197,9 +187,7 @@ func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadin
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateGlucoseReadingParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
@@ -282,9 +270,7 @@ func TreatmentToCreateActivity(source Treatment, context CreateContext) site.Cre
 		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
 		siteCreateActivityParams.HeartRate = &xint644
 	}
-	if source.Date != nil {
-		siteCreateActivityParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateActivityParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateActivityParams.UtcOffsetMinutes = &xint645
@@ -309,9 +295,7 @@ func TreatmentToCreateCgmState(source Treatment, context CreateContext) site.Cre
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateCGMStateParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateCGMStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateCGMStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateCGMStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -332,9 +316,7 @@ func TreatmentToCreateDeviceState(source Treatment, context CreateContext) site.
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateDeviceStateParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateDeviceStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateDeviceStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateDeviceStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -354,9 +336,7 @@ func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.C
 	if source.EventType != nil {
 		siteCreateEventGroupParams.GroupType = string(*source.EventType)
 	}
-	if source.Date != nil {
-		siteCreateEventGroupParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateEventGroupParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
@@ -401,9 +381,7 @@ func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.C
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateFoodIntakeParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateFoodIntakeParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateFoodIntakeParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateFoodIntakeParams.RawJsonData = &pString
 	if source.App != nil {
@@ -430,9 +408,7 @@ func TreatmentToCreateGlucoseReading(source Treatment, context CreateContext) si
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateGlucoseReadingParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
@@ -456,9 +432,7 @@ func TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateInsulinDoseParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateInsulinDoseParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateInsulinDoseParams.RawJsonData = &pString
 	if source.App != nil {
@@ -479,9 +453,7 @@ func TreatmentToCreateLoopState(source Treatment, context CreateContext) site.Cr
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateLoopStateParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateLoopStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateLoopStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateLoopStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -509,9 +481,7 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateN
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateNoteParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateNoteParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateNoteParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateNoteParams.RawJsonData = &pString
 	if source.App != nil {
@@ -560,9 +530,7 @@ func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) sit
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateProfileSwitchParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateProfileSwitchParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateProfileSwitchParams.RawJsonData = &pString
 	if source.App != nil {
@@ -583,9 +551,7 @@ func TreatmentToCreatePumpState(source Treatment, context CreateContext) site.Cr
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreatePumpStateParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreatePumpStateParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreatePumpStateParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreatePumpStateParams.RawJsonData = &pString
 	if source.App != nil {
@@ -616,9 +582,7 @@ func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.Cr
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateTempBasalParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateTempBasalParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateTempBasalParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateTempBasalParams.RawJsonData = &pString
 	if source.App != nil {
@@ -648,9 +612,7 @@ func TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.C
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateTempTargetParams.UtcOffsetMinutes = &xint64
 	}
-	if source.Date != nil {
-		siteCreateTempTargetParams.OccurredAt = nightscoutDateIntToInt64(*source.Date)
-	}
+	siteCreateTempTargetParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
 	siteCreateTempTargetParams.RawJsonData = &pString
 	if source.App != nil {
@@ -663,7 +625,4 @@ func TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.C
 	}
 	siteCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateTempTargetParams
-}
-func nightscoutDateIntToInt64(source DateInt) int64 {
-	return int64(source)
 }
