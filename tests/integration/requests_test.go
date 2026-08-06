@@ -64,9 +64,13 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 		if err != nil {
 			t.Fatalf("failed to read request file: %v", err)
 		}
+		fmt.Println()
+		fmt.Println("===============================================")
+		fmt.Printf("Running request file: %s\n", requestFilePath)
+		fmt.Println("===============================================")
 
 		requestContext := map[string]any{}
-		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext)
+		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext, requestFilePath)
 		if err != nil {
 			t.Fatalf("failed to parse request file: %v", err)
 		}

@@ -10,14 +10,25 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 	"text/template"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
+
+type AssertType struct {
+	Path string
+	Line int
+	Raw  string
+}
+
+type AssertStatusType struct {
+	Path string
+	Line int
+	Code int
+}
 
 type Request struct {
 	Name       string
@@ -27,8 +38,8 @@ type Request struct {
 	Body       string
 	IsFunction bool
 
-	AssertStatus int
-	Assert       []string
+	AssertStatus AssertStatusType
+	Assert       []AssertType
 }
 
 func (r Request) ToFlatString() string {
@@ -65,34 +76,36 @@ type RequestFile struct {
 	Requests []Request
 }
 
-func ParseRequestFile(file string, ctx map[string]any) (*RequestFile, error) {
-	requests, err := parseFile(strings.NewReader(file))
+func ParseRequestFile(fileContents string, ctx map[string]any, path string) (*RequestFile, error) {
+	requests, err := parseFile(strings.NewReader(fileContents), path)
 	if err != nil {
 		return nil, err
 	}
 
 	// name is the file name without folders or extension
-	name := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
+	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	return &RequestFile{
 		Name:     name,
 		Requests: requests,
 	}, nil
 }
 
-func parseFile(r io.Reader) ([]Request, error) {
+func parseFile(r io.Reader, path string) ([]Request, error) {
 	scanner := bufio.NewScanner(r)
 
 	var requests []Request
 	var current *Request
 
+	fmt.Println("Parsing request file:", path)
 	flush := func() {
 		if current != nil {
 			requests = append(requests, *current)
 			current = nil
 		}
 	}
-
+	lineNumber := 0
 	for scanner.Scan() {
+		lineNumber += 1
 		raw := scanner.Text()
 		line := strings.TrimSpace(raw)
 
@@ -110,7 +123,7 @@ func parseFile(r io.Reader) ([]Request, error) {
 		}
 
 		switch {
-		case strings.HasPrefix(line, "#"):
+		case strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//"):
 			// comment ignore
 		case strings.HasPrefix(line, "NAME "):
 			flush()
@@ -167,7 +180,11 @@ func parseFile(r io.Reader) ([]Request, error) {
 			if err != nil {
 				return nil, fmt.Errorf("invalid assert_status: %q", statusStr)
 			}
-			current.AssertStatus = statusCode
+			current.AssertStatus = AssertStatusType{
+				Path: path,
+				Line: lineNumber,
+				Code: statusCode,
+			}
 
 		case strings.HasPrefix(line, "ASSERT "):
 			if current == nil {
@@ -175,7 +192,11 @@ func parseFile(r io.Reader) ([]Request, error) {
 			}
 
 			assert := strings.TrimSpace(strings.TrimPrefix(line, "ASSERT "))
-			current.Assert = append(current.Assert, assert)
+			current.Assert = append(current.Assert, AssertType{
+				Path: path,
+				Line: lineNumber,
+				Raw:  assert,
+			})
 		case strings.HasPrefix(line, "H "):
 			if current == nil {
 				return nil, fmt.Errorf("header before NAME")
@@ -311,14 +332,16 @@ func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (i
 }
 
 func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, ctx map[string]any) {
-	if r.AssertStatus != 0 && statusCode != r.AssertStatus {
-		t.Fatalf("request %s expected status %d but got %d with body %v", r.Name, r.AssertStatus, statusCode, output)
+	code := r.AssertStatus.Code
+	if code != 0 {
+		message := fmt.Sprintf("request %s expected status %d but got %d with body %v", r.Name, code, statusCode, output)
+		AssertEqual(t, code, statusCode, message, r.AssertStatus.Path, r.AssertStatus.Line)
 	}
 
-	for _, assert := range r.Assert {
-		_, err := assertTemplateCheck(assert, ctx, output, t)
+	for _, assertStruct := range r.Assert {
+		_, err := assertTemplateCheck(assertStruct, ctx, output, t)
 		if err != nil {
-			t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", r.Name, assert, output, err)
+			t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", r.Name, assertStruct.Raw, output, err)
 		}
 	}
 }
@@ -423,7 +446,7 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 	return buf.String(), nil
 }
 
-func assertTemplateCheck(input string, ctx map[string]any, localResult any, t *testing.T) (string, error) {
+func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResult any, t *testing.T) (string, error) {
 	prettyOutput, _ := json.MarshalIndent(localResult, "", "  ")
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
@@ -434,16 +457,18 @@ func assertTemplateCheck(input string, ctx map[string]any, localResult any, t *t
 			// TESTING FUNCTIONS
 			"assertEquals": func(rawExpected, rawActual any) string {
 				expected, actual := normalizeExpectedAndAcutal(rawExpected, rawActual, localResult)
-				assert.Equal(t, expected, actual, "assertEquals failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
+				message := fmt.Sprintf("assertEquals failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
+				AssertEqual(t, expected, actual, message, assertStruct.Path, assertStruct.Line)
 				return "true"
 			},
 			"assertExists": func(rawActual any) string {
 				_, actual := normalizeExpectedAndAcutal(rawActual, rawActual, localResult)
-				assert.NotNil(t, actual, "assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
+				message := fmt.Sprintf("assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
+				AssertNotNil(t, actual, message, assertStruct.Path, assertStruct.Line)
 				return "true"
 			},
 		}).
-		Parse(input)
+		Parse(assertStruct.Raw)
 	if err != nil {
 		return "", err
 	}
@@ -512,4 +537,41 @@ func normalizeValue(v any) any {
 	default:
 		return v
 	}
+}
+
+func AssertEqual(t *testing.T, expected, actual any, message string, file string, line int) bool {
+	t.Helper()
+
+	if reflect.DeepEqual(expected, actual) {
+		return true
+	}
+
+	t.Errorf(
+		"%s:%d: %s\nexpected: %#v\nactual:   %#v",
+		file,
+		line,
+		message,
+		expected,
+		actual,
+	)
+
+	return false
+}
+
+func AssertNotNil(t *testing.T, actual any, message string, file string, line int) bool {
+	t.Helper()
+
+	if actual != nil {
+		return true
+	}
+
+	t.Errorf(
+		"%s:%d: %s\nactual:   %#v",
+		file,
+		line,
+		message,
+		actual,
+	)
+
+	return false
 }

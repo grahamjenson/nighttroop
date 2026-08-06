@@ -187,6 +187,7 @@ func (c EntriesCollection) Replace(ctx context.Context, siteContext *httputils.S
 			slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", dbModel.ReadingType, "newReadingType", createParams.ReadingType)
 			return nil, nsutils.ErrCannotChangeReadingType
 		}
+		createParams.ID = dbModel.ID
 	}
 
 	// DELETE

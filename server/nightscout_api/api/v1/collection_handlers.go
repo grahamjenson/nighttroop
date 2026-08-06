@@ -139,7 +139,16 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 		identifier_or_type := chi.URLParam(r, "identifier_or_type")
 		if identifier_or_type != "" {
 			if collection.IsTypeString(identifier_or_type) {
-				dep.Store.DeleteType(r.Context(), collection, identifier_or_type, permanent)
+				amount, err := dep.Store.DeleteType(r.Context(), collection, identifier_or_type, permanent)
+				if err != nil {
+					nsutils.WriteError(w, err)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+				nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+					"acknowledged": true,
+					"deletedCount": amount,
+				})
 				return
 			} else {
 				err = dep.Store.Delete(r.Context(), collection, identifier_or_type, permanent)
@@ -147,7 +156,12 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 					nsutils.WriteError(w, err)
 					return
 				}
-				w.WriteHeader(http.StatusNoContent)
+
+				w.WriteHeader(http.StatusOK)
+				nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+					"acknowledged": true,
+					"deletedCount": 1,
+				})
 				return
 			}
 		}
