@@ -85,12 +85,12 @@ func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httput
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
-func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	treatmentModel := nightscout.Treatment{}
 	err := utils.FromMap(patch, &treatmentModel)
 	if err != nil {
 		slog.Error("failed to map patch to treatment model", "error", err)
-		return nil, nsutils.BadDataBodyError
+		return nil, false, nsutils.BadDataBodyError
 	}
 
 	cc := nightscout.UpdateContext{
@@ -101,14 +101,14 @@ func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils
 	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
 	if rerr != nil {
 		slog.Error("failed to update treatment in database", "error", rerr)
-		return nil, rerr
+		return nil, false, rerr
 	}
 	if dbModel == nil {
 		slog.Error("failed to update treatment in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(dbModel)), nil
+	return ptr(c.converter(dbModel)), false, nil
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt

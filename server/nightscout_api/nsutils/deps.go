@@ -48,7 +48,7 @@ type Store interface {
 	// Delete old record and insert new one with the same identifier
 	// return    v1 return the recrod as body v3 "body": { "lastModified": 1785972708836, "status": 200 }, on success
 	// v1 if id is not found it is just created, no checks or anything
-	Replace(ctx context.Context, collection Collection, identifier string, data map[string]any) (Record, *HTTPError)
+	Replace(ctx context.Context, collection Collection, identifier string, data map[string]any, canCreate bool) (Record, bool, *HTTPError)
 
 	// patch PATCH
 	// Patch will 404 if no record is founf of that id

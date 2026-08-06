@@ -136,10 +136,10 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 		}
 		permanent := r.URL.Query().Get("permanent") == "true"
 
-		identifier_or_type := chi.URLParam(r, "identifier_or_type")
-		if identifier_or_type != "" {
-			if collection.IsTypeString(identifier_or_type) {
-				amount, err := dep.Store.DeleteType(r.Context(), collection, identifier_or_type, permanent)
+		identifierOrType := chi.URLParam(r, "identifier_or_type")
+		if identifierOrType != "" {
+			if collection.IsTypeString(identifierOrType) {
+				amount, err := dep.Store.DeleteType(r.Context(), collection, identifierOrType, permanent)
 				if err != nil {
 					nsutils.WriteError(w, err)
 					return
@@ -151,7 +151,7 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 				})
 				return
 			} else {
-				err = dep.Store.Delete(r.Context(), collection, identifier_or_type, permanent)
+				err = dep.Store.Delete(r.Context(), collection, identifierOrType, permanent)
 				if err != nil {
 					nsutils.WriteError(w, err)
 					return
@@ -172,14 +172,12 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 // Replace If not found will return 404
 func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-
-		// Identifier can be in the URL param OOR
-		identifier := chi.URLParam(r, "identifier")
+		canCreate := nsutils.HasPermission(dep, collection, identity, nsutils.CollectionActionCreate)
 
 		var body map[string]any
 		if err := nsutils.ReadJSON(r, &body); err != nil {
@@ -187,6 +185,8 @@ func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
+		// GET THE IDENTIFIER FROM THE URL OR BODY
+		identifier := chi.URLParam(r, "identifier")
 		if identifier == "" {
 			if uid, ok := body["_id"].(string); ok {
 				identifier = uid
@@ -198,24 +198,16 @@ func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			}
 		}
 
-		if identifier == "" {
-			w.WriteHeader(http.StatusNotFound)
+		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
+			nsutils.WriteError(w, err)
 			return
 		}
 
-		if identifier != "" {
-			updated, herr := dep.Store.Replace(r.Context(), collection, identifier, body)
-			if herr != nil {
-				nsutils.WriteError(w, herr)
-				return
-			}
-			nsutils.WriteRecordV1(w, updated, nil)
+		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate)
+		if herr != nil {
+			nsutils.WriteError(w, herr)
 			return
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-			return
-
 		}
-
+		nsutils.WriteRecordV1(w, updated, nil)
 	}
 }

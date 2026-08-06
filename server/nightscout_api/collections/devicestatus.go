@@ -125,6 +125,6 @@ func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputil
 	return ptr(c.converter(dbModel)), nil
 }
 
-func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
+func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return nil, false, nsutils.ErrNotImplemented
 }

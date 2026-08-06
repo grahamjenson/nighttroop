@@ -63,6 +63,7 @@ var (
 	ErrBadRequest        = &HTTPError{Status: http.StatusBadRequest, Message: "Bad request"}
 	ErrInvalidCollection = &HTTPError{Status: http.StatusBadRequest, Message: "invalid collection"}
 	BadDataBodyError     = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing body"}
+	BadIdentifierError   = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing identifier field"}
 	BadDateFieldError    = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing date field"}
 	BadUTCTOffsetError   = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing utcOffset field"}
 	BadCreatedAtError    = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing created_at field"}

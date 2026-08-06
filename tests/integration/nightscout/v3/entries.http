@@ -26,7 +26,7 @@ NAME create_entry_v1
 POST http://{{ .site }}.ns.localhost/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "sgv": 101, "type": "sgv" }
-ASSERT_STATUS 200
+ASSERT_STATUS 201
 ASSERT {{ assertEquals 101 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertExists "@result.identifier" }}
@@ -54,6 +54,11 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@result.0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.0.type" }}
+
+NAME get_404_entry_v1
+GET http://{{ .site }}.ns.localhost/api/v3/entries/NonExistentID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
 
 //////
 // UPDATE
@@ -98,7 +103,7 @@ ASSERT {{ assertEquals 103 "@result.sgv" }}
 // DELETE
 //////
 
-NAME delete_entry_v1
+NAME delete_soft_entry_v1
 DELETE http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200

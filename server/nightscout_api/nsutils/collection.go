@@ -165,3 +165,11 @@ func GetCollectionFromStringAndEnsurePermission(dep Dependencies, collectionStri
 
 	return collection, identity, nil
 }
+
+func HasPermission(dep Dependencies, collection Collection, identity *Identity, action CollectionAction) bool {
+	if identity == nil {
+		return false
+	}
+	permission := fmt.Sprintf("api:%s:%s", collection, action)
+	return dep.Auth.HasPermission(*identity, permission)
+}

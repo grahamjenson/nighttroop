@@ -7,17 +7,20 @@ import (
 	"time"
 )
 
-func WriteRecordV3(w http.ResponseWriter, record Record, fields []string) {
-	body := map[string]any{"status": http.StatusOK, "result": record.SelectFields(fields, true)}
+func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, created bool) {
+	status := http.StatusOK
+	if created {
+		status = http.StatusCreated
+	}
+	body := map[string]any{"status": status, "result": record.SelectFields(fields, true)}
 	if record.Identifier() != "" {
 		LastModifiedHeader(w, record.SrvModified)
-		body["status"] = http.StatusOK
 		body["identifier"] = record.Identifier()
 		body["lastModified"] = record.SrvModified
 
 	}
 
-	WriteJSON(w, http.StatusOK, body)
+	WriteJSON(w, status, body)
 }
 
 func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {

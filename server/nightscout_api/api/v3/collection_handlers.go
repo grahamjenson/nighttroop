@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -18,20 +17,21 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteError(w, err)
 			return
 		}
+		identifier := chi.URLParam(r, "identifier")
+		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 
-		record, err := dep.Store.Get(r.Context(), collection, chi.URLParam(r, "identifier"))
+		record, err := dep.Store.Get(r.Context(), collection, identifier)
 
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		if modifiedSince, ok := nsutils.ParseIfModifiedSince(r); ok && time.UnixMilli(record.SrvModified).Before(modifiedSince.Add(time.Second)) {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-		query, _ := nsutils.ParseQuery(r.URL.Query())
 
-		nsutils.WriteRecordV3(w, record, query.Fields)
+		query, _ := nsutils.ParseQuery(r.URL.Query())
+		nsutils.WriteRecordV3(w, record, query.Fields, false)
 
 	}
 }
@@ -82,7 +82,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		w.Header().Set("Location", fmt.Sprintf("/api/v3/%s/%s", collection, record.Identifier()))
-		nsutils.WriteRecordV3(w, record, nil)
+		nsutils.WriteRecordV3(w, record, nil, true)
 
 	}
 }
@@ -97,8 +97,12 @@ func Remove(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		permanent := r.URL.Query().Get("permanent") == "true"
-
-		err = dep.Store.Delete(r.Context(), collection, chi.URLParam(r, "identifier"), permanent)
+		identifier := chi.URLParam(r, "identifier")
+		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+		err = dep.Store.Delete(r.Context(), collection, identifier, permanent)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -144,36 +148,33 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
 func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
+		canCreate := nsutils.HasPermission(dep, collection, identity, nsutils.CollectionActionCreate)
 
 		identifier := chi.URLParam(r, "identifier")
+		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
-		existing, err := dep.Store.Get(r.Context(), collection, identifier)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
-			nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
-			return
-		}
-		record, err := dep.Store.Replace(r.Context(), collection, identifier, doc)
+		// TODO put If-Unmodified-Since into the update query to make it atomic
+		record, created, err := dep.Store.Replace(r.Context(), collection, identifier, doc, canCreate)
 
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
 
-		nsutils.WriteRecordV3(w, record, nil)
+		nsutils.WriteRecordV3(w, record, nil, created)
 	}
 }
 
@@ -187,21 +188,18 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		identifier := chi.URLParam(r, "identifier")
+		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
 
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
-		existing, err := dep.Store.Get(r.Context(), collection, identifier)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
-			nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
-			return
-		}
+		// TODO put If-Unmodified-Since into the update query to make it atomic
+
 		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc)
 
 		if err != nil {
@@ -209,6 +207,6 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		nsutils.WriteRecordV3(w, record, nil)
+		nsutils.WriteRecordV3(w, record, nil, false)
 	}
 }
