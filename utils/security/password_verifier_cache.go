@@ -5,7 +5,6 @@ package security
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"sync"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -18,7 +17,6 @@ type passwordCacheEntry struct {
 
 type PasswordVerifier struct {
 	cache *lru.Cache[string, passwordCacheEntry]
-	mu    sync.Mutex
 	ttl   time.Duration
 }
 

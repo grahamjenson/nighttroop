@@ -5,33 +5,6 @@ import (
 	"strings"
 )
 
-// CloneMap deep-copies a JSON-like map structure.
-func CloneMap(in map[string]any) map[string]any {
-	if in == nil {
-		return map[string]any{}
-	}
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		switch typed := v.(type) {
-		case map[string]any:
-			out[k] = CloneMap(typed)
-		case []any:
-			copied := make([]any, len(typed))
-			for i, item := range typed {
-				if nested, ok := item.(map[string]any); ok {
-					copied[i] = CloneMap(nested)
-				} else {
-					copied[i] = item
-				}
-			}
-			out[k] = copied
-		default:
-			out[k] = typed
-		}
-	}
-	return out
-}
-
 // PathValue returns a nested value from a JSON-like object using dot or bracket
 // notation.
 func PathValue(data map[string]any, path string) any {

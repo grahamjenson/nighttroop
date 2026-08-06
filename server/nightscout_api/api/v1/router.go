@@ -45,17 +45,11 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Post("/{collection}/", Create(dep))
 
 	// Put/Patch Update
-	r.Put("/{collection}", Update(dep))
-	r.Put("/{collection}.json", Update(dep))
-	r.Put("/{collection}/", Update(dep))
-	r.Put("/{collection}/{identifier}", Update(dep))
-	r.Put("/{collection}/{identifier}.json", Update(dep))
-
-	r.Patch("/{collection}", Update(dep))
-	r.Patch("/{collection}.json", Update(dep))
-	r.Patch("/{collection}/", Update(dep))
-	r.Patch("/{collection}/{identifier}", Update(dep))
-	r.Patch("/{collection}/{identifier}.json", Update(dep))
+	r.Put("/{collection}", Replace(dep))
+	r.Put("/{collection}.json", Replace(dep))
+	r.Put("/{collection}/", Replace(dep))
+	r.Put("/{collection}/{identifier}", Replace(dep))
+	r.Put("/{collection}/{identifier}.json", Replace(dep))
 
 	// DELETE
 	r.Delete("/{collection}/{identifier_or_type}", Delete(dep))

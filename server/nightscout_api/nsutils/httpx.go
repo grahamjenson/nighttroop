@@ -16,6 +16,7 @@ func WriteRecordV3(w http.ResponseWriter, record Record, fields []string) {
 		body["lastModified"] = record.SrvModified
 
 	}
+
 	WriteJSON(w, http.StatusOK, body)
 }
 
@@ -32,6 +33,11 @@ func WriteRecordsV1(w http.ResponseWriter, records []Record, fields []string) {
 	for _, record := range records {
 		response = append(response, record.SelectFields(fields, false))
 	}
+	WriteJSON(w, http.StatusOK, response)
+}
+
+func WriteRecordV1(w http.ResponseWriter, record Record, fields []string) {
+	response := record.SelectFields(fields, false)
 	WriteJSON(w, http.StatusOK, response)
 }
 

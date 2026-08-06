@@ -29,14 +29,18 @@ func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.Si
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c ProfileCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
-}
-
 func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
 func (c ProfileCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
+}
+
+func (c ProfileCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
+}
+
+func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
 }

@@ -36,6 +36,16 @@ ASSERT {{ assertEquals "lunch" "@0.reason" }}
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
+NAME create_minimal_meal_bolus_v1
+POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+B { "eventType": "Meal Bolus", "insulin": 4.2 }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals 4.2 "@0.insulin" }}
+ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@0.utcOffset" }}
+
 NAME get_treatments_v1
 GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
@@ -77,48 +87,3 @@ GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated notes" "@0.notes" }}
 ASSERT {{ assertEquals "Updated reason" "@0.reason" }}
-
-######
-# Version 3 API
-######
-
-
-NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
-ASSERT_STATUS 200
-
-# Auth with JWT
-NAME jwt
-SET {{ .jwtauth.token }}
-
-NAME create_bolus_wizard_v1
-POST http://{{ .site }}.ns.localhost/api/v3/treatments
-H Authorization: Bearer {{ jwt }}
-B {
-  "eventType": "Bolus Wizard",
-  "created_at": "{{ time 0 }}",
-
-  "glucose": 150,
-  "glucoseType": "Sensor",
-
-  "carbs": 46,
-  "insulin": 4.3,
-
-  "notes": "Here are some notes",
-  "reason": "lunch"
- }
-ASSERT_STATUS 200
-ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
-ASSERT {{ assertExists "@result.created_at" }}
-ASSERT {{ assertEquals 150 "@result.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
-ASSERT {{ assertEquals 46 "@result.carbs" }}
-ASSERT {{ assertEquals 4.3 "@result.insulin" }}
-ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}
-ASSERT {{ assertEquals "lunch" "@result.reason" }}
-ASSERT {{ assertExists "@result.identifier" }}
-ASSERT {{ assertExists "@result.date" }}
-ASSERT {{ assertExists "@result.subject" }}
-ASSERT {{ assertExists "@result.utcOffset" }}
-ASSERT {{ assertExists "@result.srvCreated" }}
-ASSERT {{ assertExists "@result.srvModified" }}

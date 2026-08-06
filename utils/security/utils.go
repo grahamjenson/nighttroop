@@ -71,8 +71,3 @@ func HashPassword(password string) string {
 	}
 	return string(hashedBytes)
 }
-
-func VerifyPassword(plainPassword, storedHash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(plainPassword))
-	return err == nil
-}

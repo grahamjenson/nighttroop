@@ -58,7 +58,36 @@ func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputi
 
 	return ptr(c.converter(dbModel)), nil
 }
-func (c DeviceStatusCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+
+// ///////
+// Default EventGroup stuff
+// ///////
+func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	seg, rerr := EventGroupGet(ctx, siteContext, identifier)
+	if rerr != nil {
+		return nil, rerr
+	}
+	return ptr(c.converter(seg)), nil
+}
+
+func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+	deviceStatuses, rerr := EventGroupSearch(ctx, siteContext, query)
+	if rerr != nil {
+		return nil, rerr
+	}
+
+	return nsutils.CreateRecordSlice(deviceStatuses, c.converter), nil
+}
+
+func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+	return EventGroupDelete(ctx, siteContext, identifier, permanent)
+}
+
+func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
+}
+
+func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	deviceStatusModel := nightscout.DeviceStatus{}
 	err := utils.FromMap(patch, &deviceStatusModel)
 
@@ -96,30 +125,6 @@ func (c DeviceStatusCollection) Update(ctx context.Context, siteContext *httputi
 	return ptr(c.converter(dbModel)), nil
 }
 
-// ///////
-// Default EventGroup stuff
-// ///////
-func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	seg, rerr := EventGroupGet(ctx, siteContext, identifier)
-	if rerr != nil {
-		return nil, rerr
-	}
-	return ptr(c.converter(seg)), nil
-}
-
-func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	deviceStatuses, rerr := EventGroupSearch(ctx, siteContext, query)
-	if rerr != nil {
-		return nil, rerr
-	}
-
-	return nsutils.CreateRecordSlice(deviceStatuses, c.converter), nil
-}
-
-func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return EventGroupDelete(ctx, siteContext, identifier, permanent)
-}
-
-func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
+func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
 }

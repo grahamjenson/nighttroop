@@ -20,7 +20,7 @@ func NewNightscoutV3Router(dep nsutils.Dependencies) http.Handler {
 
 	r.Get("/{collection}/history/{since}", History(dep))
 	r.Get("/{collection}/{identifier}", Read(dep))
-	r.Put("/{collection}/{identifier}", Update(dep))
+	r.Put("/{collection}/{identifier}", Replace(dep))
 	r.Patch("/{collection}/{identifier}", Patch(dep))
 	r.Delete("/{collection}/{identifier}", Remove(dep))
 	r.Get("/{collection}", Search(dep))

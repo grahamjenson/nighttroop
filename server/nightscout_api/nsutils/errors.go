@@ -73,3 +73,10 @@ var (
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing numeric field %s", field)}
 	}
 )
+
+// Bad Updates
+var (
+	ErrCannotChangeReadingType = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change reading type"}
+	ErrCannotChangeApp         = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change app"}
+	ErrCannotChangeEventType   = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change event_type"}
+)

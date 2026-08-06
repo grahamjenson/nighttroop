@@ -2,11 +2,15 @@ package integration_test
 
 import (
 	"context"
+	"embed"
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"nighttroop.t1d.nz/data/db"
@@ -15,15 +19,10 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed nightscout/site_v1_treatments.http
-var siteV1TreatmentsHTTP string
+//go:embed nightscout/**
+var embeddedFiles embed.FS
 
-func TestUserTreatments(t *testing.T) {
-	requestContext := map[string]any{}
-	requestFile, err := ParseRequestFile(siteV1TreatmentsHTTP, requestContext)
-	if err != nil {
-		t.Fatalf("failed to parse request file: %v", err)
-	}
+func TestRequests(t *testing.T) {
 
 	config, controlDB, err := testutils.GetConfigControlDBForTest()
 	if err != nil {
@@ -34,39 +33,77 @@ func TestUserTreatments(t *testing.T) {
 
 	DumpOnFailure(t, controlDB, "user_treatments_test_failure_dump.sqlite")
 
-	for _, request := range requestFile.Requests {
-		realRequest, err := request.BuildRealRequest(requestContext)
+	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			t.Fatalf("failed to build real request: %v", err)
+			return err
 		}
 
-		if request.IsFunction {
-			requestContext, err = realRequest.ExecuteFunction(requestContext)
-			if err != nil {
-				t.Fatalf("failed to execute function: %v", err)
-			}
-
-		} else {
-			fmt.Println()
-			fmt.Println("===============================")
-			realRequest.PrintRequest()
-			fmt.Println()
-			fmt.Println("- - - - - - - - - - - - - - - - ")
-			fmt.Println()
-			statusCode, output, _, newContext := realRequest.ExecuteRequest(router, requestContext)
-			requestContext = newContext
-			fmt.Println()
-			fmt.Println("- - - - - - - - - - - - - - - - ")
-			fmt.Println()
-			fmt.Printf("STATUS CODE: %d\n", statusCode)
-			prettyOutput, _ := json.MarshalIndent(output, "", "  ")
-			fmt.Printf("RESPONSE: %+v\n", string(prettyOutput))
-			fmt.Println("===============================")
-			realRequest.ExecuteAsserts(t, statusCode, output, requestContext)
+		if d.IsDir() {
+			return nil
 		}
 
+		if filepath.Ext(path) != ".http" {
+			return nil
+		}
+
+		runTheRequestFileAsATest(t, path, router)
+
+		return nil
+	})
+
+	if err != nil {
+		t.Fatalf("failed walking embedded files: %v", err)
 	}
 
+}
+
+func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.Handler) {
+	removeNightscout := strings.TrimPrefix(requestFilePath, "nightscout/")
+	t.Run(removeNightscout, func(t *testing.T) {
+		requestFileBytes, err := embeddedFiles.ReadFile(requestFilePath)
+		if err != nil {
+			t.Fatalf("failed to read request file: %v", err)
+		}
+
+		requestContext := map[string]any{}
+		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext)
+		if err != nil {
+			t.Fatalf("failed to parse request file: %v", err)
+		}
+		for _, request := range requestFile.Requests {
+			realRequest, err := request.BuildRealRequest(requestContext)
+			if err != nil {
+				t.Fatalf("failed to build real request: %v", err)
+			}
+
+			if request.IsFunction {
+				requestContext, err = realRequest.ExecuteFunction(requestContext)
+				if err != nil {
+					t.Fatalf("failed to execute function: %v", err)
+				}
+
+			} else {
+				fmt.Println()
+				fmt.Println("===============================")
+				realRequest.PrintRequest()
+				fmt.Println()
+				fmt.Println("- - - - - - - - - - - - - - - - ")
+				fmt.Println()
+				statusCode, output, _, newContext := realRequest.ExecuteRequest(router, requestContext)
+				requestContext = newContext
+				fmt.Println()
+				fmt.Println("- - - - - - - - - - - - - - - - ")
+				fmt.Println()
+				fmt.Printf("STATUS CODE: %d\n", statusCode)
+				prettyOutput, _ := json.MarshalIndent(output, "", "  ")
+				fmt.Printf("RESPONSE: %+v\n", string(prettyOutput))
+				fmt.Println("===============================")
+				realRequest.ExecuteAsserts(t, statusCode, output, requestContext)
+
+			}
+
+		}
+	})
 }
 
 // DumpOnFailure registers a cleanup hook that saves the in-memory DB

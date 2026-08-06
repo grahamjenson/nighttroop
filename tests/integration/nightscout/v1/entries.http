@@ -1,0 +1,45 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+NAME create_entry_v1
+POST http://{{ .site }}.ns.localhost/api/v1/entries?token={{ token }}
+B { "sgv": 101, "type": "sgv"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 101 "@0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@0.type" }}
+ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@0.utcOffset" }}
+
+NAME get_entries_v1
+GET http://{{ .site }}.ns.localhost/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 101 "@0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@0.type" }}
+ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@0.utcOffset" }}
+
+NAME get_entries_type_v1
+GET http://{{ .site }}.ns.localhost/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 101 "@0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@0.type" }}
+
+NAME update_entries_v1
+PUT http://{{ .site }}.ns.localhost/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_v1.0._id" }}", "sgv": 102", "type": "sgv"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 102 "@0.sgv" }}
+
+NAME get_entries_after_put_v1
+GET http://{{ .site }}.ns.localhost/api/v1/entries/sgv?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 102 "@0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@0.type" }}

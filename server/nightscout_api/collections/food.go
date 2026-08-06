@@ -71,14 +71,18 @@ func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteC
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c FoodCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
-}
-
 func (c FoodCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
 func (c FoodCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
+}
+
+func (c FoodCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
+}
+
+func (c FoodCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
 }

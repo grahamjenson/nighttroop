@@ -57,7 +57,6 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		nsutils.WriteRecordsV3(w, records, query.Fields)
-
 	}
 }
 
@@ -83,111 +82,6 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		w.Header().Set("Location", fmt.Sprintf("/api/v3/%s/%s", collection, record.Identifier()))
-		nsutils.WriteRecordV3(w, record, nil)
-
-	}
-}
-
-// Update replaces a document in an API v3 collection and supports upsert semantics when allowed by the caller's permissions.
-func Update(dep nsutils.Dependencies) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		canCreate := dep.Auth.HasPermission(*identity, fmt.Sprintf("api:%s:create", collection))
-		identifier := chi.URLParam(r, "identifier")
-
-		//
-		var doc map[string]any
-		if err := nsutils.ReadJSON(r, &doc); err != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
-			return
-		}
-
-		// TODO cleanup folling logic make it understandable
-		existing, err := dep.Store.Get(r.Context(), collection, identifier)
-		existingNotFound := err == nsutils.ErrNotFound
-		if err == nsutils.ErrGone {
-			// Deleted Soft
-			nsutils.WriteJSON(w, http.StatusGone, map[string]any{"status": http.StatusGone})
-			return
-		}
-		if err != nil && !existingNotFound {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		// Cant find existing record, and user cant create a new one that is an error
-		if existingNotFound && !canCreate {
-			nsutils.WriteJSON(w, http.StatusForbidden, map[string]any{"status": http.StatusForbidden, "message": fmt.Sprintf("Missing permission api:%s:create", collection)})
-			return
-		}
-
-		createNewRecord := existingNotFound && canCreate
-		updateRecord := !existingNotFound
-
-		if updateRecord {
-			// We just check if the user has sent a header to not update if unmodified since
-			if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
-				nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
-				return
-			}
-
-		}
-
-		// Set default values, normalize incoming values, and validate everything is good, then Create or Update
-
-		var record nsutils.Record
-		if createNewRecord {
-			record, err = dep.Store.Create(r.Context(), collection, doc)
-		} else {
-			record, err = dep.Store.Update(r.Context(), collection, identifier, doc)
-		}
-
-		if err != nil || record.Identifier() == "" {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		nsutils.WriteRecordV3(w, record, nil)
-
-	}
-}
-
-// Patch applies a partial update to an API v3 document.
-func Patch(dep nsutils.Dependencies) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		identifier := chi.URLParam(r, "identifier")
-
-		var doc map[string]any
-		if err := nsutils.ReadJSON(r, &doc); err != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
-			return
-		}
-		existing, err := dep.Store.Get(r.Context(), collection, identifier)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
-			nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
-			return
-		}
-		record, err := dep.Store.Update(r.Context(), collection, identifier, doc)
-
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
 		nsutils.WriteRecordV3(w, record, nil)
 
 	}
@@ -244,5 +138,77 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		nsutils.WriteRecordsV3(w, records, query.Fields)
+	}
+}
+
+// Replace will replace (delete, then insert) if it exists, or create it if it doesnt
+func Replace(dep nsutils.Dependencies) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+
+		identifier := chi.URLParam(r, "identifier")
+
+		var doc map[string]any
+		if err := nsutils.ReadJSON(r, &doc); err != nil {
+			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+			return
+		}
+		existing, err := dep.Store.Get(r.Context(), collection, identifier)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+		if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
+			nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
+			return
+		}
+		record, err := dep.Store.Replace(r.Context(), collection, identifier, doc)
+
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+
+		nsutils.WriteRecordV3(w, record, nil)
+	}
+}
+
+// Patch applies a partial update to an API v3 document.
+func Patch(dep nsutils.Dependencies) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+
+		identifier := chi.URLParam(r, "identifier")
+
+		var doc map[string]any
+		if err := nsutils.ReadJSON(r, &doc); err != nil {
+			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+			return
+		}
+		existing, err := dep.Store.Get(r.Context(), collection, identifier)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+		if unmodifiedSince, ok := nsutils.ParseIfUnmodifiedSince(r); ok && time.UnixMilli(existing.SrvModified).After(unmodifiedSince) {
+			nsutils.WriteJSON(w, http.StatusPreconditionFailed, map[string]any{"status": http.StatusPreconditionFailed})
+			return
+		}
+		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc)
+
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+
+		nsutils.WriteRecordV3(w, record, nil)
 	}
 }

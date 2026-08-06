@@ -15,7 +15,8 @@ type CollectionStore interface {
 	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
-	Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
 }
@@ -87,7 +88,7 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 
 }
 
-func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
@@ -96,7 +97,26 @@ func (nts *NightTroopAPIStore) Update(ctx context.Context, collection nsutils.Co
 	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Update(ctx, siteContext, identifier, patch)
+	record, err := collectionsStore.Replace(ctx, siteContext, identifier, patch)
+	if err != nil {
+		return nsutils.Record{}, err
+	}
+	if record == nil {
+		return nsutils.Record{}, nsutils.ErrNotFound
+	}
+	return *record, nil
+}
+
+func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Record, *nsutils.HTTPError) {
+	collectionsStore, ok := nts.stores[collection]
+	if !ok {
+		return nsutils.Record{}, nsutils.ErrInvalidCollection
+	}
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext == nil {
+		return nsutils.Record{}, nsutils.ErrMissingCredentials
+	}
+	record, err := collectionsStore.Patch(ctx, siteContext, identifier, patch)
 	if err != nil {
 		return nsutils.Record{}, err
 	}

@@ -1,0 +1,54 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+NAME jwtauth
+GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+######
+# Version 3 API
+######
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+NAME create_bolus_wizard_v1
+POST http://{{ .site }}.ns.localhost/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+  "eventType": "Bolus Wizard",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 150,
+  "glucoseType": "Sensor",
+
+  "carbs": 46,
+  "insulin": 4.3,
+
+  "notes": "Here are some notes",
+  "reason": "lunch"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
+ASSERT {{ assertExists "@result.created_at" }}
+ASSERT {{ assertEquals 150 "@result.glucose" }}
+ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
+ASSERT {{ assertEquals 46 "@result.carbs" }}
+ASSERT {{ assertEquals 4.3 "@result.insulin" }}
+ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}
+ASSERT {{ assertEquals "lunch" "@result.reason" }}
+ASSERT {{ assertExists "@result.identifier" }}
+ASSERT {{ assertExists "@result.date" }}
+ASSERT {{ assertExists "@result.subject" }}
+ASSERT {{ assertExists "@result.utcOffset" }}
+ASSERT {{ assertExists "@result.srvCreated" }}
+ASSERT {{ assertExists "@result.srvModified" }}

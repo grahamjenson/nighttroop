@@ -55,33 +55,6 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	return ptr(c.converter(dbModel)), nil
 }
 
-// Update will not create a new DB record, and only update existing records on the event group.
-func (c TreatmentCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	treatmentModel := nightscout.Treatment{}
-	err := utils.FromMap(patch, &treatmentModel)
-	if err != nil {
-		slog.Error("failed to map patch to treatment model", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	cc := nightscout.UpdateContext{
-		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
-		UpdatedByIdentityName: siteContext.IdentityModel.Name,
-	}
-
-	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
-	if rerr != nil {
-		slog.Error("failed to update treatment in database", "error", rerr)
-		return nil, rerr
-	}
-	if dbModel == nil {
-		slog.Error("failed to update treatment in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbModel)), nil
-}
-
 // ///////
 // Default EventGroup stuff
 // ///////
@@ -109,6 +82,60 @@ func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
+}
+
+// Replace will replace (delete, then insert) if it exists, or create it if it doesnt
+func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	treatmentModel := nightscout.Treatment{}
+	err := utils.FromMap(patch, &treatmentModel)
+	if err != nil {
+		slog.Error("failed to map patch to treatment model", "error", err)
+		return nil, nsutils.BadDataBodyError
+	}
+
+	cc := nightscout.UpdateContext{
+		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
+		UpdatedByIdentityName: siteContext.IdentityModel.Name,
+	}
+
+	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
+	if rerr != nil {
+		slog.Error("failed to update treatment in database", "error", rerr)
+		return nil, rerr
+	}
+	if dbModel == nil {
+		slog.Error("failed to update treatment in database, dbModel is nil")
+		return nil, nsutils.ErrInternal
+	}
+
+	return ptr(c.converter(dbModel)), nil
+}
+
+// Replace will replace (delete, then insert) if it exists, or create it if it doesnt
+func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	treatmentModel := nightscout.Treatment{}
+	err := utils.FromMap(patch, &treatmentModel)
+	if err != nil {
+		slog.Error("failed to map patch to treatment model", "error", err)
+		return nil, nsutils.BadDataBodyError
+	}
+
+	cc := nightscout.UpdateContext{
+		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
+		UpdatedByIdentityName: siteContext.IdentityModel.Name,
+	}
+
+	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
+	if rerr != nil {
+		slog.Error("failed to update treatment in database", "error", rerr)
+		return nil, rerr
+	}
+	if dbModel == nil {
+		slog.Error("failed to update treatment in database, dbModel is nil")
+		return nil, nsutils.ErrInternal
+	}
+
+	return ptr(c.converter(dbModel)), nil
 }
 
 func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext, treatment nightscout.Treatment) site.CreateEventGroupBundle {

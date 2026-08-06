@@ -21,13 +21,13 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteError(w, err)
 			return
 		}
-		identifier_or_type := chi.URLParam(r, "identifier_or_type")
-		if identifier_or_type != "" {
+		identifierOrType := chi.URLParam(r, "identifier_or_type")
+		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
-			if collection.IsTypeString(identifier_or_type) {
-				query.TypeEq = ptr(identifier_or_type)
+			if collection.IsTypeString(identifierOrType) {
+				query.TypeEq = ptr(identifierOrType)
 			} else {
-				query.IDEq = ptr(identifier_or_type)
+				query.IDEq = ptr(identifierOrType)
 			}
 		}
 		records := []nsutils.Record{}
@@ -155,9 +155,10 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func Update(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+// Replace If not found will return 404
+func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -188,14 +189,13 @@ func Update(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		// Deal with one record being sent or an array being sent
 		if identifier != "" {
-			updated, herr := dep.Store.Update(r.Context(), collection, identifier, body)
+			updated, herr := dep.Store.Replace(r.Context(), collection, identifier, body)
 			if herr != nil {
 				nsutils.WriteError(w, herr)
 				return
 			}
-			nsutils.WriteRecordsV1(w, []nsutils.Record{updated}, nil)
+			nsutils.WriteRecordV1(w, updated, nil)
 			return
 		} else {
 			w.WriteHeader(http.StatusNotFound)

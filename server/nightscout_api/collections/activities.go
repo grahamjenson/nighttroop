@@ -72,14 +72,18 @@ func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.S
 	return nil, nsutils.ErrNotImplemented
 }
 
-func (c ActivityCollection) Update(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
-}
-
 func (c ActivityCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	return nsutils.ErrNotImplemented
 }
 
 func (c ActivityCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
+}
+
+func (c ActivityCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
+}
+
+func (c ActivityCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return nil, nsutils.ErrNotImplemented
 }
