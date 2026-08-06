@@ -141,10 +141,13 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			if collection.IsTypeString(identifierOrType) {
 				amount, err := dep.Store.DeleteType(r.Context(), collection, identifierOrType, permanent)
 				if err != nil {
-					nsutils.WriteError(w, err)
+					// IGNORE THE ERROR AND JUST RETURN 0 DELETED COUNT
+					nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+						"acknowledged": true,
+						"deletedCount": 0,
+					})
 					return
 				}
-				w.WriteHeader(http.StatusOK)
 				nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 					"acknowledged": true,
 					"deletedCount": amount,
@@ -153,11 +156,14 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			} else {
 				err = dep.Store.Delete(r.Context(), collection, identifierOrType, permanent)
 				if err != nil {
-					nsutils.WriteError(w, err)
+					// IGNORE THE ERROR AND JUST RETURN 0 DELETED COUNT
+					nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+						"acknowledged": true,
+						"deletedCount": 0,
+					})
 					return
 				}
 
-				w.WriteHeader(http.StatusOK)
 				nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 					"acknowledged": true,
 					"deletedCount": 1,

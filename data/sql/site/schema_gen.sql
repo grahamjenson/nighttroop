@@ -1,5 +1,5 @@
 CREATE TABLE activities (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     name TEXT CHECK(length(name) <= 64),
     notes TEXT CHECK(length(notes) <= 1024),
@@ -26,7 +26,7 @@ CREATE TABLE activities (
 );
 
 CREATE TABLE cgm_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     cgm_state TEXT CHECK(length(cgm_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", "insertion" etc
     cgm_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
@@ -49,7 +49,7 @@ CREATE TABLE cgm_states (
 );
 
 CREATE TABLE device_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
     device_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
@@ -73,7 +73,7 @@ CREATE TABLE device_states (
 );
 
 CREATE TABLE event_groups (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     group_type TEXT NOT NULL CHECK(length(group_type) > 0 AND length(group_type) <= 32),
 
     glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
@@ -107,7 +107,7 @@ CREATE TABLE event_groups (
 );
 
 CREATE TABLE food_intakes (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT CHECK(length(name) <= 64), -- this could be a reference to a preset
     food_type TEXT CHECK(length(food_type) <= 32), -- this could be like hypo treatment, meal, snack, etc
 
@@ -133,7 +133,7 @@ CREATE TABLE food_intakes (
 );
 
 CREATE TABLE food_presets (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
     food_type TEXT NOT NULL CHECK(length(food_type) <= 32),
 
@@ -156,7 +156,7 @@ CREATE TABLE food_presets (
 );
 
 CREATE TABLE glucose_readings (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     reading REAL NOT NULL,
@@ -178,7 +178,7 @@ CREATE TABLE glucose_readings (
 );
 
 CREATE TABLE insulin_doses (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     dose REAL NOT NULL,
     dose_type TEXT CHECK (dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
@@ -199,7 +199,7 @@ CREATE TABLE insulin_doses (
 );
 
 CREATE TABLE loop_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     loop_state TEXT CHECK(length(loop_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
     loop_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
@@ -226,7 +226,7 @@ CREATE TABLE loop_states (
 );
 
 CREATE TABLE notes (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     content TEXT CHECK(length(content) <= 1024) NOT NULL,
     reason TEXT CHECK(length(reason) <= 64), 
 
@@ -246,7 +246,7 @@ CREATE TABLE notes (
 );
 
 CREATE TABLE profile_presets (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
 
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- { [1,2] },
@@ -267,7 +267,7 @@ CREATE TABLE profile_presets (
 );
 
 CREATE TABLE profile_switches (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     
     -- Date stuff
@@ -297,7 +297,7 @@ CREATE TABLE profile_switches (
 );
 
 CREATE TABLE pump_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     pump_state TEXT CHECK(length(pump_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
     pump_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
 
@@ -352,7 +352,7 @@ CREATE TABLE site_settings (
 );
 
 CREATE TABLE temp_basals (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL,
     absolute REAL NOT NULL,
@@ -375,7 +375,7 @@ CREATE TABLE temp_basals (
 );
 
 CREATE TABLE temp_targets (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL,
     high_target REAL NOT NULL,
