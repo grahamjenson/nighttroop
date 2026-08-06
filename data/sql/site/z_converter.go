@@ -86,7 +86,8 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 		xstring3 := *source.UpdatedByIdentityName
 		siteUpdateActivityParams.UpdatedByIdentityName = &xstring3
 	}
-	siteUpdateActivityParams.ID = source.ID
+	pString := source.ID
+	siteUpdateActivityParams.ID = &pString
 	return siteUpdateActivityParams
 }
 func CGMStateToCreate(source CgmState) CreateCGMStateParams {

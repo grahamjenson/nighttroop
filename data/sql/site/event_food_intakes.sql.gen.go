@@ -348,8 +348,8 @@ const softDeleteFoodIntake = `-- name: SoftDeleteFoodIntake :execresult
 
 UPDATE food_intakes SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteFoodIntakeParams struct {
@@ -367,19 +367,19 @@ func (q *Queries) SoftDeleteFoodIntake(ctx context.Context, arg SoftDeleteFoodIn
 const updateFoodIntake = `-- name: UpdateFoodIntake :one
 
 UPDATE food_intakes SET
-    name = COALESCE(?3, name),
-    food_type = COALESCE(?4, food_type),
-    carbs = COALESCE(?5, carbs),
-    fat = COALESCE(?6, fat),
-    protein = COALESCE(?7, protein),
-    fibre = COALESCE(?8, fibre),
-    calories = COALESCE(?9, calories),
+    name = COALESCE(?1, name),
+    food_type = COALESCE(?2, food_type),
+    carbs = COALESCE(?3, carbs),
+    fat = COALESCE(?4, fat),
+    protein = COALESCE(?5, protein),
+    fibre = COALESCE(?6, fibre),
+    calories = COALESCE(?7, calories),
 
-    occurred_at = COALESCE(?10, occurred_at),
-    utc_offset_minutes = COALESCE(?11, utc_offset_minutes),
+    occurred_at = COALESCE(?8, occurred_at),
+    utc_offset_minutes = COALESCE(?9, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?10
+WHERE id = ?11 AND deleted_at IS NULL
 RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 

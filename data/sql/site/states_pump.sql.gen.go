@@ -308,8 +308,8 @@ const softDeletePumpState = `-- name: SoftDeletePumpState :execresult
 
 UPDATE pump_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeletePumpStateParams struct {
@@ -327,18 +327,18 @@ func (q *Queries) SoftDeletePumpState(ctx context.Context, arg SoftDeletePumpSta
 const updatePumpState = `-- name: UpdatePumpState :one
 
 UPDATE pump_states SET
-    pump_state = COALESCE(?3, pump_state),
-    pump_timestamp = COALESCE(?4, pump_timestamp),
-    pump_insertion_time = COALESCE(?5, pump_insertion_time),
-    pump_reservoir = COALESCE(?6, pump_reservoir),
-    pump_battery_percent = COALESCE(?7, pump_battery_percent),
-    pump_charging_state = COALESCE(?8, pump_charging_state),
+    pump_state = COALESCE(?1, pump_state),
+    pump_timestamp = COALESCE(?2, pump_timestamp),
+    pump_insertion_time = COALESCE(?3, pump_insertion_time),
+    pump_reservoir = COALESCE(?4, pump_reservoir),
+    pump_battery_percent = COALESCE(?5, pump_battery_percent),
+    pump_charging_state = COALESCE(?6, pump_charging_state),
     
-    occurred_at = COALESCE(?9, occurred_at),
-    utc_offset_minutes = COALESCE(?10, utc_offset_minutes),
+    occurred_at = COALESCE(?7, occurred_at),
+    utc_offset_minutes = COALESCE(?8, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?9
+WHERE id = ?10 AND deleted_at IS NULL
 RETURNING id, pump_state, pump_timestamp, pump_insertion_time, pump_reservoir, pump_battery_percent, pump_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 

@@ -41,7 +41,8 @@ func ActivityToUpdate(source Activity, context UpdateContext) site.UpdateActivit
 	}
 	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateActivityParams.ID = string(*source.Identifier)
+		xstring3 := string(*source.Identifier)
+		siteUpdateActivityParams.ID = &xstring3
 	}
 	return siteUpdateActivityParams
 }
@@ -205,7 +206,8 @@ func TreatmentToUpdateActivity(source Treatment, context UpdateContext) site.Upd
 	}
 	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateActivityParams.ID = string(*source.Identifier)
+		xstring3 := string(*source.Identifier)
+		siteUpdateActivityParams.ID = &xstring3
 	}
 	return siteUpdateActivityParams
 }

@@ -303,8 +303,8 @@ const softDeleteTempBasal = `-- name: SoftDeleteTempBasal :execresult
 
 UPDATE temp_basals SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteTempBasalParams struct {
@@ -322,15 +322,15 @@ func (q *Queries) SoftDeleteTempBasal(ctx context.Context, arg SoftDeleteTempBas
 const updateTempBasal = `-- name: UpdateTempBasal :one
 
 UPDATE temp_basals SET
-    duration_minutes = COALESCE(?3, duration_minutes),
-    absolute = COALESCE(?4, absolute),
-    percent = COALESCE(?5, percent),
+    duration_minutes = COALESCE(?1, duration_minutes),
+    absolute = COALESCE(?2, absolute),
+    percent = COALESCE(?3, percent),
 
-    occurred_at = COALESCE(?6, occurred_at),
-    utc_offset_minutes = COALESCE(?7, utc_offset_minutes),
+    occurred_at = COALESCE(?4, occurred_at),
+    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?6
+WHERE id = ?7 AND deleted_at IS NULL
 RETURNING id, duration_minutes, absolute, percent, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 

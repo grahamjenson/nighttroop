@@ -308,8 +308,8 @@ const softDeleteLoopState = `-- name: SoftDeleteLoopState :execresult
 
 UPDATE loop_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteLoopStateParams struct {
@@ -327,18 +327,18 @@ func (q *Queries) SoftDeleteLoopState(ctx context.Context, arg SoftDeleteLoopSta
 const updateLoopState = `-- name: UpdateLoopState :one
 
 UPDATE loop_states SET
-    loop_state = COALESCE(?3, loop_state),
-    loop_timestamp = COALESCE(?4, loop_timestamp),
-    iob = COALESCE(?5, iob),
-    iob_basal = COALESCE(?6, iob_basal),
-    iob_treatment = COALESCE(?7, iob_treatment),
-    cob = COALESCE(?8, cob),
+    loop_state = COALESCE(?1, loop_state),
+    loop_timestamp = COALESCE(?2, loop_timestamp),
+    iob = COALESCE(?3, iob),
+    iob_basal = COALESCE(?4, iob_basal),
+    iob_treatment = COALESCE(?5, iob_treatment),
+    cob = COALESCE(?6, cob),
     
-    occurred_at = COALESCE(?9, occurred_at),
-    utc_offset_minutes = COALESCE(?10, utc_offset_minutes),
+    occurred_at = COALESCE(?7, occurred_at),
+    utc_offset_minutes = COALESCE(?8, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?9
+WHERE id = ?10 AND deleted_at IS NULL
 RETURNING id, loop_state, loop_timestamp, iob, iob_basal, iob_treatment, cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 

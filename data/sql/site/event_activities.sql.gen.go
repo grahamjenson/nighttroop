@@ -345,8 +345,8 @@ const softDeleteActivity = `-- name: SoftDeleteActivity :execresult
 
 UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteActivityParams struct {
@@ -364,18 +364,18 @@ func (q *Queries) SoftDeleteActivity(ctx context.Context, arg SoftDeleteActivity
 const updateActivity = `-- name: UpdateActivity :one
 
 UPDATE activities SET
-    name = COALESCE(?3, name),
-    activity_type = COALESCE(?4, activity_type),
-    duration_minutes = COALESCE(?5, duration_minutes),
-    calories = COALESCE(?6, calories),
-    steps = COALESCE(?7, steps),
-    heart_rate = COALESCE(?8, heart_rate),
+    name = COALESCE(?1, name),
+    activity_type = COALESCE(?2, activity_type),
+    duration_minutes = COALESCE(?3, duration_minutes),
+    calories = COALESCE(?4, calories),
+    steps = COALESCE(?5, steps),
+    heart_rate = COALESCE(?6, heart_rate),
 
-    occurred_at = COALESCE(?9, occurred_at),
-    utc_offset_minutes = COALESCE(?10, utc_offset_minutes),
+    occurred_at = COALESCE(?7, occurred_at),
+    utc_offset_minutes = COALESCE(?8, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?9
+WHERE id = ?10 AND deleted_at IS NULL
 RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, heart_rate, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -389,7 +389,7 @@ type UpdateActivityParams struct {
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
-	ID                    string
+	ID                    *string
 }
 
 // ------

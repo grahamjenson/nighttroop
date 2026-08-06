@@ -1166,8 +1166,8 @@ const softDeleteEventGroup = `-- name: SoftDeleteEventGroup :execresult
 
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteEventGroupParams struct {
@@ -1201,11 +1201,11 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 const updateEventGroup = `-- name: UpdateEventGroup :one
 
 UPDATE event_groups SET
-    occurred_at = COALESCE(?3, occurred_at),
-    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
+    occurred_at = COALESCE(?1, occurred_at),
+    utc_offset_minutes = COALESCE(?2, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?3
+WHERE id = ?4 AND deleted_at IS NULL
 RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 

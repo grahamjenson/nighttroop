@@ -295,8 +295,8 @@ const softDeleteDeviceState = `-- name: SoftDeleteDeviceState :execresult
 
 UPDATE device_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteDeviceStateParams struct {
@@ -314,16 +314,16 @@ func (q *Queries) SoftDeleteDeviceState(ctx context.Context, arg SoftDeleteDevic
 const updateDeviceState = `-- name: UpdateDeviceState :one
 
 UPDATE device_states SET
-    device_state = COALESCE(?3, device_state),
-    device_timestamp = COALESCE(?4, device_timestamp),
-    device_battery_percent = COALESCE(?5, device_battery_percent),
-    device_charging_state = COALESCE(?6, device_charging_state),
+    device_state = COALESCE(?1, device_state),
+    device_timestamp = COALESCE(?2, device_timestamp),
+    device_battery_percent = COALESCE(?3, device_battery_percent),
+    device_charging_state = COALESCE(?4, device_charging_state),
     
-    occurred_at = COALESCE(?7, occurred_at),
-    utc_offset_minutes = COALESCE(?8, utc_offset_minutes),
+    occurred_at = COALESCE(?5, occurred_at),
+    utc_offset_minutes = COALESCE(?6, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?7
+WHERE id = ?8 AND deleted_at IS NULL
 RETURNING id, device_state, device_timestamp, device_battery_percent, device_charging_state, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 

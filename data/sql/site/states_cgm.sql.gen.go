@@ -287,8 +287,8 @@ const softDeleteCGMState = `-- name: SoftDeleteCGMState :execresult
 
 UPDATE cgm_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteCGMStateParams struct {
@@ -306,15 +306,15 @@ func (q *Queries) SoftDeleteCGMState(ctx context.Context, arg SoftDeleteCGMState
 const updateCGMState = `-- name: UpdateCGMState :one
 
 UPDATE cgm_states SET
-    cgm_state = COALESCE(?3, cgm_state),
-    cgm_timestamp = COALESCE(?4, cgm_timestamp),
-    cgm_insertion_time = COALESCE(?5, cgm_insertion_time),
+    cgm_state = COALESCE(?1, cgm_state),
+    cgm_timestamp = COALESCE(?2, cgm_timestamp),
+    cgm_insertion_time = COALESCE(?3, cgm_insertion_time),
 
-    occurred_at = COALESCE(?6, occurred_at),
-    utc_offset_minutes = COALESCE(?7, utc_offset_minutes),
+    occurred_at = COALESCE(?4, occurred_at),
+    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?6
+WHERE id = ?7 AND deleted_at IS NULL
 RETURNING id, cgm_state, cgm_timestamp, cgm_insertion_time, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 

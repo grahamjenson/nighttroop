@@ -73,8 +73,8 @@ UPDATE cgm_states SET
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
 RETURNING *; 
 
 --------
@@ -84,8 +84,8 @@ RETURNING *;
 -- name: SoftDeleteCGMState :execresult
 UPDATE cgm_states SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL;
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
 -- name: HardDeleteCGMState :execresult
 DELETE FROM cgm_states WHERE id = ?;

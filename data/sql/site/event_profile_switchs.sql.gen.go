@@ -335,8 +335,8 @@ const softDeleteProfileSwitch = `-- name: SoftDeleteProfileSwitch :execresult
 
 UPDATE profile_switches SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 `
 
 type SoftDeleteProfileSwitchParams struct {
@@ -354,19 +354,19 @@ func (q *Queries) SoftDeleteProfileSwitch(ctx context.Context, arg SoftDeletePro
 const updateProfileSwitch = `-- name: UpdateProfileSwitch :one
 
 UPDATE profile_switches SET
-    name = COALESCE(?3, name),
-    duration_minutes = COALESCE(?4, duration_minutes),
-    percent = COALESCE(?5, percent),
-    carb_ratios_json = COALESCE(?6, carb_ratios_json),
-    insulin_sensitivities_json = COALESCE(?7, insulin_sensitivities_json),
-    basal_rates_json = COALESCE(?8, basal_rates_json),
-    targets_json = COALESCE(?9, targets_json),
+    name = COALESCE(?1, name),
+    duration_minutes = COALESCE(?2, duration_minutes),
+    percent = COALESCE(?3, percent),
+    carb_ratios_json = COALESCE(?4, carb_ratios_json),
+    insulin_sensitivities_json = COALESCE(?5, insulin_sensitivities_json),
+    basal_rates_json = COALESCE(?6, basal_rates_json),
+    targets_json = COALESCE(?7, targets_json),
 
-    occurred_at = COALESCE(?10, occurred_at),
-    utc_offset_minutes = COALESCE(?11, utc_offset_minutes),
+    occurred_at = COALESCE(?8, occurred_at),
+    utc_offset_minutes = COALESCE(?9, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ? AND deleted_at IS NULL
+    updated_by_identity_name = ?10
+WHERE id = ?11 AND deleted_at IS NULL
 RETURNING id, name, duration_minutes, percent, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
