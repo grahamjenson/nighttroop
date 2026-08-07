@@ -25,27 +25,48 @@ CREATE TABLE activities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE TABLE device_events (
+    cgm_insertion_time INTEGER,
+
+    pump_insertion_time INTEGER,
+    pump_type TEXT CHECK(length(pump_type) <= 32),
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
+
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
+);
+
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    device_type TEXT CHECK (device_type IN ('pump', 'cgm', 'loop', 'phone', 'display', 'device')) DEFAULT 'device', -- device is generic 
 
-    -- shared columns
-    state TEXT CHECK(length(state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
-    timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
-    insertion_time INTEGER, -- both pump and cgm (not phone)
-    battery_percent REAL,
-    charging_state TEXT CHECK(length(charging_state) <= 32),
+    -- uploader
+    device TEXT CHECK(length(device) <= 64),
+    device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    device_battery_percent REAL,
+    device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
 
-    -- Pump specific columns
+    -- PUMP
+    pump_state TEXT CHECK(length(pump_state) <= 64),
     pump_reservoir REAL,
+    pump_battery_percent REAL,
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
-    -- LOOP specific columns
-    iob REAL,
-    iob_basal REAL,
-    iob_treatment REAL,
-
-    cob REAL,
+    -- LOOP
+    loop_iob REAL,
+    loop_iob_basal REAL,
+    loop_iob_treatment REAL,
+    loop_cob REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -74,7 +95,7 @@ CREATE TABLE event_groups (
     temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
     profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
 
-    device_report_id TEXT UNIQUE REFERENCES device_reports(id) ON DELETE RESTRICT,
+    device_event_id TEXT UNIQUE REFERENCES device_events(id) ON DELETE RESTRICT,
 
     activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
     note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,

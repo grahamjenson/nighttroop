@@ -53,6 +53,7 @@ type Treatment struct {
 	TargetTop    *FlexibleFloat64 `json:"targetTop,omitempty"`
 	TargetBottom *FlexibleFloat64 `json:"targetBottom,omitempty"`
 	Units        *Units           `json:"units,omitempty"`
+	PumpType     *ShortString     `json:"pumpType,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -125,16 +126,16 @@ const (
 	CorrectionBolus   TreatmentEventType = "Correction Bolus"
 	DADAlert          TreatmentEventType = "D.A.D. Alert"
 	Exercise          TreatmentEventType = "Exercise"
-	InsulinChange     TreatmentEventType = "Insulin Change"
+	InsulinChange     TreatmentEventType = "Insulin Change" // device event
 	MealBolus         TreatmentEventType = "Meal Bolus"
 	Note              TreatmentEventType = "Note"
-	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
+	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline" // device event
 	ProfileSwitch     TreatmentEventType = "Profile Switch"
-	PumpBatteryChange TreatmentEventType = "Pump Battery Change"
+	PumpBatteryChange TreatmentEventType = "Pump Battery Change" // device event
 	Question          TreatmentEventType = "Question"
-	SensorChange      TreatmentEventType = "Sensor Change"
-	SensorStart       TreatmentEventType = "Sensor Start"
-	SiteChange        TreatmentEventType = "Site Change"
+	SensorChange      TreatmentEventType = "Sensor Change" // device event
+	SensorStart       TreatmentEventType = "Sensor Start"  // device event
+	SiteChange        TreatmentEventType = "Site Change"   // device event
 	SnackBolus        TreatmentEventType = "Snack Bolus"
 	TempBasal         TreatmentEventType = "Temp Basal"
 	TemporaryTarget   TreatmentEventType = "Temporary Target"
