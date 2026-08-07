@@ -77,11 +77,18 @@ func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return EventGroupDelete(ctx, siteContext, identifier, permanent)
+	if permanent {
+		return EventGroupHardDelete(ctx, siteContext, identifier)
+	}
+	return EventGroupSoftDelete(ctx, siteContext, identifier)
 }
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
+
+	if permanent {
+		return EventGroupHardDeleteType(ctx, siteContext, typeString)
+	}
+	return EventGroupSoftDeleteType(ctx, siteContext, typeString)
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
@@ -93,12 +100,18 @@ func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils
 		return nil, false, nsutils.BadDataBodyError
 	}
 
-	cc := nightscout.UpdateContext{
-		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
-		UpdatedByIdentityName: siteContext.IdentityModel.Name,
+	cc := nightscout.CreateContext{
+		CreatedByIdentityID:   siteContext.IdentityModel.ID,
+		CreatedByIdentityName: siteContext.IdentityModel.Name,
 	}
 
-	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
+	if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
+		slog.Error("treatment event type is nil")
+		return nil, false, nsutils.BadDataBodyError
+	}
+	createParams := TreatmentEventGroupCreate(ctx, cc, treatmentModel)
+	createParams.EventGroup.ID = identifier
+	dbModel, created, rerr := EventGroupReplace(ctx, siteContext, createParams, canCreate)
 	if rerr != nil {
 		slog.Error("failed to update treatment in database", "error", rerr)
 		return nil, false, rerr
@@ -108,7 +121,7 @@ func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils
 		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(dbModel)), false, nil
+	return ptr(c.converter(dbModel)), created, nil
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
@@ -123,6 +136,11 @@ func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.S
 	cc := nightscout.UpdateContext{
 		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
 		UpdatedByIdentityName: siteContext.IdentityModel.Name,
+	}
+
+	if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
+		slog.Error("treatment event type is nil")
+		return nil, nsutils.BadDataBodyError
 	}
 
 	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))

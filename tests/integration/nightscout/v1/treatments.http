@@ -36,11 +36,11 @@ ASSERT {{ assertEquals "lunch" "@0.reason" }}
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
-NAME create_minimal_meal_bolus_v1
+NAME create_minimal_correction_bolus_v1
 POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
-B { "eventType": "Meal Bolus", "insulin": 4.2 }
+B { "eventType": "Correction Bolus", "insulin": 4.2 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertEquals "Correction Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertExists "@0._id" }}
@@ -67,23 +67,32 @@ ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 
-NAME update_treatments_v1
+NAME put_update_treatments_v1
 PUT http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
 B {
   "_id": "{{ dig "create_meal_bolus_v1.0._id" }}",
-  "notes": "Updated notes"
-  }
-ASSERT_STATUS 200
-
-NAME update_treatments_v1
-PUT http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
-B {
-  "reason": "Updated reason"
+  "eventType": "Meal Bolus",
+  "notes": "Updated from put_update_treatments_v1"
   }
 ASSERT_STATUS 200
 
 NAME get_treatments_after_updates_v1
 GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated notes" "@0.notes" }}
-ASSERT {{ assertEquals "Updated reason" "@0.reason" }}
+ASSERT {{ assertEquals "Updated from put_update_treatments_v1" "@0.notes" }}
+
+NAME put_create_treatments_v1
+PUT http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+B {
+  "_id": "myveryownid",
+  "eventType": "Meal Bolus",
+  "notes": "Updated from put_create_treatments_v1"
+  }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@notes" }}
+ASSERT {{ assertEquals "myveryownid" "@_id" }}
+
+NAME get_treatments_after_user_id_create_v1
+GET http://{{ .site }}.ns.localhost/api/v1/treatments/myveryownid?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}

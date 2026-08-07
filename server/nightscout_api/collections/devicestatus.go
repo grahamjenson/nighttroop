@@ -80,11 +80,17 @@ func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputi
 }
 
 func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return EventGroupDelete(ctx, siteContext, identifier, permanent)
+	if permanent {
+		return EventGroupHardDelete(ctx, siteContext, identifier)
+	}
+	return EventGroupSoftDelete(ctx, siteContext, identifier)
 }
 
 func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return EventGroupDeleteType(ctx, siteContext, typeString, permanent)
+	if permanent {
+		return EventGroupHardDeleteType(ctx, siteContext, typeString)
+	}
+	return EventGroupSoftDeleteType(ctx, siteContext, typeString)
 }
 
 func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
@@ -126,5 +132,41 @@ func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputil
 }
 
 func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return nil, false, nsutils.ErrNotImplemented
+	deviceStatusModel := nightscout.DeviceStatus{}
+	err := utils.FromMap(patch, &deviceStatusModel)
+
+	if err != nil {
+		slog.Error("failed to map data to device status model", "error", err)
+		return nil, false, nsutils.BadDataBodyError
+	}
+
+	cc := nightscout.CreateContext{
+		CreatedByIdentityID:   siteContext.IdentityModel.ID,
+		CreatedByIdentityName: siteContext.IdentityModel.Name,
+	}
+
+	createDevice := nightscout.DeviceStatusToCreateDevice(deviceStatusModel, cc)
+	createLoop := nightscout.DeviceStatusToCreateLoop(deviceStatusModel, cc)
+	createPump := nightscout.DeviceStatusToCreatePump(deviceStatusModel, cc)
+	createEventGroup := nightscout.DeviceStatusToCreateEventGroup(deviceStatusModel, cc)
+
+	createEventGroup.ID = identifier
+
+	dbModel, created, rerr := EventGroupReplace(ctx, siteContext, site.CreateEventGroupBundle{
+		DeviceState: &createDevice,
+		LoopState:   &createLoop,
+		PumpState:   &createPump,
+		EventGroup:  createEventGroup,
+	}, canCreate)
+
+	if rerr != nil {
+		slog.Error("failed to replace device status in database", "error", rerr)
+		return nil, false, rerr
+	}
+	if dbModel == nil {
+		slog.Error("failed to replace device status in database, dbModel is nil")
+		return nil, false, nsutils.ErrInternal
+	}
+
+	return ptr(c.converter(dbModel)), created, nil
 }

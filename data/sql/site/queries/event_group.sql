@@ -413,21 +413,23 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeleteEventGroup :execresult
+-- name: SoftDeleteEventGroup :one
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
-WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
 
--- name: HardDeleteEventGroup :execresult
-DELETE FROM event_groups WHERE id = ?;
+-- name: HardDeleteEventGroup :one
+DELETE FROM event_groups WHERE id = ? RETURNING *;
 
 
--- name: SoftDeleteEventGroupsByType :execresult
+-- name: SoftDeleteEventGroupsByType :many
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE group_type = ? AND deleted_at IS NULL;
+WHERE group_type = ? AND deleted_at IS NULL
+RETURNING *;
 
--- name: HardDeleteEventGroupsByType :execresult
-DELETE FROM event_groups WHERE group_type = ?;
+-- name: HardDeleteEventGroupsByType :many
+DELETE FROM event_groups WHERE group_type = ? RETURNING *;

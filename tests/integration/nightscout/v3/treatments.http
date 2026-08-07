@@ -37,7 +37,7 @@ B {
   "notes": "Here are some notes",
   "reason": "lunch"
  }
-ASSERT_STATUS 200
+ASSERT_STATUS 201
 ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
 ASSERT {{ assertExists "@result.created_at" }}
 ASSERT {{ assertEquals 150 "@result.glucose" }}
