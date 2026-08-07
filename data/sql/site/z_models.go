@@ -25,29 +25,20 @@ type Activity struct {
 	CreatedByIdentityName string
 }
 
-type CgmState struct {
+type DeviceReport struct {
 	ID                    string
-	CgmState              *string
-	CgmTimestamp          *int64
-	CgmInsertionTime      *int64
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityName string
-}
-
-type DeviceState struct {
-	ID                    string
-	DeviceState           *string
-	DeviceTimestamp       *int64
-	DeviceBatteryPercent  *float64
-	DeviceChargingState   *string
+	DeviceType            *string
+	State                 *string
+	Timestamp             *int64
+	InsertionTime         *int64
+	BatteryPercent        *float64
+	ChargingState         *string
+	PumpReservoir         *float64
+	PumpChargingState     *string
+	Iob                   *float64
+	IobBasal              *float64
+	IobTreatment          *float64
+	Cob                   *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -69,10 +60,7 @@ type EventGroup struct {
 	TempBasalID           *string
 	TempTargetID          *string
 	ProfileSwitchID       *string
-	DeviceStateID         *string
-	LoopStateID           *string
-	PumpStateID           *string
-	CgmStateID            *string
+	DeviceReportID        *string
 	ActivityID            *string
 	NoteID                *string
 	RawJsonData           *string
@@ -158,26 +146,6 @@ type InsulinDose struct {
 	CreatedByIdentityName string
 }
 
-type LoopState struct {
-	ID                    string
-	LoopState             *string
-	LoopTimestamp         *int64
-	Iob                   *float64
-	IobBasal              *float64
-	IobTreatment          *float64
-	Cob                   *float64
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityName string
-}
-
 type Note struct {
 	ID                    string
 	Content               string
@@ -229,26 +197,6 @@ type ProfileSwitch struct {
 	CreatedByDeviceName      *string
 	UpdatedByIdentityName    *string
 	CreatedByIdentityName    string
-}
-
-type PumpState struct {
-	ID                    string
-	PumpState             *string
-	PumpTimestamp         *int64
-	PumpInsertionTime     *int64
-	PumpReservoir         *float64
-	PumpBatteryPercent    *float64
-	PumpChargingState     *string
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityName string
 }
 
 type SiteSetting struct {

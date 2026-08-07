@@ -93,147 +93,117 @@ func (m Activity) GetCreatedByIdentityName() string {
 }
 
 // GetID returns the ID value.
-func (m CgmState) GetID() string {
+func (m DeviceReport) GetID() string {
 	return m.ID
 }
 
-// GetCgmState returns the CgmState value.
-func (m CgmState) GetCgmState() *string {
-	return m.CgmState
+// GetDeviceType returns the DeviceType value.
+func (m DeviceReport) GetDeviceType() *string {
+	return m.DeviceType
 }
 
-// GetCgmTimestamp returns the CgmTimestamp value.
-func (m CgmState) GetCgmTimestamp() *int64 {
-	return m.CgmTimestamp
+// GetState returns the State value.
+func (m DeviceReport) GetState() *string {
+	return m.State
 }
 
-// GetCgmInsertionTime returns the CgmInsertionTime value.
-func (m CgmState) GetCgmInsertionTime() *int64 {
-	return m.CgmInsertionTime
+// GetTimestamp returns the Timestamp value.
+func (m DeviceReport) GetTimestamp() *int64 {
+	return m.Timestamp
+}
+
+// GetInsertionTime returns the InsertionTime value.
+func (m DeviceReport) GetInsertionTime() *int64 {
+	return m.InsertionTime
+}
+
+// GetBatteryPercent returns the BatteryPercent value.
+func (m DeviceReport) GetBatteryPercent() *float64 {
+	return m.BatteryPercent
+}
+
+// GetChargingState returns the ChargingState value.
+func (m DeviceReport) GetChargingState() *string {
+	return m.ChargingState
+}
+
+// GetPumpReservoir returns the PumpReservoir value.
+func (m DeviceReport) GetPumpReservoir() *float64 {
+	return m.PumpReservoir
+}
+
+// GetPumpChargingState returns the PumpChargingState value.
+func (m DeviceReport) GetPumpChargingState() *string {
+	return m.PumpChargingState
+}
+
+// GetIob returns the Iob value.
+func (m DeviceReport) GetIob() *float64 {
+	return m.Iob
+}
+
+// GetIobBasal returns the IobBasal value.
+func (m DeviceReport) GetIobBasal() *float64 {
+	return m.IobBasal
+}
+
+// GetIobTreatment returns the IobTreatment value.
+func (m DeviceReport) GetIobTreatment() *float64 {
+	return m.IobTreatment
+}
+
+// GetCob returns the Cob value.
+func (m DeviceReport) GetCob() *float64 {
+	return m.Cob
 }
 
 // GetRawJsonData returns the RawJsonData value.
-func (m CgmState) GetRawJsonData() *string {
+func (m DeviceReport) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
 // GetDeletedAt returns the DeletedAt value.
-func (m CgmState) GetDeletedAt() *int64 {
+func (m DeviceReport) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m CgmState) GetUtcOffsetMinutes() *int64 {
+func (m DeviceReport) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
 // GetOccurredAt returns the OccurredAt value.
-func (m CgmState) GetOccurredAt() int64 {
+func (m DeviceReport) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
 // GetCreatedAt returns the CreatedAt value.
-func (m CgmState) GetCreatedAt() int64 {
+func (m DeviceReport) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
-func (m CgmState) GetUpdatedAt() int64 {
+func (m DeviceReport) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m CgmState) GetUpdatedByIdentityName() *string {
+func (m DeviceReport) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m CgmState) GetCreatedByAppName() *string {
+func (m DeviceReport) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m CgmState) GetCreatedByDeviceName() *string {
+func (m DeviceReport) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m CgmState) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetID returns the ID value.
-func (m DeviceState) GetID() string {
-	return m.ID
-}
-
-// GetDeviceState returns the DeviceState value.
-func (m DeviceState) GetDeviceState() *string {
-	return m.DeviceState
-}
-
-// GetDeviceTimestamp returns the DeviceTimestamp value.
-func (m DeviceState) GetDeviceTimestamp() *int64 {
-	return m.DeviceTimestamp
-}
-
-// GetDeviceBatteryPercent returns the DeviceBatteryPercent value.
-func (m DeviceState) GetDeviceBatteryPercent() *float64 {
-	return m.DeviceBatteryPercent
-}
-
-// GetDeviceChargingState returns the DeviceChargingState value.
-func (m DeviceState) GetDeviceChargingState() *string {
-	return m.DeviceChargingState
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m DeviceState) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m DeviceState) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m DeviceState) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m DeviceState) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m DeviceState) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m DeviceState) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m DeviceState) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m DeviceState) GetCreatedByAppName() *string {
-	return m.CreatedByAppName
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m DeviceState) GetCreatedByDeviceName() *string {
-	return m.CreatedByDeviceName
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m DeviceState) GetCreatedByIdentityName() string {
+func (m DeviceReport) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
@@ -277,24 +247,9 @@ func (m EventGroup) GetProfileSwitchID() *string {
 	return m.ProfileSwitchID
 }
 
-// GetDeviceStateID returns the DeviceStateID value.
-func (m EventGroup) GetDeviceStateID() *string {
-	return m.DeviceStateID
-}
-
-// GetLoopStateID returns the LoopStateID value.
-func (m EventGroup) GetLoopStateID() *string {
-	return m.LoopStateID
-}
-
-// GetPumpStateID returns the PumpStateID value.
-func (m EventGroup) GetPumpStateID() *string {
-	return m.PumpStateID
-}
-
-// GetCgmStateID returns the CgmStateID value.
-func (m EventGroup) GetCgmStateID() *string {
-	return m.CgmStateID
+// GetDeviceReportID returns the DeviceReportID value.
+func (m EventGroup) GetDeviceReportID() *string {
+	return m.DeviceReportID
 }
 
 // GetActivityID returns the ActivityID value.
@@ -653,91 +608,6 @@ func (m InsulinDose) GetCreatedByIdentityName() string {
 }
 
 // GetID returns the ID value.
-func (m LoopState) GetID() string {
-	return m.ID
-}
-
-// GetLoopState returns the LoopState value.
-func (m LoopState) GetLoopState() *string {
-	return m.LoopState
-}
-
-// GetLoopTimestamp returns the LoopTimestamp value.
-func (m LoopState) GetLoopTimestamp() *int64 {
-	return m.LoopTimestamp
-}
-
-// GetIob returns the Iob value.
-func (m LoopState) GetIob() *float64 {
-	return m.Iob
-}
-
-// GetIobBasal returns the IobBasal value.
-func (m LoopState) GetIobBasal() *float64 {
-	return m.IobBasal
-}
-
-// GetIobTreatment returns the IobTreatment value.
-func (m LoopState) GetIobTreatment() *float64 {
-	return m.IobTreatment
-}
-
-// GetCob returns the Cob value.
-func (m LoopState) GetCob() *float64 {
-	return m.Cob
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m LoopState) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m LoopState) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m LoopState) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m LoopState) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m LoopState) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m LoopState) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m LoopState) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m LoopState) GetCreatedByAppName() *string {
-	return m.CreatedByAppName
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m LoopState) GetCreatedByDeviceName() *string {
-	return m.CreatedByDeviceName
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m LoopState) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetID returns the ID value.
 func (m Note) GetID() string {
 	return m.ID
 }
@@ -954,91 +824,6 @@ func (m ProfileSwitch) GetUpdatedByIdentityName() *string {
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m ProfileSwitch) GetCreatedByIdentityName() string {
-	return m.CreatedByIdentityName
-}
-
-// GetID returns the ID value.
-func (m PumpState) GetID() string {
-	return m.ID
-}
-
-// GetPumpState returns the PumpState value.
-func (m PumpState) GetPumpState() *string {
-	return m.PumpState
-}
-
-// GetPumpTimestamp returns the PumpTimestamp value.
-func (m PumpState) GetPumpTimestamp() *int64 {
-	return m.PumpTimestamp
-}
-
-// GetPumpInsertionTime returns the PumpInsertionTime value.
-func (m PumpState) GetPumpInsertionTime() *int64 {
-	return m.PumpInsertionTime
-}
-
-// GetPumpReservoir returns the PumpReservoir value.
-func (m PumpState) GetPumpReservoir() *float64 {
-	return m.PumpReservoir
-}
-
-// GetPumpBatteryPercent returns the PumpBatteryPercent value.
-func (m PumpState) GetPumpBatteryPercent() *float64 {
-	return m.PumpBatteryPercent
-}
-
-// GetPumpChargingState returns the PumpChargingState value.
-func (m PumpState) GetPumpChargingState() *string {
-	return m.PumpChargingState
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m PumpState) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m PumpState) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m PumpState) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m PumpState) GetOccurredAt() int64 {
-	return m.OccurredAt
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m PumpState) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m PumpState) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m PumpState) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// GetCreatedByAppName returns the CreatedByAppName value.
-func (m PumpState) GetCreatedByAppName() *string {
-	return m.CreatedByAppName
-}
-
-// GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m PumpState) GetCreatedByDeviceName() *string {
-	return m.CreatedByDeviceName
-}
-
-// GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m PumpState) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 

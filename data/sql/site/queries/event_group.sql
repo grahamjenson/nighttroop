@@ -11,10 +11,7 @@ INSERT INTO event_groups (
     temp_basal_id,
     temp_target_id,
     profile_switch_id,
-    device_state_id,
-    loop_state_id,
-    pump_state_id,
-    cgm_state_id,
+    device_report_id,
     activity_id,
     note_id,
 
@@ -25,7 +22,7 @@ INSERT INTO event_groups (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -76,33 +73,17 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_state_id,
-    ds.device_state as device_state_device_state,
-    ds.device_timestamp as device_state_device_timestamp,
-    ds.device_battery_percent as device_state_device_battery_percent,
-    ds.device_charging_state as device_state_device_charging_state,
-
-    ls.id as loop_state_id,
-    ls.loop_state as loop_state_loop_state,
-    ls.loop_timestamp as loop_state_loop_timestamp,
-    ls.iob as loop_state_iob,
-    ls.iob_basal as loop_state_iob_basal,
-    ls.iob_treatment as loop_state_iob_treatment,
-    ls.cob as loop_state_cob,
-
-
-    ps2.id as pump_state_id,
-    ps2.pump_state as pump_state_pump_state,
-    ps2.pump_timestamp as pump_state_pump_timestamp,
-    ps2.pump_insertion_time as pump_state_pump_insertion_time,
-    ps2.pump_reservoir as pump_state_pump_reservoir,
-    ps2.pump_battery_percent as pump_state_pump_battery_percent,
-    ps2.pump_charging_state as pump_state_pump_charging_state,
-
-    cs.id as cgm_state_id,
-    cs.cgm_state as cgm_state_cgm_state,
-    cs.cgm_timestamp as cgm_state_cgm_timestamp,
-    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+    ds.id as device_report_id,
+    ds.state as device_report_device_state,
+    ds.timestamp as device_report_device_timestamp,
+    ds.battery_percent as device_report_device_battery_percent,
+    ds.charging_state as device_report_device_charging_state,
+    ds.iob as device_report_iob,
+    ds.iob_basal as device_report_iob_basal,
+    ds.iob_treatment as device_report_iob_treatment,
+    ds.cob as device_report_cob,
+    ds.insertion_time as device_report_insertion_time,
+    ds.pump_reservoir as device_report_pump_reservoir,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -123,10 +104,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR eg.deleted_at IS NULL)
@@ -175,33 +153,17 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_state_id,
-    ds.device_state as device_state_device_state,
-    ds.device_timestamp as device_state_device_timestamp,
-    ds.device_battery_percent as device_state_device_battery_percent,
-    ds.device_charging_state as device_state_device_charging_state,
-
-    ls.id as loop_state_id,
-    ls.loop_state as loop_state_loop_state,
-    ls.loop_timestamp as loop_state_loop_timestamp,
-    ls.iob as loop_state_iob,
-    ls.iob_basal as loop_state_iob_basal,
-    ls.iob_treatment as loop_state_iob_treatment,
-    ls.cob as loop_state_cob,
-
-
-    ps2.id as pump_state_id,
-    ps2.pump_state as pump_state_pump_state,
-    ps2.pump_timestamp as pump_state_pump_timestamp,
-    ps2.pump_insertion_time as pump_state_pump_insertion_time,
-    ps2.pump_reservoir as pump_state_pump_reservoir,
-    ps2.pump_battery_percent as pump_state_pump_battery_percent,
-    ps2.pump_charging_state as pump_state_pump_charging_state,
-
-    cs.id as cgm_state_id,
-    cs.cgm_state as cgm_state_cgm_state,
-    cs.cgm_timestamp as cgm_state_cgm_timestamp,
-    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+    ds.id as device_report_id,
+    ds.state as device_report_device_state,
+    ds.timestamp as device_report_device_timestamp,
+    ds.battery_percent as device_report_device_battery_percent,
+    ds.charging_state as device_report_device_charging_state,
+    ds.iob as device_report_iob,
+    ds.iob_basal as device_report_iob_basal,
+    ds.iob_treatment as device_report_iob_treatment,
+    ds.cob as device_report_cob,
+    ds.insertion_time as device_report_insertion_time,
+    ds.pump_reservoir as device_report_pump_reservoir,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -222,10 +184,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 
@@ -272,33 +231,17 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_state_id,
-    ds.device_state as device_state_device_state,
-    ds.device_timestamp as device_state_device_timestamp,
-    ds.device_battery_percent as device_state_device_battery_percent,
-    ds.device_charging_state as device_state_device_charging_state,
-
-    ls.id as loop_state_id,
-    ls.loop_state as loop_state_loop_state,
-    ls.loop_timestamp as loop_state_loop_timestamp,
-    ls.iob as loop_state_iob,
-    ls.iob_basal as loop_state_iob_basal,
-    ls.iob_treatment as loop_state_iob_treatment,
-    ls.cob as loop_state_cob,
-
-
-    ps2.id as pump_state_id,
-    ps2.pump_state as pump_state_pump_state,
-    ps2.pump_timestamp as pump_state_pump_timestamp,
-    ps2.pump_insertion_time as pump_state_pump_insertion_time,
-    ps2.pump_reservoir as pump_state_pump_reservoir,
-    ps2.pump_battery_percent as pump_state_pump_battery_percent,
-    ps2.pump_charging_state as pump_state_pump_charging_state,
-
-    cs.id as cgm_state_id,
-    cs.cgm_state as cgm_state_cgm_state,
-    cs.cgm_timestamp as cgm_state_cgm_timestamp,
-    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+    ds.id as device_report_id,
+    ds.state as device_report_device_state,
+    ds.timestamp as device_report_device_timestamp,
+    ds.battery_percent as device_report_device_battery_percent,
+    ds.charging_state as device_report_device_charging_state,
+    ds.iob as device_report_iob,
+    ds.iob_basal as device_report_iob_basal,
+    ds.iob_treatment as device_report_iob_treatment,
+    ds.cob as device_report_cob,
+    ds.insertion_time as device_report_insertion_time,
+    ds.pump_reservoir as device_report_pump_reservoir,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -319,10 +262,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 

@@ -1,15 +1,14 @@
 -------
 -- CREATE 
 --------
--- name: CreatePumpState :one
-INSERT INTO pump_states (
+-- name: CreateDeviceReport :one
+INSERT INTO device_reports (
     id,
-    pump_state,
-    pump_timestamp,
-    pump_insertion_time,
-    pump_reservoir,
-    pump_battery_percent,
-    pump_charging_state,
+    state,
+    timestamp,
+    battery_percent,
+    charging_state,
+
 
     utc_offset_minutes,
     occurred_at,
@@ -18,25 +17,25 @@ INSERT INTO pump_states (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
 -- READ
 --------
 
--- name: AllPumpStates :many
-SELECT * FROM pump_states
+-- name: AllDeviceReports :many
+SELECT * FROM device_reports
 WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
--- name: GetPumpState :one
-SELECT * FROM pump_states WHERE id = ?;
+-- name: GetDeviceReport :one
+SELECT * FROM device_reports WHERE id = ?;
 
--- name: SearchPumpStates :many
-SELECT * FROM pump_states
+-- name: SearchDeviceReports :many
+SELECT * FROM device_reports
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR occurred_at >= sqlc.narg('DateGTE'))
     AND (CAST(sqlc.narg('DateLTE') AS INTEGER) IS NULL OR occurred_at <= sqlc.narg('DateLTE'))
@@ -67,14 +66,12 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- UPDATE
 --------
 
--- name: UpdatePumpState :one
-UPDATE pump_states SET
-    pump_state = COALESCE(sqlc.narg('PumpState'), pump_state),
-    pump_timestamp = COALESCE(sqlc.narg('PumpTimestamp'), pump_timestamp),
-    pump_insertion_time = COALESCE(sqlc.narg('PumpInsertionTime'), pump_insertion_time),
-    pump_reservoir = COALESCE(sqlc.narg('PumpReservoir'), pump_reservoir),
-    pump_battery_percent = COALESCE(sqlc.narg('PumpBatteryPercent'), pump_battery_percent),
-    pump_charging_state = COALESCE(sqlc.narg('PumpChargingState'), pump_charging_state),
+-- name: UpdateDeviceReport :one
+UPDATE device_reports SET
+    state = COALESCE(sqlc.narg('DeviceReport'), state),
+    timestamp = COALESCE(sqlc.narg('DeviceTimestamp'), timestamp),
+    battery_percent = COALESCE(sqlc.narg('DeviceBatteryPercent'), battery_percent),
+    charging_state = COALESCE(sqlc.narg('DeviceChargingState'), charging_state),
     
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
@@ -87,11 +84,11 @@ RETURNING *;
 -- DELETE
 --------
 
--- name: SoftDeletePumpState :execresult
-UPDATE pump_states SET
+-- name: SoftDeleteDeviceReport :execresult
+UPDATE device_reports SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
--- name: HardDeletePumpState :execresult
-DELETE FROM pump_states WHERE id = ?;
+-- name: HardDeleteDeviceReport :execresult
+DELETE FROM device_reports WHERE id = ?;

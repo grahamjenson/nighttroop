@@ -206,62 +206,22 @@ CREATE TABLE profile_switches (
 
 -- STATE TABLES (recording states of things over time)
 
-CREATE TABLE pump_states (
+CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    pump_state TEXT CHECK(length(pump_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
-    pump_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
+    device_type TEXT CHECK (device_type IN ('pump', 'cgm', 'loop', 'phone', 'display', 'device')) DEFAULT 'device', -- device is generic 
 
-    pump_insertion_time INTEGER,
+    -- shared columns
+    state TEXT CHECK(length(state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
+    insertion_time INTEGER, -- both pump and cgm (not phone)
+    battery_percent REAL,
+    charging_state TEXT CHECK(length(charging_state) <= 32),
 
+    -- Pump specific columns
     pump_reservoir REAL,
-
-    pump_battery_percent REAL,
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
-CREATE TABLE cgm_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    cgm_state TEXT CHECK(length(cgm_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", "insertion" etc
-    cgm_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
-
-    cgm_insertion_time INTEGER,
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
-CREATE TABLE loop_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    loop_state TEXT CHECK(length(loop_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
-    loop_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
-
+    -- LOOP specific columns
     iob REAL,
     iob_basal REAL,
     iob_treatment REAL,
@@ -284,31 +244,6 @@ CREATE TABLE loop_states (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-CREATE TABLE device_states (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
-    device_timestamp INTEGER, -- This is the timestamp of the device state, like the time of the last reading
-
-    device_battery_percent REAL,
-    device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
-
-
 
 -- EventGroup is when multiple events happen together, like a meal with insulin and glucose reading
 CREATE TABLE event_groups (
@@ -320,12 +255,9 @@ CREATE TABLE event_groups (
     food_intake_id TEXT UNIQUE REFERENCES food_intakes(id) ON DELETE RESTRICT,
     temp_basal_id TEXT UNIQUE REFERENCES temp_basals(id) ON DELETE RESTRICT,
     temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
-    profile_switch_id TEXT UNIQUE REFERENCES profile_switch(id) ON DELETE RESTRICT,
+    profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
 
-    device_state_id TEXT UNIQUE REFERENCES device_states(id) ON DELETE RESTRICT,
-    loop_state_id TEXT UNIQUE REFERENCES loop_states(id) ON DELETE RESTRICT,
-    pump_state_id TEXT UNIQUE REFERENCES pump_states(id) ON DELETE RESTRICT,
-    cgm_state_id TEXT UNIQUE REFERENCES cgm_states(id) ON DELETE RESTRICT,
+    device_report_id TEXT UNIQUE REFERENCES device_reports(id) ON DELETE RESTRICT,
 
     activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
     note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,

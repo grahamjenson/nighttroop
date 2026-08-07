@@ -13,7 +13,7 @@ const allEventGroups = `-- name: AllEventGroups :many
 SELECT 
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_state_id, eg.loop_state_id, eg.pump_state_id, eg.cgm_state_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_report_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
 
     gr.id as glucose_reading_id,   
     gr.reading as glucose_reading,
@@ -50,33 +50,17 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_state_id,
-    ds.device_state as device_state_device_state,
-    ds.device_timestamp as device_state_device_timestamp,
-    ds.device_battery_percent as device_state_device_battery_percent,
-    ds.device_charging_state as device_state_device_charging_state,
-
-    ls.id as loop_state_id,
-    ls.loop_state as loop_state_loop_state,
-    ls.loop_timestamp as loop_state_loop_timestamp,
-    ls.iob as loop_state_iob,
-    ls.iob_basal as loop_state_iob_basal,
-    ls.iob_treatment as loop_state_iob_treatment,
-    ls.cob as loop_state_cob,
-
-
-    ps2.id as pump_state_id,
-    ps2.pump_state as pump_state_pump_state,
-    ps2.pump_timestamp as pump_state_pump_timestamp,
-    ps2.pump_insertion_time as pump_state_pump_insertion_time,
-    ps2.pump_reservoir as pump_state_pump_reservoir,
-    ps2.pump_battery_percent as pump_state_pump_battery_percent,
-    ps2.pump_charging_state as pump_state_pump_charging_state,
-
-    cs.id as cgm_state_id,
-    cs.cgm_state as cgm_state_cgm_state,
-    cs.cgm_timestamp as cgm_state_cgm_timestamp,
-    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+    ds.id as device_report_id,
+    ds.state as device_report_device_state,
+    ds.timestamp as device_report_device_timestamp,
+    ds.battery_percent as device_report_device_battery_percent,
+    ds.charging_state as device_report_device_charging_state,
+    ds.iob as device_report_iob,
+    ds.iob_basal as device_report_iob_basal,
+    ds.iob_treatment as device_report_iob_treatment,
+    ds.cob as device_report_cob,
+    ds.insertion_time as device_report_insertion_time,
+    ds.pump_reservoir as device_report_pump_reservoir,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -97,10 +81,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 WHERE (CAST(?1 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
@@ -145,29 +126,17 @@ type AllEventGroupsRow struct {
 	ProfileSwitchInsulinSensitivitiesJson *string
 	ProfileSwitchBasalRatesJson           *string
 	ProfileSwitchTargetsJson              *string
-	DeviceStateID                         *string
-	DeviceStateDeviceState                *string
-	DeviceStateDeviceTimestamp            *int64
-	DeviceStateDeviceBatteryPercent       *float64
-	DeviceStateDeviceChargingState        *string
-	LoopStateID                           *string
-	LoopStateLoopState                    *string
-	LoopStateLoopTimestamp                *int64
-	LoopStateIob                          *float64
-	LoopStateIobBasal                     *float64
-	LoopStateIobTreatment                 *float64
-	LoopStateCob                          *float64
-	PumpStateID                           *string
-	PumpStatePumpState                    *string
-	PumpStatePumpTimestamp                *int64
-	PumpStatePumpInsertionTime            *int64
-	PumpStatePumpReservoir                *float64
-	PumpStatePumpBatteryPercent           *float64
-	PumpStatePumpChargingState            *string
-	CgmStateID                            *string
-	CgmStateCgmState                      *string
-	CgmStateCgmTimestamp                  *int64
-	CgmStateCgmInsertionTime              *int64
+	DeviceReportID                        *string
+	DeviceReportDeviceState               *string
+	DeviceReportDeviceTimestamp           *int64
+	DeviceReportDeviceBatteryPercent      *float64
+	DeviceReportDeviceChargingState       *string
+	DeviceReportIob                       *float64
+	DeviceReportIobBasal                  *float64
+	DeviceReportIobTreatment              *float64
+	DeviceReportCob                       *float64
+	DeviceReportInsertionTime             *int64
+	DeviceReportPumpReservoir             *float64
 	ActivityID                            *string
 	ActivityName                          *string
 	ActivityType                          *string
@@ -198,10 +167,7 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.EventGroup.TempBasalID,
 			&i.EventGroup.TempTargetID,
 			&i.EventGroup.ProfileSwitchID,
-			&i.EventGroup.DeviceStateID,
-			&i.EventGroup.LoopStateID,
-			&i.EventGroup.PumpStateID,
-			&i.EventGroup.CgmStateID,
+			&i.EventGroup.DeviceReportID,
 			&i.EventGroup.ActivityID,
 			&i.EventGroup.NoteID,
 			&i.EventGroup.RawJsonData,
@@ -243,29 +209,17 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.ProfileSwitchInsulinSensitivitiesJson,
 			&i.ProfileSwitchBasalRatesJson,
 			&i.ProfileSwitchTargetsJson,
-			&i.DeviceStateID,
-			&i.DeviceStateDeviceState,
-			&i.DeviceStateDeviceTimestamp,
-			&i.DeviceStateDeviceBatteryPercent,
-			&i.DeviceStateDeviceChargingState,
-			&i.LoopStateID,
-			&i.LoopStateLoopState,
-			&i.LoopStateLoopTimestamp,
-			&i.LoopStateIob,
-			&i.LoopStateIobBasal,
-			&i.LoopStateIobTreatment,
-			&i.LoopStateCob,
-			&i.PumpStateID,
-			&i.PumpStatePumpState,
-			&i.PumpStatePumpTimestamp,
-			&i.PumpStatePumpInsertionTime,
-			&i.PumpStatePumpReservoir,
-			&i.PumpStatePumpBatteryPercent,
-			&i.PumpStatePumpChargingState,
-			&i.CgmStateID,
-			&i.CgmStateCgmState,
-			&i.CgmStateCgmTimestamp,
-			&i.CgmStateCgmInsertionTime,
+			&i.DeviceReportID,
+			&i.DeviceReportDeviceState,
+			&i.DeviceReportDeviceTimestamp,
+			&i.DeviceReportDeviceBatteryPercent,
+			&i.DeviceReportDeviceChargingState,
+			&i.DeviceReportIob,
+			&i.DeviceReportIobBasal,
+			&i.DeviceReportIobTreatment,
+			&i.DeviceReportCob,
+			&i.DeviceReportInsertionTime,
+			&i.DeviceReportPumpReservoir,
 			&i.ActivityID,
 			&i.ActivityName,
 			&i.ActivityType,
@@ -300,10 +254,7 @@ INSERT INTO event_groups (
     temp_basal_id,
     temp_target_id,
     profile_switch_id,
-    device_state_id,
-    loop_state_id,
-    pump_state_id,
-    cgm_state_id,
+    device_report_id,
     activity_id,
     note_id,
 
@@ -314,8 +265,8 @@ INSERT INTO event_groups (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateEventGroupParams struct {
@@ -327,10 +278,7 @@ type CreateEventGroupParams struct {
 	TempBasalID           *string
 	TempTargetID          *string
 	ProfileSwitchID       *string
-	DeviceStateID         *string
-	LoopStateID           *string
-	PumpStateID           *string
-	CgmStateID            *string
+	DeviceReportID        *string
 	ActivityID            *string
 	NoteID                *string
 	OccurredAt            int64
@@ -354,10 +302,7 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 		arg.TempBasalID,
 		arg.TempTargetID,
 		arg.ProfileSwitchID,
-		arg.DeviceStateID,
-		arg.LoopStateID,
-		arg.PumpStateID,
-		arg.CgmStateID,
+		arg.DeviceReportID,
 		arg.ActivityID,
 		arg.NoteID,
 		arg.OccurredAt,
@@ -377,10 +322,7 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 		&i.TempBasalID,
 		&i.TempTargetID,
 		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
+		&i.DeviceReportID,
 		&i.ActivityID,
 		&i.NoteID,
 		&i.RawJsonData,
@@ -401,7 +343,7 @@ const getEventGroup = `-- name: GetEventGroup :one
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_state_id, eg.loop_state_id, eg.pump_state_id, eg.cgm_state_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_report_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
 
     gr.id as glucose_reading_id,   
     gr.reading as glucose_reading,
@@ -438,33 +380,17 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_state_id,
-    ds.device_state as device_state_device_state,
-    ds.device_timestamp as device_state_device_timestamp,
-    ds.device_battery_percent as device_state_device_battery_percent,
-    ds.device_charging_state as device_state_device_charging_state,
-
-    ls.id as loop_state_id,
-    ls.loop_state as loop_state_loop_state,
-    ls.loop_timestamp as loop_state_loop_timestamp,
-    ls.iob as loop_state_iob,
-    ls.iob_basal as loop_state_iob_basal,
-    ls.iob_treatment as loop_state_iob_treatment,
-    ls.cob as loop_state_cob,
-
-
-    ps2.id as pump_state_id,
-    ps2.pump_state as pump_state_pump_state,
-    ps2.pump_timestamp as pump_state_pump_timestamp,
-    ps2.pump_insertion_time as pump_state_pump_insertion_time,
-    ps2.pump_reservoir as pump_state_pump_reservoir,
-    ps2.pump_battery_percent as pump_state_pump_battery_percent,
-    ps2.pump_charging_state as pump_state_pump_charging_state,
-
-    cs.id as cgm_state_id,
-    cs.cgm_state as cgm_state_cgm_state,
-    cs.cgm_timestamp as cgm_state_cgm_timestamp,
-    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+    ds.id as device_report_id,
+    ds.state as device_report_device_state,
+    ds.timestamp as device_report_device_timestamp,
+    ds.battery_percent as device_report_device_battery_percent,
+    ds.charging_state as device_report_device_charging_state,
+    ds.iob as device_report_iob,
+    ds.iob_basal as device_report_iob_basal,
+    ds.iob_treatment as device_report_iob_treatment,
+    ds.cob as device_report_cob,
+    ds.insertion_time as device_report_insertion_time,
+    ds.pump_reservoir as device_report_pump_reservoir,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -485,10 +411,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 
@@ -530,29 +453,17 @@ type GetEventGroupRow struct {
 	ProfileSwitchInsulinSensitivitiesJson *string
 	ProfileSwitchBasalRatesJson           *string
 	ProfileSwitchTargetsJson              *string
-	DeviceStateID                         *string
-	DeviceStateDeviceState                *string
-	DeviceStateDeviceTimestamp            *int64
-	DeviceStateDeviceBatteryPercent       *float64
-	DeviceStateDeviceChargingState        *string
-	LoopStateID                           *string
-	LoopStateLoopState                    *string
-	LoopStateLoopTimestamp                *int64
-	LoopStateIob                          *float64
-	LoopStateIobBasal                     *float64
-	LoopStateIobTreatment                 *float64
-	LoopStateCob                          *float64
-	PumpStateID                           *string
-	PumpStatePumpState                    *string
-	PumpStatePumpTimestamp                *int64
-	PumpStatePumpInsertionTime            *int64
-	PumpStatePumpReservoir                *float64
-	PumpStatePumpBatteryPercent           *float64
-	PumpStatePumpChargingState            *string
-	CgmStateID                            *string
-	CgmStateCgmState                      *string
-	CgmStateCgmTimestamp                  *int64
-	CgmStateCgmInsertionTime              *int64
+	DeviceReportID                        *string
+	DeviceReportDeviceState               *string
+	DeviceReportDeviceTimestamp           *int64
+	DeviceReportDeviceBatteryPercent      *float64
+	DeviceReportDeviceChargingState       *string
+	DeviceReportIob                       *float64
+	DeviceReportIobBasal                  *float64
+	DeviceReportIobTreatment              *float64
+	DeviceReportCob                       *float64
+	DeviceReportInsertionTime             *int64
+	DeviceReportPumpReservoir             *float64
 	ActivityID                            *string
 	ActivityName                          *string
 	ActivityType                          *string
@@ -577,10 +488,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.EventGroup.TempBasalID,
 		&i.EventGroup.TempTargetID,
 		&i.EventGroup.ProfileSwitchID,
-		&i.EventGroup.DeviceStateID,
-		&i.EventGroup.LoopStateID,
-		&i.EventGroup.PumpStateID,
-		&i.EventGroup.CgmStateID,
+		&i.EventGroup.DeviceReportID,
 		&i.EventGroup.ActivityID,
 		&i.EventGroup.NoteID,
 		&i.EventGroup.RawJsonData,
@@ -622,29 +530,17 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.ProfileSwitchInsulinSensitivitiesJson,
 		&i.ProfileSwitchBasalRatesJson,
 		&i.ProfileSwitchTargetsJson,
-		&i.DeviceStateID,
-		&i.DeviceStateDeviceState,
-		&i.DeviceStateDeviceTimestamp,
-		&i.DeviceStateDeviceBatteryPercent,
-		&i.DeviceStateDeviceChargingState,
-		&i.LoopStateID,
-		&i.LoopStateLoopState,
-		&i.LoopStateLoopTimestamp,
-		&i.LoopStateIob,
-		&i.LoopStateIobBasal,
-		&i.LoopStateIobTreatment,
-		&i.LoopStateCob,
-		&i.PumpStateID,
-		&i.PumpStatePumpState,
-		&i.PumpStatePumpTimestamp,
-		&i.PumpStatePumpInsertionTime,
-		&i.PumpStatePumpReservoir,
-		&i.PumpStatePumpBatteryPercent,
-		&i.PumpStatePumpChargingState,
-		&i.CgmStateID,
-		&i.CgmStateCgmState,
-		&i.CgmStateCgmTimestamp,
-		&i.CgmStateCgmInsertionTime,
+		&i.DeviceReportID,
+		&i.DeviceReportDeviceState,
+		&i.DeviceReportDeviceTimestamp,
+		&i.DeviceReportDeviceBatteryPercent,
+		&i.DeviceReportDeviceChargingState,
+		&i.DeviceReportIob,
+		&i.DeviceReportIobBasal,
+		&i.DeviceReportIobTreatment,
+		&i.DeviceReportCob,
+		&i.DeviceReportInsertionTime,
+		&i.DeviceReportPumpReservoir,
 		&i.ActivityID,
 		&i.ActivityName,
 		&i.ActivityType,
@@ -661,7 +557,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 
 const getEventGroupWithoutJoins = `-- name: GetEventGroupWithoutJoins :one
 
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?
 `
 
 type GetEventGroupWithoutJoinsParams struct {
@@ -683,10 +579,7 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 		&i.TempBasalID,
 		&i.TempTargetID,
 		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
+		&i.DeviceReportID,
 		&i.ActivityID,
 		&i.NoteID,
 		&i.RawJsonData,
@@ -704,7 +597,7 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 }
 
 const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :one
-DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type HardDeleteEventGroupParams struct {
@@ -723,10 +616,7 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 		&i.TempBasalID,
 		&i.TempTargetID,
 		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
+		&i.DeviceReportID,
 		&i.ActivityID,
 		&i.NoteID,
 		&i.RawJsonData,
@@ -744,7 +634,7 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 }
 
 const hardDeleteEventGroupsByType = `-- name: HardDeleteEventGroupsByType :many
-DELETE FROM event_groups WHERE group_type = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM event_groups WHERE group_type = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type HardDeleteEventGroupsByTypeParams struct {
@@ -769,10 +659,7 @@ func (q *Queries) HardDeleteEventGroupsByType(ctx context.Context, arg HardDelet
 			&i.TempBasalID,
 			&i.TempTargetID,
 			&i.ProfileSwitchID,
-			&i.DeviceStateID,
-			&i.LoopStateID,
-			&i.PumpStateID,
-			&i.CgmStateID,
+			&i.DeviceReportID,
 			&i.ActivityID,
 			&i.NoteID,
 			&i.RawJsonData,
@@ -803,7 +690,7 @@ const searchEventGroups = `-- name: SearchEventGroups :many
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_state_id, eg.loop_state_id, eg.pump_state_id, eg.cgm_state_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.device_report_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
 
     gr.id as glucose_reading_id,   
     gr.reading as glucose_reading,
@@ -840,33 +727,17 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_state_id,
-    ds.device_state as device_state_device_state,
-    ds.device_timestamp as device_state_device_timestamp,
-    ds.device_battery_percent as device_state_device_battery_percent,
-    ds.device_charging_state as device_state_device_charging_state,
-
-    ls.id as loop_state_id,
-    ls.loop_state as loop_state_loop_state,
-    ls.loop_timestamp as loop_state_loop_timestamp,
-    ls.iob as loop_state_iob,
-    ls.iob_basal as loop_state_iob_basal,
-    ls.iob_treatment as loop_state_iob_treatment,
-    ls.cob as loop_state_cob,
-
-
-    ps2.id as pump_state_id,
-    ps2.pump_state as pump_state_pump_state,
-    ps2.pump_timestamp as pump_state_pump_timestamp,
-    ps2.pump_insertion_time as pump_state_pump_insertion_time,
-    ps2.pump_reservoir as pump_state_pump_reservoir,
-    ps2.pump_battery_percent as pump_state_pump_battery_percent,
-    ps2.pump_charging_state as pump_state_pump_charging_state,
-
-    cs.id as cgm_state_id,
-    cs.cgm_state as cgm_state_cgm_state,
-    cs.cgm_timestamp as cgm_state_cgm_timestamp,
-    cs.cgm_insertion_time as cgm_state_cgm_insertion_time,
+    ds.id as device_report_id,
+    ds.state as device_report_device_state,
+    ds.timestamp as device_report_device_timestamp,
+    ds.battery_percent as device_report_device_battery_percent,
+    ds.charging_state as device_report_device_charging_state,
+    ds.iob as device_report_iob,
+    ds.iob_basal as device_report_iob_basal,
+    ds.iob_treatment as device_report_iob_treatment,
+    ds.cob as device_report_cob,
+    ds.insertion_time as device_report_insertion_time,
+    ds.pump_reservoir as device_report_pump_reservoir,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -887,10 +758,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_states ds ON eg.device_state_id = ds.id
-LEFT JOIN loop_states ls ON eg.loop_state_id = ls.id
-LEFT JOIN pump_states ps2 ON eg.pump_state_id = ps2.id
-LEFT JOIN cgm_states cs ON eg.cgm_state_id = cs.id
+LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 
@@ -1043,29 +911,17 @@ type SearchEventGroupsRow struct {
 	ProfileSwitchInsulinSensitivitiesJson *string
 	ProfileSwitchBasalRatesJson           *string
 	ProfileSwitchTargetsJson              *string
-	DeviceStateID                         *string
-	DeviceStateDeviceState                *string
-	DeviceStateDeviceTimestamp            *int64
-	DeviceStateDeviceBatteryPercent       *float64
-	DeviceStateDeviceChargingState        *string
-	LoopStateID                           *string
-	LoopStateLoopState                    *string
-	LoopStateLoopTimestamp                *int64
-	LoopStateIob                          *float64
-	LoopStateIobBasal                     *float64
-	LoopStateIobTreatment                 *float64
-	LoopStateCob                          *float64
-	PumpStateID                           *string
-	PumpStatePumpState                    *string
-	PumpStatePumpTimestamp                *int64
-	PumpStatePumpInsertionTime            *int64
-	PumpStatePumpReservoir                *float64
-	PumpStatePumpBatteryPercent           *float64
-	PumpStatePumpChargingState            *string
-	CgmStateID                            *string
-	CgmStateCgmState                      *string
-	CgmStateCgmTimestamp                  *int64
-	CgmStateCgmInsertionTime              *int64
+	DeviceReportID                        *string
+	DeviceReportDeviceState               *string
+	DeviceReportDeviceTimestamp           *int64
+	DeviceReportDeviceBatteryPercent      *float64
+	DeviceReportDeviceChargingState       *string
+	DeviceReportIob                       *float64
+	DeviceReportIobBasal                  *float64
+	DeviceReportIobTreatment              *float64
+	DeviceReportCob                       *float64
+	DeviceReportInsertionTime             *int64
+	DeviceReportPumpReservoir             *float64
 	ActivityID                            *string
 	ActivityName                          *string
 	ActivityType                          *string
@@ -1141,10 +997,7 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.EventGroup.TempBasalID,
 			&i.EventGroup.TempTargetID,
 			&i.EventGroup.ProfileSwitchID,
-			&i.EventGroup.DeviceStateID,
-			&i.EventGroup.LoopStateID,
-			&i.EventGroup.PumpStateID,
-			&i.EventGroup.CgmStateID,
+			&i.EventGroup.DeviceReportID,
 			&i.EventGroup.ActivityID,
 			&i.EventGroup.NoteID,
 			&i.EventGroup.RawJsonData,
@@ -1186,29 +1039,17 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.ProfileSwitchInsulinSensitivitiesJson,
 			&i.ProfileSwitchBasalRatesJson,
 			&i.ProfileSwitchTargetsJson,
-			&i.DeviceStateID,
-			&i.DeviceStateDeviceState,
-			&i.DeviceStateDeviceTimestamp,
-			&i.DeviceStateDeviceBatteryPercent,
-			&i.DeviceStateDeviceChargingState,
-			&i.LoopStateID,
-			&i.LoopStateLoopState,
-			&i.LoopStateLoopTimestamp,
-			&i.LoopStateIob,
-			&i.LoopStateIobBasal,
-			&i.LoopStateIobTreatment,
-			&i.LoopStateCob,
-			&i.PumpStateID,
-			&i.PumpStatePumpState,
-			&i.PumpStatePumpTimestamp,
-			&i.PumpStatePumpInsertionTime,
-			&i.PumpStatePumpReservoir,
-			&i.PumpStatePumpBatteryPercent,
-			&i.PumpStatePumpChargingState,
-			&i.CgmStateID,
-			&i.CgmStateCgmState,
-			&i.CgmStateCgmTimestamp,
-			&i.CgmStateCgmInsertionTime,
+			&i.DeviceReportID,
+			&i.DeviceReportDeviceState,
+			&i.DeviceReportDeviceTimestamp,
+			&i.DeviceReportDeviceBatteryPercent,
+			&i.DeviceReportDeviceChargingState,
+			&i.DeviceReportIob,
+			&i.DeviceReportIobBasal,
+			&i.DeviceReportIobTreatment,
+			&i.DeviceReportCob,
+			&i.DeviceReportInsertionTime,
+			&i.DeviceReportPumpReservoir,
 			&i.ActivityID,
 			&i.ActivityName,
 			&i.ActivityType,
@@ -1239,7 +1080,7 @@ UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?1
 WHERE id = ?2 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteEventGroupParams struct {
@@ -1262,10 +1103,7 @@ func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventG
 		&i.TempBasalID,
 		&i.TempTargetID,
 		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
+		&i.DeviceReportID,
 		&i.ActivityID,
 		&i.NoteID,
 		&i.RawJsonData,
@@ -1287,7 +1125,7 @@ UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE group_type = ? AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteEventGroupsByTypeParams struct {
@@ -1313,10 +1151,7 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 			&i.TempBasalID,
 			&i.TempTargetID,
 			&i.ProfileSwitchID,
-			&i.DeviceStateID,
-			&i.LoopStateID,
-			&i.PumpStateID,
-			&i.CgmStateID,
+			&i.DeviceReportID,
 			&i.ActivityID,
 			&i.NoteID,
 			&i.RawJsonData,
@@ -1351,7 +1186,7 @@ UPDATE event_groups SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?3
 WHERE id = ?4 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_state_id, loop_state_id, pump_state_id, cgm_state_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, device_report_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateEventGroupParams struct {
@@ -1381,10 +1216,7 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		&i.TempBasalID,
 		&i.TempTargetID,
 		&i.ProfileSwitchID,
-		&i.DeviceStateID,
-		&i.LoopStateID,
-		&i.PumpStateID,
-		&i.CgmStateID,
+		&i.DeviceReportID,
 		&i.ActivityID,
 		&i.NoteID,
 		&i.RawJsonData,
