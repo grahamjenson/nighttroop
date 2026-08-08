@@ -6,6 +6,7 @@
     1. Separate Device and Identity and App OR Join Them
     1. Check Sync Creds before save/enable
 
+
 1. Carer & AAPS minimal compatability 
     1. Nightscout API Treatments
     1. Nightscout API Entries
@@ -22,6 +23,8 @@
 1. Deploy to a fly.io dev/staging environment
 1. Connect actual data and do some fun perf testing
 1. Optional error reporting with sentry (if a given key is present)
+1. Deleting an identity should soft deletee but hard remove passwords (names should be unique per user)
+1. Identity IDs mean nothing in user database
 1. check that users dont get error responses traces!
 
 1. Site UI
