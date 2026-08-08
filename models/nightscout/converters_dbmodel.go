@@ -44,6 +44,20 @@ type DBModelConverter interface {
 	DBModelToEntry(source *site.GlucoseReading) Entry
 
 	///////
+	// DEVICE REPORT TO DEVICE STATUS
+	///////
+
+	// goverter:ignore Uploader Loop Pump OpenAPS MergedLoopStatus
+	// goverter:map CreatedByIdentityName Subject
+	// goverter:map CreatedByAppName App
+	// goverter:map CreatedByDeviceName Device
+	// goverter:map ID Identifier
+	// goverter:map OccurredAt Date
+	// goverter:map DeviceBatteryPercent UploaderBattery
+	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus
+
+	///////
 	// FOOD TO FOOD PRESET
 	///////
 
@@ -92,7 +106,7 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.ID Identifier
 	// goverter:map EventGroup.OccurredAt Date
 	//
-	// goverter:ignore PreBolus SplitNow SplitExt Profile Units
+	// goverter:ignore PreBolus SplitNow SplitExt Profile Units PumpType
 	// goverter:map EventGroup.GroupType EventType
 	//
 	// goverter:map GlucoseReading.Reading Glucose
@@ -126,22 +140,6 @@ type DBModelConverter interface {
 	// goverter:map Note.Content Notes
 	// goverter:map Note.Reason Reason
 	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
-
-	////////////////////////////////////////
-	// DEVICE STATUS TO CREATE/UPDATE
-	////////////////////////////////////////
-
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map EventGroup.UtcOffsetMinutes UtcOffsetMinutes
-	// goverter:map EventGroup.RawJsonData RawJsonData
-	// goverter:map EventGroup.CreatedByIdentityName Subject
-	// goverter:map EventGroup.CreatedByAppName App
-	// goverter:map EventGroup.CreatedByDeviceName Device
-	// goverter:map EventGroup.ID Identifier
-	// goverter:map EventGroup.OccurredAt Date
-	//
-	// goverter:ignore Uploader Loop OpenAPS Pump UploaderBattery MergedLoopStatus
-	DBModelToDeviceStatus(source *site.EventGroupsBundle) DeviceStatus
 }
 
 // //

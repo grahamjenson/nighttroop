@@ -27,6 +27,13 @@ type ToSearchParams interface {
 	GlucoseSearch(source Query) site.SearchGlucoseReadingsParams
 
 	//////
+	// DEVICE REPORTS
+	//////
+
+	DeviceReportAll(source Query) site.AllDeviceReportsParams
+	DeviceReportSearch(source Query) site.SearchDeviceReportsParams
+
+	//////
 	// FoodIntake
 	//////
 

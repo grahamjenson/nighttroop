@@ -8,6 +8,90 @@ import (
 	nightscout "nighttroop.t1d.nz/models/nightscout"
 )
 
+func DeviceReportAll(source Query) site.AllDeviceReportsParams {
+	var siteAllDeviceReportsParams site.AllDeviceReportsParams
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteAllDeviceReportsParams.IncludeDeleted = &xbool
+	}
+	siteAllDeviceReportsParams.Skip = source.Skip
+	siteAllDeviceReportsParams.Limit = source.Limit
+	return siteAllDeviceReportsParams
+}
+func DeviceReportSearch(source Query) site.SearchDeviceReportsParams {
+	var siteSearchDeviceReportsParams site.SearchDeviceReportsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		siteSearchDeviceReportsParams.DateGTE = &xint64
+	}
+	if source.DateLTE != nil {
+		xint642 := *source.DateLTE
+		siteSearchDeviceReportsParams.DateLTE = &xint642
+	}
+	if source.DateGT != nil {
+		xint643 := *source.DateGT
+		siteSearchDeviceReportsParams.DateGT = &xint643
+	}
+	if source.DateLT != nil {
+		xint644 := *source.DateLT
+		siteSearchDeviceReportsParams.DateLT = &xint644
+	}
+	if source.CreatedAtGTE != nil {
+		xint645 := *source.CreatedAtGTE
+		siteSearchDeviceReportsParams.CreatedAtGTE = &xint645
+	}
+	if source.CreatedAtLTE != nil {
+		xint646 := *source.CreatedAtLTE
+		siteSearchDeviceReportsParams.CreatedAtLTE = &xint646
+	}
+	if source.CreatedAtGT != nil {
+		xint647 := *source.CreatedAtGT
+		siteSearchDeviceReportsParams.CreatedAtGT = &xint647
+	}
+	if source.CreatedAtLT != nil {
+		xint648 := *source.CreatedAtLT
+		siteSearchDeviceReportsParams.CreatedAtLT = &xint648
+	}
+	if source.UpdatedGTE != nil {
+		xint649 := *source.UpdatedGTE
+		siteSearchDeviceReportsParams.UpdatedGTE = &xint649
+	}
+	if source.UpdatedLTE != nil {
+		xint6410 := *source.UpdatedLTE
+		siteSearchDeviceReportsParams.UpdatedLTE = &xint6410
+	}
+	if source.UpdatedGT != nil {
+		xint6411 := *source.UpdatedGT
+		siteSearchDeviceReportsParams.UpdatedGT = &xint6411
+	}
+	if source.UpdatedLT != nil {
+		xint6412 := *source.UpdatedLT
+		siteSearchDeviceReportsParams.UpdatedLT = &xint6412
+	}
+	if source.IDEq != nil {
+		xstring := *source.IDEq
+		siteSearchDeviceReportsParams.IDEq = &xstring
+	}
+	if source.IDIn != nil {
+		xstring2 := *source.IDIn
+		siteSearchDeviceReportsParams.IDIn = &xstring2
+	}
+	if source.DeviceEq != nil {
+		xstring3 := *source.DeviceEq
+		siteSearchDeviceReportsParams.DeviceEq = &xstring3
+	}
+	if source.AppEq != nil {
+		xstring4 := *source.AppEq
+		siteSearchDeviceReportsParams.AppEq = &xstring4
+	}
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteSearchDeviceReportsParams.IncludeDeleted = &xbool
+	}
+	siteSearchDeviceReportsParams.Skip = source.Skip
+	siteSearchDeviceReportsParams.Limit = source.Limit
+	return siteSearchDeviceReportsParams
+}
 func EventGroupAll(source Query) site.AllEventGroupsParams {
 	var siteAllEventGroupsParams site.AllEventGroupsParams
 	if source.IncludeDeleted != nil {

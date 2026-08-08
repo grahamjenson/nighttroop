@@ -23,46 +23,40 @@ func NewEntriesCollection() EntriesCollection {
 	}
 }
 
+// ///
+// FUNCTIONS USED BY META COLLECTIONS
+// ///
+
+func (c EntriesCollection) Name() string {
+	return "entries"
+}
+
+func (c EntriesCollection) Convert(dr *site.GlucoseReading) nsutils.Record {
+	return c.converter(dr)
+}
+
+func (c EntriesCollection) CreateDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext) (*site.GlucoseReading, error) {
+	return siteContext.SiteDB.Queries.CreateGlucoseReading(ctx, nightscout.EntryToCreate(nsModel, cc))
+}
+
+func (c EntriesCollection) UpdateSBFunc(siteContext *httputils.SiteContext, ctx context.Context, updateParams site.UpdateGlucoseReadingParams, nsModel nightscout.Entry, uc nightscout.UpdateContext) (*site.GlucoseReading, error) {
+	return siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
+}
+
+func (c EntriesCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (*site.GlucoseReading, error) {
+	return siteContext.SiteDB.Queries.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
+}
+
+/////
+// END OF FUNCTIONS USED BY META COLLECTIONS
+/////
+
 func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	entryModel := &nightscout.Entry{}
-	err := utils.FromMap(data, entryModel)
-
-	if err != nil {
-		slog.Error("failed to map data to entry model", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	createParams := nightscout.EntryToCreate(
-		*entryModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-
-	dbModel, err := siteContext.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
-	if err != nil {
-		slog.Error("failed to create glucose reading in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to create glucose reading in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-	return ptr(c.converter(dbModel)), nil
+	return MetaCreate(c, ctx, siteContext, data)
 }
 
 func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	glucoseReading, err := siteContext.SiteDB.Queries.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
-	if err == sql.ErrNoRows {
-		return nil, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("failed to get glucose reading by ID", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if glucoseReading == nil {
-		return nil, nsutils.ErrNotFound
-	}
-	record := c.converter(glucoseReading)
-	return &record, nil
+	return MetaGet(c, ctx, siteContext, identifier)
 }
 
 func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

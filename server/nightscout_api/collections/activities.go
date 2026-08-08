@@ -2,14 +2,11 @@ package collections
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -23,48 +20,40 @@ func NewActivityCollection() ActivityCollection {
 	}
 }
 
+// ///
+// FUNCTIONS USED BY META COLLECTIONS
+// ///
+
+func (c ActivityCollection) Name() string {
+	return "activity"
+}
+
+func (c ActivityCollection) Convert(dr *site.Activity) nsutils.Record {
+	return c.converter(dr)
+}
+
+func (c ActivityCollection) CreateDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.Activity, cc nightscout.CreateContext) (*site.Activity, error) {
+	return siteContext.SiteDB.Queries.CreateActivity(ctx, nightscout.ActivityToCreate(nsModel, cc))
+}
+
+func (c ActivityCollection) UpdateSBFunc(siteContext *httputils.SiteContext, ctx context.Context, updateParams site.UpdateActivityParams) (*site.Activity, error) {
+	return siteContext.SiteDB.Queries.UpdateActivity(ctx, updateParams)
+}
+
+func (c ActivityCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (*site.Activity, error) {
+	return siteContext.SiteDB.Queries.GetActivity(ctx, site.GetActivityParams{ID: identifier})
+}
+
+// ///
+// END OF FUNCTIONS USED BY META COLLECTIONS
+// ///
+
 func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	activityModel := &nightscout.Activity{}
-	err := utils.FromMap(data, activityModel)
-
-	if err != nil {
-		slog.Error("failed to map data to activity model", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	createParams := nightscout.ActivityToCreate(
-		*activityModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-
-	dbModel, err := siteContext.SiteDB.Queries.CreateActivity(ctx, createParams)
-	if err != nil {
-		slog.Error("failed to create activity in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to create activity in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-	return ptr(c.converter(dbModel)), nil
+	return MetaCreate(c, ctx, siteContext, data)
 }
 
 func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetActivity(ctx, site.GetActivityParams{
-		ID: identifier,
-	})
-	if err == sql.ErrNoRows {
-		return nil, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("failed to get activity", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		return nil, nsutils.ErrNotFound
-	}
-	record := c.converter(dbModel)
-	return &record, nil
+	return MetaGet(c, ctx, siteContext, identifier)
 }
 
 func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

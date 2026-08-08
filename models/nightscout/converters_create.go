@@ -91,7 +91,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID LoopStateID PumpStateID CgmStateID ActivityID NoteID
+	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NoteID
 	// goverter:map EventType GroupType
 	TreatmentToCreateEventGroup(source Treatment, ctx CreateContext) site.CreateEventGroupParams
 
@@ -222,7 +222,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore ComponentEvent DeviceTimestamp DeviceBatteryPercent DeviceChargingState
+	// goverter:ignore
 	TreatmentToCreateComponentEvent(source Treatment, ctx CreateContext) site.CreateComponentEventParams
 
 	// goverter:context ctx

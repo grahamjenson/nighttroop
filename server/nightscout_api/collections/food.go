@@ -2,14 +2,11 @@ package collections
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -23,48 +20,40 @@ func NewFoodCollection() FoodCollection {
 	}
 }
 
+// ///
+// FUNCTIONS USED BY META COLLECTIONS
+// ///
+
+func (c FoodCollection) Name() string {
+	return "food"
+}
+
+func (c FoodCollection) Convert(dr *site.FoodPreset) nsutils.Record {
+	return c.converter(dr)
+}
+
+func (c FoodCollection) CreateDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.Food, cc nightscout.CreateContext) (*site.FoodPreset, error) {
+	return siteContext.SiteDB.Queries.CreateFoodPreset(ctx, nightscout.FoodToCreate(nsModel, cc))
+}
+
+func (c FoodCollection) UpdateSBFunc(siteContext *httputils.SiteContext, ctx context.Context, updateParams site.UpdateFoodPresetParams) (*site.FoodPreset, error) {
+	return siteContext.SiteDB.Queries.UpdateFoodPreset(ctx, updateParams)
+}
+
+func (c FoodCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (*site.FoodPreset, error) {
+	return siteContext.SiteDB.Queries.GetFoodPreset(ctx, site.GetFoodPresetParams{ID: identifier})
+}
+
+// ///
+// END OF FUNCTIONS USED BY META COLLECTIONS
+// ///
+
 func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	foodModel := &nightscout.Food{}
-	err := utils.FromMap(data, foodModel)
-
-	if err != nil {
-		slog.Error("failed to map data to food model", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	createParams := nightscout.FoodToCreate(
-		*foodModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-
-	dbModel, err := siteContext.SiteDB.Queries.CreateFoodPreset(ctx, createParams)
-	if err != nil {
-		slog.Error("failed to create food in database", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to create food in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-	return ptr(c.converter(dbModel)), nil
+	return MetaCreate(c, ctx, siteContext, data)
 }
 
 func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.GetFoodPreset(ctx, site.GetFoodPresetParams{
-		ID: identifier,
-	})
-	if err == sql.ErrNoRows {
-		return nil, nsutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("failed to get food", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		return nil, nsutils.ErrNotFound
-	}
-	record := c.converter(dbModel)
-	return &record, nil
+	return MetaGet(c, ctx, siteContext, identifier)
 }
 
 func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

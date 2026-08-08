@@ -61,30 +61,34 @@ func DBModelToActivity(source *site.Activity) Activity {
 	}
 	return nightscoutActivity
 }
-func DBModelToDeviceStatus(source *site.EventGroupsBundle) DeviceStatus {
+func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
 	if source != nil {
-		pNightscoutIdentifierString := IdentifierString((*source).EventGroup.ID)
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
 		nightscoutDeviceStatus.Identifier = &pNightscoutIdentifierString
-		if (*source).EventGroup.CreatedByDeviceName != nil {
-			nightscoutShortString := ShortString(*(*source).EventGroup.CreatedByDeviceName)
+		if (*source).CreatedByDeviceName != nil {
+			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
 			nightscoutDeviceStatus.Device = &nightscoutShortString
 		}
+		if (*source).DeviceBatteryPercent != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).DeviceBatteryPercent)
+			nightscoutDeviceStatus.UploaderBattery = &nightscoutFlexibleFloat64
+		}
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
-		if (*source).EventGroup.CreatedByAppName != nil {
-			nightscoutShortString2 := ShortString(*(*source).EventGroup.CreatedByAppName)
+		if (*source).CreatedByAppName != nil {
+			nightscoutShortString2 := ShortString(*(*source).CreatedByAppName)
 			nightscoutDeviceStatus.App = &nightscoutShortString2
 		}
-		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByIdentityName)
+		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
 		nightscoutDeviceStatus.Subject = &pNightscoutShortString
-		pNightscoutDateInt := DateInt((*source).EventGroup.OccurredAt)
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
 		nightscoutDeviceStatus.Date = &pNightscoutDateInt
-		if (*source).EventGroup.UtcOffsetMinutes != nil {
-			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
 		}
-		if (*source).EventGroup.RawJsonData != nil {
-			nightscoutDeviceStatus.RawJsonData = *(*source).EventGroup.RawJsonData
+		if (*source).RawJsonData != nil {
+			nightscoutDeviceStatus.RawJsonData = *(*source).RawJsonData
 		}
 	}
 	return nightscoutDeviceStatus

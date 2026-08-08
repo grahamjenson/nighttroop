@@ -80,4 +80,5 @@ var (
 	ErrCannotChangeReadingType = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change reading type"}
 	ErrCannotChangeApp         = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change app"}
 	ErrCannotChangeEventType   = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change event_type"}
+	ErrCannotChangeDevice      = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change device name"}
 )

@@ -197,7 +197,7 @@ type UpdateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
-	// goverter:ignore ComponentEvent DeviceTimestamp DeviceBatteryPercent DeviceChargingState
+	// goverter:ignore
 	TreatmentToUpdateComponentEvent(source Treatment, ctx UpdateContext) site.UpdateComponentEventParams
 
 	// goverter:context ctx

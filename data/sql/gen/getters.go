@@ -53,6 +53,52 @@ var TypeLookupMap = map[string]map[string]string{
 	"SyncSourceReport": {
 		"PreviousSyncErrors": "errors.ErrorList",
 	},
+	"FailJobParams": {
+		"Errors": "errors.ErrorList",
+	},
+	"CreateIdentityParams": {
+		"Role": "consts.IdentityRole",
+	},
+	"CreateIfNotExistsIdentityParams": {
+		"Role": "consts.IdentityRole",
+	},
+	"CreateNightscoutSyncSourceParams": {
+		"Type":         "consts.SyncSourceType",
+		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
+	},
+	"UpdateNightscoutSyncSourceParams": {
+		"Type":         "consts.SyncSourceType",
+		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
+	},
+	"UpdateDexcomSyncSourceParams": {
+		"Type":         "consts.SyncSourceType",
+		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
+	},
+	"UpdateDexcomSyncSourceWithoutPasswordParams": {
+		"Type":         "consts.SyncSourceType",
+		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
+	},
+	"CreateDexcomSyncSourceParams": {
+		"Type":         "consts.SyncSourceType",
+		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
+	},
+	"DeleteJobsByIdsParams": {
+		"Ids": "[]int64",
+	},
+	"UpdateNightscoutSyncSourceWithoutPasswordParams": {
+		"Enabled": "bool",
+	},
+	"DeleteSyncSourceParams": {
+		"Type": "consts.SyncSourceType",
+	},
+	"UpdateSyncSourceReportsFailureParams": {
+		"ErrorMessages": "errors.ErrorList",
+	},
 }
 
 func run() error {
@@ -103,6 +149,25 @@ package %s
 		}
 	}
 
+	for _, query := range req.Queries {
+		if query == nil {
+			continue
+		}
+		queryName := query.Name
+		cols := []*plugin.Column{}
+		for _, param := range query.Params {
+			if param != nil && param.Column != nil {
+				// This will print out the stuff
+				// jjj, _ := json.Marshal(param)
+				// totalContent += "// " + string(jjj) + "\n"
+
+				cols = append(cols, param.Column)
+			}
+		}
+		content := generateParamGetters(queryName+"Params", cols)
+		totalContent += content
+
+	}
 	resp.Files = append(resp.Files, &plugin.File{
 		Name:     "z_getters.go",
 		Contents: []byte(totalContent),
@@ -202,6 +267,37 @@ func generateGetters(modelName string, columns []*plugin.Column) string {
 		sb.WriteString(fmt.Sprintf("func (m %s) Get%s() %s {\n", modelName, fieldName, fieldType))
 		sb.WriteString(fmt.Sprintf("	return m.%s\n", fieldName))
 		sb.WriteString("}\n\n")
+	}
+
+	return sb.String()
+}
+
+func generateParamGetters(paramName string, columns []*plugin.Column) string {
+	var sb strings.Builder
+
+	for _, col := range columns {
+		if len(col.Name) == 0 {
+			continue
+		}
+		// If the first letter is lowercase use snakecase
+
+		fieldName := col.Name
+		if strings.ToLower(string(col.Name[0])) == string(col.Name[0]) {
+			fieldName = snakeToCamel(col.Name)
+		}
+		fieldType := getSQLiteGoType(col, paramName, fieldName)
+
+		sb.WriteString(fmt.Sprintf("// Get%s returns the %s value.\n", fieldName, fieldName))
+		sb.WriteString(fmt.Sprintf("func (m %s) Get%s() %s {\n", paramName, fieldName, fieldType))
+		sb.WriteString(fmt.Sprintf("	return m.%s\n", fieldName))
+		sb.WriteString("}\n\n")
+
+		sb.WriteString(fmt.Sprintf("// Set%s sets the %s value and returns the updated %s.\n", fieldName, fieldName, paramName))
+		sb.WriteString(fmt.Sprintf("func (m %s) Set%s(v %s) %s {\n", paramName, fieldName, fieldType, paramName))
+		sb.WriteString(fmt.Sprintf("	m.%s = v\n", fieldName))
+		sb.WriteString(fmt.Sprintf("	return m\n"))
+		sb.WriteString("}\n\n")
+
 	}
 
 	return sb.String()

@@ -46,69 +46,21 @@ func ActivityToUpdate(source Activity, context UpdateContext) site.UpdateActivit
 	}
 	return siteUpdateActivityParams
 }
-func DeviceStatusToUpdateDevice(source DeviceStatus, context UpdateContext) site.UpdateDeviceStateParams {
-	var siteUpdateDeviceStateParams site.UpdateDeviceStateParams
+func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context UpdateContext) site.UpdateDeviceReportParams {
+	var siteUpdateDeviceReportParams site.UpdateDeviceReportParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
-		siteUpdateDeviceStateParams.OccurredAt = &xint64
+		siteUpdateDeviceReportParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateDeviceStateParams.UtcOffsetMinutes = &xint642
+		siteUpdateDeviceReportParams.UtcOffsetMinutes = &xint642
 	}
-	siteUpdateDeviceStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
+	siteUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateDeviceStateParams.ID = string(*source.Identifier)
+		siteUpdateDeviceReportParams.ID = string(*source.Identifier)
 	}
-	return siteUpdateDeviceStateParams
-}
-func DeviceStatusToUpdateEventGroup(source DeviceStatus, context UpdateContext) site.UpdateEventGroupParams {
-	var siteUpdateEventGroupParams site.UpdateEventGroupParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateEventGroupParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateEventGroupParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateEventGroupParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateEventGroupParams
-}
-func DeviceStatusToUpdateLoop(source DeviceStatus, context UpdateContext) site.UpdateLoopStateParams {
-	var siteUpdateLoopStateParams site.UpdateLoopStateParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateLoopStateParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateLoopStateParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateLoopStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateLoopStateParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateLoopStateParams
-}
-func DeviceStatusToUpdatePump(source DeviceStatus, context UpdateContext) site.UpdatePumpStateParams {
-	var siteUpdatePumpStateParams site.UpdatePumpStateParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdatePumpStateParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdatePumpStateParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdatePumpStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdatePumpStateParams.ID = string(*source.Identifier)
-	}
-	return siteUpdatePumpStateParams
+	return siteUpdateDeviceReportParams
 }
 func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
@@ -211,37 +163,21 @@ func TreatmentToUpdateActivity(source Treatment, context UpdateContext) site.Upd
 	}
 	return siteUpdateActivityParams
 }
-func TreatmentToUpdateCgmState(source Treatment, context UpdateContext) site.UpdateCGMStateParams {
-	var siteUpdateCGMStateParams site.UpdateCGMStateParams
+func TreatmentToUpdateComponentEvent(source Treatment, context UpdateContext) site.UpdateComponentEventParams {
+	var siteUpdateComponentEventParams site.UpdateComponentEventParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
-		siteUpdateCGMStateParams.OccurredAt = &xint64
+		siteUpdateComponentEventParams.OccurredAt = &xint64
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateCGMStateParams.UtcOffsetMinutes = &xint642
+		siteUpdateComponentEventParams.UtcOffsetMinutes = &xint642
 	}
-	siteUpdateCGMStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
+	siteUpdateComponentEventParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateCGMStateParams.ID = string(*source.Identifier)
+		siteUpdateComponentEventParams.ID = string(*source.Identifier)
 	}
-	return siteUpdateCGMStateParams
-}
-func TreatmentToUpdateDeviceState(source Treatment, context UpdateContext) site.UpdateDeviceStateParams {
-	var siteUpdateDeviceStateParams site.UpdateDeviceStateParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateDeviceStateParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateDeviceStateParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateDeviceStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateDeviceStateParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateDeviceStateParams
+	return siteUpdateComponentEventParams
 }
 func TreatmentToUpdateEventGroup(source Treatment, context UpdateContext) site.UpdateEventGroupParams {
 	var siteUpdateEventGroupParams site.UpdateEventGroupParams
@@ -339,22 +275,6 @@ func TreatmentToUpdateInsulinDose(source Treatment, context UpdateContext) site.
 	}
 	return siteUpdateInsulinDoseParams
 }
-func TreatmentToUpdateLoopState(source Treatment, context UpdateContext) site.UpdateLoopStateParams {
-	var siteUpdateLoopStateParams site.UpdateLoopStateParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateLoopStateParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateLoopStateParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateLoopStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateLoopStateParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateLoopStateParams
-}
 func TreatmentToUpdateNote(source Treatment, context UpdateContext) site.UpdateNoteParams {
 	var siteUpdateNoteParams site.UpdateNoteParams
 	if source.Notes != nil {
@@ -418,22 +338,6 @@ func TreatmentToUpdateProfileSwitch(source Treatment, context UpdateContext) sit
 		siteUpdateProfileSwitchParams.ID = string(*source.Identifier)
 	}
 	return siteUpdateProfileSwitchParams
-}
-func TreatmentToUpdatePumpState(source Treatment, context UpdateContext) site.UpdatePumpStateParams {
-	var siteUpdatePumpStateParams site.UpdatePumpStateParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdatePumpStateParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdatePumpStateParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdatePumpStateParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdatePumpStateParams.ID = string(*source.Identifier)
-	}
-	return siteUpdatePumpStateParams
 }
 func TreatmentToUpdateTempBasal(source Treatment, context UpdateContext) site.UpdateTempBasalParams {
 	var siteUpdateTempBasalParams site.UpdateTempBasalParams
