@@ -9,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -34,32 +33,44 @@ func (c DeviceStatusCollection) Convert(dr *site.DeviceReport) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c DeviceStatusCollection) CreateDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.CreateContext) (*site.DeviceReport, error) {
-	return siteContext.SiteDB.Queries.CreateDeviceReport(ctx, nightscout.DeviceStatusToCreateDeviceReport(nsModel, cc))
+func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.CreateContext, replacing *site.DeviceReport, overrideIdentifier *string) (*site.DeviceReport, error) {
+	createParams := nightscout.DeviceStatusToCreateDeviceReport(nsModel, cc)
+	// Validate change if replacing a model
+	if replacing != nil {
+		if replacing.CreatedByDeviceName != nil && createParams.CreatedByDeviceName != nil && *replacing.CreatedByDeviceName != *createParams.CreatedByDeviceName {
+			slog.Error("cannot change created_by_device_name attribute on device status", "existingCreatedByDeviceName", replacing.CreatedByDeviceName, "newCreatedByDeviceName", createParams.CreatedByDeviceName)
+			return nil, nsutils.ErrCannotChangeDevice
+		}
+
+	}
+
+	if overrideIdentifier != nil {
+		createParams.ID = *overrideIdentifier
+	}
+
+	return q.CreateDeviceReport(ctx, createParams)
 }
 
-func (c DeviceStatusCollection) UpdateSBFunc(siteContext *httputils.SiteContext, ctx context.Context, updateParams site.UpdateDeviceReportParams) (*site.DeviceReport, error) {
-	return siteContext.SiteDB.Queries.UpdateDeviceReport(ctx, updateParams)
+func (c DeviceStatusCollection) UpdateSBFunc(q *site.Queries, ctx context.Context, updateParams site.UpdateDeviceReportParams) (*site.DeviceReport, error) {
+	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
-func (c DeviceStatusCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (*site.DeviceReport, error) {
-	return siteContext.SiteDB.Queries.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier})
+func (c DeviceStatusCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.DeviceReport, error) {
+	return q.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) HardDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
-	return siteContext.SiteDB.Queries.HardDeleteDeviceReport(ctx, site.HardDeleteDeviceReportParams{ID: identifier})
+func (c DeviceStatusCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteDeviceReport(ctx, site.HardDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) SoftDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
-	return siteContext.SiteDB.Queries.SoftDeleteDeviceReport(ctx, site.SoftDeleteDeviceReportParams{ID: identifier})
+func (c DeviceStatusCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.SoftDeleteDeviceReport(ctx, site.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) PatchDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.DeviceStatus, identifier string, uc nightscout.UpdateContext) (*site.DeviceReport, error) {
+func (c DeviceStatusCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, identifier string, uc nightscout.UpdateContext) (*site.DeviceReport, error) {
 	updateParams := nightscout.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
-
-	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateDeviceReport(ctx, updateParams)
-	return dbUpdateModel, err
+	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
 /////
@@ -107,76 +118,5 @@ func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputil
 
 // Replace will delete then create the record again, BUT it will not
 func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	entryModel := &nightscout.DeviceStatus{}
-	err := utils.FromMap(patch, entryModel)
-	if err != nil {
-		slog.Error("failed to map data to entry model", "error", err)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	getParams := site.GetDeviceReportParams{ID: identifier}
-	deleteParams := site.HardDeleteDeviceReportParams{ID: identifier}
-	createParams := nightscout.DeviceStatusToCreateDeviceReport(
-		*entryModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-	creatingNewRecord := false
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, false, nsutils.ErrInternal
-	}
-	defer tx.Rollback()
-
-	// GET
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-	dbModel, err := q.GetDeviceReport(ctx, getParams)
-	if err == sql.ErrNoRows {
-		// Check no Record exists
-		if !canCreate {
-			return nil, false, nsutils.ErrNotFound
-		}
-		creatingNewRecord = true
-	} else if err != nil {
-		slog.Error("failed to get device status by ID", "error", err)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	// VALIDATE ATTRIBUTES
-	if !creatingNewRecord && dbModel != nil {
-		if dbModel.CreatedByDeviceName != createParams.CreatedByDeviceName {
-			slog.Error("cannot change created_by_device_name attribute on device status", "existingCreatedByDeviceName", dbModel.CreatedByDeviceName, "newCreatedByDeviceName", createParams.CreatedByDeviceName)
-			return nil, false, nsutils.ErrCannotChangeDevice
-		}
-	}
-
-	createParams.ID = identifier
-
-	// DELETE record if we are not creating a new record
-	if !creatingNewRecord {
-		_, err = q.HardDeleteDeviceReport(ctx, deleteParams)
-		if err != nil {
-			slog.Error("failed to hard delete device status in database", "error", err)
-			return nil, false, nsutils.ErrInternal
-		}
-	}
-
-	// CREATE
-	dbCreateModel, err := q.CreateDeviceReport(ctx, createParams)
-	if err != nil {
-		slog.Error("failed to create device status in database", "error", err)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if dbCreateModel == nil {
-		slog.Error("failed to create device status in database, dbCreateModel is nil")
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit create device status in database", "error", err, "entryModel", entryModel)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbCreateModel)), creatingNewRecord, nil
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
 }

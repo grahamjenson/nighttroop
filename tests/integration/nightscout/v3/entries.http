@@ -95,9 +95,10 @@ ASSERT {{ assertEquals "sgv" "@result.type" }}
 NAME update_entries_force_create_v3
 PUT http://{{ .site }}.ns.localhost/api/v3/entries/AnotherFunID
 H Authorization: Bearer {{ jwt }}
-B { "sgv": 103, "type": "sgv" }
+B { "sgv": 104, "type": "sgv" }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 103 "@result.sgv" }}
+ASSERT {{ assertEquals 104 "@result.sgv" }}
+ASSERT {{ assertEquals "AnotherFunID" "@result.identifier" }}
 
 //////
 // DELETE

@@ -86,8 +86,7 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 		xstring3 := *source.UpdatedByIdentityName
 		siteUpdateActivityParams.UpdatedByIdentityName = &xstring3
 	}
-	pString := source.ID
-	siteUpdateActivityParams.ID = &pString
+	siteUpdateActivityParams.ID = source.ID
 	return siteUpdateActivityParams
 }
 func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {

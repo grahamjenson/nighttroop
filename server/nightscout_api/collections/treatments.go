@@ -37,24 +37,39 @@ func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle) nsutils.Record 
 	return c.converter(dr)
 }
 
-func (c TreatmentCollection) CreateDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.CreateContext) (*site.EventGroupsBundle, error) {
+func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.CreateContext, replacing *site.EventGroupsBundle, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
 	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
 		slog.Error("treatment event type is nil")
 		return nil, nsutils.BadDataBodyError
 	}
 
-	dbModel, rerr := EventGroupCreate(ctx, siteContext, TreatmentEventGroupCreate(ctx, cc, nsModel))
+	createParams := TreatmentEventGroupCreate(ctx, cc, nsModel)
+
+	if overrideIdentifier != nil {
+		createParams.EventGroup.ID = *overrideIdentifier
+	}
+
+	dbModel, rerr := EventGroupCreate(ctx, q, createParams)
 
 	return dbModel, rerr
 }
 
-func (c TreatmentCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (*site.EventGroupsBundle, error) {
-	dbModel, err := siteContext.SiteDB.Queries.GetEventGroup(ctx, site.GetEventGroupParams{ID: identifier})
+func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.EventGroupsBundle, error) {
+	dbModel, err := q.GetEventGroup(ctx, site.GetEventGroupParams{ID: identifier})
 	if err != nil {
 		return nil, err
 	}
 	egb := site.GetEventGroupToEventGroupsBundle(*dbModel)
 	return &egb, nil
+}
+
+func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, uc nightscout.UpdateContext) (*site.EventGroupsBundle, error) {
+	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
+		slog.Error("treatment event type is nil")
+		return nil, nsutils.BadDataBodyError
+	}
+
+	return EventGroupUpdate(ctx, q, TreatmentEventGroupUpdate(ctx, uc, nsModel))
 }
 
 // ///
@@ -65,12 +80,12 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	return MetaCreate(c, ctx, siteContext, data)
 }
 
-// ///////
-// Default EventGroup stuff
-// ///////
-
 func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaGet(c, ctx, siteContext, identifier)
+}
+
+func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaPatch(c, ctx, siteContext, identifier, patch)
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -128,38 +143,6 @@ func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils
 	}
 
 	return ptr(c.converter(dbModel)), created, nil
-}
-
-// Replace will replace (delete, then insert) if it exists, or create it if it doesnt
-func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	treatmentModel := nightscout.Treatment{}
-	err := utils.FromMap(patch, &treatmentModel)
-	if err != nil {
-		slog.Error("failed to map patch to treatment model", "error", err)
-		return nil, nsutils.BadDataBodyError
-	}
-
-	cc := nightscout.UpdateContext{
-		UpdatedByIdentityID:   siteContext.IdentityModel.ID,
-		UpdatedByIdentityName: siteContext.IdentityModel.Name,
-	}
-
-	if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
-		slog.Error("treatment event type is nil")
-		return nil, nsutils.BadDataBodyError
-	}
-
-	dbModel, rerr := EventGroupUpdate(ctx, siteContext, TreatmentEventGroupUpdate(ctx, cc, treatmentModel))
-	if rerr != nil {
-		slog.Error("failed to update treatment in database", "error", rerr)
-		return nil, rerr
-	}
-	if dbModel == nil {
-		slog.Error("failed to update treatment in database, dbModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbModel)), nil
 }
 
 func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext, treatment nightscout.Treatment) site.CreateEventGroupBundle {
@@ -483,15 +466,7 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 }
 
 // CREATE
-func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, bundle site.CreateEventGroupBundle) (*site.EventGroupsBundle, error) {
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, nsutils.ErrInternal
-	}
-	defer tx.Rollback()
-
-	q := siteContext.SiteDB.Queries.WithTx(tx)
+func EventGroupCreate(ctx context.Context, q *site.Queries, bundle site.CreateEventGroupBundle) (*site.EventGroupsBundle, error) {
 
 	ret, err := createEventGroup(ctx, q, bundle)
 	if err != nil {
@@ -503,25 +478,11 @@ func EventGroupCreate(ctx context.Context, siteContext *httputils.SiteContext, b
 		return nil, err
 	}
 
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit create event group in database", "error", err, "dbModel", ret)
-		return nil, err
-	}
-
 	return ret, nil
 }
 
 // UPDATE
-func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, bundle site.UpdateEventGroupBundle) (*site.EventGroupsBundle, *nsutils.HTTPError) {
-
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, nsutils.ErrInternal
-	}
-
-	defer tx.Rollback()
-	q := siteContext.SiteDB.Queries.WithTx(tx)
+func EventGroupUpdate(ctx context.Context, q *site.Queries, bundle site.UpdateEventGroupBundle) (*site.EventGroupsBundle, *nsutils.HTTPError) {
 
 	ret, err := updateEventGroup(ctx, q, bundle)
 	if err != nil {
@@ -531,11 +492,6 @@ func EventGroupUpdate(ctx context.Context, siteContext *httputils.SiteContext, b
 
 	if ret == nil || ret.EventGroup.ID == "" {
 		slog.Error("failed in EventGroupUpdate to update event group in database, EventGroup is nil", "bundle", bundle)
-		return nil, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed in EventGroupUpdate to commit update event group in database", "error", err, "dbModel", ret)
 		return nil, nsutils.ErrInternal
 	}
 

@@ -417,7 +417,7 @@ type UpdateActivityParams struct {
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
-	ID                    *string
+	ID                    string
 }
 
 // ------

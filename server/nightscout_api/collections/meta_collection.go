@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
@@ -14,38 +15,39 @@ import (
 type MetaCreateCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-	CreateDBFunc(*httputils.SiteContext, context.Context, NS, nightscout.CreateContext) (*DM, error)
+	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *DM, *string) (*DM, error)
 }
 
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-	PatchDBFunc(*httputils.SiteContext, context.Context, NS, string, nightscout.UpdateContext) (*DM, error)
+	PatchDBFunc(*site.Queries, context.Context, NS, string, nightscout.UpdateContext) (*DM, error)
 }
 
 type MetaGetCollection[DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-	GetDBFunc(*httputils.SiteContext, context.Context, string) (*DM, error)
+	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
 }
 
 type MetaDeleteCollection interface {
 	Name() string
-	HardDeleteDBFunc(*httputils.SiteContext, context.Context, string) (sql.Result, error)
-	SoftDeleteDBFunc(*httputils.SiteContext, context.Context, string) (sql.Result, error)
+	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
+	SoftDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
 }
 
 type MetaDeleteTypeCollection interface {
 	Name() string
-	HardDeleteTypeDBFunc(*httputils.SiteContext, context.Context, string) (sql.Result, error)
-	SoftDeleteTypeDBFunc(*httputils.SiteContext, context.Context, string) (sql.Result, error)
+	HardDeleteTypeDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
+	SoftDeleteTypeDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
 }
 
 type MetaReplaceCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-
-	ReplaceDBFunc(*httputils.SiteContext, context.Context, DM) (*DM, error)
+	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
+	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
+	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *DM, *string) (*DM, error)
 }
 
 // //
@@ -66,8 +68,23 @@ func MetaCreate[NS, DM any](
 		return nil, nsutils.BadDataBodyError
 	}
 
-	cc := nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name}
-	dbModel, err := m.CreateDBFunc(siteContext, ctx, nsModel, cc)
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nsutils.ErrInternal
+	}
+	defer tx.Rollback()
+
+	q := siteContext.SiteDB.Queries.WithTx(tx)
+
+	dbModel, err := m.CreateDBFunc(
+		q,
+		ctx,
+		nsModel,
+		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
+		nil,
+		nil,
+	)
+
 	if err != nil {
 		slog.Error("failed to create in database", "error", err, "collection", m.Name())
 		return nil, nsutils.ErrInternal
@@ -76,6 +93,12 @@ func MetaCreate[NS, DM any](
 		slog.Error("failed to create in database, dbModel is nil", "collection", m.Name())
 		return nil, nsutils.ErrInternal
 	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit create in database", "error", err, "dbModel", dbModel, "collection", m.Name())
+		return nil, nsutils.ErrInternal
+	}
+
 	return ptr(m.Convert(dbModel)), nil
 }
 
@@ -93,14 +116,33 @@ func MetaPatch[NS, DM any](
 		return nil, nsutils.BadDataBodyError
 	}
 
-	uc := nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name}
-	dbModel, err := m.PatchDBFunc(siteContext, ctx, nsModel, identifier, uc)
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nsutils.ErrInternal
+	}
+	defer tx.Rollback()
+
+	q := siteContext.SiteDB.Queries.WithTx(tx)
+
+	dbModel, err := m.PatchDBFunc(
+		q,
+		ctx,
+		nsModel,
+		identifier,
+		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
+	)
+
 	if err != nil {
 		slog.Error("failed to patch in database", "error", err, "collection", m.Name(), "identifier", identifier, "params", data)
 		return nil, nsutils.ErrInternal
 	}
 	if dbModel == nil {
 		slog.Error("failed to patch in database, dbModel is nil", "collection", m.Name(), "identifier", identifier, "params", data)
+		return nil, nsutils.ErrInternal
+	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit patch in database", "error", err, "dbModel", dbModel, "collection", m.Name())
 		return nil, nsutils.ErrInternal
 	}
 
@@ -113,7 +155,7 @@ func MetaGet[DM any](
 	siteContext *httputils.SiteContext,
 	identifier string,
 ) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := m.GetDBFunc(siteContext, ctx, identifier)
+	dbModel, err := m.GetDBFunc(siteContext.SiteDB.Queries, ctx, identifier)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -134,9 +176,15 @@ func MetaDelete(
 	identifier string,
 	permanent bool,
 ) *nsutils.HTTPError {
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nsutils.ErrInternal
+	}
+	defer tx.Rollback()
+	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	if permanent {
-		res, err := m.HardDeleteDBFunc(siteContext, ctx, identifier)
+		res, err := m.HardDeleteDBFunc(q, ctx, identifier)
 		if err != nil {
 			slog.Error("failed to permanently delete by ID", "error", err, "collection", m.Name())
 			return nsutils.ErrInternal
@@ -152,7 +200,7 @@ func MetaDelete(
 		slog.Info("Hard Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
 
 	} else {
-		res, err := m.SoftDeleteDBFunc(siteContext, ctx, identifier)
+		res, err := m.SoftDeleteDBFunc(q, ctx, identifier)
 		if err != nil {
 			slog.Error("failed to soft delete by ID", "error", err, "collection", m.Name())
 			return nsutils.ErrInternal
@@ -168,6 +216,11 @@ func MetaDelete(
 		slog.Info("Soft Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
 
 	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
+		return nsutils.ErrInternal
+	}
 	return nil
 }
 
@@ -178,30 +231,115 @@ func MetaDeleteType(
 	typeString string,
 	permanent bool,
 ) (int, *nsutils.HTTPError) {
+	rowsAffected := int64(0)
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, nsutils.ErrInternal
+	}
+	defer tx.Rollback()
+	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	if permanent {
-		res, err := m.HardDeleteTypeDBFunc(siteContext, ctx, typeString)
+		res, err := m.HardDeleteTypeDBFunc(q, ctx, typeString)
 		if err != nil {
 			slog.Error("failed to permanently delete  by type", "error", err, "collection", m.Name())
 			return 0, nsutils.ErrInternal
 		}
-		rowsAffected, err := res.RowsAffected()
+		rowsAffected, err = res.RowsAffected()
 		if err != nil {
 			slog.Error("failed to get rows affected for  delete", "error", err, "collection", m.Name())
 			return 0, nsutils.ErrInternal
 		}
-		return int(rowsAffected), nil
+
 	} else {
-		res, err := m.SoftDeleteTypeDBFunc(siteContext, ctx, typeString)
+		res, err := m.SoftDeleteTypeDBFunc(q, ctx, typeString)
 		if err != nil {
 			slog.Error("failed to soft delete  by IDs", "error", err, "collection", m.Name())
 			return 0, nsutils.ErrInternal
 		}
-		rowsAffected, err := res.RowsAffected()
+		rowsAffected, err = res.RowsAffected()
 		if err != nil {
 			slog.Error("failed to get rows affected for  delete", "error", err, "collection", m.Name())
 			return 0, nsutils.ErrInternal
 		}
-		return int(rowsAffected), nil
+
 	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
+		return 0, nsutils.ErrInternal
+	}
+
+	return int(rowsAffected), nil
+}
+
+func MetaReplace[NS, DM any](
+	m MetaReplaceCollection[NS, DM],
+	ctx context.Context,
+	siteContext *httputils.SiteContext,
+	identifier string,
+	data map[string]any,
+	canCreate bool,
+) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	var nsModel NS
+	err := utils.FromMap(data, &nsModel)
+	if err != nil {
+		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
+		return nil, false, nsutils.BadDataBodyError
+	}
+
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, false, nsutils.ErrInternal
+	}
+	defer tx.Rollback()
+	q := siteContext.SiteDB.Queries.WithTx(tx)
+
+	cc := nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name}
+
+	creatingNewRecord := false
+
+	// GET
+
+	replacingModel, err := m.GetDBFunc(q, ctx, identifier)
+	if err == sql.ErrNoRows {
+		// Check no Record exists
+		if !canCreate {
+			return nil, false, nsutils.ErrNotFound
+		}
+		creatingNewRecord = true
+		replacingModel = nil
+	} else if err != nil {
+		slog.Error("failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
+		return nil, false, nsutils.ErrInternal
+	}
+
+	// DELETE record if we are not creating a new record
+	if !creatingNewRecord {
+		_, err := m.HardDeleteDBFunc(q, ctx, identifier)
+		if err != nil {
+			slog.Error("failed to hard delete in database", "error", err, "collection", m.Name(), "identifier", identifier)
+			return nil, false, nsutils.ErrInternal
+		}
+	}
+
+	// CREATE
+	dbCreateModel, err := m.CreateDBFunc(q, ctx, nsModel, cc, replacingModel, &identifier)
+	if err != nil {
+		slog.Error("failed to create in database", "error", err, "collection", m.Name())
+		return nil, false, nsutils.ErrInternal
+	}
+
+	if dbCreateModel == nil {
+		slog.Error("failed to create in database, dbCreateModel is nil", "collection", m.Name())
+		return nil, false, nsutils.ErrInternal
+	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit create in database", "error", err, "collection", m.Name())
+		return nil, false, nsutils.ErrInternal
+	}
+
+	return ptr(m.Convert(dbCreateModel)), creatingNewRecord, nil
+
 }

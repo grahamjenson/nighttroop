@@ -2205,12 +2205,12 @@ func (m UpdateActivityParams) SetUpdatedByIdentityName(v *string) UpdateActivity
 }
 
 // GetID returns the ID value.
-func (m UpdateActivityParams) GetID() *string {
+func (m UpdateActivityParams) GetID() string {
 	return m.ID
 }
 
 // SetID sets the ID value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetID(v *string) UpdateActivityParams {
+func (m UpdateActivityParams) SetID(v string) UpdateActivityParams {
 	m.ID = v
 	return m
 }

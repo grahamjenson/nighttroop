@@ -9,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -35,32 +34,53 @@ func (c EntriesCollection) Convert(dr *site.GlucoseReading) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c EntriesCollection) CreateDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext) (*site.GlucoseReading, error) {
-	return siteContext.SiteDB.Queries.CreateGlucoseReading(ctx, nightscout.EntryToCreate(nsModel, cc))
+func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext, replacing *site.GlucoseReading, overrideIdentifier *string) (*site.GlucoseReading, error) {
+	createParams := nightscout.EntryToCreate(nsModel, cc)
+
+	// Validate if replacing a model
+	if replacing != nil {
+		if replacing.ReadingType != createParams.ReadingType {
+			slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", replacing.ReadingType, "newReadingType", createParams.ReadingType)
+			return nil, nsutils.ErrCannotChangeReadingType
+		}
+	}
+
+	if overrideIdentifier != nil {
+		createParams.ID = *overrideIdentifier
+	}
+
+	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) UpdateSBFunc(siteContext *httputils.SiteContext, ctx context.Context, updateParams site.UpdateGlucoseReadingParams, nsModel nightscout.Entry, uc nightscout.UpdateContext) (*site.GlucoseReading, error) {
-	return siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
+func (c EntriesCollection) UpdateSBFunc(q *site.Queries, ctx context.Context, updateParams site.UpdateGlucoseReadingParams, nsModel nightscout.Entry, uc nightscout.UpdateContext) (*site.GlucoseReading, error) {
+	return q.UpdateGlucoseReading(ctx, updateParams)
 }
 
-func (c EntriesCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (*site.GlucoseReading, error) {
-	return siteContext.SiteDB.Queries.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.GlucoseReading, error) {
+	return q.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) HardDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
-	return siteContext.SiteDB.Queries.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) SoftDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
-	return siteContext.SiteDB.Queries.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) HardDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
-	return siteContext.SiteDB.Queries.HardDeleteGlucoseReadingsByType(ctx, site.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+func (c EntriesCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	return q.HardDeleteGlucoseReadingsByType(ctx, site.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) SoftDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
-	return siteContext.SiteDB.Queries.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+func (c EntriesCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	return q.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+}
+
+func (c EntriesCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, identifier string, uc nightscout.UpdateContext) (*site.GlucoseReading, error) {
+	updateParams := nightscout.EntryToUpdate(nsModel, uc)
+	updateParams.ID = identifier
+
+	return q.UpdateGlucoseReading(ctx, updateParams)
 }
 
 /////
@@ -84,31 +104,7 @@ func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputil
 }
 
 func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	entryModel := &nightscout.Entry{}
-	err := utils.FromMap(patch, entryModel)
-	if err != nil {
-		slog.Error("failed to map data to entry model", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-
-	updateParams := nightscout.EntryToUpdate(
-		*entryModel,
-		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-	updateParams.ID = identifier
-
-	ssss, _ := utils.ToMap[site.UpdateGlucoseReadingParams](&updateParams)
-	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
-	if err != nil {
-		slog.Error("failed to update glucose reading in database", "error", err, "updateParams", ssss)
-		return nil, nsutils.ErrInternal
-	}
-	if dbUpdateModel == nil {
-		slog.Error("failed to update glucose reading in database, dbUpdateModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbUpdateModel)), nil
+	return MetaPatch(c, ctx, siteContext, identifier, patch)
 }
 
 func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -132,76 +128,5 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 
 // Replace will delete then create the record again, BUT it will not
 func (c EntriesCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	entryModel := &nightscout.Entry{}
-	err := utils.FromMap(patch, entryModel)
-	if err != nil {
-		slog.Error("failed to map data to entry model", "error", err)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	getParams := site.GetGlucoseReadingParams{ID: identifier}
-	deleteParams := site.HardDeleteGlucoseReadingParams{ID: identifier}
-	createParams := nightscout.EntryToCreate(
-		*entryModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-	creatingNewRecord := false
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, false, nsutils.ErrInternal
-	}
-	defer tx.Rollback()
-
-	// GET
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-	dbModel, err := q.GetGlucoseReading(ctx, getParams)
-	if err == sql.ErrNoRows {
-		// Check no Record exists
-		if !canCreate {
-			return nil, false, nsutils.ErrNotFound
-		}
-		creatingNewRecord = true
-	} else if err != nil {
-		slog.Error("failed to get glucose reading by ID", "error", err)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	// VALIDATE ATTRIBUTES
-	if !creatingNewRecord && dbModel != nil {
-		if dbModel.ReadingType != createParams.ReadingType {
-			slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", dbModel.ReadingType, "newReadingType", createParams.ReadingType)
-			return nil, false, nsutils.ErrCannotChangeReadingType
-		}
-	}
-
-	createParams.ID = identifier
-
-	// DELETE record if we are not creating a new record
-	if !creatingNewRecord {
-		_, err = q.HardDeleteGlucoseReading(ctx, deleteParams)
-		if err != nil {
-			slog.Error("failed to hard delete glucose reading in database", "error", err)
-			return nil, false, nsutils.ErrInternal
-		}
-	}
-
-	// CREATE
-	dbCreateModel, err := q.CreateGlucoseReading(ctx, createParams)
-	if err != nil {
-		slog.Error("failed to create glucose reading in database", "error", err)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if dbCreateModel == nil {
-		slog.Error("failed to create glucose reading in database, dbCreateModel is nil")
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit create glucose reading in database", "error", err, "entryModel", entryModel)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbCreateModel)), creatingNewRecord, nil
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
 }
