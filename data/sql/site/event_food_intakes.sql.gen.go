@@ -198,6 +198,18 @@ func (q *Queries) HardDeleteFoodIntake(ctx context.Context, arg HardDeleteFoodIn
 	return q.exec(ctx, q.hardDeleteFoodIntakeStmt, hardDeleteFoodIntake, arg.ID)
 }
 
+const hardDeleteFoodIntakesByType = `-- name: HardDeleteFoodIntakesByType :execresult
+DELETE FROM food_intakes WHERE food_type = ?
+`
+
+type HardDeleteFoodIntakesByTypeParams struct {
+	FoodType *string
+}
+
+func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDeleteFoodIntakesByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteFoodIntakesByTypeStmt, hardDeleteFoodIntakesByType, arg.FoodType)
+}
+
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
 SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
 WHERE
@@ -362,6 +374,22 @@ type SoftDeleteFoodIntakeParams struct {
 // ------
 func (q *Queries) SoftDeleteFoodIntake(ctx context.Context, arg SoftDeleteFoodIntakeParams) (sql.Result, error) {
 	return q.exec(ctx, q.softDeleteFoodIntakeStmt, softDeleteFoodIntake, arg.UpdatedByIdentityName, arg.ID)
+}
+
+const softDeleteFoodIntakesByType = `-- name: SoftDeleteFoodIntakesByType :execresult
+UPDATE food_intakes SET 
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE food_type = ? AND deleted_at IS NULL
+`
+
+type SoftDeleteFoodIntakesByTypeParams struct {
+	UpdatedByIdentityName *string
+	FoodType              *string
+}
+
+func (q *Queries) SoftDeleteFoodIntakesByType(ctx context.Context, arg SoftDeleteFoodIntakesByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteFoodIntakesByTypeStmt, softDeleteFoodIntakesByType, arg.UpdatedByIdentityName, arg.FoodType)
 }
 
 const updateFoodIntake = `-- name: UpdateFoodIntake :one

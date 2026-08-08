@@ -63,34 +63,6 @@ func (c TreatmentCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx c
 
 func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data)
-	// treatmentModel := nightscout.Treatment{}
-	// err := utils.FromMap(data, &treatmentModel)
-	// if err != nil {
-	// 	slog.Error("failed to map data to treatment model", "error", err)
-	// 	return nil, nsutils.BadDataBodyError
-	// }
-
-	// if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
-	// 	slog.Error("treatment event type is nil")
-	// 	return nil, nsutils.BadDataBodyError
-	// }
-
-	// cc := nightscout.CreateContext{
-	// 	CreatedByIdentityID:   siteContext.IdentityModel.ID,
-	// 	CreatedByIdentityName: siteContext.IdentityModel.Name,
-	// }
-
-	// dbModel, rerr := EventGroupCreate(ctx, siteContext, TreatmentEventGroupCreate(ctx, cc, treatmentModel))
-	// if rerr != nil {
-	// 	slog.Error("failed to create treatment in database", "error", rerr)
-	// 	return nil, rerr
-	// }
-	// if dbModel == nil {
-	// 	slog.Error("failed to create treatment in database, dbModel is nil")
-	// 	return nil, nsutils.ErrInternal
-	// }
-
-	// return ptr(c.converter(dbModel)), nil
 }
 
 // ///////

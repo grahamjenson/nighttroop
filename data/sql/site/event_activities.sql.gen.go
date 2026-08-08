@@ -183,6 +183,18 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 	return &i, err
 }
 
+const hardDeleteActivitiesByType = `-- name: HardDeleteActivitiesByType :execresult
+DELETE FROM activities WHERE activity_type = ?
+`
+
+type HardDeleteActivitiesByTypeParams struct {
+	ActivityType *string
+}
+
+func (q *Queries) HardDeleteActivitiesByType(ctx context.Context, arg HardDeleteActivitiesByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteActivitiesByTypeStmt, hardDeleteActivitiesByType, arg.ActivityType)
+}
+
 const hardDeleteActivity = `-- name: HardDeleteActivity :execresult
 DELETE FROM activities WHERE id = ?
 `
@@ -339,6 +351,22 @@ func (q *Queries) SearchActivities(ctx context.Context, arg SearchActivitiesPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const softDeleteActivitiesByType = `-- name: SoftDeleteActivitiesByType :execresult
+UPDATE activities SET 
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE activity_type = ? AND deleted_at IS NULL
+`
+
+type SoftDeleteActivitiesByTypeParams struct {
+	UpdatedByIdentityName *string
+	ActivityType          *string
+}
+
+func (q *Queries) SoftDeleteActivitiesByType(ctx context.Context, arg SoftDeleteActivitiesByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.softDeleteActivitiesByTypeStmt, softDeleteActivitiesByType, arg.UpdatedByIdentityName, arg.ActivityType)
 }
 
 const softDeleteActivity = `-- name: SoftDeleteActivity :execresult

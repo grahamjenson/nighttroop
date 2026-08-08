@@ -98,3 +98,6 @@ RETURNING *;
 
 -- name: HardDeleteFoodPreset :execresult
 DELETE FROM food_presets WHERE id = ?;
+
+-- name: HardDeleteFoodPresetsByType :execresult
+DELETE FROM food_presets WHERE food_type = sqlc.narg('FoodType');

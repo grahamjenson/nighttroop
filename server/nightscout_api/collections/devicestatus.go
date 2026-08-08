@@ -46,6 +46,22 @@ func (c DeviceStatusCollection) GetDBFunc(siteContext *httputils.SiteContext, ct
 	return siteContext.SiteDB.Queries.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier})
 }
 
+func (c DeviceStatusCollection) HardDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteDeviceReport(ctx, site.HardDeleteDeviceReportParams{ID: identifier})
+}
+
+func (c DeviceStatusCollection) SoftDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.SoftDeleteDeviceReport(ctx, site.SoftDeleteDeviceReportParams{ID: identifier})
+}
+
+func (c DeviceStatusCollection) PatchDBFunc(siteContext *httputils.SiteContext, ctx context.Context, nsModel nightscout.DeviceStatus, identifier string, uc nightscout.UpdateContext) (*site.DeviceReport, error) {
+	updateParams := nightscout.DeviceStatusToUpdateDeviceReport(nsModel, uc)
+	updateParams.ID = identifier
+
+	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateDeviceReport(ctx, updateParams)
+	return dbUpdateModel, err
+}
+
 /////
 // END OF FUNCTIONS USED BY META COLLECTIONS
 /////
@@ -78,45 +94,15 @@ func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputi
 }
 
 func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-
-	if permanent {
-		res, err := siteContext.SiteDB.Queries.HardDeleteDeviceReport(ctx, site.HardDeleteDeviceReportParams{ID: identifier})
-		if err != nil {
-			slog.Error("failed to permanently delete device status by ID", "error", err)
-			return nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for device status delete", "error", err)
-			return nsutils.ErrInternal
-		}
-		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
-		}
-		slog.Info("Deleted device status", "eid", identifier, "rowsAffected", rowsAffected)
-
-	} else {
-		res, err := siteContext.SiteDB.Queries.SoftDeleteDeviceReport(ctx, site.SoftDeleteDeviceReportParams{ID: identifier})
-		if err != nil {
-			slog.Error("failed to soft delete device status by ID", "error", err)
-			return nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for device status delete", "error", err)
-			return nsutils.ErrInternal
-		}
-		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
-		}
-		slog.Info("Soft Deleted device status", "eid", identifier, "rowsAffected", rowsAffected)
-
-	}
-	return nil
+	return MetaDelete(c, ctx, siteContext, identifier, permanent)
 }
 
 func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
+}
+
+func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaPatch(c, ctx, siteContext, identifier, patch)
 }
 
 // Replace will delete then create the record again, BUT it will not
@@ -193,32 +179,4 @@ func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httput
 	}
 
 	return ptr(c.converter(dbCreateModel)), creatingNewRecord, nil
-}
-
-func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	entryModel := &nightscout.DeviceStatus{}
-	err := utils.FromMap(patch, entryModel)
-	if err != nil {
-		slog.Error("failed to map data to entry model", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-
-	updateParams := nightscout.DeviceStatusToUpdateDeviceReport(
-		*entryModel,
-		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-	updateParams.ID = identifier
-
-	ssss, _ := utils.ToMap[site.UpdateDeviceReportParams](&updateParams)
-	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateDeviceReport(ctx, updateParams)
-	if err != nil {
-		slog.Error("failed to update device status in database", "error", err, "updateParams", ssss)
-		return nil, nsutils.ErrInternal
-	}
-	if dbUpdateModel == nil {
-		slog.Error("failed to update device status in database, dbUpdateModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbUpdateModel)), nil
 }

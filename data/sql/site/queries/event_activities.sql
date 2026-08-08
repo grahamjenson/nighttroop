@@ -108,3 +108,12 @@ WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
 -- name: HardDeleteActivity :execresult
 DELETE FROM activities WHERE id = ?;
+
+-- name: SoftDeleteActivitiesByType :execresult
+UPDATE activities SET 
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?
+WHERE activity_type = ? AND deleted_at IS NULL;
+
+-- name: HardDeleteActivitiesByType :execresult
+DELETE FROM activities WHERE activity_type = ?;

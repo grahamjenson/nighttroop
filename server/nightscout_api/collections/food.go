@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -44,6 +45,24 @@ func (c FoodCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx contex
 	return siteContext.SiteDB.Queries.GetFoodPreset(ctx, site.GetFoodPresetParams{ID: identifier})
 }
 
+func (c FoodCollection) HardDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteFoodPreset(ctx, site.HardDeleteFoodPresetParams{ID: identifier})
+}
+
+// Only Hard Deletes For Presets
+func (c FoodCollection) SoftDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteFoodPreset(ctx, site.HardDeleteFoodPresetParams{ID: identifier})
+}
+
+func (c FoodCollection) HardDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{FoodType: &typeString})
+}
+
+// Only Hard Deletes For Presets
+func (c FoodCollection) SoftDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{FoodType: &typeString})
+}
+
 // ///
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
@@ -61,11 +80,11 @@ func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c FoodCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nsutils.ErrNotImplemented
+	return MetaDelete(c, ctx, siteContext, identifier, permanent)
 }
 
 func (c FoodCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
+	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
 }
 
 func (c FoodCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {

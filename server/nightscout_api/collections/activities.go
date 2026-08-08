@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"database/sql"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -44,6 +45,22 @@ func (c ActivityCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx co
 	return siteContext.SiteDB.Queries.GetActivity(ctx, site.GetActivityParams{ID: identifier})
 }
 
+func (c ActivityCollection) HardDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteActivity(ctx, site.HardDeleteActivityParams{ID: identifier})
+}
+
+func (c ActivityCollection) SoftDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.SoftDeleteActivity(ctx, site.SoftDeleteActivityParams{ID: identifier})
+}
+
+func (c ActivityCollection) HardDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteActivitiesByType(ctx, site.HardDeleteActivitiesByTypeParams{ActivityType: &typeString})
+}
+
+func (c ActivityCollection) SoftDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.SoftDeleteActivitiesByType(ctx, site.SoftDeleteActivitiesByTypeParams{ActivityType: &typeString})
+}
+
 // ///
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
@@ -62,11 +79,11 @@ func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.S
 }
 
 func (c ActivityCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return nsutils.ErrNotImplemented
+	return MetaDelete(c, ctx, siteContext, identifier, permanent)
 }
 
 func (c ActivityCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
+	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
 }
 
 func (c ActivityCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {

@@ -186,6 +186,18 @@ func (q *Queries) HardDeleteFoodPreset(ctx context.Context, arg HardDeleteFoodPr
 	return q.exec(ctx, q.hardDeleteFoodPresetStmt, hardDeleteFoodPreset, arg.ID)
 }
 
+const hardDeleteFoodPresetsByType = `-- name: HardDeleteFoodPresetsByType :execresult
+DELETE FROM food_presets WHERE food_type = ?1
+`
+
+type HardDeleteFoodPresetsByTypeParams struct {
+	FoodType *string
+}
+
+func (q *Queries) HardDeleteFoodPresetsByType(ctx context.Context, arg HardDeleteFoodPresetsByTypeParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteFoodPresetsByTypeStmt, hardDeleteFoodPresetsByType, arg.FoodType)
+}
+
 const searchFoodPresets = `-- name: SearchFoodPresets :many
 SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
 WHERE

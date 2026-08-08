@@ -147,6 +147,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
 	}
+	if q.hardDeleteActivitiesByTypeStmt, err = db.PrepareContext(ctx, hardDeleteActivitiesByType); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteActivitiesByType: %w", err)
+	}
 	if q.hardDeleteActivityStmt, err = db.PrepareContext(ctx, hardDeleteActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteActivity: %w", err)
 	}
@@ -165,8 +168,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteFoodIntakeStmt, err = db.PrepareContext(ctx, hardDeleteFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteFoodIntake: %w", err)
 	}
+	if q.hardDeleteFoodIntakesByTypeStmt, err = db.PrepareContext(ctx, hardDeleteFoodIntakesByType); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteFoodIntakesByType: %w", err)
+	}
 	if q.hardDeleteFoodPresetStmt, err = db.PrepareContext(ctx, hardDeleteFoodPreset); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteFoodPreset: %w", err)
+	}
+	if q.hardDeleteFoodPresetsByTypeStmt, err = db.PrepareContext(ctx, hardDeleteFoodPresetsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteFoodPresetsByType: %w", err)
 	}
 	if q.hardDeleteGlucoseReadingStmt, err = db.PrepareContext(ctx, hardDeleteGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteGlucoseReading: %w", err)
@@ -231,6 +240,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchTempTargetsStmt, err = db.PrepareContext(ctx, searchTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchTempTargets: %w", err)
 	}
+	if q.softDeleteActivitiesByTypeStmt, err = db.PrepareContext(ctx, softDeleteActivitiesByType); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteActivitiesByType: %w", err)
+	}
 	if q.softDeleteActivityStmt, err = db.PrepareContext(ctx, softDeleteActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteActivity: %w", err)
 	}
@@ -248,6 +260,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.softDeleteFoodIntakeStmt, err = db.PrepareContext(ctx, softDeleteFoodIntake); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteFoodIntake: %w", err)
+	}
+	if q.softDeleteFoodIntakesByTypeStmt, err = db.PrepareContext(ctx, softDeleteFoodIntakesByType); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteFoodIntakesByType: %w", err)
 	}
 	if q.softDeleteGlucoseReadingStmt, err = db.PrepareContext(ctx, softDeleteGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteGlucoseReading: %w", err)
@@ -522,6 +537,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.hardDeleteActivitiesByTypeStmt != nil {
+		if cerr := q.hardDeleteActivitiesByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteActivitiesByTypeStmt: %w", cerr)
+		}
+	}
 	if q.hardDeleteActivityStmt != nil {
 		if cerr := q.hardDeleteActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteActivityStmt: %w", cerr)
@@ -552,9 +572,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteFoodIntakeStmt: %w", cerr)
 		}
 	}
+	if q.hardDeleteFoodIntakesByTypeStmt != nil {
+		if cerr := q.hardDeleteFoodIntakesByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteFoodIntakesByTypeStmt: %w", cerr)
+		}
+	}
 	if q.hardDeleteFoodPresetStmt != nil {
 		if cerr := q.hardDeleteFoodPresetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteFoodPresetStmt: %w", cerr)
+		}
+	}
+	if q.hardDeleteFoodPresetsByTypeStmt != nil {
+		if cerr := q.hardDeleteFoodPresetsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteFoodPresetsByTypeStmt: %w", cerr)
 		}
 	}
 	if q.hardDeleteGlucoseReadingStmt != nil {
@@ -662,6 +692,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchTempTargetsStmt: %w", cerr)
 		}
 	}
+	if q.softDeleteActivitiesByTypeStmt != nil {
+		if cerr := q.softDeleteActivitiesByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteActivitiesByTypeStmt: %w", cerr)
+		}
+	}
 	if q.softDeleteActivityStmt != nil {
 		if cerr := q.softDeleteActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing softDeleteActivityStmt: %w", cerr)
@@ -690,6 +725,11 @@ func (q *Queries) Close() error {
 	if q.softDeleteFoodIntakeStmt != nil {
 		if cerr := q.softDeleteFoodIntakeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing softDeleteFoodIntakeStmt: %w", cerr)
+		}
+	}
+	if q.softDeleteFoodIntakesByTypeStmt != nil {
+		if cerr := q.softDeleteFoodIntakesByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteFoodIntakesByTypeStmt: %w", cerr)
 		}
 	}
 	if q.softDeleteGlucoseReadingStmt != nil {
@@ -877,13 +917,16 @@ type Queries struct {
 	getSiteSettingsStmt                 *sql.Stmt
 	getTempBasalStmt                    *sql.Stmt
 	getTempTargetStmt                   *sql.Stmt
+	hardDeleteActivitiesByTypeStmt      *sql.Stmt
 	hardDeleteActivityStmt              *sql.Stmt
 	hardDeleteComponentEventStmt        *sql.Stmt
 	hardDeleteDeviceReportStmt          *sql.Stmt
 	hardDeleteEventGroupStmt            *sql.Stmt
 	hardDeleteEventGroupsByTypeStmt     *sql.Stmt
 	hardDeleteFoodIntakeStmt            *sql.Stmt
+	hardDeleteFoodIntakesByTypeStmt     *sql.Stmt
 	hardDeleteFoodPresetStmt            *sql.Stmt
+	hardDeleteFoodPresetsByTypeStmt     *sql.Stmt
 	hardDeleteGlucoseReadingStmt        *sql.Stmt
 	hardDeleteGlucoseReadingsByTypeStmt *sql.Stmt
 	hardDeleteInsulinDoseStmt           *sql.Stmt
@@ -905,12 +948,14 @@ type Queries struct {
 	searchProfileSwitchesStmt           *sql.Stmt
 	searchTempBasalsStmt                *sql.Stmt
 	searchTempTargetsStmt               *sql.Stmt
+	softDeleteActivitiesByTypeStmt      *sql.Stmt
 	softDeleteActivityStmt              *sql.Stmt
 	softDeleteComponentEventStmt        *sql.Stmt
 	softDeleteDeviceReportStmt          *sql.Stmt
 	softDeleteEventGroupStmt            *sql.Stmt
 	softDeleteEventGroupsByTypeStmt     *sql.Stmt
 	softDeleteFoodIntakeStmt            *sql.Stmt
+	softDeleteFoodIntakesByTypeStmt     *sql.Stmt
 	softDeleteGlucoseReadingStmt        *sql.Stmt
 	softDeleteGlucoseReadingsByTypeStmt *sql.Stmt
 	softDeleteInsulinDoseStmt           *sql.Stmt
@@ -979,13 +1024,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteSettingsStmt:                 q.getSiteSettingsStmt,
 		getTempBasalStmt:                    q.getTempBasalStmt,
 		getTempTargetStmt:                   q.getTempTargetStmt,
+		hardDeleteActivitiesByTypeStmt:      q.hardDeleteActivitiesByTypeStmt,
 		hardDeleteActivityStmt:              q.hardDeleteActivityStmt,
 		hardDeleteComponentEventStmt:        q.hardDeleteComponentEventStmt,
 		hardDeleteDeviceReportStmt:          q.hardDeleteDeviceReportStmt,
 		hardDeleteEventGroupStmt:            q.hardDeleteEventGroupStmt,
 		hardDeleteEventGroupsByTypeStmt:     q.hardDeleteEventGroupsByTypeStmt,
 		hardDeleteFoodIntakeStmt:            q.hardDeleteFoodIntakeStmt,
+		hardDeleteFoodIntakesByTypeStmt:     q.hardDeleteFoodIntakesByTypeStmt,
 		hardDeleteFoodPresetStmt:            q.hardDeleteFoodPresetStmt,
+		hardDeleteFoodPresetsByTypeStmt:     q.hardDeleteFoodPresetsByTypeStmt,
 		hardDeleteGlucoseReadingStmt:        q.hardDeleteGlucoseReadingStmt,
 		hardDeleteGlucoseReadingsByTypeStmt: q.hardDeleteGlucoseReadingsByTypeStmt,
 		hardDeleteInsulinDoseStmt:           q.hardDeleteInsulinDoseStmt,
@@ -1007,12 +1055,14 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchProfileSwitchesStmt:           q.searchProfileSwitchesStmt,
 		searchTempBasalsStmt:                q.searchTempBasalsStmt,
 		searchTempTargetsStmt:               q.searchTempTargetsStmt,
+		softDeleteActivitiesByTypeStmt:      q.softDeleteActivitiesByTypeStmt,
 		softDeleteActivityStmt:              q.softDeleteActivityStmt,
 		softDeleteComponentEventStmt:        q.softDeleteComponentEventStmt,
 		softDeleteDeviceReportStmt:          q.softDeleteDeviceReportStmt,
 		softDeleteEventGroupStmt:            q.softDeleteEventGroupStmt,
 		softDeleteEventGroupsByTypeStmt:     q.softDeleteEventGroupsByTypeStmt,
 		softDeleteFoodIntakeStmt:            q.softDeleteFoodIntakeStmt,
+		softDeleteFoodIntakesByTypeStmt:     q.softDeleteFoodIntakesByTypeStmt,
 		softDeleteGlucoseReadingStmt:        q.softDeleteGlucoseReadingStmt,
 		softDeleteGlucoseReadingsByTypeStmt: q.softDeleteGlucoseReadingsByTypeStmt,
 		softDeleteInsulinDoseStmt:           q.softDeleteInsulinDoseStmt,

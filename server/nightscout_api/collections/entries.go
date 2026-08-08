@@ -47,6 +47,22 @@ func (c EntriesCollection) GetDBFunc(siteContext *httputils.SiteContext, ctx con
 	return siteContext.SiteDB.Queries.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
 }
 
+func (c EntriesCollection) HardDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: identifier})
+}
+
+func (c EntriesCollection) SoftDeleteDBFunc(siteContext *httputils.SiteContext, ctx context.Context, identifier string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: identifier})
+}
+
+func (c EntriesCollection) HardDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.HardDeleteGlucoseReadingsByType(ctx, site.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+}
+
+func (c EntriesCollection) SoftDeleteTypeDBFunc(siteContext *httputils.SiteContext, ctx context.Context, typeString string) (sql.Result, error) {
+	return siteContext.SiteDB.Queries.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+}
+
 /////
 // END OF FUNCTIONS USED BY META COLLECTIONS
 /////
@@ -57,6 +73,42 @@ func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.Si
 
 func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaGet(c, ctx, siteContext, identifier)
+}
+
+func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+	return MetaDelete(c, ctx, siteContext, identifier, permanent)
+}
+
+func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
+}
+
+func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	entryModel := &nightscout.Entry{}
+	err := utils.FromMap(patch, entryModel)
+	if err != nil {
+		slog.Error("failed to map data to entry model", "error", err)
+		return nil, nsutils.ErrInternal
+	}
+
+	updateParams := nightscout.EntryToUpdate(
+		*entryModel,
+		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
+	)
+	updateParams.ID = identifier
+
+	ssss, _ := utils.ToMap[site.UpdateGlucoseReadingParams](&updateParams)
+	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
+	if err != nil {
+		slog.Error("failed to update glucose reading in database", "error", err, "updateParams", ssss)
+		return nil, nsutils.ErrInternal
+	}
+	if dbUpdateModel == nil {
+		slog.Error("failed to update glucose reading in database, dbUpdateModel is nil")
+		return nil, nsutils.ErrInternal
+	}
+
+	return ptr(c.converter(dbUpdateModel)), nil
 }
 
 func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -76,72 +128,6 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 	}
 
 	return nsutils.CreateRecordSlice(entries, c.converter), nil
-}
-
-func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-
-	if permanent {
-		res, err := siteContext.SiteDB.Queries.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: identifier})
-		if err != nil {
-			slog.Error("failed to permanently delete glucose reading by ID", "error", err)
-			return nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for glucose reading delete", "error", err)
-			return nsutils.ErrInternal
-		}
-		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
-		}
-		slog.Info("Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
-
-	} else {
-		res, err := siteContext.SiteDB.Queries.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: identifier})
-		if err != nil {
-			slog.Error("failed to soft delete glucose reading by ID", "error", err)
-			return nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for glucose reading delete", "error", err)
-			return nsutils.ErrInternal
-		}
-		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
-		}
-		slog.Info("Soft Deleted glucose reading", "eid", identifier, "rowsAffected", rowsAffected)
-
-	}
-	return nil
-}
-
-func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	if permanent {
-		res, err := siteContext.SiteDB.Queries.HardDeleteGlucoseReadingsByType(ctx, site.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
-		if err != nil {
-			slog.Error("failed to permanently delete glucose readings by type", "error", err)
-			return 0, nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for glucose readings delete", "error", err)
-			return 0, nsutils.ErrInternal
-		}
-		return int(rowsAffected), nil
-	} else {
-		res, err := siteContext.SiteDB.Queries.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
-		if err != nil {
-			slog.Error("failed to soft delete glucose readings by IDs", "error", err)
-			return 0, nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for glucose readings delete", "error", err)
-			return 0, nsutils.ErrInternal
-		}
-		return int(rowsAffected), nil
-	}
 }
 
 // Replace will delete then create the record again, BUT it will not
@@ -218,32 +204,4 @@ func (c EntriesCollection) Replace(ctx context.Context, siteContext *httputils.S
 	}
 
 	return ptr(c.converter(dbCreateModel)), creatingNewRecord, nil
-}
-
-func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	entryModel := &nightscout.Entry{}
-	err := utils.FromMap(patch, entryModel)
-	if err != nil {
-		slog.Error("failed to map data to entry model", "error", err)
-		return nil, nsutils.ErrInternal
-	}
-
-	updateParams := nightscout.EntryToUpdate(
-		*entryModel,
-		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-	updateParams.ID = identifier
-
-	ssss, _ := utils.ToMap[site.UpdateGlucoseReadingParams](&updateParams)
-	dbUpdateModel, err := siteContext.SiteDB.Queries.UpdateGlucoseReading(ctx, updateParams)
-	if err != nil {
-		slog.Error("failed to update glucose reading in database", "error", err, "updateParams", ssss)
-		return nil, nsutils.ErrInternal
-	}
-	if dbUpdateModel == nil {
-		slog.Error("failed to update glucose reading in database, dbUpdateModel is nil")
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbUpdateModel)), nil
 }

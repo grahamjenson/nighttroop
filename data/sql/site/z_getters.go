@@ -2248,6 +2248,39 @@ func (m HardDeleteActivityParams) SetID(v string) HardDeleteActivityParams {
 	return m
 }
 
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m SoftDeleteActivitiesByTypeParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteActivitiesByTypeParams.
+func (m SoftDeleteActivitiesByTypeParams) SetUpdatedByIdentityName(v *string) SoftDeleteActivitiesByTypeParams {
+	m.UpdatedByIdentityName = v
+	return m
+}
+
+// GetActivityType returns the ActivityType value.
+func (m SoftDeleteActivitiesByTypeParams) GetActivityType() *string {
+	return m.ActivityType
+}
+
+// SetActivityType sets the ActivityType value and returns the updated SoftDeleteActivitiesByTypeParams.
+func (m SoftDeleteActivitiesByTypeParams) SetActivityType(v *string) SoftDeleteActivitiesByTypeParams {
+	m.ActivityType = v
+	return m
+}
+
+// GetActivityType returns the ActivityType value.
+func (m HardDeleteActivitiesByTypeParams) GetActivityType() *string {
+	return m.ActivityType
+}
+
+// SetActivityType sets the ActivityType value and returns the updated HardDeleteActivitiesByTypeParams.
+func (m HardDeleteActivitiesByTypeParams) SetActivityType(v *string) HardDeleteActivitiesByTypeParams {
+	m.ActivityType = v
+	return m
+}
+
 // GetID returns the ID value.
 func (m CreateComponentEventParams) GetID() string {
 	return m.ID
@@ -3378,6 +3411,39 @@ func (m HardDeleteFoodIntakeParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteFoodIntakeParams.
 func (m HardDeleteFoodIntakeParams) SetID(v string) HardDeleteFoodIntakeParams {
 	m.ID = v
+	return m
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m SoftDeleteFoodIntakesByTypeParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteFoodIntakesByTypeParams.
+func (m SoftDeleteFoodIntakesByTypeParams) SetUpdatedByIdentityName(v *string) SoftDeleteFoodIntakesByTypeParams {
+	m.UpdatedByIdentityName = v
+	return m
+}
+
+// GetFoodType returns the FoodType value.
+func (m SoftDeleteFoodIntakesByTypeParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated SoftDeleteFoodIntakesByTypeParams.
+func (m SoftDeleteFoodIntakesByTypeParams) SetFoodType(v *string) SoftDeleteFoodIntakesByTypeParams {
+	m.FoodType = v
+	return m
+}
+
+// GetFoodType returns the FoodType value.
+func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated HardDeleteFoodIntakesByTypeParams.
+func (m HardDeleteFoodIntakesByTypeParams) SetFoodType(v *string) HardDeleteFoodIntakesByTypeParams {
+	m.FoodType = v
 	return m
 }
 
@@ -8075,6 +8141,17 @@ func (m HardDeleteFoodPresetParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteFoodPresetParams.
 func (m HardDeleteFoodPresetParams) SetID(v string) HardDeleteFoodPresetParams {
 	m.ID = v
+	return m
+}
+
+// GetFoodType returns the FoodType value.
+func (m HardDeleteFoodPresetsByTypeParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated HardDeleteFoodPresetsByTypeParams.
+func (m HardDeleteFoodPresetsByTypeParams) SetFoodType(v *string) HardDeleteFoodPresetsByTypeParams {
+	m.FoodType = v
 	return m
 }
 
