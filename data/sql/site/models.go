@@ -69,10 +69,7 @@ type CreateEventGroupBundle struct {
 	TempBasal      *CreateTempBasalParams
 	TempTarget     *CreateTempTargetParams
 	ProfileSwitch  *CreateProfileSwitchParams
-	DeviceState    *CreateDeviceStateParams
-	LoopState      *CreateLoopStateParams
-	PumpState      *CreatePumpStateParams
-	CgmState       *CreateCGMStateParams
+	ComponentEvent *CreateComponentEventParams
 	Activity       *CreateActivityParams
 	Note           *CreateNoteParams
 }
@@ -85,10 +82,7 @@ type UpdateEventGroupBundle struct {
 	TempBasal      *UpdateTempBasalParams
 	TempTarget     *UpdateTempTargetParams
 	ProfileSwitch  *UpdateProfileSwitchParams
-	DeviceState    *UpdateDeviceStateParams
-	LoopState      *UpdateLoopStateParams
-	PumpState      *UpdatePumpStateParams
-	CgmState       *UpdateCGMStateParams
+	ComponentEvent *UpdateComponentEventParams
 	Activity       *UpdateActivityParams
 	Note           *UpdateNoteParams
 }
@@ -101,10 +95,7 @@ type EventGroupsBundle struct {
 	TempBasal      *TempBasal
 	TempTarget     *TempTarget
 	ProfileSwitch  *ProfileSwitch
-	DeviceState    *DeviceState
-	LoopState      *LoopState
-	PumpState      *PumpState
-	CgmState       *CgmState
+	ComponentEvent *ComponentEvent
 	Activity       *Activity
 	Note           *Note
 }
@@ -174,46 +165,10 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 
 	}
 
-	if source.DeviceStateID != nil {
-		egb.DeviceState = &DeviceState{
-			ID:                   *source.DeviceStateID,
-			DeviceState:          source.DeviceStateDeviceState,
-			DeviceTimestamp:      source.DeviceStateDeviceTimestamp,
-			DeviceBatteryPercent: source.DeviceStateDeviceBatteryPercent,
-			DeviceChargingState:  source.DeviceStateDeviceChargingState,
-		}
-	}
-
-	if source.LoopStateID != nil {
-		egb.LoopState = &LoopState{
-			ID:            *source.LoopStateID,
-			LoopState:     source.LoopStateLoopState,
-			LoopTimestamp: source.LoopStateLoopTimestamp,
-			Iob:           source.LoopStateIob,
-			IobBasal:      source.LoopStateIobBasal,
-			IobTreatment:  source.LoopStateIobTreatment,
-			Cob:           source.LoopStateCob,
-		}
-	}
-
-	if source.PumpStateID != nil {
-		egb.PumpState = &PumpState{
-			ID:                 *source.PumpStateID,
-			PumpState:          source.PumpStatePumpState,
-			PumpTimestamp:      source.PumpStatePumpTimestamp,
-			PumpInsertionTime:  source.PumpStatePumpInsertionTime,
-			PumpReservoir:      source.PumpStatePumpReservoir,
-			PumpBatteryPercent: source.PumpStatePumpBatteryPercent,
-			PumpChargingState:  source.PumpStatePumpChargingState,
-		}
-	}
-
-	if source.CgmStateID != nil {
-		egb.CgmState = &CgmState{
-			ID:               *source.CgmStateID,
-			CgmState:         source.CgmStateCgmState,
-			CgmTimestamp:     source.CgmStateCgmTimestamp,
-			CgmInsertionTime: source.CgmStateCgmInsertionTime,
+	if source.ComponentEventID != nil {
+		egb.ComponentEvent = &ComponentEvent{
+			ID:        *source.ComponentEventID,
+			EventType: source.EventGroup.GroupType,
 		}
 	}
 

@@ -30,17 +30,11 @@ type ToCreateParams interface {
 	TempTargetToCreate(source TempTarget) CreateTempTargetParams
 	TempTargetToUpdate(source TempTarget) UpdateTempTargetParams
 
-	CGMStateToCreate(source CgmState) CreateCGMStateParams
-	CGMStateToUpdate(source CgmState) UpdateCGMStateParams
+	ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams
+	ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams
 
-	DeviceStateToCreate(source DeviceState) CreateDeviceStateParams
-	DeviceStateToUpdate(source DeviceState) UpdateDeviceStateParams
-
-	LoopStateToCreate(source LoopState) CreateLoopStateParams
-	LoopStateToUpdate(source LoopState) UpdateLoopStateParams
-
-	PumpStateToCreate(source PumpState) CreatePumpStateParams
-	PumpStateToUpdate(source PumpState) UpdatePumpStateParams
+	DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams
+	DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams
 
 	// PRESETS
 	FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams
@@ -59,6 +53,6 @@ type ToCreateParams interface {
 	SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow
 
 	//goverter:map . EventGroup
-	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch DeviceState LoopState PumpState CgmState Activity Note
+	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch ComponentEvent Activity Note
 	EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle
 }

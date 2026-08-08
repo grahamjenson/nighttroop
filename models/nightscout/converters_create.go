@@ -91,7 +91,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
+	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID LoopStateID PumpStateID CgmStateID ActivityID NoteID
 	// goverter:map EventType GroupType
 	TreatmentToCreateEventGroup(source Treatment, ctx CreateContext) site.CreateEventGroupParams
 
@@ -222,38 +222,8 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore DeviceState DeviceTimestamp DeviceBatteryPercent DeviceChargingState
-	TreatmentToCreateDeviceState(source Treatment, ctx CreateContext) site.CreateDeviceStateParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore LoopState LoopTimestamp Iob IobBasal IobTreatment Cob
-	TreatmentToCreateLoopState(source Treatment, ctx CreateContext) site.CreateLoopStateParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore PumpState PumpTimestamp PumpInsertionTime PumpReservoir PumpBatteryPercent PumpChargingState
-	TreatmentToCreatePumpState(source Treatment, ctx CreateContext) site.CreatePumpStateParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore CgmState CgmTimestamp CgmInsertionTime
-	TreatmentToCreateCgmState(source Treatment, ctx CreateContext) site.CreateCGMStateParams
+	// goverter:ignore ComponentEvent DeviceTimestamp DeviceBatteryPercent DeviceChargingState
+	TreatmentToCreateComponentEvent(source Treatment, ctx CreateContext) site.CreateComponentEventParams
 
 	// goverter:context ctx
 	// goverter:map Date OccurredAt | OrNow
@@ -281,44 +251,9 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore GroupType GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID DeviceStateID LoopStateID PumpStateID CgmStateID ActivityID NoteID
-	DeviceStatusToCreateEventGroup(source DeviceStatus, ctx CreateContext) site.CreateEventGroupParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore DeviceState DeviceChargingState
-	// goverter:map Date DeviceTimestamp
+	// goverter:ignore DeviceChargingState PumpState PumpReservoir PumpBatteryPercent PumpChargingState LoopIob LoopIobBasal LoopIobTreatment LoopCob
 	// goverter:map UploaderBattery DeviceBatteryPercent
-	DeviceStatusToCreateDevice(source DeviceStatus, ctx CreateContext) site.CreateDeviceStateParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore LoopState LoopTimestamp IobTreatment
-	// goverter:map MergedLoopStatus.IOB.IOB Iob
-	// goverter:map MergedLoopStatus.IOB.BasalIOB IobBasal
-	// goverter:map MergedLoopStatus.COB.COB Cob
-	DeviceStatusToCreateLoop(source DeviceStatus, ctx CreateContext) site.CreateLoopStateParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore PumpState PumpChargingState PumpTimestamp PumpInsertionTime PumpBatteryPercent
-	// goverter:map Pump.Reservoir PumpReservoir
-	DeviceStatusToCreatePump(source DeviceStatus, ctx CreateContext) site.CreatePumpStateParams
+	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx CreateContext) site.CreateDeviceReportParams
 }
 
 // //

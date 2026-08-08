@@ -25,20 +25,33 @@ type Activity struct {
 	CreatedByIdentityName string
 }
 
+type ComponentEvent struct {
+	ID                    string
+	EventType             string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            int64
+	CreatedAt             int64
+	UpdatedAt             int64
+	UpdatedByIdentityName *string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName string
+}
+
 type DeviceReport struct {
 	ID                    string
-	DeviceType            *string
-	State                 *string
-	Timestamp             *int64
-	InsertionTime         *int64
-	BatteryPercent        *float64
-	ChargingState         *string
+	DeviceBatteryPercent  *float64
+	DeviceChargingState   *string
+	PumpState             *string
 	PumpReservoir         *float64
+	PumpBatteryPercent    *float64
 	PumpChargingState     *string
-	Iob                   *float64
-	IobBasal              *float64
-	IobTreatment          *float64
-	Cob                   *float64
+	LoopIob               *float64
+	LoopIobBasal          *float64
+	LoopIobTreatment      *float64
+	LoopCob               *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -60,7 +73,7 @@ type EventGroup struct {
 	TempBasalID           *string
 	TempTargetID          *string
 	ProfileSwitchID       *string
-	DeviceReportID        *string
+	ComponentEventID      *string
 	ActivityID            *string
 	NoteID                *string
 	RawJsonData           *string

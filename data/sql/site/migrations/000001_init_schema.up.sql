@@ -203,11 +203,10 @@ CREATE TABLE profile_switches (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-CREATE TABLE device_events (
-    cgm_insertion_time INTEGER,
+CREATE TABLE component_events (
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    pump_insertion_time INTEGER,
-    pump_type TEXT CHECK(length(pump_type) <= 32),
+    event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -225,12 +224,49 @@ CREATE TABLE device_events (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+
+
+-- EventGroup is when multiple events happen together, like a meal with insulin and glucose reading
+CREATE TABLE event_groups (
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
+    group_type TEXT NOT NULL CHECK(length(group_type) > 0 AND length(group_type) <= 32),
+
+    glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
+    insulin_dose_id TEXT UNIQUE REFERENCES insulin_doses(id) ON DELETE RESTRICT,
+    food_intake_id TEXT UNIQUE REFERENCES food_intakes(id) ON DELETE RESTRICT,
+    temp_basal_id TEXT UNIQUE REFERENCES temp_basals(id) ON DELETE RESTRICT,
+    temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
+    profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
+
+    component_event_id TEXT UNIQUE REFERENCES component_events(id) ON DELETE RESTRICT,
+
+    activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
+    note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,
+
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+
+    deleted_at INTEGER,
+    utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
+    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
+);
+
+
+------------
+-- Reports Reports are not events, they are a snapshot of the state of a device at a point in time
+------------
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     
     -- uploader
-    device TEXT CHECK(length(device) <= 64),
-    device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    -- device is created_by_device_name
     device_battery_percent REAL,
     device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
 
@@ -262,38 +298,6 @@ CREATE TABLE device_reports (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-
--- EventGroup is when multiple events happen together, like a meal with insulin and glucose reading
-CREATE TABLE event_groups (
-    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    group_type TEXT NOT NULL CHECK(length(group_type) > 0 AND length(group_type) <= 32),
-
-    glucose_reading_id TEXT UNIQUE REFERENCES glucose_readings(id) ON DELETE RESTRICT,
-    insulin_dose_id TEXT UNIQUE REFERENCES insulin_doses(id) ON DELETE RESTRICT,
-    food_intake_id TEXT UNIQUE REFERENCES food_intakes(id) ON DELETE RESTRICT,
-    temp_basal_id TEXT UNIQUE REFERENCES temp_basals(id) ON DELETE RESTRICT,
-    temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
-    profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
-
-    device_event_id TEXT UNIQUE REFERENCES device_events(id) ON DELETE RESTRICT,
-
-    activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
-    note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,
-
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
-
-    deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    
-    created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
-    created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
-    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
-);
 
 ----------
 -- PRESETS are user defined templates for the event types

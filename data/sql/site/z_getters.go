@@ -93,38 +93,83 @@ func (m Activity) GetCreatedByIdentityName() string {
 }
 
 // GetID returns the ID value.
+func (m ComponentEvent) GetID() string {
+	return m.ID
+}
+
+// GetEventType returns the EventType value.
+func (m ComponentEvent) GetEventType() string {
+	return m.EventType
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m ComponentEvent) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m ComponentEvent) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m ComponentEvent) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m ComponentEvent) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m ComponentEvent) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m ComponentEvent) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m ComponentEvent) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m ComponentEvent) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m ComponentEvent) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m ComponentEvent) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// GetID returns the ID value.
 func (m DeviceReport) GetID() string {
 	return m.ID
 }
 
-// GetDeviceType returns the DeviceType value.
-func (m DeviceReport) GetDeviceType() *string {
-	return m.DeviceType
+// GetDeviceBatteryPercent returns the DeviceBatteryPercent value.
+func (m DeviceReport) GetDeviceBatteryPercent() *float64 {
+	return m.DeviceBatteryPercent
 }
 
-// GetState returns the State value.
-func (m DeviceReport) GetState() *string {
-	return m.State
+// GetDeviceChargingState returns the DeviceChargingState value.
+func (m DeviceReport) GetDeviceChargingState() *string {
+	return m.DeviceChargingState
 }
 
-// GetTimestamp returns the Timestamp value.
-func (m DeviceReport) GetTimestamp() *int64 {
-	return m.Timestamp
-}
-
-// GetInsertionTime returns the InsertionTime value.
-func (m DeviceReport) GetInsertionTime() *int64 {
-	return m.InsertionTime
-}
-
-// GetBatteryPercent returns the BatteryPercent value.
-func (m DeviceReport) GetBatteryPercent() *float64 {
-	return m.BatteryPercent
-}
-
-// GetChargingState returns the ChargingState value.
-func (m DeviceReport) GetChargingState() *string {
-	return m.ChargingState
+// GetPumpState returns the PumpState value.
+func (m DeviceReport) GetPumpState() *string {
+	return m.PumpState
 }
 
 // GetPumpReservoir returns the PumpReservoir value.
@@ -132,29 +177,34 @@ func (m DeviceReport) GetPumpReservoir() *float64 {
 	return m.PumpReservoir
 }
 
+// GetPumpBatteryPercent returns the PumpBatteryPercent value.
+func (m DeviceReport) GetPumpBatteryPercent() *float64 {
+	return m.PumpBatteryPercent
+}
+
 // GetPumpChargingState returns the PumpChargingState value.
 func (m DeviceReport) GetPumpChargingState() *string {
 	return m.PumpChargingState
 }
 
-// GetIob returns the Iob value.
-func (m DeviceReport) GetIob() *float64 {
-	return m.Iob
+// GetLoopIob returns the LoopIob value.
+func (m DeviceReport) GetLoopIob() *float64 {
+	return m.LoopIob
 }
 
-// GetIobBasal returns the IobBasal value.
-func (m DeviceReport) GetIobBasal() *float64 {
-	return m.IobBasal
+// GetLoopIobBasal returns the LoopIobBasal value.
+func (m DeviceReport) GetLoopIobBasal() *float64 {
+	return m.LoopIobBasal
 }
 
-// GetIobTreatment returns the IobTreatment value.
-func (m DeviceReport) GetIobTreatment() *float64 {
-	return m.IobTreatment
+// GetLoopIobTreatment returns the LoopIobTreatment value.
+func (m DeviceReport) GetLoopIobTreatment() *float64 {
+	return m.LoopIobTreatment
 }
 
-// GetCob returns the Cob value.
-func (m DeviceReport) GetCob() *float64 {
-	return m.Cob
+// GetLoopCob returns the LoopCob value.
+func (m DeviceReport) GetLoopCob() *float64 {
+	return m.LoopCob
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -247,9 +297,9 @@ func (m EventGroup) GetProfileSwitchID() *string {
 	return m.ProfileSwitchID
 }
 
-// GetDeviceReportID returns the DeviceReportID value.
-func (m EventGroup) GetDeviceReportID() *string {
-	return m.DeviceReportID
+// GetComponentEventID returns the ComponentEventID value.
+func (m EventGroup) GetComponentEventID() *string {
+	return m.ComponentEventID
 }
 
 // GetActivityID returns the ActivityID value.

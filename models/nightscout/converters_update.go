@@ -197,32 +197,8 @@ type UpdateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
-	// goverter:ignore DeviceState DeviceTimestamp DeviceBatteryPercent DeviceChargingState
-	TreatmentToUpdateDeviceState(source Treatment, ctx UpdateContext) site.UpdateDeviceStateParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore LoopState LoopTimestamp Iob IobBasal IobTreatment Cob
-	TreatmentToUpdateLoopState(source Treatment, ctx UpdateContext) site.UpdateLoopStateParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore PumpState PumpTimestamp PumpInsertionTime PumpReservoir PumpBatteryPercent PumpChargingState
-	TreatmentToUpdatePumpState(source Treatment, ctx UpdateContext) site.UpdatePumpStateParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore CgmState CgmTimestamp CgmInsertionTime
-	TreatmentToUpdateCgmState(source Treatment, ctx UpdateContext) site.UpdateCGMStateParams
+	// goverter:ignore ComponentEvent DeviceTimestamp DeviceBatteryPercent DeviceChargingState
+	TreatmentToUpdateComponentEvent(source Treatment, ctx UpdateContext) site.UpdateComponentEventParams
 
 	// goverter:context ctx
 	// goverter:map Identifier ID
@@ -247,31 +223,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	DeviceStatusToUpdateEventGroup(source DeviceStatus, ctx UpdateContext) site.UpdateEventGroupParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore DeviceState DeviceChargingState DeviceTimestamp DeviceBatteryPercent
-	DeviceStatusToUpdateDevice(source DeviceStatus, ctx UpdateContext) site.UpdateDeviceStateParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore LoopState LoopTimestamp Iob IobBasal IobTreatment Cob
-	DeviceStatusToUpdateLoop(source DeviceStatus, ctx UpdateContext) site.UpdateLoopStateParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore PumpState PumpChargingState PumpTimestamp PumpInsertionTime PumpBatteryPercent PumpReservoir
-	DeviceStatusToUpdatePump(source DeviceStatus, ctx UpdateContext) site.UpdatePumpStateParams
+	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx UpdateContext) site.UpdateDeviceReportParams
 }
 
 // //

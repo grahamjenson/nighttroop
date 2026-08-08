@@ -5,10 +5,9 @@ DROP TABLE IF EXISTS temp_basals;
 DROP TABLE IF EXISTS temp_targets;
 DROP TABLE IF EXISTS profile_switches;
 
-DROP TABLE IF EXISTS pump_states;
-DROP TABLE IF EXISTS cgm_states;
-DROP TABLE IF EXISTS loop_states;
-DROP TABLE IF EXISTS device_states;
+DROP TABLE IF EXISTS component_events;
+
+DROP TABLE IF EXISTS device_reports;
 
 DROP TABLE IF EXISTS activities;
 DROP TABLE IF EXISTS notes;

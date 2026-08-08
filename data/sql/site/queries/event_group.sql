@@ -11,7 +11,7 @@ INSERT INTO event_groups (
     temp_basal_id,
     temp_target_id,
     profile_switch_id,
-    device_report_id,
+    component_event_id,
     activity_id,
     note_id,
 
@@ -73,17 +73,7 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_report_id,
-    ds.state as device_report_device_state,
-    ds.timestamp as device_report_device_timestamp,
-    ds.battery_percent as device_report_device_battery_percent,
-    ds.charging_state as device_report_device_charging_state,
-    ds.iob as device_report_iob,
-    ds.iob_basal as device_report_iob_basal,
-    ds.iob_treatment as device_report_iob_treatment,
-    ds.cob as device_report_cob,
-    ds.insertion_time as device_report_insertion_time,
-    ds.pump_reservoir as device_report_pump_reservoir,
+    ce.id as component_event_id,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -104,7 +94,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
+LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR eg.deleted_at IS NULL)
@@ -153,17 +143,7 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_report_id,
-    ds.state as device_report_device_state,
-    ds.timestamp as device_report_device_timestamp,
-    ds.battery_percent as device_report_device_battery_percent,
-    ds.charging_state as device_report_device_charging_state,
-    ds.iob as device_report_iob,
-    ds.iob_basal as device_report_iob_basal,
-    ds.iob_treatment as device_report_iob_treatment,
-    ds.cob as device_report_cob,
-    ds.insertion_time as device_report_insertion_time,
-    ds.pump_reservoir as device_report_pump_reservoir,
+    ce.id as component_event_id,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -184,7 +164,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
+LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 
@@ -231,17 +211,7 @@ SELECT
     ps.basal_rates_json as profile_switch_basal_rates_json,
     ps.targets_json as profile_switch_targets_json,
 
-    ds.id as device_report_id,
-    ds.state as device_report_device_state,
-    ds.timestamp as device_report_device_timestamp,
-    ds.battery_percent as device_report_device_battery_percent,
-    ds.charging_state as device_report_device_charging_state,
-    ds.iob as device_report_iob,
-    ds.iob_basal as device_report_iob_basal,
-    ds.iob_treatment as device_report_iob_treatment,
-    ds.cob as device_report_cob,
-    ds.insertion_time as device_report_insertion_time,
-    ds.pump_reservoir as device_report_pump_reservoir,
+    ce.id as component_event_id,
 
     a.id as activity_id,
     a.name as activity_name,
@@ -262,7 +232,7 @@ LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
 LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
 LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN device_reports ds ON eg.device_report_id = ds.id
+LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
 LEFT JOIN notes n ON eg.note_id = n.id
 

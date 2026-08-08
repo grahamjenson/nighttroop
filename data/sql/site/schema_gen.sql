@@ -25,11 +25,10 @@ CREATE TABLE activities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
-CREATE TABLE device_events (
-    cgm_insertion_time INTEGER,
+CREATE TABLE component_events (
+    id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    pump_insertion_time INTEGER,
-    pump_type TEXT CHECK(length(pump_type) <= 32),
+    event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -49,10 +48,9 @@ CREATE TABLE device_events (
 
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-
+    
     -- uploader
-    device TEXT CHECK(length(device) <= 64),
-    device_state TEXT CHECK(length(device_state) <= 64), -- This is the state of the device, like "ok", "error", "warning", etc
+    -- device is created_by_device_name
     device_battery_percent REAL,
     device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
 
@@ -95,7 +93,7 @@ CREATE TABLE event_groups (
     temp_target_id TEXT UNIQUE REFERENCES temp_targets(id) ON DELETE RESTRICT,
     profile_switch_id TEXT UNIQUE REFERENCES profile_switches(id) ON DELETE RESTRICT,
 
-    device_event_id TEXT UNIQUE REFERENCES device_events(id) ON DELETE RESTRICT,
+    component_event_id TEXT UNIQUE REFERENCES component_events(id) ON DELETE RESTRICT,
 
     activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
     note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,

@@ -90,137 +90,122 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 	siteUpdateActivityParams.ID = &pString
 	return siteUpdateActivityParams
 }
-func CGMStateToCreate(source CgmState) CreateCGMStateParams {
-	var siteCreateCGMStateParams CreateCGMStateParams
-	siteCreateCGMStateParams.ID = source.ID
-	if source.CgmState != nil {
-		xstring := *source.CgmState
-		siteCreateCGMStateParams.CgmState = &xstring
-	}
-	if source.CgmTimestamp != nil {
-		xint64 := *source.CgmTimestamp
-		siteCreateCGMStateParams.CgmTimestamp = &xint64
-	}
-	if source.CgmInsertionTime != nil {
-		xint642 := *source.CgmInsertionTime
-		siteCreateCGMStateParams.CgmInsertionTime = &xint642
-	}
+func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
+	var siteCreateComponentEventParams CreateComponentEventParams
+	siteCreateComponentEventParams.ID = source.ID
+	siteCreateComponentEventParams.EventType = source.EventType
 	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		siteCreateCGMStateParams.UtcOffsetMinutes = &xint643
+		xint64 := *source.UtcOffsetMinutes
+		siteCreateComponentEventParams.UtcOffsetMinutes = &xint64
 	}
-	siteCreateCGMStateParams.OccurredAt = source.OccurredAt
+	siteCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		siteCreateCGMStateParams.RawJsonData = &xstring2
+		xstring := *source.RawJsonData
+		siteCreateComponentEventParams.RawJsonData = &xstring
 	}
 	if source.CreatedByAppName != nil {
-		xstring3 := *source.CreatedByAppName
-		siteCreateCGMStateParams.CreatedByAppName = &xstring3
+		xstring2 := *source.CreatedByAppName
+		siteCreateComponentEventParams.CreatedByAppName = &xstring2
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring4 := *source.CreatedByDeviceName
-		siteCreateCGMStateParams.CreatedByDeviceName = &xstring4
+		xstring3 := *source.CreatedByDeviceName
+		siteCreateComponentEventParams.CreatedByDeviceName = &xstring3
 	}
-	siteCreateCGMStateParams.CreatedByIdentityName = source.CreatedByIdentityName
-	return siteCreateCGMStateParams
+	siteCreateComponentEventParams.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteCreateComponentEventParams
 }
-func CGMStateToUpdate(source CgmState) UpdateCGMStateParams {
-	var siteUpdateCGMStateParams UpdateCGMStateParams
-	if source.CgmState != nil {
-		xstring := *source.CgmState
-		siteUpdateCGMStateParams.CgmState = &xstring
-	}
-	if source.CgmTimestamp != nil {
-		xint64 := *source.CgmTimestamp
-		siteUpdateCGMStateParams.CgmTimestamp = &xint64
-	}
-	if source.CgmInsertionTime != nil {
-		xint642 := *source.CgmInsertionTime
-		siteUpdateCGMStateParams.CgmInsertionTime = &xint642
-	}
+func ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams {
+	var siteUpdateComponentEventParams UpdateComponentEventParams
 	pInt64 := source.OccurredAt
-	siteUpdateCGMStateParams.OccurredAt = &pInt64
+	siteUpdateComponentEventParams.OccurredAt = &pInt64
 	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		siteUpdateCGMStateParams.UtcOffsetMinutes = &xint643
+		xint64 := *source.UtcOffsetMinutes
+		siteUpdateComponentEventParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring2 := *source.UpdatedByIdentityName
-		siteUpdateCGMStateParams.UpdatedByIdentityName = &xstring2
+		xstring := *source.UpdatedByIdentityName
+		siteUpdateComponentEventParams.UpdatedByIdentityName = &xstring
 	}
-	siteUpdateCGMStateParams.ID = source.ID
-	return siteUpdateCGMStateParams
+	siteUpdateComponentEventParams.ID = source.ID
+	return siteUpdateComponentEventParams
 }
-func DeviceStateToCreate(source DeviceState) CreateDeviceStateParams {
-	var siteCreateDeviceStateParams CreateDeviceStateParams
-	siteCreateDeviceStateParams.ID = source.ID
-	if source.DeviceState != nil {
-		xstring := *source.DeviceState
-		siteCreateDeviceStateParams.DeviceState = &xstring
-	}
-	if source.DeviceTimestamp != nil {
-		xint64 := *source.DeviceTimestamp
-		siteCreateDeviceStateParams.DeviceTimestamp = &xint64
-	}
+func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
+	var siteCreateDeviceReportParams CreateDeviceReportParams
+	siteCreateDeviceReportParams.ID = source.ID
 	if source.DeviceBatteryPercent != nil {
 		xfloat64 := *source.DeviceBatteryPercent
-		siteCreateDeviceStateParams.DeviceBatteryPercent = &xfloat64
+		siteCreateDeviceReportParams.DeviceBatteryPercent = &xfloat64
 	}
 	if source.DeviceChargingState != nil {
-		xstring2 := *source.DeviceChargingState
-		siteCreateDeviceStateParams.DeviceChargingState = &xstring2
+		xstring := *source.DeviceChargingState
+		siteCreateDeviceReportParams.DeviceChargingState = &xstring
+	}
+	if source.PumpState != nil {
+		xstring2 := *source.PumpState
+		siteCreateDeviceReportParams.PumpState = &xstring2
+	}
+	if source.PumpReservoir != nil {
+		xfloat642 := *source.PumpReservoir
+		siteCreateDeviceReportParams.PumpReservoir = &xfloat642
+	}
+	if source.PumpBatteryPercent != nil {
+		xfloat643 := *source.PumpBatteryPercent
+		siteCreateDeviceReportParams.PumpBatteryPercent = &xfloat643
+	}
+	if source.PumpChargingState != nil {
+		xstring3 := *source.PumpChargingState
+		siteCreateDeviceReportParams.PumpChargingState = &xstring3
+	}
+	if source.LoopIob != nil {
+		xfloat644 := *source.LoopIob
+		siteCreateDeviceReportParams.LoopIob = &xfloat644
+	}
+	if source.LoopIobBasal != nil {
+		xfloat645 := *source.LoopIobBasal
+		siteCreateDeviceReportParams.LoopIobBasal = &xfloat645
+	}
+	if source.LoopIobTreatment != nil {
+		xfloat646 := *source.LoopIobTreatment
+		siteCreateDeviceReportParams.LoopIobTreatment = &xfloat646
+	}
+	if source.LoopCob != nil {
+		xfloat647 := *source.LoopCob
+		siteCreateDeviceReportParams.LoopCob = &xfloat647
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteCreateDeviceStateParams.UtcOffsetMinutes = &xint642
+		xint64 := *source.UtcOffsetMinutes
+		siteCreateDeviceReportParams.UtcOffsetMinutes = &xint64
 	}
-	siteCreateDeviceStateParams.OccurredAt = source.OccurredAt
+	siteCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		siteCreateDeviceStateParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		siteCreateDeviceReportParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		siteCreateDeviceStateParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		siteCreateDeviceReportParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		siteCreateDeviceStateParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring6
 	}
-	siteCreateDeviceStateParams.CreatedByIdentityName = source.CreatedByIdentityName
-	return siteCreateDeviceStateParams
+	siteCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
+	return siteCreateDeviceReportParams
 }
-func DeviceStateToUpdate(source DeviceState) UpdateDeviceStateParams {
-	var siteUpdateDeviceStateParams UpdateDeviceStateParams
-	if source.DeviceState != nil {
-		xstring := *source.DeviceState
-		siteUpdateDeviceStateParams.DeviceState = &xstring
-	}
-	if source.DeviceTimestamp != nil {
-		xint64 := *source.DeviceTimestamp
-		siteUpdateDeviceStateParams.DeviceTimestamp = &xint64
-	}
-	if source.DeviceBatteryPercent != nil {
-		xfloat64 := *source.DeviceBatteryPercent
-		siteUpdateDeviceStateParams.DeviceBatteryPercent = &xfloat64
-	}
-	if source.DeviceChargingState != nil {
-		xstring2 := *source.DeviceChargingState
-		siteUpdateDeviceStateParams.DeviceChargingState = &xstring2
-	}
+func DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams {
+	var siteUpdateDeviceReportParams UpdateDeviceReportParams
 	pInt64 := source.OccurredAt
-	siteUpdateDeviceStateParams.OccurredAt = &pInt64
+	siteUpdateDeviceReportParams.OccurredAt = &pInt64
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteUpdateDeviceStateParams.UtcOffsetMinutes = &xint642
+		xint64 := *source.UtcOffsetMinutes
+		siteUpdateDeviceReportParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring3 := *source.UpdatedByIdentityName
-		siteUpdateDeviceStateParams.UpdatedByIdentityName = &xstring3
+		xstring := *source.UpdatedByIdentityName
+		siteUpdateDeviceReportParams.UpdatedByIdentityName = &xstring
 	}
-	siteUpdateDeviceStateParams.ID = source.ID
-	return siteUpdateDeviceStateParams
+	siteUpdateDeviceReportParams.ID = source.ID
+	return siteUpdateDeviceReportParams
 }
 func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 	var siteCreateEventGroupParams CreateEventGroupParams
@@ -250,29 +235,17 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring6 := *source.ProfileSwitchID
 		siteCreateEventGroupParams.ProfileSwitchID = &xstring6
 	}
-	if source.DeviceStateID != nil {
-		xstring7 := *source.DeviceStateID
-		siteCreateEventGroupParams.DeviceStateID = &xstring7
-	}
-	if source.LoopStateID != nil {
-		xstring8 := *source.LoopStateID
-		siteCreateEventGroupParams.LoopStateID = &xstring8
-	}
-	if source.PumpStateID != nil {
-		xstring9 := *source.PumpStateID
-		siteCreateEventGroupParams.PumpStateID = &xstring9
-	}
-	if source.CgmStateID != nil {
-		xstring10 := *source.CgmStateID
-		siteCreateEventGroupParams.CgmStateID = &xstring10
+	if source.ComponentEventID != nil {
+		xstring7 := *source.ComponentEventID
+		siteCreateEventGroupParams.ComponentEventID = &xstring7
 	}
 	if source.ActivityID != nil {
-		xstring11 := *source.ActivityID
-		siteCreateEventGroupParams.ActivityID = &xstring11
+		xstring8 := *source.ActivityID
+		siteCreateEventGroupParams.ActivityID = &xstring8
 	}
 	if source.NoteID != nil {
-		xstring12 := *source.NoteID
-		siteCreateEventGroupParams.NoteID = &xstring12
+		xstring9 := *source.NoteID
+		siteCreateEventGroupParams.NoteID = &xstring9
 	}
 	siteCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
@@ -280,16 +253,16 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
 	}
 	if source.RawJsonData != nil {
-		xstring13 := *source.RawJsonData
-		siteCreateEventGroupParams.RawJsonData = &xstring13
+		xstring10 := *source.RawJsonData
+		siteCreateEventGroupParams.RawJsonData = &xstring10
 	}
 	if source.CreatedByAppName != nil {
-		xstring14 := *source.CreatedByAppName
-		siteCreateEventGroupParams.CreatedByAppName = &xstring14
+		xstring11 := *source.CreatedByAppName
+		siteCreateEventGroupParams.CreatedByAppName = &xstring11
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring15 := *source.CreatedByDeviceName
-		siteCreateEventGroupParams.CreatedByDeviceName = &xstring15
+		xstring12 := *source.CreatedByDeviceName
+		siteCreateEventGroupParams.CreatedByDeviceName = &xstring12
 	}
 	siteCreateEventGroupParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateEventGroupParams
@@ -574,92 +547,6 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	siteUpdateInsulinDoseParams.ID = source.ID
 	return siteUpdateInsulinDoseParams
 }
-func LoopStateToCreate(source LoopState) CreateLoopStateParams {
-	var siteCreateLoopStateParams CreateLoopStateParams
-	siteCreateLoopStateParams.ID = source.ID
-	if source.LoopState != nil {
-		xstring := *source.LoopState
-		siteCreateLoopStateParams.LoopState = &xstring
-	}
-	if source.LoopTimestamp != nil {
-		xint64 := *source.LoopTimestamp
-		siteCreateLoopStateParams.LoopTimestamp = &xint64
-	}
-	if source.Iob != nil {
-		xfloat64 := *source.Iob
-		siteCreateLoopStateParams.Iob = &xfloat64
-	}
-	if source.IobBasal != nil {
-		xfloat642 := *source.IobBasal
-		siteCreateLoopStateParams.IobBasal = &xfloat642
-	}
-	if source.IobTreatment != nil {
-		xfloat643 := *source.IobTreatment
-		siteCreateLoopStateParams.IobTreatment = &xfloat643
-	}
-	if source.Cob != nil {
-		xfloat644 := *source.Cob
-		siteCreateLoopStateParams.Cob = &xfloat644
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteCreateLoopStateParams.UtcOffsetMinutes = &xint642
-	}
-	siteCreateLoopStateParams.OccurredAt = source.OccurredAt
-	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		siteCreateLoopStateParams.RawJsonData = &xstring2
-	}
-	if source.CreatedByAppName != nil {
-		xstring3 := *source.CreatedByAppName
-		siteCreateLoopStateParams.CreatedByAppName = &xstring3
-	}
-	if source.CreatedByDeviceName != nil {
-		xstring4 := *source.CreatedByDeviceName
-		siteCreateLoopStateParams.CreatedByDeviceName = &xstring4
-	}
-	siteCreateLoopStateParams.CreatedByIdentityName = source.CreatedByIdentityName
-	return siteCreateLoopStateParams
-}
-func LoopStateToUpdate(source LoopState) UpdateLoopStateParams {
-	var siteUpdateLoopStateParams UpdateLoopStateParams
-	if source.LoopState != nil {
-		xstring := *source.LoopState
-		siteUpdateLoopStateParams.LoopState = &xstring
-	}
-	if source.LoopTimestamp != nil {
-		xint64 := *source.LoopTimestamp
-		siteUpdateLoopStateParams.LoopTimestamp = &xint64
-	}
-	if source.Iob != nil {
-		xfloat64 := *source.Iob
-		siteUpdateLoopStateParams.Iob = &xfloat64
-	}
-	if source.IobBasal != nil {
-		xfloat642 := *source.IobBasal
-		siteUpdateLoopStateParams.IobBasal = &xfloat642
-	}
-	if source.IobTreatment != nil {
-		xfloat643 := *source.IobTreatment
-		siteUpdateLoopStateParams.IobTreatment = &xfloat643
-	}
-	if source.Cob != nil {
-		xfloat644 := *source.Cob
-		siteUpdateLoopStateParams.Cob = &xfloat644
-	}
-	pInt64 := source.OccurredAt
-	siteUpdateLoopStateParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteUpdateLoopStateParams.UtcOffsetMinutes = &xint642
-	}
-	if source.UpdatedByIdentityName != nil {
-		xstring2 := *source.UpdatedByIdentityName
-		siteUpdateLoopStateParams.UpdatedByIdentityName = &xstring2
-	}
-	siteUpdateLoopStateParams.ID = source.ID
-	return siteUpdateLoopStateParams
-}
 func NoteToCreate(source Note) CreateNoteParams {
 	var siteCreateNoteParams CreateNoteParams
 	siteCreateNoteParams.ID = source.ID
@@ -850,92 +737,6 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	siteUpdateProfileSwitchParams.ID = source.ID
 	return siteUpdateProfileSwitchParams
 }
-func PumpStateToCreate(source PumpState) CreatePumpStateParams {
-	var siteCreatePumpStateParams CreatePumpStateParams
-	siteCreatePumpStateParams.ID = source.ID
-	if source.PumpState != nil {
-		xstring := *source.PumpState
-		siteCreatePumpStateParams.PumpState = &xstring
-	}
-	if source.PumpTimestamp != nil {
-		xint64 := *source.PumpTimestamp
-		siteCreatePumpStateParams.PumpTimestamp = &xint64
-	}
-	if source.PumpInsertionTime != nil {
-		xint642 := *source.PumpInsertionTime
-		siteCreatePumpStateParams.PumpInsertionTime = &xint642
-	}
-	if source.PumpReservoir != nil {
-		xfloat64 := *source.PumpReservoir
-		siteCreatePumpStateParams.PumpReservoir = &xfloat64
-	}
-	if source.PumpBatteryPercent != nil {
-		xfloat642 := *source.PumpBatteryPercent
-		siteCreatePumpStateParams.PumpBatteryPercent = &xfloat642
-	}
-	if source.PumpChargingState != nil {
-		xstring2 := *source.PumpChargingState
-		siteCreatePumpStateParams.PumpChargingState = &xstring2
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		siteCreatePumpStateParams.UtcOffsetMinutes = &xint643
-	}
-	siteCreatePumpStateParams.OccurredAt = source.OccurredAt
-	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		siteCreatePumpStateParams.RawJsonData = &xstring3
-	}
-	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		siteCreatePumpStateParams.CreatedByAppName = &xstring4
-	}
-	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		siteCreatePumpStateParams.CreatedByDeviceName = &xstring5
-	}
-	siteCreatePumpStateParams.CreatedByIdentityName = source.CreatedByIdentityName
-	return siteCreatePumpStateParams
-}
-func PumpStateToUpdate(source PumpState) UpdatePumpStateParams {
-	var siteUpdatePumpStateParams UpdatePumpStateParams
-	if source.PumpState != nil {
-		xstring := *source.PumpState
-		siteUpdatePumpStateParams.PumpState = &xstring
-	}
-	if source.PumpTimestamp != nil {
-		xint64 := *source.PumpTimestamp
-		siteUpdatePumpStateParams.PumpTimestamp = &xint64
-	}
-	if source.PumpInsertionTime != nil {
-		xint642 := *source.PumpInsertionTime
-		siteUpdatePumpStateParams.PumpInsertionTime = &xint642
-	}
-	if source.PumpReservoir != nil {
-		xfloat64 := *source.PumpReservoir
-		siteUpdatePumpStateParams.PumpReservoir = &xfloat64
-	}
-	if source.PumpBatteryPercent != nil {
-		xfloat642 := *source.PumpBatteryPercent
-		siteUpdatePumpStateParams.PumpBatteryPercent = &xfloat642
-	}
-	if source.PumpChargingState != nil {
-		xstring2 := *source.PumpChargingState
-		siteUpdatePumpStateParams.PumpChargingState = &xstring2
-	}
-	pInt64 := source.OccurredAt
-	siteUpdatePumpStateParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		siteUpdatePumpStateParams.UtcOffsetMinutes = &xint643
-	}
-	if source.UpdatedByIdentityName != nil {
-		xstring3 := *source.UpdatedByIdentityName
-		siteUpdatePumpStateParams.UpdatedByIdentityName = &xstring3
-	}
-	siteUpdatePumpStateParams.ID = source.ID
-	return siteUpdatePumpStateParams
-}
 func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow {
 	var siteGetEventGroupRow GetEventGroupRow
 	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source.EventGroup)
@@ -1055,137 +856,49 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		xstring14 := *source.ProfileSwitchTargetsJson
 		siteGetEventGroupRow.ProfileSwitchTargetsJson = &xstring14
 	}
-	if source.DeviceStateID != nil {
-		xstring15 := *source.DeviceStateID
-		siteGetEventGroupRow.DeviceStateID = &xstring15
-	}
-	if source.DeviceStateDeviceState != nil {
-		xstring16 := *source.DeviceStateDeviceState
-		siteGetEventGroupRow.DeviceStateDeviceState = &xstring16
-	}
-	if source.DeviceStateDeviceTimestamp != nil {
-		xint644 := *source.DeviceStateDeviceTimestamp
-		siteGetEventGroupRow.DeviceStateDeviceTimestamp = &xint644
-	}
-	if source.DeviceStateDeviceBatteryPercent != nil {
-		xfloat6413 := *source.DeviceStateDeviceBatteryPercent
-		siteGetEventGroupRow.DeviceStateDeviceBatteryPercent = &xfloat6413
-	}
-	if source.DeviceStateDeviceChargingState != nil {
-		xstring17 := *source.DeviceStateDeviceChargingState
-		siteGetEventGroupRow.DeviceStateDeviceChargingState = &xstring17
-	}
-	if source.LoopStateID != nil {
-		xstring18 := *source.LoopStateID
-		siteGetEventGroupRow.LoopStateID = &xstring18
-	}
-	if source.LoopStateLoopState != nil {
-		xstring19 := *source.LoopStateLoopState
-		siteGetEventGroupRow.LoopStateLoopState = &xstring19
-	}
-	if source.LoopStateLoopTimestamp != nil {
-		xint645 := *source.LoopStateLoopTimestamp
-		siteGetEventGroupRow.LoopStateLoopTimestamp = &xint645
-	}
-	if source.LoopStateIob != nil {
-		xfloat6414 := *source.LoopStateIob
-		siteGetEventGroupRow.LoopStateIob = &xfloat6414
-	}
-	if source.LoopStateIobBasal != nil {
-		xfloat6415 := *source.LoopStateIobBasal
-		siteGetEventGroupRow.LoopStateIobBasal = &xfloat6415
-	}
-	if source.LoopStateIobTreatment != nil {
-		xfloat6416 := *source.LoopStateIobTreatment
-		siteGetEventGroupRow.LoopStateIobTreatment = &xfloat6416
-	}
-	if source.LoopStateCob != nil {
-		xfloat6417 := *source.LoopStateCob
-		siteGetEventGroupRow.LoopStateCob = &xfloat6417
-	}
-	if source.PumpStateID != nil {
-		xstring20 := *source.PumpStateID
-		siteGetEventGroupRow.PumpStateID = &xstring20
-	}
-	if source.PumpStatePumpState != nil {
-		xstring21 := *source.PumpStatePumpState
-		siteGetEventGroupRow.PumpStatePumpState = &xstring21
-	}
-	if source.PumpStatePumpTimestamp != nil {
-		xint646 := *source.PumpStatePumpTimestamp
-		siteGetEventGroupRow.PumpStatePumpTimestamp = &xint646
-	}
-	if source.PumpStatePumpInsertionTime != nil {
-		xint647 := *source.PumpStatePumpInsertionTime
-		siteGetEventGroupRow.PumpStatePumpInsertionTime = &xint647
-	}
-	if source.PumpStatePumpReservoir != nil {
-		xfloat6418 := *source.PumpStatePumpReservoir
-		siteGetEventGroupRow.PumpStatePumpReservoir = &xfloat6418
-	}
-	if source.PumpStatePumpBatteryPercent != nil {
-		xfloat6419 := *source.PumpStatePumpBatteryPercent
-		siteGetEventGroupRow.PumpStatePumpBatteryPercent = &xfloat6419
-	}
-	if source.PumpStatePumpChargingState != nil {
-		xstring22 := *source.PumpStatePumpChargingState
-		siteGetEventGroupRow.PumpStatePumpChargingState = &xstring22
-	}
-	if source.CgmStateID != nil {
-		xstring23 := *source.CgmStateID
-		siteGetEventGroupRow.CgmStateID = &xstring23
-	}
-	if source.CgmStateCgmState != nil {
-		xstring24 := *source.CgmStateCgmState
-		siteGetEventGroupRow.CgmStateCgmState = &xstring24
-	}
-	if source.CgmStateCgmTimestamp != nil {
-		xint648 := *source.CgmStateCgmTimestamp
-		siteGetEventGroupRow.CgmStateCgmTimestamp = &xint648
-	}
-	if source.CgmStateCgmInsertionTime != nil {
-		xint649 := *source.CgmStateCgmInsertionTime
-		siteGetEventGroupRow.CgmStateCgmInsertionTime = &xint649
+	if source.ComponentEventID != nil {
+		xstring15 := *source.ComponentEventID
+		siteGetEventGroupRow.ComponentEventID = &xstring15
 	}
 	if source.ActivityID != nil {
-		xstring25 := *source.ActivityID
-		siteGetEventGroupRow.ActivityID = &xstring25
+		xstring16 := *source.ActivityID
+		siteGetEventGroupRow.ActivityID = &xstring16
 	}
 	if source.ActivityName != nil {
-		xstring26 := *source.ActivityName
-		siteGetEventGroupRow.ActivityName = &xstring26
+		xstring17 := *source.ActivityName
+		siteGetEventGroupRow.ActivityName = &xstring17
 	}
 	if source.ActivityType != nil {
-		xstring27 := *source.ActivityType
-		siteGetEventGroupRow.ActivityType = &xstring27
+		xstring18 := *source.ActivityType
+		siteGetEventGroupRow.ActivityType = &xstring18
 	}
 	if source.ActivityDurationMinutes != nil {
-		xint6410 := *source.ActivityDurationMinutes
-		siteGetEventGroupRow.ActivityDurationMinutes = &xint6410
+		xint644 := *source.ActivityDurationMinutes
+		siteGetEventGroupRow.ActivityDurationMinutes = &xint644
 	}
 	if source.ActivityCalories != nil {
-		xint6411 := *source.ActivityCalories
-		siteGetEventGroupRow.ActivityCalories = &xint6411
+		xint645 := *source.ActivityCalories
+		siteGetEventGroupRow.ActivityCalories = &xint645
 	}
 	if source.ActivitySteps != nil {
-		xint6412 := *source.ActivitySteps
-		siteGetEventGroupRow.ActivitySteps = &xint6412
+		xint646 := *source.ActivitySteps
+		siteGetEventGroupRow.ActivitySteps = &xint646
 	}
 	if source.ActivityHeartRate != nil {
-		xint6413 := *source.ActivityHeartRate
-		siteGetEventGroupRow.ActivityHeartRate = &xint6413
+		xint647 := *source.ActivityHeartRate
+		siteGetEventGroupRow.ActivityHeartRate = &xint647
 	}
 	if source.NoteID != nil {
-		xstring28 := *source.NoteID
-		siteGetEventGroupRow.NoteID = &xstring28
+		xstring19 := *source.NoteID
+		siteGetEventGroupRow.NoteID = &xstring19
 	}
 	if source.NoteContent != nil {
-		xstring29 := *source.NoteContent
-		siteGetEventGroupRow.NoteContent = &xstring29
+		xstring20 := *source.NoteContent
+		siteGetEventGroupRow.NoteContent = &xstring20
 	}
 	if source.NoteReason != nil {
-		xstring30 := *source.NoteReason
-		siteGetEventGroupRow.NoteReason = &xstring30
+		xstring21 := *source.NoteReason
+		siteGetEventGroupRow.NoteReason = &xstring21
 	}
 	return siteGetEventGroupRow
 }
@@ -1345,33 +1058,21 @@ func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
 		xstring6 := *source.ProfileSwitchID
 		siteEventGroup.ProfileSwitchID = &xstring6
 	}
-	if source.DeviceStateID != nil {
-		xstring7 := *source.DeviceStateID
-		siteEventGroup.DeviceStateID = &xstring7
-	}
-	if source.LoopStateID != nil {
-		xstring8 := *source.LoopStateID
-		siteEventGroup.LoopStateID = &xstring8
-	}
-	if source.PumpStateID != nil {
-		xstring9 := *source.PumpStateID
-		siteEventGroup.PumpStateID = &xstring9
-	}
-	if source.CgmStateID != nil {
-		xstring10 := *source.CgmStateID
-		siteEventGroup.CgmStateID = &xstring10
+	if source.ComponentEventID != nil {
+		xstring7 := *source.ComponentEventID
+		siteEventGroup.ComponentEventID = &xstring7
 	}
 	if source.ActivityID != nil {
-		xstring11 := *source.ActivityID
-		siteEventGroup.ActivityID = &xstring11
+		xstring8 := *source.ActivityID
+		siteEventGroup.ActivityID = &xstring8
 	}
 	if source.NoteID != nil {
-		xstring12 := *source.NoteID
-		siteEventGroup.NoteID = &xstring12
+		xstring9 := *source.NoteID
+		siteEventGroup.NoteID = &xstring9
 	}
 	if source.RawJsonData != nil {
-		xstring13 := *source.RawJsonData
-		siteEventGroup.RawJsonData = &xstring13
+		xstring10 := *source.RawJsonData
+		siteEventGroup.RawJsonData = &xstring10
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -1385,16 +1086,16 @@ func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
 	siteEventGroup.CreatedAt = source.CreatedAt
 	siteEventGroup.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring14 := *source.CreatedByAppName
-		siteEventGroup.CreatedByAppName = &xstring14
+		xstring11 := *source.CreatedByAppName
+		siteEventGroup.CreatedByAppName = &xstring11
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring15 := *source.CreatedByDeviceName
-		siteEventGroup.CreatedByDeviceName = &xstring15
+		xstring12 := *source.CreatedByDeviceName
+		siteEventGroup.CreatedByDeviceName = &xstring12
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring16 := *source.UpdatedByIdentityName
-		siteEventGroup.UpdatedByIdentityName = &xstring16
+		xstring13 := *source.UpdatedByIdentityName
+		siteEventGroup.UpdatedByIdentityName = &xstring13
 	}
 	siteEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteEventGroup

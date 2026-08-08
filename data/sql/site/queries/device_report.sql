@@ -4,11 +4,16 @@
 -- name: CreateDeviceReport :one
 INSERT INTO device_reports (
     id,
-    state,
-    timestamp,
-    battery_percent,
-    charging_state,
-
+    device_battery_percent,
+    device_charging_state,
+    pump_state,
+    pump_reservoir,
+    pump_battery_percent,
+    pump_charging_state,
+    loop_iob,
+    loop_iob_basal,
+    loop_iob_treatment,
+    loop_cob,
 
     utc_offset_minutes,
     occurred_at,
@@ -17,7 +22,7 @@ INSERT INTO device_reports (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -68,11 +73,6 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateDeviceReport :one
 UPDATE device_reports SET
-    state = COALESCE(sqlc.narg('DeviceReport'), state),
-    timestamp = COALESCE(sqlc.narg('DeviceTimestamp'), timestamp),
-    battery_percent = COALESCE(sqlc.narg('DeviceBatteryPercent'), battery_percent),
-    charging_state = COALESCE(sqlc.narg('DeviceChargingState'), charging_state),
-    
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
