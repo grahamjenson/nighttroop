@@ -129,6 +129,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getInsulinDoseStmt, err = db.PrepareContext(ctx, getInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInsulinDose: %w", err)
 	}
+	if q.getMostRecentProfileStoreStmt, err = db.PrepareContext(ctx, getMostRecentProfileStore); err != nil {
+		return nil, fmt.Errorf("error preparing query GetMostRecentProfileStore: %w", err)
+	}
 	if q.getNoteStmt, err = db.PrepareContext(ctx, getNote); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNote: %w", err)
 	}
@@ -505,6 +508,11 @@ func (q *Queries) Close() error {
 	if q.getInsulinDoseStmt != nil {
 		if cerr := q.getInsulinDoseStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.getMostRecentProfileStoreStmt != nil {
+		if cerr := q.getMostRecentProfileStoreStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getMostRecentProfileStoreStmt: %w", cerr)
 		}
 	}
 	if q.getNoteStmt != nil {
@@ -911,6 +919,7 @@ type Queries struct {
 	getFoodPresetStmt                   *sql.Stmt
 	getGlucoseReadingStmt               *sql.Stmt
 	getInsulinDoseStmt                  *sql.Stmt
+	getMostRecentProfileStoreStmt       *sql.Stmt
 	getNoteStmt                         *sql.Stmt
 	getProfilePresetStmt                *sql.Stmt
 	getProfileSwitchStmt                *sql.Stmt
@@ -1018,6 +1027,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getFoodPresetStmt:                   q.getFoodPresetStmt,
 		getGlucoseReadingStmt:               q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                  q.getInsulinDoseStmt,
+		getMostRecentProfileStoreStmt:       q.getMostRecentProfileStoreStmt,
 		getNoteStmt:                         q.getNoteStmt,
 		getProfilePresetStmt:                q.getProfilePresetStmt,
 		getProfileSwitchStmt:                q.getProfileSwitchStmt,

@@ -43,12 +43,15 @@ SELECT
 
     ps.id as profile_switch_id,
     ps.name as profile_switch_name,
+    ps.dia as profile_switch_dia,
+    ps.units as profile_switch_units,
     ps.duration_minutes as profile_switch_duration_minutes,
     ps.percent as profile_switch_percent,
     ps.carb_ratios_json as profile_switch_carb_ratios_json,
     ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
     ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_json as profile_switch_targets_json,
+    ps.targets_high_json as profile_switch_targets_high_json,
+    ps.targets_low_json as profile_switch_targets_low_json,
 
     ce.id as component_event_id,
 
@@ -110,12 +113,15 @@ type AllEventGroupsRow struct {
 	TempTargetLowTarget                   *float64
 	ProfileSwitchID                       *string
 	ProfileSwitchName                     *string
+	ProfileSwitchDia                      *float64
+	ProfileSwitchUnits                    *string
 	ProfileSwitchDurationMinutes          *int64
 	ProfileSwitchPercent                  *float64
 	ProfileSwitchCarbRatiosJson           *string
 	ProfileSwitchInsulinSensitivitiesJson *string
 	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsJson              *string
+	ProfileSwitchTargetsHighJson          *string
+	ProfileSwitchTargetsLowJson           *string
 	ComponentEventID                      *string
 	ActivityID                            *string
 	ActivityName                          *string
@@ -183,12 +189,15 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.TempTargetLowTarget,
 			&i.ProfileSwitchID,
 			&i.ProfileSwitchName,
+			&i.ProfileSwitchDia,
+			&i.ProfileSwitchUnits,
 			&i.ProfileSwitchDurationMinutes,
 			&i.ProfileSwitchPercent,
 			&i.ProfileSwitchCarbRatiosJson,
 			&i.ProfileSwitchInsulinSensitivitiesJson,
 			&i.ProfileSwitchBasalRatesJson,
-			&i.ProfileSwitchTargetsJson,
+			&i.ProfileSwitchTargetsHighJson,
+			&i.ProfileSwitchTargetsLowJson,
 			&i.ComponentEventID,
 			&i.ActivityID,
 			&i.ActivityName,
@@ -343,12 +352,15 @@ SELECT
 
     ps.id as profile_switch_id,
     ps.name as profile_switch_name,
+    ps.dia as profile_switch_dia,
+    ps.units as profile_switch_units,
     ps.duration_minutes as profile_switch_duration_minutes,
     ps.percent as profile_switch_percent,
     ps.carb_ratios_json as profile_switch_carb_ratios_json,
     ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
     ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_json as profile_switch_targets_json,
+    ps.targets_high_json as profile_switch_targets_high_json,
+    ps.targets_low_json as profile_switch_targets_low_json,
 
     ce.id as component_event_id,
 
@@ -407,12 +419,15 @@ type GetEventGroupRow struct {
 	TempTargetLowTarget                   *float64
 	ProfileSwitchID                       *string
 	ProfileSwitchName                     *string
+	ProfileSwitchDia                      *float64
+	ProfileSwitchUnits                    *string
 	ProfileSwitchDurationMinutes          *int64
 	ProfileSwitchPercent                  *float64
 	ProfileSwitchCarbRatiosJson           *string
 	ProfileSwitchInsulinSensitivitiesJson *string
 	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsJson              *string
+	ProfileSwitchTargetsHighJson          *string
+	ProfileSwitchTargetsLowJson           *string
 	ComponentEventID                      *string
 	ActivityID                            *string
 	ActivityName                          *string
@@ -474,12 +489,15 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.TempTargetLowTarget,
 		&i.ProfileSwitchID,
 		&i.ProfileSwitchName,
+		&i.ProfileSwitchDia,
+		&i.ProfileSwitchUnits,
 		&i.ProfileSwitchDurationMinutes,
 		&i.ProfileSwitchPercent,
 		&i.ProfileSwitchCarbRatiosJson,
 		&i.ProfileSwitchInsulinSensitivitiesJson,
 		&i.ProfileSwitchBasalRatesJson,
-		&i.ProfileSwitchTargetsJson,
+		&i.ProfileSwitchTargetsHighJson,
+		&i.ProfileSwitchTargetsLowJson,
 		&i.ComponentEventID,
 		&i.ActivityID,
 		&i.ActivityName,
@@ -660,12 +678,15 @@ SELECT
 
     ps.id as profile_switch_id,
     ps.name as profile_switch_name,
+    ps.dia as profile_switch_dia,
+    ps.units as profile_switch_units,
     ps.duration_minutes as profile_switch_duration_minutes,
     ps.percent as profile_switch_percent,
     ps.carb_ratios_json as profile_switch_carb_ratios_json,
     ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
     ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_json as profile_switch_targets_json,
+    ps.targets_high_json as profile_switch_targets_high_json,
+    ps.targets_low_json as profile_switch_targets_low_json,
 
     ce.id as component_event_id,
 
@@ -835,12 +856,15 @@ type SearchEventGroupsRow struct {
 	TempTargetLowTarget                   *float64
 	ProfileSwitchID                       *string
 	ProfileSwitchName                     *string
+	ProfileSwitchDia                      *float64
+	ProfileSwitchUnits                    *string
 	ProfileSwitchDurationMinutes          *int64
 	ProfileSwitchPercent                  *float64
 	ProfileSwitchCarbRatiosJson           *string
 	ProfileSwitchInsulinSensitivitiesJson *string
 	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsJson              *string
+	ProfileSwitchTargetsHighJson          *string
+	ProfileSwitchTargetsLowJson           *string
 	ComponentEventID                      *string
 	ActivityID                            *string
 	ActivityName                          *string
@@ -953,12 +977,15 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.TempTargetLowTarget,
 			&i.ProfileSwitchID,
 			&i.ProfileSwitchName,
+			&i.ProfileSwitchDia,
+			&i.ProfileSwitchUnits,
 			&i.ProfileSwitchDurationMinutes,
 			&i.ProfileSwitchPercent,
 			&i.ProfileSwitchCarbRatiosJson,
 			&i.ProfileSwitchInsulinSensitivitiesJson,
 			&i.ProfileSwitchBasalRatesJson,
-			&i.ProfileSwitchTargetsJson,
+			&i.ProfileSwitchTargetsHighJson,
+			&i.ProfileSwitchTargetsLowJson,
 			&i.ComponentEventID,
 			&i.ActivityID,
 			&i.ActivityName,

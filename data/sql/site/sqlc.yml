@@ -30,3 +30,9 @@ sql:
         output_batch_file_name: "z_batch.go"
         output_copyfrom_file_name: "z_copyfrom.go"
 
+overrides:
+  go:
+    overrides:
+      - column: "profile_presets.is_default"
+        go_type:
+          type: "bool"

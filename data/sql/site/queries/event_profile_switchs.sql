@@ -7,10 +7,14 @@ INSERT INTO profile_switches (
     name,
     duration_minutes,
     percent,
+
+    dia,
+    units,
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
-    targets_json,
+    targets_high_json,
+    targets_low_json,
 
     utc_offset_minutes,
     occurred_at,
@@ -19,7 +23,7 @@ INSERT INTO profile_switches (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -81,10 +85,6 @@ UPDATE profile_switches SET
     name = COALESCE(sqlc.narg('Name'), name),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     percent = COALESCE(sqlc.narg('Percent'), percent),
-    carb_ratios_json = COALESCE(sqlc.narg('CarbRatiosJson'), carb_ratios_json),
-    insulin_sensitivities_json = COALESCE(sqlc.narg('InsulinSensitivitiesJson'), insulin_sensitivities_json),
-    basal_rates_json = COALESCE(sqlc.narg('BasalRatesJson'), basal_rates_json),
-    targets_json = COALESCE(sqlc.narg('TargetsJson'), targets_json),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

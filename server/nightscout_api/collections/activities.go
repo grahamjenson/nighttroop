@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -85,8 +86,22 @@ func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	// TODO
-	return nil, nsutils.ErrNotImplemented
+	var activities []*site.Activity
+	var rerr error
+
+	// There are three options,
+	if !query.HasFilters {
+		activities, rerr = siteContext.SiteDB.Queries.AllActivities(ctx, nsquery.ActivityAll(query))
+	} else {
+		activities, rerr = siteContext.SiteDB.Queries.SearchActivities(ctx, nsquery.ActivitySearch(query))
+	}
+
+	if rerr != nil {
+		slog.Error("failed to query activities from database", "error", rerr)
+		return nil, nsutils.ErrInternal
+	}
+
+	return nsutils.CreateRecordSlice(activities, c.converter), nil
 }
 
 func (c ActivityCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {

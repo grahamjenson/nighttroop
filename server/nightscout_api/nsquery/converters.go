@@ -27,12 +27,25 @@ type ToSearchParams interface {
 	GlucoseSearch(source Query) site.SearchGlucoseReadingsParams
 
 	//////
+	// Activities
+	//////
+
+	ActivityAll(source Query) site.AllActivitiesParams
+	ActivitySearch(source Query) site.SearchActivitiesParams
+
+	//////
 	// DEVICE REPORTS
 	//////
 
 	DeviceReportAll(source Query) site.AllDeviceReportsParams
 	DeviceReportSearch(source Query) site.SearchDeviceReportsParams
 
+	//////
+	// FoodPresets
+	//////
+
+	FoodPresetAll(source Query) site.AllFoodPresetsParams
+	FoodPresetSearch(source Query) site.SearchFoodPresetsParams
 	//////
 	// FoodIntake
 	//////
@@ -46,6 +59,13 @@ type ToSearchParams interface {
 
 	EventGroupAll(source Query) site.AllEventGroupsParams
 	EventGroupSearch(source Query) site.SearchEventGroupsParams
+
+	///////
+	// Profiles Presets
+	////////
+
+	ProfilePresetsAll(source Query) site.AllProfilePresetsParams
+	ProfilePresetsSearch(source Query) site.SearchProfilePresetsParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {

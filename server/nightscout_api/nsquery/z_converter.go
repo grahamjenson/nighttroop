@@ -8,6 +8,130 @@ import (
 	nightscout "nighttroop.t1d.nz/models/nightscout"
 )
 
+func ActivityAll(source Query) site.AllActivitiesParams {
+	var siteAllActivitiesParams site.AllActivitiesParams
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteAllActivitiesParams.IncludeDeleted = &xbool
+	}
+	siteAllActivitiesParams.Skip = source.Skip
+	siteAllActivitiesParams.Limit = source.Limit
+	return siteAllActivitiesParams
+}
+func ActivitySearch(source Query) site.SearchActivitiesParams {
+	var siteSearchActivitiesParams site.SearchActivitiesParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		siteSearchActivitiesParams.DateGTE = &xint64
+	}
+	if source.DateLTE != nil {
+		xint642 := *source.DateLTE
+		siteSearchActivitiesParams.DateLTE = &xint642
+	}
+	if source.DateGT != nil {
+		xint643 := *source.DateGT
+		siteSearchActivitiesParams.DateGT = &xint643
+	}
+	if source.DateLT != nil {
+		xint644 := *source.DateLT
+		siteSearchActivitiesParams.DateLT = &xint644
+	}
+	if source.CreatedAtGTE != nil {
+		xint645 := *source.CreatedAtGTE
+		siteSearchActivitiesParams.CreatedAtGTE = &xint645
+	}
+	if source.CreatedAtLTE != nil {
+		xint646 := *source.CreatedAtLTE
+		siteSearchActivitiesParams.CreatedAtLTE = &xint646
+	}
+	if source.CreatedAtGT != nil {
+		xint647 := *source.CreatedAtGT
+		siteSearchActivitiesParams.CreatedAtGT = &xint647
+	}
+	if source.CreatedAtLT != nil {
+		xint648 := *source.CreatedAtLT
+		siteSearchActivitiesParams.CreatedAtLT = &xint648
+	}
+	if source.UpdatedGTE != nil {
+		xint649 := *source.UpdatedGTE
+		siteSearchActivitiesParams.UpdatedGTE = &xint649
+	}
+	if source.UpdatedLTE != nil {
+		xint6410 := *source.UpdatedLTE
+		siteSearchActivitiesParams.UpdatedLTE = &xint6410
+	}
+	if source.UpdatedGT != nil {
+		xint6411 := *source.UpdatedGT
+		siteSearchActivitiesParams.UpdatedGT = &xint6411
+	}
+	if source.UpdatedLT != nil {
+		xint6412 := *source.UpdatedLT
+		siteSearchActivitiesParams.UpdatedLT = &xint6412
+	}
+	if source.IDEq != nil {
+		xstring := *source.IDEq
+		siteSearchActivitiesParams.IDEq = &xstring
+	}
+	if source.IDIn != nil {
+		xstring2 := *source.IDIn
+		siteSearchActivitiesParams.IDIn = &xstring2
+	}
+	if source.NameEq != nil {
+		xstring3 := *source.NameEq
+		siteSearchActivitiesParams.NameEq = &xstring3
+	}
+	if source.DeviceEq != nil {
+		xstring4 := *source.DeviceEq
+		siteSearchActivitiesParams.DeviceEq = &xstring4
+	}
+	if source.AppEq != nil {
+		xstring5 := *source.AppEq
+		siteSearchActivitiesParams.AppEq = &xstring5
+	}
+	if source.TypeEq != nil {
+		xstring6 := *source.TypeEq
+		siteSearchActivitiesParams.TypeEq = &xstring6
+	}
+	if source.TypeNeq != nil {
+		xstring7 := *source.TypeNeq
+		siteSearchActivitiesParams.TypeNeq = &xstring7
+	}
+	if source.TypeIn != nil {
+		xstring8 := *source.TypeIn
+		siteSearchActivitiesParams.TypeIn = &xstring8
+	}
+	if source.TypeNin != nil {
+		xstring9 := *source.TypeNin
+		siteSearchActivitiesParams.TypeNin = &xstring9
+	}
+	if source.DurationEQ != nil {
+		xint6413 := *source.DurationEQ
+		siteSearchActivitiesParams.DurationEQ = &xint6413
+	}
+	if source.DurationGTE != nil {
+		xint6414 := *source.DurationGTE
+		siteSearchActivitiesParams.DurationGTE = &xint6414
+	}
+	if source.DurationGT != nil {
+		xint6415 := *source.DurationGT
+		siteSearchActivitiesParams.DurationGT = &xint6415
+	}
+	if source.DurationLTE != nil {
+		xint6416 := *source.DurationLTE
+		siteSearchActivitiesParams.DurationLTE = &xint6416
+	}
+	if source.DurationLT != nil {
+		xint6417 := *source.DurationLT
+		siteSearchActivitiesParams.DurationLT = &xint6417
+	}
+	if source.IncludeDeleted != nil {
+		xbool := *source.IncludeDeleted
+		siteSearchActivitiesParams.IncludeDeleted = &xbool
+	}
+	siteSearchActivitiesParams.Skip = source.Skip
+	siteSearchActivitiesParams.Limit = source.Limit
+	return siteSearchActivitiesParams
+}
 func DeviceReportAll(source Query) site.AllDeviceReportsParams {
 	var siteAllDeviceReportsParams site.AllDeviceReportsParams
 	if source.IncludeDeleted != nil {
@@ -400,6 +524,122 @@ func FoodIntakeSearch(source Query) site.SearchFoodIntakesParams {
 	siteSearchFoodIntakesParams.Limit = source.Limit
 	return siteSearchFoodIntakesParams
 }
+func FoodPresetAll(source Query) site.AllFoodPresetsParams {
+	var siteAllFoodPresetsParams site.AllFoodPresetsParams
+	siteAllFoodPresetsParams.Skip = source.Skip
+	siteAllFoodPresetsParams.Limit = source.Limit
+	return siteAllFoodPresetsParams
+}
+func FoodPresetSearch(source Query) site.SearchFoodPresetsParams {
+	var siteSearchFoodPresetsParams site.SearchFoodPresetsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		siteSearchFoodPresetsParams.DateGTE = &xint64
+	}
+	if source.DateLTE != nil {
+		xint642 := *source.DateLTE
+		siteSearchFoodPresetsParams.DateLTE = &xint642
+	}
+	if source.DateGT != nil {
+		xint643 := *source.DateGT
+		siteSearchFoodPresetsParams.DateGT = &xint643
+	}
+	if source.DateLT != nil {
+		xint644 := *source.DateLT
+		siteSearchFoodPresetsParams.DateLT = &xint644
+	}
+	if source.CreatedAtGTE != nil {
+		xint645 := *source.CreatedAtGTE
+		siteSearchFoodPresetsParams.CreatedAtGTE = &xint645
+	}
+	if source.CreatedAtLTE != nil {
+		xint646 := *source.CreatedAtLTE
+		siteSearchFoodPresetsParams.CreatedAtLTE = &xint646
+	}
+	if source.CreatedAtGT != nil {
+		xint647 := *source.CreatedAtGT
+		siteSearchFoodPresetsParams.CreatedAtGT = &xint647
+	}
+	if source.CreatedAtLT != nil {
+		xint648 := *source.CreatedAtLT
+		siteSearchFoodPresetsParams.CreatedAtLT = &xint648
+	}
+	if source.UpdatedGTE != nil {
+		xint649 := *source.UpdatedGTE
+		siteSearchFoodPresetsParams.UpdatedGTE = &xint649
+	}
+	if source.UpdatedLTE != nil {
+		xint6410 := *source.UpdatedLTE
+		siteSearchFoodPresetsParams.UpdatedLTE = &xint6410
+	}
+	if source.UpdatedGT != nil {
+		xint6411 := *source.UpdatedGT
+		siteSearchFoodPresetsParams.UpdatedGT = &xint6411
+	}
+	if source.UpdatedLT != nil {
+		xint6412 := *source.UpdatedLT
+		siteSearchFoodPresetsParams.UpdatedLT = &xint6412
+	}
+	if source.IDEq != nil {
+		xstring := *source.IDEq
+		siteSearchFoodPresetsParams.IDEq = &xstring
+	}
+	if source.IDIn != nil {
+		xstring2 := *source.IDIn
+		siteSearchFoodPresetsParams.IDIn = &xstring2
+	}
+	if source.NameEq != nil {
+		xstring3 := *source.NameEq
+		siteSearchFoodPresetsParams.NameEq = &xstring3
+	}
+	if source.DeviceEq != nil {
+		xstring4 := *source.DeviceEq
+		siteSearchFoodPresetsParams.DeviceEq = &xstring4
+	}
+	if source.AppEq != nil {
+		xstring5 := *source.AppEq
+		siteSearchFoodPresetsParams.AppEq = &xstring5
+	}
+	if source.TypeEq != nil {
+		xstring6 := *source.TypeEq
+		siteSearchFoodPresetsParams.TypeEq = &xstring6
+	}
+	if source.TypeNeq != nil {
+		xstring7 := *source.TypeNeq
+		siteSearchFoodPresetsParams.TypeNeq = &xstring7
+	}
+	if source.TypeIn != nil {
+		xstring8 := *source.TypeIn
+		siteSearchFoodPresetsParams.TypeIn = &xstring8
+	}
+	if source.TypeNin != nil {
+		xstring9 := *source.TypeNin
+		siteSearchFoodPresetsParams.TypeNin = &xstring9
+	}
+	if source.CarbsEQ != nil {
+		xint6413 := *source.CarbsEQ
+		siteSearchFoodPresetsParams.CarbsEQ = &xint6413
+	}
+	if source.CarbsGTE != nil {
+		xint6414 := *source.CarbsGTE
+		siteSearchFoodPresetsParams.CarbsGTE = &xint6414
+	}
+	if source.CarbsGT != nil {
+		xint6415 := *source.CarbsGT
+		siteSearchFoodPresetsParams.CarbsGT = &xint6415
+	}
+	if source.CarbsLTE != nil {
+		xint6416 := *source.CarbsLTE
+		siteSearchFoodPresetsParams.CarbsLTE = &xint6416
+	}
+	if source.CarbsLT != nil {
+		xint6417 := *source.CarbsLT
+		siteSearchFoodPresetsParams.CarbsLT = &xint6417
+	}
+	siteSearchFoodPresetsParams.Skip = source.Skip
+	siteSearchFoodPresetsParams.Limit = source.Limit
+	return siteSearchFoodPresetsParams
+}
 func GlucoseAll(source Query) site.AllGlucoseReadingsParams {
 	var siteAllGlucoseReadingsParams site.AllGlucoseReadingsParams
 	if source.IncludeDeleted != nil {
@@ -519,6 +759,86 @@ func GlucoseSearch(source Query) site.SearchGlucoseReadingsParams {
 	siteSearchGlucoseReadingsParams.Skip = source.Skip
 	siteSearchGlucoseReadingsParams.Limit = source.Limit
 	return siteSearchGlucoseReadingsParams
+}
+func ProfilePresetsAll(source Query) site.AllProfilePresetsParams {
+	var siteAllProfilePresetsParams site.AllProfilePresetsParams
+	siteAllProfilePresetsParams.Skip = source.Skip
+	siteAllProfilePresetsParams.Limit = source.Limit
+	return siteAllProfilePresetsParams
+}
+func ProfilePresetsSearch(source Query) site.SearchProfilePresetsParams {
+	var siteSearchProfilePresetsParams site.SearchProfilePresetsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		siteSearchProfilePresetsParams.DateGTE = &xint64
+	}
+	if source.DateLTE != nil {
+		xint642 := *source.DateLTE
+		siteSearchProfilePresetsParams.DateLTE = &xint642
+	}
+	if source.DateGT != nil {
+		xint643 := *source.DateGT
+		siteSearchProfilePresetsParams.DateGT = &xint643
+	}
+	if source.DateLT != nil {
+		xint644 := *source.DateLT
+		siteSearchProfilePresetsParams.DateLT = &xint644
+	}
+	if source.CreatedAtGTE != nil {
+		xint645 := *source.CreatedAtGTE
+		siteSearchProfilePresetsParams.CreatedAtGTE = &xint645
+	}
+	if source.CreatedAtLTE != nil {
+		xint646 := *source.CreatedAtLTE
+		siteSearchProfilePresetsParams.CreatedAtLTE = &xint646
+	}
+	if source.CreatedAtGT != nil {
+		xint647 := *source.CreatedAtGT
+		siteSearchProfilePresetsParams.CreatedAtGT = &xint647
+	}
+	if source.CreatedAtLT != nil {
+		xint648 := *source.CreatedAtLT
+		siteSearchProfilePresetsParams.CreatedAtLT = &xint648
+	}
+	if source.UpdatedGTE != nil {
+		xint649 := *source.UpdatedGTE
+		siteSearchProfilePresetsParams.UpdatedGTE = &xint649
+	}
+	if source.UpdatedLTE != nil {
+		xint6410 := *source.UpdatedLTE
+		siteSearchProfilePresetsParams.UpdatedLTE = &xint6410
+	}
+	if source.UpdatedGT != nil {
+		xint6411 := *source.UpdatedGT
+		siteSearchProfilePresetsParams.UpdatedGT = &xint6411
+	}
+	if source.UpdatedLT != nil {
+		xint6412 := *source.UpdatedLT
+		siteSearchProfilePresetsParams.UpdatedLT = &xint6412
+	}
+	if source.IDEq != nil {
+		xstring := *source.IDEq
+		siteSearchProfilePresetsParams.IDEq = &xstring
+	}
+	if source.IDIn != nil {
+		xstring2 := *source.IDIn
+		siteSearchProfilePresetsParams.IDIn = &xstring2
+	}
+	if source.NameEq != nil {
+		xstring3 := *source.NameEq
+		siteSearchProfilePresetsParams.NameEq = &xstring3
+	}
+	if source.DeviceEq != nil {
+		xstring4 := *source.DeviceEq
+		siteSearchProfilePresetsParams.DeviceEq = &xstring4
+	}
+	if source.AppEq != nil {
+		xstring5 := *source.AppEq
+		siteSearchProfilePresetsParams.AppEq = &xstring5
+	}
+	siteSearchProfilePresetsParams.Skip = source.Skip
+	siteSearchProfilePresetsParams.Limit = source.Limit
+	return siteSearchProfilePresetsParams
 }
 func QueryValueToQuery(source QueryValues) Query {
 	var nsqueryQuery Query

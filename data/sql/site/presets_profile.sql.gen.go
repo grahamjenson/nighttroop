@@ -11,8 +11,7 @@ import (
 )
 
 const allProfilePresets = `-- name: AllProfilePresets :many
-
-SELECT id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
+SELECT id, name, profile_store_id, is_default, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
 ORDER BY created_at DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -22,9 +21,6 @@ type AllProfilePresetsParams struct {
 	Limit int64
 }
 
-// ------
-// READ
-// ------
 func (q *Queries) AllProfilePresets(ctx context.Context, arg AllProfilePresetsParams) ([]*ProfilePreset, error) {
 	rows, err := q.query(ctx, q.allProfilePresetsStmt, allProfilePresets, arg.Skip, arg.Limit)
 	if err != nil {
@@ -37,11 +33,18 @@ func (q *Queries) AllProfilePresets(ctx context.Context, arg AllProfilePresetsPa
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.ProfileStoreID,
+			&i.IsDefault,
+			&i.Dia,
+			&i.Units,
 			&i.CarbRatiosJson,
 			&i.InsulinSensitivitiesJson,
 			&i.BasalRatesJson,
-			&i.TargetsJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
 			&i.RawJsonData,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
@@ -66,27 +69,41 @@ const createProfilePreset = `-- name: CreateProfilePreset :one
 INSERT INTO profile_presets (
     id,
     name,
+    profile_store_id,
+    is_default,
+    dia,
+    units,
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
-    targets_json,
+    targets_high_json,
+    targets_low_json,
 
+    occurred_at,
+    utc_offset_minutes,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, profile_store_id, is_default, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateProfilePresetParams struct {
 	ID                       string
 	Name                     string
+	ProfileStoreID           string
+	IsDefault                bool
+	Dia                      *float64
+	Units                    *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
-	TargetsJson              *string
+	TargetsHighJson          *string
+	TargetsLowJson           *string
+	OccurredAt               int64
+	UtcOffsetMinutes         *int64
 	RawJsonData              *string
 	CreatedByAppName         *string
 	CreatedByDeviceName      *string
@@ -100,10 +117,17 @@ func (q *Queries) CreateProfilePreset(ctx context.Context, arg CreateProfilePres
 	row := q.queryRow(ctx, q.createProfilePresetStmt, createProfilePreset,
 		arg.ID,
 		arg.Name,
+		arg.ProfileStoreID,
+		arg.IsDefault,
+		arg.Dia,
+		arg.Units,
 		arg.CarbRatiosJson,
 		arg.InsulinSensitivitiesJson,
 		arg.BasalRatesJson,
-		arg.TargetsJson,
+		arg.TargetsHighJson,
+		arg.TargetsLowJson,
+		arg.OccurredAt,
+		arg.UtcOffsetMinutes,
 		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
@@ -113,11 +137,18 @@ func (q *Queries) CreateProfilePreset(ctx context.Context, arg CreateProfilePres
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.ProfileStoreID,
+		&i.IsDefault,
+		&i.Dia,
+		&i.Units,
 		&i.CarbRatiosJson,
 		&i.InsulinSensitivitiesJson,
 		&i.BasalRatesJson,
-		&i.TargetsJson,
+		&i.TargetsHighJson,
+		&i.TargetsLowJson,
 		&i.RawJsonData,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
@@ -128,8 +159,68 @@ func (q *Queries) CreateProfilePreset(ctx context.Context, arg CreateProfilePres
 	return &i, err
 }
 
+const getMostRecentProfileStore = `-- name: GetMostRecentProfileStore :many
+
+SELECT id, name, profile_store_id, is_default, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+FROM profile_presets
+WHERE profile_store_id = (
+    SELECT profile_store_id
+    FROM profile_presets
+    GROUP BY profile_store_id
+    ORDER BY MAX(created_at) DESC
+    LIMIT 1
+)
+`
+
+// ------
+// READ
+// ------
+func (q *Queries) GetMostRecentProfileStore(ctx context.Context) ([]*ProfilePreset, error) {
+	rows, err := q.query(ctx, q.getMostRecentProfileStoreStmt, getMostRecentProfileStore)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ProfilePreset
+	for rows.Next() {
+		var i ProfilePreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProfileStoreID,
+			&i.IsDefault,
+			&i.Dia,
+			&i.Units,
+			&i.CarbRatiosJson,
+			&i.InsulinSensitivitiesJson,
+			&i.BasalRatesJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
+			&i.RawJsonData,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getProfilePreset = `-- name: GetProfilePreset :one
-SELECT id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE id = ?
+SELECT id, name, profile_store_id, is_default, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE id = ?
 `
 
 type GetProfilePresetParams struct {
@@ -142,11 +233,18 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.ProfileStoreID,
+		&i.IsDefault,
+		&i.Dia,
+		&i.Units,
 		&i.CarbRatiosJson,
 		&i.InsulinSensitivitiesJson,
 		&i.BasalRatesJson,
-		&i.TargetsJson,
+		&i.TargetsHighJson,
+		&i.TargetsLowJson,
 		&i.RawJsonData,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
@@ -175,7 +273,7 @@ func (q *Queries) HardDeleteProfilePreset(ctx context.Context, arg HardDeletePro
 }
 
 const searchProfilePresets = `-- name: SearchProfilePresets :many
-SELECT id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
+SELECT id, name, profile_store_id, is_default, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR created_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR created_at <= ?2)
@@ -257,11 +355,18 @@ func (q *Queries) SearchProfilePresets(ctx context.Context, arg SearchProfilePre
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.ProfileStoreID,
+			&i.IsDefault,
+			&i.Dia,
+			&i.Units,
 			&i.CarbRatiosJson,
 			&i.InsulinSensitivitiesJson,
 			&i.BasalRatesJson,
-			&i.TargetsJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
 			&i.RawJsonData,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
@@ -286,49 +391,39 @@ const updateProfilePreset = `-- name: UpdateProfilePreset :one
 
 UPDATE profile_presets SET
     name = COALESCE(?3, name),
-    carb_ratios_json = COALESCE(?4, carb_ratios_json),
-    insulin_sensitivities_json = COALESCE(?5, insulin_sensitivities_json),
-    basal_rates_json = COALESCE(?6, basal_rates_json),
-    targets_json = COALESCE(?7, targets_json),
-
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, name, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_json, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, profile_store_id, is_default, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateProfilePresetParams struct {
-	Name                     *string
-	CarbRatiosJson           *string
-	InsulinSensitivitiesJson *string
-	BasalRatesJson           *string
-	TargetsJson              *string
-	UpdatedByIdentityName    *string
-	ID                       string
+	Name                  *string
+	UpdatedByIdentityName *string
+	ID                    string
 }
 
 // ------
 // UPDATE
 // ------
 func (q *Queries) UpdateProfilePreset(ctx context.Context, arg UpdateProfilePresetParams) (*ProfilePreset, error) {
-	row := q.queryRow(ctx, q.updateProfilePresetStmt, updateProfilePreset,
-		arg.Name,
-		arg.CarbRatiosJson,
-		arg.InsulinSensitivitiesJson,
-		arg.BasalRatesJson,
-		arg.TargetsJson,
-		arg.UpdatedByIdentityName,
-		arg.ID,
-	)
+	row := q.queryRow(ctx, q.updateProfilePresetStmt, updateProfilePreset, arg.Name, arg.UpdatedByIdentityName, arg.ID)
 	var i ProfilePreset
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.ProfileStoreID,
+		&i.IsDefault,
+		&i.Dia,
+		&i.Units,
 		&i.CarbRatiosJson,
 		&i.InsulinSensitivitiesJson,
 		&i.BasalRatesJson,
-		&i.TargetsJson,
+		&i.TargetsHighJson,
+		&i.TargetsLowJson,
 		&i.RawJsonData,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByAppName,

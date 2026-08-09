@@ -5,22 +5,40 @@
 INSERT INTO profile_presets (
     id,
     name,
+    profile_store_id,
+    is_default,
+    dia,
+    units,
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
-    targets_json,
+    targets_high_json,
+    targets_low_json,
 
+    occurred_at,
+    utc_offset_minutes,
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
 -- READ
 --------
+
+-- name: GetMostRecentProfileStore :many
+SELECT *
+FROM profile_presets
+WHERE profile_store_id = (
+    SELECT profile_store_id
+    FROM profile_presets
+    GROUP BY profile_store_id
+    ORDER BY MAX(created_at) DESC
+    LIMIT 1
+);
 
 -- name: AllProfilePresets :many
 SELECT * FROM profile_presets
@@ -66,11 +84,6 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: UpdateProfilePreset :one
 UPDATE profile_presets SET
     name = COALESCE(sqlc.narg('Name'), name),
-    carb_ratios_json = COALESCE(sqlc.narg('CarbRatiosJson'), carb_ratios_json),
-    insulin_sensitivities_json = COALESCE(sqlc.narg('InsulinSensitivitiesJson'), insulin_sensitivities_json),
-    basal_rates_json = COALESCE(sqlc.narg('BasalRatesJson'), basal_rates_json),
-    targets_json = COALESCE(sqlc.narg('TargetsJson'), targets_json),
-
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ?

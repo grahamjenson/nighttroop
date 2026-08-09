@@ -66,7 +66,8 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	//
-	// goverter:ignore Food Category Subcategory Portion Unit GI Portions HideAfterUse Hidden Position Date
+	// goverter:ignore Food Category Subcategory Portion Unit GI Portions HideAfterUse Hidden Position
+	// goverter:map CreatedAt Date
 	// goverter:map Calories Energy
 	DBModelToFood(source *site.FoodPreset) Food
 
@@ -74,15 +75,16 @@ type DBModelConverter interface {
 	// Profile To Profile Preset
 	///////
 
-	// // goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// // goverter:map CreatedByIdentityName Subject
-	// // goverter:map CreatedByAppName App
-	// // goverter:map CreatedByDeviceName Device
-	// // goverter:map ID Identifier
-	// // goverter:map OccurredAt Date
-	// //
-	// // goverter:ignore DefaultProfile Store StartDate Mills
-	// DBModelToProfile(source *site.ProfilePreset) Profile
+	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map CreatedByIdentityName Subject
+	// goverter:map CreatedByAppName App
+	// goverter:map CreatedByDeviceName Device
+	// goverter:map ID Identifier
+	// goverter:map OccurredAt Date
+	//
+	// goverter:map CreatedAt Date
+	// goverter:ignore DefaultProfile Store StartDate Mills
+	DBModelToProfile(source *site.ProfilePreset) Profile
 
 	//
 	//

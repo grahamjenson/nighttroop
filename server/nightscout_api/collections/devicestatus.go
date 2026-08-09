@@ -86,14 +86,14 @@ func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.
 }
 
 func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	var DeviceStatus []*site.DeviceReport
+	var deviceStatuses []*site.DeviceReport
 	var rerr error
 
 	// There are three options,
 	if !query.HasFilters {
-		DeviceStatus, rerr = siteContext.SiteDB.Queries.AllDeviceReports(ctx, nsquery.DeviceReportAll(query))
+		deviceStatuses, rerr = siteContext.SiteDB.Queries.AllDeviceReports(ctx, nsquery.DeviceReportAll(query))
 	} else {
-		DeviceStatus, rerr = siteContext.SiteDB.Queries.SearchDeviceReports(ctx, nsquery.DeviceReportSearch(query))
+		deviceStatuses, rerr = siteContext.SiteDB.Queries.SearchDeviceReports(ctx, nsquery.DeviceReportSearch(query))
 	}
 
 	if rerr != nil {
@@ -101,7 +101,7 @@ func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputi
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(DeviceStatus, c.converter), nil
+	return nsutils.CreateRecordSlice(deviceStatuses, c.converter), nil
 }
 
 func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {

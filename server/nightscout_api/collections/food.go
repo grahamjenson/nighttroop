@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -100,9 +101,24 @@ func (c FoodCollection) DeleteType(ctx context.Context, siteContext *httputils.S
 }
 
 func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
+	var foodPresets []*site.FoodPreset
+	var rerr error
+
+	// There are three options,
+	if !query.HasFilters {
+		foodPresets, rerr = siteContext.SiteDB.Queries.AllFoodPresets(ctx, nsquery.FoodPresetAll(query))
+	} else {
+		foodPresets, rerr = siteContext.SiteDB.Queries.SearchFoodPresets(ctx, nsquery.FoodPresetSearch(query))
+	}
+
+	if rerr != nil {
+		slog.Error("failed to query food presets from database", "error", rerr)
+		return nil, nsutils.ErrInternal
+	}
+
+	return nsutils.CreateRecordSlice(foodPresets, c.converter), nil
 }
 
 func (c FoodCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return nil, false, nsutils.ErrNotImplemented
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
 }

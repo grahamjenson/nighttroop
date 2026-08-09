@@ -599,33 +599,52 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 	var siteCreateProfilePresetParams CreateProfilePresetParams
 	siteCreateProfilePresetParams.ID = source.ID
 	siteCreateProfilePresetParams.Name = source.Name
+	siteCreateProfilePresetParams.ProfileStoreID = source.ProfileStoreID
+	siteCreateProfilePresetParams.IsDefault = source.IsDefault
+	if source.Dia != nil {
+		xfloat64 := *source.Dia
+		siteCreateProfilePresetParams.Dia = &xfloat64
+	}
+	if source.Units != nil {
+		xstring := *source.Units
+		siteCreateProfilePresetParams.Units = &xstring
+	}
 	if source.CarbRatiosJson != nil {
-		xstring := *source.CarbRatiosJson
-		siteCreateProfilePresetParams.CarbRatiosJson = &xstring
+		xstring2 := *source.CarbRatiosJson
+		siteCreateProfilePresetParams.CarbRatiosJson = &xstring2
 	}
 	if source.InsulinSensitivitiesJson != nil {
-		xstring2 := *source.InsulinSensitivitiesJson
-		siteCreateProfilePresetParams.InsulinSensitivitiesJson = &xstring2
+		xstring3 := *source.InsulinSensitivitiesJson
+		siteCreateProfilePresetParams.InsulinSensitivitiesJson = &xstring3
 	}
 	if source.BasalRatesJson != nil {
-		xstring3 := *source.BasalRatesJson
-		siteCreateProfilePresetParams.BasalRatesJson = &xstring3
+		xstring4 := *source.BasalRatesJson
+		siteCreateProfilePresetParams.BasalRatesJson = &xstring4
 	}
-	if source.TargetsJson != nil {
-		xstring4 := *source.TargetsJson
-		siteCreateProfilePresetParams.TargetsJson = &xstring4
+	if source.TargetsHighJson != nil {
+		xstring5 := *source.TargetsHighJson
+		siteCreateProfilePresetParams.TargetsHighJson = &xstring5
+	}
+	if source.TargetsLowJson != nil {
+		xstring6 := *source.TargetsLowJson
+		siteCreateProfilePresetParams.TargetsLowJson = &xstring6
+	}
+	siteCreateProfilePresetParams.OccurredAt = source.OccurredAt
+	if source.UtcOffsetMinutes != nil {
+		xint64 := *source.UtcOffsetMinutes
+		siteCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.RawJsonData != nil {
-		xstring5 := *source.RawJsonData
-		siteCreateProfilePresetParams.RawJsonData = &xstring5
+		xstring7 := *source.RawJsonData
+		siteCreateProfilePresetParams.RawJsonData = &xstring7
 	}
 	if source.CreatedByAppName != nil {
-		xstring6 := *source.CreatedByAppName
-		siteCreateProfilePresetParams.CreatedByAppName = &xstring6
+		xstring8 := *source.CreatedByAppName
+		siteCreateProfilePresetParams.CreatedByAppName = &xstring8
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring7 := *source.CreatedByDeviceName
-		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring7
+		xstring9 := *source.CreatedByDeviceName
+		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring9
 	}
 	siteCreateProfilePresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateProfilePresetParams
@@ -634,25 +653,9 @@ func ProfilePresetToUpdate(source ProfilePreset) UpdateProfilePresetParams {
 	var siteUpdateProfilePresetParams UpdateProfilePresetParams
 	pString := source.Name
 	siteUpdateProfilePresetParams.Name = &pString
-	if source.CarbRatiosJson != nil {
-		xstring := *source.CarbRatiosJson
-		siteUpdateProfilePresetParams.CarbRatiosJson = &xstring
-	}
-	if source.InsulinSensitivitiesJson != nil {
-		xstring2 := *source.InsulinSensitivitiesJson
-		siteUpdateProfilePresetParams.InsulinSensitivitiesJson = &xstring2
-	}
-	if source.BasalRatesJson != nil {
-		xstring3 := *source.BasalRatesJson
-		siteUpdateProfilePresetParams.BasalRatesJson = &xstring3
-	}
-	if source.TargetsJson != nil {
-		xstring4 := *source.TargetsJson
-		siteUpdateProfilePresetParams.TargetsJson = &xstring4
-	}
 	if source.UpdatedByIdentityName != nil {
-		xstring5 := *source.UpdatedByIdentityName
-		siteUpdateProfilePresetParams.UpdatedByIdentityName = &xstring5
+		xstring := *source.UpdatedByIdentityName
+		siteUpdateProfilePresetParams.UpdatedByIdentityName = &xstring
 	}
 	siteUpdateProfilePresetParams.ID = source.ID
 	return siteUpdateProfilePresetParams
@@ -663,21 +666,33 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 	siteCreateProfileSwitchParams.Name = source.Name
 	siteCreateProfileSwitchParams.DurationMinutes = source.DurationMinutes
 	siteCreateProfileSwitchParams.Percent = source.Percent
+	if source.Dia != nil {
+		xfloat64 := *source.Dia
+		siteCreateProfileSwitchParams.Dia = &xfloat64
+	}
+	if source.Units != nil {
+		xstring := *source.Units
+		siteCreateProfileSwitchParams.Units = &xstring
+	}
 	if source.CarbRatiosJson != nil {
-		xstring := *source.CarbRatiosJson
-		siteCreateProfileSwitchParams.CarbRatiosJson = &xstring
+		xstring2 := *source.CarbRatiosJson
+		siteCreateProfileSwitchParams.CarbRatiosJson = &xstring2
 	}
 	if source.InsulinSensitivitiesJson != nil {
-		xstring2 := *source.InsulinSensitivitiesJson
-		siteCreateProfileSwitchParams.InsulinSensitivitiesJson = &xstring2
+		xstring3 := *source.InsulinSensitivitiesJson
+		siteCreateProfileSwitchParams.InsulinSensitivitiesJson = &xstring3
 	}
 	if source.BasalRatesJson != nil {
-		xstring3 := *source.BasalRatesJson
-		siteCreateProfileSwitchParams.BasalRatesJson = &xstring3
+		xstring4 := *source.BasalRatesJson
+		siteCreateProfileSwitchParams.BasalRatesJson = &xstring4
 	}
-	if source.TargetsJson != nil {
-		xstring4 := *source.TargetsJson
-		siteCreateProfileSwitchParams.TargetsJson = &xstring4
+	if source.TargetsHighJson != nil {
+		xstring5 := *source.TargetsHighJson
+		siteCreateProfileSwitchParams.TargetsHighJson = &xstring5
+	}
+	if source.TargetsLowJson != nil {
+		xstring6 := *source.TargetsLowJson
+		siteCreateProfileSwitchParams.TargetsLowJson = &xstring6
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -685,16 +700,16 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 	}
 	siteCreateProfileSwitchParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring5 := *source.RawJsonData
-		siteCreateProfileSwitchParams.RawJsonData = &xstring5
+		xstring7 := *source.RawJsonData
+		siteCreateProfileSwitchParams.RawJsonData = &xstring7
 	}
 	if source.CreatedByAppName != nil {
-		xstring6 := *source.CreatedByAppName
-		siteCreateProfileSwitchParams.CreatedByAppName = &xstring6
+		xstring8 := *source.CreatedByAppName
+		siteCreateProfileSwitchParams.CreatedByAppName = &xstring8
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring7 := *source.CreatedByDeviceName
-		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring7
+		xstring9 := *source.CreatedByDeviceName
+		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring9
 	}
 	siteCreateProfileSwitchParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateProfileSwitchParams
@@ -707,22 +722,6 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	siteUpdateProfileSwitchParams.DurationMinutes = &pInt64
 	pFloat64 := source.Percent
 	siteUpdateProfileSwitchParams.Percent = &pFloat64
-	if source.CarbRatiosJson != nil {
-		xstring := *source.CarbRatiosJson
-		siteUpdateProfileSwitchParams.CarbRatiosJson = &xstring
-	}
-	if source.InsulinSensitivitiesJson != nil {
-		xstring2 := *source.InsulinSensitivitiesJson
-		siteUpdateProfileSwitchParams.InsulinSensitivitiesJson = &xstring2
-	}
-	if source.BasalRatesJson != nil {
-		xstring3 := *source.BasalRatesJson
-		siteUpdateProfileSwitchParams.BasalRatesJson = &xstring3
-	}
-	if source.TargetsJson != nil {
-		xstring4 := *source.TargetsJson
-		siteUpdateProfileSwitchParams.TargetsJson = &xstring4
-	}
 	pInt642 := source.OccurredAt
 	siteUpdateProfileSwitchParams.OccurredAt = &pInt642
 	if source.UtcOffsetMinutes != nil {
@@ -730,8 +729,8 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 		siteUpdateProfileSwitchParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring5 := *source.UpdatedByIdentityName
-		siteUpdateProfileSwitchParams.UpdatedByIdentityName = &xstring5
+		xstring := *source.UpdatedByIdentityName
+		siteUpdateProfileSwitchParams.UpdatedByIdentityName = &xstring
 	}
 	siteUpdateProfileSwitchParams.ID = source.ID
 	return siteUpdateProfileSwitchParams
@@ -831,45 +830,57 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		xstring10 := *source.ProfileSwitchName
 		siteGetEventGroupRow.ProfileSwitchName = &xstring10
 	}
+	if source.ProfileSwitchDia != nil {
+		xfloat6412 := *source.ProfileSwitchDia
+		siteGetEventGroupRow.ProfileSwitchDia = &xfloat6412
+	}
+	if source.ProfileSwitchUnits != nil {
+		xstring11 := *source.ProfileSwitchUnits
+		siteGetEventGroupRow.ProfileSwitchUnits = &xstring11
+	}
 	if source.ProfileSwitchDurationMinutes != nil {
 		xint643 := *source.ProfileSwitchDurationMinutes
 		siteGetEventGroupRow.ProfileSwitchDurationMinutes = &xint643
 	}
 	if source.ProfileSwitchPercent != nil {
-		xfloat6412 := *source.ProfileSwitchPercent
-		siteGetEventGroupRow.ProfileSwitchPercent = &xfloat6412
+		xfloat6413 := *source.ProfileSwitchPercent
+		siteGetEventGroupRow.ProfileSwitchPercent = &xfloat6413
 	}
 	if source.ProfileSwitchCarbRatiosJson != nil {
-		xstring11 := *source.ProfileSwitchCarbRatiosJson
-		siteGetEventGroupRow.ProfileSwitchCarbRatiosJson = &xstring11
+		xstring12 := *source.ProfileSwitchCarbRatiosJson
+		siteGetEventGroupRow.ProfileSwitchCarbRatiosJson = &xstring12
 	}
 	if source.ProfileSwitchInsulinSensitivitiesJson != nil {
-		xstring12 := *source.ProfileSwitchInsulinSensitivitiesJson
-		siteGetEventGroupRow.ProfileSwitchInsulinSensitivitiesJson = &xstring12
+		xstring13 := *source.ProfileSwitchInsulinSensitivitiesJson
+		siteGetEventGroupRow.ProfileSwitchInsulinSensitivitiesJson = &xstring13
 	}
 	if source.ProfileSwitchBasalRatesJson != nil {
-		xstring13 := *source.ProfileSwitchBasalRatesJson
-		siteGetEventGroupRow.ProfileSwitchBasalRatesJson = &xstring13
+		xstring14 := *source.ProfileSwitchBasalRatesJson
+		siteGetEventGroupRow.ProfileSwitchBasalRatesJson = &xstring14
 	}
-	if source.ProfileSwitchTargetsJson != nil {
-		xstring14 := *source.ProfileSwitchTargetsJson
-		siteGetEventGroupRow.ProfileSwitchTargetsJson = &xstring14
+	if source.ProfileSwitchTargetsHighJson != nil {
+		xstring15 := *source.ProfileSwitchTargetsHighJson
+		siteGetEventGroupRow.ProfileSwitchTargetsHighJson = &xstring15
+	}
+	if source.ProfileSwitchTargetsLowJson != nil {
+		xstring16 := *source.ProfileSwitchTargetsLowJson
+		siteGetEventGroupRow.ProfileSwitchTargetsLowJson = &xstring16
 	}
 	if source.ComponentEventID != nil {
-		xstring15 := *source.ComponentEventID
-		siteGetEventGroupRow.ComponentEventID = &xstring15
+		xstring17 := *source.ComponentEventID
+		siteGetEventGroupRow.ComponentEventID = &xstring17
 	}
 	if source.ActivityID != nil {
-		xstring16 := *source.ActivityID
-		siteGetEventGroupRow.ActivityID = &xstring16
+		xstring18 := *source.ActivityID
+		siteGetEventGroupRow.ActivityID = &xstring18
 	}
 	if source.ActivityName != nil {
-		xstring17 := *source.ActivityName
-		siteGetEventGroupRow.ActivityName = &xstring17
+		xstring19 := *source.ActivityName
+		siteGetEventGroupRow.ActivityName = &xstring19
 	}
 	if source.ActivityType != nil {
-		xstring18 := *source.ActivityType
-		siteGetEventGroupRow.ActivityType = &xstring18
+		xstring20 := *source.ActivityType
+		siteGetEventGroupRow.ActivityType = &xstring20
 	}
 	if source.ActivityDurationMinutes != nil {
 		xint644 := *source.ActivityDurationMinutes
@@ -888,16 +899,16 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		siteGetEventGroupRow.ActivityHeartRate = &xint647
 	}
 	if source.NoteID != nil {
-		xstring19 := *source.NoteID
-		siteGetEventGroupRow.NoteID = &xstring19
+		xstring21 := *source.NoteID
+		siteGetEventGroupRow.NoteID = &xstring21
 	}
 	if source.NoteContent != nil {
-		xstring20 := *source.NoteContent
-		siteGetEventGroupRow.NoteContent = &xstring20
+		xstring22 := *source.NoteContent
+		siteGetEventGroupRow.NoteContent = &xstring22
 	}
 	if source.NoteReason != nil {
-		xstring21 := *source.NoteReason
-		siteGetEventGroupRow.NoteReason = &xstring21
+		xstring23 := *source.NoteReason
+		siteGetEventGroupRow.NoteReason = &xstring23
 	}
 	return siteGetEventGroupRow
 }

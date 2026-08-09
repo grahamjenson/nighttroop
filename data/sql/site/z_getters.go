@@ -732,6 +732,26 @@ func (m ProfilePreset) GetName() string {
 	return m.Name
 }
 
+// GetProfileStoreID returns the ProfileStoreID value.
+func (m ProfilePreset) GetProfileStoreID() string {
+	return m.ProfileStoreID
+}
+
+// GetIsDefault returns the IsDefault value.
+func (m ProfilePreset) GetIsDefault() bool {
+	return m.IsDefault
+}
+
+// GetDia returns the Dia value.
+func (m ProfilePreset) GetDia() *float64 {
+	return m.Dia
+}
+
+// GetUnits returns the Units value.
+func (m ProfilePreset) GetUnits() *string {
+	return m.Units
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m ProfilePreset) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -747,14 +767,29 @@ func (m ProfilePreset) GetBasalRatesJson() *string {
 	return m.BasalRatesJson
 }
 
-// GetTargetsJson returns the TargetsJson value.
-func (m ProfilePreset) GetTargetsJson() *string {
-	return m.TargetsJson
+// GetTargetsHighJson returns the TargetsHighJson value.
+func (m ProfilePreset) GetTargetsHighJson() *string {
+	return m.TargetsHighJson
+}
+
+// GetTargetsLowJson returns the TargetsLowJson value.
+func (m ProfilePreset) GetTargetsLowJson() *string {
+	return m.TargetsLowJson
 }
 
 // GetRawJsonData returns the RawJsonData value.
 func (m ProfilePreset) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m ProfilePreset) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m ProfilePreset) GetOccurredAt() int64 {
+	return m.OccurredAt
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -807,6 +842,16 @@ func (m ProfileSwitch) GetPercent() float64 {
 	return m.Percent
 }
 
+// GetDia returns the Dia value.
+func (m ProfileSwitch) GetDia() *float64 {
+	return m.Dia
+}
+
+// GetUnits returns the Units value.
+func (m ProfileSwitch) GetUnits() *string {
+	return m.Units
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m ProfileSwitch) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -822,9 +867,14 @@ func (m ProfileSwitch) GetBasalRatesJson() *string {
 	return m.BasalRatesJson
 }
 
-// GetTargetsJson returns the TargetsJson value.
-func (m ProfileSwitch) GetTargetsJson() *string {
-	return m.TargetsJson
+// GetTargetsHighJson returns the TargetsHighJson value.
+func (m ProfileSwitch) GetTargetsHighJson() *string {
+	return m.TargetsHighJson
+}
+
+// GetTargetsLowJson returns the TargetsLowJson value.
+func (m ProfileSwitch) GetTargetsLowJson() *string {
+	return m.TargetsLowJson
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -5922,6 +5972,28 @@ func (m CreateProfileSwitchParams) SetPercent(v float64) CreateProfileSwitchPara
 	return m
 }
 
+// GetDia returns the Dia value.
+func (m CreateProfileSwitchParams) GetDia() *float64 {
+	return m.Dia
+}
+
+// SetDia sets the Dia value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetDia(v *float64) CreateProfileSwitchParams {
+	m.Dia = v
+	return m
+}
+
+// GetUnits returns the Units value.
+func (m CreateProfileSwitchParams) GetUnits() *string {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetUnits(v *string) CreateProfileSwitchParams {
+	m.Units = v
+	return m
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m CreateProfileSwitchParams) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -5955,14 +6027,25 @@ func (m CreateProfileSwitchParams) SetBasalRatesJson(v *string) CreateProfileSwi
 	return m
 }
 
-// GetTargetsJson returns the TargetsJson value.
-func (m CreateProfileSwitchParams) GetTargetsJson() *string {
-	return m.TargetsJson
+// GetTargetsHighJson returns the TargetsHighJson value.
+func (m CreateProfileSwitchParams) GetTargetsHighJson() *string {
+	return m.TargetsHighJson
 }
 
-// SetTargetsJson sets the TargetsJson value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetTargetsJson(v *string) CreateProfileSwitchParams {
-	m.TargetsJson = v
+// SetTargetsHighJson sets the TargetsHighJson value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetTargetsHighJson(v *string) CreateProfileSwitchParams {
+	m.TargetsHighJson = v
+	return m
+}
+
+// GetTargetsLowJson returns the TargetsLowJson value.
+func (m CreateProfileSwitchParams) GetTargetsLowJson() *string {
+	return m.TargetsLowJson
+}
+
+// SetTargetsLowJson sets the TargetsLowJson value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetTargetsLowJson(v *string) CreateProfileSwitchParams {
+	m.TargetsLowJson = v
 	return m
 }
 
@@ -6381,50 +6464,6 @@ func (m UpdateProfileSwitchParams) GetPercent() *float64 {
 // SetPercent sets the Percent value and returns the updated UpdateProfileSwitchParams.
 func (m UpdateProfileSwitchParams) SetPercent(v *float64) UpdateProfileSwitchParams {
 	m.Percent = v
-	return m
-}
-
-// GetCarbRatiosJson returns the CarbRatiosJson value.
-func (m UpdateProfileSwitchParams) GetCarbRatiosJson() *string {
-	return m.CarbRatiosJson
-}
-
-// SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetCarbRatiosJson(v *string) UpdateProfileSwitchParams {
-	m.CarbRatiosJson = v
-	return m
-}
-
-// GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
-func (m UpdateProfileSwitchParams) GetInsulinSensitivitiesJson() *string {
-	return m.InsulinSensitivitiesJson
-}
-
-// SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetInsulinSensitivitiesJson(v *string) UpdateProfileSwitchParams {
-	m.InsulinSensitivitiesJson = v
-	return m
-}
-
-// GetBasalRatesJson returns the BasalRatesJson value.
-func (m UpdateProfileSwitchParams) GetBasalRatesJson() *string {
-	return m.BasalRatesJson
-}
-
-// SetBasalRatesJson sets the BasalRatesJson value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetBasalRatesJson(v *string) UpdateProfileSwitchParams {
-	m.BasalRatesJson = v
-	return m
-}
-
-// GetTargetsJson returns the TargetsJson value.
-func (m UpdateProfileSwitchParams) GetTargetsJson() *string {
-	return m.TargetsJson
-}
-
-// SetTargetsJson sets the TargetsJson value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetTargetsJson(v *string) UpdateProfileSwitchParams {
-	m.TargetsJson = v
 	return m
 }
 
@@ -8177,6 +8216,50 @@ func (m CreateProfilePresetParams) SetName(v string) CreateProfilePresetParams {
 	return m
 }
 
+// GetProfileStoreID returns the ProfileStoreID value.
+func (m CreateProfilePresetParams) GetProfileStoreID() string {
+	return m.ProfileStoreID
+}
+
+// SetProfileStoreID sets the ProfileStoreID value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetProfileStoreID(v string) CreateProfilePresetParams {
+	m.ProfileStoreID = v
+	return m
+}
+
+// GetIsDefault returns the IsDefault value.
+func (m CreateProfilePresetParams) GetIsDefault() bool {
+	return m.IsDefault
+}
+
+// SetIsDefault sets the IsDefault value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetIsDefault(v bool) CreateProfilePresetParams {
+	m.IsDefault = v
+	return m
+}
+
+// GetDia returns the Dia value.
+func (m CreateProfilePresetParams) GetDia() *float64 {
+	return m.Dia
+}
+
+// SetDia sets the Dia value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetDia(v *float64) CreateProfilePresetParams {
+	m.Dia = v
+	return m
+}
+
+// GetUnits returns the Units value.
+func (m CreateProfilePresetParams) GetUnits() *string {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetUnits(v *string) CreateProfilePresetParams {
+	m.Units = v
+	return m
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m CreateProfilePresetParams) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -8210,14 +8293,47 @@ func (m CreateProfilePresetParams) SetBasalRatesJson(v *string) CreateProfilePre
 	return m
 }
 
-// GetTargetsJson returns the TargetsJson value.
-func (m CreateProfilePresetParams) GetTargetsJson() *string {
-	return m.TargetsJson
+// GetTargetsHighJson returns the TargetsHighJson value.
+func (m CreateProfilePresetParams) GetTargetsHighJson() *string {
+	return m.TargetsHighJson
 }
 
-// SetTargetsJson sets the TargetsJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetTargetsJson(v *string) CreateProfilePresetParams {
-	m.TargetsJson = v
+// SetTargetsHighJson sets the TargetsHighJson value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetTargetsHighJson(v *string) CreateProfilePresetParams {
+	m.TargetsHighJson = v
+	return m
+}
+
+// GetTargetsLowJson returns the TargetsLowJson value.
+func (m CreateProfilePresetParams) GetTargetsLowJson() *string {
+	return m.TargetsLowJson
+}
+
+// SetTargetsLowJson sets the TargetsLowJson value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetTargetsLowJson(v *string) CreateProfilePresetParams {
+	m.TargetsLowJson = v
+	return m
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m CreateProfilePresetParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetOccurredAt(v int64) CreateProfilePresetParams {
+	m.OccurredAt = v
+	return m
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m CreateProfilePresetParams) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetUtcOffsetMinutes(v *int64) CreateProfilePresetParams {
+	m.UtcOffsetMinutes = v
 	return m
 }
 
@@ -8515,50 +8631,6 @@ func (m UpdateProfilePresetParams) GetName() *string {
 // SetName sets the Name value and returns the updated UpdateProfilePresetParams.
 func (m UpdateProfilePresetParams) SetName(v *string) UpdateProfilePresetParams {
 	m.Name = v
-	return m
-}
-
-// GetCarbRatiosJson returns the CarbRatiosJson value.
-func (m UpdateProfilePresetParams) GetCarbRatiosJson() *string {
-	return m.CarbRatiosJson
-}
-
-// SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetCarbRatiosJson(v *string) UpdateProfilePresetParams {
-	m.CarbRatiosJson = v
-	return m
-}
-
-// GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
-func (m UpdateProfilePresetParams) GetInsulinSensitivitiesJson() *string {
-	return m.InsulinSensitivitiesJson
-}
-
-// SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetInsulinSensitivitiesJson(v *string) UpdateProfilePresetParams {
-	m.InsulinSensitivitiesJson = v
-	return m
-}
-
-// GetBasalRatesJson returns the BasalRatesJson value.
-func (m UpdateProfilePresetParams) GetBasalRatesJson() *string {
-	return m.BasalRatesJson
-}
-
-// SetBasalRatesJson sets the BasalRatesJson value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetBasalRatesJson(v *string) UpdateProfilePresetParams {
-	m.BasalRatesJson = v
-	return m
-}
-
-// GetTargetsJson returns the TargetsJson value.
-func (m UpdateProfilePresetParams) GetTargetsJson() *string {
-	return m.TargetsJson
-}
-
-// SetTargetsJson sets the TargetsJson value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetTargetsJson(v *string) UpdateProfilePresetParams {
-	m.TargetsJson = v
 	return m
 }
 

@@ -99,6 +99,12 @@ var TypeLookupMap = map[string]map[string]string{
 	"UpdateSyncSourceReportsFailureParams": {
 		"ErrorMessages": "errors.ErrorList",
 	},
+	"ProfilePreset": {
+		"IsDefault": "bool",
+	},
+	"CreateProfilePresetParams": {
+		"IsDefault": "bool",
+	},
 }
 
 func run() error {

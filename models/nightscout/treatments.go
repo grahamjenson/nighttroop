@@ -45,8 +45,12 @@ type Treatment struct {
 	EnteredBy *ShortString     `json:"enteredBy,omitempty"`
 
 	// Treatment-specific fields
-	Profile      *ShortString     `json:"profile,omitempty"`
-	Percentage   *FlexibleFloat64 `json:"percentage,omitempty"`
+	Profile             *ShortString     `json:"profile,omitempty"`
+	OriginalProfileName *ShortString     `json:"originalProfileName,omitempty"`
+	ProfileJSON         *SanitizedString `json:"profileJson,omitempty"`
+	Percentage          *FlexibleFloat64 `json:"percentage,omitempty"`
+	Timeshift           *FlexibleInt64   `json:"timeshift,omitempty"`
+
 	Rate         *FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute     *FlexibleFloat64 `json:"absolute,omitempty"`
 	Reason       *ShortString     `json:"reason,omitempty"`

@@ -29,6 +29,10 @@ func (model FoodPreset) GetOccurredAt() int64 {
 	return model.CreatedAt
 }
 
+func (model ProfilePreset) GetDeletedAt() *int64 {
+	return nil
+}
+
 /////////
 // Event Group Stuff
 /////////
@@ -160,7 +164,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			CarbRatiosJson:           source.ProfileSwitchCarbRatiosJson,
 			InsulinSensitivitiesJson: source.ProfileSwitchInsulinSensitivitiesJson,
 			BasalRatesJson:           source.ProfileSwitchBasalRatesJson,
-			TargetsJson:              source.ProfileSwitchTargetsJson,
+			TargetsHighJson:          source.ProfileSwitchTargetsHighJson,
+			TargetsLowJson:           source.ProfileSwitchTargetsLowJson,
 		}
 
 	}

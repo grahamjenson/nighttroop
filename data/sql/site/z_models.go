@@ -178,11 +178,18 @@ type Note struct {
 type ProfilePreset struct {
 	ID                       string
 	Name                     string
+	ProfileStoreID           string
+	IsDefault                bool
+	Dia                      *float64
+	Units                    *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
-	TargetsJson              *string
+	TargetsHighJson          *string
+	TargetsLowJson           *string
 	RawJsonData              *string
+	UtcOffsetMinutes         *int64
+	OccurredAt               int64
 	CreatedAt                int64
 	UpdatedAt                int64
 	CreatedByAppName         *string
@@ -196,10 +203,13 @@ type ProfileSwitch struct {
 	Name                     string
 	DurationMinutes          int64
 	Percent                  float64
+	Dia                      *float64
+	Units                    *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
-	TargetsJson              *string
+	TargetsHighJson          *string
+	TargetsLowJson           *string
 	RawJsonData              *string
 	DeletedAt                *int64
 	UtcOffsetMinutes         *int64

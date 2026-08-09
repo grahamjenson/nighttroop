@@ -227,39 +227,56 @@ CREATE TABLE notes (
 
 CREATE TABLE profile_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
+    name TEXT NOT NULL CHECK(length(name) <= 64),
 
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- { [1,2] },
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {[1,2]},
-    targets_json TEXT CHECK(length(targets_json) <= 1024), -- { [high, low] }
+    -- Store stuff
+    profile_store_id TEXT NOT NULL,
+    is_default INTEGER NOT NULL DEFAULT 0, -- 0 for false, 1 for true
+
+    -- Profile Stuff
+    dia REAL, -- in hours
+    units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
     
-    -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 1024), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 1024), -- { [high, low] }
 
+    -- Default Stuff
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
+
+    utc_offset_minutes INTEGER DEFAULT 0,
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 32),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 32),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+
+    -- Constraints
+    UNIQUE (name, profile_store_id)
 );
 
 CREATE TABLE profile_switches (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     
-    -- Date stuff
+    -- Profile Switch Specific
     duration_minutes INTEGER NOT NULL default 0, -- e.g. 0 means it is forever unless another profile overrides it
-
-    -- ratios
     percent REAL NOT NULL default 100, 
 
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- { [1,2] },
+    -- Profile Stuff
+    dia REAL, -- in hours
+    units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
+    
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- 
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {[1,2]},
-    targets_json TEXT CHECK(length(targets_json) <= 1024), -- { [high, low] }
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 1024), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 1024), -- { [high, low] }
     
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
