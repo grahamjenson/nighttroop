@@ -9,9 +9,22 @@ import (
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
+
+type SQLResultCustomResult struct {
+	LastInsertIdInt int64
+	RowsAffectedInt int64
+	Err             error
+}
+
+func (s SQLResultCustomResult) LastInsertId() (int64, error) {
+	return s.LastInsertIdInt, s.Err
+}
+
+func (s SQLResultCustomResult) RowsAffected() (int64, error) {
+	return s.RowsAffectedInt, s.Err
+}
 
 type TreatmentCollection struct {
 	converter func(c *site.EventGroupsBundle) nsutils.Record
@@ -49,9 +62,17 @@ func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, 
 		createParams.EventGroup.ID = *overrideIdentifier
 	}
 
-	dbModel, rerr := EventGroupCreate(ctx, q, createParams)
+	dbModel, err := createEventGroup(ctx, q, createParams)
+	if err != nil {
+		return nil, err
+	}
 
-	return dbModel, rerr
+	if dbModel == nil || dbModel.EventGroup.ID == "" {
+		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", createParams)
+		return nil, err
+	}
+
+	return dbModel, nil
 }
 
 func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.EventGroupsBundle, error) {
@@ -70,6 +91,14 @@ func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, n
 	}
 
 	return EventGroupUpdate(ctx, q, TreatmentEventGroupUpdate(ctx, uc, nsModel))
+}
+
+func (c TreatmentCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return hardDeleteEventGroup(ctx, q, identifier)
+}
+
+func (c TreatmentCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return softDeleteEventGroup(ctx, q, identifier)
 }
 
 // ///
@@ -98,14 +127,10 @@ func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	if permanent {
-		return EventGroupHardDelete(ctx, siteContext, identifier)
-	}
-	return EventGroupSoftDelete(ctx, siteContext, identifier)
+	return MetaDelete(c, ctx, siteContext, identifier, permanent)
 }
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-
 	if permanent {
 		return EventGroupHardDeleteType(ctx, siteContext, typeString)
 	}
@@ -114,35 +139,7 @@ func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httput
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
 func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	treatmentModel := nightscout.Treatment{}
-	err := utils.FromMap(patch, &treatmentModel)
-	if err != nil {
-		slog.Error("failed to map patch to treatment model", "error", err)
-		return nil, false, nsutils.BadDataBodyError
-	}
-
-	cc := nightscout.CreateContext{
-		CreatedByIdentityID:   siteContext.IdentityModel.ID,
-		CreatedByIdentityName: siteContext.IdentityModel.Name,
-	}
-
-	if treatmentModel.EventType == nil || *treatmentModel.EventType == nightscout.Unknown {
-		slog.Error("treatment event type is nil")
-		return nil, false, nsutils.BadDataBodyError
-	}
-	createParams := TreatmentEventGroupCreate(ctx, cc, treatmentModel)
-	createParams.EventGroup.ID = identifier
-	dbModel, created, rerr := EventGroupReplace(ctx, siteContext, createParams, canCreate)
-	if rerr != nil {
-		slog.Error("failed to update treatment in database", "error", rerr)
-		return nil, false, rerr
-	}
-	if dbModel == nil {
-		slog.Error("failed to update treatment in database, dbModel is nil")
-		return nil, false, nsutils.ErrInternal
-	}
-
-	return ptr(c.converter(dbModel)), created, nil
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
 }
 
 func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext, treatment nightscout.Treatment) site.CreateEventGroupBundle {
@@ -465,22 +462,6 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 
 }
 
-// CREATE
-func EventGroupCreate(ctx context.Context, q *site.Queries, bundle site.CreateEventGroupBundle) (*site.EventGroupsBundle, error) {
-
-	ret, err := createEventGroup(ctx, q, bundle)
-	if err != nil {
-		return nil, err
-	}
-
-	if ret == nil || ret.EventGroup.ID == "" {
-		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", bundle)
-		return nil, err
-	}
-
-	return ret, nil
-}
-
 // UPDATE
 func EventGroupUpdate(ctx context.Context, q *site.Queries, bundle site.UpdateEventGroupBundle) (*site.EventGroupsBundle, *nsutils.HTTPError) {
 
@@ -496,101 +477,6 @@ func EventGroupUpdate(ctx context.Context, q *site.Queries, bundle site.UpdateEv
 	}
 
 	return ret, nil
-}
-
-func EventGroupReplace(ctx context.Context, siteContext *httputils.SiteContext, bundle site.CreateEventGroupBundle, canCreate bool) (*site.EventGroupsBundle, bool, *nsutils.HTTPError) {
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, false, nsutils.ErrInternal
-	}
-
-	defer tx.Rollback()
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-
-	createingNewRecord := false
-	// DELETE THE RECORD
-	err = hardDeleteEventGroup(ctx, q, bundle.EventGroup.ID)
-	if err != nil {
-		notFoundError := err == sql.ErrNoRows
-
-		allowedToContinue := canCreate && notFoundError
-		if !allowedToContinue && notFoundError {
-			slog.Error("failed to delete event group in database", "error", err, "allowedToContinue", allowedToContinue, "canCreate", canCreate, "notFoundError", notFoundError)
-			return nil, false, nsutils.ErrNotFound
-		}
-		if !allowedToContinue {
-			slog.Error("failed to delete event group in database", "error", err, "allowedToContinue", allowedToContinue, "canCreate", canCreate, "notFoundError", notFoundError)
-			return nil, false, nsutils.ErrInternal
-		}
-		createingNewRecord = true
-	}
-
-	// RECREATE THE NEW RECORD
-	ret, err := createEventGroup(ctx, q, bundle)
-	if err != nil {
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if ret == nil || ret.EventGroup.ID == "" {
-		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", bundle)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit update event group in database", "error", err, "dbModel", ret)
-		return nil, false, nsutils.ErrInternal
-	}
-
-	return ret, createingNewRecord, nil
-}
-
-// DELETES
-
-func EventGroupSoftDelete(ctx context.Context, siteContext *httputils.SiteContext, identifier string) *nsutils.HTTPError {
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nsutils.ErrInternal
-	}
-	defer tx.Rollback()
-
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-
-	err = softDeleteEventGroup(ctx, q, identifier)
-	if err != nil {
-		return nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit soft delete event group in database", "error", err)
-		return nsutils.ErrInternal
-	}
-
-	return nil
-}
-
-func EventGroupHardDelete(ctx context.Context, siteContext *httputils.SiteContext, identifier string) *nsutils.HTTPError {
-	db := siteContext.SiteDB.SQLiteDB
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return nsutils.ErrInternal
-	}
-	defer tx.Rollback()
-
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-
-	err = hardDeleteEventGroup(ctx, q, identifier)
-	if err != nil {
-		return nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit hard delete event group in database", "error", err)
-		return nsutils.ErrInternal
-	}
-
-	return nil
 }
 
 func EventGroupSoftDeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string) (int, *nsutils.HTTPError) {
@@ -797,132 +683,142 @@ func createEventGroup(ctx context.Context, q *site.Queries, bundle site.CreateEv
 	return &ret, nil
 }
 
-func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) error {
+func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) (sql.Result, error) {
 	eventGroup, err := q.HardDeleteEventGroup(ctx, site.HardDeleteEventGroupParams{ID: identifier})
 	if err != nil {
 		slog.Error("failed to hard delete eventGroup event group by ID", "error", err)
-		return err
+		return nil, err
+	}
+
+	if eventGroup == nil {
+		slog.Error("failed to hard delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
+		return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
 	}
 
 	if eventGroup.GlucoseReadingID != nil {
 		if res, err := q.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
 			slog.Error("failed to delete glucose reading by ID", "error", err, "glucoseReadingID", *eventGroup.GlucoseReadingID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.InsulinDoseID != nil {
 		if res, err := q.HardDeleteInsulinDose(ctx, site.HardDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
 			slog.Error("failed to delete insulin dose by ID", "error", err, "insulinDoseID", *eventGroup.InsulinDoseID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.FoodIntakeID != nil {
 		if res, err := q.HardDeleteFoodIntake(ctx, site.HardDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
 			slog.Error("failed to delete food intake by ID", "error", err, "foodIntakeID", *eventGroup.FoodIntakeID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.TempBasalID != nil {
 		if res, err := q.HardDeleteTempBasal(ctx, site.HardDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
 			slog.Error("failed to delete temp basal by ID", "error", err, "tempBasalID", *eventGroup.TempBasalID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.TempTargetID != nil {
 		if res, err := q.HardDeleteTempTarget(ctx, site.HardDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
 			slog.Error("failed to delete temp target by ID", "error", err, "tempTargetID", *eventGroup.TempTargetID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.ProfileSwitchID != nil {
 		if res, err := q.HardDeleteProfileSwitch(ctx, site.HardDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
 			slog.Error("failed to delete profile switch by ID", "error", err, "profileSwitchID", *eventGroup.ProfileSwitchID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.ComponentEventID != nil {
 		if res, err := q.HardDeleteComponentEvent(ctx, site.HardDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
 			slog.Error("failed to delete component event by ID", "error", err, "deviceStateID", *eventGroup.ComponentEventID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.ActivityID != nil {
 		if res, err := q.HardDeleteActivity(ctx, site.HardDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
 			slog.Error("failed to delete activity by ID", "error", err, "activityID", *eventGroup.ActivityID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.NoteID != nil {
 		if res, err := q.HardDeleteNote(ctx, site.HardDeleteNoteParams{ID: *eventGroup.NoteID}); err != nil {
 			slog.Error("failed to delete note by ID", "error", err, "noteID", *eventGroup.NoteID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
 
-func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) error {
+func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) (sql.Result, error) {
 	eventGroup, err := q.SoftDeleteEventGroup(ctx, site.SoftDeleteEventGroupParams{ID: identifier})
 	if err != nil {
 		slog.Error("failed to soft delete eventGroup event group by ID", "error", err)
-		return err
+		return nil, err
+	}
+
+	if eventGroup == nil {
+		slog.Error("failed to soft delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
+		return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
 	}
 
 	if eventGroup.GlucoseReadingID != nil {
 		if res, err := q.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err, "glucoseReadingID", *eventGroup.GlucoseReadingID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.InsulinDoseID != nil {
 		if res, err := q.SoftDeleteInsulinDose(ctx, site.SoftDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
 			slog.Error("failed to soft delete insulin dose by ID", "error", err, "insulinDoseID", *eventGroup.InsulinDoseID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.FoodIntakeID != nil {
 		if res, err := q.SoftDeleteFoodIntake(ctx, site.SoftDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
 			slog.Error("failed to soft delete food intake by ID", "error", err, "foodIntakeID", *eventGroup.FoodIntakeID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.TempBasalID != nil {
 		if res, err := q.SoftDeleteTempBasal(ctx, site.SoftDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
 			slog.Error("failed to soft delete temp basal by ID", "error", err, "tempBasalID", *eventGroup.TempBasalID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.TempTargetID != nil {
 		if res, err := q.SoftDeleteTempTarget(ctx, site.SoftDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
 			slog.Error("failed to soft delete temp target by ID", "error", err, "tempTargetID", *eventGroup.TempTargetID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.ProfileSwitchID != nil {
 		if res, err := q.SoftDeleteProfileSwitch(ctx, site.SoftDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
 			slog.Error("failed to soft delete profile switch by ID", "error", err, "profileSwitchID", *eventGroup.ProfileSwitchID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.ComponentEventID != nil {
 		if res, err := q.SoftDeleteComponentEvent(ctx, site.SoftDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
 			slog.Error("failed to soft delete component event by ID", "error", err, "deviceStateID", *eventGroup.ComponentEventID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.ActivityID != nil {
 		if res, err := q.SoftDeleteActivity(ctx, site.SoftDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
 			slog.Error("failed to soft delete activity by ID", "error", err, "activityID", *eventGroup.ActivityID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 	if eventGroup.NoteID != nil {
 		if res, err := q.SoftDeleteNote(ctx, site.SoftDeleteNoteParams{ID: *eventGroup.NoteID}); err != nil {
 			slog.Error("failed to soft delete note by ID", "error", err, "noteID", *eventGroup.NoteID, "result", res)
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
