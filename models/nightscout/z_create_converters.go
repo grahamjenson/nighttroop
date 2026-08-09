@@ -357,25 +357,6 @@ func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateN
 	siteCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateNoteParams
 }
-func TreatmentToCreateProfile(source Treatment, context CreateContext) site.CreateProfilePresetParams {
-	var siteCreateProfilePresetParams site.CreateProfilePresetParams
-	siteCreateProfilePresetParams.ID = AssignID()
-	if source.Name != nil {
-		siteCreateProfilePresetParams.Name = ShortStringToString(*source.Name)
-	}
-	pString := source.RawJsonData
-	siteCreateProfilePresetParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateProfilePresetParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateProfilePresetParams
-}
 func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) site.CreateProfileSwitchParams {
 	var siteCreateProfileSwitchParams site.CreateProfileSwitchParams
 	siteCreateProfileSwitchParams.ID = AssignID()
@@ -388,6 +369,10 @@ func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) sit
 	if source.Percentage != nil {
 		siteCreateProfileSwitchParams.Percent = FlexibleFloat64ToFloat64(*source.Percentage)
 	}
+	if source.Units != nil {
+		xstring := string(*source.Units)
+		siteCreateProfileSwitchParams.Units = &xstring
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint64
@@ -396,12 +381,12 @@ func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) sit
 	pString := source.RawJsonData
 	siteCreateProfileSwitchParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateProfileSwitchParams.CreatedByAppName = &xstring
+		xstring2 := ShortStringToString(*source.App)
+		siteCreateProfileSwitchParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring2
+		xstring3 := ShortStringToString(*source.Device)
+		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring3
 	}
 	siteCreateProfileSwitchParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateProfileSwitchParams

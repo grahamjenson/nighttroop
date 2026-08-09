@@ -1,0 +1,96 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+//////
+// CREATE
+//////
+
+NAME create_profile_v1
+POST http://{{ .site }}.ns.localhost/api/v1/profiles?token={{ token }}
+B {
+    "units": "mg/dl",
+    "startDate": "{{ time 0 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "dia": "5",
+            "units": "mg/dl",
+            "sens": [{"value": "110", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_low": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "33", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [
+                {"value": "0.35", "time": "00:00", "timeAsSeconds": "0"},
+                {"value": "0.36", "time": "03:00", "timeAsSeconds": "10800"},
+                {"value": "0.37", "time": "05:00", "timeAsSeconds": "18000"},
+                {"value": "0.38", "time": "07:00", "timeAsSeconds": "25200"},
+                {"value": "0.39", "time": "17:00", "timeAsSeconds": "61200"}
+            ],
+            "carbs_hr": "20",
+            "delay": "20",
+            "timezone": "US/Eastern",
+            "startDate": "1970-01-01T00:00:00.000Z"
+        },
+        "Work": {
+            "dia": "5",
+            "units": "mg/dl",
+            "sens": [
+                {"value": "10", "time": "00:00", "timeAsSeconds": "0"},
+                {"value": "11", "time": "03:00", "timeAsSeconds": "10800"},
+                {"value": "12", "time": "05:00", "timeAsSeconds": "18000"},
+                {"value": "13", "time": "07:00", "timeAsSeconds": "25200"},
+                {"value": "14", "time": "17:00", "timeAsSeconds": "61200"},
+                {"value": "15", "time": "19:00", "timeAsSeconds": "68400"}
+            ],
+            "target_low": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "target_high": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbratio": [{"value": "33", "time": "00:00", "timeAsSeconds": "0"}],
+            "basal": [{"value": "0.35", "time": "00:00", "timeAsSeconds": "0"}],
+            "carbs_hr": "20",
+            "delay": "20",
+            "timezone": "Pacific/Honolulu",
+            "startDate": "1970-01-01T00:00:00.000Z"
+        }
+    }
+  }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
+ASSERT {{ assertEquals "mg/dl" "@0.units" }}
+ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
+ASSERT {{ assertEquals "0.35" "@0.store.Default.basal.0.value" }}
+ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
+
+///////
+// READ
+///////
+
+NAME get_profiles_type_v1
+GET http://{{ .site }}.ns.localhost/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
+ASSERT {{ assertEquals "mg/dl" "@0.units" }}
+ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
+ASSERT {{ assertEquals "0.35" "@0.store.Default.basal.0.value" }}
+ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
+
+/////
+// UPDATE
+/////
+
+
+///////
+// DELETE
+///////
+
+NAME delete_entries_v1
+DELETE http://{{ .site }}.ns.localhost/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 1 "@deletedCount" }}

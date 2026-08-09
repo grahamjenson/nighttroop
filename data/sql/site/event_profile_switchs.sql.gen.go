@@ -12,7 +12,7 @@ import (
 
 const allProfileSwitches = `-- name: AllProfileSwitches :many
 
-SELECT id, name, duration_minutes, percent, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches
+SELECT id, name, duration_minutes, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -43,6 +43,7 @@ func (q *Queries) AllProfileSwitches(ctx context.Context, arg AllProfileSwitches
 			&i.Percent,
 			&i.Dia,
 			&i.Units,
+			&i.Timezone,
 			&i.CarbRatiosJson,
 			&i.InsulinSensitivitiesJson,
 			&i.BasalRatesJson,
@@ -81,6 +82,7 @@ INSERT INTO profile_switches (
 
     dia,
     units,
+    timezone,
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
@@ -94,8 +96,8 @@ INSERT INTO profile_switches (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, duration_minutes, percent, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, duration_minutes, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateProfileSwitchParams struct {
@@ -105,6 +107,7 @@ type CreateProfileSwitchParams struct {
 	Percent                  float64
 	Dia                      *float64
 	Units                    *string
+	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -129,6 +132,7 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 		arg.Percent,
 		arg.Dia,
 		arg.Units,
+		arg.Timezone,
 		arg.CarbRatiosJson,
 		arg.InsulinSensitivitiesJson,
 		arg.BasalRatesJson,
@@ -149,6 +153,7 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 		&i.Percent,
 		&i.Dia,
 		&i.Units,
+		&i.Timezone,
 		&i.CarbRatiosJson,
 		&i.InsulinSensitivitiesJson,
 		&i.BasalRatesJson,
@@ -169,7 +174,7 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 }
 
 const getProfileSwitch = `-- name: GetProfileSwitch :one
-SELECT id, name, duration_minutes, percent, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches WHERE id = ?
+SELECT id, name, duration_minutes, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches WHERE id = ?
 `
 
 type GetProfileSwitchParams struct {
@@ -186,6 +191,7 @@ func (q *Queries) GetProfileSwitch(ctx context.Context, arg GetProfileSwitchPara
 		&i.Percent,
 		&i.Dia,
 		&i.Units,
+		&i.Timezone,
 		&i.CarbRatiosJson,
 		&i.InsulinSensitivitiesJson,
 		&i.BasalRatesJson,
@@ -218,7 +224,7 @@ func (q *Queries) HardDeleteProfileSwitch(ctx context.Context, arg HardDeletePro
 }
 
 const searchProfileSwitches = `-- name: SearchProfileSwitches :many
-SELECT id, name, duration_minutes, percent, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches
+SELECT id, name, duration_minutes, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_switches
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -324,6 +330,7 @@ func (q *Queries) SearchProfileSwitches(ctx context.Context, arg SearchProfileSw
 			&i.Percent,
 			&i.Dia,
 			&i.Units,
+			&i.Timezone,
 			&i.CarbRatiosJson,
 			&i.InsulinSensitivitiesJson,
 			&i.BasalRatesJson,
@@ -385,7 +392,7 @@ UPDATE profile_switches SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?6
 WHERE id = ?7 AND deleted_at IS NULL
-RETURNING id, name, duration_minutes, percent, dia, units, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, duration_minutes, percent, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateProfileSwitchParams struct {
@@ -419,6 +426,7 @@ func (q *Queries) UpdateProfileSwitch(ctx context.Context, arg UpdateProfileSwit
 		&i.Percent,
 		&i.Dia,
 		&i.Units,
+		&i.Timezone,
 		&i.CarbRatiosJson,
 		&i.InsulinSensitivitiesJson,
 		&i.BasalRatesJson,

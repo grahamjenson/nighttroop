@@ -182,6 +182,7 @@ type ProfilePreset struct {
 	IsDefault                bool
 	Dia                      *float64
 	Units                    *string
+	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -205,6 +206,7 @@ type ProfileSwitch struct {
 	Percent                  float64
 	Dia                      *float64
 	Units                    *string
+	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string

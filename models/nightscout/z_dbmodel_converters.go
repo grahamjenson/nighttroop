@@ -166,11 +166,68 @@ func DBModelToFood(source *site.FoodPreset) Food {
 		}
 		pNightscoutShortString2 := ShortString((*source).CreatedByIdentityName)
 		nightscoutFood.Subject = &pNightscoutShortString2
+		pNightscoutDateInt := DateInt((*source).CreatedAt)
+		nightscoutFood.Date = &pNightscoutDateInt
 		if (*source).RawJsonData != nil {
 			nightscoutFood.RawJsonData = *(*source).RawJsonData
 		}
 	}
 	return nightscoutFood
+}
+func DBModelToProfile(source *site.ProfilePreset) Profile {
+	var nightscoutProfile Profile
+	if source != nil {
+		if (*source).Dia != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Dia)
+			nightscoutProfile.Dia = &nightscoutFlexibleFloat64
+		}
+		nightscoutProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
+		nightscoutProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
+		nightscoutProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
+		nightscoutProfile.TargetLow = JSONToScheduleValueSlice((*source).TargetsLowJson)
+		nightscoutProfile.TargetHigh = JSONToScheduleValueSlice((*source).TargetsHighJson)
+		if (*source).Timezone != nil {
+			nightscoutTimezone := Timezone(*(*source).Timezone)
+			nightscoutProfile.Timezone = &nightscoutTimezone
+		}
+		if (*source).Units != nil {
+			nightscoutUnits := Units(*(*source).Units)
+			nightscoutProfile.Units = &nightscoutUnits
+		}
+	}
+	return nightscoutProfile
+}
+func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
+	var nightscoutProfileStore ProfileStore
+	if source != nil {
+		pNightscoutIdentifierString := IdentifierString((*source).ID)
+		nightscoutProfileStore.Identifier = &pNightscoutIdentifierString
+		pNightscoutShortString := ShortString((*source).Name)
+		nightscoutProfileStore.DefaultProfile = &pNightscoutShortString
+		if (*source).CreatedByDeviceName != nil {
+			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
+			nightscoutProfileStore.Device = &nightscoutShortString
+		}
+		if (*source).CreatedByAppName != nil {
+			nightscoutShortString2 := ShortString(*(*source).CreatedByAppName)
+			nightscoutProfileStore.App = &nightscoutShortString2
+		}
+		pNightscoutShortString2 := ShortString((*source).CreatedByIdentityName)
+		nightscoutProfileStore.Subject = &pNightscoutShortString2
+		nightscoutProfileStore.StartDate = ModelDateStringFromDateIntAndUTCOffset((*source))
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutProfileStore.Mills = &pNightscoutDateInt
+		pNightscoutDateInt2 := DateInt((*source).OccurredAt)
+		nightscoutProfileStore.Date = &pNightscoutDateInt2
+		if (*source).UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutProfileStore.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if (*source).RawJsonData != nil {
+			nightscoutProfileStore.RawJsonData = *(*source).RawJsonData
+		}
+	}
+	return nightscoutProfileStore
 }
 func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 	var nightscoutTreatment Treatment
@@ -301,6 +358,14 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 		}
 		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutTreatment.EnteredBy = &pNightscoutShortString
+		var pString5 *string
+		if (*source).ProfileSwitch != nil {
+			pString5 = &(*source).ProfileSwitch.Name
+		}
+		if pString5 != nil {
+			nightscoutShortString3 := ShortString(*pString5)
+			nightscoutTreatment.OriginalProfileName = &nightscoutShortString3
+		}
 		var pFloat648 *float64
 		if (*source).ProfileSwitch != nil {
 			pFloat648 = &(*source).ProfileSwitch.Percent
@@ -325,13 +390,13 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutFlexibleFloat6410 := FlexibleFloat64(*pFloat6410)
 			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6410
 		}
-		var pString5 *string
+		var pString6 *string
 		if (*source).Note != nil {
-			pString5 = (*source).Note.Reason
+			pString6 = (*source).Note.Reason
 		}
-		if pString5 != nil {
-			nightscoutShortString3 := ShortString(*pString5)
-			nightscoutTreatment.Reason = &nightscoutShortString3
+		if pString6 != nil {
+			nightscoutShortString4 := ShortString(*pString6)
+			nightscoutTreatment.Reason = &nightscoutShortString4
 		}
 		var pFloat6411 *float64
 		if (*source).TempTarget != nil {
@@ -350,12 +415,12 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutTreatment.TargetBottom = &nightscoutFlexibleFloat6412
 		}
 		if (*source).EventGroup.CreatedByDeviceName != nil {
-			nightscoutShortString4 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
-			nightscoutTreatment.Device = &nightscoutShortString4
+			nightscoutShortString5 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
+			nightscoutTreatment.Device = &nightscoutShortString5
 		}
 		if (*source).EventGroup.CreatedByAppName != nil {
-			nightscoutShortString5 := ShortString(*(*source).EventGroup.CreatedByAppName)
-			nightscoutTreatment.App = &nightscoutShortString5
+			nightscoutShortString6 := ShortString(*(*source).EventGroup.CreatedByAppName)
+			nightscoutTreatment.App = &nightscoutShortString6
 		}
 		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutTreatment.Subject = &pNightscoutShortString2

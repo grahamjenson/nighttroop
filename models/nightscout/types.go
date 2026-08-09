@@ -330,32 +330,22 @@ func (d *DateInt) Int64p() *int64 {
 // Timezone
 // ///////
 
-type Timezone struct {
-	Location *time.Location
-	Name     string
-}
+type Timezone string
 
 func (t *Timezone) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return fmt.Errorf("timezone must be a string: %w", err)
 	}
-
-	loc, err := time.LoadLocation(s)
-	if err != nil {
-		return fmt.Errorf("invalid timezone %q: %w", s, err)
-	}
-
-	t.Name = s
-	t.Location = loc
+	*t = Timezone(s)
 	return nil
 }
 
 func (t Timezone) MarshalJSON() ([]byte, error) {
-	if t.Name == "" {
-		return []byte(`null`), nil
+	if t == "" {
+		return []byte(`"UTC"`), nil
 	}
-	return json.Marshal(t.Name)
+	return json.Marshal(string(t))
 }
 
 /////

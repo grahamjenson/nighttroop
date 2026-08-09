@@ -22,6 +22,12 @@ ASSERT {{ assertEquals "sgv" "@0.type" }}
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
+
+
+///////
+// READ
+///////
+
 NAME get_entries_v1
 GET http://{{ .site }}.ns.localhost/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
@@ -29,10 +35,6 @@ ASSERT {{ assertEquals 101 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
-
-///////
-// READ
-///////
 
 NAME get_entries_type_v1
 GET http://{{ .site }}.ns.localhost/api/v1/entries/sgv?token={{ token }}

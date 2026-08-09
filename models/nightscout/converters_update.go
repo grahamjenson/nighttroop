@@ -148,7 +148,6 @@ type UpdateMapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
-	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
 	TreatmentToUpdateProfile(source Treatment, ctx UpdateContext) site.UpdateProfilePresetParams
 
 	///////
@@ -160,7 +159,6 @@ type UpdateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
-	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
 	// goverter:map Duration DurationMinutes
 	// goverter:map Percentage Percent
 	TreatmentToUpdateProfileSwitch(source Treatment, ctx UpdateContext) site.UpdateProfileSwitchParams

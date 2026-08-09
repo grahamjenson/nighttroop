@@ -10,6 +10,7 @@ INSERT INTO profile_switches (
 
     dia,
     units,
+    timezone,
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
@@ -23,7 +24,7 @@ INSERT INTO profile_switches (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

@@ -1,6 +1,7 @@
 package nightscout
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -75,20 +76,24 @@ type DBModelConverter interface {
 	// Profile To Profile Preset
 	///////
 
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
 	//
-	// goverter:map CreatedAt Date
-	// goverter:ignore DefaultProfile Store StartDate Mills
-	DBModelToProfile(source *site.ProfilePreset) Profile
+	// goverter:ignore Store
+	// goverter:map OccurredAt Mills
+	// goverter:map Name DefaultProfile
+	DBModelToProfileStore(source *site.ProfilePreset) ProfileStore
 
-	//
-	//
-	//
+	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
+	// goverter:map InsulinSensitivitiesJson Sens       | JSONToScheduleValueSlice
+	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
+	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSlice
+	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSlice
+	DBModelToProfile(source *site.ProfilePreset) Profile
 
 	////////////////////////////////////////
 	// TREATMENT TO CREATE/UPDATE
@@ -108,7 +113,7 @@ type DBModelConverter interface {
 	// goverter:map EventGroup.ID Identifier
 	// goverter:map EventGroup.OccurredAt Date
 	//
-	// goverter:ignore PreBolus SplitNow SplitExt Profile Units PumpType
+	// goverter:ignore PreBolus SplitNow SplitExt Profile Units PumpType ProfileJSON Timeshift
 	// goverter:map EventGroup.GroupType EventType
 	//
 	// goverter:map GlucoseReading.Reading Glucose
@@ -131,6 +136,8 @@ type DBModelConverter interface {
 	// goverter:map TempTarget.LowTarget TargetBottom
 	//
 	// goverter:map ProfileSwitch.Name Name
+	// goverter:map ProfileSwitch.Name Profile
+	// goverter:map ProfileSwitch.Name OriginalProfileName
 	// goverter:map ProfileSwitch.Percent Percentage
 	//
 	// goverter:map Activity.ActivityType ActivityType
@@ -189,4 +196,24 @@ func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
 	}
 	return nil
 
+}
+
+func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
+	if jsonStr == nil {
+		return nil
+	}
+	var result []*ScheduleValue
+	err := json.Unmarshal([]byte(*jsonStr), &result)
+	if err != nil {
+		return nil
+	}
+	for _, sv := range result {
+		if sv == nil {
+			continue
+		}
+		if sv.TimeAsSeconds == nil && sv.Time != nil {
+			sv.TimeAsSeconds = sv.Time.ToSeconds()
+		}
+	}
+	return result
 }

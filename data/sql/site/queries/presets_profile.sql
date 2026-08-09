@@ -7,8 +7,11 @@ INSERT INTO profile_presets (
     name,
     profile_store_id,
     is_default,
+    
     dia,
     units,
+    timezone,
+
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
@@ -22,7 +25,7 @@ INSERT INTO profile_presets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -36,9 +39,9 @@ WHERE profile_store_id = (
     SELECT profile_store_id
     FROM profile_presets
     GROUP BY profile_store_id
-    ORDER BY MAX(created_at) DESC
+    ORDER BY MAX(occurred_at) DESC
     LIMIT 1
-);
+) ORDER BY is_default DESC;
 
 -- name: AllProfilePresets :many
 SELECT * FROM profile_presets

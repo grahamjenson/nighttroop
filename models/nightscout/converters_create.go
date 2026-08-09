@@ -63,19 +63,6 @@ type CreateMapConverter interface {
 	// goverter:map Energy Calories
 	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodPresetParams
 
-	///////
-	// Profile To Profile Preset
-	///////
-
-	// goverter:context ctx
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// ProfileToCreate(source Profile, ctx CreateContext) []site.CreateProfilePresetParams
-
 	//
 	//
 	//
@@ -156,19 +143,6 @@ type CreateMapConverter interface {
 	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
 
 	///////
-	// Profile
-	///////
-
-	// goverter:context ctx
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
-	TreatmentToCreateProfile(source Treatment, ctx CreateContext) site.CreateProfilePresetParams
-
-	///////
 	// Profile Switch
 	///////
 
@@ -179,7 +153,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsJson
+	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone
 	// goverter:map Duration DurationMinutes
 	// goverter:map Percentage Percent
 	TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams

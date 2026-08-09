@@ -752,6 +752,11 @@ func (m ProfilePreset) GetUnits() *string {
 	return m.Units
 }
 
+// GetTimezone returns the Timezone value.
+func (m ProfilePreset) GetTimezone() *string {
+	return m.Timezone
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m ProfilePreset) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -850,6 +855,11 @@ func (m ProfileSwitch) GetDia() *float64 {
 // GetUnits returns the Units value.
 func (m ProfileSwitch) GetUnits() *string {
 	return m.Units
+}
+
+// GetTimezone returns the Timezone value.
+func (m ProfileSwitch) GetTimezone() *string {
+	return m.Timezone
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -5994,6 +6004,17 @@ func (m CreateProfileSwitchParams) SetUnits(v *string) CreateProfileSwitchParams
 	return m
 }
 
+// GetTimezone returns the Timezone value.
+func (m CreateProfileSwitchParams) GetTimezone() *string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetTimezone(v *string) CreateProfileSwitchParams {
+	m.Timezone = v
+	return m
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m CreateProfileSwitchParams) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -8257,6 +8278,17 @@ func (m CreateProfilePresetParams) GetUnits() *string {
 // SetUnits sets the Units value and returns the updated CreateProfilePresetParams.
 func (m CreateProfilePresetParams) SetUnits(v *string) CreateProfilePresetParams {
 	m.Units = v
+	return m
+}
+
+// GetTimezone returns the Timezone value.
+func (m CreateProfilePresetParams) GetTimezone() *string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetTimezone(v *string) CreateProfilePresetParams {
+	m.Timezone = v
 	return m
 }
 
