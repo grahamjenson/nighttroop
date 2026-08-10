@@ -57,6 +57,14 @@ func (model EventGroupsBundle) GetCreatedByIdentityName() string {
 	return model.EventGroup.CreatedByIdentityName
 }
 
+func (model EventGroupsBundle) GetCreatedByAppName() *string {
+	return model.EventGroup.CreatedByAppName
+}
+
+func (model EventGroupsBundle) GetCreatedByDeviceName() *string {
+	return model.EventGroup.CreatedByDeviceName
+}
+
 func (model EventGroupsBundle) GetOccurredAt() int64 {
 	return model.EventGroup.OccurredAt
 }

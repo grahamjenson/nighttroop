@@ -142,3 +142,19 @@ func (t *EntryType) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func (t Entry) GetDevice() *string {
+	return t.Device.Stringp()
+}
+
+func (t Entry) GetApp() *string {
+	return t.App.Stringp()
+}
+
+func (t Entry) GetSubject() *string {
+	return t.Subject.Stringp()
+}
+
+func (t Entry) GetDate() *int64 {
+	return t.Date.Int64p()
+}

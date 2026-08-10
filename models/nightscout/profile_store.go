@@ -242,3 +242,19 @@ func (s *ScheduleTime) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func (t ProfileStore) GetDevice() *string {
+	return t.Device.Stringp()
+}
+
+func (t ProfileStore) GetApp() *string {
+	return t.App.Stringp()
+}
+
+func (t ProfileStore) GetSubject() *string {
+	return t.Subject.Stringp()
+}
+
+func (t ProfileStore) GetDate() *int64 {
+	return t.Date.Int64p()
+}

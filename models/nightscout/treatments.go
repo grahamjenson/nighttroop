@@ -237,3 +237,19 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func (t Treatment) GetDevice() *string {
+	return t.Device.Stringp()
+}
+
+func (t Treatment) GetApp() *string {
+	return t.App.Stringp()
+}
+
+func (t Treatment) GetSubject() *string {
+	return t.Subject.Stringp()
+}
+
+func (t Treatment) GetDate() *int64 {
+	return t.Date.Int64p()
+}

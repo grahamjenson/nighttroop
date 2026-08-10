@@ -76,3 +76,19 @@ const (
 	UnitPackage   FoodUnit = "package"
 	UnitContainer FoodUnit = "container"
 )
+
+func (t Food) GetDevice() *string {
+	return t.Device.Stringp()
+}
+
+func (t Food) GetApp() *string {
+	return t.App.Stringp()
+}
+
+func (t Food) GetSubject() *string {
+	return t.Subject.Stringp()
+}
+
+func (t Food) GetDate() *int64 {
+	return t.Date.Int64p()
+}

@@ -200,3 +200,19 @@ type COBStatus struct {
 	COB       *FlexibleFloat64 `json:"cob,omitempty"`
 	Timestamp *DateString      `json:"timestamp,omitempty"`
 }
+
+func (t DeviceStatus) GetDevice() *string {
+	return t.Device.Stringp()
+}
+
+func (t DeviceStatus) GetApp() *string {
+	return t.App.Stringp()
+}
+
+func (t DeviceStatus) GetSubject() *string {
+	return t.Subject.Stringp()
+}
+
+func (t DeviceStatus) GetDate() *int64 {
+	return t.Date.Int64p()
+}

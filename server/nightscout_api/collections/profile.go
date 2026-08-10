@@ -14,7 +14,7 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *ProfilePresetWrapper) nsutils.Record
+	converter func(c *ProfilePresetBundle) nsutils.Record
 }
 
 func NewProfileCollection() ProfileCollection {
@@ -25,18 +25,18 @@ func (c ProfileCollection) Name() string {
 	return "profile"
 }
 
-func (c ProfileCollection) Convert(dr *ProfilePresetWrapper) nsutils.Record {
+func (c ProfileCollection) Convert(dr *ProfilePresetBundle) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.CreateContext, replacing *ProfilePresetWrapper, overrideIdentifier *string) (*ProfilePresetWrapper, error) {
+func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.CreateContext, replacing *ProfilePresetBundle, overrideIdentifier *string) (*ProfilePresetBundle, error) {
 	manyCreateParams := NightscoutToDBCreate(nsModel, cc)
 	// Validate change if replacing a model
 	if replacing != nil {
 		// TODO: Validate something here
 	}
 
-	ret := ProfilePresetWrapper([]*site.ProfilePreset{})
+	ret := ProfilePresetBundle([]*site.ProfilePreset{})
 
 	for _, createParams := range manyCreateParams {
 		dbModel, err := q.CreateProfilePreset(ctx, createParams)
@@ -48,12 +48,12 @@ func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, ns
 	return &ret, nil
 }
 
-func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*ProfilePresetWrapper, error) {
+func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*ProfilePresetBundle, error) {
 	ret, err := q.GetProfileStore(ctx, site.GetProfileStoreParams{ProfileStoreID: identifier})
 	if err != nil {
 		return nil, err
 	}
-	wrapper := ProfilePresetWrapper(ret)
+	wrapper := ProfilePresetBundle(ret)
 	return &wrapper, nil
 }
 
@@ -92,7 +92,7 @@ func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 	wrappers := ManyPresetsToMayWrappers(profilePresets)
-	return nsutils.CreateRecordSlice[*ProfilePresetWrapper](wrappers, c.converter), nil
+	return nsutils.CreateRecordSlice[*ProfilePresetBundle](wrappers, c.converter), nil
 }
 
 func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -115,56 +115,70 @@ func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 // CONVERSION METHOD
 ///////////////////////////
 
-type ProfilePresetWrapper []*site.ProfilePreset
+type ProfilePresetBundle []*site.ProfilePreset
 
-func (c ProfilePresetWrapper) GetID() string {
+func (c ProfilePresetBundle) GetID() string {
 	if len(c) == 0 || c[0] == nil {
 		return ""
 	}
 	return c[0].ProfileStoreID
 }
-func (c ProfilePresetWrapper) GetDeletedAt() *int64 {
+func (c ProfilePresetBundle) GetDeletedAt() *int64 {
 	return nil
 
 }
-func (c ProfilePresetWrapper) GetCreatedAt() int64 {
+func (c ProfilePresetBundle) GetCreatedAt() int64 {
 	if len(c) == 0 || c[0] == nil {
 		return 0
 	}
 	return c[0].CreatedAt
 }
-func (c ProfilePresetWrapper) GetUpdatedAt() int64 {
+func (c ProfilePresetBundle) GetUpdatedAt() int64 {
 	if len(c) == 0 || c[0] == nil {
 		return 0
 	}
 	return c[0].UpdatedAt
 }
 
-func (c ProfilePresetWrapper) GetCreatedByIdentityName() string {
+func (c ProfilePresetBundle) GetCreatedByIdentityName() string {
 	if len(c) == 0 || c[0] == nil {
 		return ""
 	}
 	return c[0].CreatedByIdentityName
 }
 
-func (c ProfilePresetWrapper) GetUtcOffsetMinutes() *int64 {
+func (c ProfilePresetBundle) GetUtcOffsetMinutes() *int64 {
 	if len(c) == 0 || c[0] == nil {
 		return nil
 	}
 	return c[0].UtcOffsetMinutes
 }
-func (c ProfilePresetWrapper) GetOccurredAt() int64 {
+func (c ProfilePresetBundle) GetOccurredAt() int64 {
 	if len(c) == 0 || c[0] == nil {
 		return 0
 	}
 	return c[0].OccurredAt
 }
 
+func (c ProfilePresetBundle) GetCreatedByAppName() *string {
+	if len(c) == 0 || c[0] == nil {
+		return nil
+	}
+	return c[0].CreatedByAppName
+}
+
+func (c ProfilePresetBundle) GetCreatedByDeviceName() *string {
+	if len(c) == 0 || c[0] == nil {
+		return nil
+	}
+	return c[0].CreatedByDeviceName
+}
+
 ///////
 // Many to Many
 ///////
 
-func ManyPresetsToMayWrappers(source []*site.ProfilePreset) []*ProfilePresetWrapper {
+func ManyPresetsToMayWrappers(source []*site.ProfilePreset) []*ProfilePresetBundle {
 	if source == nil {
 		return nil
 	}
@@ -185,9 +199,9 @@ func ManyPresetsToMayWrappers(source []*site.ProfilePreset) []*ProfilePresetWrap
 		}
 	}
 
-	wrappers := []*ProfilePresetWrapper{}
+	wrappers := []*ProfilePresetBundle{}
 	for _, presets := range lookup {
-		wrapper := ProfilePresetWrapper(presets)
+		wrapper := ProfilePresetBundle(presets)
 		wrappers = append(wrappers, &wrapper)
 	}
 	return wrappers
@@ -197,7 +211,7 @@ func ManyPresetsToMayWrappers(source []*site.ProfilePreset) []*ProfilePresetWrap
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscout(source *ProfilePresetWrapper) nightscout.ProfileStore {
+func DBToNightscout(source *ProfilePresetBundle) nightscout.ProfileStore {
 	if source == nil {
 		return nightscout.ProfileStore{}
 	}

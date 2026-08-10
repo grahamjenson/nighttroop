@@ -209,6 +209,16 @@ func (d *DateString) Time() time.Time {
 	t, _ := time.Parse(time.RFC3339Nano, string(*d))
 	return t
 }
+
+func (d *DateString) Timep() *time.Time {
+	if d == nil {
+		return nil
+	}
+	// This should have errored on unmarshal or assignment
+	t, _ := time.Parse(time.RFC3339Nano, string(*d))
+	return &t
+}
+
 func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
 	t := d.Time()
 	_, offsetSeconds := t.Zone()

@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -273,7 +274,17 @@ func MetaDeleteType(
 	return int(rowsAffected), nil
 }
 
-func MetaReplace[NS, DM any](
+func MetaReplace[NS interface {
+	GetDevice() *string
+	GetApp() *string
+	GetSubject() *string
+	GetDate() *int64
+}, DM interface {
+	GetOccurredAt() int64
+	GetCreatedByAppName() *string
+	GetCreatedByDeviceName() *string
+	GetCreatedByIdentityName() string
+}](
 	m MetaReplaceCollection[NS, DM],
 	ctx context.Context,
 	siteContext *httputils.SiteContext,
@@ -300,7 +311,6 @@ func MetaReplace[NS, DM any](
 	creatingNewRecord := false
 
 	// GET
-
 	replacingModel, err := m.GetDBFunc(q, ctx, identifier)
 	if err == sql.ErrNoRows {
 		// Check no Record exists
@@ -323,6 +333,11 @@ func MetaReplace[NS, DM any](
 		}
 	}
 
+	if err := ValidateNotChangingSharedFields(replacingModel, nsModel); err != nil {
+		slog.Error("validation failed for replacing model", "error", err, "collection", m.Name())
+		return nil, false, err
+	}
+
 	// CREATE
 	dbCreateModel, err := m.CreateDBFunc(q, ctx, nsModel, cc, replacingModel, &identifier)
 	if err != nil {
@@ -342,4 +357,40 @@ func MetaReplace[NS, DM any](
 
 	return ptr(m.Convert(dbCreateModel)), creatingNewRecord, nil
 
+}
+
+func ValidateNotChangingSharedFields[NS interface {
+	GetDevice() *string
+	GetApp() *string
+	GetSubject() *string
+	GetDate() *int64
+}, DM interface {
+	GetOccurredAt() int64
+	GetCreatedByAppName() *string
+	GetCreatedByDeviceName() *string
+	GetCreatedByIdentityName() string
+}](replacingModelPtr *DM, nsModel NS) *nsutils.HTTPError {
+	if replacingModelPtr == nil {
+		return nil
+	}
+	replacingModel := *replacingModelPtr
+
+	fmt.Printf("Validating not changing shared fields for replacing model: %+v and new model: %+v\n", *replacingModelPtr, nsModel)
+	fmt.Printf("Diff in nsModel Model Device: %v, App: %v, Subject: %v, Date: %v\n Replacing Device: %v, App: %v, Subject: %v, Date: %v\n", nsModel.GetDevice(), nsModel.GetApp(), nsModel.GetSubject(), nsModel.GetDate(), replacingModel.GetCreatedByDeviceName(), replacingModel.GetCreatedByAppName(), replacingModel.GetCreatedByIdentityName(), replacingModel.GetOccurredAt())
+
+	// Validate that the new model has the same device, app, subject, and date as the replacing model
+	if nsModel.GetDevice() != nil && replacingModel.GetCreatedByDeviceName() != nil && *nsModel.GetDevice() != *replacingModel.GetCreatedByDeviceName() {
+		return nsutils.ErrCannotChangeDevice
+	}
+	if nsModel.GetApp() != nil && replacingModel.GetCreatedByAppName() != nil && *nsModel.GetApp() != *replacingModel.GetCreatedByAppName() {
+		return nsutils.ErrCannotChangeApp
+	}
+	if nsModel.GetSubject() != nil && replacingModel.GetCreatedByIdentityName() != "" && *nsModel.GetSubject() != replacingModel.GetCreatedByIdentityName() {
+		return nsutils.ErrCannotChangeSubject
+	}
+	if nsModel.GetDate() != nil && replacingModel.GetOccurredAt() != 0 && *nsModel.GetDate() != replacingModel.GetOccurredAt() {
+		return nsutils.ErrCannotChangeDate
+	}
+
+	return nil
 }

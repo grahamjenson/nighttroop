@@ -72,3 +72,19 @@ func (t *Activity) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(t),
 	})
 }
+
+func (t Activity) GetDevice() *string {
+	return t.Device.Stringp()
+}
+
+func (t Activity) GetApp() *string {
+	return t.App.Stringp()
+}
+
+func (t Activity) GetSubject() *string {
+	return t.Subject.Stringp()
+}
+
+func (t Activity) GetDate() *int64 {
+	return t.Date.Int64p()
+}
