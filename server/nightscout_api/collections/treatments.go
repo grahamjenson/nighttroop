@@ -30,8 +30,6 @@ type TreatmentCollection struct {
 	converter func(c *site.EventGroupsBundle) nsutils.Record
 }
 
-// There is a list of incoming types, but we only support a few, and some we break apart into simpler types
-// Treatments are a constallation of DB types and no more.
 func NewTreatmentCollection() TreatmentCollection {
 	return TreatmentCollection{
 		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.DBModelToTreatment),
@@ -90,7 +88,19 @@ func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, n
 		return nil, nsutils.BadDataBodyError
 	}
 
-	return EventGroupUpdate(ctx, q, TreatmentEventGroupUpdate(ctx, uc, nsModel))
+	bundle := TreatmentEventGroupUpdate(ctx, uc, nsModel)
+	ret, err := updateEventGroup(ctx, q, bundle)
+	if err != nil {
+		slog.Error("failed in EventGroupUpdate to update event group in database", "error", err, "bundle", bundle)
+		return nil, nsutils.ErrInternal
+	}
+
+	if ret == nil || ret.EventGroup.ID == "" {
+		slog.Error("failed in EventGroupUpdate to update event group in database, EventGroup is nil", "bundle", bundle)
+		return nil, nsutils.ErrInternal
+	}
+
+	return ret, nil
 }
 
 func (c TreatmentCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
@@ -99,6 +109,40 @@ func (c TreatmentCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Conte
 
 func (c TreatmentCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return softDeleteEventGroup(ctx, q, identifier)
+}
+
+func (c TreatmentCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, site.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, eg := range eventGroups {
+		if eg != nil {
+			if _, err := hardDeleteEventGroup(ctx, q, eg.ID); err != nil {
+				return nil, err
+			}
+
+		}
+	}
+	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
+}
+
+func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, site.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, eg := range eventGroups {
+		if eg != nil {
+			if _, err := softDeleteEventGroup(ctx, q, eg.ID); err != nil {
+				return nil, err
+			}
+
+		}
+	}
+	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
 // ///
@@ -131,10 +175,7 @@ func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.
 }
 
 func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	if permanent {
-		return EventGroupHardDeleteType(ctx, siteContext, typeString)
-	}
-	return EventGroupSoftDeleteType(ctx, siteContext, typeString)
+	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
@@ -154,6 +195,15 @@ func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext,
 	componentEvent := nightscout.TreatmentToCreateComponentEvent(treatment, cc)
 	activity := nightscout.TreatmentToCreateActivity(treatment, cc)
 	note := nightscout.TreatmentToCreateNote(treatment, cc)
+
+	ret := site.CreateEventGroupBundle{EventGroup: eventGroup}
+	if glucoseReading.Reading != 0 {
+		ret.GlucoseReading = &glucoseReading
+	}
+
+	if insulinDose.Dose != 0 {
+		ret.InsulinDose = &insulinDose
+	}
 
 	switch *treatment.EventType {
 	case nightscout.Announcement:
@@ -460,31 +510,6 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 	}
 	return res, nil
 
-}
-
-// UPDATE
-func EventGroupUpdate(ctx context.Context, q *site.Queries, bundle site.UpdateEventGroupBundle) (*site.EventGroupsBundle, *nsutils.HTTPError) {
-
-	ret, err := updateEventGroup(ctx, q, bundle)
-	if err != nil {
-		slog.Error("failed in EventGroupUpdate to update event group in database", "error", err, "bundle", bundle)
-		return nil, nsutils.ErrInternal
-	}
-
-	if ret == nil || ret.EventGroup.ID == "" {
-		slog.Error("failed in EventGroupUpdate to update event group in database, EventGroup is nil", "bundle", bundle)
-		return nil, nsutils.ErrInternal
-	}
-
-	return ret, nil
-}
-
-func EventGroupSoftDeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
-}
-
-func EventGroupHardDeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
 }
 
 // //////////////////////

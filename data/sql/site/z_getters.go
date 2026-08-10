@@ -4288,6 +4288,17 @@ func (m GetEventGroupWithoutJoinsParams) SetID(v string) GetEventGroupWithoutJoi
 	return m
 }
 
+// GetGroupType returns the GroupType value.
+func (m GetEventGroupOfTypeWithoutJoinsParams) GetGroupType() string {
+	return m.GroupType
+}
+
+// SetGroupType sets the GroupType value and returns the updated GetEventGroupOfTypeWithoutJoinsParams.
+func (m GetEventGroupOfTypeWithoutJoinsParams) SetGroupType(v string) GetEventGroupOfTypeWithoutJoinsParams {
+	m.GroupType = v
+	return m
+}
+
 // GetIncludeDeleted returns the IncludeDeleted value.
 func (m AllEventGroupsParams) GetIncludeDeleted() *bool {
 	return m.IncludeDeleted

@@ -114,6 +114,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getEventGroupStmt, err = db.PrepareContext(ctx, getEventGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEventGroup: %w", err)
 	}
+	if q.getEventGroupOfTypeWithoutJoinsStmt, err = db.PrepareContext(ctx, getEventGroupOfTypeWithoutJoins); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEventGroupOfTypeWithoutJoins: %w", err)
+	}
 	if q.getEventGroupWithoutJoinsStmt, err = db.PrepareContext(ctx, getEventGroupWithoutJoins); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEventGroupWithoutJoins: %w", err)
 	}
@@ -489,6 +492,11 @@ func (q *Queries) Close() error {
 	if q.getEventGroupStmt != nil {
 		if cerr := q.getEventGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getEventGroupStmt: %w", cerr)
+		}
+	}
+	if q.getEventGroupOfTypeWithoutJoinsStmt != nil {
+		if cerr := q.getEventGroupOfTypeWithoutJoinsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEventGroupOfTypeWithoutJoinsStmt: %w", cerr)
 		}
 	}
 	if q.getEventGroupWithoutJoinsStmt != nil {
@@ -930,6 +938,7 @@ type Queries struct {
 	getComponentEventStmt               *sql.Stmt
 	getDeviceReportStmt                 *sql.Stmt
 	getEventGroupStmt                   *sql.Stmt
+	getEventGroupOfTypeWithoutJoinsStmt *sql.Stmt
 	getEventGroupWithoutJoinsStmt       *sql.Stmt
 	getFoodIntakeStmt                   *sql.Stmt
 	getFoodPresetStmt                   *sql.Stmt
@@ -1040,6 +1049,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getComponentEventStmt:               q.getComponentEventStmt,
 		getDeviceReportStmt:                 q.getDeviceReportStmt,
 		getEventGroupStmt:                   q.getEventGroupStmt,
+		getEventGroupOfTypeWithoutJoinsStmt: q.getEventGroupOfTypeWithoutJoinsStmt,
 		getEventGroupWithoutJoinsStmt:       q.getEventGroupWithoutJoinsStmt,
 		getFoodIntakeStmt:                   q.getFoodIntakeStmt,
 		getFoodPresetStmt:                   q.getFoodPresetStmt,

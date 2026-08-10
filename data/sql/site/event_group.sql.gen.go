@@ -513,6 +513,59 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 	return &i, err
 }
 
+const getEventGroupOfTypeWithoutJoins = `-- name: GetEventGroupOfTypeWithoutJoins :many
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE group_type = ?
+`
+
+type GetEventGroupOfTypeWithoutJoinsParams struct {
+	GroupType string
+}
+
+func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEventGroupOfTypeWithoutJoinsParams) ([]*EventGroup, error) {
+	rows, err := q.query(ctx, q.getEventGroupOfTypeWithoutJoinsStmt, getEventGroupOfTypeWithoutJoins, arg.GroupType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*EventGroup
+	for rows.Next() {
+		var i EventGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupType,
+			&i.GlucoseReadingID,
+			&i.InsulinDoseID,
+			&i.FoodIntakeID,
+			&i.TempBasalID,
+			&i.TempTargetID,
+			&i.ProfileSwitchID,
+			&i.ComponentEventID,
+			&i.ActivityID,
+			&i.NoteID,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEventGroupWithoutJoins = `-- name: GetEventGroupWithoutJoins :one
 
 SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?

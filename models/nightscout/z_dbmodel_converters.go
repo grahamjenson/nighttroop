@@ -204,6 +204,10 @@ func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
 		nightscoutProfileStore.Identifier = &pNightscoutIdentifierString
 		pNightscoutShortString := ShortString((*source).Name)
 		nightscoutProfileStore.DefaultProfile = &pNightscoutShortString
+		if (*source).Units != nil {
+			nightscoutUnits := Units(*(*source).Units)
+			nightscoutProfileStore.Units = &nightscoutUnits
+		}
 		if (*source).CreatedByDeviceName != nil {
 			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
 			nightscoutProfileStore.Device = &nightscoutShortString
