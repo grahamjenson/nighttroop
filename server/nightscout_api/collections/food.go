@@ -43,10 +43,6 @@ func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsMod
 
 }
 
-func (c FoodCollection) UpdateSBFunc(q *site.Queries, ctx context.Context, updateParams site.UpdateFoodPresetParams) (*site.FoodPreset, error) {
-	return q.UpdateFoodPreset(ctx, updateParams)
-}
-
 func (c FoodCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.FoodPreset, error) {
 	return q.GetFoodPreset(ctx, site.GetFoodPresetParams{ID: identifier})
 }

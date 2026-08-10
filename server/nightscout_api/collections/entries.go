@@ -52,10 +52,6 @@ func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, ns
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) UpdateSBFunc(q *site.Queries, ctx context.Context, updateParams site.UpdateGlucoseReadingParams, nsModel nightscout.Entry, uc nightscout.UpdateContext) (*site.GlucoseReading, error) {
-	return q.UpdateGlucoseReading(ctx, updateParams)
-}
-
 func (c EntriesCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
 }

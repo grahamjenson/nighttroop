@@ -42,10 +42,6 @@ func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, n
 	return q.CreateActivity(ctx, createParams)
 }
 
-func (c ActivityCollection) UpdateSBFunc(q *site.Queries, ctx context.Context, updateParams site.UpdateActivityParams) (*site.Activity, error) {
-	return q.UpdateActivity(ctx, updateParams)
-}
-
 func (c ActivityCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.Activity, error) {
 	return q.GetActivity(ctx, site.GetActivityParams{ID: identifier})
 }

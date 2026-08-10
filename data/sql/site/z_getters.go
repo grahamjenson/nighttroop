@@ -8446,215 +8446,6 @@ func (m GetProfilePresetParams) SetID(v string) GetProfilePresetParams {
 	return m
 }
 
-// GetDateGTE returns the DateGTE value.
-func (m SearchProfilePresetsParams) GetDateGTE() *int64 {
-	return m.DateGTE
-}
-
-// SetDateGTE sets the DateGTE value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetDateGTE(v *int64) SearchProfilePresetsParams {
-	m.DateGTE = v
-	return m
-}
-
-// GetDateLTE returns the DateLTE value.
-func (m SearchProfilePresetsParams) GetDateLTE() *int64 {
-	return m.DateLTE
-}
-
-// SetDateLTE sets the DateLTE value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetDateLTE(v *int64) SearchProfilePresetsParams {
-	m.DateLTE = v
-	return m
-}
-
-// GetDateGT returns the DateGT value.
-func (m SearchProfilePresetsParams) GetDateGT() *int64 {
-	return m.DateGT
-}
-
-// SetDateGT sets the DateGT value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetDateGT(v *int64) SearchProfilePresetsParams {
-	m.DateGT = v
-	return m
-}
-
-// GetDateLT returns the DateLT value.
-func (m SearchProfilePresetsParams) GetDateLT() *int64 {
-	return m.DateLT
-}
-
-// SetDateLT sets the DateLT value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetDateLT(v *int64) SearchProfilePresetsParams {
-	m.DateLT = v
-	return m
-}
-
-// GetCreatedAtGTE returns the CreatedAtGTE value.
-func (m SearchProfilePresetsParams) GetCreatedAtGTE() *int64 {
-	return m.CreatedAtGTE
-}
-
-// SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetCreatedAtGTE(v *int64) SearchProfilePresetsParams {
-	m.CreatedAtGTE = v
-	return m
-}
-
-// GetCreatedAtLTE returns the CreatedAtLTE value.
-func (m SearchProfilePresetsParams) GetCreatedAtLTE() *int64 {
-	return m.CreatedAtLTE
-}
-
-// SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetCreatedAtLTE(v *int64) SearchProfilePresetsParams {
-	m.CreatedAtLTE = v
-	return m
-}
-
-// GetCreatedAtGT returns the CreatedAtGT value.
-func (m SearchProfilePresetsParams) GetCreatedAtGT() *int64 {
-	return m.CreatedAtGT
-}
-
-// SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetCreatedAtGT(v *int64) SearchProfilePresetsParams {
-	m.CreatedAtGT = v
-	return m
-}
-
-// GetCreatedAtLT returns the CreatedAtLT value.
-func (m SearchProfilePresetsParams) GetCreatedAtLT() *int64 {
-	return m.CreatedAtLT
-}
-
-// SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetCreatedAtLT(v *int64) SearchProfilePresetsParams {
-	m.CreatedAtLT = v
-	return m
-}
-
-// GetUpdatedGTE returns the UpdatedGTE value.
-func (m SearchProfilePresetsParams) GetUpdatedGTE() *int64 {
-	return m.UpdatedGTE
-}
-
-// SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetUpdatedGTE(v *int64) SearchProfilePresetsParams {
-	m.UpdatedGTE = v
-	return m
-}
-
-// GetUpdatedLTE returns the UpdatedLTE value.
-func (m SearchProfilePresetsParams) GetUpdatedLTE() *int64 {
-	return m.UpdatedLTE
-}
-
-// SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetUpdatedLTE(v *int64) SearchProfilePresetsParams {
-	m.UpdatedLTE = v
-	return m
-}
-
-// GetUpdatedGT returns the UpdatedGT value.
-func (m SearchProfilePresetsParams) GetUpdatedGT() *int64 {
-	return m.UpdatedGT
-}
-
-// SetUpdatedGT sets the UpdatedGT value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetUpdatedGT(v *int64) SearchProfilePresetsParams {
-	m.UpdatedGT = v
-	return m
-}
-
-// GetUpdatedLT returns the UpdatedLT value.
-func (m SearchProfilePresetsParams) GetUpdatedLT() *int64 {
-	return m.UpdatedLT
-}
-
-// SetUpdatedLT sets the UpdatedLT value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetUpdatedLT(v *int64) SearchProfilePresetsParams {
-	m.UpdatedLT = v
-	return m
-}
-
-// GetIDEq returns the IDEq value.
-func (m SearchProfilePresetsParams) GetIDEq() *string {
-	return m.IDEq
-}
-
-// SetIDEq sets the IDEq value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetIDEq(v *string) SearchProfilePresetsParams {
-	m.IDEq = v
-	return m
-}
-
-// GetIDIn returns the IDIn value.
-func (m SearchProfilePresetsParams) GetIDIn() *string {
-	return m.IDIn
-}
-
-// SetIDIn sets the IDIn value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetIDIn(v *string) SearchProfilePresetsParams {
-	m.IDIn = v
-	return m
-}
-
-// GetNameEq returns the NameEq value.
-func (m SearchProfilePresetsParams) GetNameEq() *string {
-	return m.NameEq
-}
-
-// SetNameEq sets the NameEq value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetNameEq(v *string) SearchProfilePresetsParams {
-	m.NameEq = v
-	return m
-}
-
-// GetDeviceEq returns the DeviceEq value.
-func (m SearchProfilePresetsParams) GetDeviceEq() *string {
-	return m.DeviceEq
-}
-
-// SetDeviceEq sets the DeviceEq value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetDeviceEq(v *string) SearchProfilePresetsParams {
-	m.DeviceEq = v
-	return m
-}
-
-// GetAppEq returns the AppEq value.
-func (m SearchProfilePresetsParams) GetAppEq() *string {
-	return m.AppEq
-}
-
-// SetAppEq sets the AppEq value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetAppEq(v *string) SearchProfilePresetsParams {
-	m.AppEq = v
-	return m
-}
-
-// GetSkip returns the Skip value.
-func (m SearchProfilePresetsParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetSkip(v int64) SearchProfilePresetsParams {
-	m.Skip = v
-	return m
-}
-
-// GetLimit returns the Limit value.
-func (m SearchProfilePresetsParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated SearchProfilePresetsParams.
-func (m SearchProfilePresetsParams) SetLimit(v int64) SearchProfilePresetsParams {
-	m.Limit = v
-	return m
-}
-
 // GetName returns the Name value.
 func (m UpdateProfilePresetParams) GetName() *string {
 	return m.Name
@@ -8696,6 +8487,237 @@ func (m HardDeleteProfilePresetParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteProfilePresetParams.
 func (m HardDeleteProfilePresetParams) SetID(v string) HardDeleteProfilePresetParams {
 	m.ID = v
+	return m
+}
+
+// GetProfileStoreID returns the ProfileStoreID value.
+func (m GetProfileStoreParams) GetProfileStoreID() string {
+	return m.ProfileStoreID
+}
+
+// SetProfileStoreID sets the ProfileStoreID value and returns the updated GetProfileStoreParams.
+func (m GetProfileStoreParams) SetProfileStoreID(v string) GetProfileStoreParams {
+	m.ProfileStoreID = v
+	return m
+}
+
+// GetDateGTE returns the DateGTE value.
+func (m SearchProfileStoresParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetDateGTE(v *int64) SearchProfileStoresParams {
+	m.DateGTE = v
+	return m
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m SearchProfileStoresParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetDateLTE(v *int64) SearchProfileStoresParams {
+	m.DateLTE = v
+	return m
+}
+
+// GetDateGT returns the DateGT value.
+func (m SearchProfileStoresParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetDateGT(v *int64) SearchProfileStoresParams {
+	m.DateGT = v
+	return m
+}
+
+// GetDateLT returns the DateLT value.
+func (m SearchProfileStoresParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetDateLT(v *int64) SearchProfileStoresParams {
+	m.DateLT = v
+	return m
+}
+
+// GetCreatedAtGTE returns the CreatedAtGTE value.
+func (m SearchProfileStoresParams) GetCreatedAtGTE() *int64 {
+	return m.CreatedAtGTE
+}
+
+// SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetCreatedAtGTE(v *int64) SearchProfileStoresParams {
+	m.CreatedAtGTE = v
+	return m
+}
+
+// GetCreatedAtLTE returns the CreatedAtLTE value.
+func (m SearchProfileStoresParams) GetCreatedAtLTE() *int64 {
+	return m.CreatedAtLTE
+}
+
+// SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetCreatedAtLTE(v *int64) SearchProfileStoresParams {
+	m.CreatedAtLTE = v
+	return m
+}
+
+// GetCreatedAtGT returns the CreatedAtGT value.
+func (m SearchProfileStoresParams) GetCreatedAtGT() *int64 {
+	return m.CreatedAtGT
+}
+
+// SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetCreatedAtGT(v *int64) SearchProfileStoresParams {
+	m.CreatedAtGT = v
+	return m
+}
+
+// GetCreatedAtLT returns the CreatedAtLT value.
+func (m SearchProfileStoresParams) GetCreatedAtLT() *int64 {
+	return m.CreatedAtLT
+}
+
+// SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetCreatedAtLT(v *int64) SearchProfileStoresParams {
+	m.CreatedAtLT = v
+	return m
+}
+
+// GetUpdatedGTE returns the UpdatedGTE value.
+func (m SearchProfileStoresParams) GetUpdatedGTE() *int64 {
+	return m.UpdatedGTE
+}
+
+// SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetUpdatedGTE(v *int64) SearchProfileStoresParams {
+	m.UpdatedGTE = v
+	return m
+}
+
+// GetUpdatedLTE returns the UpdatedLTE value.
+func (m SearchProfileStoresParams) GetUpdatedLTE() *int64 {
+	return m.UpdatedLTE
+}
+
+// SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetUpdatedLTE(v *int64) SearchProfileStoresParams {
+	m.UpdatedLTE = v
+	return m
+}
+
+// GetUpdatedGT returns the UpdatedGT value.
+func (m SearchProfileStoresParams) GetUpdatedGT() *int64 {
+	return m.UpdatedGT
+}
+
+// SetUpdatedGT sets the UpdatedGT value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetUpdatedGT(v *int64) SearchProfileStoresParams {
+	m.UpdatedGT = v
+	return m
+}
+
+// GetUpdatedLT returns the UpdatedLT value.
+func (m SearchProfileStoresParams) GetUpdatedLT() *int64 {
+	return m.UpdatedLT
+}
+
+// SetUpdatedLT sets the UpdatedLT value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetUpdatedLT(v *int64) SearchProfileStoresParams {
+	m.UpdatedLT = v
+	return m
+}
+
+// GetIDEq returns the IDEq value.
+func (m SearchProfileStoresParams) GetIDEq() *string {
+	return m.IDEq
+}
+
+// SetIDEq sets the IDEq value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetIDEq(v *string) SearchProfileStoresParams {
+	m.IDEq = v
+	return m
+}
+
+// GetIDIn returns the IDIn value.
+func (m SearchProfileStoresParams) GetIDIn() *string {
+	return m.IDIn
+}
+
+// SetIDIn sets the IDIn value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetIDIn(v *string) SearchProfileStoresParams {
+	m.IDIn = v
+	return m
+}
+
+// GetNameEq returns the NameEq value.
+func (m SearchProfileStoresParams) GetNameEq() *string {
+	return m.NameEq
+}
+
+// SetNameEq sets the NameEq value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetNameEq(v *string) SearchProfileStoresParams {
+	m.NameEq = v
+	return m
+}
+
+// GetDeviceEq returns the DeviceEq value.
+func (m SearchProfileStoresParams) GetDeviceEq() *string {
+	return m.DeviceEq
+}
+
+// SetDeviceEq sets the DeviceEq value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetDeviceEq(v *string) SearchProfileStoresParams {
+	m.DeviceEq = v
+	return m
+}
+
+// GetAppEq returns the AppEq value.
+func (m SearchProfileStoresParams) GetAppEq() *string {
+	return m.AppEq
+}
+
+// SetAppEq sets the AppEq value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetAppEq(v *string) SearchProfileStoresParams {
+	m.AppEq = v
+	return m
+}
+
+// GetSkip returns the Skip value.
+func (m SearchProfileStoresParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetSkip(v int64) SearchProfileStoresParams {
+	m.Skip = v
+	return m
+}
+
+// GetLimit returns the Limit value.
+func (m SearchProfileStoresParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetLimit(v int64) SearchProfileStoresParams {
+	m.Limit = v
+	return m
+}
+
+// GetProfileStoreID returns the ProfileStoreID value.
+func (m HardDeleteProfileStoreParams) GetProfileStoreID() string {
+	return m.ProfileStoreID
+}
+
+// SetProfileStoreID sets the ProfileStoreID value and returns the updated HardDeleteProfileStoreParams.
+func (m HardDeleteProfileStoreParams) SetProfileStoreID(v string) HardDeleteProfileStoreParams {
+	m.ProfileStoreID = v
 	return m
 }
 

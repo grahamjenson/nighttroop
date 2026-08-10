@@ -16,13 +16,13 @@ SET {{ .create_new_site.site_subdomain }}
 NAME create_profile_v1
 POST http://{{ .site }}.ns.localhost/api/v1/profiles?token={{ token }}
 B {
-    "units": "mg/dl",
+    "units": "mg/dL",
     "startDate": "{{ time 0 }}",
     "defaultProfile": "Default",
     "store": {
         "Default": {
             "dia": "5",
-            "units": "mg/dl",
+            "units": "mg/dL",
             "sens": [{"value": "110", "time": "00:00", "timeAsSeconds": "0"}],
             "target_low": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
             "target_high": [{"value": "100", "time": "00:00", "timeAsSeconds": "0"}],
@@ -41,7 +41,7 @@ B {
         },
         "Work": {
             "dia": "5",
-            "units": "mg/dl",
+            "units": "mg/dL",
             "sens": [
                 {"value": "10", "time": "00:00", "timeAsSeconds": "0"},
                 {"value": "11", "time": "03:00", "timeAsSeconds": "10800"},
@@ -63,9 +63,9 @@ B {
   }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mg/dl" "@0.units" }}
+ASSERT {{ assertEquals "mg/dL" "@0.units" }}
 ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
-ASSERT {{ assertEquals "0.35" "@0.store.Default.basal.0.value" }}
+ASSERT {{ assertEquals 0.35 "@0.store.Default.basal.0.value" }}
 ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 
 ///////
@@ -76,9 +76,9 @@ NAME get_profiles_type_v1
 GET http://{{ .site }}.ns.localhost/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mg/dl" "@0.units" }}
+ASSERT {{ assertEquals "mg/dL" "@0.units" }}
 ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
-ASSERT {{ assertEquals "0.35" "@0.store.Default.basal.0.value" }}
+ASSERT {{ assertEquals 0.35 "@0.store.Default.basal.0.value" }}
 ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 
 /////

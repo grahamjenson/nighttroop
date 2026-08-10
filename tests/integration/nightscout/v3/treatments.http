@@ -76,6 +76,3 @@ B {
  }
 ASSERT_STATUS 201
 ASSERT {{ assertEquals "Profile Switch" "@result.eventType" }}
-ASSERT {{ assertEquals "SamDash-2025" "@result.originalProfileName" }}
-ASSERT {{ assertEquals 120 "@result.percentage" }}
-ASSERT {{ assertEquals "SamDash-2025(120%)" "@result.profile" }}

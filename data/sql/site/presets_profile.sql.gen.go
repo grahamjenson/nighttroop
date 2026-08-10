@@ -11,6 +11,7 @@ import (
 )
 
 const allProfilePresets = `-- name: AllProfilePresets :many
+
 SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
 ORDER BY created_at DESC
 LIMIT ?2 OFFSET ?1
@@ -21,6 +22,9 @@ type AllProfilePresetsParams struct {
 	Limit int64
 }
 
+// ------
+// READ
+// ------
 func (q *Queries) AllProfilePresets(ctx context.Context, arg AllProfilePresetsParams) ([]*ProfilePreset, error) {
 	rows, err := q.query(ctx, q.allProfilePresetsStmt, allProfilePresets, arg.Skip, arg.Limit)
 	if err != nil {
@@ -179,6 +183,9 @@ WHERE profile_store_id = (
 ) ORDER BY is_default DESC
 `
 
+// ---------------------------
+// - PROFILE STORE
+// ---------------------------
 // ------
 // READ
 // ------
@@ -264,8 +271,60 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 	return &i, err
 }
 
-const hardDeleteProfilePreset = `-- name: HardDeleteProfilePreset :execresult
+const getProfileStore = `-- name: GetProfileStore :many
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DESC
+`
 
+type GetProfileStoreParams struct {
+	ProfileStoreID string
+}
+
+func (q *Queries) GetProfileStore(ctx context.Context, arg GetProfileStoreParams) ([]*ProfilePreset, error) {
+	rows, err := q.query(ctx, q.getProfileStoreStmt, getProfileStore, arg.ProfileStoreID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ProfilePreset
+	for rows.Next() {
+		var i ProfilePreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProfileStoreID,
+			&i.IsDefault,
+			&i.Dia,
+			&i.Units,
+			&i.Timezone,
+			&i.CarbRatiosJson,
+			&i.InsulinSensitivitiesJson,
+			&i.BasalRatesJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
+			&i.RawJsonData,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const hardDeleteProfilePreset = `-- name: HardDeleteProfilePreset :execresult
 
 DELETE FROM profile_presets WHERE id = ?
 `
@@ -281,36 +340,57 @@ func (q *Queries) HardDeleteProfilePreset(ctx context.Context, arg HardDeletePro
 	return q.exec(ctx, q.hardDeleteProfilePresetStmt, hardDeleteProfilePreset, arg.ID)
 }
 
-const searchProfilePresets = `-- name: SearchProfilePresets :many
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
-WHERE
-    (CAST(?1 AS INTEGER) IS NULL OR created_at >= ?1)
-    AND (CAST(?2 AS INTEGER) IS NULL OR created_at <= ?2)
-    AND (CAST(?3 AS INTEGER) IS NULL OR created_at > ?3)
-    AND (CAST(?4 AS INTEGER) IS NULL OR created_at < ?4)
+const hardDeleteProfileStore = `-- name: HardDeleteProfileStore :execresult
 
-    AND (CAST(?5 AS INTEGER) IS NULL OR created_at >= ?5)
-    AND (CAST(?6 AS INTEGER) IS NULL OR created_at <= ?6)
-    AND (CAST(?7 AS INTEGER) IS NULL OR created_at > ?7)
-    AND (CAST(?8 AS INTEGER) IS NULL OR created_at < ?8)
-
-    AND (CAST(?9 AS INTEGER) IS NULL OR updated_at >= ?9)
-    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at <= ?10)
-    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at > ?11)
-    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at < ?12)
-
-    AND (CAST(?13 AS TEXT) IS NULL OR id = ?13)
-    AND (CAST(?14 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?14)))
-
-    AND (CAST(?15 AS TEXT) IS NULL OR name = ?15)
-
-    AND (CAST(?16 AS TEXT) IS NULL OR created_by_device_name = ?16)
-    AND (CAST(?17 AS TEXT) IS NULL OR created_by_app_name = ?17)
-ORDER BY created_at DESC
-LIMIT ?19 OFFSET ?18
+DELETE FROM profile_presets WHERE profile_store_id = ?
 `
 
-type SearchProfilePresetsParams struct {
+type HardDeleteProfileStoreParams struct {
+	ProfileStoreID string
+}
+
+// ------
+// DELETE
+// ------
+func (q *Queries) HardDeleteProfileStore(ctx context.Context, arg HardDeleteProfileStoreParams) (sql.Result, error) {
+	return q.exec(ctx, q.hardDeleteProfileStoreStmt, hardDeleteProfileStore, arg.ProfileStoreID)
+}
+
+const searchProfileStores = `-- name: SearchProfileStores :many
+WITH distinct_profile_store_ids AS (
+    SELECT DISTINCT profile_store_id FROM profile_presets
+    WHERE
+        (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
+        AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
+        AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at > ?3)
+        AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at < ?4)
+
+        AND (CAST(?5 AS INTEGER) IS NULL OR created_at >= ?5)
+        AND (CAST(?6 AS INTEGER) IS NULL OR created_at <= ?6)
+        AND (CAST(?7 AS INTEGER) IS NULL OR created_at > ?7)
+        AND (CAST(?8 AS INTEGER) IS NULL OR created_at < ?8)
+
+        AND (CAST(?9 AS INTEGER) IS NULL OR updated_at >= ?9)
+        AND (CAST(?10 AS INTEGER) IS NULL OR updated_at <= ?10)
+        AND (CAST(?11 AS INTEGER) IS NULL OR updated_at > ?11)
+        AND (CAST(?12 AS INTEGER) IS NULL OR updated_at < ?12)
+
+        AND (CAST(?13 AS TEXT) IS NULL OR profile_store_id = ?13)
+        AND (CAST(?14 AS TEXT) IS NULL OR profile_store_id IN (SELECT value FROM json_each(?14)))
+
+        AND (CAST(?15 AS TEXT) IS NULL OR name = ?15)
+
+        AND (CAST(?16 AS TEXT) IS NULL OR created_by_device_name = ?16)
+        AND (CAST(?17 AS TEXT) IS NULL OR created_by_app_name = ?17)
+    ORDER BY occurred_at DESC
+    LIMIT ?19 OFFSET ?18
+)
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
+WHERE profile_store_id IN (SELECT profile_store_id FROM distinct_profile_store_ids)
+ORDER BY created_at DESC
+`
+
+type SearchProfileStoresParams struct {
 	DateGTE      *int64
 	DateLTE      *int64
 	DateGT       *int64
@@ -332,8 +412,8 @@ type SearchProfilePresetsParams struct {
 	Limit        int64
 }
 
-func (q *Queries) SearchProfilePresets(ctx context.Context, arg SearchProfilePresetsParams) ([]*ProfilePreset, error) {
-	rows, err := q.query(ctx, q.searchProfilePresetsStmt, searchProfilePresets,
+func (q *Queries) SearchProfileStores(ctx context.Context, arg SearchProfileStoresParams) ([]*ProfilePreset, error) {
+	rows, err := q.query(ctx, q.searchProfileStoresStmt, searchProfileStores,
 		arg.DateGTE,
 		arg.DateLTE,
 		arg.DateGT,

@@ -51,10 +51,6 @@ func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Contex
 	return q.CreateDeviceReport(ctx, createParams)
 }
 
-func (c DeviceStatusCollection) UpdateSBFunc(q *site.Queries, ctx context.Context, updateParams site.UpdateDeviceReportParams) (*site.DeviceReport, error) {
-	return q.UpdateDeviceReport(ctx, updateParams)
-}
-
 func (c DeviceStatusCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.DeviceReport, error) {
 	return q.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier})
 }

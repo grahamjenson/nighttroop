@@ -65,7 +65,7 @@ type ToSearchParams interface {
 	////////
 
 	ProfilePresetsAll(source Query) site.AllProfilePresetsParams
-	ProfilePresetsSearch(source Query) site.SearchProfilePresetsParams
+	ProfileStoreSearch(source Query) site.SearchProfileStoresParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {

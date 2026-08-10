@@ -144,6 +144,27 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParam
 	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodPresetParams
 }
+func PartialProfileStoreToCreate(source ProfileStore, context CreateContext) site.CreateProfilePresetParams {
+	var siteCreateProfilePresetParams site.CreateProfilePresetParams
+	siteCreateProfilePresetParams.ID = AssignID()
+	siteCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
+	if source.UtcOffsetMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteCreateProfilePresetParams.UtcOffsetMinutes = &xint64
+	}
+	pString := source.RawJsonData
+	siteCreateProfilePresetParams.RawJsonData = &pString
+	if source.App != nil {
+		xstring := ShortStringToString(*source.App)
+		siteCreateProfilePresetParams.CreatedByAppName = &xstring
+	}
+	if source.Device != nil {
+		xstring2 := ShortStringToString(*source.Device)
+		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring2
+	}
+	siteCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return siteCreateProfilePresetParams
+}
 func TreatmentToCreateActivity(source Treatment, context CreateContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
 	siteCreateActivityParams.ID = AssignID()

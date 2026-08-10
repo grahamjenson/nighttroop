@@ -63,6 +63,20 @@ type CreateMapConverter interface {
 	// goverter:map Energy Calories
 	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodPresetParams
 
+	///////
+	// ProfileStore To Profile Preset
+	///////
+
+	// goverter:context ctx
+	// goverter:map App CreatedByAppName
+	// goverter:map Device CreatedByDeviceName
+	// goverter:map ID                | AssignID
+	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	//
+	// goverter:ignore Name CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone Units IsDefault ProfileStoreID
+	// goverter:map Date OccurredAt | OrNow
+	PartialProfileStoreToCreate(source ProfileStore, ctx CreateContext) site.CreateProfilePresetParams
+
 	//
 	//
 	//

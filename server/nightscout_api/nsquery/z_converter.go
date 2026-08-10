@@ -766,79 +766,79 @@ func ProfilePresetsAll(source Query) site.AllProfilePresetsParams {
 	siteAllProfilePresetsParams.Limit = source.Limit
 	return siteAllProfilePresetsParams
 }
-func ProfilePresetsSearch(source Query) site.SearchProfilePresetsParams {
-	var siteSearchProfilePresetsParams site.SearchProfilePresetsParams
+func ProfileStoreSearch(source Query) site.SearchProfileStoresParams {
+	var siteSearchProfileStoresParams site.SearchProfileStoresParams
 	if source.DateGTE != nil {
 		xint64 := *source.DateGTE
-		siteSearchProfilePresetsParams.DateGTE = &xint64
+		siteSearchProfileStoresParams.DateGTE = &xint64
 	}
 	if source.DateLTE != nil {
 		xint642 := *source.DateLTE
-		siteSearchProfilePresetsParams.DateLTE = &xint642
+		siteSearchProfileStoresParams.DateLTE = &xint642
 	}
 	if source.DateGT != nil {
 		xint643 := *source.DateGT
-		siteSearchProfilePresetsParams.DateGT = &xint643
+		siteSearchProfileStoresParams.DateGT = &xint643
 	}
 	if source.DateLT != nil {
 		xint644 := *source.DateLT
-		siteSearchProfilePresetsParams.DateLT = &xint644
+		siteSearchProfileStoresParams.DateLT = &xint644
 	}
 	if source.CreatedAtGTE != nil {
 		xint645 := *source.CreatedAtGTE
-		siteSearchProfilePresetsParams.CreatedAtGTE = &xint645
+		siteSearchProfileStoresParams.CreatedAtGTE = &xint645
 	}
 	if source.CreatedAtLTE != nil {
 		xint646 := *source.CreatedAtLTE
-		siteSearchProfilePresetsParams.CreatedAtLTE = &xint646
+		siteSearchProfileStoresParams.CreatedAtLTE = &xint646
 	}
 	if source.CreatedAtGT != nil {
 		xint647 := *source.CreatedAtGT
-		siteSearchProfilePresetsParams.CreatedAtGT = &xint647
+		siteSearchProfileStoresParams.CreatedAtGT = &xint647
 	}
 	if source.CreatedAtLT != nil {
 		xint648 := *source.CreatedAtLT
-		siteSearchProfilePresetsParams.CreatedAtLT = &xint648
+		siteSearchProfileStoresParams.CreatedAtLT = &xint648
 	}
 	if source.UpdatedGTE != nil {
 		xint649 := *source.UpdatedGTE
-		siteSearchProfilePresetsParams.UpdatedGTE = &xint649
+		siteSearchProfileStoresParams.UpdatedGTE = &xint649
 	}
 	if source.UpdatedLTE != nil {
 		xint6410 := *source.UpdatedLTE
-		siteSearchProfilePresetsParams.UpdatedLTE = &xint6410
+		siteSearchProfileStoresParams.UpdatedLTE = &xint6410
 	}
 	if source.UpdatedGT != nil {
 		xint6411 := *source.UpdatedGT
-		siteSearchProfilePresetsParams.UpdatedGT = &xint6411
+		siteSearchProfileStoresParams.UpdatedGT = &xint6411
 	}
 	if source.UpdatedLT != nil {
 		xint6412 := *source.UpdatedLT
-		siteSearchProfilePresetsParams.UpdatedLT = &xint6412
+		siteSearchProfileStoresParams.UpdatedLT = &xint6412
 	}
 	if source.IDEq != nil {
 		xstring := *source.IDEq
-		siteSearchProfilePresetsParams.IDEq = &xstring
+		siteSearchProfileStoresParams.IDEq = &xstring
 	}
 	if source.IDIn != nil {
 		xstring2 := *source.IDIn
-		siteSearchProfilePresetsParams.IDIn = &xstring2
+		siteSearchProfileStoresParams.IDIn = &xstring2
 	}
 	if source.NameEq != nil {
 		xstring3 := *source.NameEq
-		siteSearchProfilePresetsParams.NameEq = &xstring3
+		siteSearchProfileStoresParams.NameEq = &xstring3
 	}
 	if source.DeviceEq != nil {
 		xstring4 := *source.DeviceEq
-		siteSearchProfilePresetsParams.DeviceEq = &xstring4
+		siteSearchProfileStoresParams.DeviceEq = &xstring4
 	}
 	if source.AppEq != nil {
 		xstring5 := *source.AppEq
-		siteSearchProfilePresetsParams.AppEq = &xstring5
+		siteSearchProfileStoresParams.AppEq = &xstring5
 	}
-	siteSearchProfilePresetsParams.Skip = source.Skip
-	siteSearchProfilePresetsParams.Limit = source.Limit
-	return siteSearchProfilePresetsParams
+	siteSearchProfileStoresParams.Skip = source.Skip
+	siteSearchProfileStoresParams.Limit = source.Limit
+	return siteSearchProfileStoresParams
 }
 func QueryValueToQuery(source QueryValues) Query {
 	var nsqueryQuery Query

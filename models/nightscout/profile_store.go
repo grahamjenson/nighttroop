@@ -2,15 +2,13 @@ package nightscout
 
 import (
 	"encoding/json"
-	"log/slog"
-
-	"nighttroop.t1d.nz/data/sql/site"
 )
 
 type ProfileStore struct {
 	Identifier     *IdentifierString       `json:"identifier,omitempty"`
 	DefaultProfile *ShortString            `json:"defaultProfile,omitempty"`
 	Store          map[ShortString]Profile `json:"store,omitempty"`
+	Units          *Units                  `json:"units,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -243,92 +241,4 @@ func (s *ScheduleTime) UnmarshalJSON(data []byte) error {
 	*s = ScheduleTime(str)
 
 	return nil
-}
-
-///////
-// Profile To Profile Preset
-///////
-
-func ProfilePresetsToProfileStore(source []*site.ProfilePreset) ProfileStore {
-	if len(source) == 0 {
-		return ProfileStore{}
-	}
-	defaultProfile := source[0] // Query is ordered by is_default so default should be top
-
-	profileStore := DBModelToProfileStore(defaultProfile)
-	profileStore.Store = make(map[ShortString]Profile)
-
-	for _, p := range source {
-		profile := DBModelToProfile(p)
-		profileStore.Store[ShortString(p.Name)] = profile
-	}
-
-	return profileStore
-}
-
-///////
-// ProfileStore To Profile Preset
-///////
-
-// goverter:context ctx
-// goverter:map App CreatedByAppName
-// goverter:map Device CreatedByDeviceName
-// goverter:map ID                | AssignID
-// goverter:map CreatedByIdentityName  | AssignCreatedByName
-//
-// goverter:map Duration DurationMinutes
-func ProfileStoreToSingleCreate(source ProfileStore, name string, profile Profile, ctx CreateContext) site.CreateProfilePresetParams {
-	params := site.CreateProfilePresetParams{
-		Name:                  name,
-		IsDefault:             source.DefaultProfile != nil && *source.DefaultProfile == ShortString(name),
-		CreatedByAppName:      ctx.CreatedByAppName,
-		CreatedByDeviceName:   ctx.CreatedByDeviceName,
-		CreatedByIdentityName: ctx.CreatedByIdentityName,
-	}
-
-	if profile.Dia != nil {
-		params.Dia = *profile.Dia
-	}
-	if profile.CarbRatio != nil {
-		params.CarbRatiosJson = ScheduleValuesToJson(profile.CarbRatio)
-	}
-	if profile.Sens != nil {
-		params.InsulinSensitivitiesJson = ScheduleValuesToJson(profile.Sens)
-	}
-	if profile.Basal != nil {
-		params.BasalRatesJson = ScheduleValuesToJson(profile.Basal)
-	}
-	if profile.TargetLow != nil || profile.TargetHigh != nil {
-		params.TargetsJson = TargetsToJson(profile.TargetLow, profile.TargetHigh)
-	}
-	if profile.Timezone != nil {
-		params.Timezone = string(*profile.Timezone)
-	}
-	if profile.Units != nil {
-		params.Units = string(*profile.Units)
-	}
-
-	return params
-}
-
-func ProfileStoreToCreateAll(source ProfileStore, profile Profile, ctx CreateContext) []site.CreateProfilePresetParams {
-	creates := []site.CreateProfilePresetParams{}
-	for profileName, profile := range source.Store {
-		create := ProfileStoreToSingleCreate(source, string(profileName), profile, ctx)
-		creates = append(creates, create)
-	}
-	return creates
-}
-
-func ScheduleValuesToJson(svs []*ScheduleValue) *string {
-	if len(svs) == 0 {
-		return nil
-	}
-	jsonBytes, err := json.Marshal(svs)
-	if err != nil {
-		slog.Error("error marshalling schedule values to JSON", "error", err)
-		return nil
-	}
-	jsonStr := string(jsonBytes)
-	return &jsonStr
 }

@@ -332,6 +332,14 @@ func (d *DateInt) Int64p() *int64 {
 
 type Timezone string
 
+func (t *Timezone) Stringp() *string {
+	if t == nil {
+		return nil
+	}
+	str := string(*t)
+	return &str
+}
+
 func (t *Timezone) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
@@ -358,6 +366,14 @@ const (
 	UnitsMGDL Units = "mg/dL"
 	UnitsMMOL Units = "mmol/L"
 )
+
+func (u *Units) Stringp() *string {
+	if u == nil {
+		return nil
+	}
+	str := string(*u)
+	return &str
+}
 
 func (u *Units) ToMGDLMultiplier() float64 {
 	if u == nil {

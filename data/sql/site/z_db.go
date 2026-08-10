@@ -138,6 +138,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getProfilePresetStmt, err = db.PrepareContext(ctx, getProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfilePreset: %w", err)
 	}
+	if q.getProfileStoreStmt, err = db.PrepareContext(ctx, getProfileStore); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfileStore: %w", err)
+	}
 	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
 	}
@@ -195,6 +198,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteProfilePresetStmt, err = db.PrepareContext(ctx, hardDeleteProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteProfilePreset: %w", err)
 	}
+	if q.hardDeleteProfileStoreStmt, err = db.PrepareContext(ctx, hardDeleteProfileStore); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteProfileStore: %w", err)
+	}
 	if q.hardDeleteProfileSwitchStmt, err = db.PrepareContext(ctx, hardDeleteProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteProfileSwitch: %w", err)
 	}
@@ -231,8 +237,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchNotesStmt, err = db.PrepareContext(ctx, searchNotes); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchNotes: %w", err)
 	}
-	if q.searchProfilePresetsStmt, err = db.PrepareContext(ctx, searchProfilePresets); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchProfilePresets: %w", err)
+	if q.searchProfileStoresStmt, err = db.PrepareContext(ctx, searchProfileStores); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchProfileStores: %w", err)
 	}
 	if q.searchProfileSwitchesStmt, err = db.PrepareContext(ctx, searchProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchProfileSwitches: %w", err)
@@ -525,6 +531,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getProfilePresetStmt: %w", cerr)
 		}
 	}
+	if q.getProfileStoreStmt != nil {
+		if cerr := q.getProfileStoreStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfileStoreStmt: %w", cerr)
+		}
+	}
 	if q.getProfileSwitchStmt != nil {
 		if cerr := q.getProfileSwitchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
@@ -620,6 +631,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteProfilePresetStmt: %w", cerr)
 		}
 	}
+	if q.hardDeleteProfileStoreStmt != nil {
+		if cerr := q.hardDeleteProfileStoreStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteProfileStoreStmt: %w", cerr)
+		}
+	}
 	if q.hardDeleteProfileSwitchStmt != nil {
 		if cerr := q.hardDeleteProfileSwitchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteProfileSwitchStmt: %w", cerr)
@@ -680,9 +696,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchNotesStmt: %w", cerr)
 		}
 	}
-	if q.searchProfilePresetsStmt != nil {
-		if cerr := q.searchProfilePresetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchProfilePresetsStmt: %w", cerr)
+	if q.searchProfileStoresStmt != nil {
+		if cerr := q.searchProfileStoresStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchProfileStoresStmt: %w", cerr)
 		}
 	}
 	if q.searchProfileSwitchesStmt != nil {
@@ -922,6 +938,7 @@ type Queries struct {
 	getMostRecentProfileStoreStmt       *sql.Stmt
 	getNoteStmt                         *sql.Stmt
 	getProfilePresetStmt                *sql.Stmt
+	getProfileStoreStmt                 *sql.Stmt
 	getProfileSwitchStmt                *sql.Stmt
 	getSiteSettingsStmt                 *sql.Stmt
 	getTempBasalStmt                    *sql.Stmt
@@ -941,6 +958,7 @@ type Queries struct {
 	hardDeleteInsulinDoseStmt           *sql.Stmt
 	hardDeleteNoteStmt                  *sql.Stmt
 	hardDeleteProfilePresetStmt         *sql.Stmt
+	hardDeleteProfileStoreStmt          *sql.Stmt
 	hardDeleteProfileSwitchStmt         *sql.Stmt
 	hardDeleteTempBasalStmt             *sql.Stmt
 	hardDeleteTempTargetStmt            *sql.Stmt
@@ -953,7 +971,7 @@ type Queries struct {
 	searchGlucoseReadingsStmt           *sql.Stmt
 	searchInsulinDosesStmt              *sql.Stmt
 	searchNotesStmt                     *sql.Stmt
-	searchProfilePresetsStmt            *sql.Stmt
+	searchProfileStoresStmt             *sql.Stmt
 	searchProfileSwitchesStmt           *sql.Stmt
 	searchTempBasalsStmt                *sql.Stmt
 	searchTempTargetsStmt               *sql.Stmt
@@ -1030,6 +1048,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getMostRecentProfileStoreStmt:       q.getMostRecentProfileStoreStmt,
 		getNoteStmt:                         q.getNoteStmt,
 		getProfilePresetStmt:                q.getProfilePresetStmt,
+		getProfileStoreStmt:                 q.getProfileStoreStmt,
 		getProfileSwitchStmt:                q.getProfileSwitchStmt,
 		getSiteSettingsStmt:                 q.getSiteSettingsStmt,
 		getTempBasalStmt:                    q.getTempBasalStmt,
@@ -1049,6 +1068,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteInsulinDoseStmt:           q.hardDeleteInsulinDoseStmt,
 		hardDeleteNoteStmt:                  q.hardDeleteNoteStmt,
 		hardDeleteProfilePresetStmt:         q.hardDeleteProfilePresetStmt,
+		hardDeleteProfileStoreStmt:          q.hardDeleteProfileStoreStmt,
 		hardDeleteProfileSwitchStmt:         q.hardDeleteProfileSwitchStmt,
 		hardDeleteTempBasalStmt:             q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:            q.hardDeleteTempTargetStmt,
@@ -1061,7 +1081,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchGlucoseReadingsStmt:           q.searchGlucoseReadingsStmt,
 		searchInsulinDosesStmt:              q.searchInsulinDosesStmt,
 		searchNotesStmt:                     q.searchNotesStmt,
-		searchProfilePresetsStmt:            q.searchProfilePresetsStmt,
+		searchProfileStoresStmt:             q.searchProfileStoresStmt,
 		searchProfileSwitchesStmt:           q.searchProfileSwitchesStmt,
 		searchTempBasalsStmt:                q.searchTempBasalsStmt,
 		searchTempTargetsStmt:               q.searchTempTargetsStmt,
