@@ -28,7 +28,7 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
@@ -52,7 +52,7 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
@@ -65,7 +65,7 @@ GET http://{{ .site }}.ns.localhost/api/v1/treatments/Meal%20Bolus?token={{ toke
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
 
 NAME put_update_treatments_v1
 PUT http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
