@@ -94,7 +94,7 @@ RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_da
 type CreateFoodIntakeParams struct {
 	ID                    string
 	Name                  *string
-	FoodType              *string
+	FoodType              string
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
@@ -203,7 +203,7 @@ DELETE FROM food_intakes WHERE food_type = ?
 `
 
 type HardDeleteFoodIntakesByTypeParams struct {
-	FoodType *string
+	FoodType string
 }
 
 func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDeleteFoodIntakesByTypeParams) (sql.Result, error) {
@@ -385,7 +385,7 @@ WHERE food_type = ? AND deleted_at IS NULL
 
 type SoftDeleteFoodIntakesByTypeParams struct {
 	UpdatedByIdentityName *string
-	FoodType              *string
+	FoodType              string
 }
 
 func (q *Queries) SoftDeleteFoodIntakesByType(ctx context.Context, arg SoftDeleteFoodIntakesByTypeParams) (sql.Result, error) {

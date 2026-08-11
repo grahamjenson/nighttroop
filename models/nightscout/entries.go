@@ -143,6 +143,13 @@ func (t *EntryType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (t *EntryType) String() string {
+	if t == nil {
+		return ""
+	}
+	return string(*t)
+}
+
 func (t Entry) GetDevice() *string {
 	return t.Device.Stringp()
 }

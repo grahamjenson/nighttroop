@@ -52,8 +52,6 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	// goverter:map Food Name
-	// goverter:map Category FoodType
 	// goverter:map Energy	Calories
 	FoodToUpdate(source Food, ctx UpdateContext) site.UpdateFoodPresetParams
 

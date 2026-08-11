@@ -93,7 +93,7 @@ RETURNING id, name, notes, activity_type, duration_minutes, calories, steps, hea
 type CreateActivityParams struct {
 	ID                    string
 	Name                  *string
-	ActivityType          *string
+	ActivityType          string
 	DurationMinutes       *int64
 	Calories              *int64
 	Steps                 *int64
@@ -188,7 +188,7 @@ DELETE FROM activities WHERE activity_type = ?
 `
 
 type HardDeleteActivitiesByTypeParams struct {
-	ActivityType *string
+	ActivityType string
 }
 
 func (q *Queries) HardDeleteActivitiesByType(ctx context.Context, arg HardDeleteActivitiesByTypeParams) (sql.Result, error) {
@@ -362,7 +362,7 @@ WHERE activity_type = ? AND deleted_at IS NULL
 
 type SoftDeleteActivitiesByTypeParams struct {
 	UpdatedByIdentityName *string
-	ActivityType          *string
+	ActivityType          string
 }
 
 func (q *Queries) SoftDeleteActivitiesByType(ctx context.Context, arg SoftDeleteActivitiesByTypeParams) (sql.Result, error) {

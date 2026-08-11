@@ -32,7 +32,7 @@ CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     dose REAL NOT NULL,
-    dose_type TEXT CHECK (dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
+    dose_type TEXT NOT NULL CHECK (length(dose_type) <= 32) DEFAULT 'bolus',
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -52,7 +52,7 @@ CREATE TABLE insulin_doses (
 CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT CHECK(length(name) <= 64), -- this could be a reference to a preset
-    food_type TEXT CHECK(length(food_type) <= 32), -- this could be like hypo treatment, meal, snack, etc
+    food_type TEXT NOT NULL CHECK(length(food_type) <= 32) DEFAULT 'meal', -- this could be like hypo treatment, meal, snack, etc
 
     carbs REAL,
     fat REAL,
@@ -81,7 +81,7 @@ CREATE TABLE activities (
 
     name TEXT CHECK(length(name) <= 64),
     notes TEXT CHECK(length(notes) <= 1024),
-    activity_type TEXT CHECK(length(activity_type) <= 32),
+    activity_type TEXT NOT NULL CHECK(length(activity_type) <= 32) default 'exercise',
 
     duration_minutes INTEGER,
     calories INTEGER,
@@ -310,13 +310,16 @@ CREATE TABLE device_reports (
 CREATE TABLE food_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
-    food_type TEXT NOT NULL CHECK(length(food_type) <= 32),
+    
+    category TEXT CHECK(length(category) <= 64),
+    subcategory TEXT CHECK(length(subcategory) <= 64),
 
     carbs REAL,
     fat REAL,
     protein REAL,
     fibre REAL,
     calories REAL,
+    portions REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly

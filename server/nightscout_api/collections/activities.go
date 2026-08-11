@@ -34,7 +34,19 @@ func (c ActivityCollection) Convert(dr *site.Activity) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, cc nightscout.CreateContext, replacing *site.Activity, overrideIdentifier *string) (*site.Activity, error) {
+func (c ActivityCollection) ValidateChange(nsModel nightscout.Activity, dbModel *site.Activity) *nsutils.HTTPError {
+	if dbModel == nil {
+		return nil
+	}
+
+	if nsModel.ActivityType != nil && nsModel.ActivityType.String() != dbModel.ActivityType {
+		slog.Error("cannot change activity_type attribute on activity", "existingActivityType", dbModel.ActivityType, "newActivityType", nsModel.ActivityType.String())
+		return nsutils.ErrCannotChangeType
+	}
+	return nil
+}
+
+func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, cc nightscout.CreateContext, overrideIdentifier *string) (*site.Activity, error) {
 	createParams := nightscout.ActivityToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -55,11 +67,11 @@ func (c ActivityCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Contex
 }
 
 func (c ActivityCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	return q.HardDeleteActivitiesByType(ctx, site.HardDeleteActivitiesByTypeParams{ActivityType: &typeString})
+	return q.HardDeleteActivitiesByType(ctx, site.HardDeleteActivitiesByTypeParams{ActivityType: typeString})
 }
 
 func (c ActivityCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	return q.SoftDeleteActivitiesByType(ctx, site.SoftDeleteActivitiesByTypeParams{ActivityType: &typeString})
+	return q.SoftDeleteActivitiesByType(ctx, site.SoftDeleteActivitiesByTypeParams{ActivityType: typeString})
 }
 
 func (c ActivityCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, identifier string, uc nightscout.UpdateContext) (*site.Activity, error) {

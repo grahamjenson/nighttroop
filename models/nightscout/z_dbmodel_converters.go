@@ -14,10 +14,8 @@ func DBModelToActivity(source *site.Activity) Activity {
 			nightscoutShortString := ShortString(*(*source).Name)
 			nightscoutActivity.Name = &nightscoutShortString
 		}
-		if (*source).ActivityType != nil {
-			nightscoutShortString2 := ShortString(*(*source).ActivityType)
-			nightscoutActivity.ActivityType = &nightscoutShortString2
-		}
+		pNightscoutShortString := ShortString((*source).ActivityType)
+		nightscoutActivity.ActivityType = &pNightscoutShortString
 		if (*source).DurationMinutes != nil {
 			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).DurationMinutes)
 			nightscoutActivity.Duration = &nightscoutFlexibleInt64
@@ -40,15 +38,15 @@ func DBModelToActivity(source *site.Activity) Activity {
 		}
 		nightscoutActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutShortString3 := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutActivity.Device = &nightscoutShortString3
+			nightscoutShortString2 := ShortString(*(*source).CreatedByDeviceName)
+			nightscoutActivity.Device = &nightscoutShortString2
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutShortString4 := ShortString(*(*source).CreatedByAppName)
-			nightscoutActivity.App = &nightscoutShortString4
+			nightscoutShortString3 := ShortString(*(*source).CreatedByAppName)
+			nightscoutActivity.App = &nightscoutShortString3
 		}
-		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
-		nightscoutActivity.Subject = &pNightscoutShortString
+		pNightscoutShortString2 := ShortString((*source).CreatedByIdentityName)
+		nightscoutActivity.Subject = &pNightscoutShortString2
 		pNightscoutDateInt := DateInt((*source).OccurredAt)
 		nightscoutActivity.Date = &pNightscoutDateInt
 		if (*source).UtcOffsetMinutes != nil {
@@ -136,6 +134,14 @@ func DBModelToFood(source *site.FoodPreset) Food {
 		nightscoutFood.Identifier = &pNightscoutIdentifierString
 		pNightscoutShortString := ShortString((*source).Name)
 		nightscoutFood.Name = &pNightscoutShortString
+		if (*source).Category != nil {
+			nightscoutShortString := ShortString(*(*source).Category)
+			nightscoutFood.Category = &nightscoutShortString
+		}
+		if (*source).Subcategory != nil {
+			nightscoutShortString2 := ShortString(*(*source).Subcategory)
+			nightscoutFood.Subcategory = &nightscoutShortString2
+		}
 		if (*source).Carbs != nil {
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Carbs)
 			nightscoutFood.Carbs = &nightscoutFlexibleFloat64
@@ -156,13 +162,17 @@ func DBModelToFood(source *site.FoodPreset) Food {
 			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).Calories)
 			nightscoutFood.Energy = &nightscoutFlexibleFloat645
 		}
+		if (*source).Portions != nil {
+			nightscoutFlexibleFloat646 := FlexibleFloat64(*(*source).Portions)
+			nightscoutFood.Portions = &nightscoutFlexibleFloat646
+		}
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutFood.Device = &nightscoutShortString
+			nightscoutShortString3 := ShortString(*(*source).CreatedByDeviceName)
+			nightscoutFood.Device = &nightscoutShortString3
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutShortString2 := ShortString(*(*source).CreatedByAppName)
-			nightscoutFood.App = &nightscoutShortString2
+			nightscoutShortString4 := ShortString(*(*source).CreatedByAppName)
+			nightscoutFood.App = &nightscoutShortString4
 		}
 		pNightscoutShortString2 := ShortString((*source).CreatedByIdentityName)
 		nightscoutFood.Subject = &pNightscoutShortString2
@@ -314,7 +324,7 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 		}
 		var pString3 *string
 		if (*source).Activity != nil {
-			pString3 = (*source).Activity.ActivityType
+			pString3 = &(*source).Activity.ActivityType
 		}
 		if pString3 != nil {
 			nightscoutShortString2 := ShortString(*pString3)

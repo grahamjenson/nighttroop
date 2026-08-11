@@ -67,7 +67,7 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	//
-	// goverter:ignore Food Category Subcategory Portion Unit GI Portions HideAfterUse Hidden Position
+	// goverter:ignore Unit GI HideAfterUse Hidden Position
 	// goverter:map CreatedAt Date
 	// goverter:map Calories Energy
 	DBModelToFood(source *site.FoodPreset) Food

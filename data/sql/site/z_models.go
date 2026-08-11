@@ -8,7 +8,7 @@ type Activity struct {
 	ID                    string
 	Name                  *string
 	Notes                 *string
-	ActivityType          *string
+	ActivityType          string
 	DurationMinutes       *int64
 	Calories              *int64
 	Steps                 *int64
@@ -91,7 +91,7 @@ type EventGroup struct {
 type FoodIntake struct {
 	ID                    string
 	Name                  *string
-	FoodType              *string
+	FoodType              string
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
@@ -112,12 +112,14 @@ type FoodIntake struct {
 type FoodPreset struct {
 	ID                    string
 	Name                  string
-	FoodType              string
+	Category              *string
+	Subcategory           *string
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
 	Fibre                 *float64
 	Calories              *float64
+	Portions              *float64
 	RawJsonData           *string
 	CreatedAt             int64
 	UpdatedAt             int64
@@ -146,7 +148,7 @@ type GlucoseReading struct {
 type InsulinDose struct {
 	ID                    string
 	Dose                  float64
-	DoseType              *string
+	DoseType              string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

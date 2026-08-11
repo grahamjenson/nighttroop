@@ -79,6 +79,7 @@ var (
 var (
 	ErrCannotChangeApp        = &HTTPError{Status: http.StatusBadRequest, Message: "Field app cannot be modified by the client"}
 	ErrCannotChangeEventType  = &HTTPError{Status: http.StatusBadRequest, Message: "Field eventType cannot be modified by the client"}
+	ErrCannotChangeName       = &HTTPError{Status: http.StatusBadRequest, Message: "Field name cannot be modified by the client"}
 	ErrCannotChangeType       = &HTTPError{Status: http.StatusBadRequest, Message: "Field type cannot be modified by the client"}
 	ErrCannotChangeSubject    = &HTTPError{Status: http.StatusBadRequest, Message: "Field subject cannot be modified by the client"}
 	ErrCannotChangeDate       = &HTTPError{Status: http.StatusBadRequest, Message: "Field date cannot be modified by the client"}

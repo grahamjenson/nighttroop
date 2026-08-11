@@ -33,16 +33,15 @@ func (c DeviceStatusCollection) Convert(dr *site.DeviceReport) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.CreateContext, replacing *site.DeviceReport, overrideIdentifier *string) (*site.DeviceReport, error) {
-	createParams := nightscout.DeviceStatusToCreateDeviceReport(nsModel, cc)
-	// Validate change if replacing a model
-	if replacing != nil {
-		if replacing.CreatedByDeviceName != nil && createParams.CreatedByDeviceName != nil && *replacing.CreatedByDeviceName != *createParams.CreatedByDeviceName {
-			slog.Error("cannot change created_by_device_name attribute on device status", "existingCreatedByDeviceName", replacing.CreatedByDeviceName, "newCreatedByDeviceName", createParams.CreatedByDeviceName)
-			return nil, nsutils.ErrCannotChangeDevice
-		}
-
+func (c DeviceStatusCollection) ValidateChange(nsModel nightscout.DeviceStatus, dbModel *site.DeviceReport) *nsutils.HTTPError {
+	if dbModel == nil {
+		return nil
 	}
+	return nil
+}
+
+func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.CreateContext, overrideIdentifier *string) (*site.DeviceReport, error) {
+	createParams := nightscout.DeviceStatusToCreateDeviceReport(nsModel, cc)
 
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier

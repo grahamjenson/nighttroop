@@ -34,13 +34,27 @@ func (c EntriesCollection) Convert(dr *site.GlucoseReading) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext, replacing *site.GlucoseReading, overrideIdentifier *string) (*site.GlucoseReading, error) {
-	createParams := nightscout.EntryToCreate(nsModel, cc)
+// Cannot change properties
 
+func (c EntriesCollection) ValidateChange(nsModel nightscout.Entry, dbModel *site.GlucoseReading) *nsutils.HTTPError {
+	if dbModel == nil {
+		return nil
+	}
+
+	if nsModel.Type != nil && nsModel.Type.String() != dbModel.ReadingType {
+		slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", dbModel.ReadingType, "newReadingType", nsModel.Type.String())
+		return nsutils.ErrCannotChangeType
+	}
+
+	return nil
+
+}
+
+func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext, overrideIdentifier *string) (*site.GlucoseReading, error) {
+	createParams := nightscout.EntryToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
-
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 

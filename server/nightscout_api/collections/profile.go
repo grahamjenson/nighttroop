@@ -29,12 +29,16 @@ func (c ProfileCollection) Convert(dr *ProfilePresetBundle) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.CreateContext, replacing *ProfilePresetBundle, overrideIdentifier *string) (*ProfilePresetBundle, error) {
-	manyCreateParams := NightscoutToDBCreate(nsModel, cc)
-	// Validate change if replacing a model
-	if replacing != nil {
-		// TODO: Validate something here
+func (c ProfileCollection) ValidateChange(nsModel nightscout.ProfileStore, dbModel *ProfilePresetBundle) *nsutils.HTTPError {
+	if dbModel == nil {
+		return nil
 	}
+
+	return nil
+}
+
+func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.CreateContext, overrideIdentifier *string) (*ProfilePresetBundle, error) {
+	manyCreateParams := NightscoutToDBCreate(nsModel, cc)
 
 	ret := ProfilePresetBundle([]*site.ProfilePreset{})
 

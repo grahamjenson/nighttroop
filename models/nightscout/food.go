@@ -7,13 +7,12 @@ import (
 type Food struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
 
-	Name        *ShortString `json:"name,omitempty"`
-	Food        *ShortString `json:"food,omitempty"`
+	Name *ShortString `json:"name,omitempty"`
+
 	Category    *ShortString `json:"category,omitempty"`
 	Subcategory *ShortString `json:"subcategory,omitempty"`
 
-	Portion *FlexibleFloat64 `json:"portion,omitempty"`
-	Unit    *FoodUnit        `json:"unit,omitempty"`
+	Unit *FoodUnit `json:"unit,omitempty"`
 
 	Carbs    *FlexibleFloat64 `json:"carbs,omitempty"`
 	Fat      *FlexibleFloat64 `json:"fat,omitempty"`
@@ -21,7 +20,7 @@ type Food struct {
 	Fibre    *FlexibleFloat64 `json:"fibre,omitempty"`
 	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
 	GI       *FlexibleFloat64 `json:"gi,omitempty"`
-	Portions FlexibleFloat64  `json:"portions,omitempty"`
+	Portions *FlexibleFloat64 `json:"portions,omitempty"`
 
 	// QuickPick
 	HideAfterUse *FlexibleBool  `json:"hideafteruse,omitempty"`

@@ -48,7 +48,20 @@ func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle) nsutils.Record 
 	return c.converter(dr)
 }
 
-func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.CreateContext, replacing *site.EventGroupsBundle, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
+func (c TreatmentCollection) ValidateChange(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
+	if dbModel == nil {
+		return nil
+	}
+
+	if nsModel.EventType != nil && nsModel.EventType.String() != dbModel.EventGroup.GroupType {
+		slog.Error("cannot change event_type attribute on treatment", "existingEventType", dbModel.EventGroup.GroupType, "newEventType", nsModel.EventType.String())
+		return nsutils.ErrCannotChangeEventType
+	}
+
+	return nil
+}
+
+func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.CreateContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
 	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
 		slog.Error("treatment event type is nil")
 		return nil, nsutils.BadDataBodyError

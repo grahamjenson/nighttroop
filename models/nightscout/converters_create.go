@@ -59,7 +59,6 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:map Food FoodType
 	// goverter:map Energy Calories
 	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodPresetParams
 

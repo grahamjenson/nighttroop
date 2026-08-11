@@ -15,11 +15,12 @@ import (
 type MetaCreateCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *DM, *string) (*DM, error)
+	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *string) (*DM, error)
 }
 
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
+	ValidateChange(NS, *DM) *nsutils.HTTPError
 	Convert(*DM) nsutils.Record
 	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
 	PatchDBFunc(*site.Queries, context.Context, NS, string, nightscout.UpdateContext) (*DM, error)
@@ -46,9 +47,10 @@ type MetaDeleteTypeCollection interface {
 type MetaReplaceCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
+	ValidateChange(NS, *DM) *nsutils.HTTPError
 	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
 	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
-	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *DM, *string) (*DM, error)
+	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *string) (*DM, error)
 }
 
 // //
@@ -82,7 +84,6 @@ func MetaCreate[NS, DM any](
 		ctx,
 		nsModel,
 		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
-		nil,
 		nil,
 	)
 
@@ -295,8 +296,13 @@ func MetaReplace[NS interface {
 		return nil, false, err
 	}
 
+	if err := m.ValidateChange(nsModel, replacingModel); err != nil {
+		slog.Error("validation failed for replacing model", "error", err, "collection", m.Name())
+		return nil, false, err
+	}
+
 	// CREATE
-	dbCreateModel, err := m.CreateDBFunc(q, ctx, nsModel, cc, replacingModel, &identifier)
+	dbCreateModel, err := m.CreateDBFunc(q, ctx, nsModel, cc, &identifier)
 	if err != nil {
 		slog.Error("failed to create in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
@@ -362,6 +368,11 @@ func MetaPatch[NS interface {
 	}
 
 	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {
+		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
+		return nil, err
+	}
+
+	if err := m.ValidateChange(nsModel, updateingModel); err != nil {
 		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
@@ -453,15 +464,3 @@ func ValidateNotChangingSharedFields[NS interface {
 
 	return nil
 }
-
-// if _, ok := any(nsModel).(interface{ GetEventType() }); ok {
-// 	// nsModel supports asd()
-// }
-
-// Field eventType cannot be modified by the client
-// if replacing != nil {
-// 	if replacing.ReadingType != createParams.ReadingType {
-// 		slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", replacing.ReadingType, "newReadingType", createParams.ReadingType)
-// 		return nil, nsutils.ErrCannotChangeReadingType
-// 	}
-// }

@@ -18,7 +18,7 @@ func (m Activity) GetNotes() *string {
 }
 
 // GetActivityType returns the ActivityType value.
-func (m Activity) GetActivityType() *string {
+func (m Activity) GetActivityType() string {
 	return m.ActivityType
 }
 
@@ -373,7 +373,7 @@ func (m FoodIntake) GetName() *string {
 }
 
 // GetFoodType returns the FoodType value.
-func (m FoodIntake) GetFoodType() *string {
+func (m FoodIntake) GetFoodType() string {
 	return m.FoodType
 }
 
@@ -462,9 +462,14 @@ func (m FoodPreset) GetName() string {
 	return m.Name
 }
 
-// GetFoodType returns the FoodType value.
-func (m FoodPreset) GetFoodType() string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m FoodPreset) GetCategory() *string {
+	return m.Category
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m FoodPreset) GetSubcategory() *string {
+	return m.Subcategory
 }
 
 // GetCarbs returns the Carbs value.
@@ -490,6 +495,11 @@ func (m FoodPreset) GetFibre() *float64 {
 // GetCalories returns the Calories value.
 func (m FoodPreset) GetCalories() *float64 {
 	return m.Calories
+}
+
+// GetPortions returns the Portions value.
+func (m FoodPreset) GetPortions() *float64 {
+	return m.Portions
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -603,7 +613,7 @@ func (m InsulinDose) GetDose() float64 {
 }
 
 // GetDoseType returns the DoseType value.
-func (m InsulinDose) GetDoseType() *string {
+func (m InsulinDose) GetDoseType() string {
 	return m.DoseType
 }
 
@@ -1682,12 +1692,12 @@ func (m CreateActivityParams) SetName(v *string) CreateActivityParams {
 }
 
 // GetActivityType returns the ActivityType value.
-func (m CreateActivityParams) GetActivityType() *string {
+func (m CreateActivityParams) GetActivityType() string {
 	return m.ActivityType
 }
 
 // SetActivityType sets the ActivityType value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetActivityType(v *string) CreateActivityParams {
+func (m CreateActivityParams) SetActivityType(v string) CreateActivityParams {
 	m.ActivityType = v
 	return m
 }
@@ -2320,23 +2330,23 @@ func (m SoftDeleteActivitiesByTypeParams) SetUpdatedByIdentityName(v *string) So
 }
 
 // GetActivityType returns the ActivityType value.
-func (m SoftDeleteActivitiesByTypeParams) GetActivityType() *string {
+func (m SoftDeleteActivitiesByTypeParams) GetActivityType() string {
 	return m.ActivityType
 }
 
 // SetActivityType sets the ActivityType value and returns the updated SoftDeleteActivitiesByTypeParams.
-func (m SoftDeleteActivitiesByTypeParams) SetActivityType(v *string) SoftDeleteActivitiesByTypeParams {
+func (m SoftDeleteActivitiesByTypeParams) SetActivityType(v string) SoftDeleteActivitiesByTypeParams {
 	m.ActivityType = v
 	return m
 }
 
 // GetActivityType returns the ActivityType value.
-func (m HardDeleteActivitiesByTypeParams) GetActivityType() *string {
+func (m HardDeleteActivitiesByTypeParams) GetActivityType() string {
 	return m.ActivityType
 }
 
 // SetActivityType sets the ActivityType value and returns the updated HardDeleteActivitiesByTypeParams.
-func (m HardDeleteActivitiesByTypeParams) SetActivityType(v *string) HardDeleteActivitiesByTypeParams {
+func (m HardDeleteActivitiesByTypeParams) SetActivityType(v string) HardDeleteActivitiesByTypeParams {
 	m.ActivityType = v
 	return m
 }
@@ -2826,12 +2836,12 @@ func (m CreateFoodIntakeParams) SetName(v *string) CreateFoodIntakeParams {
 }
 
 // GetFoodType returns the FoodType value.
-func (m CreateFoodIntakeParams) GetFoodType() *string {
+func (m CreateFoodIntakeParams) GetFoodType() string {
 	return m.FoodType
 }
 
 // SetFoodType sets the FoodType value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetFoodType(v *string) CreateFoodIntakeParams {
+func (m CreateFoodIntakeParams) SetFoodType(v string) CreateFoodIntakeParams {
 	m.FoodType = v
 	return m
 }
@@ -3486,23 +3496,23 @@ func (m SoftDeleteFoodIntakesByTypeParams) SetUpdatedByIdentityName(v *string) S
 }
 
 // GetFoodType returns the FoodType value.
-func (m SoftDeleteFoodIntakesByTypeParams) GetFoodType() *string {
+func (m SoftDeleteFoodIntakesByTypeParams) GetFoodType() string {
 	return m.FoodType
 }
 
 // SetFoodType sets the FoodType value and returns the updated SoftDeleteFoodIntakesByTypeParams.
-func (m SoftDeleteFoodIntakesByTypeParams) SetFoodType(v *string) SoftDeleteFoodIntakesByTypeParams {
+func (m SoftDeleteFoodIntakesByTypeParams) SetFoodType(v string) SoftDeleteFoodIntakesByTypeParams {
 	m.FoodType = v
 	return m
 }
 
 // GetFoodType returns the FoodType value.
-func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() *string {
+func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() string {
 	return m.FoodType
 }
 
 // SetFoodType sets the FoodType value and returns the updated HardDeleteFoodIntakesByTypeParams.
-func (m HardDeleteFoodIntakesByTypeParams) SetFoodType(v *string) HardDeleteFoodIntakesByTypeParams {
+func (m HardDeleteFoodIntakesByTypeParams) SetFoodType(v string) HardDeleteFoodIntakesByTypeParams {
 	m.FoodType = v
 	return m
 }
@@ -4960,12 +4970,12 @@ func (m CreateInsulinDoseParams) SetDose(v float64) CreateInsulinDoseParams {
 }
 
 // GetDoseType returns the DoseType value.
-func (m CreateInsulinDoseParams) GetDoseType() *string {
+func (m CreateInsulinDoseParams) GetDoseType() string {
 	return m.DoseType
 }
 
 // SetDoseType sets the DoseType value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetDoseType(v *string) CreateInsulinDoseParams {
+func (m CreateInsulinDoseParams) SetDoseType(v string) CreateInsulinDoseParams {
 	m.DoseType = v
 	return m
 }
@@ -7654,14 +7664,36 @@ func (m CreateFoodPresetParams) SetName(v string) CreateFoodPresetParams {
 	return m
 }
 
-// GetFoodType returns the FoodType value.
-func (m CreateFoodPresetParams) GetFoodType() string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m CreateFoodPresetParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetFoodType sets the FoodType value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetFoodType(v string) CreateFoodPresetParams {
-	m.FoodType = v
+// SetCategory sets the Category value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetCategory(v *string) CreateFoodPresetParams {
+	m.Category = v
+	return m
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m CreateFoodPresetParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetSubcategory(v *string) CreateFoodPresetParams {
+	m.Subcategory = v
+	return m
+}
+
+// GetPortions returns the Portions value.
+func (m CreateFoodPresetParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetPortions(v *float64) CreateFoodPresetParams {
+	m.Portions = v
 	return m
 }
 
@@ -8116,14 +8148,36 @@ func (m UpdateFoodPresetParams) SetName(v *string) UpdateFoodPresetParams {
 	return m
 }
 
-// GetFoodType returns the FoodType value.
-func (m UpdateFoodPresetParams) GetFoodType() *string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m UpdateFoodPresetParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetFoodType sets the FoodType value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetFoodType(v *string) UpdateFoodPresetParams {
-	m.FoodType = v
+// SetCategory sets the Category value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetCategory(v *string) UpdateFoodPresetParams {
+	m.Category = v
+	return m
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m UpdateFoodPresetParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetSubcategory(v *string) UpdateFoodPresetParams {
+	m.Subcategory = v
+	return m
+}
+
+// GetPortions returns the Portions value.
+func (m UpdateFoodPresetParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetPortions(v *float64) UpdateFoodPresetParams {
+	m.Portions = v
 	return m
 }
 
@@ -8212,17 +8266,6 @@ func (m HardDeleteFoodPresetParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteFoodPresetParams.
 func (m HardDeleteFoodPresetParams) SetID(v string) HardDeleteFoodPresetParams {
 	m.ID = v
-	return m
-}
-
-// GetFoodType returns the FoodType value.
-func (m HardDeleteFoodPresetsByTypeParams) GetFoodType() *string {
-	return m.FoodType
-}
-
-// SetFoodType sets the FoodType value and returns the updated HardDeleteFoodPresetsByTypeParams.
-func (m HardDeleteFoodPresetsByTypeParams) SetFoodType(v *string) HardDeleteFoodPresetsByTypeParams {
-	m.FoodType = v
 	return m
 }
 

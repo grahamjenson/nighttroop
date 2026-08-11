@@ -87,33 +87,41 @@ func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadin
 }
 func FoodToUpdate(source Food, context UpdateContext) site.UpdateFoodPresetParams {
 	var siteUpdateFoodPresetParams site.UpdateFoodPresetParams
-	if source.Food != nil {
-		xstring := ShortStringToString(*source.Food)
+	if source.Name != nil {
+		xstring := ShortStringToString(*source.Name)
 		siteUpdateFoodPresetParams.Name = &xstring
 	}
 	if source.Category != nil {
 		xstring2 := ShortStringToString(*source.Category)
-		siteUpdateFoodPresetParams.FoodType = &xstring2
+		siteUpdateFoodPresetParams.Category = &xstring2
+	}
+	if source.Subcategory != nil {
+		xstring3 := ShortStringToString(*source.Subcategory)
+		siteUpdateFoodPresetParams.Subcategory = &xstring3
+	}
+	if source.Portions != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Portions)
+		siteUpdateFoodPresetParams.Portions = &xfloat64
 	}
 	if source.Carbs != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteUpdateFoodPresetParams.Carbs = &xfloat64
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Carbs)
+		siteUpdateFoodPresetParams.Carbs = &xfloat642
 	}
 	if source.Fat != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteUpdateFoodPresetParams.Fat = &xfloat642
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Fat)
+		siteUpdateFoodPresetParams.Fat = &xfloat643
 	}
 	if source.Protein != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteUpdateFoodPresetParams.Protein = &xfloat643
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Protein)
+		siteUpdateFoodPresetParams.Protein = &xfloat644
 	}
 	if source.Fibre != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteUpdateFoodPresetParams.Fibre = &xfloat644
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Fibre)
+		siteUpdateFoodPresetParams.Fibre = &xfloat645
 	}
 	if source.Energy != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteUpdateFoodPresetParams.Calories = &xfloat645
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
+		siteUpdateFoodPresetParams.Calories = &xfloat646
 	}
 	siteUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {

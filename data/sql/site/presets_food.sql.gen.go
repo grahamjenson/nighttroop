@@ -12,7 +12,7 @@ import (
 
 const allFoodPresets = `-- name: AllFoodPresets :many
 
-SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, calories, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
 ORDER BY created_at DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -37,12 +37,14 @@ func (q *Queries) AllFoodPresets(ctx context.Context, arg AllFoodPresetsParams) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.FoodType,
+			&i.Category,
+			&i.Subcategory,
 			&i.Carbs,
 			&i.Fat,
 			&i.Protein,
 			&i.Fibre,
 			&i.Calories,
+			&i.Portions,
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -68,7 +70,10 @@ const createFoodPreset = `-- name: CreateFoodPreset :one
 INSERT INTO food_presets (
     id,
     name,
-    food_type,
+    category,
+    subcategory,
+
+    portions,
     carbs,
     fat,
     protein,
@@ -80,14 +85,16 @@ INSERT INTO food_presets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, calories, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateFoodPresetParams struct {
 	ID                    string
 	Name                  string
-	FoodType              string
+	Category              *string
+	Subcategory           *string
+	Portions              *float64
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
@@ -106,7 +113,9 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 	row := q.queryRow(ctx, q.createFoodPresetStmt, createFoodPreset,
 		arg.ID,
 		arg.Name,
-		arg.FoodType,
+		arg.Category,
+		arg.Subcategory,
+		arg.Portions,
 		arg.Carbs,
 		arg.Fat,
 		arg.Protein,
@@ -121,12 +130,14 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.FoodType,
+		&i.Category,
+		&i.Subcategory,
 		&i.Carbs,
 		&i.Fat,
 		&i.Protein,
 		&i.Fibre,
 		&i.Calories,
+		&i.Portions,
 		&i.RawJsonData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -139,7 +150,7 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 }
 
 const getFoodPreset = `-- name: GetFoodPreset :one
-SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets WHERE id = ?
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, calories, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets WHERE id = ?
 `
 
 type GetFoodPresetParams struct {
@@ -152,12 +163,14 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.FoodType,
+		&i.Category,
+		&i.Subcategory,
 		&i.Carbs,
 		&i.Fat,
 		&i.Protein,
 		&i.Fibre,
 		&i.Calories,
+		&i.Portions,
 		&i.RawJsonData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -186,20 +199,8 @@ func (q *Queries) HardDeleteFoodPreset(ctx context.Context, arg HardDeleteFoodPr
 	return q.exec(ctx, q.hardDeleteFoodPresetStmt, hardDeleteFoodPreset, arg.ID)
 }
 
-const hardDeleteFoodPresetsByType = `-- name: HardDeleteFoodPresetsByType :execresult
-DELETE FROM food_presets WHERE food_type = ?1
-`
-
-type HardDeleteFoodPresetsByTypeParams struct {
-	FoodType *string
-}
-
-func (q *Queries) HardDeleteFoodPresetsByType(ctx context.Context, arg HardDeleteFoodPresetsByTypeParams) (sql.Result, error) {
-	return q.exec(ctx, q.hardDeleteFoodPresetsByTypeStmt, hardDeleteFoodPresetsByType, arg.FoodType)
-}
-
 const searchFoodPresets = `-- name: SearchFoodPresets :many
-SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, calories, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR created_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR created_at <= ?2)
@@ -224,10 +225,10 @@ WHERE
     AND (CAST(?16 AS TEXT) IS NULL OR created_by_device_name = ?16)
     AND (CAST(?17 AS TEXT) IS NULL OR created_by_app_name = ?17)
     
-    AND (CAST(?18 AS TEXT) IS NULL OR food_type = ?18)
-    AND (CAST(?19 AS TEXT) IS NULL OR food_type != ?19)
-    AND (CAST(?20 AS TEXT) IS NULL OR food_type IN (SELECT value FROM json_each(?20)))
-    AND (CAST(?21 AS TEXT) IS NULL OR food_type NOT IN (SELECT value FROM json_each(?21)))
+    AND (CAST(?18 AS TEXT) IS NULL OR category = ?18)
+    AND (CAST(?19 AS TEXT) IS NULL OR category != ?19)
+    AND (CAST(?20 AS TEXT) IS NULL OR category IN (SELECT value FROM json_each(?20)))
+    AND (CAST(?21 AS TEXT) IS NULL OR category NOT IN (SELECT value FROM json_each(?21)))
 
     AND (CAST(?22 AS INTEGER) IS NULL OR carbs = ?22)
     AND (CAST(?23 AS INTEGER) IS NULL OR carbs >= ?23)
@@ -310,12 +311,14 @@ func (q *Queries) SearchFoodPresets(ctx context.Context, arg SearchFoodPresetsPa
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.FoodType,
+			&i.Category,
+			&i.Subcategory,
 			&i.Carbs,
 			&i.Fat,
 			&i.Protein,
 			&i.Fibre,
 			&i.Calories,
+			&i.Portions,
 			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -341,22 +344,27 @@ const updateFoodPreset = `-- name: UpdateFoodPreset :one
 
 UPDATE food_presets SET
     name = COALESCE(?3, name),
-    food_type = COALESCE(?4, food_type),
-    carbs = COALESCE(?5, carbs),
-    fat = COALESCE(?6, fat),
-    protein = COALESCE(?7, protein),
-    fibre = COALESCE(?8, fibre),
-    calories = COALESCE(?9, calories),
+    category = COALESCE(?4, category),
+    subcategory = COALESCE(?5, subcategory),
+
+    portions = COALESCE(?6, portions),
+    carbs = COALESCE(?7, carbs),
+    fat = COALESCE(?8, fat),
+    protein = COALESCE(?9, protein),
+    fibre = COALESCE(?10, fibre),
+    calories = COALESCE(?11, calories),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE id = ?
-RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, calories, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateFoodPresetParams struct {
 	Name                  *string
-	FoodType              *string
+	Category              *string
+	Subcategory           *string
+	Portions              *float64
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
@@ -372,7 +380,9 @@ type UpdateFoodPresetParams struct {
 func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetParams) (*FoodPreset, error) {
 	row := q.queryRow(ctx, q.updateFoodPresetStmt, updateFoodPreset,
 		arg.Name,
-		arg.FoodType,
+		arg.Category,
+		arg.Subcategory,
+		arg.Portions,
 		arg.Carbs,
 		arg.Fat,
 		arg.Protein,
@@ -385,12 +395,14 @@ func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetPara
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.FoodType,
+		&i.Category,
+		&i.Subcategory,
 		&i.Carbs,
 		&i.Fat,
 		&i.Protein,
 		&i.Fibre,
 		&i.Calories,
+		&i.Portions,
 		&i.RawJsonData,
 		&i.CreatedAt,
 		&i.UpdatedAt,

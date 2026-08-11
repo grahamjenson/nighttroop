@@ -10,10 +10,7 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 		xstring := *source.Name
 		siteCreateActivityParams.Name = &xstring
 	}
-	if source.ActivityType != nil {
-		xstring2 := *source.ActivityType
-		siteCreateActivityParams.ActivityType = &xstring2
-	}
+	siteCreateActivityParams.ActivityType = source.ActivityType
 	if source.DurationMinutes != nil {
 		xint64 := *source.DurationMinutes
 		siteCreateActivityParams.DurationMinutes = &xint64
@@ -36,16 +33,16 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 		siteCreateActivityParams.UtcOffsetMinutes = &xint645
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		siteCreateActivityParams.RawJsonData = &xstring3
+		xstring2 := *source.RawJsonData
+		siteCreateActivityParams.RawJsonData = &xstring2
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		siteCreateActivityParams.CreatedByAppName = &xstring4
+		xstring3 := *source.CreatedByAppName
+		siteCreateActivityParams.CreatedByAppName = &xstring3
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		siteCreateActivityParams.CreatedByDeviceName = &xstring5
+		xstring4 := *source.CreatedByDeviceName
+		siteCreateActivityParams.CreatedByDeviceName = &xstring4
 	}
 	siteCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateActivityParams
@@ -56,10 +53,8 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 		xstring := *source.Name
 		siteUpdateActivityParams.Name = &xstring
 	}
-	if source.ActivityType != nil {
-		xstring2 := *source.ActivityType
-		siteUpdateActivityParams.ActivityType = &xstring2
-	}
+	pString := source.ActivityType
+	siteUpdateActivityParams.ActivityType = &pString
 	if source.DurationMinutes != nil {
 		xint64 := *source.DurationMinutes
 		siteUpdateActivityParams.DurationMinutes = &xint64
@@ -83,8 +78,8 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 		siteUpdateActivityParams.UtcOffsetMinutes = &xint645
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring3 := *source.UpdatedByIdentityName
-		siteUpdateActivityParams.UpdatedByIdentityName = &xstring3
+		xstring2 := *source.UpdatedByIdentityName
+		siteUpdateActivityParams.UpdatedByIdentityName = &xstring2
 	}
 	siteUpdateActivityParams.ID = source.ID
 	return siteUpdateActivityParams
@@ -293,10 +288,7 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 		xstring := *source.Name
 		siteCreateFoodIntakeParams.Name = &xstring
 	}
-	if source.FoodType != nil {
-		xstring2 := *source.FoodType
-		siteCreateFoodIntakeParams.FoodType = &xstring2
-	}
+	siteCreateFoodIntakeParams.FoodType = source.FoodType
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		siteCreateFoodIntakeParams.Carbs = &xfloat64
@@ -323,16 +315,16 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 	}
 	siteCreateFoodIntakeParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		siteCreateFoodIntakeParams.RawJsonData = &xstring3
+		xstring2 := *source.RawJsonData
+		siteCreateFoodIntakeParams.RawJsonData = &xstring2
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		siteCreateFoodIntakeParams.CreatedByAppName = &xstring4
+		xstring3 := *source.CreatedByAppName
+		siteCreateFoodIntakeParams.CreatedByAppName = &xstring3
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring5
+		xstring4 := *source.CreatedByDeviceName
+		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring4
 	}
 	siteCreateFoodIntakeParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateFoodIntakeParams
@@ -343,10 +335,8 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 		xstring := *source.Name
 		siteUpdateFoodIntakeParams.Name = &xstring
 	}
-	if source.FoodType != nil {
-		xstring2 := *source.FoodType
-		siteUpdateFoodIntakeParams.FoodType = &xstring2
-	}
+	pString := source.FoodType
+	siteUpdateFoodIntakeParams.FoodType = &pString
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		siteUpdateFoodIntakeParams.Carbs = &xfloat64
@@ -374,8 +364,8 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 		siteUpdateFoodIntakeParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring3 := *source.UpdatedByIdentityName
-		siteUpdateFoodIntakeParams.UpdatedByIdentityName = &xstring3
+		xstring2 := *source.UpdatedByIdentityName
+		siteUpdateFoodIntakeParams.UpdatedByIdentityName = &xstring2
 	}
 	siteUpdateFoodIntakeParams.ID = source.ID
 	return siteUpdateFoodIntakeParams
@@ -384,38 +374,49 @@ func FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams {
 	var siteCreateFoodPresetParams CreateFoodPresetParams
 	siteCreateFoodPresetParams.ID = source.ID
 	siteCreateFoodPresetParams.Name = source.Name
-	siteCreateFoodPresetParams.FoodType = source.FoodType
+	if source.Category != nil {
+		xstring := *source.Category
+		siteCreateFoodPresetParams.Category = &xstring
+	}
+	if source.Subcategory != nil {
+		xstring2 := *source.Subcategory
+		siteCreateFoodPresetParams.Subcategory = &xstring2
+	}
+	if source.Portions != nil {
+		xfloat64 := *source.Portions
+		siteCreateFoodPresetParams.Portions = &xfloat64
+	}
 	if source.Carbs != nil {
-		xfloat64 := *source.Carbs
-		siteCreateFoodPresetParams.Carbs = &xfloat64
+		xfloat642 := *source.Carbs
+		siteCreateFoodPresetParams.Carbs = &xfloat642
 	}
 	if source.Fat != nil {
-		xfloat642 := *source.Fat
-		siteCreateFoodPresetParams.Fat = &xfloat642
+		xfloat643 := *source.Fat
+		siteCreateFoodPresetParams.Fat = &xfloat643
 	}
 	if source.Protein != nil {
-		xfloat643 := *source.Protein
-		siteCreateFoodPresetParams.Protein = &xfloat643
+		xfloat644 := *source.Protein
+		siteCreateFoodPresetParams.Protein = &xfloat644
 	}
 	if source.Fibre != nil {
-		xfloat644 := *source.Fibre
-		siteCreateFoodPresetParams.Fibre = &xfloat644
+		xfloat645 := *source.Fibre
+		siteCreateFoodPresetParams.Fibre = &xfloat645
 	}
 	if source.Calories != nil {
-		xfloat645 := *source.Calories
-		siteCreateFoodPresetParams.Calories = &xfloat645
+		xfloat646 := *source.Calories
+		siteCreateFoodPresetParams.Calories = &xfloat646
 	}
 	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteCreateFoodPresetParams.RawJsonData = &xstring
+		xstring3 := *source.RawJsonData
+		siteCreateFoodPresetParams.RawJsonData = &xstring3
 	}
 	if source.CreatedByAppName != nil {
-		xstring2 := *source.CreatedByAppName
-		siteCreateFoodPresetParams.CreatedByAppName = &xstring2
+		xstring4 := *source.CreatedByAppName
+		siteCreateFoodPresetParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring3 := *source.CreatedByDeviceName
-		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring3
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateFoodPresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateFoodPresetParams
@@ -424,31 +425,41 @@ func FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams {
 	var siteUpdateFoodPresetParams UpdateFoodPresetParams
 	pString := source.Name
 	siteUpdateFoodPresetParams.Name = &pString
-	pString2 := source.FoodType
-	siteUpdateFoodPresetParams.FoodType = &pString2
+	if source.Category != nil {
+		xstring := *source.Category
+		siteUpdateFoodPresetParams.Category = &xstring
+	}
+	if source.Subcategory != nil {
+		xstring2 := *source.Subcategory
+		siteUpdateFoodPresetParams.Subcategory = &xstring2
+	}
+	if source.Portions != nil {
+		xfloat64 := *source.Portions
+		siteUpdateFoodPresetParams.Portions = &xfloat64
+	}
 	if source.Carbs != nil {
-		xfloat64 := *source.Carbs
-		siteUpdateFoodPresetParams.Carbs = &xfloat64
+		xfloat642 := *source.Carbs
+		siteUpdateFoodPresetParams.Carbs = &xfloat642
 	}
 	if source.Fat != nil {
-		xfloat642 := *source.Fat
-		siteUpdateFoodPresetParams.Fat = &xfloat642
+		xfloat643 := *source.Fat
+		siteUpdateFoodPresetParams.Fat = &xfloat643
 	}
 	if source.Protein != nil {
-		xfloat643 := *source.Protein
-		siteUpdateFoodPresetParams.Protein = &xfloat643
+		xfloat644 := *source.Protein
+		siteUpdateFoodPresetParams.Protein = &xfloat644
 	}
 	if source.Fibre != nil {
-		xfloat644 := *source.Fibre
-		siteUpdateFoodPresetParams.Fibre = &xfloat644
+		xfloat645 := *source.Fibre
+		siteUpdateFoodPresetParams.Fibre = &xfloat645
 	}
 	if source.Calories != nil {
-		xfloat645 := *source.Calories
-		siteUpdateFoodPresetParams.Calories = &xfloat645
+		xfloat646 := *source.Calories
+		siteUpdateFoodPresetParams.Calories = &xfloat646
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring := *source.UpdatedByIdentityName
-		siteUpdateFoodPresetParams.UpdatedByIdentityName = &xstring
+		xstring3 := *source.UpdatedByIdentityName
+		siteUpdateFoodPresetParams.UpdatedByIdentityName = &xstring3
 	}
 	siteUpdateFoodPresetParams.ID = source.ID
 	return siteUpdateFoodPresetParams
@@ -501,36 +512,31 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 	var siteCreateInsulinDoseParams CreateInsulinDoseParams
 	siteCreateInsulinDoseParams.ID = source.ID
 	siteCreateInsulinDoseParams.Dose = source.Dose
-	if source.DoseType != nil {
-		xstring := *source.DoseType
-		siteCreateInsulinDoseParams.DoseType = &xstring
-	}
+	siteCreateInsulinDoseParams.DoseType = source.DoseType
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
 	siteCreateInsulinDoseParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		siteCreateInsulinDoseParams.RawJsonData = &xstring2
+		xstring := *source.RawJsonData
+		siteCreateInsulinDoseParams.RawJsonData = &xstring
 	}
 	if source.CreatedByAppName != nil {
-		xstring3 := *source.CreatedByAppName
-		siteCreateInsulinDoseParams.CreatedByAppName = &xstring3
+		xstring2 := *source.CreatedByAppName
+		siteCreateInsulinDoseParams.CreatedByAppName = &xstring2
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring4 := *source.CreatedByDeviceName
-		siteCreateInsulinDoseParams.CreatedByDeviceName = &xstring4
+		xstring3 := *source.CreatedByDeviceName
+		siteCreateInsulinDoseParams.CreatedByDeviceName = &xstring3
 	}
 	siteCreateInsulinDoseParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateInsulinDoseParams
 }
 func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	var siteUpdateInsulinDoseParams UpdateInsulinDoseParams
-	if source.DoseType != nil {
-		xstring := *source.DoseType
-		siteUpdateInsulinDoseParams.DoseType = &xstring
-	}
+	pString := source.DoseType
+	siteUpdateInsulinDoseParams.DoseType = &pString
 	pFloat64 := source.Dose
 	siteUpdateInsulinDoseParams.Dose = &pFloat64
 	pInt64 := source.OccurredAt
@@ -540,8 +546,8 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 		siteUpdateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring2 := *source.UpdatedByIdentityName
-		siteUpdateInsulinDoseParams.UpdatedByIdentityName = &xstring2
+		xstring := *source.UpdatedByIdentityName
+		siteUpdateInsulinDoseParams.UpdatedByIdentityName = &xstring
 	}
 	siteUpdateInsulinDoseParams.ID = source.ID
 	return siteUpdateInsulinDoseParams

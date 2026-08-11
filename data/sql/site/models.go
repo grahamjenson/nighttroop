@@ -125,11 +125,11 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		}
 	}
 
-	if source.InsulinDoseID != nil && source.InsulinDose != nil {
+	if source.InsulinDoseID != nil && source.InsulinDose != nil && source.InsulinDoseType != nil {
 		egb.InsulinDose = &InsulinDose{
 			ID:       *source.InsulinDoseID,
 			Dose:     *source.InsulinDose,
-			DoseType: source.InsulinDoseType,
+			DoseType: *source.InsulinDoseType,
 		}
 	}
 
@@ -185,11 +185,11 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		}
 	}
 
-	if source.ActivityID != nil {
+	if source.ActivityID != nil && source.ActivityType != nil {
 		egb.Activity = &Activity{
 			ID:              *source.ActivityID,
 			Name:            source.ActivityName,
-			ActivityType:    source.ActivityType,
+			ActivityType:    *source.ActivityType,
 			DurationMinutes: source.ActivityDurationMinutes,
 			Calories:        source.ActivityCalories,
 			Steps:           source.ActivitySteps,

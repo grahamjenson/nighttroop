@@ -13,8 +13,7 @@ func ActivityToCreate(source Activity, context CreateContext) site.CreateActivit
 		siteCreateActivityParams.Name = &xstring
 	}
 	if source.ActivityType != nil {
-		xstring2 := ShortStringToString(*source.ActivityType)
-		siteCreateActivityParams.ActivityType = &xstring2
+		siteCreateActivityParams.ActivityType = ShortStringToString(*source.ActivityType)
 	}
 	if source.Duration != nil {
 		xint64 := FlexibleInt64ToInt64(*source.Duration)
@@ -40,12 +39,12 @@ func ActivityToCreate(source Activity, context CreateContext) site.CreateActivit
 	pString := source.RawJsonData
 	siteCreateActivityParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring3 := ShortStringToString(*source.App)
-		siteCreateActivityParams.CreatedByAppName = &xstring3
+		xstring2 := ShortStringToString(*source.App)
+		siteCreateActivityParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
-		xstring4 := ShortStringToString(*source.Device)
-		siteCreateActivityParams.CreatedByDeviceName = &xstring4
+		xstring3 := ShortStringToString(*source.Device)
+		siteCreateActivityParams.CreatedByDeviceName = &xstring3
 	}
 	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateActivityParams
@@ -108,38 +107,47 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParam
 	if source.Name != nil {
 		siteCreateFoodPresetParams.Name = ShortStringToString(*source.Name)
 	}
-	if source.Food != nil {
-		siteCreateFoodPresetParams.FoodType = ShortStringToString(*source.Food)
+	if source.Category != nil {
+		xstring := ShortStringToString(*source.Category)
+		siteCreateFoodPresetParams.Category = &xstring
+	}
+	if source.Subcategory != nil {
+		xstring2 := ShortStringToString(*source.Subcategory)
+		siteCreateFoodPresetParams.Subcategory = &xstring2
+	}
+	if source.Portions != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Portions)
+		siteCreateFoodPresetParams.Portions = &xfloat64
 	}
 	if source.Carbs != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteCreateFoodPresetParams.Carbs = &xfloat64
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Carbs)
+		siteCreateFoodPresetParams.Carbs = &xfloat642
 	}
 	if source.Fat != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteCreateFoodPresetParams.Fat = &xfloat642
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Fat)
+		siteCreateFoodPresetParams.Fat = &xfloat643
 	}
 	if source.Protein != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteCreateFoodPresetParams.Protein = &xfloat643
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Protein)
+		siteCreateFoodPresetParams.Protein = &xfloat644
 	}
 	if source.Fibre != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteCreateFoodPresetParams.Fibre = &xfloat644
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Fibre)
+		siteCreateFoodPresetParams.Fibre = &xfloat645
 	}
 	if source.Energy != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteCreateFoodPresetParams.Calories = &xfloat645
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
+		siteCreateFoodPresetParams.Calories = &xfloat646
 	}
 	pString := source.RawJsonData
 	siteCreateFoodPresetParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateFoodPresetParams.CreatedByAppName = &xstring
+		xstring3 := ShortStringToString(*source.App)
+		siteCreateFoodPresetParams.CreatedByAppName = &xstring3
 	}
 	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring2
+		xstring4 := ShortStringToString(*source.Device)
+		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring4
 	}
 	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodPresetParams
@@ -173,8 +181,7 @@ func TreatmentToCreateActivity(source Treatment, context CreateContext) site.Cre
 		siteCreateActivityParams.Name = &xstring
 	}
 	if source.ActivityType != nil {
-		xstring2 := ShortStringToString(*source.ActivityType)
-		siteCreateActivityParams.ActivityType = &xstring2
+		siteCreateActivityParams.ActivityType = ShortStringToString(*source.ActivityType)
 	}
 	if source.Duration != nil {
 		xint64 := FlexibleInt64ToInt64(*source.Duration)
@@ -200,12 +207,12 @@ func TreatmentToCreateActivity(source Treatment, context CreateContext) site.Cre
 	pString := source.RawJsonData
 	siteCreateActivityParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring3 := ShortStringToString(*source.App)
-		siteCreateActivityParams.CreatedByAppName = &xstring3
+		xstring2 := ShortStringToString(*source.App)
+		siteCreateActivityParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
-		xstring4 := ShortStringToString(*source.Device)
-		siteCreateActivityParams.CreatedByDeviceName = &xstring4
+		xstring3 := ShortStringToString(*source.Device)
+		siteCreateActivityParams.CreatedByDeviceName = &xstring3
 	}
 	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateActivityParams
