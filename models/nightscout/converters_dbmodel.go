@@ -2,7 +2,6 @@ package nightscout
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"nighttroop.t1d.nz/data/sql/site"
 )
@@ -156,7 +155,6 @@ type DBModelConverter interface {
 // //
 
 func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
-	fmt.Printf("ModelDateStringFromDateIntAndUTCOff`set called with: %v:%T\n", m, m)
 	if m == nil {
 		return nil
 	}
@@ -167,18 +165,15 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 		GetUtcOffsetMinutes() *int64
 	}:
 		ds := DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
-		fmt.Printf("ModelDateStringFromDateIntAndUTCOffset returning: %v\n", ds)
 		return &ds
 	case interface {
 		GetStart() int64
 		GetUtcOffsetMinutes() *int64
 	}:
 		ds := DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
-		fmt.Printf("ModelDateStringFromDateIntAndUTCOffset returning: %v\n", ds)
 		return &ds
 	}
 
-	fmt.Printf("ModelDateStringFromDateIntAndUTCOffset returning: nil\n")
 	return nil
 }
 

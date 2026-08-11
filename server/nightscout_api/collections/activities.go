@@ -43,6 +43,7 @@ func (c ActivityCollection) ValidateChange(nsModel nightscout.Activity, dbModel 
 		slog.Error("cannot change activity_type attribute on activity", "existingActivityType", dbModel.ActivityType, "newActivityType", nsModel.ActivityType.String())
 		return nsutils.ErrCannotChangeType
 	}
+
 	return nil
 }
 

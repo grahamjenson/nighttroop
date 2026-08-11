@@ -298,13 +298,19 @@ func (r Request) BuildRealRequest(ctx map[string]any) (Request, error) {
 	}, nil
 }
 
-func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (int, any, http.Header, map[string]any) {
+func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (code int, body any, headers http.Header, outContext map[string]any, err error) {
+
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			err = fmt.Errorf("httptest.NewRequest panicked: %v", recovered)
+		}
+	}()
 
 	if r.Body != "" {
 		// Making Sure the body is JSON
-		err := json.Unmarshal([]byte(r.Body), new(any))
+		err = json.Unmarshal([]byte(r.Body), new(any))
 		if err != nil {
-			panic(fmt.Sprintf("request %s body %s is not valid JSON: %v", r.Name, r.Body, err))
+			return 0, nil, nil, context, fmt.Errorf("request %s body %s is not valid JSON: %v", r.Name, r.Body, err)
 		}
 
 	}
@@ -324,11 +330,13 @@ func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (i
 	if err := json.NewDecoder(strings.NewReader(bodyOut)).Decode(&out); err != nil {
 		fmt.Println("failed to decode json for", r.Name, "error:", err)
 	}
-
+	if err != nil {
+		return rr.Code, nil, rr.Header(), context, fmt.Errorf("request %s response body is not valid JSON: %v", r.Name, err)
+	}
 	context[r.Name] = out
 	context[r.Name+"_status"] = rr.Code
 
-	return rr.Code, out, rr.Header(), context
+	return rr.Code, out, rr.Header(), context, nil
 }
 
 func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, ctx map[string]any) {

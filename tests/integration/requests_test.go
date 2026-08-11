@@ -94,7 +94,10 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 				fmt.Println()
 				fmt.Println("- - - - - - - - - - - - - - - - ")
 				fmt.Println()
-				statusCode, output, _, newContext := realRequest.ExecuteRequest(router, requestContext)
+				statusCode, output, _, newContext, err := realRequest.ExecuteRequest(router, requestContext)
+				if err != nil {
+					t.Fatalf("failed to execute request: %v", err)
+				}
 				requestContext = newContext
 				fmt.Println()
 				fmt.Println("- - - - - - - - - - - - - - - - ")

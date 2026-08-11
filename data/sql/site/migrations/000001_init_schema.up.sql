@@ -11,7 +11,7 @@ CREATE TABLE glucose_readings (
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     reading REAL NOT NULL,
-    reading_type TEXT NOT NULL CHECK(length(reading_type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
+    reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -32,7 +32,7 @@ CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     dose REAL NOT NULL,
-    dose_type TEXT NOT NULL CHECK (length(dose_type) <= 32) DEFAULT 'bolus',
+    dose_type TEXT NOT NULL CHECK(dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
