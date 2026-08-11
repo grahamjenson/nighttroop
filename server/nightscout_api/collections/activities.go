@@ -34,7 +34,7 @@ func (c ActivityCollection) Convert(dr *site.Activity) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c ActivityCollection) ValidateChange(nsModel nightscout.Activity, dbModel *site.Activity) *nsutils.HTTPError {
+func (c ActivityCollection) Validate(nsModel nightscout.Activity, dbModel *site.Activity) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -47,7 +47,7 @@ func (c ActivityCollection) ValidateChange(nsModel nightscout.Activity, dbModel 
 	return nil
 }
 
-func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, cc nightscout.CreateContext, overrideIdentifier *string) (*site.Activity, error) {
+func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.Activity, error) {
 	createParams := nightscout.ActivityToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -75,7 +75,7 @@ func (c ActivityCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Co
 	return q.SoftDeleteActivitiesByType(ctx, site.SoftDeleteActivitiesByTypeParams{ActivityType: typeString})
 }
 
-func (c ActivityCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, identifier string, uc nightscout.UpdateContext) (*site.Activity, error) {
+func (c ActivityCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, identifier string, dbModel *site.Activity, uc nightscout.ConverterContext) (*site.Activity, error) {
 	updateParams := nightscout.ActivityToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 

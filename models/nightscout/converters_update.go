@@ -4,11 +4,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/site"
 )
 
-type UpdateContext struct {
-	UpdatedByIdentityID   int64
-	UpdatedByIdentityName string
-}
-
 // goverter:converter
 // goverter:output:format function
 // goverter:output:file ./z_update_converters.go
@@ -28,7 +23,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:map Duration DurationMinutes
-	ActivityToUpdate(source Activity, ctx UpdateContext) site.UpdateActivityParams
+	ActivityToUpdate(source Activity, ctx ConverterContext) site.UpdateActivityParams
 
 	///////
 	// ENTRIES TO GLUCOSE READINGS
@@ -40,7 +35,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	EntryToUpdate(source Entry, ctx UpdateContext) site.UpdateGlucoseReadingParams
+	EntryToUpdate(source Entry, ctx ConverterContext) site.UpdateGlucoseReadingParams
 
 	///////
 	// FOOD TO FOOD PRESET
@@ -51,138 +46,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	FoodToUpdate(source Food, ctx UpdateContext) site.UpdateFoodPresetParams
-
-	////////////////////////////////////////
-	// TREATMENT TO CREATE/UPDATE
-	////////////////////////////////////////
-
-	///////
-	// EventGroup
-	///////
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore
-	TreatmentToUpdateEventGroup(source Treatment, ctx UpdateContext) site.UpdateEventGroupParams
-
-	///////
-	// Food Intake
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	TreatmentToUpdateFoodIntake(source Treatment, ctx UpdateContext) site.UpdateFoodIntakeParams
-
-	///////
-	// Glucose Reading
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:map Glucose Reading
-	TreatmentToUpdateGlucoseReading(source Treatment, ctx UpdateContext) site.UpdateGlucoseReadingParams
-
-	///////
-	// Insulin Dose
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore DoseType
-	// goverter:map Insulin Dose
-	TreatmentToUpdateInsulinDose(source Treatment, ctx UpdateContext) site.UpdateInsulinDoseParams
-
-	///////
-	// Notes
-	///////
-
-	// goverter:context ctx
-	// goverter:map  Identifier ID
-	// goverter:map  Date OccurredAt
-	// goverter:map  Notes Content
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:map Notes Content
-	TreatmentToUpdateNote(source Treatment, ctx UpdateContext) site.UpdateNoteParams
-
-	///////
-	// Profile
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	TreatmentToUpdateProfile(source Treatment, ctx UpdateContext) site.UpdateProfilePresetParams
-
-	///////
-	// Profile Switch
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// goverter:map Percentage Percent
-	TreatmentToUpdateProfileSwitch(source Treatment, ctx UpdateContext) site.UpdateProfileSwitchParams
-
-	///////
-	// Temp Basal
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// goverter:map Percentage Percent
-	TreatmentToUpdateTempBasal(source Treatment, ctx UpdateContext) site.UpdateTempBasalParams
-
-	///////
-	// Temp Targets
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// goverter:map TargetTop HighTarget
-	// goverter:map TargetBottom LowTarget
-	TreatmentToUpdateTempTarget(source Treatment, ctx UpdateContext) site.UpdateTempTargetParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore
-	TreatmentToUpdateComponentEvent(source Treatment, ctx UpdateContext) site.UpdateComponentEventParams
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:ignore
-	// goverter:map Duration DurationMinutes
-	TreatmentToUpdateActivity(source Treatment, ctx UpdateContext) site.UpdateActivityParams
+	FoodToUpdate(source Food, ctx ConverterContext) site.UpdateFoodPresetParams
 
 	//
 	//
@@ -198,7 +62,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx UpdateContext) site.UpdateDeviceReportParams
+	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx ConverterContext) site.UpdateDeviceReportParams
 }
 
 // //
@@ -206,6 +70,6 @@ type UpdateMapConverter interface {
 // //
 
 // goverter:context ctx
-func AssignUpdatedByName(ctx UpdateContext) *string {
-	return ptr(ctx.UpdatedByIdentityName)
+func AssignUpdatedByName(ctx ConverterContext) *string {
+	return ptr(ctx.IdentityName)
 }

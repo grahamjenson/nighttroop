@@ -92,64 +92,6 @@ type DBModelConverter interface {
 	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSlice
 	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSlice
 	DBModelToProfile(source *site.ProfilePreset) Profile
-
-	////////////////////////////////////////
-	// TREATMENT TO CREATE/UPDATE
-	////////////////////////////////////////
-
-	///////
-	// EventGroup
-	///////
-
-	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map EventGroup.UtcOffsetMinutes UtcOffsetMinutes
-	// goverter:map EventGroup.RawJsonData RawJsonData
-	// goverter:map EventGroup.CreatedByIdentityName Subject
-	// goverter:map EventGroup.CreatedByIdentityName EnteredBy
-	// goverter:map EventGroup.CreatedByAppName App
-	// goverter:map EventGroup.CreatedByDeviceName Device
-	// goverter:map EventGroup.ID Identifier
-	// goverter:map EventGroup.OccurredAt Date
-	//
-	// goverter:ignore PreBolus SplitNow SplitExt Profile Units PumpType ProfileJSON Timeshift
-	// goverter:map EventGroup.GroupType EventType
-	//
-	// goverter:map GlucoseReading.Reading Glucose
-	// goverter:map GlucoseReading.ReadingType GlucoseType
-	//
-	// goverter:map InsulinDose.Dose Insulin
-	//
-	// goverter:map FoodIntake.Category Category
-	// goverter:map FoodIntake.Subcategory Subcategory
-	// goverter:map FoodIntake.Portions Portions
-	// goverter:map FoodIntake.Carbs Carbs
-	// goverter:map FoodIntake.Protein Protein
-	// goverter:map FoodIntake.Fat Fat
-	// goverter:map FoodIntake.Fibre Fibre
-	// goverter:map FoodIntake.Energy Energy
-	//
-	// goverter:map TempBasal.DurationMinutes Duration
-	// goverter:map TempBasal.Percent Rate
-	// goverter:map TempBasal.Absolute Absolute
-	//
-	// goverter:map TempTarget.DurationMinutes Duration
-	// goverter:map TempTarget.HighTarget TargetTop
-	// goverter:map TempTarget.LowTarget TargetBottom
-	//
-	// goverter:map ProfileSwitch.Name Name
-	// goverter:map ProfileSwitch.Name Profile
-	// goverter:map ProfileSwitch.Name OriginalProfileName
-	// goverter:map ProfileSwitch.Percent Percentage
-	//
-	// goverter:map Activity.ActivityType ActivityType
-	// goverter:map Activity.Steps Steps
-	// goverter:map Activity.Calories Calories
-	// goverter:map Activity.DurationMinutes Duration
-	// goverter:map Activity.HeartRate HeartRate
-	//
-	// goverter:map Note.Content Notes
-	// goverter:map Note.Reason Reason
-	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
 }
 
 // //

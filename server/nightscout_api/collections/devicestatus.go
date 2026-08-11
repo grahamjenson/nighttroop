@@ -33,14 +33,14 @@ func (c DeviceStatusCollection) Convert(dr *site.DeviceReport) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c DeviceStatusCollection) ValidateChange(nsModel nightscout.DeviceStatus, dbModel *site.DeviceReport) *nsutils.HTTPError {
+func (c DeviceStatusCollection) Validate(nsModel nightscout.DeviceStatus, dbModel *site.DeviceReport) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
 	return nil
 }
 
-func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.CreateContext, overrideIdentifier *string) (*site.DeviceReport, error) {
+func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.DeviceReport, error) {
 	createParams := nightscout.DeviceStatusToCreateDeviceReport(nsModel, cc)
 
 	if overrideIdentifier != nil {
@@ -62,7 +62,7 @@ func (c DeviceStatusCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Co
 	return q.SoftDeleteDeviceReport(ctx, site.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, identifier string, uc nightscout.UpdateContext) (*site.DeviceReport, error) {
+func (c DeviceStatusCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, identifier string, dbModel *site.DeviceReport, uc nightscout.ConverterContext) (*site.DeviceReport, error) {
 	updateParams := nightscout.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
 	return q.UpdateDeviceReport(ctx, updateParams)

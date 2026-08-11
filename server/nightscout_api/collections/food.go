@@ -34,20 +34,20 @@ func (c FoodCollection) Convert(dr *site.FoodPreset) nsutils.Record {
 	return c.converter(dr)
 }
 
-func (c FoodCollection) ValidateChange(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
+func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
 
 	if nsModel.Name != nil && nsModel.Name.String() != dbModel.Name {
 		slog.Error("cannot change name attribute on food preset", "existingName", dbModel.Name, "newName", nsModel.Name.String())
-		return nsutils.ErrCannotChangeType
+		return nsutils.ErrCannotChangeName
 	}
 
 	return nil
 }
 
-func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, cc nightscout.CreateContext, overrideIdentifier *string) (*site.FoodPreset, error) {
+func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.FoodPreset, error) {
 	createParams := nightscout.FoodToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -78,7 +78,7 @@ func (c FoodCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Contex
 	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{Category: &typeOF})
 }
 
-func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, identifier string, uc nightscout.UpdateContext) (*site.FoodPreset, error) {
+func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, identifier string, dbModel *site.FoodPreset, uc nightscout.ConverterContext) (*site.FoodPreset, error) {
 	updateParams := nightscout.FoodToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 

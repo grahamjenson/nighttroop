@@ -15,15 +15,16 @@ import (
 type MetaCreateCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *string) (*DM, error)
+	Validate(NS, *DM) *nsutils.HTTPError
+	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
 }
 
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
-	ValidateChange(NS, *DM) *nsutils.HTTPError
+	Validate(NS, *DM) *nsutils.HTTPError
 	Convert(*DM) nsutils.Record
 	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
-	PatchDBFunc(*site.Queries, context.Context, NS, string, nightscout.UpdateContext) (*DM, error)
+	PatchDBFunc(*site.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
 }
 
 type MetaGetCollection[DM any] interface {
@@ -47,10 +48,10 @@ type MetaDeleteTypeCollection interface {
 type MetaReplaceCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
-	ValidateChange(NS, *DM) *nsutils.HTTPError
+	Validate(NS, *DM) *nsutils.HTTPError
 	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
 	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
-	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.CreateContext, *string) (*DM, error)
+	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
 }
 
 // //
@@ -65,10 +66,17 @@ func MetaCreate[NS, DM any](
 ) (*nsutils.Record, *nsutils.HTTPError) {
 	var nsModel NS
 	err := utils.FromMap(data, &nsModel)
-
 	if err != nil {
 		slog.Error("failed to map data", "error", err, "collection", m.Name())
 		return nil, nsutils.BadDataBodyError
+	}
+
+	if err := ValidateInputData(data); err != nil {
+		return nil, err
+	}
+
+	if err := m.Validate(nsModel, nil); err != nil {
+		return nil, err
 	}
 
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
@@ -83,7 +91,7 @@ func MetaCreate[NS, DM any](
 		q,
 		ctx,
 		nsModel,
-		nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name},
+		nightscout.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
 		nil,
 	)
 
@@ -264,7 +272,7 @@ func MetaReplace[NS interface {
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	cc := nightscout.CreateContext{CreatedByIdentityID: siteContext.IdentityModel.ID, CreatedByIdentityName: siteContext.IdentityModel.Name}
+	cc := nightscout.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name}
 
 	creatingNewRecord := false
 
@@ -296,7 +304,7 @@ func MetaReplace[NS interface {
 		return nil, false, err
 	}
 
-	if err := m.ValidateChange(nsModel, replacingModel); err != nil {
+	if err := m.Validate(nsModel, replacingModel); err != nil {
 		slog.Error("validation failed for replacing model", "error", err, "collection", m.Name())
 		return nil, false, err
 	}
@@ -372,7 +380,7 @@ func MetaPatch[NS interface {
 		return nil, err
 	}
 
-	if err := m.ValidateChange(nsModel, updateingModel); err != nil {
+	if err := m.Validate(nsModel, updateingModel); err != nil {
 		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
@@ -382,7 +390,8 @@ func MetaPatch[NS interface {
 		ctx,
 		nsModel,
 		identifier,
-		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
+		updateingModel,
+		nightscout.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
 	)
 
 	if err != nil {
@@ -402,6 +411,24 @@ func MetaPatch[NS interface {
 	return ptr(m.Convert(dbModel)), nil
 }
 
+func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {
+	// Check to see if user has submitted read-only fields
+	if _, ok := nsModelMap["srvCreated"]; ok {
+		return nsutils.ErrCannotChangeCreatedAt
+	}
+	if _, ok := nsModelMap["srvModified"]; ok {
+		return nsutils.ErrCannotChangeModifiedAt
+	}
+	if _, ok := nsModelMap["modifiedBy"]; ok {
+		return nsutils.ErrCannotChangeModifiedBy
+	}
+	if _, ok := nsModelMap["isValid"]; ok {
+		return nsutils.ErrCannotChangeIsValid
+	}
+
+	return nil
+}
+
 func ValidateNotChangingSharedFields[NS interface {
 	GetDevice() *string
 	GetApp() *string
@@ -417,6 +444,10 @@ func ValidateNotChangingSharedFields[NS interface {
 	GetUtcOffsetMinutes() *int64
 	GetID() string
 }](replacingModelPtr *DM, nsModel NS, nsModelMap map[string]any, identifier string) *nsutils.HTTPError {
+	if err := ValidateInputData(nsModelMap); err != nil {
+		return err
+	}
+
 	if replacingModelPtr == nil {
 		return nil
 	}
@@ -446,20 +477,6 @@ func ValidateNotChangingSharedFields[NS interface {
 
 	if replacingModel.GetID() != identifier {
 		return nsutils.ErrCannotChangeIdentifier
-	}
-
-	// Check to see if user has submitted read-only fields
-	if _, ok := nsModelMap["srvCreated"]; ok {
-		return nsutils.ErrCannotChangeCreatedAt
-	}
-	if _, ok := nsModelMap["srvModified"]; ok {
-		return nsutils.ErrCannotChangeModifiedAt
-	}
-	if _, ok := nsModelMap["modifiedBy"]; ok {
-		return nsutils.ErrCannotChangeModifiedBy
-	}
-	if _, ok := nsModelMap["isValid"]; ok {
-		return nsutils.ErrCannotChangeIsValid
 	}
 
 	return nil

@@ -5,7 +5,7 @@ package nightscout
 
 import site "nighttroop.t1d.nz/data/sql/site"
 
-func ActivityToCreate(source Activity, context CreateContext) site.CreateActivityParams {
+func ActivityToCreate(source Activity, context ConverterContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
 	siteCreateActivityParams.ID = AssignID()
 	if source.Name != nil {
@@ -49,7 +49,7 @@ func ActivityToCreate(source Activity, context CreateContext) site.CreateActivit
 	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateActivityParams
 }
-func DeviceStatusToCreateDeviceReport(source DeviceStatus, context CreateContext) site.CreateDeviceReportParams {
+func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterContext) site.CreateDeviceReportParams {
 	var siteCreateDeviceReportParams site.CreateDeviceReportParams
 	siteCreateDeviceReportParams.ID = AssignID()
 	if source.UploaderBattery != nil {
@@ -74,7 +74,7 @@ func DeviceStatusToCreateDeviceReport(source DeviceStatus, context CreateContext
 	siteCreateDeviceReportParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateDeviceReportParams
 }
-func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadingParams {
+func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
 	siteCreateGlucoseReadingParams.ID = AssignID()
 	if source.Reading != nil {
@@ -101,7 +101,7 @@ func EntryToCreate(source Entry, context CreateContext) site.CreateGlucoseReadin
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams
 }
-func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParams {
+func FoodToCreate(source Food, context ConverterContext) site.CreateFoodPresetParams {
 	var siteCreateFoodPresetParams site.CreateFoodPresetParams
 	siteCreateFoodPresetParams.ID = AssignID()
 	if source.Name != nil {
@@ -152,7 +152,7 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParam
 	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodPresetParams
 }
-func PartialProfileStoreToCreate(source ProfileStore, context CreateContext) site.CreateProfilePresetParams {
+func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) site.CreateProfilePresetParams {
 	var siteCreateProfilePresetParams site.CreateProfilePresetParams
 	siteCreateProfilePresetParams.ID = AssignID()
 	siteCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
@@ -172,327 +172,4 @@ func PartialProfileStoreToCreate(source ProfileStore, context CreateContext) sit
 	}
 	siteCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateProfilePresetParams
-}
-func TreatmentToCreateActivity(source Treatment, context CreateContext) site.CreateActivityParams {
-	var siteCreateActivityParams site.CreateActivityParams
-	siteCreateActivityParams.ID = AssignID()
-	if source.Name != nil {
-		xstring := ShortStringToString(*source.Name)
-		siteCreateActivityParams.Name = &xstring
-	}
-	if source.ActivityType != nil {
-		siteCreateActivityParams.ActivityType = ShortStringToString(*source.ActivityType)
-	}
-	if source.Duration != nil {
-		xint64 := FlexibleInt64ToInt64(*source.Duration)
-		siteCreateActivityParams.DurationMinutes = &xint64
-	}
-	if source.Calories != nil {
-		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		siteCreateActivityParams.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		siteCreateActivityParams.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		siteCreateActivityParams.HeartRate = &xint644
-	}
-	siteCreateActivityParams.OccurredAt = OrNow(source.Date)
-	if source.UtcOffsetMinutes != nil {
-		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateActivityParams.UtcOffsetMinutes = &xint645
-	}
-	pString := source.RawJsonData
-	siteCreateActivityParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		siteCreateActivityParams.CreatedByAppName = &xstring2
-	}
-	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		siteCreateActivityParams.CreatedByDeviceName = &xstring3
-	}
-	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateActivityParams
-}
-func TreatmentToCreateComponentEvent(source Treatment, context CreateContext) site.CreateComponentEventParams {
-	var siteCreateComponentEventParams site.CreateComponentEventParams
-	siteCreateComponentEventParams.ID = AssignID()
-	if source.EventType != nil {
-		siteCreateComponentEventParams.EventType = string(*source.EventType)
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateComponentEventParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateComponentEventParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateComponentEventParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateComponentEventParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateComponentEventParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateComponentEventParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateComponentEventParams
-}
-func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.CreateEventGroupParams {
-	var siteCreateEventGroupParams site.CreateEventGroupParams
-	siteCreateEventGroupParams.ID = AssignID()
-	if source.EventType != nil {
-		siteCreateEventGroupParams.GroupType = string(*source.EventType)
-	}
-	siteCreateEventGroupParams.OccurredAt = OrNow(source.Date)
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
-	}
-	pString := source.RawJsonData
-	siteCreateEventGroupParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateEventGroupParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateEventGroupParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateEventGroupParams
-}
-func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.CreateFoodIntakeParams {
-	var siteCreateFoodIntakeParams site.CreateFoodIntakeParams
-	siteCreateFoodIntakeParams.ID = AssignID()
-	if source.Name != nil {
-		xstring := ShortStringToString(*source.Name)
-		siteCreateFoodIntakeParams.Name = &xstring
-	}
-	if source.Category != nil {
-		xstring2 := ShortStringToString(*source.Category)
-		siteCreateFoodIntakeParams.Category = &xstring2
-	}
-	if source.Subcategory != nil {
-		xstring3 := ShortStringToString(*source.Subcategory)
-		siteCreateFoodIntakeParams.Subcategory = &xstring3
-	}
-	if source.Carbs != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteCreateFoodIntakeParams.Carbs = &xfloat64
-	}
-	if source.Fat != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteCreateFoodIntakeParams.Fat = &xfloat642
-	}
-	if source.Protein != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteCreateFoodIntakeParams.Protein = &xfloat643
-	}
-	if source.Fibre != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteCreateFoodIntakeParams.Fibre = &xfloat644
-	}
-	if source.Energy != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteCreateFoodIntakeParams.Energy = &xfloat645
-	}
-	if source.Portions != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.Portions)
-		siteCreateFoodIntakeParams.Portions = &xfloat646
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateFoodIntakeParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateFoodIntakeParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateFoodIntakeParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring4 := ShortStringToString(*source.App)
-		siteCreateFoodIntakeParams.CreatedByAppName = &xstring4
-	}
-	if source.Device != nil {
-		xstring5 := ShortStringToString(*source.Device)
-		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring5
-	}
-	siteCreateFoodIntakeParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateFoodIntakeParams
-}
-func TreatmentToCreateGlucoseReading(source Treatment, context CreateContext) site.CreateGlucoseReadingParams {
-	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
-	siteCreateGlucoseReadingParams.ID = AssignID()
-	if source.Glucose != nil {
-		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Glucose)
-	}
-	if source.GlucoseType != nil {
-		siteCreateGlucoseReadingParams.ReadingType = string(*source.GlucoseType)
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateGlucoseReadingParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateGlucoseReadingParams
-}
-func TreatmentToCreateInsulinDose(source Treatment, context CreateContext) site.CreateInsulinDoseParams {
-	var siteCreateInsulinDoseParams site.CreateInsulinDoseParams
-	siteCreateInsulinDoseParams.ID = AssignID()
-	if source.Insulin != nil {
-		siteCreateInsulinDoseParams.Dose = FlexibleFloat64ToFloat64(*source.Insulin)
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateInsulinDoseParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateInsulinDoseParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateInsulinDoseParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateInsulinDoseParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateInsulinDoseParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateInsulinDoseParams
-}
-func TreatmentToCreateNote(source Treatment, context CreateContext) site.CreateNoteParams {
-	var siteCreateNoteParams site.CreateNoteParams
-	siteCreateNoteParams.ID = AssignID()
-	if source.Notes != nil {
-		siteCreateNoteParams.Content = string(*source.Notes)
-	}
-	if source.Reason != nil {
-		xstring := ShortStringToString(*source.Reason)
-		siteCreateNoteParams.Reason = &xstring
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateNoteParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateNoteParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateNoteParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		siteCreateNoteParams.CreatedByAppName = &xstring2
-	}
-	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		siteCreateNoteParams.CreatedByDeviceName = &xstring3
-	}
-	siteCreateNoteParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateNoteParams
-}
-func TreatmentToCreateProfileSwitch(source Treatment, context CreateContext) site.CreateProfileSwitchParams {
-	var siteCreateProfileSwitchParams site.CreateProfileSwitchParams
-	siteCreateProfileSwitchParams.ID = AssignID()
-	if source.Name != nil {
-		siteCreateProfileSwitchParams.Name = ShortStringToString(*source.Name)
-	}
-	if source.Duration != nil {
-		siteCreateProfileSwitchParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
-	}
-	if source.Percentage != nil {
-		siteCreateProfileSwitchParams.Percent = FlexibleFloat64ToFloat64(*source.Percentage)
-	}
-	if source.Units != nil {
-		xstring := string(*source.Units)
-		siteCreateProfileSwitchParams.Units = &xstring
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateProfileSwitchParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateProfileSwitchParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		siteCreateProfileSwitchParams.CreatedByAppName = &xstring2
-	}
-	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring3
-	}
-	siteCreateProfileSwitchParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateProfileSwitchParams
-}
-func TreatmentToCreateTempBasal(source Treatment, context CreateContext) site.CreateTempBasalParams {
-	var siteCreateTempBasalParams site.CreateTempBasalParams
-	siteCreateTempBasalParams.ID = AssignID()
-	if source.Duration != nil {
-		siteCreateTempBasalParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
-	}
-	if source.Absolute != nil {
-		siteCreateTempBasalParams.Absolute = FlexibleFloat64ToFloat64(*source.Absolute)
-	}
-	if source.Percentage != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Percentage)
-		siteCreateTempBasalParams.Percent = &xfloat64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateTempBasalParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateTempBasalParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateTempBasalParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateTempBasalParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateTempBasalParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateTempBasalParams
-}
-func TreatmentToCreateTempTarget(source Treatment, context CreateContext) site.CreateTempTargetParams {
-	var siteCreateTempTargetParams site.CreateTempTargetParams
-	siteCreateTempTargetParams.ID = AssignID()
-	if source.Duration != nil {
-		siteCreateTempTargetParams.DurationMinutes = FlexibleInt64ToInt64(*source.Duration)
-	}
-	if source.TargetTop != nil {
-		siteCreateTempTargetParams.HighTarget = FlexibleFloat64ToFloat64(*source.TargetTop)
-	}
-	if source.TargetBottom != nil {
-		siteCreateTempTargetParams.LowTarget = FlexibleFloat64ToFloat64(*source.TargetBottom)
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateTempTargetParams.UtcOffsetMinutes = &xint64
-	}
-	siteCreateTempTargetParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	siteCreateTempTargetParams.RawJsonData = &pString
-	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateTempTargetParams.CreatedByAppName = &xstring
-	}
-	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateTempTargetParams.CreatedByDeviceName = &xstring2
-	}
-	siteCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateTempTargetParams
 }

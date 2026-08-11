@@ -29,7 +29,7 @@ func (c ProfileCollection) Convert(dr *site.ProfilePresetBundle) nsutils.Record 
 	return c.converter(dr)
 }
 
-func (c ProfileCollection) ValidateChange(nsModel nightscout.ProfileStore, dbModel *site.ProfilePresetBundle) *nsutils.HTTPError {
+func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *site.ProfilePresetBundle) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (c ProfileCollection) ValidateChange(nsModel nightscout.ProfileStore, dbMod
 	return nil
 }
 
-func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.CreateContext, overrideIdentifier *string) (*site.ProfilePresetBundle, error) {
+func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.ProfilePresetBundle, error) {
 	manyCreateParams := NightscoutToDBCreate(nsModel, cc)
 
 	ret := site.ProfilePresetBundle([]*site.ProfilePreset{})
@@ -153,7 +153,7 @@ func DBToNightscout(source *site.ProfilePresetBundle) nightscout.ProfileStore {
 // NIGHTSCOUT TO DB
 ///////
 
-func NightscoutToDBCreate(source nightscout.ProfileStore, ctx nightscout.CreateContext) []site.CreateProfilePresetParams {
+func NightscoutToDBCreate(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []site.CreateProfilePresetParams {
 	createParams := []site.CreateProfilePresetParams{}
 	profileStoreID := nightscout.AssignID()
 	for name, profile := range source.Store {

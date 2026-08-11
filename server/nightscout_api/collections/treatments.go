@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -48,7 +49,14 @@ func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle) nsutils.Record 
 	return c.converter(dr)
 }
 
-func (c TreatmentCollection) ValidateChange(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
+func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
+	// Validate the input
+	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
+		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
+		return nsutils.BadDataBodyError
+	}
+
+	// Validate the change
 	if dbModel == nil {
 		return nil
 	}
@@ -61,34 +69,31 @@ func (c TreatmentCollection) ValidateChange(nsModel nightscout.Treatment, dbMode
 	return nil
 }
 
-func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.CreateContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
-	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
-		slog.Error("treatment event type is nil")
-		return nil, nsutils.BadDataBodyError
-	}
+func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
 
-	createParams := TreatmentEventGroupCreate(ctx, cc, nsModel)
+	createParams := TreatmentEventGroupBundle(ctx, nsModel)
 
 	if overrideIdentifier != nil {
 		createParams.EventGroup.ID = *overrideIdentifier
 	}
 
-	if createParams.GlucoseReading != nil {
-		createParams.GlucoseReading.ReadingType = "sgv"
-	}
-	if createParams.InsulinDose != nil {
-		createParams.InsulinDose.DoseType = "bolus"
-	}
-
-	dbModel, err := createEventGroup(ctx, q, createParams)
+	dbModel, err := createUpdateEventGroup(ctx, q, createParams, cc)
 	if err != nil {
 		return nil, err
 	}
 
-	if dbModel == nil || dbModel.EventGroup.ID == "" {
-		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", createParams)
+	newEventGroup, err := q.CreateEventGroup(ctx, nightscout.EventGroupCreate(createParams.EventGroup, cc))
+	if err != nil {
+		slog.Error("failed to create event group in database", "error", err, "createParams", createParams)
 		return nil, err
 	}
+
+	if newEventGroup == nil || newEventGroup.ID == "" {
+		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", createParams)
+		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
+	}
+
+	dbModel.EventGroup = *newEventGroup
 
 	return dbModel, nil
 }
@@ -102,25 +107,45 @@ func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, ide
 	return &egb, nil
 }
 
-func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, uc nightscout.UpdateContext) (*site.EventGroupsBundle, error) {
-	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
-		slog.Error("treatment event type is nil")
-		return nil, nsutils.BadDataBodyError
-	}
+func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *site.EventGroupsBundle, uc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
+	/////
+	// Delete all related models
+	/////
 
-	bundle := TreatmentEventGroupUpdate(ctx, uc, nsModel)
-	ret, err := updateEventGroup(ctx, q, bundle)
-	if err != nil {
-		slog.Error("failed in EventGroupUpdate to update event group in database", "error", err, "bundle", bundle)
-		return nil, nsutils.ErrInternal
-	}
+	/////
+	// Create the new models using the patches merged with existing values
+	//////
 
-	if ret == nil || ret.EventGroup.ID == "" {
-		slog.Error("failed in EventGroupUpdate to update event group in database, EventGroup is nil", "bundle", bundle)
-		return nil, nsutils.ErrInternal
-	}
+	/////
+	// Update Event Group Referencing the new models
+	/////
 
-	return ret, nil
+	// createSubsParams := TreatmentEventGroupCreate(ctx, uc, nsModel)
+
+	// updateParams.EventGroup.ID = identifier
+	// eventGroup := nightscout.TreatmentToUpdateEventGroup(treatment, cc)
+
+	// // Finaly Update the EventGroup
+	// dbModel, err := q.UpdateEventGroup(ctx, bundle.EventGroup)
+	// if err != nil {
+	// 	slog.Error("failed in updateEventGroup to update event group in database", "error", err, "updateParams", bundle.EventGroup)
+	// 	return nil, err
+	// }
+	// if dbModel == nil {
+	// 	slog.Error("failed in updateEventGroup to update event group in database, dbModel is nil", "updateParams", bundle.EventGroup)
+	// 	return nil, err
+	// }
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// if dbModel == nil || dbModel.EventGroup.ID == "" {
+	// 	slog.Error("failed to update event group in database, EventGroup is nil")
+	// 	return nil, err
+	// }
+
+	return dbModel, nil
 }
 
 func (c TreatmentCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
@@ -177,10 +202,6 @@ func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.Sit
 	return MetaGet(c, ctx, siteContext, identifier)
 }
 
-func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch)
-}
-
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	treatments, rerr := EventGroupSearch(ctx, siteContext, query)
 	if rerr != nil {
@@ -203,318 +224,12 @@ func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils
 	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
 }
 
-func TreatmentEventGroupCreate(ctx context.Context, cc nightscout.CreateContext, treatment nightscout.Treatment) site.CreateEventGroupBundle {
-	eventGroup := nightscout.TreatmentToCreateEventGroup(treatment, cc)
-
-	glucoseReading := nightscout.TreatmentToCreateGlucoseReading(treatment, cc)
-	insulinDose := nightscout.TreatmentToCreateInsulinDose(treatment, cc)
-	foodIntake := nightscout.TreatmentToCreateFoodIntake(treatment, cc)
-	tempBasal := nightscout.TreatmentToCreateTempBasal(treatment, cc)
-	tempTarget := nightscout.TreatmentToCreateTempTarget(treatment, cc)
-	profileSwitch := nightscout.TreatmentToCreateProfileSwitch(treatment, cc)
-	componentEvent := nightscout.TreatmentToCreateComponentEvent(treatment, cc)
-	activity := nightscout.TreatmentToCreateActivity(treatment, cc)
-	note := nightscout.TreatmentToCreateNote(treatment, cc)
-
-	ret := site.CreateEventGroupBundle{EventGroup: eventGroup}
-	if glucoseReading.Reading != 0 {
-		ret.GlucoseReading = &glucoseReading
-	}
-
-	if insulinDose.Dose != 0 {
-		ret.InsulinDose = &insulinDose
-	}
-
-	switch *treatment.EventType {
-	case nightscout.Announcement:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.BGCheck:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			Note:           &note,
-		}
-	case nightscout.BolusWizard:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.CarbCorrection:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			FoodIntake: &foodIntake,
-			Note:       &note,
-		}
-	case nightscout.ComboBolus:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.CorrectionBolus:
-		return site.CreateEventGroupBundle{
-			EventGroup:  eventGroup,
-			InsulinDose: &insulinDose,
-			Note:        &note,
-		}
-	case nightscout.DADAlert:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.Exercise:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			Activity:   &activity,
-			Note:       &note,
-		}
-	case nightscout.InsulinChange:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.MealBolus:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.Note:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.OpenAPSOffline:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.ProfileSwitch:
-		return site.CreateEventGroupBundle{
-			EventGroup:    eventGroup,
-			ProfileSwitch: &profileSwitch,
-			Note:          &note,
-		}
-	case nightscout.PumpBatteryChange:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.Question:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.SensorChange:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.SensorStart:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.SiteChange:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.SnackBolus:
-		return site.CreateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.TempBasal:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			TempBasal:  &tempBasal,
-			Note:       &note,
-		}
-	case nightscout.TemporaryTarget:
-		return site.CreateEventGroupBundle{
-			EventGroup: eventGroup,
-			TempTarget: &tempTarget,
-			Note:       &note,
-		}
-	}
-
-	return site.CreateEventGroupBundle{}
-}
-
-func TreatmentEventGroupUpdate(ctx context.Context, cc nightscout.UpdateContext, treatment nightscout.Treatment) site.UpdateEventGroupBundle {
-	eventGroup := nightscout.TreatmentToUpdateEventGroup(treatment, cc)
-
-	glucoseReading := nightscout.TreatmentToUpdateGlucoseReading(treatment, cc)
-	insulinDose := nightscout.TreatmentToUpdateInsulinDose(treatment, cc)
-	foodIntake := nightscout.TreatmentToUpdateFoodIntake(treatment, cc)
-	tempBasal := nightscout.TreatmentToUpdateTempBasal(treatment, cc)
-	tempTarget := nightscout.TreatmentToUpdateTempTarget(treatment, cc)
-	profileSwitch := nightscout.TreatmentToUpdateProfileSwitch(treatment, cc)
-	componentEvent := nightscout.TreatmentToUpdateComponentEvent(treatment, cc)
-	activity := nightscout.TreatmentToUpdateActivity(treatment, cc)
-	note := nightscout.TreatmentToUpdateNote(treatment, cc)
-
-	switch *treatment.EventType {
-	case nightscout.Announcement:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.BGCheck:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			Note:           &note,
-		}
-	case nightscout.BolusWizard:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.CarbCorrection:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			FoodIntake: &foodIntake,
-			Note:       &note,
-		}
-	case nightscout.ComboBolus:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.CorrectionBolus:
-		return site.UpdateEventGroupBundle{
-			EventGroup:  eventGroup,
-			InsulinDose: &insulinDose,
-			Note:        &note,
-		}
-	case nightscout.DADAlert:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.Exercise:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			Activity:   &activity,
-			Note:       &note,
-		}
-	case nightscout.InsulinChange:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.MealBolus:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.Note:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.OpenAPSOffline:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.ProfileSwitch:
-		return site.UpdateEventGroupBundle{
-			EventGroup:    eventGroup,
-			ProfileSwitch: &profileSwitch,
-			Note:          &note,
-		}
-	case nightscout.PumpBatteryChange:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.Question:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			Note:       &note,
-		}
-	case nightscout.SensorChange:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.SensorStart:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.SiteChange:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			ComponentEvent: &componentEvent,
-			Note:           &note,
-		}
-	case nightscout.SnackBolus:
-		return site.UpdateEventGroupBundle{
-			EventGroup:     eventGroup,
-			GlucoseReading: &glucoseReading,
-			InsulinDose:    &insulinDose,
-			FoodIntake:     &foodIntake,
-			Note:           &note,
-		}
-	case nightscout.TempBasal:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			TempBasal:  &tempBasal,
-			Note:       &note,
-		}
-	case nightscout.TemporaryTarget:
-		return site.UpdateEventGroupBundle{
-			EventGroup: eventGroup,
-			TempTarget: &tempTarget,
-			Note:       &note,
-		}
-	}
-
-	return site.UpdateEventGroupBundle{}
+func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	// We will always repalce because it is way harder otherwise
+	return MetaPatch(c, ctx, siteContext, identifier, patch)
 }
 
 func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.EventGroupsBundle, *nsutils.HTTPError) {
-	if query.TypeIn == nil {
-		// TODO list all supportted types so we can limit to those that NS Treatment expects
-	}
-
 	eventGroups, rerr := siteContext.SiteDB.Queries.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
 	if rerr != nil {
 		slog.Error("failed to query event groups from database", "error", rerr)
@@ -528,6 +243,7 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 			res = append(res, &egb)
 		}
 	}
+
 	return res, nil
 
 }
@@ -535,195 +251,191 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 // //////////////////////
 // Private Methods
 // ///////////////////////
-func updateEventGroup(ctx context.Context, q *site.Queries, bundle site.UpdateEventGroupBundle) (*site.EventGroupsBundle, error) {
+
+// createUpdateEventGroup goes through an EventGroupsBundle if the EventGroup has an ID it will update, if not it will attempt to create
+func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle site.EventGroupsBundle, cc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
 	ret := site.EventGroupsBundle{}
 
 	if bundle.GlucoseReading != nil {
-		dbModel, err := q.UpdateGlucoseReading(ctx, *bundle.GlucoseReading)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update glucose reading in database", "error", err, "updateParams", *bundle.GlucoseReading)
-			return nil, err
+		if bundle.EventGroup.GlucoseReadingID == nil {
+			bundle.EventGroup.GlucoseReadingID = &bundle.GlucoseReading.ID
+			dbModel, err := q.CreateGlucoseReading(ctx, nightscout.GlucoseReadingCreate(*bundle.GlucoseReading, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create glucose reading in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.GlucoseReading = dbModel
+		} else {
+			bundle.EventGroup.GlucoseReadingID = &bundle.GlucoseReading.ID
+			dbModel, err := q.UpdateGlucoseReading(ctx, nightscout.GlucoseReadingUpdate(*bundle.GlucoseReading, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update glucose reading in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.GlucoseReading = dbModel
 		}
-		ret.GlucoseReading = dbModel
 	}
+
 	if bundle.InsulinDose != nil {
-		dbModel, err := q.UpdateInsulinDose(ctx, *bundle.InsulinDose)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update insulin dose in database", "error", err, "updateParams", *bundle.InsulinDose)
-			return nil, err
+		if bundle.EventGroup.InsulinDoseID == nil {
+			bundle.EventGroup.InsulinDoseID = &bundle.InsulinDose.ID
+			dbModel, err := q.CreateInsulinDose(ctx, nightscout.InsulinDoseCreate(*bundle.InsulinDose, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create insulin dose in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.InsulinDose = dbModel
+		} else {
+			bundle.EventGroup.InsulinDoseID = &bundle.InsulinDose.ID
+			dbModel, err := q.UpdateInsulinDose(ctx, nightscout.InsulinDoseUpdate(*bundle.InsulinDose, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update insulin dose in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.InsulinDose = dbModel
 		}
-		ret.InsulinDose = dbModel
+
 	}
+
 	if bundle.FoodIntake != nil {
-		dbModel, err := q.UpdateFoodIntake(ctx, *bundle.FoodIntake)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update food intake in database", "error", err, "updateParams", *bundle.FoodIntake)
-			return nil, err
+		if bundle.EventGroup.FoodIntakeID == nil {
+			bundle.EventGroup.FoodIntakeID = &bundle.FoodIntake.ID
+			dbModel, err := q.CreateFoodIntake(ctx, nightscout.FoodIntakeCreate(*bundle.FoodIntake, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create food intake in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.FoodIntake = dbModel
+		} else {
+			bundle.EventGroup.FoodIntakeID = &bundle.FoodIntake.ID
+			dbModel, err := q.UpdateFoodIntake(ctx, nightscout.FoodIntakeUpdate(*bundle.FoodIntake, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update food intake in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.FoodIntake = dbModel
 		}
-		ret.FoodIntake = dbModel
 	}
+
 	if bundle.TempBasal != nil {
-		dbModel, err := q.UpdateTempBasal(ctx, *bundle.TempBasal)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update temp basal in database", "error", err, "updateParams", *bundle.TempBasal)
-			return nil, err
+		if bundle.EventGroup.TempBasalID == nil {
+			bundle.EventGroup.TempBasalID = &bundle.TempBasal.ID
+			dbModel, err := q.CreateTempBasal(ctx, nightscout.TempBasalCreate(*bundle.TempBasal, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create temp basal in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.TempBasal = dbModel
+		} else {
+			bundle.EventGroup.TempBasalID = &bundle.TempBasal.ID
+			dbModel, err := q.UpdateTempBasal(ctx, nightscout.TempBasalUpdate(*bundle.TempBasal, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update temp basal in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.TempBasal = dbModel
 		}
-		ret.TempBasal = dbModel
 	}
+
 	if bundle.TempTarget != nil {
-		dbModel, err := q.UpdateTempTarget(ctx, *bundle.TempTarget)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update temp target in database", "error", err, "updateParams", *bundle.TempTarget)
-			return nil, err
+		if bundle.EventGroup.TempTargetID == nil {
+			bundle.EventGroup.TempTargetID = &bundle.TempTarget.ID
+			dbModel, err := q.CreateTempTarget(ctx, nightscout.TempTargetCreate(*bundle.TempTarget, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create temp target in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.TempTarget = dbModel
+		} else {
+			bundle.EventGroup.TempTargetID = &bundle.TempTarget.ID
+			dbModel, err := q.UpdateTempTarget(ctx, nightscout.TempTargetUpdate(*bundle.TempTarget, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update temp target in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.TempTarget = dbModel
 		}
-		ret.TempTarget = dbModel
 	}
+
 	if bundle.ProfileSwitch != nil {
-		dbModel, err := q.UpdateProfileSwitch(ctx, *bundle.ProfileSwitch)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update profile switch in database", "error", err, "updateParams", *bundle.ProfileSwitch)
-			return nil, err
+		if bundle.EventGroup.ProfileSwitchID == nil {
+			bundle.EventGroup.ProfileSwitchID = &bundle.ProfileSwitch.ID
+			dbModel, err := q.CreateProfileSwitch(ctx, nightscout.ProfileSwitchCreate(*bundle.ProfileSwitch, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create profile switch in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.ProfileSwitch = dbModel
+		} else {
+			bundle.EventGroup.ProfileSwitchID = &bundle.ProfileSwitch.ID
+			dbModel, err := q.UpdateProfileSwitch(ctx, nightscout.ProfileSwitchUpdate(*bundle.ProfileSwitch, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update profile switch in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.ProfileSwitch = dbModel
 		}
-		ret.ProfileSwitch = dbModel
 	}
+
 	if bundle.ComponentEvent != nil {
-		dbModel, err := q.UpdateComponentEvent(ctx, *bundle.ComponentEvent)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update component event in database", "error", err, "updateParams", *bundle.ComponentEvent)
-			return nil, err
+		if bundle.EventGroup.ComponentEventID == nil {
+			bundle.EventGroup.ComponentEventID = &bundle.ComponentEvent.ID
+			dbModel, err := q.CreateComponentEvent(ctx, nightscout.ComponentEventCreate(*bundle.ComponentEvent, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create component event in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.ComponentEvent = dbModel
+		} else {
+			bundle.EventGroup.ComponentEventID = &bundle.ComponentEvent.ID
+			dbModel, err := q.UpdateComponentEvent(ctx, nightscout.ComponentEventUpdate(*bundle.ComponentEvent, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update component event in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.ComponentEvent = dbModel
 		}
-		ret.ComponentEvent = dbModel
 	}
+
 	if bundle.Activity != nil {
-		dbModel, err := q.UpdateActivity(ctx, *bundle.Activity)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update activity in database", "error", err, "updateParams", *bundle.Activity)
-			return nil, err
+		if bundle.EventGroup.ActivityID == nil {
+			bundle.EventGroup.ActivityID = &bundle.Activity.ID
+			dbModel, err := q.CreateActivity(ctx, nightscout.ActivityCreate(*bundle.Activity, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create activity in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.Activity = dbModel
+		} else {
+			bundle.EventGroup.ActivityID = &bundle.Activity.ID
+			dbModel, err := q.UpdateActivity(ctx, nightscout.ActivityUpdate(*bundle.Activity, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update activity in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.Activity = dbModel
 		}
-		ret.Activity = dbModel
 	}
+
 	if bundle.Note != nil {
-		dbModel, err := q.UpdateNote(ctx, *bundle.Note)
-		if err != nil || dbModel == nil {
-			slog.Error("failed in updateEventGroup to update note in database", "error", err, "updateParams", *bundle.Note)
-			return nil, err
+		if bundle.EventGroup.NoteID == nil {
+			bundle.EventGroup.NoteID = &bundle.Note.ID
+			dbModel, err := q.CreateNote(ctx, nightscout.NoteCreate(*bundle.Note, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.Note = dbModel
+		} else {
+			bundle.EventGroup.NoteID = &bundle.Note.ID
+			dbModel, err := q.UpdateNote(ctx, nightscout.NoteUpdate(*bundle.Note, cc))
+			if err != nil || dbModel == nil {
+				slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
+				return nil, err
+			}
+			ret.Note = dbModel
 		}
-		ret.Note = dbModel
 	}
-
-	// Finaly Update the EventGroup
-	dbModel, err := q.UpdateEventGroup(ctx, bundle.EventGroup)
-	if err != nil {
-		slog.Error("failed in updateEventGroup to update event group in database", "error", err, "updateParams", bundle.EventGroup)
-		return nil, err
-	}
-	if dbModel == nil {
-		slog.Error("failed in updateEventGroup to update event group in database, dbModel is nil", "updateParams", bundle.EventGroup)
-		return nil, err
-	}
-	ret.EventGroup = *dbModel
-
-	return &ret, nil
-}
-
-func createEventGroup(ctx context.Context, q *site.Queries, bundle site.CreateEventGroupBundle) (*site.EventGroupsBundle, error) {
-	ret := site.EventGroupsBundle{}
-
-	if bundle.GlucoseReading != nil {
-		bundle.EventGroup.GlucoseReadingID = &bundle.GlucoseReading.ID
-		dbModel, err := q.CreateGlucoseReading(ctx, *bundle.GlucoseReading)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create glucose reading in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.GlucoseReading = dbModel
-	}
-	if bundle.InsulinDose != nil {
-		bundle.EventGroup.InsulinDoseID = &bundle.InsulinDose.ID
-		dbModel, err := q.CreateInsulinDose(ctx, *bundle.InsulinDose)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create insulin dose in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.InsulinDose = dbModel
-	}
-	if bundle.FoodIntake != nil {
-		bundle.EventGroup.FoodIntakeID = &bundle.FoodIntake.ID
-		dbModel, err := q.CreateFoodIntake(ctx, *bundle.FoodIntake)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create food intake in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.FoodIntake = dbModel
-	}
-	if bundle.TempBasal != nil {
-		bundle.EventGroup.TempBasalID = &bundle.TempBasal.ID
-		dbModel, err := q.CreateTempBasal(ctx, *bundle.TempBasal)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create temp basal in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.TempBasal = dbModel
-	}
-	if bundle.TempTarget != nil {
-		bundle.EventGroup.TempTargetID = &bundle.TempTarget.ID
-		dbModel, err := q.CreateTempTarget(ctx, *bundle.TempTarget)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create temp target in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.TempTarget = dbModel
-	}
-	if bundle.ProfileSwitch != nil {
-		bundle.EventGroup.ProfileSwitchID = &bundle.ProfileSwitch.ID
-		dbModel, err := q.CreateProfileSwitch(ctx, *bundle.ProfileSwitch)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create profile switch in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.ProfileSwitch = dbModel
-	}
-	if bundle.ComponentEvent != nil {
-		bundle.EventGroup.ComponentEventID = &bundle.ComponentEvent.ID
-		dbModel, err := q.CreateComponentEvent(ctx, *bundle.ComponentEvent)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create component event in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.ComponentEvent = dbModel
-	}
-	if bundle.Activity != nil {
-		bundle.EventGroup.ActivityID = &bundle.Activity.ID
-		dbModel, err := q.CreateActivity(ctx, *bundle.Activity)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create activity in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.Activity = dbModel
-	}
-	if bundle.Note != nil {
-		bundle.EventGroup.NoteID = &bundle.Note.ID
-		dbModel, err := q.CreateNote(ctx, *bundle.Note)
-		if err != nil || dbModel == nil {
-			slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
-			return nil, err
-		}
-		ret.Note = dbModel
-	}
-
-	// Finaly Create the EventGroup
-	dbModel, err := q.CreateEventGroup(ctx, bundle.EventGroup)
-	if err != nil {
-		slog.Error("failed to create event group in database", "error", err, "dbModel", dbModel)
-		return nil, err
-	}
-
-	if dbModel == nil {
-		slog.Error("failed to create event group in database, dbModel is nil", "bundle", bundle)
-		return nil, nsutils.ErrInternal
-	}
-
-	ret.EventGroup = *dbModel
 
 	return &ret, nil
 }
@@ -866,4 +578,183 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	}
 
 	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
+}
+
+func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) site.EventGroupsBundle {
+	eventGroup := nightscout.TreatmentToEventGroup(treatment)
+
+	glucoseReading := ptr(nightscout.TreatmentToGlucoseReading(treatment))
+	insulinDose := ptr(nightscout.TreatmentToInsulinDose(treatment))
+	foodIntake := ptr(nightscout.TreatmentToFoodIntake(treatment))
+	tempBasal := ptr(nightscout.TreatmentToTempBasal(treatment))
+	tempTarget := ptr(nightscout.TreatmentToTempTarget(treatment))
+	profileSwitch := ptr(nightscout.TreatmentToProfileSwitch(treatment))
+	componentEvent := ptr(nightscout.TreatmentToComponentEvent(treatment))
+	activity := ptr(nightscout.TreatmentToActivity(treatment))
+	note := ptr(nightscout.TreatmentToNote(treatment))
+
+	///////
+	// VALIDATE THE CREATED VALUES
+	///////
+
+	if glucoseReading.ReadingType == "Sensor" {
+		glucoseReading.ReadingType = "sgv"
+	}
+
+	insulinDose.DoseType = "bolus"
+
+	/////
+	// Filter the values
+	/////
+
+	if glucoseReading.Reading == 0 {
+		glucoseReading = nil
+	}
+
+	if insulinDose.Dose == 0 {
+		insulinDose = nil
+	}
+
+	if note.Content == "" || note.Reason == nil {
+		note = nil
+	}
+
+	//////
+	// Limit the values to only the ones that are relevant to the event type
+	//////
+
+	switch *treatment.EventType {
+	case nightscout.Announcement:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			Note:       note,
+		}
+	case nightscout.BGCheck:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			Note:           note,
+		}
+	case nightscout.BolusWizard:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			InsulinDose:    insulinDose,
+			FoodIntake:     foodIntake,
+			Note:           note,
+		}
+	case nightscout.CarbCorrection:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			FoodIntake: foodIntake,
+			Note:       note,
+		}
+	case nightscout.ComboBolus:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			InsulinDose:    insulinDose,
+			FoodIntake:     foodIntake,
+			Note:           note,
+		}
+	case nightscout.CorrectionBolus:
+		return site.EventGroupsBundle{
+			EventGroup:  eventGroup,
+			InsulinDose: insulinDose,
+			Note:        note,
+		}
+	case nightscout.DADAlert:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			Note:       note,
+		}
+	case nightscout.Exercise:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			Activity:   activity,
+			Note:       note,
+		}
+	case nightscout.InsulinChange:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+			Note:           note,
+		}
+	case nightscout.MealBolus:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			InsulinDose:    insulinDose,
+			FoodIntake:     foodIntake,
+			Note:           note,
+		}
+	case nightscout.Note:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			Note:       note,
+		}
+	case nightscout.OpenAPSOffline:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+			Note:           note,
+		}
+	case nightscout.ProfileSwitch:
+		return site.EventGroupsBundle{
+			EventGroup:    eventGroup,
+			ProfileSwitch: profileSwitch,
+			Note:          note,
+		}
+	case nightscout.PumpBatteryChange:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+			Note:           note,
+		}
+	case nightscout.Question:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			Note:       note,
+		}
+	case nightscout.SensorChange:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+			Note:           note,
+		}
+	case nightscout.SensorStart:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+			Note:           note,
+		}
+	case nightscout.SiteChange:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+			Note:           note,
+		}
+	case nightscout.SnackBolus:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			InsulinDose:    insulinDose,
+			FoodIntake:     foodIntake,
+			Note:           note,
+		}
+	case nightscout.TempBasal:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			TempBasal:  tempBasal,
+			Note:       note,
+		}
+	case nightscout.TemporaryTarget:
+		return site.EventGroupsBundle{
+			EventGroup: eventGroup,
+			TempTarget: tempTarget,
+			Note:       note,
+		}
+	}
+
+	return site.EventGroupsBundle{EventGroup: eventGroup}
 }

@@ -40,32 +40,6 @@ func (model EventGroupsBundle) GetUtcOffsetMinutes() *int64 {
 	return model.EventGroup.UtcOffsetMinutes
 }
 
-type CreateEventGroupBundle struct {
-	EventGroup     CreateEventGroupParams
-	GlucoseReading *CreateGlucoseReadingParams
-	InsulinDose    *CreateInsulinDoseParams
-	FoodIntake     *CreateFoodIntakeParams
-	TempBasal      *CreateTempBasalParams
-	TempTarget     *CreateTempTargetParams
-	ProfileSwitch  *CreateProfileSwitchParams
-	ComponentEvent *CreateComponentEventParams
-	Activity       *CreateActivityParams
-	Note           *CreateNoteParams
-}
-
-type UpdateEventGroupBundle struct {
-	EventGroup     UpdateEventGroupParams
-	GlucoseReading *UpdateGlucoseReadingParams
-	InsulinDose    *UpdateInsulinDoseParams
-	FoodIntake     *UpdateFoodIntakeParams
-	TempBasal      *UpdateTempBasalParams
-	TempTarget     *UpdateTempTargetParams
-	ProfileSwitch  *UpdateProfileSwitchParams
-	ComponentEvent *UpdateComponentEventParams
-	Activity       *UpdateActivityParams
-	Note           *UpdateNoteParams
-}
-
 type EventGroupsBundle struct {
 	EventGroup     EventGroup
 	GlucoseReading *GlucoseReading

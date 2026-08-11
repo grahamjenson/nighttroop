@@ -96,7 +96,7 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 				fmt.Println()
 				statusCode, output, _, newContext, err := realRequest.ExecuteRequest(router, requestContext)
 				if err != nil {
-					t.Fatalf("failed to execute request: %v", err)
+					t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, realRequest.Method, realRequest.URL)
 				}
 				requestContext = newContext
 				fmt.Println()

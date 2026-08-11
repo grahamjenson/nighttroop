@@ -5,7 +5,7 @@ package nightscout
 
 import site "nighttroop.t1d.nz/data/sql/site"
 
-func ActivityToUpdate(source Activity, context UpdateContext) site.UpdateActivityParams {
+func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActivityParams {
 	var siteUpdateActivityParams site.UpdateActivityParams
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
@@ -45,7 +45,7 @@ func ActivityToUpdate(source Activity, context UpdateContext) site.UpdateActivit
 	}
 	return siteUpdateActivityParams
 }
-func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context UpdateContext) site.UpdateDeviceReportParams {
+func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterContext) site.UpdateDeviceReportParams {
 	var siteUpdateDeviceReportParams site.UpdateDeviceReportParams
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -61,7 +61,7 @@ func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context UpdateContext
 	}
 	return siteUpdateDeviceReportParams
 }
-func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadingParams {
+func EntryToUpdate(source Entry, context ConverterContext) site.UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
 	if source.Reading != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Reading)
@@ -81,7 +81,7 @@ func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadin
 	}
 	return siteUpdateGlucoseReadingParams
 }
-func FoodToUpdate(source Food, context UpdateContext) site.UpdateFoodPresetParams {
+func FoodToUpdate(source Food, context ConverterContext) site.UpdateFoodPresetParams {
 	var siteUpdateFoodPresetParams site.UpdateFoodPresetParams
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
@@ -124,288 +124,4 @@ func FoodToUpdate(source Food, context UpdateContext) site.UpdateFoodPresetParam
 		siteUpdateFoodPresetParams.ID = string(*source.Identifier)
 	}
 	return siteUpdateFoodPresetParams
-}
-func TreatmentToUpdateActivity(source Treatment, context UpdateContext) site.UpdateActivityParams {
-	var siteUpdateActivityParams site.UpdateActivityParams
-	if source.Name != nil {
-		xstring := ShortStringToString(*source.Name)
-		siteUpdateActivityParams.Name = &xstring
-	}
-	if source.ActivityType != nil {
-		xstring2 := ShortStringToString(*source.ActivityType)
-		siteUpdateActivityParams.ActivityType = &xstring2
-	}
-	if source.Duration != nil {
-		xint64 := FlexibleInt64ToInt64(*source.Duration)
-		siteUpdateActivityParams.DurationMinutes = &xint64
-	}
-	if source.Calories != nil {
-		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		siteUpdateActivityParams.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		siteUpdateActivityParams.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		siteUpdateActivityParams.HeartRate = &xint644
-	}
-	if source.Date != nil {
-		xint645 := int64(*source.Date)
-		siteUpdateActivityParams.OccurredAt = &xint645
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint646 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateActivityParams.UtcOffsetMinutes = &xint646
-	}
-	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateActivityParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateActivityParams
-}
-func TreatmentToUpdateComponentEvent(source Treatment, context UpdateContext) site.UpdateComponentEventParams {
-	var siteUpdateComponentEventParams site.UpdateComponentEventParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateComponentEventParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateComponentEventParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateComponentEventParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateComponentEventParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateComponentEventParams
-}
-func TreatmentToUpdateEventGroup(source Treatment, context UpdateContext) site.UpdateEventGroupParams {
-	var siteUpdateEventGroupParams site.UpdateEventGroupParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateEventGroupParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateEventGroupParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateEventGroupParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateEventGroupParams
-}
-func TreatmentToUpdateFoodIntake(source Treatment, context UpdateContext) site.UpdateFoodIntakeParams {
-	var siteUpdateFoodIntakeParams site.UpdateFoodIntakeParams
-	if source.Name != nil {
-		xstring := ShortStringToString(*source.Name)
-		siteUpdateFoodIntakeParams.Name = &xstring
-	}
-	if source.Category != nil {
-		xstring2 := ShortStringToString(*source.Category)
-		siteUpdateFoodIntakeParams.Category = &xstring2
-	}
-	if source.Subcategory != nil {
-		xstring3 := ShortStringToString(*source.Subcategory)
-		siteUpdateFoodIntakeParams.Subcategory = &xstring3
-	}
-	if source.Carbs != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteUpdateFoodIntakeParams.Carbs = &xfloat64
-	}
-	if source.Fat != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteUpdateFoodIntakeParams.Fat = &xfloat642
-	}
-	if source.Protein != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteUpdateFoodIntakeParams.Protein = &xfloat643
-	}
-	if source.Fibre != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteUpdateFoodIntakeParams.Fibre = &xfloat644
-	}
-	if source.Energy != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteUpdateFoodIntakeParams.Energy = &xfloat645
-	}
-	if source.Portions != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.Portions)
-		siteUpdateFoodIntakeParams.Portions = &xfloat646
-	}
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateFoodIntakeParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateFoodIntakeParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateFoodIntakeParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateFoodIntakeParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateFoodIntakeParams
-}
-func TreatmentToUpdateGlucoseReading(source Treatment, context UpdateContext) site.UpdateGlucoseReadingParams {
-	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
-	if source.Glucose != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Glucose)
-		siteUpdateGlucoseReadingParams.Reading = &xfloat64
-	}
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateGlucoseReadingParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateGlucoseReadingParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateGlucoseReadingParams
-}
-func TreatmentToUpdateInsulinDose(source Treatment, context UpdateContext) site.UpdateInsulinDoseParams {
-	var siteUpdateInsulinDoseParams site.UpdateInsulinDoseParams
-	if source.Insulin != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Insulin)
-		siteUpdateInsulinDoseParams.Dose = &xfloat64
-	}
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateInsulinDoseParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateInsulinDoseParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateInsulinDoseParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateInsulinDoseParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateInsulinDoseParams
-}
-func TreatmentToUpdateNote(source Treatment, context UpdateContext) site.UpdateNoteParams {
-	var siteUpdateNoteParams site.UpdateNoteParams
-	if source.Notes != nil {
-		xstring := string(*source.Notes)
-		siteUpdateNoteParams.Content = &xstring
-	}
-	if source.Reason != nil {
-		xstring2 := ShortStringToString(*source.Reason)
-		siteUpdateNoteParams.Reason = &xstring2
-	}
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateNoteParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateNoteParams.UtcOffsetMinutes = &xint642
-	}
-	siteUpdateNoteParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateNoteParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateNoteParams
-}
-func TreatmentToUpdateProfile(source Treatment, context UpdateContext) site.UpdateProfilePresetParams {
-	var siteUpdateProfilePresetParams site.UpdateProfilePresetParams
-	if source.Name != nil {
-		xstring := ShortStringToString(*source.Name)
-		siteUpdateProfilePresetParams.Name = &xstring
-	}
-	siteUpdateProfilePresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateProfilePresetParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateProfilePresetParams
-}
-func TreatmentToUpdateProfileSwitch(source Treatment, context UpdateContext) site.UpdateProfileSwitchParams {
-	var siteUpdateProfileSwitchParams site.UpdateProfileSwitchParams
-	if source.Name != nil {
-		xstring := ShortStringToString(*source.Name)
-		siteUpdateProfileSwitchParams.Name = &xstring
-	}
-	if source.Duration != nil {
-		xint64 := FlexibleInt64ToInt64(*source.Duration)
-		siteUpdateProfileSwitchParams.DurationMinutes = &xint64
-	}
-	if source.Percentage != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Percentage)
-		siteUpdateProfileSwitchParams.Percent = &xfloat64
-	}
-	if source.Date != nil {
-		xint642 := int64(*source.Date)
-		siteUpdateProfileSwitchParams.OccurredAt = &xint642
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint643 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateProfileSwitchParams.UtcOffsetMinutes = &xint643
-	}
-	siteUpdateProfileSwitchParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateProfileSwitchParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateProfileSwitchParams
-}
-func TreatmentToUpdateTempBasal(source Treatment, context UpdateContext) site.UpdateTempBasalParams {
-	var siteUpdateTempBasalParams site.UpdateTempBasalParams
-	if source.Duration != nil {
-		xint64 := FlexibleInt64ToInt64(*source.Duration)
-		siteUpdateTempBasalParams.DurationMinutes = &xint64
-	}
-	if source.Absolute != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Absolute)
-		siteUpdateTempBasalParams.Absolute = &xfloat64
-	}
-	if source.Percentage != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Percentage)
-		siteUpdateTempBasalParams.Percent = &xfloat642
-	}
-	if source.Date != nil {
-		xint642 := int64(*source.Date)
-		siteUpdateTempBasalParams.OccurredAt = &xint642
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint643 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateTempBasalParams.UtcOffsetMinutes = &xint643
-	}
-	siteUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateTempBasalParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateTempBasalParams
-}
-func TreatmentToUpdateTempTarget(source Treatment, context UpdateContext) site.UpdateTempTargetParams {
-	var siteUpdateTempTargetParams site.UpdateTempTargetParams
-	if source.Duration != nil {
-		xint64 := FlexibleInt64ToInt64(*source.Duration)
-		siteUpdateTempTargetParams.DurationMinutes = &xint64
-	}
-	if source.TargetTop != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.TargetTop)
-		siteUpdateTempTargetParams.HighTarget = &xfloat64
-	}
-	if source.TargetBottom != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.TargetBottom)
-		siteUpdateTempTargetParams.LowTarget = &xfloat642
-	}
-	if source.Date != nil {
-		xint642 := int64(*source.Date)
-		siteUpdateTempTargetParams.OccurredAt = &xint642
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint643 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateTempTargetParams.UtcOffsetMinutes = &xint643
-	}
-	siteUpdateTempTargetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
-	if source.Identifier != nil {
-		siteUpdateTempTargetParams.ID = string(*source.Identifier)
-	}
-	return siteUpdateTempTargetParams
 }

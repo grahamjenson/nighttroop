@@ -36,7 +36,7 @@ func (c EntriesCollection) Convert(dr *site.GlucoseReading) nsutils.Record {
 
 // Cannot change properties
 
-func (c EntriesCollection) ValidateChange(nsModel nightscout.Entry, dbModel *site.GlucoseReading) *nsutils.HTTPError {
+func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *site.GlucoseReading) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -50,7 +50,7 @@ func (c EntriesCollection) ValidateChange(nsModel nightscout.Entry, dbModel *sit
 
 }
 
-func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext, overrideIdentifier *string) (*site.GlucoseReading, error) {
+func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.GlucoseReading, error) {
 	createParams := nightscout.EntryToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -78,7 +78,7 @@ func (c EntriesCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Con
 	return q.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, identifier string, uc nightscout.UpdateContext) (*site.GlucoseReading, error) {
+func (c EntriesCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, identifier string, dbModel *site.GlucoseReading, uc nightscout.ConverterContext) (*site.GlucoseReading, error) {
 	updateParams := nightscout.EntryToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 

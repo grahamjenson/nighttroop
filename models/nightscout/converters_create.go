@@ -7,9 +7,9 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-type CreateContext struct {
-	CreatedByIdentityID   int64
-	CreatedByIdentityName string
+type ConverterContext struct {
+	IdentityID   int64
+	IdentityName string
 }
 
 // goverter:converter
@@ -33,7 +33,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:map Duration DurationMinutes
-	ActivityToCreate(source Activity, ctx CreateContext) site.CreateActivityParams
+	ActivityToCreate(source Activity, ctx ConverterContext) site.CreateActivityParams
 
 	///////
 	// ENTRIES TO GLUCOSE READINGS
@@ -47,7 +47,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName      | AssignCreatedByName
 	//
 	// goverter:map Type ReadingType
-	EntryToCreate(source Entry, ctx CreateContext) site.CreateGlucoseReadingParams
+	EntryToCreate(source Entry, ctx ConverterContext) site.CreateGlucoseReadingParams
 
 	///////
 	// FOOD TO FOOD PRESET
@@ -59,7 +59,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	FoodToCreate(source Food, ctx CreateContext) site.CreateFoodPresetParams
+	FoodToCreate(source Food, ctx ConverterContext) site.CreateFoodPresetParams
 
 	///////
 	// ProfileStore To Profile Preset
@@ -73,156 +73,7 @@ type CreateMapConverter interface {
 	//
 	// goverter:ignore Name CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone Units IsDefault ProfileStoreID
 	// goverter:map Date OccurredAt | OrNow
-	PartialProfileStoreToCreate(source ProfileStore, ctx CreateContext) site.CreateProfilePresetParams
-
-	//
-	//
-	//
-
-	////////////////////////////////////////
-	// TREATMENT TO CREATE/UPDATE
-	////////////////////////////////////////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore  GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NoteID
-	// goverter:map EventType GroupType
-	TreatmentToCreateEventGroup(source Treatment, ctx CreateContext) site.CreateEventGroupParams
-
-	///////
-	// Food Intake
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	TreatmentToCreateFoodIntake(source Treatment, ctx CreateContext) site.CreateFoodIntakeParams
-
-	///////
-	// Glucose Reading
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Glucose Reading
-	// goverter:map GlucoseType ReadingType
-	TreatmentToCreateGlucoseReading(source Treatment, ctx CreateContext) site.CreateGlucoseReadingParams
-
-	///////
-	// Insulin Dose
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore DoseType
-	// goverter:map Insulin Dose
-	TreatmentToCreateInsulinDose(source Treatment, ctx CreateContext) site.CreateInsulinDoseParams
-
-	///////
-	// Notes
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Notes Content
-	// goverter:map Reason Reason
-	TreatmentToCreateNote(source Treatment, ctx CreateContext) site.CreateNoteParams
-
-	///////
-	// Profile Switch
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone
-	// goverter:map Duration DurationMinutes
-	// goverter:map Percentage Percent
-	TreatmentToCreateProfileSwitch(source Treatment, ctx CreateContext) site.CreateProfileSwitchParams
-
-	///////
-	// Temp Basal
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// goverter:map Percentage Percent
-	TreatmentToCreateTempBasal(source Treatment, ctx CreateContext) site.CreateTempBasalParams
-
-	///////
-	// Temp Targets
-	///////
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// goverter:map TargetTop HighTarget
-	// goverter:map TargetBottom LowTarget
-	TreatmentToCreateTempTarget(source Treatment, ctx CreateContext) site.CreateTempTargetParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore
-	TreatmentToCreateComponentEvent(source Treatment, ctx CreateContext) site.CreateComponentEventParams
-
-	// goverter:context ctx
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	// goverter:map ID                | AssignID
-	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore
-	// goverter:map Duration DurationMinutes
-	TreatmentToCreateActivity(source Treatment, ctx CreateContext) site.CreateActivityParams
-
-	//
-	//
-	//
+	PartialProfileStoreToCreate(source ProfileStore, ctx ConverterContext) site.CreateProfilePresetParams
 
 	////////////////////////////////////////
 	// DEVICE STATUS TO CREATE/UPDATE
@@ -237,7 +88,7 @@ type CreateMapConverter interface {
 	//
 	// goverter:ignore DeviceChargingState PumpState PumpReservoir PumpBatteryPercent PumpChargingState LoopIob LoopIobBasal LoopIobTreatment LoopCob
 	// goverter:map UploaderBattery DeviceBatteryPercent
-	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx CreateContext) site.CreateDeviceReportParams
+	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) site.CreateDeviceReportParams
 }
 
 // //
@@ -249,8 +100,8 @@ func AssignID() string {
 }
 
 // goverter:context ctx
-func AssignCreatedByName(ctx CreateContext) string {
-	return ctx.CreatedByIdentityName
+func AssignCreatedByName(ctx ConverterContext) string {
+	return ctx.IdentityName
 }
 
 func ToDateInt(createdAt int64) *DateInt {
