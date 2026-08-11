@@ -50,6 +50,10 @@ func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *site.Gluc
 
 }
 
+func (c EntriesCollection) ValidatePatch(nsModel nightscout.Entry, dbModel *site.GlucoseReading) *nsutils.HTTPError {
+	return c.Validate(nsModel, dbModel)
+}
+
 func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.GlucoseReading, error) {
 	createParams := nightscout.EntryToCreate(nsModel, cc)
 	if overrideIdentifier != nil {

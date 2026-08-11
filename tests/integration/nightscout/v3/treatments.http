@@ -82,15 +82,7 @@ NAME patch_profile_switch_v3
 PATCH http://{{ .site }}.ns.localhost/api/v3/treatments/{{ dig "create_profile_switch_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B {
-    "app": "AAPS",
-    "date": 1786184674000,
-    "eventType": "Profile Switch",
-    "originalProfileName": "SamDash-2025",
-    "percentage": 120,
-    "profile": "SamDash-2025(120%)",
-    "timeshift": 0,
-    "utcOffset": 720,
-    "created_at": "2026-08-08T10:24:34.000Z"
+    "notes": "Updated notes"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Profile Switch" "@result.eventType" }}
+ASSERT {{ assertEquals "Updated notes" "@result.notes" }}

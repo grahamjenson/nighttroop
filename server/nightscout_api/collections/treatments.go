@@ -70,6 +70,14 @@ func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *sit
 	return nil
 }
 
+func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
+	if nsModel.EventType != nil && nsModel.EventType.String() != dbModel.EventGroup.GroupType {
+		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
+		return nsutils.BadDataBodyError
+	}
+	return nil
+}
+
 func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)

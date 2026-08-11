@@ -40,6 +40,10 @@ func (c DeviceStatusCollection) Validate(nsModel nightscout.DeviceStatus, dbMode
 	return nil
 }
 
+func (c DeviceStatusCollection) ValidatePatch(nsModel nightscout.DeviceStatus, dbModel *site.DeviceReport) *nsutils.HTTPError {
+	return nil
+}
+
 func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.DeviceReport, error) {
 	createParams := nightscout.DeviceStatusToCreateDeviceReport(nsModel, cc)
 

@@ -47,6 +47,10 @@ func (c ActivityCollection) Validate(nsModel nightscout.Activity, dbModel *site.
 	return nil
 }
 
+func (c ActivityCollection) ValidatePatch(nsModel nightscout.Activity, dbModel *site.Activity) *nsutils.HTTPError {
+	return c.Validate(nsModel, dbModel)
+}
+
 func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.Activity, error) {
 	createParams := nightscout.ActivityToCreate(nsModel, cc)
 	if overrideIdentifier != nil {

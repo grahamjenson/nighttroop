@@ -47,6 +47,10 @@ func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *site.FoodPres
 	return nil
 }
 
+func (c FoodCollection) ValidatePatch(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
+	return c.Validate(nsModel, dbModel)
+}
+
 func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.FoodPreset, error) {
 	createParams := nightscout.FoodToCreate(nsModel, cc)
 	if overrideIdentifier != nil {

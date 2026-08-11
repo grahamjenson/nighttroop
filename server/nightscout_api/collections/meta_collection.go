@@ -21,7 +21,7 @@ type MetaCreateCollection[NS, DM any] interface {
 
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
-	Validate(NS, *DM) *nsutils.HTTPError
+	ValidatePatch(NS, *DM) *nsutils.HTTPError
 	Convert(*DM) nsutils.Record
 	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
 	PatchDBFunc(*site.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
@@ -380,7 +380,7 @@ func MetaPatch[NS interface {
 		return nil, err
 	}
 
-	if err := m.Validate(nsModel, updateingModel); err != nil {
+	if err := m.ValidatePatch(nsModel, updateingModel); err != nil {
 		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
