@@ -73,6 +73,13 @@ func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, 
 		createParams.EventGroup.ID = *overrideIdentifier
 	}
 
+	if createParams.GlucoseReading != nil {
+		createParams.GlucoseReading.ReadingType = "sgv"
+	}
+	if createParams.InsulinDose != nil {
+		createParams.InsulinDose.DoseType = "bolus"
+	}
+
 	dbModel, err := createEventGroup(ctx, q, createParams)
 	if err != nil {
 		return nil, err

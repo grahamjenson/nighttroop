@@ -135,13 +135,16 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 
 	if source.FoodIntakeID != nil {
 		egb.FoodIntake = &FoodIntake{
-			ID:       *source.FoodIntakeID,
-			Name:     source.FoodIntakeName,
-			Carbs:    source.FoodIntakeCarbs,
-			Fat:      source.FoodIntakeFat,
-			Protein:  source.FoodIntakeProtein,
-			Fibre:    source.FoodIntakeFibre,
-			Calories: source.FoodIntakeCalories,
+			ID:          *source.FoodIntakeID,
+			Name:        source.FoodIntakeName,
+			Category:    source.FoodIntakeCategory,
+			Subcategory: source.FoodIntakeSubcategory,
+			Carbs:       source.FoodIntakeCarbs,
+			Fat:         source.FoodIntakeFat,
+			Protein:     source.FoodIntakeProtein,
+			Fibre:       source.FoodIntakeFibre,
+			Energy:      source.FoodIntakeEnergy,
+			Portions:    source.FoodIntakePortions,
 		}
 	}
 

@@ -52,13 +52,16 @@ CREATE TABLE insulin_doses (
 CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT CHECK(length(name) <= 64), -- this could be a reference to a preset
-    food_type TEXT NOT NULL CHECK(length(food_type) <= 32) DEFAULT 'meal', -- this could be like hypo treatment, meal, snack, etc
+
+    category TEXT CHECK(length(category) <= 64),
+    subcategory TEXT CHECK(length(subcategory) <= 64),
 
     carbs REAL,
     fat REAL,
     protein REAL,
     fibre REAL,
-    calories REAL,
+    energy REAL,
+    portions REAL,
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -318,7 +321,7 @@ CREATE TABLE food_presets (
     fat REAL,
     protein REAL,
     fibre REAL,
-    calories REAL,
+    energy REAL,
     portions REAL,
 
     -- Default Stuff

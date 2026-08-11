@@ -5,12 +5,15 @@
 INSERT INTO food_intakes (
     id,
     name,
-    food_type,
+    category,
+    subcategory,
+
     carbs,
     fat,
     protein,
     fibre,
-    calories,
+    energy,
+    portions,
 
     utc_offset_minutes,
     occurred_at,
@@ -19,7 +22,7 @@ INSERT INTO food_intakes (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -62,10 +65,10 @@ WHERE
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
     
-    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR food_type = sqlc.narg('TypeEq'))
-    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR food_type != sqlc.narg('TypeNeq'))
-    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR food_type IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
-    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR food_type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
+    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR category = sqlc.narg('TypeEq'))
+    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR category != sqlc.narg('TypeNeq'))
+    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR category IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
+    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR category NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
 
     AND (CAST(sqlc.narg('CarbsEQ') AS INTEGER) IS NULL OR carbs = sqlc.narg('CarbsEQ'))
     AND (CAST(sqlc.narg('CarbsGTE') AS INTEGER) IS NULL OR carbs >= sqlc.narg('CarbsGTE'))
@@ -84,12 +87,15 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: UpdateFoodIntake :one
 UPDATE food_intakes SET
     name = COALESCE(sqlc.narg('Name'), name),
-    food_type = COALESCE(sqlc.narg('FoodType'), food_type),
+    category = COALESCE(sqlc.narg('Category'), category),
+    subcategory = COALESCE(sqlc.narg('Subcategory'), subcategory),
+
     carbs = COALESCE(sqlc.narg('Carbs'), carbs),
     fat = COALESCE(sqlc.narg('Fat'), fat),
     protein = COALESCE(sqlc.narg('Protein'), protein),
     fibre = COALESCE(sqlc.narg('Fibre'), fibre),
-    calories = COALESCE(sqlc.narg('Calories'), calories),
+    energy = COALESCE(sqlc.narg('Energy'), energy),
+    portions = COALESCE(sqlc.narg('Portions'), portions),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
@@ -116,7 +122,7 @@ DELETE FROM food_intakes WHERE id = ?;
 UPDATE food_intakes SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE food_type = ? AND deleted_at IS NULL;
+WHERE category = ? AND deleted_at IS NULL;
 
 -- name: HardDeleteFoodIntakesByType :execresult
-DELETE FROM food_intakes WHERE food_type = ?;
+DELETE FROM food_intakes WHERE category = ?;

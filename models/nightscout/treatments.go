@@ -22,6 +22,9 @@ type Treatment struct {
 	GlucoseType *GlucoseType     `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
 
 	// Food
+	Category    *ShortString `json:"category,omitempty"`
+	Subcategory *ShortString `json:"subcategory,omitempty"`
+
 	Carbs    *FlexibleFloat64 `json:"carbs,omitempty"`
 	Insulin  *FlexibleFloat64 `json:"insulin,omitempty"`
 	Protein  *FlexibleFloat64 `json:"protein,omitempty"`
@@ -29,6 +32,7 @@ type Treatment struct {
 	Fibre    *FlexibleFloat64 `json:"fibre,omitempty"`
 	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
 	PreBolus *FlexibleFloat64 `json:"preBolus,omitempty"`
+	Portions *FlexibleFloat64 `json:"portions,omitempty"`
 
 	// Exercise
 	ActivityType *ShortString   `json:"activityType,omitempty"` // Type of activity

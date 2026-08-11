@@ -68,7 +68,6 @@ type DBModelConverter interface {
 	//
 	// goverter:ignore Unit GI HideAfterUse Hidden Position
 	// goverter:map CreatedAt Date
-	// goverter:map Calories Energy
 	DBModelToFood(source *site.FoodPreset) Food
 
 	///////
@@ -120,11 +119,14 @@ type DBModelConverter interface {
 	//
 	// goverter:map InsulinDose.Dose Insulin
 	//
+	// goverter:map FoodIntake.Category Category
+	// goverter:map FoodIntake.Subcategory Subcategory
+	// goverter:map FoodIntake.Portions Portions
 	// goverter:map FoodIntake.Carbs Carbs
 	// goverter:map FoodIntake.Protein Protein
 	// goverter:map FoodIntake.Fat Fat
 	// goverter:map FoodIntake.Fibre Fibre
-	// goverter:map FoodIntake.Calories Energy
+	// goverter:map FoodIntake.Energy Energy
 	//
 	// goverter:map TempBasal.DurationMinutes Duration
 	// goverter:map TempBasal.Percent Rate

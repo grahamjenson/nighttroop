@@ -67,10 +67,6 @@ func EntryToUpdate(source Entry, context UpdateContext) site.UpdateGlucoseReadin
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Reading)
 		siteUpdateGlucoseReadingParams.Reading = &xfloat64
 	}
-	if source.Type != nil {
-		xstring := string(*source.Type)
-		siteUpdateGlucoseReadingParams.ReadingType = &xstring
-	}
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
 		siteUpdateGlucoseReadingParams.OccurredAt = &xint64
@@ -121,7 +117,7 @@ func FoodToUpdate(source Food, context UpdateContext) site.UpdateFoodPresetParam
 	}
 	if source.Energy != nil {
 		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteUpdateFoodPresetParams.Calories = &xfloat646
+		siteUpdateFoodPresetParams.Energy = &xfloat646
 	}
 	siteUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
@@ -203,6 +199,18 @@ func TreatmentToUpdateEventGroup(source Treatment, context UpdateContext) site.U
 }
 func TreatmentToUpdateFoodIntake(source Treatment, context UpdateContext) site.UpdateFoodIntakeParams {
 	var siteUpdateFoodIntakeParams site.UpdateFoodIntakeParams
+	if source.Name != nil {
+		xstring := ShortStringToString(*source.Name)
+		siteUpdateFoodIntakeParams.Name = &xstring
+	}
+	if source.Category != nil {
+		xstring2 := ShortStringToString(*source.Category)
+		siteUpdateFoodIntakeParams.Category = &xstring2
+	}
+	if source.Subcategory != nil {
+		xstring3 := ShortStringToString(*source.Subcategory)
+		siteUpdateFoodIntakeParams.Subcategory = &xstring3
+	}
 	if source.Carbs != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteUpdateFoodIntakeParams.Carbs = &xfloat64
@@ -221,7 +229,11 @@ func TreatmentToUpdateFoodIntake(source Treatment, context UpdateContext) site.U
 	}
 	if source.Energy != nil {
 		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteUpdateFoodIntakeParams.Calories = &xfloat645
+		siteUpdateFoodIntakeParams.Energy = &xfloat645
+	}
+	if source.Portions != nil {
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Portions)
+		siteUpdateFoodIntakeParams.Portions = &xfloat646
 	}
 	if source.Date != nil {
 		xint64 := int64(*source.Date)
@@ -242,10 +254,6 @@ func TreatmentToUpdateGlucoseReading(source Treatment, context UpdateContext) si
 	if source.Glucose != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Glucose)
 		siteUpdateGlucoseReadingParams.Reading = &xfloat64
-	}
-	if source.GlucoseType != nil {
-		xstring := string(*source.GlucoseType)
-		siteUpdateGlucoseReadingParams.ReadingType = &xstring
 	}
 	if source.Date != nil {
 		xint64 := int64(*source.Date)

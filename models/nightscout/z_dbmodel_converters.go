@@ -158,8 +158,8 @@ func DBModelToFood(source *site.FoodPreset) Food {
 			nightscoutFlexibleFloat644 := FlexibleFloat64(*(*source).Fibre)
 			nightscoutFood.Fibre = &nightscoutFlexibleFloat644
 		}
-		if (*source).Calories != nil {
-			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).Calories)
+		if (*source).Energy != nil {
+			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).Energy)
 			nightscoutFood.Energy = &nightscoutFlexibleFloat645
 		}
 		if (*source).Portions != nil {
@@ -274,6 +274,22 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutGlucoseType := GlucoseType(*pString2)
 			nightscoutTreatment.GlucoseType = &nightscoutGlucoseType
 		}
+		var pString3 *string
+		if (*source).FoodIntake != nil {
+			pString3 = (*source).FoodIntake.Category
+		}
+		if pString3 != nil {
+			nightscoutShortString2 := ShortString(*pString3)
+			nightscoutTreatment.Category = &nightscoutShortString2
+		}
+		var pString4 *string
+		if (*source).FoodIntake != nil {
+			pString4 = (*source).FoodIntake.Subcategory
+		}
+		if pString4 != nil {
+			nightscoutShortString3 := ShortString(*pString4)
+			nightscoutTreatment.Subcategory = &nightscoutShortString3
+		}
 		var pFloat642 *float64
 		if (*source).FoodIntake != nil {
 			pFloat642 = (*source).FoodIntake.Carbs
@@ -316,19 +332,27 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 		}
 		var pFloat647 *float64
 		if (*source).FoodIntake != nil {
-			pFloat647 = (*source).FoodIntake.Calories
+			pFloat647 = (*source).FoodIntake.Energy
 		}
 		if pFloat647 != nil {
 			nightscoutFlexibleFloat647 := FlexibleFloat64(*pFloat647)
 			nightscoutTreatment.Energy = &nightscoutFlexibleFloat647
 		}
-		var pString3 *string
-		if (*source).Activity != nil {
-			pString3 = &(*source).Activity.ActivityType
+		var pFloat648 *float64
+		if (*source).FoodIntake != nil {
+			pFloat648 = (*source).FoodIntake.Portions
 		}
-		if pString3 != nil {
-			nightscoutShortString2 := ShortString(*pString3)
-			nightscoutTreatment.ActivityType = &nightscoutShortString2
+		if pFloat648 != nil {
+			nightscoutFlexibleFloat648 := FlexibleFloat64(*pFloat648)
+			nightscoutTreatment.Portions = &nightscoutFlexibleFloat648
+		}
+		var pString5 *string
+		if (*source).Activity != nil {
+			pString5 = &(*source).Activity.ActivityType
+		}
+		if pString5 != nil {
+			nightscoutShortString4 := ShortString(*pString5)
+			nightscoutTreatment.ActivityType = &nightscoutShortString4
 		}
 		var pInt64 *int64
 		if (*source).Activity != nil {
@@ -362,79 +386,79 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutFlexibleInt644 := FlexibleInt64(*pInt644)
 			nightscoutTreatment.Duration = &nightscoutFlexibleInt644
 		}
-		var pString4 *string
+		var pString6 *string
 		if (*source).Note != nil {
-			pString4 = &(*source).Note.Content
+			pString6 = &(*source).Note.Content
 		}
-		if pString4 != nil {
-			nightscoutSanitizedString := SanitizedString(*pString4)
+		if pString6 != nil {
+			nightscoutSanitizedString := SanitizedString(*pString6)
 			nightscoutTreatment.Notes = &nightscoutSanitizedString
 		}
 		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutTreatment.EnteredBy = &pNightscoutShortString
-		var pString5 *string
+		var pString7 *string
 		if (*source).ProfileSwitch != nil {
-			pString5 = &(*source).ProfileSwitch.Name
+			pString7 = &(*source).ProfileSwitch.Name
 		}
-		if pString5 != nil {
-			nightscoutShortString3 := ShortString(*pString5)
-			nightscoutTreatment.OriginalProfileName = &nightscoutShortString3
-		}
-		var pFloat648 *float64
-		if (*source).ProfileSwitch != nil {
-			pFloat648 = &(*source).ProfileSwitch.Percent
-		}
-		if pFloat648 != nil {
-			nightscoutFlexibleFloat648 := FlexibleFloat64(*pFloat648)
-			nightscoutTreatment.Percentage = &nightscoutFlexibleFloat648
+		if pString7 != nil {
+			nightscoutShortString5 := ShortString(*pString7)
+			nightscoutTreatment.OriginalProfileName = &nightscoutShortString5
 		}
 		var pFloat649 *float64
-		if (*source).TempBasal != nil {
-			pFloat649 = (*source).TempBasal.Percent
+		if (*source).ProfileSwitch != nil {
+			pFloat649 = &(*source).ProfileSwitch.Percent
 		}
 		if pFloat649 != nil {
 			nightscoutFlexibleFloat649 := FlexibleFloat64(*pFloat649)
-			nightscoutTreatment.Rate = &nightscoutFlexibleFloat649
+			nightscoutTreatment.Percentage = &nightscoutFlexibleFloat649
 		}
 		var pFloat6410 *float64
 		if (*source).TempBasal != nil {
-			pFloat6410 = &(*source).TempBasal.Absolute
+			pFloat6410 = (*source).TempBasal.Percent
 		}
 		if pFloat6410 != nil {
 			nightscoutFlexibleFloat6410 := FlexibleFloat64(*pFloat6410)
-			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6410
-		}
-		var pString6 *string
-		if (*source).Note != nil {
-			pString6 = (*source).Note.Reason
-		}
-		if pString6 != nil {
-			nightscoutShortString4 := ShortString(*pString6)
-			nightscoutTreatment.Reason = &nightscoutShortString4
+			nightscoutTreatment.Rate = &nightscoutFlexibleFloat6410
 		}
 		var pFloat6411 *float64
-		if (*source).TempTarget != nil {
-			pFloat6411 = &(*source).TempTarget.HighTarget
+		if (*source).TempBasal != nil {
+			pFloat6411 = &(*source).TempBasal.Absolute
 		}
 		if pFloat6411 != nil {
 			nightscoutFlexibleFloat6411 := FlexibleFloat64(*pFloat6411)
-			nightscoutTreatment.TargetTop = &nightscoutFlexibleFloat6411
+			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6411
+		}
+		var pString8 *string
+		if (*source).Note != nil {
+			pString8 = (*source).Note.Reason
+		}
+		if pString8 != nil {
+			nightscoutShortString6 := ShortString(*pString8)
+			nightscoutTreatment.Reason = &nightscoutShortString6
 		}
 		var pFloat6412 *float64
 		if (*source).TempTarget != nil {
-			pFloat6412 = &(*source).TempTarget.LowTarget
+			pFloat6412 = &(*source).TempTarget.HighTarget
 		}
 		if pFloat6412 != nil {
 			nightscoutFlexibleFloat6412 := FlexibleFloat64(*pFloat6412)
-			nightscoutTreatment.TargetBottom = &nightscoutFlexibleFloat6412
+			nightscoutTreatment.TargetTop = &nightscoutFlexibleFloat6412
+		}
+		var pFloat6413 *float64
+		if (*source).TempTarget != nil {
+			pFloat6413 = &(*source).TempTarget.LowTarget
+		}
+		if pFloat6413 != nil {
+			nightscoutFlexibleFloat6413 := FlexibleFloat64(*pFloat6413)
+			nightscoutTreatment.TargetBottom = &nightscoutFlexibleFloat6413
 		}
 		if (*source).EventGroup.CreatedByDeviceName != nil {
-			nightscoutShortString5 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
-			nightscoutTreatment.Device = &nightscoutShortString5
+			nightscoutShortString7 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
+			nightscoutTreatment.Device = &nightscoutShortString7
 		}
 		if (*source).EventGroup.CreatedByAppName != nil {
-			nightscoutShortString6 := ShortString(*(*source).EventGroup.CreatedByAppName)
-			nightscoutTreatment.App = &nightscoutShortString6
+			nightscoutShortString8 := ShortString(*(*source).EventGroup.CreatedByAppName)
+			nightscoutTreatment.App = &nightscoutShortString8
 		}
 		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutTreatment.Subject = &pNightscoutShortString2

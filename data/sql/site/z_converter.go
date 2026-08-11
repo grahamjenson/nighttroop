@@ -288,7 +288,14 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 		xstring := *source.Name
 		siteCreateFoodIntakeParams.Name = &xstring
 	}
-	siteCreateFoodIntakeParams.FoodType = source.FoodType
+	if source.Category != nil {
+		xstring2 := *source.Category
+		siteCreateFoodIntakeParams.Category = &xstring2
+	}
+	if source.Subcategory != nil {
+		xstring3 := *source.Subcategory
+		siteCreateFoodIntakeParams.Subcategory = &xstring3
+	}
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		siteCreateFoodIntakeParams.Carbs = &xfloat64
@@ -305,9 +312,13 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 		xfloat644 := *source.Fibre
 		siteCreateFoodIntakeParams.Fibre = &xfloat644
 	}
-	if source.Calories != nil {
-		xfloat645 := *source.Calories
-		siteCreateFoodIntakeParams.Calories = &xfloat645
+	if source.Energy != nil {
+		xfloat645 := *source.Energy
+		siteCreateFoodIntakeParams.Energy = &xfloat645
+	}
+	if source.Portions != nil {
+		xfloat646 := *source.Portions
+		siteCreateFoodIntakeParams.Portions = &xfloat646
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -315,16 +326,16 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 	}
 	siteCreateFoodIntakeParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		siteCreateFoodIntakeParams.RawJsonData = &xstring2
+		xstring4 := *source.RawJsonData
+		siteCreateFoodIntakeParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring3 := *source.CreatedByAppName
-		siteCreateFoodIntakeParams.CreatedByAppName = &xstring3
+		xstring5 := *source.CreatedByAppName
+		siteCreateFoodIntakeParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring4 := *source.CreatedByDeviceName
-		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring4
+		xstring6 := *source.CreatedByDeviceName
+		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring6
 	}
 	siteCreateFoodIntakeParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateFoodIntakeParams
@@ -335,8 +346,14 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 		xstring := *source.Name
 		siteUpdateFoodIntakeParams.Name = &xstring
 	}
-	pString := source.FoodType
-	siteUpdateFoodIntakeParams.FoodType = &pString
+	if source.Category != nil {
+		xstring2 := *source.Category
+		siteUpdateFoodIntakeParams.Category = &xstring2
+	}
+	if source.Subcategory != nil {
+		xstring3 := *source.Subcategory
+		siteUpdateFoodIntakeParams.Subcategory = &xstring3
+	}
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		siteUpdateFoodIntakeParams.Carbs = &xfloat64
@@ -353,9 +370,13 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 		xfloat644 := *source.Fibre
 		siteUpdateFoodIntakeParams.Fibre = &xfloat644
 	}
-	if source.Calories != nil {
-		xfloat645 := *source.Calories
-		siteUpdateFoodIntakeParams.Calories = &xfloat645
+	if source.Energy != nil {
+		xfloat645 := *source.Energy
+		siteUpdateFoodIntakeParams.Energy = &xfloat645
+	}
+	if source.Portions != nil {
+		xfloat646 := *source.Portions
+		siteUpdateFoodIntakeParams.Portions = &xfloat646
 	}
 	pInt64 := source.OccurredAt
 	siteUpdateFoodIntakeParams.OccurredAt = &pInt64
@@ -364,8 +385,8 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 		siteUpdateFoodIntakeParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring2 := *source.UpdatedByIdentityName
-		siteUpdateFoodIntakeParams.UpdatedByIdentityName = &xstring2
+		xstring4 := *source.UpdatedByIdentityName
+		siteUpdateFoodIntakeParams.UpdatedByIdentityName = &xstring4
 	}
 	siteUpdateFoodIntakeParams.ID = source.ID
 	return siteUpdateFoodIntakeParams
@@ -402,9 +423,9 @@ func FoodPresetToCreate(source FoodPreset) CreateFoodPresetParams {
 		xfloat645 := *source.Fibre
 		siteCreateFoodPresetParams.Fibre = &xfloat645
 	}
-	if source.Calories != nil {
-		xfloat646 := *source.Calories
-		siteCreateFoodPresetParams.Calories = &xfloat646
+	if source.Energy != nil {
+		xfloat646 := *source.Energy
+		siteCreateFoodPresetParams.Energy = &xfloat646
 	}
 	if source.RawJsonData != nil {
 		xstring3 := *source.RawJsonData
@@ -453,9 +474,9 @@ func FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams {
 		xfloat645 := *source.Fibre
 		siteUpdateFoodPresetParams.Fibre = &xfloat645
 	}
-	if source.Calories != nil {
-		xfloat646 := *source.Calories
-		siteUpdateFoodPresetParams.Calories = &xfloat646
+	if source.Energy != nil {
+		xfloat646 := *source.Energy
+		siteUpdateFoodPresetParams.Energy = &xfloat646
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName
@@ -493,8 +514,6 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams UpdateGlucoseReadingParams
 	pFloat64 := source.Reading
 	siteUpdateGlucoseReadingParams.Reading = &pFloat64
-	pString := source.ReadingType
-	siteUpdateGlucoseReadingParams.ReadingType = &pString
 	pInt64 := source.OccurredAt
 	siteUpdateGlucoseReadingParams.OccurredAt = &pInt64
 	if source.UtcOffsetMinutes != nil {
@@ -784,6 +803,14 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		xstring6 := *source.FoodIntakeName
 		siteGetEventGroupRow.FoodIntakeName = &xstring6
 	}
+	if source.FoodIntakeCategory != nil {
+		xstring7 := *source.FoodIntakeCategory
+		siteGetEventGroupRow.FoodIntakeCategory = &xstring7
+	}
+	if source.FoodIntakeSubcategory != nil {
+		xstring8 := *source.FoodIntakeSubcategory
+		siteGetEventGroupRow.FoodIntakeSubcategory = &xstring8
+	}
 	if source.FoodIntakeCarbs != nil {
 		xfloat643 := *source.FoodIntakeCarbs
 		siteGetEventGroupRow.FoodIntakeCarbs = &xfloat643
@@ -800,101 +827,105 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		xfloat646 := *source.FoodIntakeFibre
 		siteGetEventGroupRow.FoodIntakeFibre = &xfloat646
 	}
-	if source.FoodIntakeCalories != nil {
-		xfloat647 := *source.FoodIntakeCalories
-		siteGetEventGroupRow.FoodIntakeCalories = &xfloat647
+	if source.FoodIntakeEnergy != nil {
+		xfloat647 := *source.FoodIntakeEnergy
+		siteGetEventGroupRow.FoodIntakeEnergy = &xfloat647
+	}
+	if source.FoodIntakePortions != nil {
+		xfloat648 := *source.FoodIntakePortions
+		siteGetEventGroupRow.FoodIntakePortions = &xfloat648
 	}
 	if source.TempBasalID != nil {
-		xstring7 := *source.TempBasalID
-		siteGetEventGroupRow.TempBasalID = &xstring7
+		xstring9 := *source.TempBasalID
+		siteGetEventGroupRow.TempBasalID = &xstring9
 	}
 	if source.TempBasalDurationMinutes != nil {
 		xint64 := *source.TempBasalDurationMinutes
 		siteGetEventGroupRow.TempBasalDurationMinutes = &xint64
 	}
 	if source.TempBasalAbsolute != nil {
-		xfloat648 := *source.TempBasalAbsolute
-		siteGetEventGroupRow.TempBasalAbsolute = &xfloat648
+		xfloat649 := *source.TempBasalAbsolute
+		siteGetEventGroupRow.TempBasalAbsolute = &xfloat649
 	}
 	if source.TempBasalPercent != nil {
-		xfloat649 := *source.TempBasalPercent
-		siteGetEventGroupRow.TempBasalPercent = &xfloat649
+		xfloat6410 := *source.TempBasalPercent
+		siteGetEventGroupRow.TempBasalPercent = &xfloat6410
 	}
 	if source.TempTargetID != nil {
-		xstring8 := *source.TempTargetID
-		siteGetEventGroupRow.TempTargetID = &xstring8
+		xstring10 := *source.TempTargetID
+		siteGetEventGroupRow.TempTargetID = &xstring10
 	}
 	if source.TempTargetDurationMinutes != nil {
 		xint642 := *source.TempTargetDurationMinutes
 		siteGetEventGroupRow.TempTargetDurationMinutes = &xint642
 	}
 	if source.TempTargetHighTarget != nil {
-		xfloat6410 := *source.TempTargetHighTarget
-		siteGetEventGroupRow.TempTargetHighTarget = &xfloat6410
+		xfloat6411 := *source.TempTargetHighTarget
+		siteGetEventGroupRow.TempTargetHighTarget = &xfloat6411
 	}
 	if source.TempTargetLowTarget != nil {
-		xfloat6411 := *source.TempTargetLowTarget
-		siteGetEventGroupRow.TempTargetLowTarget = &xfloat6411
+		xfloat6412 := *source.TempTargetLowTarget
+		siteGetEventGroupRow.TempTargetLowTarget = &xfloat6412
 	}
 	if source.ProfileSwitchID != nil {
-		xstring9 := *source.ProfileSwitchID
-		siteGetEventGroupRow.ProfileSwitchID = &xstring9
+		xstring11 := *source.ProfileSwitchID
+		siteGetEventGroupRow.ProfileSwitchID = &xstring11
 	}
 	if source.ProfileSwitchName != nil {
-		xstring10 := *source.ProfileSwitchName
-		siteGetEventGroupRow.ProfileSwitchName = &xstring10
+		xstring12 := *source.ProfileSwitchName
+		siteGetEventGroupRow.ProfileSwitchName = &xstring12
 	}
 	if source.ProfileSwitchDia != nil {
-		xfloat6412 := *source.ProfileSwitchDia
-		siteGetEventGroupRow.ProfileSwitchDia = &xfloat6412
+		xfloat6413 := *source.ProfileSwitchDia
+		siteGetEventGroupRow.ProfileSwitchDia = &xfloat6413
 	}
 	if source.ProfileSwitchUnits != nil {
-		xstring11 := *source.ProfileSwitchUnits
-		siteGetEventGroupRow.ProfileSwitchUnits = &xstring11
+		xstring13 := *source.ProfileSwitchUnits
+		siteGetEventGroupRow.ProfileSwitchUnits = &xstring13
 	}
 	if source.ProfileSwitchDurationMinutes != nil {
 		xint643 := *source.ProfileSwitchDurationMinutes
 		siteGetEventGroupRow.ProfileSwitchDurationMinutes = &xint643
 	}
 	if source.ProfileSwitchPercent != nil {
-		xfloat6413 := *source.ProfileSwitchPercent
-		siteGetEventGroupRow.ProfileSwitchPercent = &xfloat6413
+		xfloat6414 := *source.ProfileSwitchPercent
+		siteGetEventGroupRow.ProfileSwitchPercent = &xfloat6414
 	}
 	if source.ProfileSwitchCarbRatiosJson != nil {
-		xstring12 := *source.ProfileSwitchCarbRatiosJson
-		siteGetEventGroupRow.ProfileSwitchCarbRatiosJson = &xstring12
+		xstring14 := *source.ProfileSwitchCarbRatiosJson
+		siteGetEventGroupRow.ProfileSwitchCarbRatiosJson = &xstring14
 	}
 	if source.ProfileSwitchInsulinSensitivitiesJson != nil {
-		xstring13 := *source.ProfileSwitchInsulinSensitivitiesJson
-		siteGetEventGroupRow.ProfileSwitchInsulinSensitivitiesJson = &xstring13
+		xstring15 := *source.ProfileSwitchInsulinSensitivitiesJson
+		siteGetEventGroupRow.ProfileSwitchInsulinSensitivitiesJson = &xstring15
 	}
 	if source.ProfileSwitchBasalRatesJson != nil {
-		xstring14 := *source.ProfileSwitchBasalRatesJson
-		siteGetEventGroupRow.ProfileSwitchBasalRatesJson = &xstring14
+		xstring16 := *source.ProfileSwitchBasalRatesJson
+		siteGetEventGroupRow.ProfileSwitchBasalRatesJson = &xstring16
 	}
 	if source.ProfileSwitchTargetsHighJson != nil {
-		xstring15 := *source.ProfileSwitchTargetsHighJson
-		siteGetEventGroupRow.ProfileSwitchTargetsHighJson = &xstring15
+		xstring17 := *source.ProfileSwitchTargetsHighJson
+		siteGetEventGroupRow.ProfileSwitchTargetsHighJson = &xstring17
 	}
 	if source.ProfileSwitchTargetsLowJson != nil {
-		xstring16 := *source.ProfileSwitchTargetsLowJson
-		siteGetEventGroupRow.ProfileSwitchTargetsLowJson = &xstring16
+		xstring18 := *source.ProfileSwitchTargetsLowJson
+		siteGetEventGroupRow.ProfileSwitchTargetsLowJson = &xstring18
 	}
 	if source.ComponentEventID != nil {
-		xstring17 := *source.ComponentEventID
-		siteGetEventGroupRow.ComponentEventID = &xstring17
+		xstring19 := *source.ComponentEventID
+		siteGetEventGroupRow.ComponentEventID = &xstring19
 	}
 	if source.ActivityID != nil {
-		xstring18 := *source.ActivityID
-		siteGetEventGroupRow.ActivityID = &xstring18
+		xstring20 := *source.ActivityID
+		siteGetEventGroupRow.ActivityID = &xstring20
 	}
 	if source.ActivityName != nil {
-		xstring19 := *source.ActivityName
-		siteGetEventGroupRow.ActivityName = &xstring19
+		xstring21 := *source.ActivityName
+		siteGetEventGroupRow.ActivityName = &xstring21
 	}
 	if source.ActivityType != nil {
-		xstring20 := *source.ActivityType
-		siteGetEventGroupRow.ActivityType = &xstring20
+		xstring22 := *source.ActivityType
+		siteGetEventGroupRow.ActivityType = &xstring22
 	}
 	if source.ActivityDurationMinutes != nil {
 		xint644 := *source.ActivityDurationMinutes
@@ -913,16 +944,16 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		siteGetEventGroupRow.ActivityHeartRate = &xint647
 	}
 	if source.NoteID != nil {
-		xstring21 := *source.NoteID
-		siteGetEventGroupRow.NoteID = &xstring21
+		xstring23 := *source.NoteID
+		siteGetEventGroupRow.NoteID = &xstring23
 	}
 	if source.NoteContent != nil {
-		xstring22 := *source.NoteContent
-		siteGetEventGroupRow.NoteContent = &xstring22
+		xstring24 := *source.NoteContent
+		siteGetEventGroupRow.NoteContent = &xstring24
 	}
 	if source.NoteReason != nil {
-		xstring23 := *source.NoteReason
-		siteGetEventGroupRow.NoteReason = &xstring23
+		xstring25 := *source.NoteReason
+		siteGetEventGroupRow.NoteReason = &xstring25
 	}
 	return siteGetEventGroupRow
 }

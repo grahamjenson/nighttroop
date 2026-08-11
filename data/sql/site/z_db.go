@@ -183,6 +183,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteFoodPresetStmt, err = db.PrepareContext(ctx, hardDeleteFoodPreset); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteFoodPreset: %w", err)
 	}
+	if q.hardDeleteFoodPresetsByTypeStmt, err = db.PrepareContext(ctx, hardDeleteFoodPresetsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteFoodPresetsByType: %w", err)
+	}
 	if q.hardDeleteGlucoseReadingStmt, err = db.PrepareContext(ctx, hardDeleteGlucoseReading); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteGlucoseReading: %w", err)
 	}
@@ -606,6 +609,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteFoodPresetStmt: %w", cerr)
 		}
 	}
+	if q.hardDeleteFoodPresetsByTypeStmt != nil {
+		if cerr := q.hardDeleteFoodPresetsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteFoodPresetsByTypeStmt: %w", cerr)
+		}
+	}
 	if q.hardDeleteGlucoseReadingStmt != nil {
 		if cerr := q.hardDeleteGlucoseReadingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteGlucoseReadingStmt: %w", cerr)
@@ -953,6 +961,7 @@ type Queries struct {
 	hardDeleteFoodIntakeStmt            *sql.Stmt
 	hardDeleteFoodIntakesByTypeStmt     *sql.Stmt
 	hardDeleteFoodPresetStmt            *sql.Stmt
+	hardDeleteFoodPresetsByTypeStmt     *sql.Stmt
 	hardDeleteGlucoseReadingStmt        *sql.Stmt
 	hardDeleteGlucoseReadingsByTypeStmt *sql.Stmt
 	hardDeleteInsulinDoseStmt           *sql.Stmt
@@ -1063,6 +1072,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteFoodIntakeStmt:            q.hardDeleteFoodIntakeStmt,
 		hardDeleteFoodIntakesByTypeStmt:     q.hardDeleteFoodIntakesByTypeStmt,
 		hardDeleteFoodPresetStmt:            q.hardDeleteFoodPresetStmt,
+		hardDeleteFoodPresetsByTypeStmt:     q.hardDeleteFoodPresetsByTypeStmt,
 		hardDeleteGlucoseReadingStmt:        q.hardDeleteGlucoseReadingStmt,
 		hardDeleteGlucoseReadingsByTypeStmt: q.hardDeleteGlucoseReadingsByTypeStmt,
 		hardDeleteInsulinDoseStmt:           q.hardDeleteInsulinDoseStmt,

@@ -91,12 +91,14 @@ type EventGroup struct {
 type FoodIntake struct {
 	ID                    string
 	Name                  *string
-	FoodType              string
+	Category              *string
+	Subcategory           *string
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
 	Fibre                 *float64
-	Calories              *float64
+	Energy                *float64
+	Portions              *float64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -118,7 +120,7 @@ type FoodPreset struct {
 	Fat                   *float64
 	Protein               *float64
 	Fibre                 *float64
-	Calories              *float64
+	Energy                *float64
 	Portions              *float64
 	RawJsonData           *string
 	CreatedAt             int64

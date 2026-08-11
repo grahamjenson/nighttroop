@@ -69,6 +69,15 @@ func (c FoodCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, i
 	return q.HardDeleteFoodPreset(ctx, site.HardDeleteFoodPresetParams{ID: identifier})
 }
 
+func (c FoodCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
+	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{Category: &typeOF})
+}
+
+// SoftDeleteDBFunc Only Hard Deletes For Presets
+func (c FoodCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
+	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{Category: &typeOF})
+}
+
 func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, identifier string, uc nightscout.UpdateContext) (*site.FoodPreset, error) {
 	updateParams := nightscout.FoodToUpdate(nsModel, uc)
 	updateParams.ID = identifier
@@ -97,7 +106,7 @@ func (c FoodCollection) Delete(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c FoodCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
+	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
 }
 
 func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

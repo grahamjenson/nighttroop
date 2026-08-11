@@ -13,7 +13,7 @@ INSERT INTO food_presets (
     fat,
     protein,
     fibre,
-    calories,
+    energy,
 
     raw_json_data,
     created_by_app_name,
@@ -90,7 +90,7 @@ UPDATE food_presets SET
     fat = COALESCE(sqlc.narg('Fat'), fat),
     protein = COALESCE(sqlc.narg('Protein'), protein),
     fibre = COALESCE(sqlc.narg('Fibre'), fibre),
-    calories = COALESCE(sqlc.narg('Calories'), calories),
+    energy = COALESCE(sqlc.narg('Energy'), energy),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
@@ -104,3 +104,6 @@ RETURNING *;
 
 -- name: HardDeleteFoodPreset :execresult
 DELETE FROM food_presets WHERE id = ?;
+
+-- name: HardDeleteFoodPresetsByType :execresult
+DELETE FROM food_presets WHERE category = ?;

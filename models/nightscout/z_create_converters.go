@@ -137,7 +137,7 @@ func FoodToCreate(source Food, context CreateContext) site.CreateFoodPresetParam
 	}
 	if source.Energy != nil {
 		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteCreateFoodPresetParams.Calories = &xfloat646
+		siteCreateFoodPresetParams.Energy = &xfloat646
 	}
 	pString := source.RawJsonData
 	siteCreateFoodPresetParams.RawJsonData = &pString
@@ -268,6 +268,18 @@ func TreatmentToCreateEventGroup(source Treatment, context CreateContext) site.C
 func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.CreateFoodIntakeParams {
 	var siteCreateFoodIntakeParams site.CreateFoodIntakeParams
 	siteCreateFoodIntakeParams.ID = AssignID()
+	if source.Name != nil {
+		xstring := ShortStringToString(*source.Name)
+		siteCreateFoodIntakeParams.Name = &xstring
+	}
+	if source.Category != nil {
+		xstring2 := ShortStringToString(*source.Category)
+		siteCreateFoodIntakeParams.Category = &xstring2
+	}
+	if source.Subcategory != nil {
+		xstring3 := ShortStringToString(*source.Subcategory)
+		siteCreateFoodIntakeParams.Subcategory = &xstring3
+	}
 	if source.Carbs != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		siteCreateFoodIntakeParams.Carbs = &xfloat64
@@ -286,7 +298,11 @@ func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.C
 	}
 	if source.Energy != nil {
 		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteCreateFoodIntakeParams.Calories = &xfloat645
+		siteCreateFoodIntakeParams.Energy = &xfloat645
+	}
+	if source.Portions != nil {
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Portions)
+		siteCreateFoodIntakeParams.Portions = &xfloat646
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
@@ -296,12 +312,12 @@ func TreatmentToCreateFoodIntake(source Treatment, context CreateContext) site.C
 	pString := source.RawJsonData
 	siteCreateFoodIntakeParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateFoodIntakeParams.CreatedByAppName = &xstring
+		xstring4 := ShortStringToString(*source.App)
+		siteCreateFoodIntakeParams.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring2
+		xstring5 := ShortStringToString(*source.Device)
+		siteCreateFoodIntakeParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateFoodIntakeParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodIntakeParams

@@ -372,9 +372,14 @@ func (m FoodIntake) GetName() *string {
 	return m.Name
 }
 
-// GetFoodType returns the FoodType value.
-func (m FoodIntake) GetFoodType() string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m FoodIntake) GetCategory() *string {
+	return m.Category
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m FoodIntake) GetSubcategory() *string {
+	return m.Subcategory
 }
 
 // GetCarbs returns the Carbs value.
@@ -397,9 +402,14 @@ func (m FoodIntake) GetFibre() *float64 {
 	return m.Fibre
 }
 
-// GetCalories returns the Calories value.
-func (m FoodIntake) GetCalories() *float64 {
-	return m.Calories
+// GetEnergy returns the Energy value.
+func (m FoodIntake) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// GetPortions returns the Portions value.
+func (m FoodIntake) GetPortions() *float64 {
+	return m.Portions
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -492,9 +502,9 @@ func (m FoodPreset) GetFibre() *float64 {
 	return m.Fibre
 }
 
-// GetCalories returns the Calories value.
-func (m FoodPreset) GetCalories() *float64 {
-	return m.Calories
+// GetEnergy returns the Energy value.
+func (m FoodPreset) GetEnergy() *float64 {
+	return m.Energy
 }
 
 // GetPortions returns the Portions value.
@@ -2835,14 +2845,25 @@ func (m CreateFoodIntakeParams) SetName(v *string) CreateFoodIntakeParams {
 	return m
 }
 
-// GetFoodType returns the FoodType value.
-func (m CreateFoodIntakeParams) GetFoodType() string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m CreateFoodIntakeParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetFoodType sets the FoodType value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetFoodType(v string) CreateFoodIntakeParams {
-	m.FoodType = v
+// SetCategory sets the Category value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetCategory(v *string) CreateFoodIntakeParams {
+	m.Category = v
+	return m
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m CreateFoodIntakeParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetSubcategory(v *string) CreateFoodIntakeParams {
+	m.Subcategory = v
 	return m
 }
 
@@ -2890,14 +2911,25 @@ func (m CreateFoodIntakeParams) SetFibre(v *float64) CreateFoodIntakeParams {
 	return m
 }
 
-// GetCalories returns the Calories value.
-func (m CreateFoodIntakeParams) GetCalories() *float64 {
-	return m.Calories
+// GetEnergy returns the Energy value.
+func (m CreateFoodIntakeParams) GetEnergy() *float64 {
+	return m.Energy
 }
 
-// SetCalories sets the Calories value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetCalories(v *float64) CreateFoodIntakeParams {
-	m.Calories = v
+// SetEnergy sets the Energy value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetEnergy(v *float64) CreateFoodIntakeParams {
+	m.Energy = v
+	return m
+}
+
+// GetPortions returns the Portions value.
+func (m CreateFoodIntakeParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetPortions(v *float64) CreateFoodIntakeParams {
+	m.Portions = v
 	return m
 }
 
@@ -3341,14 +3373,25 @@ func (m UpdateFoodIntakeParams) SetName(v *string) UpdateFoodIntakeParams {
 	return m
 }
 
-// GetFoodType returns the FoodType value.
-func (m UpdateFoodIntakeParams) GetFoodType() *string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m UpdateFoodIntakeParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetFoodType sets the FoodType value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetFoodType(v *string) UpdateFoodIntakeParams {
-	m.FoodType = v
+// SetCategory sets the Category value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetCategory(v *string) UpdateFoodIntakeParams {
+	m.Category = v
+	return m
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m UpdateFoodIntakeParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetSubcategory(v *string) UpdateFoodIntakeParams {
+	m.Subcategory = v
 	return m
 }
 
@@ -3396,14 +3439,25 @@ func (m UpdateFoodIntakeParams) SetFibre(v *float64) UpdateFoodIntakeParams {
 	return m
 }
 
-// GetCalories returns the Calories value.
-func (m UpdateFoodIntakeParams) GetCalories() *float64 {
-	return m.Calories
+// GetEnergy returns the Energy value.
+func (m UpdateFoodIntakeParams) GetEnergy() *float64 {
+	return m.Energy
 }
 
-// SetCalories sets the Calories value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetCalories(v *float64) UpdateFoodIntakeParams {
-	m.Calories = v
+// SetEnergy sets the Energy value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetEnergy(v *float64) UpdateFoodIntakeParams {
+	m.Energy = v
+	return m
+}
+
+// GetPortions returns the Portions value.
+func (m UpdateFoodIntakeParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetPortions(v *float64) UpdateFoodIntakeParams {
+	m.Portions = v
 	return m
 }
 
@@ -3495,25 +3549,25 @@ func (m SoftDeleteFoodIntakesByTypeParams) SetUpdatedByIdentityName(v *string) S
 	return m
 }
 
-// GetFoodType returns the FoodType value.
-func (m SoftDeleteFoodIntakesByTypeParams) GetFoodType() string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m SoftDeleteFoodIntakesByTypeParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetFoodType sets the FoodType value and returns the updated SoftDeleteFoodIntakesByTypeParams.
-func (m SoftDeleteFoodIntakesByTypeParams) SetFoodType(v string) SoftDeleteFoodIntakesByTypeParams {
-	m.FoodType = v
+// SetCategory sets the Category value and returns the updated SoftDeleteFoodIntakesByTypeParams.
+func (m SoftDeleteFoodIntakesByTypeParams) SetCategory(v *string) SoftDeleteFoodIntakesByTypeParams {
+	m.Category = v
 	return m
 }
 
-// GetFoodType returns the FoodType value.
-func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() string {
-	return m.FoodType
+// GetCategory returns the Category value.
+func (m HardDeleteFoodIntakesByTypeParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetFoodType sets the FoodType value and returns the updated HardDeleteFoodIntakesByTypeParams.
-func (m HardDeleteFoodIntakesByTypeParams) SetFoodType(v string) HardDeleteFoodIntakesByTypeParams {
-	m.FoodType = v
+// SetCategory sets the Category value and returns the updated HardDeleteFoodIntakesByTypeParams.
+func (m HardDeleteFoodIntakesByTypeParams) SetCategory(v *string) HardDeleteFoodIntakesByTypeParams {
+	m.Category = v
 	return m
 }
 
@@ -3976,17 +4030,6 @@ func (m UpdateGlucoseReadingParams) GetReading() *float64 {
 // SetReading sets the Reading value and returns the updated UpdateGlucoseReadingParams.
 func (m UpdateGlucoseReadingParams) SetReading(v *float64) UpdateGlucoseReadingParams {
 	m.Reading = v
-	return m
-}
-
-// GetReadingType returns the ReadingType value.
-func (m UpdateGlucoseReadingParams) GetReadingType() *string {
-	return m.ReadingType
-}
-
-// SetReadingType sets the ReadingType value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetReadingType(v *string) UpdateGlucoseReadingParams {
-	m.ReadingType = v
 	return m
 }
 
@@ -7741,14 +7784,14 @@ func (m CreateFoodPresetParams) SetFibre(v *float64) CreateFoodPresetParams {
 	return m
 }
 
-// GetCalories returns the Calories value.
-func (m CreateFoodPresetParams) GetCalories() *float64 {
-	return m.Calories
+// GetEnergy returns the Energy value.
+func (m CreateFoodPresetParams) GetEnergy() *float64 {
+	return m.Energy
 }
 
-// SetCalories sets the Calories value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetCalories(v *float64) CreateFoodPresetParams {
-	m.Calories = v
+// SetEnergy sets the Energy value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetEnergy(v *float64) CreateFoodPresetParams {
+	m.Energy = v
 	return m
 }
 
@@ -8225,14 +8268,14 @@ func (m UpdateFoodPresetParams) SetFibre(v *float64) UpdateFoodPresetParams {
 	return m
 }
 
-// GetCalories returns the Calories value.
-func (m UpdateFoodPresetParams) GetCalories() *float64 {
-	return m.Calories
+// GetEnergy returns the Energy value.
+func (m UpdateFoodPresetParams) GetEnergy() *float64 {
+	return m.Energy
 }
 
-// SetCalories sets the Calories value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetCalories(v *float64) UpdateFoodPresetParams {
-	m.Calories = v
+// SetEnergy sets the Energy value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetEnergy(v *float64) UpdateFoodPresetParams {
+	m.Energy = v
 	return m
 }
 
@@ -8266,6 +8309,17 @@ func (m HardDeleteFoodPresetParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteFoodPresetParams.
 func (m HardDeleteFoodPresetParams) SetID(v string) HardDeleteFoodPresetParams {
 	m.ID = v
+	return m
+}
+
+// GetCategory returns the Category value.
+func (m HardDeleteFoodPresetsByTypeParams) GetCategory() *string {
+	return m.Category
+}
+
+// SetCategory sets the Category value and returns the updated HardDeleteFoodPresetsByTypeParams.
+func (m HardDeleteFoodPresetsByTypeParams) SetCategory(v *string) HardDeleteFoodPresetsByTypeParams {
+	m.Category = v
 	return m
 }
 

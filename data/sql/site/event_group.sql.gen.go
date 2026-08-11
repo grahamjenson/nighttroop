@@ -25,11 +25,14 @@ SELECT
 
     fi.id as food_intake_id,
     fi.name as food_intake_name,
+    fi.category as food_intake_category,
+    fi.subcategory as food_intake_subcategory,
     fi.carbs as food_intake_carbs,
     fi.fat as food_intake_fat,
     fi.protein as food_intake_protein,
     fi.fibre as food_intake_fibre,
-    fi.calories as food_intake_calories,
+    fi.energy as food_intake_energy,
+    fi.portions as food_intake_portions,
 
     tb.id as temp_basal_id,
     tb.duration_minutes as temp_basal_duration_minutes,
@@ -98,11 +101,14 @@ type AllEventGroupsRow struct {
 	InsulinDoseType                       *string
 	FoodIntakeID                          *string
 	FoodIntakeName                        *string
+	FoodIntakeCategory                    *string
+	FoodIntakeSubcategory                 *string
 	FoodIntakeCarbs                       *float64
 	FoodIntakeFat                         *float64
 	FoodIntakeProtein                     *float64
 	FoodIntakeFibre                       *float64
-	FoodIntakeCalories                    *float64
+	FoodIntakeEnergy                      *float64
+	FoodIntakePortions                    *float64
 	TempBasalID                           *string
 	TempBasalDurationMinutes              *int64
 	TempBasalAbsolute                     *float64
@@ -174,11 +180,14 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.InsulinDoseType,
 			&i.FoodIntakeID,
 			&i.FoodIntakeName,
+			&i.FoodIntakeCategory,
+			&i.FoodIntakeSubcategory,
 			&i.FoodIntakeCarbs,
 			&i.FoodIntakeFat,
 			&i.FoodIntakeProtein,
 			&i.FoodIntakeFibre,
-			&i.FoodIntakeCalories,
+			&i.FoodIntakeEnergy,
+			&i.FoodIntakePortions,
 			&i.TempBasalID,
 			&i.TempBasalDurationMinutes,
 			&i.TempBasalAbsolute,
@@ -334,11 +343,14 @@ SELECT
 
     fi.id as food_intake_id,
     fi.name as food_intake_name,
+    fi.category as food_intake_category,
+    fi.subcategory as food_intake_subcategory,
     fi.carbs as food_intake_carbs,
     fi.fat as food_intake_fat,
     fi.protein as food_intake_protein,
     fi.fibre as food_intake_fibre,
-    fi.calories as food_intake_calories,
+    fi.energy as food_intake_energy,
+    fi.portions as food_intake_portions,
 
     tb.id as temp_basal_id,
     tb.duration_minutes as temp_basal_duration_minutes,
@@ -404,11 +416,14 @@ type GetEventGroupRow struct {
 	InsulinDoseType                       *string
 	FoodIntakeID                          *string
 	FoodIntakeName                        *string
+	FoodIntakeCategory                    *string
+	FoodIntakeSubcategory                 *string
 	FoodIntakeCarbs                       *float64
 	FoodIntakeFat                         *float64
 	FoodIntakeProtein                     *float64
 	FoodIntakeFibre                       *float64
-	FoodIntakeCalories                    *float64
+	FoodIntakeEnergy                      *float64
+	FoodIntakePortions                    *float64
 	TempBasalID                           *string
 	TempBasalDurationMinutes              *int64
 	TempBasalAbsolute                     *float64
@@ -474,11 +489,14 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.InsulinDoseType,
 		&i.FoodIntakeID,
 		&i.FoodIntakeName,
+		&i.FoodIntakeCategory,
+		&i.FoodIntakeSubcategory,
 		&i.FoodIntakeCarbs,
 		&i.FoodIntakeFat,
 		&i.FoodIntakeProtein,
 		&i.FoodIntakeFibre,
-		&i.FoodIntakeCalories,
+		&i.FoodIntakeEnergy,
+		&i.FoodIntakePortions,
 		&i.TempBasalID,
 		&i.TempBasalDurationMinutes,
 		&i.TempBasalAbsolute,
@@ -713,11 +731,14 @@ SELECT
 
     fi.id as food_intake_id,
     fi.name as food_intake_name,
+    fi.category as food_intake_category,
+    fi.subcategory as food_intake_subcategory,
     fi.carbs as food_intake_carbs,
     fi.fat as food_intake_fat,
     fi.protein as food_intake_protein,
     fi.fibre as food_intake_fibre,
-    fi.calories as food_intake_calories,
+    fi.energy as food_intake_energy,
+    fi.portions as food_intake_portions,
 
     tb.id as temp_basal_id,
     tb.duration_minutes as temp_basal_duration_minutes,
@@ -894,11 +915,14 @@ type SearchEventGroupsRow struct {
 	InsulinDoseType                       *string
 	FoodIntakeID                          *string
 	FoodIntakeName                        *string
+	FoodIntakeCategory                    *string
+	FoodIntakeSubcategory                 *string
 	FoodIntakeCarbs                       *float64
 	FoodIntakeFat                         *float64
 	FoodIntakeProtein                     *float64
 	FoodIntakeFibre                       *float64
-	FoodIntakeCalories                    *float64
+	FoodIntakeEnergy                      *float64
+	FoodIntakePortions                    *float64
 	TempBasalID                           *string
 	TempBasalDurationMinutes              *int64
 	TempBasalAbsolute                     *float64
@@ -1015,11 +1039,14 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.InsulinDoseType,
 			&i.FoodIntakeID,
 			&i.FoodIntakeName,
+			&i.FoodIntakeCategory,
+			&i.FoodIntakeSubcategory,
 			&i.FoodIntakeCarbs,
 			&i.FoodIntakeFat,
 			&i.FoodIntakeProtein,
 			&i.FoodIntakeFibre,
-			&i.FoodIntakeCalories,
+			&i.FoodIntakeEnergy,
+			&i.FoodIntakePortions,
 			&i.TempBasalID,
 			&i.TempBasalDurationMinutes,
 			&i.TempBasalAbsolute,

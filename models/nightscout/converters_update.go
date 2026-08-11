@@ -40,7 +40,6 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	// goverter:map Type ReadingType
 	EntryToUpdate(source Entry, ctx UpdateContext) site.UpdateGlucoseReadingParams
 
 	///////
@@ -52,24 +51,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	// goverter:map Energy	Calories
 	FoodToUpdate(source Food, ctx UpdateContext) site.UpdateFoodPresetParams
-
-	///////
-	// Profile To Profile Preset
-	///////
-
-	// goverter:context ctx
-	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
-	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	//
-	// goverter:map Duration DurationMinutes
-	// ProfileToUpdate(source Profile, ctx UpdateContext) site.UpdateProfilePresetParams
-
-	//
-	//
-	//
 
 	////////////////////////////////////////
 	// TREATMENT TO CREATE/UPDATE
@@ -95,8 +77,6 @@ type UpdateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
-	// goverter:ignore Name FoodType
-	// goverter:map Energy Calories
 	TreatmentToUpdateFoodIntake(source Treatment, ctx UpdateContext) site.UpdateFoodIntakeParams
 
 	///////
@@ -109,7 +89,6 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:map Glucose Reading
-	// goverter:map GlucoseType ReadingType
 	TreatmentToUpdateGlucoseReading(source Treatment, ctx UpdateContext) site.UpdateGlucoseReadingParams
 
 	///////

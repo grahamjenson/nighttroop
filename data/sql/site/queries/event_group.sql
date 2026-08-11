@@ -51,11 +51,14 @@ SELECT
 
     fi.id as food_intake_id,
     fi.name as food_intake_name,
+    fi.category as food_intake_category,
+    fi.subcategory as food_intake_subcategory,
     fi.carbs as food_intake_carbs,
     fi.fat as food_intake_fat,
     fi.protein as food_intake_protein,
     fi.fibre as food_intake_fibre,
-    fi.calories as food_intake_calories,
+    fi.energy as food_intake_energy,
+    fi.portions as food_intake_portions,
 
     tb.id as temp_basal_id,
     tb.duration_minutes as temp_basal_duration_minutes,
@@ -124,11 +127,14 @@ SELECT
 
     fi.id as food_intake_id,
     fi.name as food_intake_name,
+    fi.category as food_intake_category,
+    fi.subcategory as food_intake_subcategory,
     fi.carbs as food_intake_carbs,
     fi.fat as food_intake_fat,
     fi.protein as food_intake_protein,
     fi.fibre as food_intake_fibre,
-    fi.calories as food_intake_calories,
+    fi.energy as food_intake_energy,
+    fi.portions as food_intake_portions,
 
     tb.id as temp_basal_id,
     tb.duration_minutes as temp_basal_duration_minutes,
@@ -195,11 +201,14 @@ SELECT
 
     fi.id as food_intake_id,
     fi.name as food_intake_name,
+    fi.category as food_intake_category,
+    fi.subcategory as food_intake_subcategory,
     fi.carbs as food_intake_carbs,
     fi.fat as food_intake_fat,
     fi.protein as food_intake_protein,
     fi.fibre as food_intake_fibre,
-    fi.calories as food_intake_calories,
+    fi.energy as food_intake_energy,
+    fi.portions as food_intake_portions,
 
     tb.id as temp_basal_id,
     tb.duration_minutes as temp_basal_duration_minutes,

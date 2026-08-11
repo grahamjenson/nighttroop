@@ -79,7 +79,17 @@ INSERT INTO glucose_readings (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+    ?1,
+    ?2,
+    ?3,
+    ?4,
+    ?5,
+    ?6,
+    ?7,
+    ?8,
+    ?9
+)
 RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -363,19 +373,17 @@ const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
 
 UPDATE glucose_readings SET
     reading = COALESCE(?1, reading),
-    reading_type = COALESCE(?2, reading_type),
 
-    occurred_at = COALESCE(?3, occurred_at),
-    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
+    occurred_at = COALESCE(?2, occurred_at),
+    utc_offset_minutes = COALESCE(?3, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?5
-WHERE id = ?6 AND deleted_at IS NULL
+    updated_by_identity_name = ?4
+WHERE id = ?5 AND deleted_at IS NULL
 RETURNING id, reading, reading_type, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
 	Reading               *float64
-	ReadingType           *string
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -388,7 +396,6 @@ type UpdateGlucoseReadingParams struct {
 func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseReadingParams) (*GlucoseReading, error) {
 	row := q.queryRow(ctx, q.updateGlucoseReadingStmt, updateGlucoseReading,
 		arg.Reading,
-		arg.ReadingType,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,

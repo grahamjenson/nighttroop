@@ -12,7 +12,7 @@ import (
 
 const allFoodIntakes = `-- name: AllFoodIntakes :many
 
-SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -39,12 +39,14 @@ func (q *Queries) AllFoodIntakes(ctx context.Context, arg AllFoodIntakesParams) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.FoodType,
+			&i.Category,
+			&i.Subcategory,
 			&i.Carbs,
 			&i.Fat,
 			&i.Protein,
 			&i.Fibre,
-			&i.Calories,
+			&i.Energy,
+			&i.Portions,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -73,12 +75,15 @@ const createFoodIntake = `-- name: CreateFoodIntake :one
 INSERT INTO food_intakes (
     id,
     name,
-    food_type,
+    category,
+    subcategory,
+
     carbs,
     fat,
     protein,
     fibre,
-    calories,
+    energy,
+    portions,
 
     utc_offset_minutes,
     occurred_at,
@@ -87,19 +92,21 @@ INSERT INTO food_intakes (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateFoodIntakeParams struct {
 	ID                    string
 	Name                  *string
-	FoodType              string
+	Category              *string
+	Subcategory           *string
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
 	Fibre                 *float64
-	Calories              *float64
+	Energy                *float64
+	Portions              *float64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	RawJsonData           *string
@@ -115,12 +122,14 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 	row := q.queryRow(ctx, q.createFoodIntakeStmt, createFoodIntake,
 		arg.ID,
 		arg.Name,
-		arg.FoodType,
+		arg.Category,
+		arg.Subcategory,
 		arg.Carbs,
 		arg.Fat,
 		arg.Protein,
 		arg.Fibre,
-		arg.Calories,
+		arg.Energy,
+		arg.Portions,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
 		arg.RawJsonData,
@@ -132,12 +141,14 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.FoodType,
+		&i.Category,
+		&i.Subcategory,
 		&i.Carbs,
 		&i.Fat,
 		&i.Protein,
 		&i.Fibre,
-		&i.Calories,
+		&i.Energy,
+		&i.Portions,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -153,7 +164,7 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 }
 
 const getFoodIntake = `-- name: GetFoodIntake :one
-SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes WHERE id = ?
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes WHERE id = ?
 `
 
 type GetFoodIntakeParams struct {
@@ -166,12 +177,14 @@ func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.FoodType,
+		&i.Category,
+		&i.Subcategory,
 		&i.Carbs,
 		&i.Fat,
 		&i.Protein,
 		&i.Fibre,
-		&i.Calories,
+		&i.Energy,
+		&i.Portions,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -199,19 +212,19 @@ func (q *Queries) HardDeleteFoodIntake(ctx context.Context, arg HardDeleteFoodIn
 }
 
 const hardDeleteFoodIntakesByType = `-- name: HardDeleteFoodIntakesByType :execresult
-DELETE FROM food_intakes WHERE food_type = ?
+DELETE FROM food_intakes WHERE category = ?
 `
 
 type HardDeleteFoodIntakesByTypeParams struct {
-	FoodType string
+	Category *string
 }
 
 func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDeleteFoodIntakesByTypeParams) (sql.Result, error) {
-	return q.exec(ctx, q.hardDeleteFoodIntakesByTypeStmt, hardDeleteFoodIntakesByType, arg.FoodType)
+	return q.exec(ctx, q.hardDeleteFoodIntakesByTypeStmt, hardDeleteFoodIntakesByType, arg.Category)
 }
 
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
-SELECT id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -236,10 +249,10 @@ WHERE
     AND (CAST(?16 AS TEXT) IS NULL OR created_by_device_name = ?16)
     AND (CAST(?17 AS TEXT) IS NULL OR created_by_app_name = ?17)
     
-    AND (CAST(?18 AS TEXT) IS NULL OR food_type = ?18)
-    AND (CAST(?19 AS TEXT) IS NULL OR food_type != ?19)
-    AND (CAST(?20 AS TEXT) IS NULL OR food_type IN (SELECT value FROM json_each(?20)))
-    AND (CAST(?21 AS TEXT) IS NULL OR food_type NOT IN (SELECT value FROM json_each(?21)))
+    AND (CAST(?18 AS TEXT) IS NULL OR category = ?18)
+    AND (CAST(?19 AS TEXT) IS NULL OR category != ?19)
+    AND (CAST(?20 AS TEXT) IS NULL OR category IN (SELECT value FROM json_each(?20)))
+    AND (CAST(?21 AS TEXT) IS NULL OR category NOT IN (SELECT value FROM json_each(?21)))
 
     AND (CAST(?22 AS INTEGER) IS NULL OR carbs = ?22)
     AND (CAST(?23 AS INTEGER) IS NULL OR carbs >= ?23)
@@ -326,12 +339,14 @@ func (q *Queries) SearchFoodIntakes(ctx context.Context, arg SearchFoodIntakesPa
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.FoodType,
+			&i.Category,
+			&i.Subcategory,
 			&i.Carbs,
 			&i.Fat,
 			&i.Protein,
 			&i.Fibre,
-			&i.Calories,
+			&i.Energy,
+			&i.Portions,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -380,45 +395,50 @@ const softDeleteFoodIntakesByType = `-- name: SoftDeleteFoodIntakesByType :execr
 UPDATE food_intakes SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
-WHERE food_type = ? AND deleted_at IS NULL
+WHERE category = ? AND deleted_at IS NULL
 `
 
 type SoftDeleteFoodIntakesByTypeParams struct {
 	UpdatedByIdentityName *string
-	FoodType              string
+	Category              *string
 }
 
 func (q *Queries) SoftDeleteFoodIntakesByType(ctx context.Context, arg SoftDeleteFoodIntakesByTypeParams) (sql.Result, error) {
-	return q.exec(ctx, q.softDeleteFoodIntakesByTypeStmt, softDeleteFoodIntakesByType, arg.UpdatedByIdentityName, arg.FoodType)
+	return q.exec(ctx, q.softDeleteFoodIntakesByTypeStmt, softDeleteFoodIntakesByType, arg.UpdatedByIdentityName, arg.Category)
 }
 
 const updateFoodIntake = `-- name: UpdateFoodIntake :one
 
 UPDATE food_intakes SET
     name = COALESCE(?1, name),
-    food_type = COALESCE(?2, food_type),
-    carbs = COALESCE(?3, carbs),
-    fat = COALESCE(?4, fat),
-    protein = COALESCE(?5, protein),
-    fibre = COALESCE(?6, fibre),
-    calories = COALESCE(?7, calories),
+    category = COALESCE(?2, category),
+    subcategory = COALESCE(?3, subcategory),
 
-    occurred_at = COALESCE(?8, occurred_at),
-    utc_offset_minutes = COALESCE(?9, utc_offset_minutes),
+    carbs = COALESCE(?4, carbs),
+    fat = COALESCE(?5, fat),
+    protein = COALESCE(?6, protein),
+    fibre = COALESCE(?7, fibre),
+    energy = COALESCE(?8, energy),
+    portions = COALESCE(?9, portions),
+
+    occurred_at = COALESCE(?10, occurred_at),
+    utc_offset_minutes = COALESCE(?11, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?10
-WHERE id = ?11 AND deleted_at IS NULL
-RETURNING id, name, food_type, carbs, fat, protein, fibre, calories, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+    updated_by_identity_name = ?12
+WHERE id = ?13 AND deleted_at IS NULL
+RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateFoodIntakeParams struct {
 	Name                  *string
-	FoodType              *string
+	Category              *string
+	Subcategory           *string
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
 	Fibre                 *float64
-	Calories              *float64
+	Energy                *float64
+	Portions              *float64
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -431,12 +451,14 @@ type UpdateFoodIntakeParams struct {
 func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakeParams) (*FoodIntake, error) {
 	row := q.queryRow(ctx, q.updateFoodIntakeStmt, updateFoodIntake,
 		arg.Name,
-		arg.FoodType,
+		arg.Category,
+		arg.Subcategory,
 		arg.Carbs,
 		arg.Fat,
 		arg.Protein,
 		arg.Fibre,
-		arg.Calories,
+		arg.Energy,
+		arg.Portions,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,
@@ -446,12 +468,14 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.FoodType,
+		&i.Category,
+		&i.Subcategory,
 		&i.Carbs,
 		&i.Fat,
 		&i.Protein,
 		&i.Fibre,
-		&i.Calories,
+		&i.Energy,
+		&i.Portions,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
