@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -71,31 +72,38 @@ func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *sit
 
 func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
 
-	createParams := TreatmentEventGroupBundle(ctx, nsModel)
+	tebg := TreatmentEventGroupBundle(ctx, nsModel)
+	ccc, err := json.Marshal(tebg)
+	fmt.Println("tebg.EventGroup.CreateParams", string(ccc))
 
 	if overrideIdentifier != nil {
-		createParams.EventGroup.ID = *overrideIdentifier
+		tebg.EventGroup.ID = *overrideIdentifier
 	}
 
-	dbModel, err := createUpdateEventGroup(ctx, q, createParams, cc)
+	err = createUpdateEventGroup(ctx, q, &tebg, cc)
 	if err != nil {
 		return nil, err
 	}
 
-	newEventGroup, err := q.CreateEventGroup(ctx, nightscout.EventGroupCreate(createParams.EventGroup, cc))
+	createEventGroupParams := nightscout.EventGroupCreate(tebg.EventGroup, cc)
+	a, _ := json.Marshal(tebg.EventGroup)
+	b, _ := json.Marshal(createEventGroupParams)
+	fmt.Println("createParams.EventGroup.CreateParams", string(a))
+	fmt.Println("createEventGroupParams", string(b))
+	newEventGroup, err := q.CreateEventGroup(ctx, createEventGroupParams)
 	if err != nil {
-		slog.Error("failed to create event group in database", "error", err, "createParams", createParams)
+		slog.Error("failed to create event group in database", "error", err, "createParams", tebg)
 		return nil, err
 	}
 
 	if newEventGroup == nil || newEventGroup.ID == "" {
-		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", createParams)
+		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", tebg)
 		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
 	}
 
-	dbModel.EventGroup = *newEventGroup
+	tebg.EventGroup = *newEventGroup
 
-	return dbModel, nil
+	return &tebg, nil
 }
 
 func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.EventGroupsBundle, error) {
@@ -253,191 +261,247 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 // ///////////////////////
 
 // createUpdateEventGroup goes through an EventGroupsBundle if the EventGroup has an ID it will update, if not it will attempt to create
-func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle site.EventGroupsBundle, cc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
-	ret := site.EventGroupsBundle{}
+func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.EventGroupsBundle, cc nightscout.ConverterContext) error {
 
-	if bundle.GlucoseReading != nil {
-		if bundle.EventGroup.GlucoseReadingID == nil {
-			bundle.EventGroup.GlucoseReadingID = &bundle.GlucoseReading.ID
-			dbModel, err := q.CreateGlucoseReading(ctx, nightscout.GlucoseReadingCreate(*bundle.GlucoseReading, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create glucose reading in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.GlucoseReading = dbModel
-		} else {
-			bundle.EventGroup.GlucoseReadingID = &bundle.GlucoseReading.ID
-			dbModel, err := q.UpdateGlucoseReading(ctx, nightscout.GlucoseReadingUpdate(*bundle.GlucoseReading, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update glucose reading in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.GlucoseReading = dbModel
+	// GlucoseReading
+	if bundle.DeleteGlucoseReading() {
+		_, err := q.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: *bundle.EventGroup.GlucoseReadingID})
+		if err != nil {
+			slog.Error("failed to delete glucose reading from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.GlucoseReadingID = nil
+	} else if bundle.CreateGlucoseReading() {
+		dbModel, err := q.CreateGlucoseReading(ctx, nightscout.GlucoseReadingCreate(*bundle.GlucoseReading, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create glucose reading in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.GlucoseReadingID = &dbModel.ID
+		bundle.GlucoseReading = dbModel
+	} else if bundle.UpdateGlucoseReading() {
+		dbModel, err := q.UpdateGlucoseReading(ctx, nightscout.GlucoseReadingUpdate(*bundle.GlucoseReading, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update glucose reading in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.GlucoseReadingID = &dbModel.ID
+		bundle.GlucoseReading = dbModel
 	}
 
-	if bundle.InsulinDose != nil {
-		if bundle.EventGroup.InsulinDoseID == nil {
-			bundle.EventGroup.InsulinDoseID = &bundle.InsulinDose.ID
-			dbModel, err := q.CreateInsulinDose(ctx, nightscout.InsulinDoseCreate(*bundle.InsulinDose, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create insulin dose in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.InsulinDose = dbModel
-		} else {
-			bundle.EventGroup.InsulinDoseID = &bundle.InsulinDose.ID
-			dbModel, err := q.UpdateInsulinDose(ctx, nightscout.InsulinDoseUpdate(*bundle.InsulinDose, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update insulin dose in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.InsulinDose = dbModel
+	// InsulinDose
+	if bundle.DeleteInsulinDose() {
+		_, err := q.HardDeleteInsulinDose(ctx, site.HardDeleteInsulinDoseParams{ID: *bundle.EventGroup.InsulinDoseID})
+		if err != nil {
+			slog.Error("failed to delete insulin dose from database", "error", err)
+			return err
 		}
-
+		bundle.EventGroup.InsulinDoseID = nil
+	} else if bundle.CreateInsulinDose() {
+		dbModel, err := q.CreateInsulinDose(ctx, nightscout.InsulinDoseCreate(*bundle.InsulinDose, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create insulin dose in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.InsulinDoseID = &dbModel.ID
+		bundle.InsulinDose = dbModel
+	} else if bundle.UpdateInsulinDose() {
+		dbModel, err := q.UpdateInsulinDose(ctx, nightscout.InsulinDoseUpdate(*bundle.InsulinDose, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update insulin dose in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.InsulinDoseID = &dbModel.ID
+		bundle.InsulinDose = dbModel
 	}
 
-	if bundle.FoodIntake != nil {
-		if bundle.EventGroup.FoodIntakeID == nil {
-			bundle.EventGroup.FoodIntakeID = &bundle.FoodIntake.ID
-			dbModel, err := q.CreateFoodIntake(ctx, nightscout.FoodIntakeCreate(*bundle.FoodIntake, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create food intake in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.FoodIntake = dbModel
-		} else {
-			bundle.EventGroup.FoodIntakeID = &bundle.FoodIntake.ID
-			dbModel, err := q.UpdateFoodIntake(ctx, nightscout.FoodIntakeUpdate(*bundle.FoodIntake, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update food intake in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.FoodIntake = dbModel
+	if bundle.DeleteFoodIntake() {
+		_, err := q.HardDeleteFoodIntake(ctx, site.HardDeleteFoodIntakeParams{ID: *bundle.EventGroup.FoodIntakeID})
+		if err != nil {
+			slog.Error("failed to delete food intake from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.FoodIntakeID = nil
+	} else if bundle.CreateFoodIntake() {
+		dbModel, err := q.CreateFoodIntake(ctx, nightscout.FoodIntakeCreate(*bundle.FoodIntake, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create food intake in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.FoodIntakeID = &dbModel.ID
+		bundle.FoodIntake = dbModel
+	} else if bundle.UpdateFoodIntake() {
+		dbModel, err := q.UpdateFoodIntake(ctx, nightscout.FoodIntakeUpdate(*bundle.FoodIntake, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update food intake in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.FoodIntakeID = &dbModel.ID
+		bundle.FoodIntake = dbModel
 	}
 
-	if bundle.TempBasal != nil {
-		if bundle.EventGroup.TempBasalID == nil {
-			bundle.EventGroup.TempBasalID = &bundle.TempBasal.ID
-			dbModel, err := q.CreateTempBasal(ctx, nightscout.TempBasalCreate(*bundle.TempBasal, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create temp basal in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.TempBasal = dbModel
-		} else {
-			bundle.EventGroup.TempBasalID = &bundle.TempBasal.ID
-			dbModel, err := q.UpdateTempBasal(ctx, nightscout.TempBasalUpdate(*bundle.TempBasal, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update temp basal in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.TempBasal = dbModel
+	// TempBasal
+	if bundle.DeleteTempBasal() {
+		_, err := q.HardDeleteTempBasal(ctx, site.HardDeleteTempBasalParams{ID: *bundle.EventGroup.TempBasalID})
+		if err != nil {
+			slog.Error("failed to delete temp basal from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.TempBasalID = nil
+	} else if bundle.CreateTempBasal() {
+		dbModel, err := q.CreateTempBasal(ctx, nightscout.TempBasalCreate(*bundle.TempBasal, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create temp basal in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.TempBasalID = &dbModel.ID
+		bundle.TempBasal = dbModel
+	} else if bundle.UpdateTempBasal() {
+		dbModel, err := q.UpdateTempBasal(ctx, nightscout.TempBasalUpdate(*bundle.TempBasal, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update temp basal in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.TempBasalID = &dbModel.ID
+		bundle.TempBasal = dbModel
 	}
 
-	if bundle.TempTarget != nil {
-		if bundle.EventGroup.TempTargetID == nil {
-			bundle.EventGroup.TempTargetID = &bundle.TempTarget.ID
-			dbModel, err := q.CreateTempTarget(ctx, nightscout.TempTargetCreate(*bundle.TempTarget, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create temp target in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.TempTarget = dbModel
-		} else {
-			bundle.EventGroup.TempTargetID = &bundle.TempTarget.ID
-			dbModel, err := q.UpdateTempTarget(ctx, nightscout.TempTargetUpdate(*bundle.TempTarget, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update temp target in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.TempTarget = dbModel
+	// TempTarget
+	if bundle.DeleteTempTarget() {
+		_, err := q.HardDeleteTempTarget(ctx, site.HardDeleteTempTargetParams{ID: *bundle.EventGroup.TempTargetID})
+		if err != nil {
+			slog.Error("failed to delete temp target from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.TempTargetID = nil
+	} else if bundle.CreateTempTarget() {
+		dbModel, err := q.CreateTempTarget(ctx, nightscout.TempTargetCreate(*bundle.TempTarget, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create temp target in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.TempTargetID = &dbModel.ID
+		bundle.TempTarget = dbModel
+	} else if bundle.UpdateTempTarget() {
+		dbModel, err := q.UpdateTempTarget(ctx, nightscout.TempTargetUpdate(*bundle.TempTarget, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update temp target in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.TempTargetID = &dbModel.ID
+		bundle.TempTarget = dbModel
 	}
 
-	if bundle.ProfileSwitch != nil {
-		if bundle.EventGroup.ProfileSwitchID == nil {
-			bundle.EventGroup.ProfileSwitchID = &bundle.ProfileSwitch.ID
-			dbModel, err := q.CreateProfileSwitch(ctx, nightscout.ProfileSwitchCreate(*bundle.ProfileSwitch, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create profile switch in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.ProfileSwitch = dbModel
-		} else {
-			bundle.EventGroup.ProfileSwitchID = &bundle.ProfileSwitch.ID
-			dbModel, err := q.UpdateProfileSwitch(ctx, nightscout.ProfileSwitchUpdate(*bundle.ProfileSwitch, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update profile switch in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.ProfileSwitch = dbModel
+	// ProfileSwitch
+	if bundle.DeleteProfileSwitch() {
+		_, err := q.HardDeleteProfileSwitch(ctx, site.HardDeleteProfileSwitchParams{ID: *bundle.EventGroup.ProfileSwitchID})
+		if err != nil {
+			slog.Error("failed to delete profile switch from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.ProfileSwitchID = nil
+	} else if bundle.CreateProfileSwitch() {
+		dbModel, err := q.CreateProfileSwitch(ctx, nightscout.ProfileSwitchCreate(*bundle.ProfileSwitch, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create profile switch in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.ProfileSwitchID = &dbModel.ID
+		bundle.ProfileSwitch = dbModel
+	} else if bundle.UpdateProfileSwitch() {
+		dbModel, err := q.UpdateProfileSwitch(ctx, nightscout.ProfileSwitchUpdate(*bundle.ProfileSwitch, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update profile switch in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.ProfileSwitchID = &dbModel.ID
+		bundle.ProfileSwitch = dbModel
 	}
 
-	if bundle.ComponentEvent != nil {
-		if bundle.EventGroup.ComponentEventID == nil {
-			bundle.EventGroup.ComponentEventID = &bundle.ComponentEvent.ID
-			dbModel, err := q.CreateComponentEvent(ctx, nightscout.ComponentEventCreate(*bundle.ComponentEvent, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create component event in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.ComponentEvent = dbModel
-		} else {
-			bundle.EventGroup.ComponentEventID = &bundle.ComponentEvent.ID
-			dbModel, err := q.UpdateComponentEvent(ctx, nightscout.ComponentEventUpdate(*bundle.ComponentEvent, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update component event in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.ComponentEvent = dbModel
+	// ComponentEvent
+	if bundle.DeleteComponentEvent() {
+		_, err := q.HardDeleteComponentEvent(ctx, site.HardDeleteComponentEventParams{ID: *bundle.EventGroup.ComponentEventID})
+		if err != nil {
+			slog.Error("failed to delete component event from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.ComponentEventID = nil
+	} else if bundle.CreateComponentEvent() {
+		dbModel, err := q.CreateComponentEvent(ctx, nightscout.ComponentEventCreate(*bundle.ComponentEvent, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create component event in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.ComponentEventID = &dbModel.ID
+		bundle.ComponentEvent = dbModel
+	} else if bundle.UpdateComponentEvent() {
+		dbModel, err := q.UpdateComponentEvent(ctx, nightscout.ComponentEventUpdate(*bundle.ComponentEvent, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update component event in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.ComponentEventID = &dbModel.ID
+		bundle.ComponentEvent = dbModel
 	}
 
-	if bundle.Activity != nil {
-		if bundle.EventGroup.ActivityID == nil {
-			bundle.EventGroup.ActivityID = &bundle.Activity.ID
-			dbModel, err := q.CreateActivity(ctx, nightscout.ActivityCreate(*bundle.Activity, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create activity in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.Activity = dbModel
-		} else {
-			bundle.EventGroup.ActivityID = &bundle.Activity.ID
-			dbModel, err := q.UpdateActivity(ctx, nightscout.ActivityUpdate(*bundle.Activity, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update activity in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.Activity = dbModel
+	// Activity
+	if bundle.DeleteActivity() {
+		_, err := q.HardDeleteActivity(ctx, site.HardDeleteActivityParams{ID: *bundle.EventGroup.ActivityID})
+		if err != nil {
+			slog.Error("failed to delete activity from database", "error", err)
+			return err
+
 		}
+		bundle.EventGroup.ActivityID = nil
+	} else if bundle.CreateActivity() {
+		dbModel, err := q.CreateActivity(ctx, nightscout.ActivityCreate(*bundle.Activity, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create activity in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.ActivityID = &dbModel.ID
+		bundle.Activity = dbModel
+	} else if bundle.UpdateActivity() {
+		dbModel, err := q.UpdateActivity(ctx, nightscout.ActivityUpdate(*bundle.Activity, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update activity in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.ActivityID = &dbModel.ID
+		bundle.Activity = dbModel
 	}
 
-	if bundle.Note != nil {
-		if bundle.EventGroup.NoteID == nil {
-			bundle.EventGroup.NoteID = &bundle.Note.ID
-			dbModel, err := q.CreateNote(ctx, nightscout.NoteCreate(*bundle.Note, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.Note = dbModel
-		} else {
-			bundle.EventGroup.NoteID = &bundle.Note.ID
-			dbModel, err := q.UpdateNote(ctx, nightscout.NoteUpdate(*bundle.Note, cc))
-			if err != nil || dbModel == nil {
-				slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
-				return nil, err
-			}
-			ret.Note = dbModel
+	// note
+	if bundle.DeleteNote() {
+		// Id exists no model
+		_, err := q.HardDeleteNote(ctx, site.HardDeleteNoteParams{ID: *bundle.EventGroup.NoteID})
+		if err != nil {
+			slog.Error("failed to delete note from database", "error", err)
+			return err
 		}
+		bundle.EventGroup.NoteID = nil
+	} else if bundle.CreateNote() {
+		// model exists not id
+		// If the note is not deleted, but a new note is provided, we need to create it
+		dbModel, err := q.CreateNote(ctx, nightscout.NoteCreate(*bundle.Note, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.NoteID = &dbModel.ID
+		bundle.Note = dbModel
+	} else if bundle.UpdateNote() {
+		// model and id exist
+		dbModel, err := q.UpdateNote(ctx, nightscout.NoteUpdate(*bundle.Note, cc))
+		if err != nil || dbModel == nil {
+			slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
+			return err
+		}
+		bundle.EventGroup.NoteID = &dbModel.ID
+		bundle.Note = dbModel
 	}
 
-	return &ret, nil
+	return nil
 }
 
 func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) (sql.Result, error) {
@@ -615,8 +679,12 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		insulinDose = nil
 	}
 
-	if note.Content == "" || note.Reason == nil {
+	if note.Content == "" && note.Reason == nil {
 		note = nil
+	}
+
+	if foodIntake.Name == nil && foodIntake.Category == nil && foodIntake.Subcategory == nil && foodIntake.Carbs == nil && foodIntake.Fat == nil && foodIntake.Protein == nil && foodIntake.Fibre == nil && foodIntake.Energy == nil && foodIntake.Portions == nil {
+		foodIntake = nil
 	}
 
 	//////

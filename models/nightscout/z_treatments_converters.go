@@ -355,22 +355,58 @@ func EventGroupCreate(source site.EventGroup, context ConverterContext) site.Cre
 	var siteCreateEventGroupParams site.CreateEventGroupParams
 	siteCreateEventGroupParams.ID = source.ID
 	siteCreateEventGroupParams.GroupType = source.GroupType
+	if source.GlucoseReadingID != nil {
+		xstring := *source.GlucoseReadingID
+		siteCreateEventGroupParams.GlucoseReadingID = &xstring
+	}
+	if source.InsulinDoseID != nil {
+		xstring2 := *source.InsulinDoseID
+		siteCreateEventGroupParams.InsulinDoseID = &xstring2
+	}
+	if source.FoodIntakeID != nil {
+		xstring3 := *source.FoodIntakeID
+		siteCreateEventGroupParams.FoodIntakeID = &xstring3
+	}
+	if source.TempBasalID != nil {
+		xstring4 := *source.TempBasalID
+		siteCreateEventGroupParams.TempBasalID = &xstring4
+	}
+	if source.TempTargetID != nil {
+		xstring5 := *source.TempTargetID
+		siteCreateEventGroupParams.TempTargetID = &xstring5
+	}
+	if source.ProfileSwitchID != nil {
+		xstring6 := *source.ProfileSwitchID
+		siteCreateEventGroupParams.ProfileSwitchID = &xstring6
+	}
+	if source.ComponentEventID != nil {
+		xstring7 := *source.ComponentEventID
+		siteCreateEventGroupParams.ComponentEventID = &xstring7
+	}
+	if source.ActivityID != nil {
+		xstring8 := *source.ActivityID
+		siteCreateEventGroupParams.ActivityID = &xstring8
+	}
+	if source.NoteID != nil {
+		xstring9 := *source.NoteID
+		siteCreateEventGroupParams.NoteID = &xstring9
+	}
 	siteCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
 	}
 	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteCreateEventGroupParams.RawJsonData = &xstring
+		xstring10 := *source.RawJsonData
+		siteCreateEventGroupParams.RawJsonData = &xstring10
 	}
 	if source.CreatedByAppName != nil {
-		xstring2 := *source.CreatedByAppName
-		siteCreateEventGroupParams.CreatedByAppName = &xstring2
+		xstring11 := *source.CreatedByAppName
+		siteCreateEventGroupParams.CreatedByAppName = &xstring11
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring3 := *source.CreatedByDeviceName
-		siteCreateEventGroupParams.CreatedByDeviceName = &xstring3
+		xstring12 := *source.CreatedByDeviceName
+		siteCreateEventGroupParams.CreatedByDeviceName = &xstring12
 	}
 	siteCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateEventGroupParams

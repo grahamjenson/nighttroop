@@ -151,3 +151,90 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 
 	return egb
 }
+
+// Update if EventGroup has a Reference and
+func (model EventGroupsBundle) UpdateGlucoseReading() bool {
+	return model.EventGroup.GlucoseReadingID != nil && model.GlucoseReading != nil
+}
+func (model EventGroupsBundle) UpdateInsulinDose() bool {
+	return model.EventGroup.InsulinDoseID != nil && model.InsulinDose != nil
+}
+func (model EventGroupsBundle) UpdateFoodIntake() bool {
+	return model.EventGroup.FoodIntakeID != nil && model.FoodIntake != nil
+}
+func (model EventGroupsBundle) UpdateTempBasal() bool {
+	return model.EventGroup.TempBasalID != nil && model.TempBasal != nil
+}
+func (model EventGroupsBundle) UpdateTempTarget() bool {
+	return model.EventGroup.TempTargetID != nil && model.TempTarget != nil
+}
+func (model EventGroupsBundle) UpdateProfileSwitch() bool {
+	return model.EventGroup.ProfileSwitchID != nil && model.ProfileSwitch != nil
+}
+func (model EventGroupsBundle) UpdateComponentEvent() bool {
+	return model.EventGroup.ComponentEventID != nil && model.ComponentEvent != nil
+}
+func (model EventGroupsBundle) UpdateActivity() bool {
+	return model.EventGroup.ActivityID != nil && model.Activity != nil
+}
+func (model EventGroupsBundle) UpdateNote() bool {
+	return model.EventGroup.NoteID != nil && model.Note != nil
+}
+
+// Create if EventGroup has model but no reference
+func (model EventGroupsBundle) CreateGlucoseReading() bool {
+	return model.EventGroup.GlucoseReadingID == nil && model.GlucoseReading != nil
+}
+func (model EventGroupsBundle) CreateInsulinDose() bool {
+	return model.EventGroup.InsulinDoseID == nil && model.InsulinDose != nil
+}
+func (model EventGroupsBundle) CreateFoodIntake() bool {
+	return model.EventGroup.FoodIntakeID == nil && model.FoodIntake != nil
+}
+func (model EventGroupsBundle) CreateTempBasal() bool {
+	return model.EventGroup.TempBasalID == nil && model.TempBasal != nil
+}
+func (model EventGroupsBundle) CreateTempTarget() bool {
+	return model.EventGroup.TempTargetID == nil && model.TempTarget != nil
+}
+func (model EventGroupsBundle) CreateProfileSwitch() bool {
+	return model.EventGroup.ProfileSwitchID == nil && model.ProfileSwitch != nil
+}
+func (model EventGroupsBundle) CreateComponentEvent() bool {
+	return model.EventGroup.ComponentEventID == nil && model.ComponentEvent != nil
+}
+func (model EventGroupsBundle) CreateActivity() bool {
+	return model.EventGroup.ActivityID == nil && model.Activity != nil
+}
+func (model EventGroupsBundle) CreateNote() bool {
+	return model.EventGroup.NoteID == nil && model.Note != nil
+}
+
+// Delete if EventGroup has reference but no model
+func (model EventGroupsBundle) DeleteGlucoseReading() bool {
+	return model.EventGroup.GlucoseReadingID != nil && model.GlucoseReading == nil
+}
+func (model EventGroupsBundle) DeleteInsulinDose() bool {
+	return model.EventGroup.InsulinDoseID != nil && model.InsulinDose == nil
+}
+func (model EventGroupsBundle) DeleteFoodIntake() bool {
+	return model.EventGroup.FoodIntakeID != nil && model.FoodIntake == nil
+}
+func (model EventGroupsBundle) DeleteTempBasal() bool {
+	return model.EventGroup.TempBasalID != nil && model.TempBasal == nil
+}
+func (model EventGroupsBundle) DeleteTempTarget() bool {
+	return model.EventGroup.TempTargetID != nil && model.TempTarget == nil
+}
+func (model EventGroupsBundle) DeleteProfileSwitch() bool {
+	return model.EventGroup.ProfileSwitchID != nil && model.ProfileSwitch == nil
+}
+func (model EventGroupsBundle) DeleteComponentEvent() bool {
+	return model.EventGroup.ComponentEventID != nil && model.ComponentEvent == nil
+}
+func (model EventGroupsBundle) DeleteActivity() bool {
+	return model.EventGroup.ActivityID != nil && model.Activity == nil
+}
+func (model EventGroupsBundle) DeleteNote() bool {
+	return model.EventGroup.NoteID != nil && model.Note == nil
+}

@@ -14,14 +14,8 @@ type TreatmentsEvenetConverter interface {
 	// CREATE
 	///////
 
-	////////////////////////////////////////
-	// TREATMENT TO CREATE/UPDATE
-	////////////////////////////////////////
-
 	// goverter:context ctx
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
-	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NoteID
 	EventGroupCreate(source site.EventGroup, ctx ConverterContext) site.CreateEventGroupParams
 
 	///////
@@ -30,7 +24,6 @@ type TreatmentsEvenetConverter interface {
 
 	// goverter:context ctx
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
-	//
 	FoodIntakeCreate(source site.FoodIntake, ctx ConverterContext) site.CreateFoodIntakeParams
 
 	///////
@@ -89,12 +82,8 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	ActivityCreate(source site.Activity, ctx ConverterContext) site.CreateActivityParams
 
-	////////////////////////////////////////
-	// TREATMENT TO CREATE/UPDATE
-	////////////////////////////////////////
-
 	///////
-	// EventGroup
+	// Update
 	///////
 
 	// goverter:context ctx
