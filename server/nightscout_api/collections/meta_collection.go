@@ -3,7 +3,6 @@ package collections
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -22,6 +21,7 @@ type MetaCreateCollection[NS, DM any] interface {
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM) nsutils.Record
+	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
 	PatchDBFunc(*site.Queries, context.Context, NS, string, nightscout.UpdateContext) (*DM, error)
 }
 
@@ -97,53 +97,6 @@ func MetaCreate[NS, DM any](
 
 	if err := tx.Commit(); err != nil {
 		slog.Error("failed to commit create in database", "error", err, "dbModel", dbModel, "collection", m.Name())
-		return nil, nsutils.ErrInternal
-	}
-
-	return ptr(m.Convert(dbModel)), nil
-}
-
-func MetaPatch[NS, DM any](
-	m MetaPatchCollection[NS, DM],
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	identifier string,
-	data map[string]any,
-) (*nsutils.Record, *nsutils.HTTPError) {
-	var nsModel NS
-	err := utils.FromMap(data, &nsModel)
-	if err != nil {
-		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
-		return nil, nsutils.BadDataBodyError
-	}
-
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, nsutils.ErrInternal
-	}
-	defer tx.Rollback()
-
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-
-	dbModel, err := m.PatchDBFunc(
-		q,
-		ctx,
-		nsModel,
-		identifier,
-		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
-	)
-
-	if err != nil {
-		slog.Error("failed to patch in database", "error", err, "collection", m.Name(), "identifier", identifier, "params", data)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to patch in database, dbModel is nil", "collection", m.Name(), "identifier", identifier, "params", data)
-		return nil, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit patch in database", "error", err, "dbModel", dbModel, "collection", m.Name())
 		return nil, nsutils.ErrInternal
 	}
 
@@ -279,11 +232,15 @@ func MetaReplace[NS interface {
 	GetApp() *string
 	GetSubject() *string
 	GetDate() *int64
+	GetUtcOffsetMinutes() *int64
+	GetIdentifier() *string
 }, DM interface {
 	GetOccurredAt() int64
 	GetCreatedByAppName() *string
 	GetCreatedByDeviceName() *string
 	GetCreatedByIdentityName() string
+	GetUtcOffsetMinutes() *int64
+	GetID() string
 }](
 	m MetaReplaceCollection[NS, DM],
 	ctx context.Context,
@@ -333,7 +290,7 @@ func MetaReplace[NS interface {
 		}
 	}
 
-	if err := ValidateNotChangingSharedFields(replacingModel, nsModel); err != nil {
+	if err := ValidateNotChangingSharedFields(replacingModel, nsModel, data, identifier); err != nil {
 		slog.Error("validation failed for replacing model", "error", err, "collection", m.Name())
 		return nil, false, err
 	}
@@ -359,24 +316,100 @@ func MetaReplace[NS interface {
 
 }
 
-func ValidateNotChangingSharedFields[NS interface {
+func MetaPatch[NS interface {
 	GetDevice() *string
 	GetApp() *string
 	GetSubject() *string
 	GetDate() *int64
+	GetUtcOffsetMinutes() *int64
+	GetIdentifier() *string
 }, DM interface {
 	GetOccurredAt() int64
 	GetCreatedByAppName() *string
 	GetCreatedByDeviceName() *string
 	GetCreatedByIdentityName() string
-}](replacingModelPtr *DM, nsModel NS) *nsutils.HTTPError {
+	GetUtcOffsetMinutes() *int64
+	GetID() string
+}](
+	m MetaPatchCollection[NS, DM],
+	ctx context.Context,
+	siteContext *httputils.SiteContext,
+	identifier string,
+	data map[string]any,
+) (*nsutils.Record, *nsutils.HTTPError) {
+	var nsModel NS
+	err := utils.FromMap(data, &nsModel)
+	if err != nil {
+		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
+		return nil, nsutils.BadDataBodyError
+	}
+
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nsutils.ErrInternal
+	}
+	defer tx.Rollback()
+
+	q := siteContext.SiteDB.Queries.WithTx(tx)
+
+	updateingModel, err := m.GetDBFunc(q, ctx, identifier)
+	if err == sql.ErrNoRows {
+		// Check no Record exists
+		return nil, nsutils.ErrNotFound
+	} else if err != nil {
+		slog.Error("failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
+		return nil, nsutils.ErrInternal
+	}
+
+	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {
+		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
+		return nil, err
+	}
+
+	dbModel, err := m.PatchDBFunc(
+		q,
+		ctx,
+		nsModel,
+		identifier,
+		nightscout.UpdateContext{UpdatedByIdentityID: siteContext.IdentityModel.ID, UpdatedByIdentityName: siteContext.IdentityModel.Name},
+	)
+
+	if err != nil {
+		slog.Error("failed to patch in database", "error", err, "collection", m.Name(), "identifier", identifier, "params", data)
+		return nil, nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		slog.Error("failed to patch in database, dbModel is nil", "collection", m.Name(), "identifier", identifier, "params", data)
+		return nil, nsutils.ErrInternal
+	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit patch in database", "error", err, "dbModel", dbModel, "collection", m.Name())
+		return nil, nsutils.ErrInternal
+	}
+
+	return ptr(m.Convert(dbModel)), nil
+}
+
+func ValidateNotChangingSharedFields[NS interface {
+	GetDevice() *string
+	GetApp() *string
+	GetSubject() *string
+	GetDate() *int64
+	GetUtcOffsetMinutes() *int64
+	GetIdentifier() *string
+}, DM interface {
+	GetOccurredAt() int64
+	GetCreatedByAppName() *string
+	GetCreatedByDeviceName() *string
+	GetCreatedByIdentityName() string
+	GetUtcOffsetMinutes() *int64
+	GetID() string
+}](replacingModelPtr *DM, nsModel NS, nsModelMap map[string]any, identifier string) *nsutils.HTTPError {
 	if replacingModelPtr == nil {
 		return nil
 	}
 	replacingModel := *replacingModelPtr
-
-	fmt.Printf("Validating not changing shared fields for replacing model: %+v and new model: %+v\n", *replacingModelPtr, nsModel)
-	fmt.Printf("Diff in nsModel Model Device: %v, App: %v, Subject: %v, Date: %v\n Replacing Device: %v, App: %v, Subject: %v, Date: %v\n", nsModel.GetDevice(), nsModel.GetApp(), nsModel.GetSubject(), nsModel.GetDate(), replacingModel.GetCreatedByDeviceName(), replacingModel.GetCreatedByAppName(), replacingModel.GetCreatedByIdentityName(), replacingModel.GetOccurredAt())
 
 	// Validate that the new model has the same device, app, subject, and date as the replacing model
 	if nsModel.GetDevice() != nil && replacingModel.GetCreatedByDeviceName() != nil && *nsModel.GetDevice() != *replacingModel.GetCreatedByDeviceName() {
@@ -392,5 +425,43 @@ func ValidateNotChangingSharedFields[NS interface {
 		return nsutils.ErrCannotChangeDate
 	}
 
+	if nsModel.GetUtcOffsetMinutes() != nil && replacingModel.GetUtcOffsetMinutes() != nil && *nsModel.GetUtcOffsetMinutes() != *replacingModel.GetUtcOffsetMinutes() {
+		return nsutils.ErrCannotChangeUTCTOffset
+	}
+
+	if nsModel.GetIdentifier() != nil && *nsModel.GetIdentifier() != identifier {
+		return nsutils.ErrCannotChangeIdentifier
+	}
+
+	if replacingModel.GetID() != identifier {
+		return nsutils.ErrCannotChangeIdentifier
+	}
+
+	// Check to see if user has submitted read-only fields
+	if _, ok := nsModelMap["srvCreated"]; ok {
+		return nsutils.ErrCannotChangeCreatedAt
+	}
+	if _, ok := nsModelMap["srvModified"]; ok {
+		return nsutils.ErrCannotChangeModifiedAt
+	}
+	if _, ok := nsModelMap["modifiedBy"]; ok {
+		return nsutils.ErrCannotChangeModifiedBy
+	}
+	if _, ok := nsModelMap["isValid"]; ok {
+		return nsutils.ErrCannotChangeIsValid
+	}
+
 	return nil
 }
+
+// if _, ok := any(nsModel).(interface{ GetEventType() }); ok {
+// 	// nsModel supports asd()
+// }
+
+// Field eventType cannot be modified by the client
+// if replacing != nil {
+// 	if replacing.ReadingType != createParams.ReadingType {
+// 		slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", replacing.ReadingType, "newReadingType", createParams.ReadingType)
+// 		return nil, nsutils.ErrCannotChangeReadingType
+// 	}
+// }

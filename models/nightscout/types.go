@@ -538,6 +538,14 @@ func (i *IdentifierString) String() string {
 	return string(*i)
 }
 
+func (i *IdentifierString) Stringp() *string {
+	if i == nil {
+		return nil
+	}
+	str := string(*i)
+	return &str
+}
+
 func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 	// limit in possible characters and length, convert everything to a string
 	var v any

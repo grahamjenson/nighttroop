@@ -77,10 +77,16 @@ var (
 
 // Bad Updates
 var (
-	ErrCannotChangeReadingType = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change reading type"}
-	ErrCannotChangeApp         = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change app"}
-	ErrCannotChangeEventType   = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change event_type"}
-	ErrCannotChangeSubject     = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change subject"}
-	ErrCannotChangeDate        = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change date"}
-	ErrCannotChangeDevice      = &HTTPError{Status: http.StatusBadRequest, Message: "Cannot change device name"}
+	ErrCannotChangeApp        = &HTTPError{Status: http.StatusBadRequest, Message: "Field app cannot be modified by the client"}
+	ErrCannotChangeEventType  = &HTTPError{Status: http.StatusBadRequest, Message: "Field eventType cannot be modified by the client"}
+	ErrCannotChangeType       = &HTTPError{Status: http.StatusBadRequest, Message: "Field type cannot be modified by the client"}
+	ErrCannotChangeSubject    = &HTTPError{Status: http.StatusBadRequest, Message: "Field subject cannot be modified by the client"}
+	ErrCannotChangeDate       = &HTTPError{Status: http.StatusBadRequest, Message: "Field date cannot be modified by the client"}
+	ErrCannotChangeDevice     = &HTTPError{Status: http.StatusBadRequest, Message: "Field device cannot be modified by the client"}
+	ErrCannotChangeIdentifier = &HTTPError{Status: http.StatusBadRequest, Message: "Field identifier cannot be modified by the client"}
+	ErrCannotChangeUTCTOffset = &HTTPError{Status: http.StatusBadRequest, Message: "Field utcOffset cannot be modified by the client"}
+	ErrCannotChangeCreatedAt  = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvCreated cannot be modified by the client"}
+	ErrCannotChangeModifiedAt = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvModified cannot be modified by the client"}
+	ErrCannotChangeModifiedBy = &HTTPError{Status: http.StatusBadRequest, Message: "Field modifiedBy cannot be modified by the client"}
+	ErrCannotChangeIsValid    = &HTTPError{Status: http.StatusBadRequest, Message: "Field isValid cannot be modified by the client"}
 )

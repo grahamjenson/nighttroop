@@ -2,7 +2,6 @@ package nightscout
 
 import (
 	"encoding/json"
-	"time"
 )
 
 type Food struct {
@@ -42,7 +41,7 @@ type Food struct {
 func (t *Food) UnmarshalJSON(data []byte) error {
 	type Alias Food
 	aux := struct {
-		ID IdentifierString `json:"_id"`
+		ID *IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -55,11 +54,9 @@ func (t *Food) UnmarshalJSON(data []byte) error {
 	// Raw Value
 	t.RawJsonData = string(data)
 
-	t.Date = ptr(DateInt(time.Now().UnixMilli()))
-
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+		t.Identifier = aux.ID
 	}
 
 	return nil
@@ -91,4 +88,12 @@ func (t Food) GetSubject() *string {
 
 func (t Food) GetDate() *int64 {
 	return t.Date.Int64p()
+}
+
+func (t Food) GetUtcOffsetMinutes() *int64 {
+	return nil
+}
+
+func (t Food) GetIdentifier() *string {
+	return t.Identifier.Stringp()
 }

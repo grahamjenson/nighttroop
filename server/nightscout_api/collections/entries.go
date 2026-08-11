@@ -37,14 +37,6 @@ func (c EntriesCollection) Convert(dr *site.GlucoseReading) nsutils.Record {
 func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.CreateContext, replacing *site.GlucoseReading, overrideIdentifier *string) (*site.GlucoseReading, error) {
 	createParams := nightscout.EntryToCreate(nsModel, cc)
 
-	// Validate if replacing a model
-	if replacing != nil {
-		if replacing.ReadingType != createParams.ReadingType {
-			slog.Error("cannot change reading_type attribute on glucose reading", "existingReadingType", replacing.ReadingType, "newReadingType", createParams.ReadingType)
-			return nil, nsutils.ErrCannotChangeReadingType
-		}
-	}
-
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}

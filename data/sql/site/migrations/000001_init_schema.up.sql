@@ -14,7 +14,7 @@ CREATE TABLE glucose_readings (
     reading_type TEXT NOT NULL CHECK(length(reading_type) <= 32) DEFAULT 'sgv', -- sgv, finger, etc
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -35,7 +35,7 @@ CREATE TABLE insulin_doses (
     dose_type TEXT CHECK (dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -61,7 +61,7 @@ CREATE TABLE food_intakes (
     calories REAL,
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -89,7 +89,7 @@ CREATE TABLE activities (
     heart_rate INTEGER,
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -110,7 +110,7 @@ CREATE TABLE notes (
     reason TEXT CHECK(length(reason) <= 64), 
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -135,7 +135,7 @@ CREATE TABLE temp_basals (
     
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -157,7 +157,7 @@ CREATE TABLE temp_targets (
     low_target REAL NOT NULL,
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -193,7 +193,7 @@ CREATE TABLE profile_switches (
     targets_low_json TEXT CHECK(length(targets_low_json) <= 1024), -- { [high, low] }
     
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -248,7 +248,7 @@ CREATE TABLE event_groups (
     note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0,
@@ -319,7 +319,7 @@ CREATE TABLE food_presets (
     calories REAL,
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 1024), -- This is the largest user derived string, and should be culled quickly
+    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

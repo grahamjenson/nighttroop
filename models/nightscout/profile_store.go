@@ -28,7 +28,7 @@ type ProfileStore struct {
 func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 	type Alias ProfileStore
 	aux := struct {
-		ID IdentifierString `json:"_id"`
+		ID *IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -43,16 +43,10 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+		t.Identifier = aux.ID
 	}
 
-	// Set default StartDate (leave UTCOffset nil to be later replaces by user timezone)
-	if t.StartDate == nil {
-		// This is UTC not User timezone, will have to set UTC offset minutes at API level
-		ds, now := DateStringNow()
-		t.StartDate = ds
-		t.Date = ptr(DateIntFromTime(now))
-	} else {
+	if t.StartDate != nil {
 		t.Date, t.UtcOffsetMinutes = t.StartDate.MillisUTCOffset()
 	}
 
@@ -257,4 +251,12 @@ func (t ProfileStore) GetSubject() *string {
 
 func (t ProfileStore) GetDate() *int64 {
 	return t.Date.Int64p()
+}
+
+func (t ProfileStore) GetUtcOffsetMinutes() *int64 {
+	return t.UtcOffsetMinutes.Int64p()
+}
+
+func (t ProfileStore) GetIdentifier() *string {
+	return t.Identifier.Stringp()
 }

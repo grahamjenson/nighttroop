@@ -76,7 +76,7 @@ type Treatment struct {
 func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
 	aux := struct {
-		ID IdentifierString `json:"_id"`
+		ID *IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -91,16 +91,11 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+		t.Identifier = aux.ID
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt == nil {
-		// This is UTC not User timezone, will have to set UTC offset minutes at API level
-		ds, now := DateStringNow()
-		t.CreatedAt = ds
-		t.Date = ptr(DateIntFromTime(now))
-	} else {
+	if t.CreatedAt != nil {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 
@@ -252,4 +247,12 @@ func (t Treatment) GetSubject() *string {
 
 func (t Treatment) GetDate() *int64 {
 	return t.Date.Int64p()
+}
+
+func (t Treatment) GetUtcOffsetMinutes() *int64 {
+	return t.UtcOffsetMinutes.Int64p()
+}
+
+func (t Treatment) GetIdentifier() *string {
+	return t.Identifier.Stringp()
 }

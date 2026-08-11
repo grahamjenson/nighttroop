@@ -33,7 +33,7 @@ type Activity struct {
 func (t *Activity) UnmarshalJSON(data []byte) error {
 	type Alias Activity
 	aux := struct {
-		ID IdentifierString `json:"_id"`
+		ID *IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -48,16 +48,11 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+		t.Identifier = aux.ID
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt == nil {
-		// This is UTC not User timezone, will have to set UTC offset minutes at API level
-		ds, now := DateStringNow()
-		t.CreatedAt = ds
-		t.Date = ptr(DateIntFromTime(now))
-	} else {
+	if t.CreatedAt != nil {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 
@@ -87,4 +82,12 @@ func (t Activity) GetSubject() *string {
 
 func (t Activity) GetDate() *int64 {
 	return t.Date.Int64p()
+}
+
+func (t Activity) GetUtcOffsetMinutes() *int64 {
+	return t.UtcOffsetMinutes.Int64p()
+}
+
+func (t Activity) GetIdentifier() *string {
+	return t.Identifier.Stringp()
 }

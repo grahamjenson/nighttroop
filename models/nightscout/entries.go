@@ -52,7 +52,7 @@ type Entry struct {
 func (t *Entry) UnmarshalJSON(data []byte) error {
 	type Alias Entry
 	aux := struct {
-		ID IdentifierString `json:"_id"`
+		ID *IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -67,7 +67,7 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+		t.Identifier = aux.ID
 	}
 
 	// Setting the value
@@ -89,7 +89,7 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	if t.Mills != nil {
+	if t.Mills != nil && t.Date == nil {
 		t.Date = t.Mills
 	}
 
@@ -157,4 +157,12 @@ func (t Entry) GetSubject() *string {
 
 func (t Entry) GetDate() *int64 {
 	return t.Date.Int64p()
+}
+
+func (t Entry) GetUtcOffsetMinutes() *int64 {
+	return t.UtcOffsetMinutes.Int64p()
+}
+
+func (t Entry) GetIdentifier() *string {
+	return t.Identifier.Stringp()
 }

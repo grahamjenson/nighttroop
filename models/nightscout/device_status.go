@@ -40,7 +40,7 @@ type DeviceStatus struct {
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	type Alias DeviceStatus
 	aux := struct {
-		ID IdentifierString `json:"_id"`
+		ID *IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -55,16 +55,11 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+		t.Identifier = aux.ID
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
-	if t.CreatedAt == nil {
-		// This is UTC not User timezone, will have to set UTC offset minutes at API level
-		ds, now := DateStringNow()
-		t.CreatedAt = ds
-		t.Date = ptr(DateIntFromTime(now))
-	} else {
+	if t.CreatedAt != nil {
 		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
 	}
 
@@ -215,4 +210,12 @@ func (t DeviceStatus) GetSubject() *string {
 
 func (t DeviceStatus) GetDate() *int64 {
 	return t.Date.Int64p()
+}
+
+func (t DeviceStatus) GetUtcOffsetMinutes() *int64 {
+	return t.UtcOffsetMinutes.Int64p()
+}
+
+func (t DeviceStatus) GetIdentifier() *string {
+	return t.Identifier.Stringp()
 }

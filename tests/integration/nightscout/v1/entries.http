@@ -91,4 +91,5 @@ NAME bad_update_but_change_device_v1
 PUT http://{{ .site }}.ns.localhost/api/v1/entries?token={{ token }}
 B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "not-device", "sgv": 104, "type": "sgv" }
 ASSERT_STATUS 400
-ASSERT {{ assertEquals "Cannot change device name" "@message" }}
+ASSERT {{ assertEquals "Field device cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}

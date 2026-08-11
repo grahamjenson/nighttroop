@@ -84,6 +84,7 @@ ASSERT_STATUS 200
 
 NAME check_patch_devicestatus_v1
 GET http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+B { "uploaderBattery": 25 }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "iphone" "@result.device" }}
