@@ -41,20 +41,20 @@ func (q *Queries) GetSiteSettings(ctx context.Context) (*SiteSetting, error) {
 const updateSiteSettings = `-- name: UpdateSiteSettings :one
 
 UPDATE site_settings SET
-    units = COALESCE(?3, units),
-    timezone = COALESCE(?4, timezone),
-    bolus_dia_hours = COALESCE(?5, bolus_dia_hours),
-    bolus_onset_minutes = COALESCE(?6, bolus_onset_minutes),
-    bolus_peak_minutes = COALESCE(?7, bolus_peak_minutes),
-    basal_dia_hours = COALESCE(?8, basal_dia_hours),
-    basal_onset_minutes = COALESCE(?9, basal_onset_minutes),
-    basal_peak_minutes = COALESCE(?10, basal_peak_minutes),
-    carb_max_absorption_hours = COALESCE(?11, carb_max_absorption_hours),
-    carb_min_5m_impact = COALESCE(?12, carb_min_5m_impact),
+    units = COALESCE(?1, units),
+    timezone = COALESCE(?2, timezone),
+    bolus_dia_hours = COALESCE(?3, bolus_dia_hours),
+    bolus_onset_minutes = COALESCE(?4, bolus_onset_minutes),
+    bolus_peak_minutes = COALESCE(?5, bolus_peak_minutes),
+    basal_dia_hours = COALESCE(?6, basal_dia_hours),
+    basal_onset_minutes = COALESCE(?7, basal_onset_minutes),
+    basal_peak_minutes = COALESCE(?8, basal_peak_minutes),
+    carb_max_absorption_hours = COALESCE(?9, carb_max_absorption_hours),
+    carb_min_5m_impact = COALESCE(?10, carb_min_5m_impact),
     
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ?
+    updated_by_identity_name = ?11
+WHERE id = ?12
 RETURNING id, units, timezone, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, carb_max_absorption_hours, carb_min_5m_impact, updated_at, updated_by_identity_name
 `
 

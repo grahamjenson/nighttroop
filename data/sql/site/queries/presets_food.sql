@@ -93,8 +93,8 @@ UPDATE food_presets SET
     energy = COALESCE(sqlc.narg('Energy'), energy),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ?
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE id = sqlc.arg('ID')
 RETURNING *; 
 
 --------

@@ -480,10 +480,10 @@ func (q *Queries) SearchProfileStores(ctx context.Context, arg SearchProfileStor
 const updateProfilePreset = `-- name: UpdateProfilePreset :one
 
 UPDATE profile_presets SET
-    name = COALESCE(?3, name),
+    name = COALESCE(?1, name),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ?
+    updated_by_identity_name = ?2
+WHERE id = ?3
 RETURNING id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 

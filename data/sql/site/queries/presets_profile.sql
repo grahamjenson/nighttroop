@@ -49,8 +49,8 @@ SELECT * FROM profile_presets WHERE id = ?;
 UPDATE profile_presets SET
     name = COALESCE(sqlc.narg('Name'), name),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ?
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE id = sqlc.arg('ID')
 RETURNING *; 
 
 --------

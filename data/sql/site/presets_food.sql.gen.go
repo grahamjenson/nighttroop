@@ -355,20 +355,20 @@ func (q *Queries) SearchFoodPresets(ctx context.Context, arg SearchFoodPresetsPa
 const updateFoodPreset = `-- name: UpdateFoodPreset :one
 
 UPDATE food_presets SET
-    name = COALESCE(?3, name),
-    category = COALESCE(?4, category),
-    subcategory = COALESCE(?5, subcategory),
+    name = COALESCE(?1, name),
+    category = COALESCE(?2, category),
+    subcategory = COALESCE(?3, subcategory),
 
-    portions = COALESCE(?6, portions),
-    carbs = COALESCE(?7, carbs),
-    fat = COALESCE(?8, fat),
-    protein = COALESCE(?9, protein),
-    fibre = COALESCE(?10, fibre),
-    energy = COALESCE(?11, energy),
+    portions = COALESCE(?4, portions),
+    carbs = COALESCE(?5, carbs),
+    fat = COALESCE(?6, fat),
+    protein = COALESCE(?7, protein),
+    fibre = COALESCE(?8, fibre),
+    energy = COALESCE(?9, energy),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?
-WHERE id = ?
+    updated_by_identity_name = ?10
+WHERE id = ?11
 RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 

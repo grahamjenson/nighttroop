@@ -47,10 +47,10 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals 27 "@result.carbs" }}
 
 NAME search_device_v1
-GET http://{{ .site }}.ns.localhost/api/v3/food?device=iphone%
+GET http://{{ .site }}.ns.localhost/api/v3/food?carbs[gte]=10
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "iphone" "@result.0.device" }}
+ASSERT {{ assertEquals 27 "@result.0.carbs" }}
 
 NAME get_404_food_v1
 GET http://{{ .site }}.ns.localhost/api/v3/food/NonExistentID
