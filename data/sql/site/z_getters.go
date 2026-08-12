@@ -683,7 +683,7 @@ func (m Note) GetID() string {
 }
 
 // GetContent returns the Content value.
-func (m Note) GetContent() string {
+func (m Note) GetContent() *string {
 	return m.Content
 }
 
@@ -4880,6 +4880,105 @@ func (m SearchEventGroupsParams) SetLimit(v int64) SearchEventGroupsParams {
 	return m
 }
 
+// GetGlucoseReadingID returns the GlucoseReadingID value.
+func (m UpdateEventGroupParams) GetGlucoseReadingID() *string {
+	return m.GlucoseReadingID
+}
+
+// SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetGlucoseReadingID(v *string) UpdateEventGroupParams {
+	m.GlucoseReadingID = v
+	return m
+}
+
+// GetInsulinDoseID returns the InsulinDoseID value.
+func (m UpdateEventGroupParams) GetInsulinDoseID() *string {
+	return m.InsulinDoseID
+}
+
+// SetInsulinDoseID sets the InsulinDoseID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetInsulinDoseID(v *string) UpdateEventGroupParams {
+	m.InsulinDoseID = v
+	return m
+}
+
+// GetFoodIntakeID returns the FoodIntakeID value.
+func (m UpdateEventGroupParams) GetFoodIntakeID() *string {
+	return m.FoodIntakeID
+}
+
+// SetFoodIntakeID sets the FoodIntakeID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetFoodIntakeID(v *string) UpdateEventGroupParams {
+	m.FoodIntakeID = v
+	return m
+}
+
+// GetTempBasalID returns the TempBasalID value.
+func (m UpdateEventGroupParams) GetTempBasalID() *string {
+	return m.TempBasalID
+}
+
+// SetTempBasalID sets the TempBasalID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetTempBasalID(v *string) UpdateEventGroupParams {
+	m.TempBasalID = v
+	return m
+}
+
+// GetTempTargetID returns the TempTargetID value.
+func (m UpdateEventGroupParams) GetTempTargetID() *string {
+	return m.TempTargetID
+}
+
+// SetTempTargetID sets the TempTargetID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetTempTargetID(v *string) UpdateEventGroupParams {
+	m.TempTargetID = v
+	return m
+}
+
+// GetProfileSwitchID returns the ProfileSwitchID value.
+func (m UpdateEventGroupParams) GetProfileSwitchID() *string {
+	return m.ProfileSwitchID
+}
+
+// SetProfileSwitchID sets the ProfileSwitchID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetProfileSwitchID(v *string) UpdateEventGroupParams {
+	m.ProfileSwitchID = v
+	return m
+}
+
+// GetComponentEventID returns the ComponentEventID value.
+func (m UpdateEventGroupParams) GetComponentEventID() *string {
+	return m.ComponentEventID
+}
+
+// SetComponentEventID sets the ComponentEventID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetComponentEventID(v *string) UpdateEventGroupParams {
+	m.ComponentEventID = v
+	return m
+}
+
+// GetActivityID returns the ActivityID value.
+func (m UpdateEventGroupParams) GetActivityID() *string {
+	return m.ActivityID
+}
+
+// SetActivityID sets the ActivityID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetActivityID(v *string) UpdateEventGroupParams {
+	m.ActivityID = v
+	return m
+}
+
+// GetNoteID returns the NoteID value.
+func (m UpdateEventGroupParams) GetNoteID() *string {
+	return m.NoteID
+}
+
+// SetNoteID sets the NoteID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetNoteID(v *string) UpdateEventGroupParams {
+	m.NoteID = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateEventGroupParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -5552,12 +5651,12 @@ func (m CreateNoteParams) SetID(v string) CreateNoteParams {
 }
 
 // GetContent returns the Content value.
-func (m CreateNoteParams) GetContent() string {
+func (m CreateNoteParams) GetContent() *string {
 	return m.Content
 }
 
 // SetContent sets the Content value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetContent(v string) CreateNoteParams {
+func (m CreateNoteParams) SetContent(v *string) CreateNoteParams {
 	m.Content = v
 	return m
 }

@@ -268,6 +268,42 @@ func EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle {
 }
 func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 	var siteUpdateEventGroupParams UpdateEventGroupParams
+	if source.GlucoseReadingID != nil {
+		xstring := *source.GlucoseReadingID
+		siteUpdateEventGroupParams.GlucoseReadingID = &xstring
+	}
+	if source.InsulinDoseID != nil {
+		xstring2 := *source.InsulinDoseID
+		siteUpdateEventGroupParams.InsulinDoseID = &xstring2
+	}
+	if source.FoodIntakeID != nil {
+		xstring3 := *source.FoodIntakeID
+		siteUpdateEventGroupParams.FoodIntakeID = &xstring3
+	}
+	if source.TempBasalID != nil {
+		xstring4 := *source.TempBasalID
+		siteUpdateEventGroupParams.TempBasalID = &xstring4
+	}
+	if source.TempTargetID != nil {
+		xstring5 := *source.TempTargetID
+		siteUpdateEventGroupParams.TempTargetID = &xstring5
+	}
+	if source.ProfileSwitchID != nil {
+		xstring6 := *source.ProfileSwitchID
+		siteUpdateEventGroupParams.ProfileSwitchID = &xstring6
+	}
+	if source.ComponentEventID != nil {
+		xstring7 := *source.ComponentEventID
+		siteUpdateEventGroupParams.ComponentEventID = &xstring7
+	}
+	if source.ActivityID != nil {
+		xstring8 := *source.ActivityID
+		siteUpdateEventGroupParams.ActivityID = &xstring8
+	}
+	if source.NoteID != nil {
+		xstring9 := *source.NoteID
+		siteUpdateEventGroupParams.NoteID = &xstring9
+	}
 	pInt64 := source.OccurredAt
 	siteUpdateEventGroupParams.OccurredAt = &pInt64
 	if source.UtcOffsetMinutes != nil {
@@ -275,8 +311,8 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		siteUpdateEventGroupParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring := *source.UpdatedByIdentityName
-		siteUpdateEventGroupParams.UpdatedByIdentityName = &xstring
+		xstring10 := *source.UpdatedByIdentityName
+		siteUpdateEventGroupParams.UpdatedByIdentityName = &xstring10
 	}
 	siteUpdateEventGroupParams.ID = source.ID
 	return siteUpdateEventGroupParams
@@ -574,10 +610,13 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 func NoteToCreate(source Note) CreateNoteParams {
 	var siteCreateNoteParams CreateNoteParams
 	siteCreateNoteParams.ID = source.ID
-	siteCreateNoteParams.Content = source.Content
+	if source.Content != nil {
+		xstring := *source.Content
+		siteCreateNoteParams.Content = &xstring
+	}
 	if source.Reason != nil {
-		xstring := *source.Reason
-		siteCreateNoteParams.Reason = &xstring
+		xstring2 := *source.Reason
+		siteCreateNoteParams.Reason = &xstring2
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -585,27 +624,29 @@ func NoteToCreate(source Note) CreateNoteParams {
 	}
 	siteCreateNoteParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		siteCreateNoteParams.RawJsonData = &xstring2
+		xstring3 := *source.RawJsonData
+		siteCreateNoteParams.RawJsonData = &xstring3
 	}
 	if source.CreatedByAppName != nil {
-		xstring3 := *source.CreatedByAppName
-		siteCreateNoteParams.CreatedByAppName = &xstring3
+		xstring4 := *source.CreatedByAppName
+		siteCreateNoteParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring4 := *source.CreatedByDeviceName
-		siteCreateNoteParams.CreatedByDeviceName = &xstring4
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateNoteParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateNoteParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateNoteParams
 }
 func NoteToUpdate(source Note) UpdateNoteParams {
 	var siteUpdateNoteParams UpdateNoteParams
-	pString := source.Content
-	siteUpdateNoteParams.Content = &pString
+	if source.Content != nil {
+		xstring := *source.Content
+		siteUpdateNoteParams.Content = &xstring
+	}
 	if source.Reason != nil {
-		xstring := *source.Reason
-		siteUpdateNoteParams.Reason = &xstring
+		xstring2 := *source.Reason
+		siteUpdateNoteParams.Reason = &xstring2
 	}
 	pInt64 := source.OccurredAt
 	siteUpdateNoteParams.OccurredAt = &pInt64
@@ -614,8 +655,8 @@ func NoteToUpdate(source Note) UpdateNoteParams {
 		siteUpdateNoteParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring2 := *source.UpdatedByIdentityName
-		siteUpdateNoteParams.UpdatedByIdentityName = &xstring2
+		xstring3 := *source.UpdatedByIdentityName
+		siteUpdateNoteParams.UpdatedByIdentityName = &xstring3
 	}
 	siteUpdateNoteParams.ID = source.ID
 	return siteUpdateNoteParams

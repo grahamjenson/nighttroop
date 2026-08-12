@@ -333,6 +333,15 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateEventGroup :one
 UPDATE event_groups SET
+    glucose_reading_id = COALESCE(sqlc.narg('GlucoseReadingID'), glucose_reading_id),
+    insulin_dose_id = COALESCE(sqlc.narg('InsulinDoseID'), insulin_dose_id),
+    food_intake_id = COALESCE(sqlc.narg('FoodIntakeID'), food_intake_id),
+    temp_basal_id = COALESCE(sqlc.narg('TempBasalID'), temp_basal_id),
+    temp_target_id = COALESCE(sqlc.narg('TempTargetID'), temp_target_id),
+    profile_switch_id = COALESCE(sqlc.narg('ProfileSwitchID'), profile_switch_id),
+    component_event_id = COALESCE(sqlc.narg('ComponentEventID'), component_event_id),
+    activity_id = COALESCE(sqlc.narg('ActivityID'), activity_id),
+    note_id = COALESCE(sqlc.narg('NoteID'), note_id),
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

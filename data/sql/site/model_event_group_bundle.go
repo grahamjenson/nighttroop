@@ -141,10 +141,10 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		}
 	}
 
-	if source.NoteID != nil && source.NoteContent != nil {
+	if source.NoteID != nil {
 		egb.Note = &Note{
 			ID:      *source.NoteID,
-			Content: *source.NoteContent,
+			Content: source.NoteContent,
 			Reason:  source.NoteReason,
 		}
 	}

@@ -213,7 +213,7 @@ CREATE TABLE insulin_doses (
 
 CREATE TABLE notes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    content TEXT CHECK(length(content) <= 1024) NOT NULL,
+    content TEXT CHECK(length(content) <= 1024),
     reason TEXT CHECK(length(reason) <= 64), 
 
     -- Default Stuff

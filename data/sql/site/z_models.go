@@ -165,7 +165,7 @@ type InsulinDose struct {
 
 type Note struct {
 	ID                    string
-	Content               string
+	Content               *string
 	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64

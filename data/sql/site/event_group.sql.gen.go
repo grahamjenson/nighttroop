@@ -1198,15 +1198,33 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 const updateEventGroup = `-- name: UpdateEventGroup :one
 
 UPDATE event_groups SET
-    occurred_at = COALESCE(?1, occurred_at),
-    utc_offset_minutes = COALESCE(?2, utc_offset_minutes),
+    glucose_reading_id = COALESCE(?1, glucose_reading_id),
+    insulin_dose_id = COALESCE(?2, insulin_dose_id),
+    food_intake_id = COALESCE(?3, food_intake_id),
+    temp_basal_id = COALESCE(?4, temp_basal_id),
+    temp_target_id = COALESCE(?5, temp_target_id),
+    profile_switch_id = COALESCE(?6, profile_switch_id),
+    component_event_id = COALESCE(?7, component_event_id),
+    activity_id = COALESCE(?8, activity_id),
+    note_id = COALESCE(?9, note_id),
+    occurred_at = COALESCE(?10, occurred_at),
+    utc_offset_minutes = COALESCE(?11, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?3
-WHERE id = ?4 AND deleted_at IS NULL
+    updated_by_identity_name = ?12
+WHERE id = ?13 AND deleted_at IS NULL
 RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateEventGroupParams struct {
+	GlucoseReadingID      *string
+	InsulinDoseID         *string
+	FoodIntakeID          *string
+	TempBasalID           *string
+	TempTargetID          *string
+	ProfileSwitchID       *string
+	ComponentEventID      *string
+	ActivityID            *string
+	NoteID                *string
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -1218,6 +1236,15 @@ type UpdateEventGroupParams struct {
 // ------
 func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupParams) (*EventGroup, error) {
 	row := q.queryRow(ctx, q.updateEventGroupStmt, updateEventGroup,
+		arg.GlucoseReadingID,
+		arg.InsulinDoseID,
+		arg.FoodIntakeID,
+		arg.TempBasalID,
+		arg.TempTargetID,
+		arg.ProfileSwitchID,
+		arg.ComponentEventID,
+		arg.ActivityID,
+		arg.NoteID,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,

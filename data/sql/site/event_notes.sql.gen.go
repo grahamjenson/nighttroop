@@ -83,7 +83,7 @@ RETURNING id, content, reason, raw_json_data, deleted_at, utc_offset_minutes, oc
 
 type CreateNoteParams struct {
 	ID                    string
-	Content               string
+	Content               *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
