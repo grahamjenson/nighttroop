@@ -14,6 +14,8 @@ CREATE TABLE glucose_readings (
     reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
 
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -34,7 +36,10 @@ CREATE TABLE insulin_doses (
     dose REAL NOT NULL,
     dose_type TEXT NOT NULL CHECK(dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
 
+
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -64,6 +69,8 @@ CREATE TABLE food_intakes (
     portions REAL,
 
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -83,7 +90,6 @@ CREATE TABLE activities (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     name TEXT CHECK(length(name) <= 64),
-    notes TEXT CHECK(length(notes) <= 1024),
     activity_type TEXT NOT NULL CHECK(length(activity_type) <= 32) default 'exercise',
 
     duration_minutes INTEGER,
@@ -91,7 +97,10 @@ CREATE TABLE activities (
     steps INTEGER,
     heart_rate INTEGER,
 
+
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -107,12 +116,17 @@ CREATE TABLE activities (
 );
 
 
-CREATE TABLE notes (
+CREATE TABLE notification_events (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
+
+    notification_type TEXT CHECK(length(notification_type) <= 32) NOT NULL DEFAULT 'announcement', -- note, warning, error, critical, info
+    title TEXT CHECK(length(title) <= 128) NOT NULL,
+    severity INTEGER CHECK(severity >= 0 AND severity <= 5) NOT NULL DEFAULT 0, -- 0 is lowest, 5 is highest
     content TEXT CHECK(length(content) <= 1024),
-    reason TEXT CHECK(length(reason) <= 64), 
 
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -136,8 +150,9 @@ CREATE TABLE temp_basals (
     absolute REAL NOT NULL,
     percent REAL, -- This is optional, but absolute is not
     
-
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -160,6 +175,8 @@ CREATE TABLE temp_targets (
     low_target REAL NOT NULL,
 
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -196,6 +213,8 @@ CREATE TABLE profile_switches (
     targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
     
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -216,6 +235,8 @@ CREATE TABLE component_events (
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
@@ -248,9 +269,11 @@ CREATE TABLE event_groups (
     component_event_id TEXT UNIQUE REFERENCES component_events(id) ON DELETE RESTRICT,
 
     activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
-    note_id TEXT UNIQUE REFERENCES notes(id) ON DELETE RESTRICT,
+    notification_event_id TEXT UNIQUE REFERENCES notification_events(id) ON DELETE RESTRICT,
 
     -- Default Stuff
+    notes TEXT CHECK(length(notes) <= 1024),
+    reason TEXT CHECK(length(reason) <= 64),
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,

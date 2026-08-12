@@ -46,6 +46,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                         | AssignID
 	// goverter:map CreatedByIdentityName      | AssignCreatedByName
 	//
+	// goverter:ignore Notes Reason
 	// goverter:map Type ReadingType
 	EntryToCreate(source Entry, ctx ConverterContext) site.CreateGlucoseReadingParams
 

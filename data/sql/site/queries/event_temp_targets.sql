@@ -7,7 +7,8 @@ INSERT INTO temp_targets (
     duration_minutes,
     high_target,
     low_target,
-
+    notes,
+    reason,
     utc_offset_minutes,
     occurred_at,
     raw_json_data,
@@ -15,7 +16,7 @@ INSERT INTO temp_targets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -75,6 +76,9 @@ UPDATE temp_targets SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     high_target = COALESCE(sqlc.narg('HighTarget'), high_target),
     low_target = COALESCE(sqlc.narg('LowTarget'), low_target),
+
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

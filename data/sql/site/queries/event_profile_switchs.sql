@@ -17,6 +17,9 @@ INSERT INTO profile_switches (
     targets_high_json,
     targets_low_json,
 
+    notes,
+    reason,
+
     utc_offset_minutes,
     occurred_at,
     raw_json_data,
@@ -24,7 +27,7 @@ INSERT INTO profile_switches (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -86,6 +89,8 @@ UPDATE profile_switches SET
     name = COALESCE(sqlc.narg('Name'), name),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     percent = COALESCE(sqlc.narg('Percent'), percent),
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

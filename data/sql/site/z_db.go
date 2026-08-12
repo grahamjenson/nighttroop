@@ -48,8 +48,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allInsulinDosesStmt, err = db.PrepareContext(ctx, allInsulinDoses); err != nil {
 		return nil, fmt.Errorf("error preparing query AllInsulinDoses: %w", err)
 	}
-	if q.allNotesStmt, err = db.PrepareContext(ctx, allNotes); err != nil {
-		return nil, fmt.Errorf("error preparing query AllNotes: %w", err)
+	if q.allNotificationEventsStmt, err = db.PrepareContext(ctx, allNotificationEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query AllNotificationEvents: %w", err)
 	}
 	if q.allProfilePresetsStmt, err = db.PrepareContext(ctx, allProfilePresets); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfilePresets: %w", err)
@@ -87,8 +87,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createInsulinDoseStmt, err = db.PrepareContext(ctx, createInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateInsulinDose: %w", err)
 	}
-	if q.createNoteStmt, err = db.PrepareContext(ctx, createNote); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateNote: %w", err)
+	if q.createNotificationEventStmt, err = db.PrepareContext(ctx, createNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateNotificationEvent: %w", err)
 	}
 	if q.createProfilePresetStmt, err = db.PrepareContext(ctx, createProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateProfilePreset: %w", err)
@@ -135,8 +135,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getMostRecentProfileStoreStmt, err = db.PrepareContext(ctx, getMostRecentProfileStore); err != nil {
 		return nil, fmt.Errorf("error preparing query GetMostRecentProfileStore: %w", err)
 	}
-	if q.getNoteStmt, err = db.PrepareContext(ctx, getNote); err != nil {
-		return nil, fmt.Errorf("error preparing query GetNote: %w", err)
+	if q.getNotificationEventStmt, err = db.PrepareContext(ctx, getNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query GetNotificationEvent: %w", err)
 	}
 	if q.getProfilePresetStmt, err = db.PrepareContext(ctx, getProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfilePreset: %w", err)
@@ -195,8 +195,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteInsulinDoseStmt, err = db.PrepareContext(ctx, hardDeleteInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteInsulinDose: %w", err)
 	}
-	if q.hardDeleteNoteStmt, err = db.PrepareContext(ctx, hardDeleteNote); err != nil {
-		return nil, fmt.Errorf("error preparing query HardDeleteNote: %w", err)
+	if q.hardDeleteNotificationEventStmt, err = db.PrepareContext(ctx, hardDeleteNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteNotificationEvent: %w", err)
 	}
 	if q.hardDeleteProfilePresetStmt, err = db.PrepareContext(ctx, hardDeleteProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteProfilePreset: %w", err)
@@ -237,8 +237,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchInsulinDosesStmt, err = db.PrepareContext(ctx, searchInsulinDoses); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchInsulinDoses: %w", err)
 	}
-	if q.searchNotesStmt, err = db.PrepareContext(ctx, searchNotes); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchNotes: %w", err)
+	if q.searchNotificationEventsStmt, err = db.PrepareContext(ctx, searchNotificationEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchNotificationEvents: %w", err)
 	}
 	if q.searchProfileStoresStmt, err = db.PrepareContext(ctx, searchProfileStores); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchProfileStores: %w", err)
@@ -285,8 +285,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.softDeleteInsulinDoseStmt, err = db.PrepareContext(ctx, softDeleteInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteInsulinDose: %w", err)
 	}
-	if q.softDeleteNoteStmt, err = db.PrepareContext(ctx, softDeleteNote); err != nil {
-		return nil, fmt.Errorf("error preparing query SoftDeleteNote: %w", err)
+	if q.softDeleteNotificationEventStmt, err = db.PrepareContext(ctx, softDeleteNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query SoftDeleteNotificationEvent: %w", err)
 	}
 	if q.softDeleteProfileSwitchStmt, err = db.PrepareContext(ctx, softDeleteProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteProfileSwitch: %w", err)
@@ -321,8 +321,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateInsulinDoseStmt, err = db.PrepareContext(ctx, updateInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateInsulinDose: %w", err)
 	}
-	if q.updateNoteStmt, err = db.PrepareContext(ctx, updateNote); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateNote: %w", err)
+	if q.updateNotificationEventStmt, err = db.PrepareContext(ctx, updateNotificationEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateNotificationEvent: %w", err)
 	}
 	if q.updateProfilePresetStmt, err = db.PrepareContext(ctx, updateProfilePreset); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateProfilePreset: %w", err)
@@ -384,9 +384,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allInsulinDosesStmt: %w", cerr)
 		}
 	}
-	if q.allNotesStmt != nil {
-		if cerr := q.allNotesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allNotesStmt: %w", cerr)
+	if q.allNotificationEventsStmt != nil {
+		if cerr := q.allNotificationEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allNotificationEventsStmt: %w", cerr)
 		}
 	}
 	if q.allProfilePresetsStmt != nil {
@@ -449,9 +449,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createInsulinDoseStmt: %w", cerr)
 		}
 	}
-	if q.createNoteStmt != nil {
-		if cerr := q.createNoteStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createNoteStmt: %w", cerr)
+	if q.createNotificationEventStmt != nil {
+		if cerr := q.createNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createNotificationEventStmt: %w", cerr)
 		}
 	}
 	if q.createProfilePresetStmt != nil {
@@ -529,9 +529,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getMostRecentProfileStoreStmt: %w", cerr)
 		}
 	}
-	if q.getNoteStmt != nil {
-		if cerr := q.getNoteStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getNoteStmt: %w", cerr)
+	if q.getNotificationEventStmt != nil {
+		if cerr := q.getNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getNotificationEventStmt: %w", cerr)
 		}
 	}
 	if q.getProfilePresetStmt != nil {
@@ -629,9 +629,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteInsulinDoseStmt: %w", cerr)
 		}
 	}
-	if q.hardDeleteNoteStmt != nil {
-		if cerr := q.hardDeleteNoteStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing hardDeleteNoteStmt: %w", cerr)
+	if q.hardDeleteNotificationEventStmt != nil {
+		if cerr := q.hardDeleteNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteNotificationEventStmt: %w", cerr)
 		}
 	}
 	if q.hardDeleteProfilePresetStmt != nil {
@@ -699,9 +699,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchInsulinDosesStmt: %w", cerr)
 		}
 	}
-	if q.searchNotesStmt != nil {
-		if cerr := q.searchNotesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchNotesStmt: %w", cerr)
+	if q.searchNotificationEventsStmt != nil {
+		if cerr := q.searchNotificationEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchNotificationEventsStmt: %w", cerr)
 		}
 	}
 	if q.searchProfileStoresStmt != nil {
@@ -779,9 +779,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteInsulinDoseStmt: %w", cerr)
 		}
 	}
-	if q.softDeleteNoteStmt != nil {
-		if cerr := q.softDeleteNoteStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing softDeleteNoteStmt: %w", cerr)
+	if q.softDeleteNotificationEventStmt != nil {
+		if cerr := q.softDeleteNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing softDeleteNotificationEventStmt: %w", cerr)
 		}
 	}
 	if q.softDeleteProfileSwitchStmt != nil {
@@ -839,9 +839,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateInsulinDoseStmt: %w", cerr)
 		}
 	}
-	if q.updateNoteStmt != nil {
-		if cerr := q.updateNoteStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateNoteStmt: %w", cerr)
+	if q.updateNotificationEventStmt != nil {
+		if cerr := q.updateNotificationEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateNotificationEventStmt: %w", cerr)
 		}
 	}
 	if q.updateProfilePresetStmt != nil {
@@ -916,7 +916,7 @@ type Queries struct {
 	allFoodPresetsStmt                  *sql.Stmt
 	allGlucoseReadingsStmt              *sql.Stmt
 	allInsulinDosesStmt                 *sql.Stmt
-	allNotesStmt                        *sql.Stmt
+	allNotificationEventsStmt           *sql.Stmt
 	allProfilePresetsStmt               *sql.Stmt
 	allProfileSwitchesStmt              *sql.Stmt
 	allTempBasalsStmt                   *sql.Stmt
@@ -929,7 +929,7 @@ type Queries struct {
 	createFoodPresetStmt                *sql.Stmt
 	createGlucoseReadingStmt            *sql.Stmt
 	createInsulinDoseStmt               *sql.Stmt
-	createNoteStmt                      *sql.Stmt
+	createNotificationEventStmt         *sql.Stmt
 	createProfilePresetStmt             *sql.Stmt
 	createProfileSwitchStmt             *sql.Stmt
 	createTempBasalStmt                 *sql.Stmt
@@ -945,7 +945,7 @@ type Queries struct {
 	getGlucoseReadingStmt               *sql.Stmt
 	getInsulinDoseStmt                  *sql.Stmt
 	getMostRecentProfileStoreStmt       *sql.Stmt
-	getNoteStmt                         *sql.Stmt
+	getNotificationEventStmt            *sql.Stmt
 	getProfilePresetStmt                *sql.Stmt
 	getProfileStoreStmt                 *sql.Stmt
 	getProfileSwitchStmt                *sql.Stmt
@@ -965,7 +965,7 @@ type Queries struct {
 	hardDeleteGlucoseReadingStmt        *sql.Stmt
 	hardDeleteGlucoseReadingsByTypeStmt *sql.Stmt
 	hardDeleteInsulinDoseStmt           *sql.Stmt
-	hardDeleteNoteStmt                  *sql.Stmt
+	hardDeleteNotificationEventStmt     *sql.Stmt
 	hardDeleteProfilePresetStmt         *sql.Stmt
 	hardDeleteProfileStoreStmt          *sql.Stmt
 	hardDeleteProfileSwitchStmt         *sql.Stmt
@@ -979,7 +979,7 @@ type Queries struct {
 	searchFoodPresetsStmt               *sql.Stmt
 	searchGlucoseReadingsStmt           *sql.Stmt
 	searchInsulinDosesStmt              *sql.Stmt
-	searchNotesStmt                     *sql.Stmt
+	searchNotificationEventsStmt        *sql.Stmt
 	searchProfileStoresStmt             *sql.Stmt
 	searchProfileSwitchesStmt           *sql.Stmt
 	searchTempBasalsStmt                *sql.Stmt
@@ -995,7 +995,7 @@ type Queries struct {
 	softDeleteGlucoseReadingStmt        *sql.Stmt
 	softDeleteGlucoseReadingsByTypeStmt *sql.Stmt
 	softDeleteInsulinDoseStmt           *sql.Stmt
-	softDeleteNoteStmt                  *sql.Stmt
+	softDeleteNotificationEventStmt     *sql.Stmt
 	softDeleteProfileSwitchStmt         *sql.Stmt
 	softDeleteTempBasalStmt             *sql.Stmt
 	softDeleteTempTargetStmt            *sql.Stmt
@@ -1007,7 +1007,7 @@ type Queries struct {
 	updateFoodPresetStmt                *sql.Stmt
 	updateGlucoseReadingStmt            *sql.Stmt
 	updateInsulinDoseStmt               *sql.Stmt
-	updateNoteStmt                      *sql.Stmt
+	updateNotificationEventStmt         *sql.Stmt
 	updateProfilePresetStmt             *sql.Stmt
 	updateProfileSwitchStmt             *sql.Stmt
 	updateSiteSettingsStmt              *sql.Stmt
@@ -1027,7 +1027,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allFoodPresetsStmt:                  q.allFoodPresetsStmt,
 		allGlucoseReadingsStmt:              q.allGlucoseReadingsStmt,
 		allInsulinDosesStmt:                 q.allInsulinDosesStmt,
-		allNotesStmt:                        q.allNotesStmt,
+		allNotificationEventsStmt:           q.allNotificationEventsStmt,
 		allProfilePresetsStmt:               q.allProfilePresetsStmt,
 		allProfileSwitchesStmt:              q.allProfileSwitchesStmt,
 		allTempBasalsStmt:                   q.allTempBasalsStmt,
@@ -1040,7 +1040,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createFoodPresetStmt:                q.createFoodPresetStmt,
 		createGlucoseReadingStmt:            q.createGlucoseReadingStmt,
 		createInsulinDoseStmt:               q.createInsulinDoseStmt,
-		createNoteStmt:                      q.createNoteStmt,
+		createNotificationEventStmt:         q.createNotificationEventStmt,
 		createProfilePresetStmt:             q.createProfilePresetStmt,
 		createProfileSwitchStmt:             q.createProfileSwitchStmt,
 		createTempBasalStmt:                 q.createTempBasalStmt,
@@ -1056,7 +1056,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getGlucoseReadingStmt:               q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                  q.getInsulinDoseStmt,
 		getMostRecentProfileStoreStmt:       q.getMostRecentProfileStoreStmt,
-		getNoteStmt:                         q.getNoteStmt,
+		getNotificationEventStmt:            q.getNotificationEventStmt,
 		getProfilePresetStmt:                q.getProfilePresetStmt,
 		getProfileStoreStmt:                 q.getProfileStoreStmt,
 		getProfileSwitchStmt:                q.getProfileSwitchStmt,
@@ -1076,7 +1076,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteGlucoseReadingStmt:        q.hardDeleteGlucoseReadingStmt,
 		hardDeleteGlucoseReadingsByTypeStmt: q.hardDeleteGlucoseReadingsByTypeStmt,
 		hardDeleteInsulinDoseStmt:           q.hardDeleteInsulinDoseStmt,
-		hardDeleteNoteStmt:                  q.hardDeleteNoteStmt,
+		hardDeleteNotificationEventStmt:     q.hardDeleteNotificationEventStmt,
 		hardDeleteProfilePresetStmt:         q.hardDeleteProfilePresetStmt,
 		hardDeleteProfileStoreStmt:          q.hardDeleteProfileStoreStmt,
 		hardDeleteProfileSwitchStmt:         q.hardDeleteProfileSwitchStmt,
@@ -1090,7 +1090,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchFoodPresetsStmt:               q.searchFoodPresetsStmt,
 		searchGlucoseReadingsStmt:           q.searchGlucoseReadingsStmt,
 		searchInsulinDosesStmt:              q.searchInsulinDosesStmt,
-		searchNotesStmt:                     q.searchNotesStmt,
+		searchNotificationEventsStmt:        q.searchNotificationEventsStmt,
 		searchProfileStoresStmt:             q.searchProfileStoresStmt,
 		searchProfileSwitchesStmt:           q.searchProfileSwitchesStmt,
 		searchTempBasalsStmt:                q.searchTempBasalsStmt,
@@ -1106,7 +1106,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteGlucoseReadingStmt:        q.softDeleteGlucoseReadingStmt,
 		softDeleteGlucoseReadingsByTypeStmt: q.softDeleteGlucoseReadingsByTypeStmt,
 		softDeleteInsulinDoseStmt:           q.softDeleteInsulinDoseStmt,
-		softDeleteNoteStmt:                  q.softDeleteNoteStmt,
+		softDeleteNotificationEventStmt:     q.softDeleteNotificationEventStmt,
 		softDeleteProfileSwitchStmt:         q.softDeleteProfileSwitchStmt,
 		softDeleteTempBasalStmt:             q.softDeleteTempBasalStmt,
 		softDeleteTempTargetStmt:            q.softDeleteTempTargetStmt,
@@ -1118,7 +1118,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateFoodPresetStmt:                q.updateFoodPresetStmt,
 		updateGlucoseReadingStmt:            q.updateGlucoseReadingStmt,
 		updateInsulinDoseStmt:               q.updateInsulinDoseStmt,
-		updateNoteStmt:                      q.updateNoteStmt,
+		updateNotificationEventStmt:         q.updateNotificationEventStmt,
 		updateProfilePresetStmt:             q.updateProfilePresetStmt,
 		updateProfileSwitchStmt:             q.updateProfileSwitchStmt,
 		updateSiteSettingsStmt:              q.updateSiteSettingsStmt,

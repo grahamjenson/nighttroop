@@ -13,7 +13,10 @@ INSERT INTO event_groups (
     profile_switch_id,
     component_event_id,
     activity_id,
-    note_id,
+    notification_event_id,
+
+    notes,
+    reason,
 
     occurred_at,
     utc_offset_minutes,
@@ -22,7 +25,7 @@ INSERT INTO event_groups (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -92,9 +95,11 @@ SELECT
     a.steps as activity_steps,
     a.heart_rate as activity_heart_rate,
 
-    n.id as note_id,
-    n.content as note_content,
-    n.reason as note_reason
+    n.id as notification_event_id,
+    n.title as notification_event_title,
+    n.severity as notification_event_severity,
+    n.content as notification_event_content,
+    n.notification_type as notification_event_notification_type
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -105,7 +110,7 @@ LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
@@ -168,9 +173,11 @@ SELECT
     a.steps as activity_steps,
     a.heart_rate as activity_heart_rate,
 
-    n.id as note_id,
-    n.content as note_content,
-    n.reason as note_reason
+    n.id as notification_event_id,
+    n.title as notification_event_title,
+    n.severity as notification_event_severity,
+    n.content as notification_event_content,
+    n.notification_type as notification_event_notification_type
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -181,7 +188,7 @@ LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 WHERE eg.id = ?;
 
@@ -242,9 +249,11 @@ SELECT
     a.steps as activity_steps,
     a.heart_rate as activity_heart_rate,
 
-    n.id as note_id,
-    n.content as note_content,
-    n.reason as note_reason
+    n.id as notification_event_id,
+    n.title as notification_event_title,
+    n.severity as notification_event_severity,
+    n.content as notification_event_content,
+    n.notification_type as notification_event_notification_type
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -255,7 +264,7 @@ LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 
 WHERE
@@ -341,7 +350,11 @@ UPDATE event_groups SET
     profile_switch_id = COALESCE(sqlc.narg('ProfileSwitchID'), profile_switch_id),
     component_event_id = COALESCE(sqlc.narg('ComponentEventID'), component_event_id),
     activity_id = COALESCE(sqlc.narg('ActivityID'), activity_id),
-    note_id = COALESCE(sqlc.narg('NoteID'), note_id),
+    notification_event_id = COALESCE(sqlc.narg('NotificationEventID'), notification_event_id),
+
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
+
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

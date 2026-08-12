@@ -71,6 +71,8 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateComponentEvent :one
 UPDATE component_events SET
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

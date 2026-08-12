@@ -7,6 +7,9 @@ INSERT INTO insulin_doses (
     dose,
     dose_type,
 
+    notes,
+    reason,
+
     utc_offset_minutes,
     occurred_at,
     raw_json_data,
@@ -14,7 +17,7 @@ INSERT INTO insulin_doses (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -79,6 +82,9 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 UPDATE insulin_doses SET
     dose_type = COALESCE(sqlc.narg('DoseType'), dose_type),
     dose = COALESCE(sqlc.narg('Dose'), dose),
+
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

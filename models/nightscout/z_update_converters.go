@@ -31,6 +31,10 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
 		siteUpdateActivityParams.HeartRate = &xint644
 	}
+	if source.Notes != nil {
+		xstring3 := string(*source.Notes)
+		siteUpdateActivityParams.Notes = &xstring3
+	}
 	if source.Date != nil {
 		xint645 := int64(*source.Date)
 		siteUpdateActivityParams.OccurredAt = &xint645

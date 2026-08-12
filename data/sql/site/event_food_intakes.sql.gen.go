@@ -12,7 +12,7 @@ import (
 
 const allFoodIntakes = `-- name: AllFoodIntakes :many
 
-SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -47,6 +47,8 @@ func (q *Queries) AllFoodIntakes(ctx context.Context, arg AllFoodIntakesParams) 
 			&i.Fibre,
 			&i.Energy,
 			&i.Portions,
+			&i.Notes,
+			&i.Reason,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -85,6 +87,9 @@ INSERT INTO food_intakes (
     energy,
     portions,
 
+    notes,
+    reason,
+
     utc_offset_minutes,
     occurred_at,
     raw_json_data,
@@ -92,8 +97,8 @@ INSERT INTO food_intakes (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateFoodIntakeParams struct {
@@ -107,6 +112,8 @@ type CreateFoodIntakeParams struct {
 	Fibre                 *float64
 	Energy                *float64
 	Portions              *float64
+	Notes                 *string
+	Reason                *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	RawJsonData           *string
@@ -130,6 +137,8 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 		arg.Fibre,
 		arg.Energy,
 		arg.Portions,
+		arg.Notes,
+		arg.Reason,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
 		arg.RawJsonData,
@@ -149,6 +158,8 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 		&i.Fibre,
 		&i.Energy,
 		&i.Portions,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -164,7 +175,7 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 }
 
 const getFoodIntake = `-- name: GetFoodIntake :one
-SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes WHERE id = ?
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes WHERE id = ?
 `
 
 type GetFoodIntakeParams struct {
@@ -185,6 +196,8 @@ func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*
 		&i.Fibre,
 		&i.Energy,
 		&i.Portions,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -224,7 +237,7 @@ func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDelet
 }
 
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
-SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
+SELECT id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -347,6 +360,8 @@ func (q *Queries) SearchFoodIntakes(ctx context.Context, arg SearchFoodIntakesPa
 			&i.Fibre,
 			&i.Energy,
 			&i.Portions,
+			&i.Notes,
+			&i.Reason,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -421,12 +436,14 @@ UPDATE food_intakes SET
     energy = COALESCE(?8, energy),
     portions = COALESCE(?9, portions),
 
-    occurred_at = COALESCE(?10, occurred_at),
-    utc_offset_minutes = COALESCE(?11, utc_offset_minutes),
+    notes = COALESCE(?10, notes),
+    reason = COALESCE(?11, reason),
+    occurred_at = COALESCE(?12, occurred_at),
+    utc_offset_minutes = COALESCE(?13, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?12
-WHERE id = ?13 AND deleted_at IS NULL
-RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+    updated_by_identity_name = ?14
+WHERE id = ?15 AND deleted_at IS NULL
+RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateFoodIntakeParams struct {
@@ -439,6 +456,8 @@ type UpdateFoodIntakeParams struct {
 	Fibre                 *float64
 	Energy                *float64
 	Portions              *float64
+	Notes                 *string
+	Reason                *string
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -459,6 +478,8 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 		arg.Fibre,
 		arg.Energy,
 		arg.Portions,
+		arg.Notes,
+		arg.Reason,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,
@@ -476,6 +497,8 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 		&i.Fibre,
 		&i.Energy,
 		&i.Portions,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,

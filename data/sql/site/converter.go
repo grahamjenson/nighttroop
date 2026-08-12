@@ -18,8 +18,8 @@ type ToCreateParams interface {
 	InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams
 	InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams
 
-	NoteToCreate(source Note) CreateNoteParams
-	NoteToUpdate(source Note) UpdateNoteParams
+	NotificationEventToCreate(source NotificationEvent) CreateNotificationEventParams
+	NotificationEventToUpdate(source NotificationEvent) UpdateNotificationEventParams
 
 	ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams
 	ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams
@@ -53,6 +53,6 @@ type ToCreateParams interface {
 	SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow
 
 	//goverter:map . EventGroup
-	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch ComponentEvent Activity Note
+	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch ComponentEvent Activity NotificationEvent
 	EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle
 }

@@ -41,16 +41,16 @@ func (model EventGroupsBundle) GetUtcOffsetMinutes() *int64 {
 }
 
 type EventGroupsBundle struct {
-	EventGroup     EventGroup
-	GlucoseReading *GlucoseReading
-	InsulinDose    *InsulinDose
-	FoodIntake     *FoodIntake
-	TempBasal      *TempBasal
-	TempTarget     *TempTarget
-	ProfileSwitch  *ProfileSwitch
-	ComponentEvent *ComponentEvent
-	Activity       *Activity
-	Note           *Note
+	EventGroup        EventGroup
+	GlucoseReading    *GlucoseReading
+	InsulinDose       *InsulinDose
+	FoodIntake        *FoodIntake
+	TempBasal         *TempBasal
+	TempTarget        *TempTarget
+	ProfileSwitch     *ProfileSwitch
+	ComponentEvent    *ComponentEvent
+	Activity          *Activity
+	NotificationEvent *NotificationEvent
 }
 
 func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle {
@@ -141,11 +141,13 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		}
 	}
 
-	if source.NoteID != nil {
-		egb.Note = &Note{
-			ID:      *source.NoteID,
-			Content: source.NoteContent,
-			Reason:  source.NoteReason,
+	if source.NotificationEventID != nil {
+		egb.NotificationEvent = &NotificationEvent{
+			ID:               *source.NotificationEventID,
+			Title:            *source.NotificationEventTitle,
+			Severity:         *source.NotificationEventSeverity,
+			Content:          source.NotificationEventContent,
+			NotificationType: *source.NotificationEventNotificationType,
 		}
 	}
 
@@ -177,8 +179,8 @@ func (model EventGroupsBundle) UpdateComponentEvent() bool {
 func (model EventGroupsBundle) UpdateActivity() bool {
 	return model.EventGroup.ActivityID != nil && model.Activity != nil
 }
-func (model EventGroupsBundle) UpdateNote() bool {
-	return model.EventGroup.NoteID != nil && model.Note != nil
+func (model EventGroupsBundle) UpdateNotificationEvent() bool {
+	return model.EventGroup.NotificationEventID != nil && model.NotificationEvent != nil
 }
 
 // Create if EventGroup has model but no reference
@@ -206,8 +208,8 @@ func (model EventGroupsBundle) CreateComponentEvent() bool {
 func (model EventGroupsBundle) CreateActivity() bool {
 	return model.EventGroup.ActivityID == nil && model.Activity != nil
 }
-func (model EventGroupsBundle) CreateNote() bool {
-	return model.EventGroup.NoteID == nil && model.Note != nil
+func (model EventGroupsBundle) CreateNotificationEvent() bool {
+	return model.EventGroup.NotificationEventID == nil && model.NotificationEvent != nil
 }
 
 // Delete if EventGroup has reference but no model
@@ -235,6 +237,6 @@ func (model EventGroupsBundle) DeleteComponentEvent() bool {
 func (model EventGroupsBundle) DeleteActivity() bool {
 	return model.EventGroup.ActivityID != nil && model.Activity == nil
 }
-func (model EventGroupsBundle) DeleteNote() bool {
-	return model.EventGroup.NoteID != nil && model.Note == nil
+func (model EventGroupsBundle) DeleteNotificationEvent() bool {
+	return model.EventGroup.NotificationEventID != nil && model.NotificationEvent == nil
 }

@@ -13,7 +13,7 @@ const allEventGroups = `-- name: AllEventGroups :many
 SELECT 
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.notes, eg.reason, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
 
     gr.id as glucose_reading_id,   
     gr.reading as glucose_reading,
@@ -66,9 +66,11 @@ SELECT
     a.steps as activity_steps,
     a.heart_rate as activity_heart_rate,
 
-    n.id as note_id,
-    n.content as note_content,
-    n.reason as note_reason
+    n.id as notification_event_id,
+    n.title as notification_event_title,
+    n.severity as notification_event_severity,
+    n.content as notification_event_content,
+    n.notification_type as notification_event_notification_type
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -79,7 +81,7 @@ LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 WHERE (CAST(?1 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -136,9 +138,11 @@ type AllEventGroupsRow struct {
 	ActivityCalories                      *int64
 	ActivitySteps                         *int64
 	ActivityHeartRate                     *int64
-	NoteID                                *string
-	NoteContent                           *string
-	NoteReason                            *string
+	NotificationEventID                   *string
+	NotificationEventTitle                *string
+	NotificationEventSeverity             *int64
+	NotificationEventContent              *string
+	NotificationEventNotificationType     *string
 }
 
 func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) ([]*AllEventGroupsRow, error) {
@@ -161,7 +165,9 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.EventGroup.ProfileSwitchID,
 			&i.EventGroup.ComponentEventID,
 			&i.EventGroup.ActivityID,
-			&i.EventGroup.NoteID,
+			&i.EventGroup.NotificationEventID,
+			&i.EventGroup.Notes,
+			&i.EventGroup.Reason,
 			&i.EventGroup.RawJsonData,
 			&i.EventGroup.DeletedAt,
 			&i.EventGroup.UtcOffsetMinutes,
@@ -215,9 +221,11 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.ActivityCalories,
 			&i.ActivitySteps,
 			&i.ActivityHeartRate,
-			&i.NoteID,
-			&i.NoteContent,
-			&i.NoteReason,
+			&i.NotificationEventID,
+			&i.NotificationEventTitle,
+			&i.NotificationEventSeverity,
+			&i.NotificationEventContent,
+			&i.NotificationEventNotificationType,
 		); err != nil {
 			return nil, err
 		}
@@ -244,7 +252,10 @@ INSERT INTO event_groups (
     profile_switch_id,
     component_event_id,
     activity_id,
-    note_id,
+    notification_event_id,
+
+    notes,
+    reason,
 
     occurred_at,
     utc_offset_minutes,
@@ -253,8 +264,8 @@ INSERT INTO event_groups (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateEventGroupParams struct {
@@ -268,7 +279,9 @@ type CreateEventGroupParams struct {
 	ProfileSwitchID       *string
 	ComponentEventID      *string
 	ActivityID            *string
-	NoteID                *string
+	NotificationEventID   *string
+	Notes                 *string
+	Reason                *string
 	OccurredAt            int64
 	UtcOffsetMinutes      *int64
 	RawJsonData           *string
@@ -292,7 +305,9 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 		arg.ProfileSwitchID,
 		arg.ComponentEventID,
 		arg.ActivityID,
-		arg.NoteID,
+		arg.NotificationEventID,
+		arg.Notes,
+		arg.Reason,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.RawJsonData,
@@ -312,7 +327,9 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 		&i.ProfileSwitchID,
 		&i.ComponentEventID,
 		&i.ActivityID,
-		&i.NoteID,
+		&i.NotificationEventID,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -331,7 +348,7 @@ const getEventGroup = `-- name: GetEventGroup :one
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.notes, eg.reason, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
 
     gr.id as glucose_reading_id,   
     gr.reading as glucose_reading,
@@ -384,9 +401,11 @@ SELECT
     a.steps as activity_steps,
     a.heart_rate as activity_heart_rate,
 
-    n.id as note_id,
-    n.content as note_content,
-    n.reason as note_reason
+    n.id as notification_event_id,
+    n.title as notification_event_title,
+    n.severity as notification_event_severity,
+    n.content as notification_event_content,
+    n.notification_type as notification_event_notification_type
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -397,7 +416,7 @@ LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 WHERE eg.id = ?
 `
@@ -451,9 +470,11 @@ type GetEventGroupRow struct {
 	ActivityCalories                      *int64
 	ActivitySteps                         *int64
 	ActivityHeartRate                     *int64
-	NoteID                                *string
-	NoteContent                           *string
-	NoteReason                            *string
+	NotificationEventID                   *string
+	NotificationEventTitle                *string
+	NotificationEventSeverity             *int64
+	NotificationEventContent              *string
+	NotificationEventNotificationType     *string
 }
 
 func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*GetEventGroupRow, error) {
@@ -470,7 +491,9 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.EventGroup.ProfileSwitchID,
 		&i.EventGroup.ComponentEventID,
 		&i.EventGroup.ActivityID,
-		&i.EventGroup.NoteID,
+		&i.EventGroup.NotificationEventID,
+		&i.EventGroup.Notes,
+		&i.EventGroup.Reason,
 		&i.EventGroup.RawJsonData,
 		&i.EventGroup.DeletedAt,
 		&i.EventGroup.UtcOffsetMinutes,
@@ -524,15 +547,17 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.ActivityCalories,
 		&i.ActivitySteps,
 		&i.ActivityHeartRate,
-		&i.NoteID,
-		&i.NoteContent,
-		&i.NoteReason,
+		&i.NotificationEventID,
+		&i.NotificationEventTitle,
+		&i.NotificationEventSeverity,
+		&i.NotificationEventContent,
+		&i.NotificationEventNotificationType,
 	)
 	return &i, err
 }
 
 const getEventGroupOfTypeWithoutJoins = `-- name: GetEventGroupOfTypeWithoutJoins :many
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE group_type = ?
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE group_type = ?
 `
 
 type GetEventGroupOfTypeWithoutJoinsParams struct {
@@ -559,7 +584,9 @@ func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEv
 			&i.ProfileSwitchID,
 			&i.ComponentEventID,
 			&i.ActivityID,
-			&i.NoteID,
+			&i.NotificationEventID,
+			&i.Notes,
+			&i.Reason,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -586,7 +613,7 @@ func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEv
 
 const getEventGroupWithoutJoins = `-- name: GetEventGroupWithoutJoins :one
 
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?
 `
 
 type GetEventGroupWithoutJoinsParams struct {
@@ -610,7 +637,9 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 		&i.ProfileSwitchID,
 		&i.ComponentEventID,
 		&i.ActivityID,
-		&i.NoteID,
+		&i.NotificationEventID,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -626,7 +655,7 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 }
 
 const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :one
-DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM event_groups WHERE id = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type HardDeleteEventGroupParams struct {
@@ -647,7 +676,9 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 		&i.ProfileSwitchID,
 		&i.ComponentEventID,
 		&i.ActivityID,
-		&i.NoteID,
+		&i.NotificationEventID,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -663,7 +694,7 @@ func (q *Queries) HardDeleteEventGroup(ctx context.Context, arg HardDeleteEventG
 }
 
 const hardDeleteEventGroupsByType = `-- name: HardDeleteEventGroupsByType :many
-DELETE FROM event_groups WHERE group_type = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+DELETE FROM event_groups WHERE group_type = ? RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type HardDeleteEventGroupsByTypeParams struct {
@@ -690,7 +721,9 @@ func (q *Queries) HardDeleteEventGroupsByType(ctx context.Context, arg HardDelet
 			&i.ProfileSwitchID,
 			&i.ComponentEventID,
 			&i.ActivityID,
-			&i.NoteID,
+			&i.NotificationEventID,
+			&i.Notes,
+			&i.Reason,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -719,7 +752,7 @@ const searchEventGroups = `-- name: SearchEventGroups :many
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.note_id, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.notes, eg.reason, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
 
     gr.id as glucose_reading_id,   
     gr.reading as glucose_reading,
@@ -772,9 +805,11 @@ SELECT
     a.steps as activity_steps,
     a.heart_rate as activity_heart_rate,
 
-    n.id as note_id,
-    n.content as note_content,
-    n.reason as note_reason
+    n.id as notification_event_id,
+    n.title as notification_event_title,
+    n.severity as notification_event_severity,
+    n.content as notification_event_content,
+    n.notification_type as notification_event_notification_type
 
 FROM event_groups eg
 LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
@@ -785,7 +820,7 @@ LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
 LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
 LEFT JOIN component_events ce ON eg.component_event_id = ce.id
 LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notes n ON eg.note_id = n.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 
 WHERE
@@ -950,9 +985,11 @@ type SearchEventGroupsRow struct {
 	ActivityCalories                      *int64
 	ActivitySteps                         *int64
 	ActivityHeartRate                     *int64
-	NoteID                                *string
-	NoteContent                           *string
-	NoteReason                            *string
+	NotificationEventID                   *string
+	NotificationEventTitle                *string
+	NotificationEventSeverity             *int64
+	NotificationEventContent              *string
+	NotificationEventNotificationType     *string
 }
 
 func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsParams) ([]*SearchEventGroupsRow, error) {
@@ -1020,7 +1057,9 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.EventGroup.ProfileSwitchID,
 			&i.EventGroup.ComponentEventID,
 			&i.EventGroup.ActivityID,
-			&i.EventGroup.NoteID,
+			&i.EventGroup.NotificationEventID,
+			&i.EventGroup.Notes,
+			&i.EventGroup.Reason,
 			&i.EventGroup.RawJsonData,
 			&i.EventGroup.DeletedAt,
 			&i.EventGroup.UtcOffsetMinutes,
@@ -1074,9 +1113,11 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.ActivityCalories,
 			&i.ActivitySteps,
 			&i.ActivityHeartRate,
-			&i.NoteID,
-			&i.NoteContent,
-			&i.NoteReason,
+			&i.NotificationEventID,
+			&i.NotificationEventTitle,
+			&i.NotificationEventSeverity,
+			&i.NotificationEventContent,
+			&i.NotificationEventNotificationType,
 		); err != nil {
 			return nil, err
 		}
@@ -1097,7 +1138,7 @@ UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?1
 WHERE id = ?2 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteEventGroupParams struct {
@@ -1122,7 +1163,9 @@ func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventG
 		&i.ProfileSwitchID,
 		&i.ComponentEventID,
 		&i.ActivityID,
-		&i.NoteID,
+		&i.NotificationEventID,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -1142,7 +1185,7 @@ UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?
 WHERE group_type = ? AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type SoftDeleteEventGroupsByTypeParams struct {
@@ -1170,7 +1213,9 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 			&i.ProfileSwitchID,
 			&i.ComponentEventID,
 			&i.ActivityID,
-			&i.NoteID,
+			&i.NotificationEventID,
+			&i.Notes,
+			&i.Reason,
 			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -1206,13 +1251,17 @@ UPDATE event_groups SET
     profile_switch_id = COALESCE(?6, profile_switch_id),
     component_event_id = COALESCE(?7, component_event_id),
     activity_id = COALESCE(?8, activity_id),
-    note_id = COALESCE(?9, note_id),
-    occurred_at = COALESCE(?10, occurred_at),
-    utc_offset_minutes = COALESCE(?11, utc_offset_minutes),
+    notification_event_id = COALESCE(?9, notification_event_id),
+
+    notes = COALESCE(?10, notes),
+    reason = COALESCE(?11, reason),
+
+    occurred_at = COALESCE(?12, occurred_at),
+    utc_offset_minutes = COALESCE(?13, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?12
-WHERE id = ?13 AND deleted_at IS NULL
-RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, note_id, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+    updated_by_identity_name = ?14
+WHERE id = ?15 AND deleted_at IS NULL
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateEventGroupParams struct {
@@ -1224,7 +1273,9 @@ type UpdateEventGroupParams struct {
 	ProfileSwitchID       *string
 	ComponentEventID      *string
 	ActivityID            *string
-	NoteID                *string
+	NotificationEventID   *string
+	Notes                 *string
+	Reason                *string
 	OccurredAt            *int64
 	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
@@ -1244,7 +1295,9 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		arg.ProfileSwitchID,
 		arg.ComponentEventID,
 		arg.ActivityID,
-		arg.NoteID,
+		arg.NotificationEventID,
+		arg.Notes,
+		arg.Reason,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,
@@ -1262,7 +1315,9 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		&i.ProfileSwitchID,
 		&i.ComponentEventID,
 		&i.ActivityID,
-		&i.NoteID,
+		&i.NotificationEventID,
+		&i.Notes,
+		&i.Reason,
 		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,

@@ -15,6 +15,9 @@ INSERT INTO food_intakes (
     energy,
     portions,
 
+    notes,
+    reason,
+
     utc_offset_minutes,
     occurred_at,
     raw_json_data,
@@ -22,7 +25,7 @@ INSERT INTO food_intakes (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -97,6 +100,8 @@ UPDATE food_intakes SET
     energy = COALESCE(sqlc.narg('Energy'), energy),
     portions = COALESCE(sqlc.narg('Portions'), portions),
 
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

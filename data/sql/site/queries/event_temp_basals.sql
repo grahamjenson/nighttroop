@@ -7,6 +7,8 @@ INSERT INTO temp_basals (
     duration_minutes,
     absolute,
     percent,
+    notes,
+    reason,
 
     utc_offset_minutes,
     occurred_at,
@@ -15,7 +17,7 @@ INSERT INTO temp_basals (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -75,6 +77,9 @@ UPDATE temp_basals SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     absolute = COALESCE(sqlc.narg('Absolute'), absolute),
     percent = COALESCE(sqlc.narg('Percent'), percent),
+
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
 
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),

@@ -462,42 +462,38 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 	}
 
 	// note
-	fmt.Println("SAHFGSAOUGSOAUHGOUAHGOUSAHOGdsadasdSAOUGHOSAHOGHSAOUOGUIA", bundle.DeleteNote(), bundle.CreateNote(), bundle.UpdateNote())
-	fmt.Println("bundle.EventGroup.NoteID", bundle.EventGroup.NoteID, "bundle.Note", bundle.Note)
-	if bundle.DeleteNote() {
-		fmt.Println("SAHFGSAOUGSOAUHGOUAHGOUSAHOGSAOUGHOSAHOGHSAOUOGUIA")
-		fmt.Println("bundle.EventGroup.NoteID", bundle.EventGroup.NoteID)
+	if bundle.DeleteNotificationEvent() {
 		// Id exists no model
-		_, err := q.HardDeleteNote(ctx, site.HardDeleteNoteParams{ID: *bundle.EventGroup.NoteID})
+		_, err := q.HardDeleteNotificationEvent(ctx, site.HardDeleteNotificationEventParams{ID: *bundle.EventGroup.NotificationEventID})
 		if err != nil {
 			slog.Error("failed to delete note from database", "error", err)
 			return err
 		}
-		bundle.EventGroup.NoteID = nil
-	} else if bundle.CreateNote() {
+		bundle.EventGroup.NotificationEventID = nil
+	} else if bundle.CreateNotificationEvent() {
 		// model exists not id
 		// If the note is not deleted, but a new note is provided, we need to create it
-		dbModel, err := q.CreateNote(ctx, nightscout.NoteCreate(*bundle.Note, cc))
+		dbModel, err := q.CreateNotificationEvent(ctx, nightscout.NotificationEventCreate(*bundle.NotificationEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
 			return err
 		}
-		bundle.EventGroup.NoteID = &dbModel.ID
-		bundle.Note = dbModel
-	} else if bundle.UpdateNote() {
+		bundle.EventGroup.NotificationEventID = &dbModel.ID
+		bundle.NotificationEvent = dbModel
+	} else if bundle.UpdateNotificationEvent() {
 		// model and id exist
 
-		updateParams := nightscout.NoteUpdate(*bundle.Note, cc)
+		updateParams := nightscout.NotificationEventUpdate(*bundle.NotificationEvent, cc)
 		a, _ := json.Marshal(updateParams)
-		b, _ := json.Marshal(bundle.Note)
+		b, _ := json.Marshal(bundle.NotificationEvent)
 		fmt.Println("ASDSAFSAFSAFASF", string(a), "note", string(b))
-		dbModel, err := q.UpdateNote(ctx, updateParams)
+		dbModel, err := q.UpdateNotificationEvent(ctx, updateParams)
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
 			return err
 		}
-		bundle.EventGroup.NoteID = &dbModel.ID
-		bundle.Note = dbModel
+		bundle.EventGroup.NotificationEventID = &dbModel.ID
+		bundle.NotificationEvent = dbModel
 	}
 
 	return nil
@@ -553,7 +549,7 @@ func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	}
 	if eventGroup.ComponentEventID != nil {
 		if res, err := q.HardDeleteComponentEvent(ctx, site.HardDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
-			slog.Error("failed to delete component event by ID", "error", err, "deviceStateID", *eventGroup.ComponentEventID, "result", res)
+			slog.Error("failed to delete component event by ID", "error", err, "componentEventID", *eventGroup.ComponentEventID, "result", res)
 			return nil, err
 		}
 	}
@@ -563,9 +559,9 @@ func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 			return nil, err
 		}
 	}
-	if eventGroup.NoteID != nil {
-		if res, err := q.HardDeleteNote(ctx, site.HardDeleteNoteParams{ID: *eventGroup.NoteID}); err != nil {
-			slog.Error("failed to delete note by ID", "error", err, "noteID", *eventGroup.NoteID, "result", res)
+	if eventGroup.NotificationEventID != nil {
+		if res, err := q.HardDeleteNotificationEvent(ctx, site.HardDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
+			slog.Error("failed to delete notification event by ID", "error", err, "notificationEventID", *eventGroup.NotificationEventID, "result", res)
 			return nil, err
 		}
 	}
@@ -623,7 +619,7 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	}
 	if eventGroup.ComponentEventID != nil {
 		if res, err := q.SoftDeleteComponentEvent(ctx, site.SoftDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
-			slog.Error("failed to soft delete component event by ID", "error", err, "deviceStateID", *eventGroup.ComponentEventID, "result", res)
+			slog.Error("failed to soft delete component event by ID", "error", err, "componentEventID", *eventGroup.ComponentEventID, "result", res)
 			return nil, err
 		}
 	}
@@ -633,9 +629,9 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 			return nil, err
 		}
 	}
-	if eventGroup.NoteID != nil {
-		if res, err := q.SoftDeleteNote(ctx, site.SoftDeleteNoteParams{ID: *eventGroup.NoteID}); err != nil {
-			slog.Error("failed to soft delete note by ID", "error", err, "noteID", *eventGroup.NoteID, "result", res)
+	if eventGroup.NotificationEventID != nil {
+		if res, err := q.SoftDeleteNotificationEvent(ctx, site.SoftDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
+			slog.Error("failed to soft delete notification event by ID", "error", err, "notificationEventID", *eventGroup.NotificationEventID, "result", res)
 			return nil, err
 		}
 	}
@@ -654,7 +650,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	profileSwitch := ptr(nightscout.TreatmentToProfileSwitch(treatment))
 	componentEvent := ptr(nightscout.TreatmentToComponentEvent(treatment))
 	activity := ptr(nightscout.TreatmentToActivity(treatment))
-	note := ptr(nightscout.TreatmentToNote(treatment))
+	notificationEvent := ptr(nightscout.TreatmentToNotificationEvent(treatment))
 
 	///////
 	// VALIDATE THE CREATED VALUES
@@ -678,10 +674,6 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		insulinDose = nil
 	}
 
-	if note.Content == nil && note.Reason == nil {
-		note = nil
-	}
-
 	if foodIntake.Name == nil && foodIntake.Category == nil && foodIntake.Subcategory == nil && foodIntake.Carbs == nil && foodIntake.Fat == nil && foodIntake.Protein == nil && foodIntake.Fibre == nil && foodIntake.Energy == nil && foodIntake.Portions == nil {
 		foodIntake = nil
 	}
@@ -693,14 +685,13 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	switch *treatment.EventType {
 	case nightscout.Announcement:
 		return site.EventGroupsBundle{
-			EventGroup: eventGroup,
-			Note:       note,
+			EventGroup:        eventGroup,
+			NotificationEvent: notificationEvent,
 		}
 	case nightscout.BGCheck:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
-			Note:           note,
 		}
 	case nightscout.BolusWizard:
 		return site.EventGroupsBundle{
@@ -708,13 +699,11 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
-			Note:           note,
 		}
 	case nightscout.CarbCorrection:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
 			FoodIntake: foodIntake,
-			Note:       note,
 		}
 	case nightscout.ComboBolus:
 		return site.EventGroupsBundle{
@@ -722,30 +711,25 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
-			Note:           note,
 		}
 	case nightscout.CorrectionBolus:
 		return site.EventGroupsBundle{
 			EventGroup:  eventGroup,
 			InsulinDose: insulinDose,
-			Note:        note,
 		}
 	case nightscout.DADAlert:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
-			Note:       note,
 		}
 	case nightscout.Exercise:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
 			Activity:   activity,
-			Note:       note,
 		}
 	case nightscout.InsulinChange:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
-			Note:           note,
 		}
 	case nightscout.MealBolus:
 		return site.EventGroupsBundle{
@@ -753,53 +737,44 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
-			Note:           note,
 		}
 	case nightscout.Note:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
-			Note:       note,
 		}
 	case nightscout.OpenAPSOffline:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
-			Note:           note,
 		}
 	case nightscout.ProfileSwitch:
 		return site.EventGroupsBundle{
 			EventGroup:    eventGroup,
 			ProfileSwitch: profileSwitch,
-			Note:          note,
 		}
 	case nightscout.PumpBatteryChange:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
-			Note:           note,
 		}
 	case nightscout.Question:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
-			Note:       note,
 		}
 	case nightscout.SensorChange:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
-			Note:           note,
 		}
 	case nightscout.SensorStart:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
-			Note:           note,
 		}
 	case nightscout.SiteChange:
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
-			Note:           note,
 		}
 	case nightscout.SnackBolus:
 		return site.EventGroupsBundle{
@@ -807,19 +782,16 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
-			Note:           note,
 		}
 	case nightscout.TempBasal:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
 			TempBasal:  tempBasal,
-			Note:       note,
 		}
 	case nightscout.TemporaryTarget:
 		return site.EventGroupsBundle{
 			EventGroup: eventGroup,
 			TempTarget: tempTarget,
-			Note:       note,
 		}
 	}
 
@@ -827,6 +799,8 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 }
 
 func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventGroupsBundle) {
+
+	nightscout.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
 
 	if updateBundle.GlucoseReading != nil {
 		if dbModel.GlucoseReading == nil {
@@ -884,11 +858,11 @@ func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventG
 			nightscout.UpdateToActivity(*updateBundle.Activity, dbModel.Activity)
 		}
 	}
-	if updateBundle.Note != nil {
-		if dbModel.Note == nil {
-			dbModel.Note = updateBundle.Note
+	if updateBundle.NotificationEvent != nil {
+		if dbModel.NotificationEvent == nil {
+			dbModel.NotificationEvent = updateBundle.NotificationEvent
 		} else {
-			nightscout.UpdateToNote(*updateBundle.Note, dbModel.Note)
+			nightscout.UpdateToNotificationEvent(*updateBundle.NotificationEvent, dbModel.NotificationEvent)
 		}
 	}
 }

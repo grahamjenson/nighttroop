@@ -88,7 +88,8 @@ UPDATE activities SET
     calories = COALESCE(sqlc.narg('Calories'), calories),
     steps = COALESCE(sqlc.narg('Steps'), steps),
     heart_rate = COALESCE(sqlc.narg('HeartRate'), heart_rate),
-
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

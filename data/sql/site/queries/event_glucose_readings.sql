@@ -9,6 +9,8 @@ INSERT INTO glucose_readings (
     reading,
     reading_type,
     
+    notes,
+    reason,
     utc_offset_minutes,
     occurred_at,
     raw_json_data,
@@ -20,6 +22,8 @@ VALUES (
     sqlc.arg('ID'),
     sqlc.arg('Reading'),
     sqlc.arg('ReadingType'),
+    sqlc.arg('Notes'),
+    sqlc.arg('Reason'),
     sqlc.arg('UtcOffsetMinutes'),
     sqlc.arg('OccurredAt'),
     sqlc.arg('RawJsonData'),
@@ -97,6 +101,9 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 UPDATE glucose_readings SET
     reading = COALESCE(sqlc.narg('Reading'), reading),
 
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
+    
     occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
     utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),

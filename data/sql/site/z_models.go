@@ -7,12 +7,13 @@ package site
 type Activity struct {
 	ID                    string
 	Name                  *string
-	Notes                 *string
 	ActivityType          string
 	DurationMinutes       *int64
 	Calories              *int64
 	Steps                 *int64
 	HeartRate             *int64
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -28,6 +29,8 @@ type Activity struct {
 type ComponentEvent struct {
 	ID                    string
 	EventType             string
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -75,7 +78,9 @@ type EventGroup struct {
 	ProfileSwitchID       *string
 	ComponentEventID      *string
 	ActivityID            *string
-	NoteID                *string
+	NotificationEventID   *string
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -99,6 +104,8 @@ type FoodIntake struct {
 	Fibre                 *float64
 	Energy                *float64
 	Portions              *float64
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -135,6 +142,8 @@ type GlucoseReading struct {
 	ID                    string
 	Reading               float64
 	ReadingType           string
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -151,6 +160,8 @@ type InsulinDose struct {
 	ID                    string
 	Dose                  float64
 	DoseType              string
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -163,9 +174,13 @@ type InsulinDose struct {
 	CreatedByIdentityName string
 }
 
-type Note struct {
+type NotificationEvent struct {
 	ID                    string
+	NotificationType      string
+	Title                 string
+	Severity              int64
 	Content               *string
+	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
@@ -216,6 +231,8 @@ type ProfileSwitch struct {
 	BasalRatesJson           *string
 	TargetsHighJson          *string
 	TargetsLowJson           *string
+	Notes                    *string
+	Reason                   *string
 	RawJsonData              *string
 	DeletedAt                *int64
 	UtcOffsetMinutes         *int64
@@ -249,6 +266,8 @@ type TempBasal struct {
 	DurationMinutes       int64
 	Absolute              float64
 	Percent               *float64
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
@@ -266,6 +285,8 @@ type TempTarget struct {
 	DurationMinutes       int64
 	HighTarget            float64
 	LowTarget             float64
+	Notes                 *string
+	Reason                *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

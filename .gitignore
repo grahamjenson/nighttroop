@@ -6,3 +6,4 @@ tmp
 .test
 master_key.bin
 bin
+coverage.out

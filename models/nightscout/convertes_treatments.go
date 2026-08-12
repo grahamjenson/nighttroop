@@ -53,7 +53,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:context ctx
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map ID                     | AssignID
-	NoteCreate(source site.Note, ctx ConverterContext) site.CreateNoteParams
+	NotificationEventCreate(source site.NotificationEvent, ctx ConverterContext) site.CreateNotificationEventParams
 
 	///////
 	// Profile Switch
@@ -130,7 +130,7 @@ type TreatmentsEvenetConverter interface {
 
 	// goverter:context ctx
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
-	NoteUpdate(source site.Note, ctx ConverterContext) site.UpdateNoteParams
+	NotificationEventUpdate(source site.NotificationEvent, ctx ConverterContext) site.UpdateNotificationEventParams
 
 	///////
 	// Profile
@@ -185,6 +185,8 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map EventGroup.CreatedByDeviceName Device
 	// goverter:map EventGroup.ID Identifier
 	// goverter:map EventGroup.OccurredAt Date
+	// goverter:map EventGroup.Notes Notes
+	// goverter:map EventGroup.Reason Reason
 	//
 	// goverter:ignore PreBolus SplitNow SplitExt Profile Units PumpType ProfileJSON Timeshift
 	// goverter:map EventGroup.GroupType EventType
@@ -222,8 +224,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Activity.DurationMinutes Duration
 	// goverter:map Activity.HeartRate HeartRate
 	//
-	// goverter:map Note.Content Notes
-	// goverter:map Note.Reason Reason
 	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
 
 	////////////////////////////////////////
@@ -234,7 +234,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NoteID
+	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NotificationEventID
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map EventType GroupType
 	TreatmentToEventGroup(source Treatment) site.EventGroup
@@ -278,7 +278,7 @@ type TreatmentsEvenetConverter interface {
 	TreatmentToInsulinDose(source Treatment) site.InsulinDose
 
 	///////
-	// Notes
+	// NotificationEvents
 	///////
 
 	// goverter:map Date OccurredAt | OrNow
@@ -286,9 +286,11 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	//
 	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
+	// goverter:map EventType NotificationType
+	// goverter:map Name Title
 	// goverter:map Notes Content
-	// goverter:map Reason Reason
-	TreatmentToNote(source Treatment) site.Note
+	// goverter:map Severity | Zero
+	TreatmentToNotificationEvent(source Treatment) site.NotificationEvent
 
 	///////
 	// Profile Switch
@@ -367,7 +369,7 @@ type TreatmentsEvenetConverter interface {
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToNote(source site.Note, target *site.Note)
+	UpdateToNotificationEvent(source site.NotificationEvent, target *site.NotificationEvent)
 
 	// goverter:update target
 	// goverter:ignore ID
@@ -388,4 +390,8 @@ type TreatmentsEvenetConverter interface {
 	// goverter:update target
 	// goverter:ignore ID
 	UpdateToActivity(source site.Activity, target *site.Activity)
+}
+
+func Zero() int64 {
+	return 0
 }

@@ -12,11 +12,6 @@ func (m Activity) GetName() *string {
 	return m.Name
 }
 
-// GetNotes returns the Notes value.
-func (m Activity) GetNotes() *string {
-	return m.Notes
-}
-
 // GetActivityType returns the ActivityType value.
 func (m Activity) GetActivityType() string {
 	return m.ActivityType
@@ -40,6 +35,16 @@ func (m Activity) GetSteps() *int64 {
 // GetHeartRate returns the HeartRate value.
 func (m Activity) GetHeartRate() *int64 {
 	return m.HeartRate
+}
+
+// GetNotes returns the Notes value.
+func (m Activity) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m Activity) GetReason() *string {
+	return m.Reason
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -100,6 +105,16 @@ func (m ComponentEvent) GetID() string {
 // GetEventType returns the EventType value.
 func (m ComponentEvent) GetEventType() string {
 	return m.EventType
+}
+
+// GetNotes returns the Notes value.
+func (m ComponentEvent) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m ComponentEvent) GetReason() *string {
+	return m.Reason
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -307,9 +322,19 @@ func (m EventGroup) GetActivityID() *string {
 	return m.ActivityID
 }
 
-// GetNoteID returns the NoteID value.
-func (m EventGroup) GetNoteID() *string {
-	return m.NoteID
+// GetNotificationEventID returns the NotificationEventID value.
+func (m EventGroup) GetNotificationEventID() *string {
+	return m.NotificationEventID
+}
+
+// GetNotes returns the Notes value.
+func (m EventGroup) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m EventGroup) GetReason() *string {
+	return m.Reason
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -410,6 +435,16 @@ func (m FoodIntake) GetEnergy() *float64 {
 // GetPortions returns the Portions value.
 func (m FoodIntake) GetPortions() *float64 {
 	return m.Portions
+}
+
+// GetNotes returns the Notes value.
+func (m FoodIntake) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m FoodIntake) GetReason() *string {
+	return m.Reason
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -562,6 +597,16 @@ func (m GlucoseReading) GetReadingType() string {
 	return m.ReadingType
 }
 
+// GetNotes returns the Notes value.
+func (m GlucoseReading) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m GlucoseReading) GetReason() *string {
+	return m.Reason
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m GlucoseReading) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -627,6 +672,16 @@ func (m InsulinDose) GetDoseType() string {
 	return m.DoseType
 }
 
+// GetNotes returns the Notes value.
+func (m InsulinDose) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m InsulinDose) GetReason() *string {
+	return m.Reason
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m InsulinDose) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -678,67 +733,87 @@ func (m InsulinDose) GetCreatedByIdentityName() string {
 }
 
 // GetID returns the ID value.
-func (m Note) GetID() string {
+func (m NotificationEvent) GetID() string {
 	return m.ID
 }
 
+// GetNotificationType returns the NotificationType value.
+func (m NotificationEvent) GetNotificationType() string {
+	return m.NotificationType
+}
+
+// GetTitle returns the Title value.
+func (m NotificationEvent) GetTitle() string {
+	return m.Title
+}
+
+// GetSeverity returns the Severity value.
+func (m NotificationEvent) GetSeverity() int64 {
+	return m.Severity
+}
+
 // GetContent returns the Content value.
-func (m Note) GetContent() *string {
+func (m NotificationEvent) GetContent() *string {
 	return m.Content
 }
 
+// GetNotes returns the Notes value.
+func (m NotificationEvent) GetNotes() *string {
+	return m.Notes
+}
+
 // GetReason returns the Reason value.
-func (m Note) GetReason() *string {
+func (m NotificationEvent) GetReason() *string {
 	return m.Reason
 }
 
 // GetRawJsonData returns the RawJsonData value.
-func (m Note) GetRawJsonData() *string {
+func (m NotificationEvent) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
 // GetDeletedAt returns the DeletedAt value.
-func (m Note) GetDeletedAt() *int64 {
+func (m NotificationEvent) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m Note) GetUtcOffsetMinutes() *int64 {
+func (m NotificationEvent) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
 // GetOccurredAt returns the OccurredAt value.
-func (m Note) GetOccurredAt() int64 {
+func (m NotificationEvent) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
 // GetCreatedAt returns the CreatedAt value.
-func (m Note) GetCreatedAt() int64 {
+func (m NotificationEvent) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
-func (m Note) GetUpdatedAt() int64 {
+func (m NotificationEvent) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m Note) GetCreatedByAppName() *string {
+func (m NotificationEvent) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m Note) GetCreatedByDeviceName() *string {
+func (m NotificationEvent) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m Note) GetUpdatedByIdentityName() *string {
+func (m NotificationEvent) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m Note) GetCreatedByIdentityName() string {
+func (m NotificationEvent) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
@@ -907,6 +982,16 @@ func (m ProfileSwitch) GetTargetsLowJson() *string {
 	return m.TargetsLowJson
 }
 
+// GetNotes returns the Notes value.
+func (m ProfileSwitch) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m ProfileSwitch) GetReason() *string {
+	return m.Reason
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m ProfileSwitch) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -1042,6 +1127,16 @@ func (m TempBasal) GetPercent() *float64 {
 	return m.Percent
 }
 
+// GetNotes returns the Notes value.
+func (m TempBasal) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m TempBasal) GetReason() *string {
+	return m.Reason
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m TempBasal) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -1110,6 +1205,16 @@ func (m TempTarget) GetHighTarget() float64 {
 // GetLowTarget returns the LowTarget value.
 func (m TempTarget) GetLowTarget() float64 {
 	return m.LowTarget
+}
+
+// GetNotes returns the Notes value.
+func (m TempTarget) GetNotes() *string {
+	return m.Notes
+}
+
+// GetReason returns the Reason value.
+func (m TempTarget) GetReason() *string {
+	return m.Reason
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -2251,6 +2356,28 @@ func (m UpdateActivityParams) SetHeartRate(v *int64) UpdateActivityParams {
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateActivityParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateActivityParams.
+func (m UpdateActivityParams) SetNotes(v *string) UpdateActivityParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateActivityParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateActivityParams.
+func (m UpdateActivityParams) SetReason(v *string) UpdateActivityParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateActivityParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -2746,6 +2873,28 @@ func (m SearchComponentEventsParams) SetLimit(v int64) SearchComponentEventsPara
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateComponentEventParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateComponentEventParams.
+func (m UpdateComponentEventParams) SetNotes(v *string) UpdateComponentEventParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateComponentEventParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateComponentEventParams.
+func (m UpdateComponentEventParams) SetReason(v *string) UpdateComponentEventParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateComponentEventParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -2930,6 +3079,28 @@ func (m CreateFoodIntakeParams) GetPortions() *float64 {
 // SetPortions sets the Portions value and returns the updated CreateFoodIntakeParams.
 func (m CreateFoodIntakeParams) SetPortions(v *float64) CreateFoodIntakeParams {
 	m.Portions = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateFoodIntakeParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetNotes(v *string) CreateFoodIntakeParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateFoodIntakeParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetReason(v *string) CreateFoodIntakeParams {
+	m.Reason = v
 	return m
 }
 
@@ -3461,6 +3632,28 @@ func (m UpdateFoodIntakeParams) SetPortions(v *float64) UpdateFoodIntakeParams {
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateFoodIntakeParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetNotes(v *string) UpdateFoodIntakeParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateFoodIntakeParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetReason(v *string) UpdateFoodIntakeParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateFoodIntakeParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -3601,6 +3794,28 @@ func (m CreateGlucoseReadingParams) GetReadingType() string {
 // SetReadingType sets the ReadingType value and returns the updated CreateGlucoseReadingParams.
 func (m CreateGlucoseReadingParams) SetReadingType(v string) CreateGlucoseReadingParams {
 	m.ReadingType = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateGlucoseReadingParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetNotes(v *string) CreateGlucoseReadingParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateGlucoseReadingParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetReason(v *string) CreateGlucoseReadingParams {
+	m.Reason = v
 	return m
 }
 
@@ -4033,6 +4248,28 @@ func (m UpdateGlucoseReadingParams) SetReading(v *float64) UpdateGlucoseReadingP
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateGlucoseReadingParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateGlucoseReadingParams.
+func (m UpdateGlucoseReadingParams) SetNotes(v *string) UpdateGlucoseReadingParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateGlucoseReadingParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateGlucoseReadingParams.
+func (m UpdateGlucoseReadingParams) SetReason(v *string) UpdateGlucoseReadingParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateGlucoseReadingParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -4253,14 +4490,36 @@ func (m CreateEventGroupParams) SetActivityID(v *string) CreateEventGroupParams 
 	return m
 }
 
-// GetNoteID returns the NoteID value.
-func (m CreateEventGroupParams) GetNoteID() *string {
-	return m.NoteID
+// GetNotificationEventID returns the NotificationEventID value.
+func (m CreateEventGroupParams) GetNotificationEventID() *string {
+	return m.NotificationEventID
 }
 
-// SetNoteID sets the NoteID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetNoteID(v *string) CreateEventGroupParams {
-	m.NoteID = v
+// SetNotificationEventID sets the NotificationEventID value and returns the updated CreateEventGroupParams.
+func (m CreateEventGroupParams) SetNotificationEventID(v *string) CreateEventGroupParams {
+	m.NotificationEventID = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateEventGroupParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateEventGroupParams.
+func (m CreateEventGroupParams) SetNotes(v *string) CreateEventGroupParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateEventGroupParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateEventGroupParams.
+func (m CreateEventGroupParams) SetReason(v *string) CreateEventGroupParams {
+	m.Reason = v
 	return m
 }
 
@@ -4968,14 +5227,36 @@ func (m UpdateEventGroupParams) SetActivityID(v *string) UpdateEventGroupParams 
 	return m
 }
 
-// GetNoteID returns the NoteID value.
-func (m UpdateEventGroupParams) GetNoteID() *string {
-	return m.NoteID
+// GetNotificationEventID returns the NotificationEventID value.
+func (m UpdateEventGroupParams) GetNotificationEventID() *string {
+	return m.NotificationEventID
 }
 
-// SetNoteID sets the NoteID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetNoteID(v *string) UpdateEventGroupParams {
-	m.NoteID = v
+// SetNotificationEventID sets the NotificationEventID value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetNotificationEventID(v *string) UpdateEventGroupParams {
+	m.NotificationEventID = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m UpdateEventGroupParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetNotes(v *string) UpdateEventGroupParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateEventGroupParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetReason(v *string) UpdateEventGroupParams {
+	m.Reason = v
 	return m
 }
 
@@ -5119,6 +5400,28 @@ func (m CreateInsulinDoseParams) GetDoseType() string {
 // SetDoseType sets the DoseType value and returns the updated CreateInsulinDoseParams.
 func (m CreateInsulinDoseParams) SetDoseType(v string) CreateInsulinDoseParams {
 	m.DoseType = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateInsulinDoseParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateInsulinDoseParams.
+func (m CreateInsulinDoseParams) SetNotes(v *string) CreateInsulinDoseParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateInsulinDoseParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateInsulinDoseParams.
+func (m CreateInsulinDoseParams) SetReason(v *string) CreateInsulinDoseParams {
+	m.Reason = v
 	return m
 }
 
@@ -5562,6 +5865,28 @@ func (m UpdateInsulinDoseParams) SetDose(v *float64) UpdateInsulinDoseParams {
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateInsulinDoseParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateInsulinDoseParams.
+func (m UpdateInsulinDoseParams) SetNotes(v *string) UpdateInsulinDoseParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateInsulinDoseParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateInsulinDoseParams.
+func (m UpdateInsulinDoseParams) SetReason(v *string) UpdateInsulinDoseParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateInsulinDoseParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -5640,463 +5965,551 @@ func (m HardDeleteInsulinDoseParams) SetID(v string) HardDeleteInsulinDoseParams
 }
 
 // GetID returns the ID value.
-func (m CreateNoteParams) GetID() string {
+func (m CreateNotificationEventParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetID(v string) CreateNoteParams {
+// SetID sets the ID value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetID(v string) CreateNotificationEventParams {
 	m.ID = v
 	return m
 }
 
+// GetTitle returns the Title value.
+func (m CreateNotificationEventParams) GetTitle() string {
+	return m.Title
+}
+
+// SetTitle sets the Title value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetTitle(v string) CreateNotificationEventParams {
+	m.Title = v
+	return m
+}
+
+// GetSeverity returns the Severity value.
+func (m CreateNotificationEventParams) GetSeverity() int64 {
+	return m.Severity
+}
+
+// SetSeverity sets the Severity value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetSeverity(v int64) CreateNotificationEventParams {
+	m.Severity = v
+	return m
+}
+
 // GetContent returns the Content value.
-func (m CreateNoteParams) GetContent() *string {
+func (m CreateNotificationEventParams) GetContent() *string {
 	return m.Content
 }
 
-// SetContent sets the Content value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetContent(v *string) CreateNoteParams {
+// SetContent sets the Content value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetContent(v *string) CreateNotificationEventParams {
 	m.Content = v
 	return m
 }
 
+// GetNotificationType returns the NotificationType value.
+func (m CreateNotificationEventParams) GetNotificationType() string {
+	return m.NotificationType
+}
+
+// SetNotificationType sets the NotificationType value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetNotificationType(v string) CreateNotificationEventParams {
+	m.NotificationType = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateNotificationEventParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetNotes(v *string) CreateNotificationEventParams {
+	m.Notes = v
+	return m
+}
+
 // GetReason returns the Reason value.
-func (m CreateNoteParams) GetReason() *string {
+func (m CreateNotificationEventParams) GetReason() *string {
 	return m.Reason
 }
 
-// SetReason sets the Reason value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetReason(v *string) CreateNoteParams {
+// SetReason sets the Reason value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetReason(v *string) CreateNotificationEventParams {
 	m.Reason = v
 	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m CreateNoteParams) GetUtcOffsetMinutes() *int64 {
+func (m CreateNotificationEventParams) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetUtcOffsetMinutes(v *int64) CreateNoteParams {
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetUtcOffsetMinutes(v *int64) CreateNotificationEventParams {
 	m.UtcOffsetMinutes = v
 	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
-func (m CreateNoteParams) GetOccurredAt() int64 {
+func (m CreateNotificationEventParams) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
-// SetOccurredAt sets the OccurredAt value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetOccurredAt(v int64) CreateNoteParams {
+// SetOccurredAt sets the OccurredAt value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetOccurredAt(v int64) CreateNotificationEventParams {
 	m.OccurredAt = v
 	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
-func (m CreateNoteParams) GetRawJsonData() *string {
+func (m CreateNotificationEventParams) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetRawJsonData(v *string) CreateNoteParams {
+// SetRawJsonData sets the RawJsonData value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetRawJsonData(v *string) CreateNotificationEventParams {
 	m.RawJsonData = v
 	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
-func (m CreateNoteParams) GetCreatedByAppName() *string {
+func (m CreateNotificationEventParams) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
-// SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetCreatedByAppName(v *string) CreateNoteParams {
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetCreatedByAppName(v *string) CreateNotificationEventParams {
 	m.CreatedByAppName = v
 	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m CreateNoteParams) GetCreatedByDeviceName() *string {
+func (m CreateNotificationEventParams) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
-// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetCreatedByDeviceName(v *string) CreateNoteParams {
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetCreatedByDeviceName(v *string) CreateNotificationEventParams {
 	m.CreatedByDeviceName = v
 	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m CreateNoteParams) GetCreatedByIdentityName() string {
+func (m CreateNotificationEventParams) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateNoteParams.
-func (m CreateNoteParams) SetCreatedByIdentityName(v string) CreateNoteParams {
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateNotificationEventParams.
+func (m CreateNotificationEventParams) SetCreatedByIdentityName(v string) CreateNotificationEventParams {
 	m.CreatedByIdentityName = v
 	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllNotesParams) GetIncludeDeleted() *bool {
+func (m AllNotificationEventsParams) GetIncludeDeleted() *bool {
 	return m.IncludeDeleted
 }
 
-// SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllNotesParams.
-func (m AllNotesParams) SetIncludeDeleted(v *bool) AllNotesParams {
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllNotificationEventsParams.
+func (m AllNotificationEventsParams) SetIncludeDeleted(v *bool) AllNotificationEventsParams {
 	m.IncludeDeleted = v
 	return m
 }
 
 // GetSkip returns the Skip value.
-func (m AllNotesParams) GetSkip() int64 {
+func (m AllNotificationEventsParams) GetSkip() int64 {
 	return m.Skip
 }
 
-// SetSkip sets the Skip value and returns the updated AllNotesParams.
-func (m AllNotesParams) SetSkip(v int64) AllNotesParams {
+// SetSkip sets the Skip value and returns the updated AllNotificationEventsParams.
+func (m AllNotificationEventsParams) SetSkip(v int64) AllNotificationEventsParams {
 	m.Skip = v
 	return m
 }
 
 // GetLimit returns the Limit value.
-func (m AllNotesParams) GetLimit() int64 {
+func (m AllNotificationEventsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated AllNotesParams.
-func (m AllNotesParams) SetLimit(v int64) AllNotesParams {
+// SetLimit sets the Limit value and returns the updated AllNotificationEventsParams.
+func (m AllNotificationEventsParams) SetLimit(v int64) AllNotificationEventsParams {
 	m.Limit = v
 	return m
 }
 
 // GetID returns the ID value.
-func (m GetNoteParams) GetID() string {
+func (m GetNotificationEventParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated GetNoteParams.
-func (m GetNoteParams) SetID(v string) GetNoteParams {
+// SetID sets the ID value and returns the updated GetNotificationEventParams.
+func (m GetNotificationEventParams) SetID(v string) GetNotificationEventParams {
 	m.ID = v
 	return m
 }
 
 // GetDateGTE returns the DateGTE value.
-func (m SearchNotesParams) GetDateGTE() *int64 {
+func (m SearchNotificationEventsParams) GetDateGTE() *int64 {
 	return m.DateGTE
 }
 
-// SetDateGTE sets the DateGTE value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetDateGTE(v *int64) SearchNotesParams {
+// SetDateGTE sets the DateGTE value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetDateGTE(v *int64) SearchNotificationEventsParams {
 	m.DateGTE = v
 	return m
 }
 
 // GetDateLTE returns the DateLTE value.
-func (m SearchNotesParams) GetDateLTE() *int64 {
+func (m SearchNotificationEventsParams) GetDateLTE() *int64 {
 	return m.DateLTE
 }
 
-// SetDateLTE sets the DateLTE value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetDateLTE(v *int64) SearchNotesParams {
+// SetDateLTE sets the DateLTE value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetDateLTE(v *int64) SearchNotificationEventsParams {
 	m.DateLTE = v
 	return m
 }
 
 // GetDateGT returns the DateGT value.
-func (m SearchNotesParams) GetDateGT() *int64 {
+func (m SearchNotificationEventsParams) GetDateGT() *int64 {
 	return m.DateGT
 }
 
-// SetDateGT sets the DateGT value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetDateGT(v *int64) SearchNotesParams {
+// SetDateGT sets the DateGT value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetDateGT(v *int64) SearchNotificationEventsParams {
 	m.DateGT = v
 	return m
 }
 
 // GetDateLT returns the DateLT value.
-func (m SearchNotesParams) GetDateLT() *int64 {
+func (m SearchNotificationEventsParams) GetDateLT() *int64 {
 	return m.DateLT
 }
 
-// SetDateLT sets the DateLT value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetDateLT(v *int64) SearchNotesParams {
+// SetDateLT sets the DateLT value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetDateLT(v *int64) SearchNotificationEventsParams {
 	m.DateLT = v
 	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
-func (m SearchNotesParams) GetCreatedAtGTE() *int64 {
+func (m SearchNotificationEventsParams) GetCreatedAtGTE() *int64 {
 	return m.CreatedAtGTE
 }
 
-// SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetCreatedAtGTE(v *int64) SearchNotesParams {
+// SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetCreatedAtGTE(v *int64) SearchNotificationEventsParams {
 	m.CreatedAtGTE = v
 	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
-func (m SearchNotesParams) GetCreatedAtLTE() *int64 {
+func (m SearchNotificationEventsParams) GetCreatedAtLTE() *int64 {
 	return m.CreatedAtLTE
 }
 
-// SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetCreatedAtLTE(v *int64) SearchNotesParams {
+// SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetCreatedAtLTE(v *int64) SearchNotificationEventsParams {
 	m.CreatedAtLTE = v
 	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
-func (m SearchNotesParams) GetCreatedAtGT() *int64 {
+func (m SearchNotificationEventsParams) GetCreatedAtGT() *int64 {
 	return m.CreatedAtGT
 }
 
-// SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetCreatedAtGT(v *int64) SearchNotesParams {
+// SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetCreatedAtGT(v *int64) SearchNotificationEventsParams {
 	m.CreatedAtGT = v
 	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
-func (m SearchNotesParams) GetCreatedAtLT() *int64 {
+func (m SearchNotificationEventsParams) GetCreatedAtLT() *int64 {
 	return m.CreatedAtLT
 }
 
-// SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetCreatedAtLT(v *int64) SearchNotesParams {
+// SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetCreatedAtLT(v *int64) SearchNotificationEventsParams {
 	m.CreatedAtLT = v
 	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
-func (m SearchNotesParams) GetUpdatedGTE() *int64 {
+func (m SearchNotificationEventsParams) GetUpdatedGTE() *int64 {
 	return m.UpdatedGTE
 }
 
-// SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetUpdatedGTE(v *int64) SearchNotesParams {
+// SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetUpdatedGTE(v *int64) SearchNotificationEventsParams {
 	m.UpdatedGTE = v
 	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
-func (m SearchNotesParams) GetUpdatedLTE() *int64 {
+func (m SearchNotificationEventsParams) GetUpdatedLTE() *int64 {
 	return m.UpdatedLTE
 }
 
-// SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetUpdatedLTE(v *int64) SearchNotesParams {
+// SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetUpdatedLTE(v *int64) SearchNotificationEventsParams {
 	m.UpdatedLTE = v
 	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
-func (m SearchNotesParams) GetUpdatedGT() *int64 {
+func (m SearchNotificationEventsParams) GetUpdatedGT() *int64 {
 	return m.UpdatedGT
 }
 
-// SetUpdatedGT sets the UpdatedGT value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetUpdatedGT(v *int64) SearchNotesParams {
+// SetUpdatedGT sets the UpdatedGT value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetUpdatedGT(v *int64) SearchNotificationEventsParams {
 	m.UpdatedGT = v
 	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
-func (m SearchNotesParams) GetUpdatedLT() *int64 {
+func (m SearchNotificationEventsParams) GetUpdatedLT() *int64 {
 	return m.UpdatedLT
 }
 
-// SetUpdatedLT sets the UpdatedLT value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetUpdatedLT(v *int64) SearchNotesParams {
+// SetUpdatedLT sets the UpdatedLT value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetUpdatedLT(v *int64) SearchNotificationEventsParams {
 	m.UpdatedLT = v
 	return m
 }
 
 // GetIDEq returns the IDEq value.
-func (m SearchNotesParams) GetIDEq() *string {
+func (m SearchNotificationEventsParams) GetIDEq() *string {
 	return m.IDEq
 }
 
-// SetIDEq sets the IDEq value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetIDEq(v *string) SearchNotesParams {
+// SetIDEq sets the IDEq value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetIDEq(v *string) SearchNotificationEventsParams {
 	m.IDEq = v
 	return m
 }
 
 // GetIDIn returns the IDIn value.
-func (m SearchNotesParams) GetIDIn() *string {
+func (m SearchNotificationEventsParams) GetIDIn() *string {
 	return m.IDIn
 }
 
-// SetIDIn sets the IDIn value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetIDIn(v *string) SearchNotesParams {
+// SetIDIn sets the IDIn value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetIDIn(v *string) SearchNotificationEventsParams {
 	m.IDIn = v
 	return m
 }
 
-// GetNameEq returns the NameEq value.
-func (m SearchNotesParams) GetNameEq() *string {
-	return m.NameEq
+// GetTitleEq returns the TitleEq value.
+func (m SearchNotificationEventsParams) GetTitleEq() *string {
+	return m.TitleEq
 }
 
-// SetNameEq sets the NameEq value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetNameEq(v *string) SearchNotesParams {
-	m.NameEq = v
+// SetTitleEq sets the TitleEq value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetTitleEq(v *string) SearchNotificationEventsParams {
+	m.TitleEq = v
 	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
-func (m SearchNotesParams) GetDeviceEq() *string {
+func (m SearchNotificationEventsParams) GetDeviceEq() *string {
 	return m.DeviceEq
 }
 
-// SetDeviceEq sets the DeviceEq value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetDeviceEq(v *string) SearchNotesParams {
+// SetDeviceEq sets the DeviceEq value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetDeviceEq(v *string) SearchNotificationEventsParams {
 	m.DeviceEq = v
 	return m
 }
 
 // GetAppEq returns the AppEq value.
-func (m SearchNotesParams) GetAppEq() *string {
+func (m SearchNotificationEventsParams) GetAppEq() *string {
 	return m.AppEq
 }
 
-// SetAppEq sets the AppEq value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetAppEq(v *string) SearchNotesParams {
+// SetAppEq sets the AppEq value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetAppEq(v *string) SearchNotificationEventsParams {
 	m.AppEq = v
 	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m SearchNotesParams) GetIncludeDeleted() *bool {
+func (m SearchNotificationEventsParams) GetIncludeDeleted() *bool {
 	return m.IncludeDeleted
 }
 
-// SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetIncludeDeleted(v *bool) SearchNotesParams {
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetIncludeDeleted(v *bool) SearchNotificationEventsParams {
 	m.IncludeDeleted = v
 	return m
 }
 
 // GetSkip returns the Skip value.
-func (m SearchNotesParams) GetSkip() int64 {
+func (m SearchNotificationEventsParams) GetSkip() int64 {
 	return m.Skip
 }
 
-// SetSkip sets the Skip value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetSkip(v int64) SearchNotesParams {
+// SetSkip sets the Skip value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetSkip(v int64) SearchNotificationEventsParams {
 	m.Skip = v
 	return m
 }
 
 // GetLimit returns the Limit value.
-func (m SearchNotesParams) GetLimit() int64 {
+func (m SearchNotificationEventsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated SearchNotesParams.
-func (m SearchNotesParams) SetLimit(v int64) SearchNotesParams {
+// SetLimit sets the Limit value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetLimit(v int64) SearchNotificationEventsParams {
 	m.Limit = v
 	return m
 }
 
+// GetTitle returns the Title value.
+func (m UpdateNotificationEventParams) GetTitle() *string {
+	return m.Title
+}
+
+// SetTitle sets the Title value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetTitle(v *string) UpdateNotificationEventParams {
+	m.Title = v
+	return m
+}
+
+// GetSeverity returns the Severity value.
+func (m UpdateNotificationEventParams) GetSeverity() *int64 {
+	return m.Severity
+}
+
+// SetSeverity sets the Severity value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetSeverity(v *int64) UpdateNotificationEventParams {
+	m.Severity = v
+	return m
+}
+
+// GetNotificationType returns the NotificationType value.
+func (m UpdateNotificationEventParams) GetNotificationType() *string {
+	return m.NotificationType
+}
+
+// SetNotificationType sets the NotificationType value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetNotificationType(v *string) UpdateNotificationEventParams {
+	m.NotificationType = v
+	return m
+}
+
 // GetContent returns the Content value.
-func (m UpdateNoteParams) GetContent() *string {
+func (m UpdateNotificationEventParams) GetContent() *string {
 	return m.Content
 }
 
-// SetContent sets the Content value and returns the updated UpdateNoteParams.
-func (m UpdateNoteParams) SetContent(v *string) UpdateNoteParams {
+// SetContent sets the Content value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetContent(v *string) UpdateNotificationEventParams {
 	m.Content = v
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateNotificationEventParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetNotes(v *string) UpdateNotificationEventParams {
+	m.Notes = v
+	return m
+}
+
 // GetReason returns the Reason value.
-func (m UpdateNoteParams) GetReason() *string {
+func (m UpdateNotificationEventParams) GetReason() *string {
 	return m.Reason
 }
 
-// SetReason sets the Reason value and returns the updated UpdateNoteParams.
-func (m UpdateNoteParams) SetReason(v *string) UpdateNoteParams {
+// SetReason sets the Reason value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetReason(v *string) UpdateNotificationEventParams {
 	m.Reason = v
 	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
-func (m UpdateNoteParams) GetOccurredAt() *int64 {
+func (m UpdateNotificationEventParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
 }
 
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateNoteParams.
-func (m UpdateNoteParams) SetOccurredAt(v *int64) UpdateNoteParams {
+// SetOccurredAt sets the OccurredAt value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetOccurredAt(v *int64) UpdateNotificationEventParams {
 	m.OccurredAt = v
 	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateNoteParams) GetUtcOffsetMinutes() *int64 {
+func (m UpdateNotificationEventParams) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateNoteParams.
-func (m UpdateNoteParams) SetUtcOffsetMinutes(v *int64) UpdateNoteParams {
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetUtcOffsetMinutes(v *int64) UpdateNotificationEventParams {
 	m.UtcOffsetMinutes = v
 	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m UpdateNoteParams) GetUpdatedByIdentityName() *string {
+func (m UpdateNotificationEventParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateNoteParams.
-func (m UpdateNoteParams) SetUpdatedByIdentityName(v *string) UpdateNoteParams {
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetUpdatedByIdentityName(v *string) UpdateNotificationEventParams {
 	m.UpdatedByIdentityName = v
 	return m
 }
 
 // GetID returns the ID value.
-func (m UpdateNoteParams) GetID() string {
+func (m UpdateNotificationEventParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated UpdateNoteParams.
-func (m UpdateNoteParams) SetID(v string) UpdateNoteParams {
+// SetID sets the ID value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetID(v string) UpdateNotificationEventParams {
 	m.ID = v
 	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m SoftDeleteNoteParams) GetUpdatedByIdentityName() *string {
+func (m SoftDeleteNotificationEventParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteNoteParams.
-func (m SoftDeleteNoteParams) SetUpdatedByIdentityName(v *string) SoftDeleteNoteParams {
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteNotificationEventParams.
+func (m SoftDeleteNotificationEventParams) SetUpdatedByIdentityName(v *string) SoftDeleteNotificationEventParams {
 	m.UpdatedByIdentityName = v
 	return m
 }
 
 // GetID returns the ID value.
-func (m SoftDeleteNoteParams) GetID() string {
+func (m SoftDeleteNotificationEventParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated SoftDeleteNoteParams.
-func (m SoftDeleteNoteParams) SetID(v string) SoftDeleteNoteParams {
+// SetID sets the ID value and returns the updated SoftDeleteNotificationEventParams.
+func (m SoftDeleteNotificationEventParams) SetID(v string) SoftDeleteNotificationEventParams {
 	m.ID = v
 	return m
 }
 
 // GetID returns the ID value.
-func (m HardDeleteNoteParams) GetID() string {
+func (m HardDeleteNotificationEventParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated HardDeleteNoteParams.
-func (m HardDeleteNoteParams) SetID(v string) HardDeleteNoteParams {
+// SetID sets the ID value and returns the updated HardDeleteNotificationEventParams.
+func (m HardDeleteNotificationEventParams) SetID(v string) HardDeleteNotificationEventParams {
 	m.ID = v
 	return m
 }
@@ -6230,6 +6643,28 @@ func (m CreateProfileSwitchParams) GetTargetsLowJson() *string {
 // SetTargetsLowJson sets the TargetsLowJson value and returns the updated CreateProfileSwitchParams.
 func (m CreateProfileSwitchParams) SetTargetsLowJson(v *string) CreateProfileSwitchParams {
 	m.TargetsLowJson = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateProfileSwitchParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetNotes(v *string) CreateProfileSwitchParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateProfileSwitchParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetReason(v *string) CreateProfileSwitchParams {
+	m.Reason = v
 	return m
 }
 
@@ -6651,6 +7086,28 @@ func (m UpdateProfileSwitchParams) SetPercent(v *float64) UpdateProfileSwitchPar
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateProfileSwitchParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateProfileSwitchParams.
+func (m UpdateProfileSwitchParams) SetNotes(v *string) UpdateProfileSwitchParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateProfileSwitchParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateProfileSwitchParams.
+func (m UpdateProfileSwitchParams) SetReason(v *string) UpdateProfileSwitchParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateProfileSwitchParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -6769,6 +7226,28 @@ func (m CreateTempBasalParams) GetPercent() *float64 {
 // SetPercent sets the Percent value and returns the updated CreateTempBasalParams.
 func (m CreateTempBasalParams) SetPercent(v *float64) CreateTempBasalParams {
 	m.Percent = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateTempBasalParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateTempBasalParams.
+func (m CreateTempBasalParams) SetNotes(v *string) CreateTempBasalParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateTempBasalParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateTempBasalParams.
+func (m CreateTempBasalParams) SetReason(v *string) CreateTempBasalParams {
+	m.Reason = v
 	return m
 }
 
@@ -7179,6 +7658,28 @@ func (m UpdateTempBasalParams) SetPercent(v *float64) UpdateTempBasalParams {
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m UpdateTempBasalParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateTempBasalParams.
+func (m UpdateTempBasalParams) SetNotes(v *string) UpdateTempBasalParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateTempBasalParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateTempBasalParams.
+func (m UpdateTempBasalParams) SetReason(v *string) UpdateTempBasalParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m UpdateTempBasalParams) GetOccurredAt() *int64 {
 	return m.OccurredAt
@@ -7297,6 +7798,28 @@ func (m CreateTempTargetParams) GetLowTarget() float64 {
 // SetLowTarget sets the LowTarget value and returns the updated CreateTempTargetParams.
 func (m CreateTempTargetParams) SetLowTarget(v float64) CreateTempTargetParams {
 	m.LowTarget = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m CreateTempTargetParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateTempTargetParams.
+func (m CreateTempTargetParams) SetNotes(v *string) CreateTempTargetParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateTempTargetParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateTempTargetParams.
+func (m CreateTempTargetParams) SetReason(v *string) CreateTempTargetParams {
+	m.Reason = v
 	return m
 }
 
@@ -7704,6 +8227,28 @@ func (m UpdateTempTargetParams) GetLowTarget() *float64 {
 // SetLowTarget sets the LowTarget value and returns the updated UpdateTempTargetParams.
 func (m UpdateTempTargetParams) SetLowTarget(v *float64) UpdateTempTargetParams {
 	m.LowTarget = v
+	return m
+}
+
+// GetNotes returns the Notes value.
+func (m UpdateTempTargetParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated UpdateTempTargetParams.
+func (m UpdateTempTargetParams) SetNotes(v *string) UpdateTempTargetParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m UpdateTempTargetParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated UpdateTempTargetParams.
+func (m UpdateTempTargetParams) SetReason(v *string) UpdateTempTargetParams {
+	m.Reason = v
 	return m
 }
 

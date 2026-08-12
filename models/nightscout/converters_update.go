@@ -22,6 +22,7 @@ type UpdateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
+	// goverter:ignore Reason
 	// goverter:map Duration DurationMinutes
 	ActivityToUpdate(source Activity, ctx ConverterContext) site.UpdateActivityParams
 
@@ -34,7 +35,7 @@ type UpdateMapConverter interface {
 	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
-	// goverter:ignore
+	// goverter:ignore Notes Reason
 	EntryToUpdate(source Entry, ctx ConverterContext) site.UpdateGlucoseReadingParams
 
 	///////

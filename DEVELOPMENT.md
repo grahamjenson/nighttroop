@@ -35,3 +35,13 @@ docker-compose restart && rm -rf .dbs && go generate ./... && sleep 2 && air | s
 
 Then go to `localhost:8080` and create a user, `control.localhost:8080` and login as control.
 In Development all initial passwords are `password` and all TOTP is `123123`
+
+
+# Testing
+
+# Coverage
+
+
+```
+got -coverpkg=./... -coverprofile=coverage.out tests && go tool cover -html=coverage.out
+```
