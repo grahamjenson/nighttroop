@@ -312,7 +312,7 @@ CREATE TABLE device_reports (
 
 CREATE TABLE food_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
-    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 64),
+    name TEXT NOT NULL CHECK(length(name) <= 64),
     
     category TEXT CHECK(length(category) <= 64),
     subcategory TEXT CHECK(length(subcategory) <= 64),

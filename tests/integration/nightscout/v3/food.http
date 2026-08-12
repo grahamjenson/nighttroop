@@ -1,0 +1,104 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+NAME jwtauth
+GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+//////
+// CREATE
+//////
+
+
+NAME create_food_v1
+POST http://{{ .site }}.ns.localhost/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 27 }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals 27 "@result.carbs" }}
+ASSERT {{ assertExists "@result.identifier" }}
+ASSERT {{ assertExists "@result.date" }}
+ASSERT {{ assertExists "@result.subject" }}
+ASSERT {{ assertExists "@result.utcOffset" }}
+ASSERT {{ assertExists "@result.srvCreated" }}
+ASSERT {{ assertExists "@result.srvModified" }}
+
+
+//////
+// READ
+//////
+
+NAME get_food_v1
+GET http://{{ .site }}.ns.localhost/api/v3/food/{{ dig "create_food_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 27 "@result.carbs" }}
+
+NAME search_device_v1
+GET http://{{ .site }}.ns.localhost/api/v3/food?device=iphone%
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "iphone" "@result.0.device" }}
+
+NAME get_404_food_v1
+GET http://{{ .site }}.ns.localhost/api/v3/food/NonExistentID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+//////
+// UPDATE
+//////
+
+NAME put_food_v1
+PUT http://{{ .site }}.ns.localhost/api/v3/food/{{ dig "create_food_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 200 }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 200 "@result.carbs" }}
+
+NAME check_put_food_v1
+GET http://{{ .site }}.ns.localhost/api/v3/food/{{ dig "create_food_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 200 "@result.carbs" }}
+
+NAME patch_food_v1
+PATCH http://{{ .site }}.ns.localhost/api/v3/food/{{ dig "create_food_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 150 }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 150 "@result.carbs" }}
+
+NAME check_patch_food_v1
+GET http://{{ .site }}.ns.localhost/api/v3/food/{{ dig "create_food_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 150 "@result.carbs" }}
+
+NAME update_entries_force_create_v3
+PUT http://{{ .site }}.ns.localhost/api/v3/food/AnotherFunID
+H Authorization: Bearer {{ jwt }}
+B { "carbs": 100 }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals 100 "@result.carbs" }}
+
+//////
+// DELETE
+//////
+
+NAME delete_soft_food_v1
+DELETE http://{{ .site }}.ns.localhost/api/v3/food/{{ dig "create_food_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
