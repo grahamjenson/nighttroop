@@ -3,7 +3,6 @@ package collections
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -81,23 +80,16 @@ func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel
 func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)
-	ccc, err := json.Marshal(tebg)
-	fmt.Println("tebg.EventGroup.CreateParams", string(ccc))
-
 	if overrideIdentifier != nil {
 		tebg.EventGroup.ID = *overrideIdentifier
 	}
 
-	err = createUpdateEventGroup(ctx, q, &tebg, cc)
+	err := createUpdateEventGroup(ctx, q, &tebg, cc)
 	if err != nil {
 		return nil, err
 	}
 
 	createEventGroupParams := nightscout.EventGroupCreate(tebg.EventGroup, cc)
-	a, _ := json.Marshal(tebg.EventGroup)
-	b, _ := json.Marshal(createEventGroupParams)
-	fmt.Println("createParams.EventGroup.CreateParams", string(a))
-	fmt.Println("createEventGroupParams", string(b))
 	newEventGroup, err := q.CreateEventGroup(ctx, createEventGroupParams)
 	if err != nil {
 		slog.Error("failed to create event group in database", "error", err, "createParams", tebg)
@@ -123,43 +115,38 @@ func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, ide
 	return &egb, nil
 }
 
-func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *site.EventGroupsBundle, uc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
-	/////
-	// Delete all related models
-	/////
+func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *site.EventGroupsBundle, cc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
+	// This will be a partial update
+	nsModel.EventType = ptr(nightscout.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
+	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
 
-	/////
-	// Create the new models using the patches merged with existing values
-	//////
+	if updateBundle.Note != nil {
+		if dbModel.Note == nil {
+			dbModel.Note = updateBundle.Note
+		} else {
+			nightscout.UpdateToNote(*updateBundle.Note, dbModel.Note)
+		}
+	}
+	// Do something with the update bundle to merge it into the dbModel
 
-	/////
-	// Update Event Group Referencing the new models
-	/////
+	err := createUpdateEventGroup(ctx, q, dbModel, cc)
+	if err != nil {
+		return nil, err
+	}
 
-	// createSubsParams := TreatmentEventGroupCreate(ctx, uc, nsModel)
+	updateEventGroupParams := nightscout.EventGroupUpdate(dbModel.EventGroup, cc)
+	newEventGroup, err := q.UpdateEventGroup(ctx, updateEventGroupParams)
+	if err != nil {
+		slog.Error("failed to update event group in database", "error", err)
+		return nil, err
+	}
 
-	// updateParams.EventGroup.ID = identifier
-	// eventGroup := nightscout.TreatmentToUpdateEventGroup(treatment, cc)
+	if newEventGroup == nil || newEventGroup.ID == "" {
+		slog.Error("failed to update event group in database, EventGroup is nil")
+		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
+	}
 
-	// // Finaly Update the EventGroup
-	// dbModel, err := q.UpdateEventGroup(ctx, bundle.EventGroup)
-	// if err != nil {
-	// 	slog.Error("failed in updateEventGroup to update event group in database", "error", err, "updateParams", bundle.EventGroup)
-	// 	return nil, err
-	// }
-	// if dbModel == nil {
-	// 	slog.Error("failed in updateEventGroup to update event group in database, dbModel is nil", "updateParams", bundle.EventGroup)
-	// 	return nil, err
-	// }
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if dbModel == nil || dbModel.EventGroup.ID == "" {
-	// 	slog.Error("failed to update event group in database, EventGroup is nil")
-	// 	return nil, err
-	// }
+	dbModel.EventGroup = *newEventGroup
 
 	return dbModel, nil
 }

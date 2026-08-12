@@ -344,4 +344,38 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
 	// goverter:map Duration DurationMinutes
 	TreatmentToActivity(source Treatment) site.Activity
+
+	//////
+	// Update Override
+	//////
+
+	// goverter:update target
+	UpdateToEventGroup(source site.EventGroup, target *site.EventGroup)
+
+	// goverter:update target
+	UpdateToFoodIntake(source site.FoodIntake, target *site.FoodIntake)
+
+	// goverter:update target
+	UpdateToGlucoseReading(source site.GlucoseReading, target *site.GlucoseReading)
+
+	// goverter:update target
+	UpdateToInsulinDose(source site.InsulinDose, target *site.InsulinDose)
+
+	// goverter:update target
+	UpdateToNote(source site.Note, target *site.Note)
+
+	// goverter:update target
+	UpdateToProfileSwitch(source site.ProfileSwitch, target *site.ProfileSwitch)
+
+	// goverter:update target
+	UpdateToTempBasal(source site.TempBasal, target *site.TempBasal)
+
+	// goverter:update target
+	UpdateToTempTarget(source site.TempTarget, target *site.TempTarget)
+
+	// goverter:update target
+	UpdateToComponentEvent(source site.ComponentEvent, target *site.ComponentEvent)
+
+	// goverter:update target
+	UpdateToActivity(source site.Activity, target *site.Activity)
 }
