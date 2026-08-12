@@ -392,12 +392,10 @@ UPDATE glucose_readings SET
 
     notes = COALESCE(?2, notes),
     reason = COALESCE(?3, reason),
-    
-    occurred_at = COALESCE(?4, occurred_at),
-    utc_offset_minutes = COALESCE(?5, utc_offset_minutes),
+
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?6
-WHERE id = ?7 AND deleted_at IS NULL
+    updated_by_identity_name = ?4
+WHERE id = ?5 AND deleted_at IS NULL
 RETURNING id, reading, reading_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -405,8 +403,6 @@ type UpdateGlucoseReadingParams struct {
 	Reading               *float64
 	Notes                 *string
 	Reason                *string
-	OccurredAt            *int64
-	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -419,8 +415,6 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		arg.Reading,
 		arg.Notes,
 		arg.Reason,
-		arg.OccurredAt,
-		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

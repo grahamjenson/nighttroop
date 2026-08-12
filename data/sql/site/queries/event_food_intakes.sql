@@ -102,8 +102,7 @@ UPDATE food_intakes SET
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
-    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
-    utc_offset_minutes = COALESCE(sqlc.narg('UtcOffsetMinutes'), utc_offset_minutes),
+
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL

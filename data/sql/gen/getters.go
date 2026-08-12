@@ -273,6 +273,12 @@ func generateGetters(modelName string, columns []*plugin.Column) string {
 		sb.WriteString(fmt.Sprintf("func (m %s) Get%s() %s {\n", modelName, fieldName, fieldType))
 		sb.WriteString(fmt.Sprintf("	return m.%s\n", fieldName))
 		sb.WriteString("}\n\n")
+
+		sb.WriteString(fmt.Sprintf("// Set%s sets the %s value and returns the updated %s.\n", fieldName, fieldName, modelName))
+		sb.WriteString(fmt.Sprintf("func (m *%s) Set%s(v %s) {\n", modelName, fieldName, fieldType))
+		sb.WriteString(fmt.Sprintf("	m.%s = v\n", fieldName))
+		sb.WriteString("}\n\n")
+
 	}
 
 	return sb.String()

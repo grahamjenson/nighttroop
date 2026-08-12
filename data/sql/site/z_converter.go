@@ -79,12 +79,6 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 		xstring3 := *source.Reason
 		siteUpdateActivityParams.Reason = &xstring3
 	}
-	pInt64 := source.OccurredAt
-	siteUpdateActivityParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint645 := *source.UtcOffsetMinutes
-		siteUpdateActivityParams.UtcOffsetMinutes = &xint645
-	}
 	if source.UpdatedByIdentityName != nil {
 		xstring4 := *source.UpdatedByIdentityName
 		siteUpdateActivityParams.UpdatedByIdentityName = &xstring4
@@ -125,12 +119,6 @@ func ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams {
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateComponentEventParams.Reason = &xstring2
-	}
-	pInt64 := source.OccurredAt
-	siteUpdateComponentEventParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateComponentEventParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName
@@ -204,12 +192,6 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 }
 func DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams {
 	var siteUpdateDeviceReportParams UpdateDeviceReportParams
-	pInt64 := source.OccurredAt
-	siteUpdateDeviceReportParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateDeviceReportParams.UtcOffsetMinutes = &xint64
-	}
 	if source.UpdatedByIdentityName != nil {
 		xstring := *source.UpdatedByIdentityName
 		siteUpdateDeviceReportParams.UpdatedByIdentityName = &xstring
@@ -336,12 +318,6 @@ func EventGroupToUpdate(source EventGroup) UpdateEventGroupParams {
 		xstring11 := *source.Reason
 		siteUpdateEventGroupParams.Reason = &xstring11
 	}
-	pInt64 := source.OccurredAt
-	siteUpdateEventGroupParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateEventGroupParams.UtcOffsetMinutes = &xint64
-	}
 	if source.UpdatedByIdentityName != nil {
 		xstring12 := *source.UpdatedByIdentityName
 		siteUpdateEventGroupParams.UpdatedByIdentityName = &xstring12
@@ -461,12 +437,6 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 	if source.Reason != nil {
 		xstring5 := *source.Reason
 		siteUpdateFoodIntakeParams.Reason = &xstring5
-	}
-	pInt64 := source.OccurredAt
-	siteUpdateFoodIntakeParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateFoodIntakeParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring6 := *source.UpdatedByIdentityName
@@ -614,12 +584,6 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 		xstring2 := *source.Reason
 		siteUpdateGlucoseReadingParams.Reason = &xstring2
 	}
-	pInt64 := source.OccurredAt
-	siteUpdateGlucoseReadingParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint64
-	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName
 		siteUpdateGlucoseReadingParams.UpdatedByIdentityName = &xstring3
@@ -673,12 +637,6 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateInsulinDoseParams.Reason = &xstring2
-	}
-	pInt64 := source.OccurredAt
-	siteUpdateInsulinDoseParams.OccurredAt = &pInt64
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateInsulinDoseParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName
@@ -744,12 +702,6 @@ func NotificationEventToUpdate(source NotificationEvent) UpdateNotificationEvent
 	if source.Reason != nil {
 		xstring3 := *source.Reason
 		siteUpdateNotificationEventParams.Reason = &xstring3
-	}
-	pInt642 := source.OccurredAt
-	siteUpdateNotificationEventParams.OccurredAt = &pInt642
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateNotificationEventParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring4 := *source.UpdatedByIdentityName
@@ -908,12 +860,6 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateProfileSwitchParams.Reason = &xstring2
-	}
-	pInt642 := source.OccurredAt
-	siteUpdateProfileSwitchParams.OccurredAt = &pInt642
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateProfileSwitchParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName
@@ -1203,12 +1149,6 @@ func TempBasalToUpdate(source TempBasal) UpdateTempBasalParams {
 		xstring2 := *source.Reason
 		siteUpdateTempBasalParams.Reason = &xstring2
 	}
-	pInt642 := source.OccurredAt
-	siteUpdateTempBasalParams.OccurredAt = &pInt642
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateTempBasalParams.UtcOffsetMinutes = &xint64
-	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName
 		siteUpdateTempBasalParams.UpdatedByIdentityName = &xstring3
@@ -1265,12 +1205,6 @@ func TempTargetToUpdate(source TempTarget) UpdateTempTargetParams {
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateTempTargetParams.Reason = &xstring2
-	}
-	pInt642 := source.OccurredAt
-	siteUpdateTempTargetParams.OccurredAt = &pInt642
-	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteUpdateTempTargetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring3 := *source.UpdatedByIdentityName

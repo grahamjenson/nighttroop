@@ -12,9 +12,19 @@ func (m DataSourceBlockList) GetID() int64 {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated DataSourceBlockList.
+func (m *DataSourceBlockList) SetID(v int64) {
+	m.ID = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m DataSourceBlockList) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated DataSourceBlockList.
+func (m *DataSourceBlockList) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUsername returns the Username value.
@@ -22,9 +32,19 @@ func (m DataSourceBlockList) GetUsername() *string {
 	return m.Username
 }
 
+// SetUsername sets the Username value and returns the updated DataSourceBlockList.
+func (m *DataSourceBlockList) SetUsername(v *string) {
+	m.Username = v
+}
+
 // GetUrl returns the Url value.
 func (m DataSourceBlockList) GetUrl() *string {
 	return m.Url
+}
+
+// SetUrl sets the Url value and returns the updated DataSourceBlockList.
+func (m *DataSourceBlockList) SetUrl(v *string) {
+	m.Url = v
 }
 
 // GetReason returns the Reason value.
@@ -32,9 +52,19 @@ func (m DataSourceBlockList) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated DataSourceBlockList.
+func (m *DataSourceBlockList) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetID returns the ID value.
 func (m Event) GetID() int64 {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated Event.
+func (m *Event) SetID(v int64) {
+	m.ID = v
 }
 
 // GetType returns the Type value.
@@ -42,9 +72,19 @@ func (m Event) GetType() *string {
 	return m.Type
 }
 
+// SetType sets the Type value and returns the updated Event.
+func (m *Event) SetType(v *string) {
+	m.Type = v
+}
+
 // GetDetails returns the Details value.
 func (m Event) GetDetails() *string {
 	return m.Details
+}
+
+// SetDetails sets the Details value and returns the updated Event.
+func (m *Event) SetDetails(v *string) {
+	m.Details = v
 }
 
 // GetStart returns the Start value.
@@ -52,9 +92,19 @@ func (m Event) GetStart() int64 {
 	return m.Start
 }
 
+// SetStart sets the Start value and returns the updated Event.
+func (m *Event) SetStart(v int64) {
+	m.Start = v
+}
+
 // GetEnd returns the End value.
 func (m Event) GetEnd() *int64 {
 	return m.End
+}
+
+// SetEnd sets the End value and returns the updated Event.
+func (m *Event) SetEnd(v *int64) {
+	m.End = v
 }
 
 // GetID returns the ID value.
@@ -62,9 +112,19 @@ func (m Identity) GetID() int64 {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated Identity.
+func (m *Identity) SetID(v int64) {
+	m.ID = v
+}
+
 // GetSubdomain returns the Subdomain value.
 func (m Identity) GetSubdomain() string {
 	return m.Subdomain
+}
+
+// SetSubdomain sets the Subdomain value and returns the updated Identity.
+func (m *Identity) SetSubdomain(v string) {
+	m.Subdomain = v
 }
 
 // GetName returns the Name value.
@@ -72,9 +132,19 @@ func (m Identity) GetName() string {
 	return m.Name
 }
 
+// SetName sets the Name value and returns the updated Identity.
+func (m *Identity) SetName(v string) {
+	m.Name = v
+}
+
 // GetPassword returns the Password value.
 func (m Identity) GetPassword() string {
 	return m.Password
+}
+
+// SetPassword sets the Password value and returns the updated Identity.
+func (m *Identity) SetPassword(v string) {
+	m.Password = v
 }
 
 // GetTotpSecret returns the TotpSecret value.
@@ -82,9 +152,19 @@ func (m Identity) GetTotpSecret() string {
 	return m.TotpSecret
 }
 
+// SetTotpSecret sets the TotpSecret value and returns the updated Identity.
+func (m *Identity) SetTotpSecret(v string) {
+	m.TotpSecret = v
+}
+
 // GetRole returns the Role value.
 func (m Identity) GetRole() consts.IdentityRole {
 	return m.Role
+}
+
+// SetRole sets the Role value and returns the updated Identity.
+func (m *Identity) SetRole(v consts.IdentityRole) {
+	m.Role = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -92,9 +172,19 @@ func (m Identity) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated Identity.
+func (m *Identity) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m Identity) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated Identity.
+func (m *Identity) SetLastSeenAt(v *int64) {
+	m.LastSeenAt = v
 }
 
 // GetLastWriteAt returns the LastWriteAt value.
@@ -102,9 +192,19 @@ func (m Identity) GetLastWriteAt() *int64 {
 	return m.LastWriteAt
 }
 
+// SetLastWriteAt sets the LastWriteAt value and returns the updated Identity.
+func (m *Identity) SetLastWriteAt(v *int64) {
+	m.LastWriteAt = v
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m Identity) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated Identity.
+func (m *Identity) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -112,9 +212,19 @@ func (m Identity) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated Identity.
+func (m *Identity) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByIdentityID returns the CreatedByIdentityID value.
 func (m Identity) GetCreatedByIdentityID() int64 {
 	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated Identity.
+func (m *Identity) SetCreatedByIdentityID(v int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -122,9 +232,19 @@ func (m Identity) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated Identity.
+func (m *Identity) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m Identity) GetDeletedAt() *int64 {
 	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated Identity.
+func (m *Identity) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
 }
 
 // GetEnabled returns the Enabled value.
@@ -132,9 +252,19 @@ func (m Identity) GetEnabled() bool {
 	return m.Enabled
 }
 
+// SetEnabled sets the Enabled value and returns the updated Identity.
+func (m *Identity) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
 // GetDayQueueJob returns the DayQueueJob value.
 func (m JobStatsDaily) GetDayQueueJob() string {
 	return m.DayQueueJob
+}
+
+// SetDayQueueJob sets the DayQueueJob value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetDayQueueJob(v string) {
+	m.DayQueueJob = v
 }
 
 // GetTotalJobs returns the TotalJobs value.
@@ -142,9 +272,19 @@ func (m JobStatsDaily) GetTotalJobs() int64 {
 	return m.TotalJobs
 }
 
+// SetTotalJobs sets the TotalJobs value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetTotalJobs(v int64) {
+	m.TotalJobs = v
+}
+
 // GetTotalSuccess returns the TotalSuccess value.
 func (m JobStatsDaily) GetTotalSuccess() int64 {
 	return m.TotalSuccess
+}
+
+// SetTotalSuccess sets the TotalSuccess value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetTotalSuccess(v int64) {
+	m.TotalSuccess = v
 }
 
 // GetTotalFailed returns the TotalFailed value.
@@ -152,9 +292,19 @@ func (m JobStatsDaily) GetTotalFailed() int64 {
 	return m.TotalFailed
 }
 
+// SetTotalFailed sets the TotalFailed value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetTotalFailed(v int64) {
+	m.TotalFailed = v
+}
+
 // GetDurationSum returns the DurationSum value.
 func (m JobStatsDaily) GetDurationSum() float64 {
 	return m.DurationSum
+}
+
+// SetDurationSum sets the DurationSum value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetDurationSum(v float64) {
+	m.DurationSum = v
 }
 
 // GetDurationSquaredSum returns the DurationSquaredSum value.
@@ -162,9 +312,19 @@ func (m JobStatsDaily) GetDurationSquaredSum() float64 {
 	return m.DurationSquaredSum
 }
 
+// SetDurationSquaredSum sets the DurationSquaredSum value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetDurationSquaredSum(v float64) {
+	m.DurationSquaredSum = v
+}
+
 // GetErrors returns the Errors value.
 func (m JobStatsDaily) GetErrors() errors.ErrorList {
 	return m.Errors
+}
+
+// SetErrors sets the Errors value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetErrors(v errors.ErrorList) {
+	m.Errors = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -172,9 +332,19 @@ func (m JobStatsDaily) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m JobStatsDaily) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetID returns the ID value.
@@ -182,9 +352,19 @@ func (m Job) GetID() int64 {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated Job.
+func (m *Job) SetID(v int64) {
+	m.ID = v
+}
+
 // GetQueue returns the Queue value.
 func (m Job) GetQueue() string {
 	return m.Queue
+}
+
+// SetQueue sets the Queue value and returns the updated Job.
+func (m *Job) SetQueue(v string) {
+	m.Queue = v
 }
 
 // GetJob returns the Job value.
@@ -192,9 +372,19 @@ func (m Job) GetJob() string {
 	return m.Job
 }
 
+// SetJob sets the Job value and returns the updated Job.
+func (m *Job) SetJob(v string) {
+	m.Job = v
+}
+
 // GetJobStatus returns the JobStatus value.
 func (m Job) GetJobStatus() string {
 	return m.JobStatus
+}
+
+// SetJobStatus sets the JobStatus value and returns the updated Job.
+func (m *Job) SetJobStatus(v string) {
+	m.JobStatus = v
 }
 
 // GetExecuteAfter returns the ExecuteAfter value.
@@ -202,9 +392,19 @@ func (m Job) GetExecuteAfter() int64 {
 	return m.ExecuteAfter
 }
 
+// SetExecuteAfter sets the ExecuteAfter value and returns the updated Job.
+func (m *Job) SetExecuteAfter(v int64) {
+	m.ExecuteAfter = v
+}
+
 // GetRemainingAttempts returns the RemainingAttempts value.
 func (m Job) GetRemainingAttempts() int64 {
 	return m.RemainingAttempts
+}
+
+// SetRemainingAttempts sets the RemainingAttempts value and returns the updated Job.
+func (m *Job) SetRemainingAttempts(v int64) {
+	m.RemainingAttempts = v
 }
 
 // GetConsumerFetchedAt returns the ConsumerFetchedAt value.
@@ -212,9 +412,19 @@ func (m Job) GetConsumerFetchedAt() int64 {
 	return m.ConsumerFetchedAt
 }
 
+// SetConsumerFetchedAt sets the ConsumerFetchedAt value and returns the updated Job.
+func (m *Job) SetConsumerFetchedAt(v int64) {
+	m.ConsumerFetchedAt = v
+}
+
 // GetFinishedAt returns the FinishedAt value.
 func (m Job) GetFinishedAt() int64 {
 	return m.FinishedAt
+}
+
+// SetFinishedAt sets the FinishedAt value and returns the updated Job.
+func (m *Job) SetFinishedAt(v int64) {
+	m.FinishedAt = v
 }
 
 // GetDedupingKey returns the DedupingKey value.
@@ -222,9 +432,19 @@ func (m Job) GetDedupingKey() string {
 	return m.DedupingKey
 }
 
+// SetDedupingKey sets the DedupingKey value and returns the updated Job.
+func (m *Job) SetDedupingKey(v string) {
+	m.DedupingKey = v
+}
+
 // GetErrors returns the Errors value.
 func (m Job) GetErrors() errors.ErrorList {
 	return m.Errors
+}
+
+// SetErrors sets the Errors value and returns the updated Job.
+func (m *Job) SetErrors(v errors.ErrorList) {
+	m.Errors = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -232,9 +452,19 @@ func (m Job) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated Job.
+func (m *Job) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m Job) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated Job.
+func (m *Job) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetID returns the ID value.
@@ -242,9 +472,19 @@ func (m SiteSyncSource) GetID() int64 {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetID(v int64) {
+	m.ID = v
+}
+
 // GetSubdomain returns the Subdomain value.
 func (m SiteSyncSource) GetSubdomain() string {
 	return m.Subdomain
+}
+
+// SetSubdomain sets the Subdomain value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetSubdomain(v string) {
+	m.Subdomain = v
 }
 
 // GetType returns the Type value.
@@ -252,9 +492,19 @@ func (m SiteSyncSource) GetType() consts.SyncSourceType {
 	return m.Type
 }
 
+// SetType sets the Type value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
 // GetUrlOrUsername returns the UrlOrUsername value.
 func (m SiteSyncSource) GetUrlOrUsername() string {
 	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetUrlOrUsername(v string) {
+	m.UrlOrUsername = v
 }
 
 // GetPassword returns the Password value.
@@ -262,9 +512,19 @@ func (m SiteSyncSource) GetPassword() string {
 	return m.Password
 }
 
+// SetPassword sets the Password value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetPassword(v string) {
+	m.Password = v
+}
+
 // GetDexcomRegion returns the DexcomRegion value.
 func (m SiteSyncSource) GetDexcomRegion() consts.DexcomRegion {
 	return m.DexcomRegion
+}
+
+// SetDexcomRegion sets the DexcomRegion value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetDexcomRegion(v consts.DexcomRegion) {
+	m.DexcomRegion = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -272,9 +532,19 @@ func (m SiteSyncSource) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m SiteSyncSource) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetEnabled returns the Enabled value.
@@ -282,9 +552,19 @@ func (m SiteSyncSource) GetEnabled() bool {
 	return m.Enabled
 }
 
+// SetEnabled sets the Enabled value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
 // GetUniqueHash returns the UniqueHash value.
 func (m SiteSyncSource) GetUniqueHash() string {
 	return m.UniqueHash
+}
+
+// SetUniqueHash sets the UniqueHash value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetUniqueHash(v string) {
+	m.UniqueHash = v
 }
 
 // GetID returns the ID value.
@@ -292,9 +572,19 @@ func (m Site) GetID() int64 {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated Site.
+func (m *Site) SetID(v int64) {
+	m.ID = v
+}
+
 // GetSubdomain returns the Subdomain value.
 func (m Site) GetSubdomain() string {
 	return m.Subdomain
+}
+
+// SetSubdomain sets the Subdomain value and returns the updated Site.
+func (m *Site) SetSubdomain(v string) {
+	m.Subdomain = v
 }
 
 // GetBatch returns the Batch value.
@@ -302,9 +592,19 @@ func (m Site) GetBatch() string {
 	return m.Batch
 }
 
+// SetBatch sets the Batch value and returns the updated Site.
+func (m *Site) SetBatch(v string) {
+	m.Batch = v
+}
+
 // GetBackupKeyHash returns the BackupKeyHash value.
 func (m Site) GetBackupKeyHash() string {
 	return m.BackupKeyHash
+}
+
+// SetBackupKeyHash sets the BackupKeyHash value and returns the updated Site.
+func (m *Site) SetBackupKeyHash(v string) {
+	m.BackupKeyHash = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -312,9 +612,19 @@ func (m Site) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated Site.
+func (m *Site) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetMaxDbSizeKbLimit returns the MaxDbSizeKbLimit value.
 func (m Site) GetMaxDbSizeKbLimit() *int64 {
 	return m.MaxDbSizeKbLimit
+}
+
+// SetMaxDbSizeKbLimit sets the MaxDbSizeKbLimit value and returns the updated Site.
+func (m *Site) SetMaxDbSizeKbLimit(v *int64) {
+	m.MaxDbSizeKbLimit = v
 }
 
 // GetLastSeenAt returns the LastSeenAt value.
@@ -322,9 +632,19 @@ func (m Site) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
 }
 
+// SetLastSeenAt sets the LastSeenAt value and returns the updated Site.
+func (m *Site) SetLastSeenAt(v *int64) {
+	m.LastSeenAt = v
+}
+
 // GetLastWriteAt returns the LastWriteAt value.
 func (m Site) GetLastWriteAt() *int64 {
 	return m.LastWriteAt
+}
+
+// SetLastWriteAt sets the LastWriteAt value and returns the updated Site.
+func (m *Site) SetLastWriteAt(v *int64) {
+	m.LastWriteAt = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -332,9 +652,19 @@ func (m Site) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated Site.
+func (m *Site) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetName returns the Name value.
 func (m SqliteSequence) GetName() interface{} {
 	return m.Name
+}
+
+// SetName sets the Name value and returns the updated SqliteSequence.
+func (m *SqliteSequence) SetName(v interface{}) {
+	m.Name = v
 }
 
 // GetSeq returns the Seq value.
@@ -342,9 +672,19 @@ func (m SqliteSequence) GetSeq() interface{} {
 	return m.Seq
 }
 
+// SetSeq sets the Seq value and returns the updated SqliteSequence.
+func (m *SqliteSequence) SetSeq(v interface{}) {
+	m.Seq = v
+}
+
 // GetID returns the ID value.
 func (m SyncSourceReport) GetID() int64 {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetID(v int64) {
+	m.ID = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -352,9 +692,19 @@ func (m SyncSourceReport) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m SyncSourceReport) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetUniqueHash returns the UniqueHash value.
@@ -362,9 +712,19 @@ func (m SyncSourceReport) GetUniqueHash() string {
 	return m.UniqueHash
 }
 
+// SetUniqueHash sets the UniqueHash value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetUniqueHash(v string) {
+	m.UniqueHash = v
+}
+
 // GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
 func (m SyncSourceReport) GetSyncIntervalSecondsReason() string {
 	return m.SyncIntervalSecondsReason
+}
+
+// SetSyncIntervalSecondsReason sets the SyncIntervalSecondsReason value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetSyncIntervalSecondsReason(v string) {
+	m.SyncIntervalSecondsReason = v
 }
 
 // GetSyncIntervalSeconds returns the SyncIntervalSeconds value.
@@ -372,9 +732,19 @@ func (m SyncSourceReport) GetSyncIntervalSeconds() int64 {
 	return m.SyncIntervalSeconds
 }
 
+// SetSyncIntervalSeconds sets the SyncIntervalSeconds value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetSyncIntervalSeconds(v int64) {
+	m.SyncIntervalSeconds = v
+}
+
 // GetLastAttemptedSync returns the LastAttemptedSync value.
 func (m SyncSourceReport) GetLastAttemptedSync() *int64 {
 	return m.LastAttemptedSync
+}
+
+// SetLastAttemptedSync sets the LastAttemptedSync value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetLastAttemptedSync(v *int64) {
+	m.LastAttemptedSync = v
 }
 
 // GetLastSuccessfulSync returns the LastSuccessfulSync value.
@@ -382,9 +752,19 @@ func (m SyncSourceReport) GetLastSuccessfulSync() *int64 {
 	return m.LastSuccessfulSync
 }
 
+// SetLastSuccessfulSync sets the LastSuccessfulSync value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetLastSuccessfulSync(v *int64) {
+	m.LastSuccessfulSync = v
+}
+
 // GetLastFailedSync returns the LastFailedSync value.
 func (m SyncSourceReport) GetLastFailedSync() *int64 {
 	return m.LastFailedSync
+}
+
+// SetLastFailedSync sets the LastFailedSync value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetLastFailedSync(v *int64) {
+	m.LastFailedSync = v
 }
 
 // GetTotalSyncs returns the TotalSyncs value.
@@ -392,9 +772,19 @@ func (m SyncSourceReport) GetTotalSyncs() *int64 {
 	return m.TotalSyncs
 }
 
+// SetTotalSyncs sets the TotalSyncs value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetTotalSyncs(v *int64) {
+	m.TotalSyncs = v
+}
+
 // GetTotalSuccessfulSyncs returns the TotalSuccessfulSyncs value.
 func (m SyncSourceReport) GetTotalSuccessfulSyncs() *int64 {
 	return m.TotalSuccessfulSyncs
+}
+
+// SetTotalSuccessfulSyncs sets the TotalSuccessfulSyncs value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetTotalSuccessfulSyncs(v *int64) {
+	m.TotalSuccessfulSyncs = v
 }
 
 // GetTotalFailedSyncs returns the TotalFailedSyncs value.
@@ -402,9 +792,19 @@ func (m SyncSourceReport) GetTotalFailedSyncs() *int64 {
 	return m.TotalFailedSyncs
 }
 
+// SetTotalFailedSyncs sets the TotalFailedSyncs value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetTotalFailedSyncs(v *int64) {
+	m.TotalFailedSyncs = v
+}
+
 // GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
 func (m SyncSourceReport) GetConsecutiveSuccessfulSyncs() *int64 {
 	return m.ConsecutiveSuccessfulSyncs
+}
+
+// SetConsecutiveSuccessfulSyncs sets the ConsecutiveSuccessfulSyncs value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetConsecutiveSuccessfulSyncs(v *int64) {
+	m.ConsecutiveSuccessfulSyncs = v
 }
 
 // GetConsecutiveFailedSyncs returns the ConsecutiveFailedSyncs value.
@@ -412,9 +812,19 @@ func (m SyncSourceReport) GetConsecutiveFailedSyncs() *int64 {
 	return m.ConsecutiveFailedSyncs
 }
 
+// SetConsecutiveFailedSyncs sets the ConsecutiveFailedSyncs value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetConsecutiveFailedSyncs(v *int64) {
+	m.ConsecutiveFailedSyncs = v
+}
+
 // GetPreviousSyncErrors returns the PreviousSyncErrors value.
 func (m SyncSourceReport) GetPreviousSyncErrors() errors.ErrorList {
 	return m.PreviousSyncErrors
+}
+
+// SetPreviousSyncErrors sets the PreviousSyncErrors value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetPreviousSyncErrors(v errors.ErrorList) {
+	m.PreviousSyncErrors = v
 }
 
 // GetTotalEma returns the TotalEma value.
@@ -422,9 +832,19 @@ func (m SyncSourceReport) GetTotalEma() *float64 {
 	return m.TotalEma
 }
 
+// SetTotalEma sets the TotalEma value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetTotalEma(v *float64) {
+	m.TotalEma = v
+}
+
 // GetSuccessEma returns the SuccessEma value.
 func (m SyncSourceReport) GetSuccessEma() *float64 {
 	return m.SuccessEma
+}
+
+// SetSuccessEma sets the SuccessEma value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetSuccessEma(v *float64) {
+	m.SuccessEma = v
 }
 
 // GetFailureEma returns the FailureEma value.
@@ -432,9 +852,19 @@ func (m SyncSourceReport) GetFailureEma() *float64 {
 	return m.FailureEma
 }
 
+// SetFailureEma sets the FailureEma value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetFailureEma(v *float64) {
+	m.FailureEma = v
+}
+
 // GetLastSyncDuration returns the LastSyncDuration value.
 func (m SyncSourceReport) GetLastSyncDuration() *int64 {
 	return m.LastSyncDuration
+}
+
+// SetLastSyncDuration sets the LastSyncDuration value and returns the updated SyncSourceReport.
+func (m *SyncSourceReport) SetLastSyncDuration(v *int64) {
+	m.LastSyncDuration = v
 }
 
 // GetSubdomain returns the Subdomain value.

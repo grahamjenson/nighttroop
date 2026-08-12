@@ -35,14 +35,6 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 		xstring3 := string(*source.Notes)
 		siteUpdateActivityParams.Notes = &xstring3
 	}
-	if source.Date != nil {
-		xint645 := int64(*source.Date)
-		siteUpdateActivityParams.OccurredAt = &xint645
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint646 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateActivityParams.UtcOffsetMinutes = &xint646
-	}
 	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateActivityParams.ID = string(*source.Identifier)
@@ -51,14 +43,6 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 }
 func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterContext) site.UpdateDeviceReportParams {
 	var siteUpdateDeviceReportParams site.UpdateDeviceReportParams
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateDeviceReportParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateDeviceReportParams.UtcOffsetMinutes = &xint642
-	}
 	siteUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateDeviceReportParams.ID = string(*source.Identifier)
@@ -70,14 +54,6 @@ func EntryToUpdate(source Entry, context ConverterContext) site.UpdateGlucoseRea
 	if source.Reading != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Reading)
 		siteUpdateGlucoseReadingParams.Reading = &xfloat64
-	}
-	if source.Date != nil {
-		xint64 := int64(*source.Date)
-		siteUpdateGlucoseReadingParams.OccurredAt = &xint64
-	}
-	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteUpdateGlucoseReadingParams.UtcOffsetMinutes = &xint642
 	}
 	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {

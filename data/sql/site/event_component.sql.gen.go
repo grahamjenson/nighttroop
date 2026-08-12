@@ -317,19 +317,15 @@ const updateComponentEvent = `-- name: UpdateComponentEvent :one
 UPDATE component_events SET
     notes = COALESCE(?1, notes),
     reason = COALESCE(?2, reason),
-    occurred_at = COALESCE(?3, occurred_at),
-    utc_offset_minutes = COALESCE(?4, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?5
-WHERE id = ?6 AND deleted_at IS NULL
+    updated_by_identity_name = ?3
+WHERE id = ?4 AND deleted_at IS NULL
 RETURNING id, event_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type UpdateComponentEventParams struct {
 	Notes                 *string
 	Reason                *string
-	OccurredAt            *int64
-	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -341,8 +337,6 @@ func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentE
 	row := q.queryRow(ctx, q.updateComponentEventStmt, updateComponentEvent,
 		arg.Notes,
 		arg.Reason,
-		arg.OccurredAt,
-		arg.UtcOffsetMinutes,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

@@ -53,6 +53,64 @@ type EventGroupsBundle struct {
 	NotificationEvent *NotificationEvent
 }
 
+type SubEventInterface interface {
+	GetID() string
+	GetDeletedAt() *int64
+	GetCreatedAt() int64
+	GetUpdatedAt() int64
+	GetCreatedByIdentityName() string
+	GetCreatedByAppName() *string
+	GetCreatedByDeviceName() *string
+	GetOccurredAt() int64
+	GetUtcOffsetMinutes() *int64
+	GetNotes() *string
+	GetReason() *string
+
+	SetID(id string)
+	SetDeletedAt(deletedAt *int64)
+	SetCreatedAt(createdAt int64)
+	SetUpdatedAt(updatedAt int64)
+	SetCreatedByIdentityName(identityName string)
+	SetCreatedByAppName(appName *string)
+	SetCreatedByDeviceName(deviceName *string)
+	SetOccurredAt(occurredAt int64)
+	SetUtcOffsetMinutes(utcOffsetMinutes *int64)
+	SetNotes(notes *string)
+	SetReason(reason *string)
+}
+
+func (model *EventGroupsBundle) GetAllSubEvents() []SubEventInterface {
+	subEvents := []SubEventInterface{}
+	if model.GlucoseReading != nil {
+		subEvents = append(subEvents, model.GlucoseReading)
+	}
+	if model.InsulinDose != nil {
+		subEvents = append(subEvents, model.InsulinDose)
+	}
+	if model.FoodIntake != nil {
+		subEvents = append(subEvents, model.FoodIntake)
+	}
+	if model.TempBasal != nil {
+		subEvents = append(subEvents, model.TempBasal)
+	}
+	if model.TempTarget != nil {
+		subEvents = append(subEvents, model.TempTarget)
+	}
+	if model.ProfileSwitch != nil {
+		subEvents = append(subEvents, model.ProfileSwitch)
+	}
+	if model.ComponentEvent != nil {
+		subEvents = append(subEvents, model.ComponentEvent)
+	}
+	if model.Activity != nil {
+		subEvents = append(subEvents, model.Activity)
+	}
+	if model.NotificationEvent != nil {
+		subEvents = append(subEvents, model.NotificationEvent)
+	}
+	return subEvents
+}
+
 func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle {
 	egb := EventGroupsBundle{
 		EventGroup: source.EventGroup,
@@ -63,6 +121,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			ID:          *source.GlucoseReadingID,
 			Reading:     *source.GlucoseReading,
 			ReadingType: *source.GlucoseReadingType,
+			Notes:       source.EventGroup.Notes,
+			Reason:      source.EventGroup.Reason,
 		}
 	}
 
@@ -71,6 +131,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			ID:       *source.InsulinDoseID,
 			Dose:     *source.InsulinDose,
 			DoseType: *source.InsulinDoseType,
+			Notes:    source.EventGroup.Notes,
+			Reason:   source.EventGroup.Reason,
 		}
 	}
 
@@ -86,6 +148,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			Fibre:       source.FoodIntakeFibre,
 			Energy:      source.FoodIntakeEnergy,
 			Portions:    source.FoodIntakePortions,
+			Notes:       source.EventGroup.Notes,
+			Reason:      source.EventGroup.Reason,
 		}
 	}
 
@@ -95,6 +159,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			Absolute:        *source.TempBasalAbsolute,
 			DurationMinutes: *source.TempBasalDurationMinutes,
 			Percent:         source.TempBasalPercent,
+			Notes:           source.EventGroup.Notes,
+			Reason:          source.EventGroup.Reason,
 		}
 	}
 
@@ -104,6 +170,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			DurationMinutes: *source.TempTargetDurationMinutes,
 			HighTarget:      *source.TempTargetHighTarget,
 			LowTarget:       *source.TempTargetLowTarget,
+			Notes:           source.EventGroup.Notes,
+			Reason:          source.EventGroup.Reason,
 		}
 	}
 
@@ -118,6 +186,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			BasalRatesJson:           source.ProfileSwitchBasalRatesJson,
 			TargetsHighJson:          source.ProfileSwitchTargetsHighJson,
 			TargetsLowJson:           source.ProfileSwitchTargetsLowJson,
+			Notes:                    source.EventGroup.Notes,
+			Reason:                   source.EventGroup.Reason,
 		}
 
 	}
@@ -126,6 +196,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		egb.ComponentEvent = &ComponentEvent{
 			ID:        *source.ComponentEventID,
 			EventType: source.EventGroup.GroupType,
+			Notes:     source.EventGroup.Notes,
+			Reason:    source.EventGroup.Reason,
 		}
 	}
 
@@ -138,6 +210,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			Calories:        source.ActivityCalories,
 			Steps:           source.ActivitySteps,
 			HeartRate:       source.ActivityHeartRate,
+			Notes:           source.EventGroup.Notes,
+			Reason:          source.EventGroup.Reason,
 		}
 	}
 
@@ -148,6 +222,8 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 			Severity:         *source.NotificationEventSeverity,
 			Content:          source.NotificationEventContent,
 			NotificationType: *source.NotificationEventNotificationType,
+			Notes:            source.EventGroup.Notes,
+			Reason:           source.EventGroup.Reason,
 		}
 	}
 

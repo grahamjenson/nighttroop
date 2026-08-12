@@ -7,9 +7,19 @@ func (m Activity) GetID() string {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated Activity.
+func (m *Activity) SetID(v string) {
+	m.ID = v
+}
+
 // GetName returns the Name value.
 func (m Activity) GetName() *string {
 	return m.Name
+}
+
+// SetName sets the Name value and returns the updated Activity.
+func (m *Activity) SetName(v *string) {
+	m.Name = v
 }
 
 // GetActivityType returns the ActivityType value.
@@ -17,9 +27,19 @@ func (m Activity) GetActivityType() string {
 	return m.ActivityType
 }
 
+// SetActivityType sets the ActivityType value and returns the updated Activity.
+func (m *Activity) SetActivityType(v string) {
+	m.ActivityType = v
+}
+
 // GetDurationMinutes returns the DurationMinutes value.
 func (m Activity) GetDurationMinutes() *int64 {
 	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated Activity.
+func (m *Activity) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
 }
 
 // GetCalories returns the Calories value.
@@ -27,9 +47,19 @@ func (m Activity) GetCalories() *int64 {
 	return m.Calories
 }
 
+// SetCalories sets the Calories value and returns the updated Activity.
+func (m *Activity) SetCalories(v *int64) {
+	m.Calories = v
+}
+
 // GetSteps returns the Steps value.
 func (m Activity) GetSteps() *int64 {
 	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated Activity.
+func (m *Activity) SetSteps(v *int64) {
+	m.Steps = v
 }
 
 // GetHeartRate returns the HeartRate value.
@@ -37,9 +67,19 @@ func (m Activity) GetHeartRate() *int64 {
 	return m.HeartRate
 }
 
+// SetHeartRate sets the HeartRate value and returns the updated Activity.
+func (m *Activity) SetHeartRate(v *int64) {
+	m.HeartRate = v
+}
+
 // GetNotes returns the Notes value.
 func (m Activity) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated Activity.
+func (m *Activity) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -47,9 +87,19 @@ func (m Activity) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated Activity.
+func (m *Activity) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m Activity) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated Activity.
+func (m *Activity) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -57,9 +107,19 @@ func (m Activity) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated Activity.
+func (m *Activity) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m Activity) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated Activity.
+func (m *Activity) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -67,9 +127,19 @@ func (m Activity) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated Activity.
+func (m *Activity) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m Activity) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated Activity.
+func (m *Activity) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -77,9 +147,19 @@ func (m Activity) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated Activity.
+func (m *Activity) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m Activity) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated Activity.
+func (m *Activity) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -87,9 +167,19 @@ func (m Activity) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated Activity.
+func (m *Activity) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m Activity) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated Activity.
+func (m *Activity) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -97,9 +187,19 @@ func (m Activity) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated Activity.
+func (m *Activity) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m ComponentEvent) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetID(v string) {
+	m.ID = v
 }
 
 // GetEventType returns the EventType value.
@@ -107,9 +207,19 @@ func (m ComponentEvent) GetEventType() string {
 	return m.EventType
 }
 
+// SetEventType sets the EventType value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetEventType(v string) {
+	m.EventType = v
+}
+
 // GetNotes returns the Notes value.
 func (m ComponentEvent) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -117,9 +227,19 @@ func (m ComponentEvent) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m ComponentEvent) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -127,9 +247,19 @@ func (m ComponentEvent) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m ComponentEvent) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -137,9 +267,19 @@ func (m ComponentEvent) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m ComponentEvent) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -147,9 +287,19 @@ func (m ComponentEvent) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ComponentEvent) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -157,9 +307,19 @@ func (m ComponentEvent) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
 func (m ComponentEvent) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -167,9 +327,19 @@ func (m ComponentEvent) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m DeviceReport) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeviceReport.
+func (m *DeviceReport) SetID(v string) {
+	m.ID = v
 }
 
 // GetDeviceBatteryPercent returns the DeviceBatteryPercent value.
@@ -177,9 +347,19 @@ func (m DeviceReport) GetDeviceBatteryPercent() *float64 {
 	return m.DeviceBatteryPercent
 }
 
+// SetDeviceBatteryPercent sets the DeviceBatteryPercent value and returns the updated DeviceReport.
+func (m *DeviceReport) SetDeviceBatteryPercent(v *float64) {
+	m.DeviceBatteryPercent = v
+}
+
 // GetDeviceChargingState returns the DeviceChargingState value.
 func (m DeviceReport) GetDeviceChargingState() *string {
 	return m.DeviceChargingState
+}
+
+// SetDeviceChargingState sets the DeviceChargingState value and returns the updated DeviceReport.
+func (m *DeviceReport) SetDeviceChargingState(v *string) {
+	m.DeviceChargingState = v
 }
 
 // GetPumpState returns the PumpState value.
@@ -187,9 +367,19 @@ func (m DeviceReport) GetPumpState() *string {
 	return m.PumpState
 }
 
+// SetPumpState sets the PumpState value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpState(v *string) {
+	m.PumpState = v
+}
+
 // GetPumpReservoir returns the PumpReservoir value.
 func (m DeviceReport) GetPumpReservoir() *float64 {
 	return m.PumpReservoir
+}
+
+// SetPumpReservoir sets the PumpReservoir value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpReservoir(v *float64) {
+	m.PumpReservoir = v
 }
 
 // GetPumpBatteryPercent returns the PumpBatteryPercent value.
@@ -197,9 +387,19 @@ func (m DeviceReport) GetPumpBatteryPercent() *float64 {
 	return m.PumpBatteryPercent
 }
 
+// SetPumpBatteryPercent sets the PumpBatteryPercent value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpBatteryPercent(v *float64) {
+	m.PumpBatteryPercent = v
+}
+
 // GetPumpChargingState returns the PumpChargingState value.
 func (m DeviceReport) GetPumpChargingState() *string {
 	return m.PumpChargingState
+}
+
+// SetPumpChargingState sets the PumpChargingState value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpChargingState(v *string) {
+	m.PumpChargingState = v
 }
 
 // GetLoopIob returns the LoopIob value.
@@ -207,9 +407,19 @@ func (m DeviceReport) GetLoopIob() *float64 {
 	return m.LoopIob
 }
 
+// SetLoopIob sets the LoopIob value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopIob(v *float64) {
+	m.LoopIob = v
+}
+
 // GetLoopIobBasal returns the LoopIobBasal value.
 func (m DeviceReport) GetLoopIobBasal() *float64 {
 	return m.LoopIobBasal
+}
+
+// SetLoopIobBasal sets the LoopIobBasal value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopIobBasal(v *float64) {
+	m.LoopIobBasal = v
 }
 
 // GetLoopIobTreatment returns the LoopIobTreatment value.
@@ -217,9 +427,19 @@ func (m DeviceReport) GetLoopIobTreatment() *float64 {
 	return m.LoopIobTreatment
 }
 
+// SetLoopIobTreatment sets the LoopIobTreatment value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopIobTreatment(v *float64) {
+	m.LoopIobTreatment = v
+}
+
 // GetLoopCob returns the LoopCob value.
 func (m DeviceReport) GetLoopCob() *float64 {
 	return m.LoopCob
+}
+
+// SetLoopCob sets the LoopCob value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopCob(v *float64) {
+	m.LoopCob = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -227,9 +447,19 @@ func (m DeviceReport) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
+// SetRawJsonData sets the RawJsonData value and returns the updated DeviceReport.
+func (m *DeviceReport) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m DeviceReport) GetDeletedAt() *int64 {
 	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated DeviceReport.
+func (m *DeviceReport) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -237,9 +467,19 @@ func (m DeviceReport) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated DeviceReport.
+func (m *DeviceReport) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m DeviceReport) GetOccurredAt() int64 {
 	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated DeviceReport.
+func (m *DeviceReport) SetOccurredAt(v int64) {
+	m.OccurredAt = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -247,9 +487,19 @@ func (m DeviceReport) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated DeviceReport.
+func (m *DeviceReport) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m DeviceReport) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated DeviceReport.
+func (m *DeviceReport) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -257,9 +507,19 @@ func (m DeviceReport) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated DeviceReport.
+func (m *DeviceReport) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m DeviceReport) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated DeviceReport.
+func (m *DeviceReport) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -267,9 +527,19 @@ func (m DeviceReport) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated DeviceReport.
+func (m *DeviceReport) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m DeviceReport) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated DeviceReport.
+func (m *DeviceReport) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -277,9 +547,19 @@ func (m EventGroup) GetID() string {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated EventGroup.
+func (m *EventGroup) SetID(v string) {
+	m.ID = v
+}
+
 // GetGroupType returns the GroupType value.
 func (m EventGroup) GetGroupType() string {
 	return m.GroupType
+}
+
+// SetGroupType sets the GroupType value and returns the updated EventGroup.
+func (m *EventGroup) SetGroupType(v string) {
+	m.GroupType = v
 }
 
 // GetGlucoseReadingID returns the GlucoseReadingID value.
@@ -287,9 +567,19 @@ func (m EventGroup) GetGlucoseReadingID() *string {
 	return m.GlucoseReadingID
 }
 
+// SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated EventGroup.
+func (m *EventGroup) SetGlucoseReadingID(v *string) {
+	m.GlucoseReadingID = v
+}
+
 // GetInsulinDoseID returns the InsulinDoseID value.
 func (m EventGroup) GetInsulinDoseID() *string {
 	return m.InsulinDoseID
+}
+
+// SetInsulinDoseID sets the InsulinDoseID value and returns the updated EventGroup.
+func (m *EventGroup) SetInsulinDoseID(v *string) {
+	m.InsulinDoseID = v
 }
 
 // GetFoodIntakeID returns the FoodIntakeID value.
@@ -297,9 +587,19 @@ func (m EventGroup) GetFoodIntakeID() *string {
 	return m.FoodIntakeID
 }
 
+// SetFoodIntakeID sets the FoodIntakeID value and returns the updated EventGroup.
+func (m *EventGroup) SetFoodIntakeID(v *string) {
+	m.FoodIntakeID = v
+}
+
 // GetTempBasalID returns the TempBasalID value.
 func (m EventGroup) GetTempBasalID() *string {
 	return m.TempBasalID
+}
+
+// SetTempBasalID sets the TempBasalID value and returns the updated EventGroup.
+func (m *EventGroup) SetTempBasalID(v *string) {
+	m.TempBasalID = v
 }
 
 // GetTempTargetID returns the TempTargetID value.
@@ -307,9 +607,19 @@ func (m EventGroup) GetTempTargetID() *string {
 	return m.TempTargetID
 }
 
+// SetTempTargetID sets the TempTargetID value and returns the updated EventGroup.
+func (m *EventGroup) SetTempTargetID(v *string) {
+	m.TempTargetID = v
+}
+
 // GetProfileSwitchID returns the ProfileSwitchID value.
 func (m EventGroup) GetProfileSwitchID() *string {
 	return m.ProfileSwitchID
+}
+
+// SetProfileSwitchID sets the ProfileSwitchID value and returns the updated EventGroup.
+func (m *EventGroup) SetProfileSwitchID(v *string) {
+	m.ProfileSwitchID = v
 }
 
 // GetComponentEventID returns the ComponentEventID value.
@@ -317,9 +627,19 @@ func (m EventGroup) GetComponentEventID() *string {
 	return m.ComponentEventID
 }
 
+// SetComponentEventID sets the ComponentEventID value and returns the updated EventGroup.
+func (m *EventGroup) SetComponentEventID(v *string) {
+	m.ComponentEventID = v
+}
+
 // GetActivityID returns the ActivityID value.
 func (m EventGroup) GetActivityID() *string {
 	return m.ActivityID
+}
+
+// SetActivityID sets the ActivityID value and returns the updated EventGroup.
+func (m *EventGroup) SetActivityID(v *string) {
+	m.ActivityID = v
 }
 
 // GetNotificationEventID returns the NotificationEventID value.
@@ -327,9 +647,19 @@ func (m EventGroup) GetNotificationEventID() *string {
 	return m.NotificationEventID
 }
 
+// SetNotificationEventID sets the NotificationEventID value and returns the updated EventGroup.
+func (m *EventGroup) SetNotificationEventID(v *string) {
+	m.NotificationEventID = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated EventGroup.
+func (m *EventGroup) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -337,9 +667,19 @@ func (m EventGroup) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated EventGroup.
+func (m *EventGroup) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m EventGroup) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated EventGroup.
+func (m *EventGroup) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -347,9 +687,19 @@ func (m EventGroup) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated EventGroup.
+func (m *EventGroup) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m EventGroup) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated EventGroup.
+func (m *EventGroup) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -357,9 +707,19 @@ func (m EventGroup) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated EventGroup.
+func (m *EventGroup) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m EventGroup) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated EventGroup.
+func (m *EventGroup) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -367,9 +727,19 @@ func (m EventGroup) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated EventGroup.
+func (m *EventGroup) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m EventGroup) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated EventGroup.
+func (m *EventGroup) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -377,9 +747,19 @@ func (m EventGroup) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated EventGroup.
+func (m *EventGroup) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m EventGroup) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated EventGroup.
+func (m *EventGroup) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -387,9 +767,19 @@ func (m EventGroup) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated EventGroup.
+func (m *EventGroup) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m FoodIntake) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated FoodIntake.
+func (m *FoodIntake) SetID(v string) {
+	m.ID = v
 }
 
 // GetName returns the Name value.
@@ -397,9 +787,19 @@ func (m FoodIntake) GetName() *string {
 	return m.Name
 }
 
+// SetName sets the Name value and returns the updated FoodIntake.
+func (m *FoodIntake) SetName(v *string) {
+	m.Name = v
+}
+
 // GetCategory returns the Category value.
 func (m FoodIntake) GetCategory() *string {
 	return m.Category
+}
+
+// SetCategory sets the Category value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCategory(v *string) {
+	m.Category = v
 }
 
 // GetSubcategory returns the Subcategory value.
@@ -407,9 +807,19 @@ func (m FoodIntake) GetSubcategory() *string {
 	return m.Subcategory
 }
 
+// SetSubcategory sets the Subcategory value and returns the updated FoodIntake.
+func (m *FoodIntake) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
 // GetCarbs returns the Carbs value.
 func (m FoodIntake) GetCarbs() *float64 {
 	return m.Carbs
+}
+
+// SetCarbs sets the Carbs value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCarbs(v *float64) {
+	m.Carbs = v
 }
 
 // GetFat returns the Fat value.
@@ -417,9 +827,19 @@ func (m FoodIntake) GetFat() *float64 {
 	return m.Fat
 }
 
+// SetFat sets the Fat value and returns the updated FoodIntake.
+func (m *FoodIntake) SetFat(v *float64) {
+	m.Fat = v
+}
+
 // GetProtein returns the Protein value.
 func (m FoodIntake) GetProtein() *float64 {
 	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated FoodIntake.
+func (m *FoodIntake) SetProtein(v *float64) {
+	m.Protein = v
 }
 
 // GetFibre returns the Fibre value.
@@ -427,9 +847,19 @@ func (m FoodIntake) GetFibre() *float64 {
 	return m.Fibre
 }
 
+// SetFibre sets the Fibre value and returns the updated FoodIntake.
+func (m *FoodIntake) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
 // GetEnergy returns the Energy value.
 func (m FoodIntake) GetEnergy() *float64 {
 	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated FoodIntake.
+func (m *FoodIntake) SetEnergy(v *float64) {
+	m.Energy = v
 }
 
 // GetPortions returns the Portions value.
@@ -437,9 +867,19 @@ func (m FoodIntake) GetPortions() *float64 {
 	return m.Portions
 }
 
+// SetPortions sets the Portions value and returns the updated FoodIntake.
+func (m *FoodIntake) SetPortions(v *float64) {
+	m.Portions = v
+}
+
 // GetNotes returns the Notes value.
 func (m FoodIntake) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated FoodIntake.
+func (m *FoodIntake) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -447,9 +887,19 @@ func (m FoodIntake) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated FoodIntake.
+func (m *FoodIntake) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m FoodIntake) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated FoodIntake.
+func (m *FoodIntake) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -457,9 +907,19 @@ func (m FoodIntake) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated FoodIntake.
+func (m *FoodIntake) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m FoodIntake) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated FoodIntake.
+func (m *FoodIntake) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -467,9 +927,19 @@ func (m FoodIntake) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated FoodIntake.
+func (m *FoodIntake) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m FoodIntake) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -477,9 +947,19 @@ func (m FoodIntake) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated FoodIntake.
+func (m *FoodIntake) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m FoodIntake) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -487,9 +967,19 @@ func (m FoodIntake) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m FoodIntake) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated FoodIntake.
+func (m *FoodIntake) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -497,9 +987,19 @@ func (m FoodIntake) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m FoodPreset) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated FoodPreset.
+func (m *FoodPreset) SetID(v string) {
+	m.ID = v
 }
 
 // GetName returns the Name value.
@@ -507,9 +1007,19 @@ func (m FoodPreset) GetName() string {
 	return m.Name
 }
 
+// SetName sets the Name value and returns the updated FoodPreset.
+func (m *FoodPreset) SetName(v string) {
+	m.Name = v
+}
+
 // GetCategory returns the Category value.
 func (m FoodPreset) GetCategory() *string {
 	return m.Category
+}
+
+// SetCategory sets the Category value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCategory(v *string) {
+	m.Category = v
 }
 
 // GetSubcategory returns the Subcategory value.
@@ -517,9 +1027,19 @@ func (m FoodPreset) GetSubcategory() *string {
 	return m.Subcategory
 }
 
+// SetSubcategory sets the Subcategory value and returns the updated FoodPreset.
+func (m *FoodPreset) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
 // GetCarbs returns the Carbs value.
 func (m FoodPreset) GetCarbs() *float64 {
 	return m.Carbs
+}
+
+// SetCarbs sets the Carbs value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCarbs(v *float64) {
+	m.Carbs = v
 }
 
 // GetFat returns the Fat value.
@@ -527,9 +1047,19 @@ func (m FoodPreset) GetFat() *float64 {
 	return m.Fat
 }
 
+// SetFat sets the Fat value and returns the updated FoodPreset.
+func (m *FoodPreset) SetFat(v *float64) {
+	m.Fat = v
+}
+
 // GetProtein returns the Protein value.
 func (m FoodPreset) GetProtein() *float64 {
 	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated FoodPreset.
+func (m *FoodPreset) SetProtein(v *float64) {
+	m.Protein = v
 }
 
 // GetFibre returns the Fibre value.
@@ -537,9 +1067,19 @@ func (m FoodPreset) GetFibre() *float64 {
 	return m.Fibre
 }
 
+// SetFibre sets the Fibre value and returns the updated FoodPreset.
+func (m *FoodPreset) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
 // GetEnergy returns the Energy value.
 func (m FoodPreset) GetEnergy() *float64 {
 	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated FoodPreset.
+func (m *FoodPreset) SetEnergy(v *float64) {
+	m.Energy = v
 }
 
 // GetPortions returns the Portions value.
@@ -547,9 +1087,19 @@ func (m FoodPreset) GetPortions() *float64 {
 	return m.Portions
 }
 
+// SetPortions sets the Portions value and returns the updated FoodPreset.
+func (m *FoodPreset) SetPortions(v *float64) {
+	m.Portions = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m FoodPreset) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated FoodPreset.
+func (m *FoodPreset) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -557,9 +1107,19 @@ func (m FoodPreset) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m FoodPreset) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated FoodPreset.
+func (m *FoodPreset) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -567,9 +1127,19 @@ func (m FoodPreset) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
 func (m FoodPreset) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -577,9 +1147,19 @@ func (m FoodPreset) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated FoodPreset.
+func (m *FoodPreset) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m FoodPreset) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -587,9 +1167,19 @@ func (m GlucoseReading) GetID() string {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetID(v string) {
+	m.ID = v
+}
+
 // GetReading returns the Reading value.
 func (m GlucoseReading) GetReading() float64 {
 	return m.Reading
+}
+
+// SetReading sets the Reading value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetReading(v float64) {
+	m.Reading = v
 }
 
 // GetReadingType returns the ReadingType value.
@@ -597,9 +1187,19 @@ func (m GlucoseReading) GetReadingType() string {
 	return m.ReadingType
 }
 
+// SetReadingType sets the ReadingType value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetReadingType(v string) {
+	m.ReadingType = v
+}
+
 // GetNotes returns the Notes value.
 func (m GlucoseReading) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -607,9 +1207,19 @@ func (m GlucoseReading) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m GlucoseReading) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -617,9 +1227,19 @@ func (m GlucoseReading) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m GlucoseReading) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -627,9 +1247,19 @@ func (m GlucoseReading) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m GlucoseReading) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -637,9 +1267,19 @@ func (m GlucoseReading) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m GlucoseReading) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -647,9 +1287,19 @@ func (m GlucoseReading) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m GlucoseReading) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -657,9 +1307,19 @@ func (m GlucoseReading) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m InsulinDose) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated InsulinDose.
+func (m *InsulinDose) SetID(v string) {
+	m.ID = v
 }
 
 // GetDose returns the Dose value.
@@ -667,9 +1327,19 @@ func (m InsulinDose) GetDose() float64 {
 	return m.Dose
 }
 
+// SetDose sets the Dose value and returns the updated InsulinDose.
+func (m *InsulinDose) SetDose(v float64) {
+	m.Dose = v
+}
+
 // GetDoseType returns the DoseType value.
 func (m InsulinDose) GetDoseType() string {
 	return m.DoseType
+}
+
+// SetDoseType sets the DoseType value and returns the updated InsulinDose.
+func (m *InsulinDose) SetDoseType(v string) {
+	m.DoseType = v
 }
 
 // GetNotes returns the Notes value.
@@ -677,9 +1347,19 @@ func (m InsulinDose) GetNotes() *string {
 	return m.Notes
 }
 
+// SetNotes sets the Notes value and returns the updated InsulinDose.
+func (m *InsulinDose) SetNotes(v *string) {
+	m.Notes = v
+}
+
 // GetReason returns the Reason value.
 func (m InsulinDose) GetReason() *string {
 	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated InsulinDose.
+func (m *InsulinDose) SetReason(v *string) {
+	m.Reason = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -687,9 +1367,19 @@ func (m InsulinDose) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
+// SetRawJsonData sets the RawJsonData value and returns the updated InsulinDose.
+func (m *InsulinDose) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m InsulinDose) GetDeletedAt() *int64 {
 	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated InsulinDose.
+func (m *InsulinDose) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -697,9 +1387,19 @@ func (m InsulinDose) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated InsulinDose.
+func (m *InsulinDose) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m InsulinDose) GetOccurredAt() int64 {
 	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated InsulinDose.
+func (m *InsulinDose) SetOccurredAt(v int64) {
+	m.OccurredAt = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -707,9 +1407,19 @@ func (m InsulinDose) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated InsulinDose.
+func (m *InsulinDose) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m InsulinDose) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated InsulinDose.
+func (m *InsulinDose) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -717,9 +1427,19 @@ func (m InsulinDose) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated InsulinDose.
+func (m *InsulinDose) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
 func (m InsulinDose) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated InsulinDose.
+func (m *InsulinDose) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -727,9 +1447,19 @@ func (m InsulinDose) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated InsulinDose.
+func (m *InsulinDose) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m InsulinDose) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated InsulinDose.
+func (m *InsulinDose) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -737,9 +1467,19 @@ func (m NotificationEvent) GetID() string {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetID(v string) {
+	m.ID = v
+}
+
 // GetNotificationType returns the NotificationType value.
 func (m NotificationEvent) GetNotificationType() string {
 	return m.NotificationType
+}
+
+// SetNotificationType sets the NotificationType value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetNotificationType(v string) {
+	m.NotificationType = v
 }
 
 // GetTitle returns the Title value.
@@ -747,9 +1487,19 @@ func (m NotificationEvent) GetTitle() string {
 	return m.Title
 }
 
+// SetTitle sets the Title value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetTitle(v string) {
+	m.Title = v
+}
+
 // GetSeverity returns the Severity value.
 func (m NotificationEvent) GetSeverity() int64 {
 	return m.Severity
+}
+
+// SetSeverity sets the Severity value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetSeverity(v int64) {
+	m.Severity = v
 }
 
 // GetContent returns the Content value.
@@ -757,9 +1507,19 @@ func (m NotificationEvent) GetContent() *string {
 	return m.Content
 }
 
+// SetContent sets the Content value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetContent(v *string) {
+	m.Content = v
+}
+
 // GetNotes returns the Notes value.
 func (m NotificationEvent) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -767,9 +1527,19 @@ func (m NotificationEvent) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m NotificationEvent) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -777,9 +1547,19 @@ func (m NotificationEvent) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m NotificationEvent) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -787,9 +1567,19 @@ func (m NotificationEvent) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m NotificationEvent) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -797,9 +1587,19 @@ func (m NotificationEvent) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m NotificationEvent) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -807,9 +1607,19 @@ func (m NotificationEvent) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m NotificationEvent) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -817,9 +1627,19 @@ func (m NotificationEvent) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m ProfilePreset) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetID(v string) {
+	m.ID = v
 }
 
 // GetName returns the Name value.
@@ -827,9 +1647,19 @@ func (m ProfilePreset) GetName() string {
 	return m.Name
 }
 
+// SetName sets the Name value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetName(v string) {
+	m.Name = v
+}
+
 // GetProfileStoreID returns the ProfileStoreID value.
 func (m ProfilePreset) GetProfileStoreID() string {
 	return m.ProfileStoreID
+}
+
+// SetProfileStoreID sets the ProfileStoreID value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetProfileStoreID(v string) {
+	m.ProfileStoreID = v
 }
 
 // GetIsDefault returns the IsDefault value.
@@ -837,9 +1667,19 @@ func (m ProfilePreset) GetIsDefault() bool {
 	return m.IsDefault
 }
 
+// SetIsDefault sets the IsDefault value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetIsDefault(v bool) {
+	m.IsDefault = v
+}
+
 // GetDia returns the Dia value.
 func (m ProfilePreset) GetDia() *float64 {
 	return m.Dia
+}
+
+// SetDia sets the Dia value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetDia(v *float64) {
+	m.Dia = v
 }
 
 // GetUnits returns the Units value.
@@ -847,9 +1687,19 @@ func (m ProfilePreset) GetUnits() *string {
 	return m.Units
 }
 
+// SetUnits sets the Units value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetUnits(v *string) {
+	m.Units = v
+}
+
 // GetTimezone returns the Timezone value.
 func (m ProfilePreset) GetTimezone() *string {
 	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetTimezone(v *string) {
+	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -857,9 +1707,19 @@ func (m ProfilePreset) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
 }
 
+// SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCarbRatiosJson(v *string) {
+	m.CarbRatiosJson = v
+}
+
 // GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
 func (m ProfilePreset) GetInsulinSensitivitiesJson() *string {
 	return m.InsulinSensitivitiesJson
+}
+
+// SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetInsulinSensitivitiesJson(v *string) {
+	m.InsulinSensitivitiesJson = v
 }
 
 // GetBasalRatesJson returns the BasalRatesJson value.
@@ -867,9 +1727,19 @@ func (m ProfilePreset) GetBasalRatesJson() *string {
 	return m.BasalRatesJson
 }
 
+// SetBasalRatesJson sets the BasalRatesJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetBasalRatesJson(v *string) {
+	m.BasalRatesJson = v
+}
+
 // GetTargetsHighJson returns the TargetsHighJson value.
 func (m ProfilePreset) GetTargetsHighJson() *string {
 	return m.TargetsHighJson
+}
+
+// SetTargetsHighJson sets the TargetsHighJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetTargetsHighJson(v *string) {
+	m.TargetsHighJson = v
 }
 
 // GetTargetsLowJson returns the TargetsLowJson value.
@@ -877,9 +1747,19 @@ func (m ProfilePreset) GetTargetsLowJson() *string {
 	return m.TargetsLowJson
 }
 
+// SetTargetsLowJson sets the TargetsLowJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetTargetsLowJson(v *string) {
+	m.TargetsLowJson = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m ProfilePreset) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -887,9 +1767,19 @@ func (m ProfilePreset) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m ProfilePreset) GetOccurredAt() int64 {
 	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetOccurredAt(v int64) {
+	m.OccurredAt = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -897,9 +1787,19 @@ func (m ProfilePreset) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m ProfilePreset) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -907,9 +1807,19 @@ func (m ProfilePreset) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
 func (m ProfilePreset) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -917,9 +1827,19 @@ func (m ProfilePreset) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m ProfilePreset) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -927,9 +1847,19 @@ func (m ProfileSwitch) GetID() string {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetID(v string) {
+	m.ID = v
+}
+
 // GetName returns the Name value.
 func (m ProfileSwitch) GetName() string {
 	return m.Name
+}
+
+// SetName sets the Name value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetName(v string) {
+	m.Name = v
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -937,9 +1867,19 @@ func (m ProfileSwitch) GetDurationMinutes() int64 {
 	return m.DurationMinutes
 }
 
+// SetDurationMinutes sets the DurationMinutes value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetDurationMinutes(v int64) {
+	m.DurationMinutes = v
+}
+
 // GetPercent returns the Percent value.
 func (m ProfileSwitch) GetPercent() float64 {
 	return m.Percent
+}
+
+// SetPercent sets the Percent value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetPercent(v float64) {
+	m.Percent = v
 }
 
 // GetDia returns the Dia value.
@@ -947,9 +1887,19 @@ func (m ProfileSwitch) GetDia() *float64 {
 	return m.Dia
 }
 
+// SetDia sets the Dia value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetDia(v *float64) {
+	m.Dia = v
+}
+
 // GetUnits returns the Units value.
 func (m ProfileSwitch) GetUnits() *string {
 	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetUnits(v *string) {
+	m.Units = v
 }
 
 // GetTimezone returns the Timezone value.
@@ -957,9 +1907,19 @@ func (m ProfileSwitch) GetTimezone() *string {
 	return m.Timezone
 }
 
+// SetTimezone sets the Timezone value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetTimezone(v *string) {
+	m.Timezone = v
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m ProfileSwitch) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
+}
+
+// SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCarbRatiosJson(v *string) {
+	m.CarbRatiosJson = v
 }
 
 // GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
@@ -967,9 +1927,19 @@ func (m ProfileSwitch) GetInsulinSensitivitiesJson() *string {
 	return m.InsulinSensitivitiesJson
 }
 
+// SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetInsulinSensitivitiesJson(v *string) {
+	m.InsulinSensitivitiesJson = v
+}
+
 // GetBasalRatesJson returns the BasalRatesJson value.
 func (m ProfileSwitch) GetBasalRatesJson() *string {
 	return m.BasalRatesJson
+}
+
+// SetBasalRatesJson sets the BasalRatesJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetBasalRatesJson(v *string) {
+	m.BasalRatesJson = v
 }
 
 // GetTargetsHighJson returns the TargetsHighJson value.
@@ -977,9 +1947,19 @@ func (m ProfileSwitch) GetTargetsHighJson() *string {
 	return m.TargetsHighJson
 }
 
+// SetTargetsHighJson sets the TargetsHighJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetTargetsHighJson(v *string) {
+	m.TargetsHighJson = v
+}
+
 // GetTargetsLowJson returns the TargetsLowJson value.
 func (m ProfileSwitch) GetTargetsLowJson() *string {
 	return m.TargetsLowJson
+}
+
+// SetTargetsLowJson sets the TargetsLowJson value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetTargetsLowJson(v *string) {
+	m.TargetsLowJson = v
 }
 
 // GetNotes returns the Notes value.
@@ -987,9 +1967,19 @@ func (m ProfileSwitch) GetNotes() *string {
 	return m.Notes
 }
 
+// SetNotes sets the Notes value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetNotes(v *string) {
+	m.Notes = v
+}
+
 // GetReason returns the Reason value.
 func (m ProfileSwitch) GetReason() *string {
 	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetReason(v *string) {
+	m.Reason = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -997,9 +1987,19 @@ func (m ProfileSwitch) GetRawJsonData() *string {
 	return m.RawJsonData
 }
 
+// SetRawJsonData sets the RawJsonData value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m ProfileSwitch) GetDeletedAt() *int64 {
 	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -1007,9 +2007,19 @@ func (m ProfileSwitch) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
 }
 
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m ProfileSwitch) GetOccurredAt() int64 {
 	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOccurredAt(v int64) {
+	m.OccurredAt = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -1017,9 +2027,19 @@ func (m ProfileSwitch) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
+// SetCreatedAt sets the CreatedAt value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m ProfileSwitch) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -1027,9 +2047,19 @@ func (m ProfileSwitch) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
 }
 
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
 func (m ProfileSwitch) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -1037,9 +2067,19 @@ func (m ProfileSwitch) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m ProfileSwitch) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -1047,9 +2087,19 @@ func (m SiteSetting) GetID() int64 {
 	return m.ID
 }
 
+// SetID sets the ID value and returns the updated SiteSetting.
+func (m *SiteSetting) SetID(v int64) {
+	m.ID = v
+}
+
 // GetUnits returns the Units value.
 func (m SiteSetting) GetUnits() string {
 	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated SiteSetting.
+func (m *SiteSetting) SetUnits(v string) {
+	m.Units = v
 }
 
 // GetTimezone returns the Timezone value.
@@ -1057,9 +2107,19 @@ func (m SiteSetting) GetTimezone() string {
 	return m.Timezone
 }
 
+// SetTimezone sets the Timezone value and returns the updated SiteSetting.
+func (m *SiteSetting) SetTimezone(v string) {
+	m.Timezone = v
+}
+
 // GetBolusDiaHours returns the BolusDiaHours value.
 func (m SiteSetting) GetBolusDiaHours() float64 {
 	return m.BolusDiaHours
+}
+
+// SetBolusDiaHours sets the BolusDiaHours value and returns the updated SiteSetting.
+func (m *SiteSetting) SetBolusDiaHours(v float64) {
+	m.BolusDiaHours = v
 }
 
 // GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
@@ -1067,9 +2127,19 @@ func (m SiteSetting) GetBolusOnsetMinutes() float64 {
 	return m.BolusOnsetMinutes
 }
 
+// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated SiteSetting.
+func (m *SiteSetting) SetBolusOnsetMinutes(v float64) {
+	m.BolusOnsetMinutes = v
+}
+
 // GetBolusPeakMinutes returns the BolusPeakMinutes value.
 func (m SiteSetting) GetBolusPeakMinutes() float64 {
 	return m.BolusPeakMinutes
+}
+
+// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated SiteSetting.
+func (m *SiteSetting) SetBolusPeakMinutes(v float64) {
+	m.BolusPeakMinutes = v
 }
 
 // GetBasalDiaHours returns the BasalDiaHours value.
@@ -1077,9 +2147,19 @@ func (m SiteSetting) GetBasalDiaHours() float64 {
 	return m.BasalDiaHours
 }
 
+// SetBasalDiaHours sets the BasalDiaHours value and returns the updated SiteSetting.
+func (m *SiteSetting) SetBasalDiaHours(v float64) {
+	m.BasalDiaHours = v
+}
+
 // GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
 func (m SiteSetting) GetBasalOnsetMinutes() float64 {
 	return m.BasalOnsetMinutes
+}
+
+// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated SiteSetting.
+func (m *SiteSetting) SetBasalOnsetMinutes(v float64) {
+	m.BasalOnsetMinutes = v
 }
 
 // GetBasalPeakMinutes returns the BasalPeakMinutes value.
@@ -1087,9 +2167,19 @@ func (m SiteSetting) GetBasalPeakMinutes() float64 {
 	return m.BasalPeakMinutes
 }
 
+// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated SiteSetting.
+func (m *SiteSetting) SetBasalPeakMinutes(v float64) {
+	m.BasalPeakMinutes = v
+}
+
 // GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
 func (m SiteSetting) GetCarbMaxAbsorptionHours() float64 {
 	return m.CarbMaxAbsorptionHours
+}
+
+// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated SiteSetting.
+func (m *SiteSetting) SetCarbMaxAbsorptionHours(v float64) {
+	m.CarbMaxAbsorptionHours = v
 }
 
 // GetCarbMin5mImpact returns the CarbMin5mImpact value.
@@ -1097,9 +2187,19 @@ func (m SiteSetting) GetCarbMin5mImpact() float64 {
 	return m.CarbMin5mImpact
 }
 
+// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated SiteSetting.
+func (m *SiteSetting) SetCarbMin5mImpact(v float64) {
+	m.CarbMin5mImpact = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m SiteSetting) GetUpdatedAt() int64 {
 	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated SiteSetting.
+func (m *SiteSetting) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -1107,9 +2207,19 @@ func (m SiteSetting) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SiteSetting.
+func (m *SiteSetting) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m TempBasal) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated TempBasal.
+func (m *TempBasal) SetID(v string) {
+	m.ID = v
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -1117,9 +2227,19 @@ func (m TempBasal) GetDurationMinutes() int64 {
 	return m.DurationMinutes
 }
 
+// SetDurationMinutes sets the DurationMinutes value and returns the updated TempBasal.
+func (m *TempBasal) SetDurationMinutes(v int64) {
+	m.DurationMinutes = v
+}
+
 // GetAbsolute returns the Absolute value.
 func (m TempBasal) GetAbsolute() float64 {
 	return m.Absolute
+}
+
+// SetAbsolute sets the Absolute value and returns the updated TempBasal.
+func (m *TempBasal) SetAbsolute(v float64) {
+	m.Absolute = v
 }
 
 // GetPercent returns the Percent value.
@@ -1127,9 +2247,19 @@ func (m TempBasal) GetPercent() *float64 {
 	return m.Percent
 }
 
+// SetPercent sets the Percent value and returns the updated TempBasal.
+func (m *TempBasal) SetPercent(v *float64) {
+	m.Percent = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempBasal) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated TempBasal.
+func (m *TempBasal) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -1137,9 +2267,19 @@ func (m TempBasal) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated TempBasal.
+func (m *TempBasal) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m TempBasal) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated TempBasal.
+func (m *TempBasal) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -1147,9 +2287,19 @@ func (m TempBasal) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated TempBasal.
+func (m *TempBasal) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m TempBasal) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated TempBasal.
+func (m *TempBasal) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -1157,9 +2307,19 @@ func (m TempBasal) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated TempBasal.
+func (m *TempBasal) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m TempBasal) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated TempBasal.
+func (m *TempBasal) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -1167,9 +2327,19 @@ func (m TempBasal) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated TempBasal.
+func (m *TempBasal) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m TempBasal) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated TempBasal.
+func (m *TempBasal) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -1177,9 +2347,19 @@ func (m TempBasal) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated TempBasal.
+func (m *TempBasal) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m TempBasal) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempBasal.
+func (m *TempBasal) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -1187,9 +2367,19 @@ func (m TempBasal) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated TempBasal.
+func (m *TempBasal) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
 // GetID returns the ID value.
 func (m TempTarget) GetID() string {
 	return m.ID
+}
+
+// SetID sets the ID value and returns the updated TempTarget.
+func (m *TempTarget) SetID(v string) {
+	m.ID = v
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -1197,9 +2387,19 @@ func (m TempTarget) GetDurationMinutes() int64 {
 	return m.DurationMinutes
 }
 
+// SetDurationMinutes sets the DurationMinutes value and returns the updated TempTarget.
+func (m *TempTarget) SetDurationMinutes(v int64) {
+	m.DurationMinutes = v
+}
+
 // GetHighTarget returns the HighTarget value.
 func (m TempTarget) GetHighTarget() float64 {
 	return m.HighTarget
+}
+
+// SetHighTarget sets the HighTarget value and returns the updated TempTarget.
+func (m *TempTarget) SetHighTarget(v float64) {
+	m.HighTarget = v
 }
 
 // GetLowTarget returns the LowTarget value.
@@ -1207,9 +2407,19 @@ func (m TempTarget) GetLowTarget() float64 {
 	return m.LowTarget
 }
 
+// SetLowTarget sets the LowTarget value and returns the updated TempTarget.
+func (m *TempTarget) SetLowTarget(v float64) {
+	m.LowTarget = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempTarget) GetNotes() *string {
 	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated TempTarget.
+func (m *TempTarget) SetNotes(v *string) {
+	m.Notes = v
 }
 
 // GetReason returns the Reason value.
@@ -1217,9 +2427,19 @@ func (m TempTarget) GetReason() *string {
 	return m.Reason
 }
 
+// SetReason sets the Reason value and returns the updated TempTarget.
+func (m *TempTarget) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m TempTarget) GetRawJsonData() *string {
 	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated TempTarget.
+func (m *TempTarget) SetRawJsonData(v *string) {
+	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -1227,9 +2447,19 @@ func (m TempTarget) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
+// SetDeletedAt sets the DeletedAt value and returns the updated TempTarget.
+func (m *TempTarget) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m TempTarget) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated TempTarget.
+func (m *TempTarget) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -1237,9 +2467,19 @@ func (m TempTarget) GetOccurredAt() int64 {
 	return m.OccurredAt
 }
 
+// SetOccurredAt sets the OccurredAt value and returns the updated TempTarget.
+func (m *TempTarget) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m TempTarget) GetCreatedAt() int64 {
 	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated TempTarget.
+func (m *TempTarget) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetUpdatedAt returns the UpdatedAt value.
@@ -1247,9 +2487,19 @@ func (m TempTarget) GetUpdatedAt() int64 {
 	return m.UpdatedAt
 }
 
+// SetUpdatedAt sets the UpdatedAt value and returns the updated TempTarget.
+func (m *TempTarget) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetCreatedByAppName returns the CreatedByAppName value.
 func (m TempTarget) GetCreatedByAppName() *string {
 	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated TempTarget.
+func (m *TempTarget) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -1257,14 +2507,29 @@ func (m TempTarget) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated TempTarget.
+func (m *TempTarget) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m TempTarget) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempTarget.
+func (m *TempTarget) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
 func (m TempTarget) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated TempTarget.
+func (m *TempTarget) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
 }
 
 // GetID returns the ID value.
@@ -1704,28 +2969,6 @@ func (m SearchDeviceReportsParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated SearchDeviceReportsParams.
 func (m SearchDeviceReportsParams) SetLimit(v int64) SearchDeviceReportsParams {
 	m.Limit = v
-	return m
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateDeviceReportParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateDeviceReportParams.
-func (m UpdateDeviceReportParams) SetOccurredAt(v *int64) UpdateDeviceReportParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateDeviceReportParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateDeviceReportParams.
-func (m UpdateDeviceReportParams) SetUtcOffsetMinutes(v *int64) UpdateDeviceReportParams {
-	m.UtcOffsetMinutes = v
 	return m
 }
 
@@ -2378,28 +3621,6 @@ func (m UpdateActivityParams) SetReason(v *string) UpdateActivityParams {
 	return m
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateActivityParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetOccurredAt(v *int64) UpdateActivityParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateActivityParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetUtcOffsetMinutes(v *int64) UpdateActivityParams {
-	m.UtcOffsetMinutes = v
-	return m
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateActivityParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -2892,28 +4113,6 @@ func (m UpdateComponentEventParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateComponentEventParams.
 func (m UpdateComponentEventParams) SetReason(v *string) UpdateComponentEventParams {
 	m.Reason = v
-	return m
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateComponentEventParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetOccurredAt(v *int64) UpdateComponentEventParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateComponentEventParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetUtcOffsetMinutes(v *int64) UpdateComponentEventParams {
-	m.UtcOffsetMinutes = v
 	return m
 }
 
@@ -3654,28 +4853,6 @@ func (m UpdateFoodIntakeParams) SetReason(v *string) UpdateFoodIntakeParams {
 	return m
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateFoodIntakeParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetOccurredAt(v *int64) UpdateFoodIntakeParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateFoodIntakeParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetUtcOffsetMinutes(v *int64) UpdateFoodIntakeParams {
-	m.UtcOffsetMinutes = v
-	return m
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateFoodIntakeParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -4267,28 +5444,6 @@ func (m UpdateGlucoseReadingParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateGlucoseReadingParams.
 func (m UpdateGlucoseReadingParams) SetReason(v *string) UpdateGlucoseReadingParams {
 	m.Reason = v
-	return m
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateGlucoseReadingParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetOccurredAt(v *int64) UpdateGlucoseReadingParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateGlucoseReadingParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetUtcOffsetMinutes(v *int64) UpdateGlucoseReadingParams {
-	m.UtcOffsetMinutes = v
 	return m
 }
 
@@ -5260,28 +6415,6 @@ func (m UpdateEventGroupParams) SetReason(v *string) UpdateEventGroupParams {
 	return m
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateEventGroupParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetOccurredAt(v *int64) UpdateEventGroupParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateEventGroupParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetUtcOffsetMinutes(v *int64) UpdateEventGroupParams {
-	m.UtcOffsetMinutes = v
-	return m
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateEventGroupParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -5887,28 +7020,6 @@ func (m UpdateInsulinDoseParams) SetReason(v *string) UpdateInsulinDoseParams {
 	return m
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateInsulinDoseParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetOccurredAt(v *int64) UpdateInsulinDoseParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateInsulinDoseParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetUtcOffsetMinutes(v *int64) UpdateInsulinDoseParams {
-	m.UtcOffsetMinutes = v
-	return m
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateInsulinDoseParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -6434,28 +7545,6 @@ func (m UpdateNotificationEventParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateNotificationEventParams.
 func (m UpdateNotificationEventParams) SetReason(v *string) UpdateNotificationEventParams {
 	m.Reason = v
-	return m
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateNotificationEventParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetOccurredAt(v *int64) UpdateNotificationEventParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateNotificationEventParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetUtcOffsetMinutes(v *int64) UpdateNotificationEventParams {
-	m.UtcOffsetMinutes = v
 	return m
 }
 
@@ -7108,28 +8197,6 @@ func (m UpdateProfileSwitchParams) SetReason(v *string) UpdateProfileSwitchParam
 	return m
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateProfileSwitchParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetOccurredAt(v *int64) UpdateProfileSwitchParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateProfileSwitchParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetUtcOffsetMinutes(v *int64) UpdateProfileSwitchParams {
-	m.UtcOffsetMinutes = v
-	return m
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateProfileSwitchParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -7680,28 +8747,6 @@ func (m UpdateTempBasalParams) SetReason(v *string) UpdateTempBasalParams {
 	return m
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateTempBasalParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetOccurredAt(v *int64) UpdateTempBasalParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateTempBasalParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetUtcOffsetMinutes(v *int64) UpdateTempBasalParams {
-	m.UtcOffsetMinutes = v
-	return m
-}
-
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateTempBasalParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -8249,28 +9294,6 @@ func (m UpdateTempTargetParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateTempTargetParams.
 func (m UpdateTempTargetParams) SetReason(v *string) UpdateTempTargetParams {
 	m.Reason = v
-	return m
-}
-
-// GetOccurredAt returns the OccurredAt value.
-func (m UpdateTempTargetParams) GetOccurredAt() *int64 {
-	return m.OccurredAt
-}
-
-// SetOccurredAt sets the OccurredAt value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetOccurredAt(v *int64) UpdateTempTargetParams {
-	m.OccurredAt = v
-	return m
-}
-
-// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
-func (m UpdateTempTargetParams) GetUtcOffsetMinutes() *int64 {
-	return m.UtcOffsetMinutes
-}
-
-// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetUtcOffsetMinutes(v *int64) UpdateTempTargetParams {
-	m.UtcOffsetMinutes = v
 	return m
 }
 

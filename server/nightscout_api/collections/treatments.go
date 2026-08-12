@@ -3,7 +3,6 @@ package collections
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -463,7 +462,6 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// note
 	if bundle.DeleteNotificationEvent() {
-		// Id exists no model
 		_, err := q.HardDeleteNotificationEvent(ctx, site.HardDeleteNotificationEventParams{ID: *bundle.EventGroup.NotificationEventID})
 		if err != nil {
 			slog.Error("failed to delete note from database", "error", err)
@@ -471,8 +469,6 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 		}
 		bundle.EventGroup.NotificationEventID = nil
 	} else if bundle.CreateNotificationEvent() {
-		// model exists not id
-		// If the note is not deleted, but a new note is provided, we need to create it
 		dbModel, err := q.CreateNotificationEvent(ctx, nightscout.NotificationEventCreate(*bundle.NotificationEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
@@ -481,13 +477,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 		bundle.EventGroup.NotificationEventID = &dbModel.ID
 		bundle.NotificationEvent = dbModel
 	} else if bundle.UpdateNotificationEvent() {
-		// model and id exist
-
-		updateParams := nightscout.NotificationEventUpdate(*bundle.NotificationEvent, cc)
-		a, _ := json.Marshal(updateParams)
-		b, _ := json.Marshal(bundle.NotificationEvent)
-		fmt.Println("ASDSAFSAFSAFASF", string(a), "note", string(b))
-		dbModel, err := q.UpdateNotificationEvent(ctx, updateParams)
+		dbModel, err := q.UpdateNotificationEvent(ctx, nightscout.NotificationEventUpdate(*bundle.NotificationEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
 			return err
@@ -798,71 +788,74 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	return site.EventGroupsBundle{EventGroup: eventGroup}
 }
 
+// We Have taken the bundle
 func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventGroupsBundle) {
 
 	nightscout.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
+
+	if updateBundle.InsulinDose != nil {
+		if dbModel.InsulinDose == nil {
+			dbModel.InsulinDose = updateBundle.InsulinDose
+		} else {
+			nightscout.UpdateToInsulinDose(updateBundle.InsulinDose, dbModel.InsulinDose)
+		}
+	}
 
 	if updateBundle.GlucoseReading != nil {
 		if dbModel.GlucoseReading == nil {
 			dbModel.GlucoseReading = updateBundle.GlucoseReading
 		} else {
-			nightscout.UpdateToGlucoseReading(*updateBundle.GlucoseReading, dbModel.GlucoseReading)
+			nightscout.UpdateToGlucoseReading(updateBundle.GlucoseReading, dbModel.GlucoseReading)
 		}
 	}
-	if updateBundle.InsulinDose != nil {
-		if dbModel.InsulinDose == nil {
-			dbModel.InsulinDose = updateBundle.InsulinDose
-		} else {
-			nightscout.UpdateToInsulinDose(*updateBundle.InsulinDose, dbModel.InsulinDose)
-		}
-	}
+
 	if updateBundle.FoodIntake != nil {
 		if dbModel.FoodIntake == nil {
 			dbModel.FoodIntake = updateBundle.FoodIntake
 		} else {
-			nightscout.UpdateToFoodIntake(*updateBundle.FoodIntake, dbModel.FoodIntake)
+			nightscout.UpdateToFoodIntake(updateBundle.FoodIntake, dbModel.FoodIntake)
 		}
 	}
 	if updateBundle.TempBasal != nil {
 		if dbModel.TempBasal == nil {
 			dbModel.TempBasal = updateBundle.TempBasal
 		} else {
-			nightscout.UpdateToTempBasal(*updateBundle.TempBasal, dbModel.TempBasal)
+			nightscout.UpdateToTempBasal(updateBundle.TempBasal, dbModel.TempBasal)
 		}
 	}
 	if updateBundle.TempTarget != nil {
 		if dbModel.TempTarget == nil {
 			dbModel.TempTarget = updateBundle.TempTarget
 		} else {
-			nightscout.UpdateToTempTarget(*updateBundle.TempTarget, dbModel.TempTarget)
+			nightscout.UpdateToTempTarget(updateBundle.TempTarget, dbModel.TempTarget)
 		}
 	}
 	if updateBundle.ProfileSwitch != nil {
 		if dbModel.ProfileSwitch == nil {
 			dbModel.ProfileSwitch = updateBundle.ProfileSwitch
 		} else {
-			nightscout.UpdateToProfileSwitch(*updateBundle.ProfileSwitch, dbModel.ProfileSwitch)
+			nightscout.UpdateToProfileSwitch(updateBundle.ProfileSwitch, dbModel.ProfileSwitch)
 		}
 	}
 	if updateBundle.ComponentEvent != nil {
 		if dbModel.ComponentEvent == nil {
 			dbModel.ComponentEvent = updateBundle.ComponentEvent
 		} else {
-			nightscout.UpdateToComponentEvent(*updateBundle.ComponentEvent, dbModel.ComponentEvent)
+			nightscout.UpdateToComponentEvent(updateBundle.ComponentEvent, dbModel.ComponentEvent)
 		}
 	}
 	if updateBundle.Activity != nil {
 		if dbModel.Activity == nil {
 			dbModel.Activity = updateBundle.Activity
 		} else {
-			nightscout.UpdateToActivity(*updateBundle.Activity, dbModel.Activity)
+			nightscout.UpdateToActivity(updateBundle.Activity, dbModel.Activity)
 		}
 	}
 	if updateBundle.NotificationEvent != nil {
 		if dbModel.NotificationEvent == nil {
 			dbModel.NotificationEvent = updateBundle.NotificationEvent
 		} else {
-			nightscout.UpdateToNotificationEvent(*updateBundle.NotificationEvent, dbModel.NotificationEvent)
+			nightscout.UpdateToNotificationEvent(updateBundle.NotificationEvent, dbModel.NotificationEvent)
 		}
 	}
 }

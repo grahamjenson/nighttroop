@@ -357,39 +357,39 @@ type TreatmentsEvenetConverter interface {
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToFoodIntake(source site.FoodIntake, target *site.FoodIntake)
+	UpdateToFoodIntake(source *site.FoodIntake, target *site.FoodIntake)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToGlucoseReading(source site.GlucoseReading, target *site.GlucoseReading)
+	UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseReading)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToInsulinDose(source site.InsulinDose, target *site.InsulinDose)
+	UpdateToInsulinDose(source *site.InsulinDose, target *site.InsulinDose)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToNotificationEvent(source site.NotificationEvent, target *site.NotificationEvent)
+	UpdateToNotificationEvent(source *site.NotificationEvent, target *site.NotificationEvent)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToProfileSwitch(source site.ProfileSwitch, target *site.ProfileSwitch)
+	UpdateToProfileSwitch(source *site.ProfileSwitch, target *site.ProfileSwitch)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToTempBasal(source site.TempBasal, target *site.TempBasal)
+	UpdateToTempBasal(source *site.TempBasal, target *site.TempBasal)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToTempTarget(source site.TempTarget, target *site.TempTarget)
+	UpdateToTempTarget(source *site.TempTarget, target *site.TempTarget)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToComponentEvent(source site.ComponentEvent, target *site.ComponentEvent)
+	UpdateToComponentEvent(source *site.ComponentEvent, target *site.ComponentEvent)
 
 	// goverter:update target
 	// goverter:ignore ID
-	UpdateToActivity(source site.Activity, target *site.Activity)
+	UpdateToActivity(source *site.Activity, target *site.Activity)
 }
 
 func Zero() int64 {

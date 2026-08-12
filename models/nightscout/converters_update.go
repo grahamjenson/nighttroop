@@ -19,7 +19,6 @@ type UpdateMapConverter interface {
 
 	// goverter:context ctx
 	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore Reason
@@ -32,7 +31,6 @@ type UpdateMapConverter interface {
 
 	// goverter:context ctx
 	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore Notes Reason
@@ -59,7 +57,6 @@ type UpdateMapConverter interface {
 
 	// goverter:context ctx
 	// goverter:map Identifier ID
-	// goverter:map Date OccurredAt
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore

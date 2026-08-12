@@ -355,17 +355,13 @@ func (q *Queries) SoftDeleteDeviceReport(ctx context.Context, arg SoftDeleteDevi
 const updateDeviceReport = `-- name: UpdateDeviceReport :one
 
 UPDATE device_reports SET
-    occurred_at = COALESCE(?1, occurred_at),
-    utc_offset_minutes = COALESCE(?2, utc_offset_minutes),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?3
-WHERE id = ?4 AND deleted_at IS NULL
+    updated_by_identity_name = ?1
+WHERE id = ?2 AND deleted_at IS NULL
 RETURNING id, device_battery_percent, device_charging_state, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type UpdateDeviceReportParams struct {
-	OccurredAt            *int64
-	UtcOffsetMinutes      *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -374,12 +370,7 @@ type UpdateDeviceReportParams struct {
 // UPDATE
 // ------
 func (q *Queries) UpdateDeviceReport(ctx context.Context, arg UpdateDeviceReportParams) (*DeviceReport, error) {
-	row := q.queryRow(ctx, q.updateDeviceReportStmt, updateDeviceReport,
-		arg.OccurredAt,
-		arg.UtcOffsetMinutes,
-		arg.UpdatedByIdentityName,
-		arg.ID,
-	)
+	row := q.queryRow(ctx, q.updateDeviceReportStmt, updateDeviceReport, arg.UpdatedByIdentityName, arg.ID)
 	var i DeviceReport
 	err := row.Scan(
 		&i.ID,
