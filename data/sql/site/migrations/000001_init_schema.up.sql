@@ -189,11 +189,11 @@ CREATE TABLE profile_switches (
     units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
     timezone TEXT CHECK(length(timezone) <= 32),
     
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- 
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {"value": "110", "time": "00:00"},
-    targets_high_json TEXT CHECK(length(targets_high_json) <= 1024), -- { [high, low] }
-    targets_low_json TEXT CHECK(length(targets_low_json) <= 1024), -- { [high, low] }
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
     
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
@@ -350,11 +350,11 @@ CREATE TABLE profile_presets (
     units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
     timezone TEXT CHECK(length(timezone) <= 32), -- e.g. UTC, America/New_York, etc
 
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 1024), -- 
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 1024), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 1024), -- {"value": "110", "time": "00:00"},
-    targets_high_json TEXT CHECK(length(targets_high_json) <= 1024), -- { [high, low] }
-    targets_low_json TEXT CHECK(length(targets_low_json) <= 1024), -- { [high, low] }
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly
