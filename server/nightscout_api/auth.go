@@ -108,6 +108,7 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	// "api:food:read",
 	// "api:food:create",
 	// "api:food:delete",
+	// "api:settings:admin"
 
 	permissions := []string{}
 	switch ntid {

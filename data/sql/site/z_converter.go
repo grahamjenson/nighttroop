@@ -1067,29 +1067,49 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 }
 func SiteSettingsToUpdate(source SiteSetting) UpdateSiteSettingsParams {
 	var siteUpdateSiteSettingsParams UpdateSiteSettingsParams
-	pString := source.Units
-	siteUpdateSiteSettingsParams.Units = &pString
-	pString2 := source.Timezone
-	siteUpdateSiteSettingsParams.Timezone = &pString2
-	pFloat64 := source.BolusDiaHours
-	siteUpdateSiteSettingsParams.BolusDiaHours = &pFloat64
-	pFloat642 := source.BolusOnsetMinutes
-	siteUpdateSiteSettingsParams.BolusOnsetMinutes = &pFloat642
-	pFloat643 := source.BolusPeakMinutes
-	siteUpdateSiteSettingsParams.BolusPeakMinutes = &pFloat643
-	pFloat644 := source.BasalDiaHours
-	siteUpdateSiteSettingsParams.BasalDiaHours = &pFloat644
-	pFloat645 := source.BasalOnsetMinutes
-	siteUpdateSiteSettingsParams.BasalOnsetMinutes = &pFloat645
-	pFloat646 := source.BasalPeakMinutes
-	siteUpdateSiteSettingsParams.BasalPeakMinutes = &pFloat646
-	pFloat647 := source.CarbMaxAbsorptionHours
-	siteUpdateSiteSettingsParams.CarbMaxAbsorptionHours = &pFloat647
-	pFloat648 := source.CarbMin5mImpact
-	siteUpdateSiteSettingsParams.CarbMin5mImpact = &pFloat648
-	if source.UpdatedByIdentityName != nil {
-		xstring := *source.UpdatedByIdentityName
-		siteUpdateSiteSettingsParams.UpdatedByIdentityName = &xstring
+	if source.Units != nil {
+		xstring := *source.Units
+		siteUpdateSiteSettingsParams.Units = &xstring
+	}
+	if source.Timezone != nil {
+		xstring2 := *source.Timezone
+		siteUpdateSiteSettingsParams.Timezone = &xstring2
+	}
+	if source.Language != nil {
+		xstring3 := *source.Language
+		siteUpdateSiteSettingsParams.Language = &xstring3
+	}
+	if source.BolusDiaHours != nil {
+		xfloat64 := *source.BolusDiaHours
+		siteUpdateSiteSettingsParams.BolusDiaHours = &xfloat64
+	}
+	if source.BolusOnsetMinutes != nil {
+		xfloat642 := *source.BolusOnsetMinutes
+		siteUpdateSiteSettingsParams.BolusOnsetMinutes = &xfloat642
+	}
+	if source.BolusPeakMinutes != nil {
+		xfloat643 := *source.BolusPeakMinutes
+		siteUpdateSiteSettingsParams.BolusPeakMinutes = &xfloat643
+	}
+	if source.BasalDiaHours != nil {
+		xfloat644 := *source.BasalDiaHours
+		siteUpdateSiteSettingsParams.BasalDiaHours = &xfloat644
+	}
+	if source.BasalOnsetMinutes != nil {
+		xfloat645 := *source.BasalOnsetMinutes
+		siteUpdateSiteSettingsParams.BasalOnsetMinutes = &xfloat645
+	}
+	if source.BasalPeakMinutes != nil {
+		xfloat646 := *source.BasalPeakMinutes
+		siteUpdateSiteSettingsParams.BasalPeakMinutes = &xfloat646
+	}
+	if source.CarbMaxAbsorptionHours != nil {
+		xfloat647 := *source.CarbMaxAbsorptionHours
+		siteUpdateSiteSettingsParams.CarbMaxAbsorptionHours = &xfloat647
+	}
+	if source.CarbMin5mImpact != nil {
+		xfloat648 := *source.CarbMin5mImpact
+		siteUpdateSiteSettingsParams.CarbMin5mImpact = &xfloat648
 	}
 	siteUpdateSiteSettingsParams.ID = source.ID
 	return siteUpdateSiteSettingsParams

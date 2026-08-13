@@ -14,6 +14,8 @@ SELECT * FROM site_settings WHERE id = 1;
 UPDATE site_settings SET
     units = COALESCE(sqlc.narg('Units'), units),
     timezone = COALESCE(sqlc.narg('Timezone'), timezone),
+    language = COALESCE(sqlc.narg('Language'), language),
+
     bolus_dia_hours = COALESCE(sqlc.narg('BolusDiaHours'), bolus_dia_hours),
     bolus_onset_minutes = COALESCE(sqlc.narg('BolusOnsetMinutes'), bolus_onset_minutes),
     bolus_peak_minutes = COALESCE(sqlc.narg('BolusPeakMinutes'), bolus_peak_minutes),
@@ -23,8 +25,7 @@ UPDATE site_settings SET
     carb_max_absorption_hours = COALESCE(sqlc.narg('CarbMaxAbsorptionHours'), carb_max_absorption_hours),
     carb_min_5m_impact = COALESCE(sqlc.narg('CarbMin5mImpact'), carb_min_5m_impact),
     
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE id = sqlc.arg('ID')
 RETURNING *; 
 
