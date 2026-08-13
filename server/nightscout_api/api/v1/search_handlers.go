@@ -65,12 +65,13 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 
 func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Unsure of what this endpoint actually does
+		// TODO this just lists everything at this point
 		collection, _, err := nsutils.GetCollectionFromStringAndEnsurePermission(dep, "entries", r, nsutils.CollectionActionRead)
 		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
+
 		q, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)

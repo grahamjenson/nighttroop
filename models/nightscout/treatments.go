@@ -124,6 +124,7 @@ const (
 	Announcement      TreatmentEventType = "Announcement"
 	BGCheck           TreatmentEventType = "BG Check"
 	BolusWizard       TreatmentEventType = "Bolus Wizard"
+	Bolus             TreatmentEventType = "Bolus"
 	CarbCorrection    TreatmentEventType = "Carb Correction"
 	ComboBolus        TreatmentEventType = "Combo Bolus"
 	CorrectionBolus   TreatmentEventType = "Correction Bolus"
@@ -142,6 +143,11 @@ const (
 	SnackBolus        TreatmentEventType = "Snack Bolus"
 	TempBasal         TreatmentEventType = "Temp Basal"
 	TemporaryTarget   TreatmentEventType = "Temporary Target"
+	CannulaFill       TreatmentEventType = "Cannula Fill"
+	Prime             TreatmentEventType = "Prime"
+	ReservoirChange   TreatmentEventType = "Reservoir Change"
+	Calibration       TreatmentEventType = "Calibration"
+
 	//
 	Unknown TreatmentEventType = "Unknown"
 )
@@ -154,7 +160,34 @@ func ToSnakeCase(s string) string {
 	return strings.ToLower(strings.Join(strings.Fields(s), "_"))
 }
 
-var TreatmentEventTypes = []TreatmentEventType{Announcement, BGCheck, BolusWizard, CarbCorrection, ComboBolus, CorrectionBolus, DADAlert, Exercise, InsulinChange, MealBolus, Note, OpenAPSOffline, ProfileSwitch, PumpBatteryChange, Question, SensorChange, SensorStart, SiteChange, SnackBolus, TempBasal, TemporaryTarget}
+var TreatmentEventTypes = []TreatmentEventType{
+	Announcement,
+	BGCheck,
+	Bolus,
+	BolusWizard,
+	CarbCorrection,
+	ComboBolus,
+	CorrectionBolus,
+	DADAlert,
+	Exercise,
+	InsulinChange,
+	MealBolus,
+	Note,
+	OpenAPSOffline,
+	ProfileSwitch,
+	PumpBatteryChange,
+	Question,
+	SensorChange,
+	SensorStart,
+	SiteChange,
+	SnackBolus,
+	TempBasal,
+	TemporaryTarget,
+	CannulaFill,
+	Prime,
+	ReservoirChange,
+	Calibration,
+}
 
 func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 	var s string
@@ -162,54 +195,13 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch ToSnakeCase(strings.TrimSpace(s)) {
-	case "announcement":
-		*t = Announcement
-	case "bg_check":
-		*t = BGCheck
-	case "bolus_wizard":
-		*t = BolusWizard
-	case "carb_correction":
-		*t = CarbCorrection
-	case "combo_bolus":
-		*t = ComboBolus
-	case "correction_bolus":
-		*t = CorrectionBolus
-	case "d.a.d._alert":
-		*t = DADAlert
-	case "exercise":
-		*t = Exercise
-	case "insulin_change":
-		*t = InsulinChange
-	case "meal_bolus":
-		*t = MealBolus
-	case "note":
-		*t = Note
-	case "openaps_offline":
-		*t = OpenAPSOffline
-	case "profile_switch":
-		*t = ProfileSwitch
-	case "pump_battery_change":
-		*t = PumpBatteryChange
-	case "question":
-		*t = Question
-	case "sensor_change":
-		*t = SensorChange
-	case "sensor_start":
-		*t = SensorStart
-	case "site_change":
-		*t = SiteChange
-	case "snack_bolus":
-		*t = SnackBolus
-	case "temp_basal":
-		*t = TempBasal
-	case "temporary_target":
-		*t = TemporaryTarget
-	default:
-		return fmt.Errorf("unknown treatment event type: %s", s)
+	for _, et := range TreatmentEventTypes {
+		if strings.TrimSpace(s) == string(et) {
+			*t = et
+			return nil
+		}
 	}
-
-	return nil
+	return fmt.Errorf("unknown treatment event type: %s", s)
 }
 
 type GlucoseType string
@@ -217,6 +209,7 @@ type GlucoseType string
 const (
 	Sensor GlucoseType = "Sensor"
 	Finger GlucoseType = "Finger"
+	Meter  GlucoseType = "Meter"
 )
 
 func (t *GlucoseType) UnmarshalJSON(data []byte) error {
@@ -230,6 +223,8 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 		*t = Sensor
 	case "finger":
 		*t = Finger
+	case "meter":
+		*t = Meter
 	default:
 		return fmt.Errorf("unknown glucose type: %s", s)
 	}

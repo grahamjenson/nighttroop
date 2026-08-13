@@ -40,7 +40,7 @@ func (f *FlexibleFloat64) UnmarshalJSON(data []byte) error {
 		var err error
 		newF, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			return fmt.Errorf("invalid float value %q: %w", val, err)
+			return fmt.Errorf("invalid float value %q", val)
 		}
 		*f = FlexibleFloat64(newF)
 	default:

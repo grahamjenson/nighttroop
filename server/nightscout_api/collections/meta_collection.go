@@ -68,7 +68,7 @@ func MetaCreate[NS, DM any](
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data", "error", err, "collection", m.Name())
-		return nil, nsutils.BadDataBodyError
+		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
 	if err := ValidateInputData(data); err != nil {

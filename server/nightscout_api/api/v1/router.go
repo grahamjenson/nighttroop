@@ -14,6 +14,7 @@ func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
 	r := chi.NewRouter()
 
 	registerMiscRoutes(r, dep)
+
 	registerCollectionRoutes(r, dep)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
@@ -24,8 +25,10 @@ func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
 }
 
 func registerMiscRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+	r.Get("/status", StatusJSON(dep))
 	r.Get("/status.json", StatusJSON(dep))
 	r.Get("/versions", Versions())
+	r.Get("/versions.json", Versions())
 	r.Get("/verifyauth", VerifyAuth(dep))
 }
 
@@ -69,16 +72,6 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Get("/count/{collection}/where", Count(dep))
 
 	//Times
-	r.Get("/times", Times(dep))
+	r.Get("/times/", Times(dep))
 	r.Get("/times/{prefix}", Times(dep))
-	r.Get("/times/{prefix}/{regex}", Times(dep))
-
-	// Echo & Times Echo
-	r.Get("/echo", Echo(dep))
-	r.Get("/echo/{collection}", Echo(dep))
-	r.Get("/echo/{collection}/{identifier_or_type}", Echo(dep))
-
-	r.Get("/times/echo", Echo(dep))
-	r.Get("/times/echo/{prefix}", Echo(dep))
-	r.Get("/times/echo/{prefix}/{regex}", Echo(dep))
 }

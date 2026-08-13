@@ -347,6 +347,16 @@ func TreatmentToGlucoseReading(source Treatment) *site.GlucoseReading {
 		target.Reading = source.Glucose.Float64()
 	}
 
+	if source.GlucoseType != nil {
+		switch *source.GlucoseType {
+		case Sensor:
+			target.ReadingType = "sgv"
+		case Finger:
+			target.ReadingType = "mbg"
+		case Meter:
+			target.ReadingType = "mbg"
+		}
+	}
 	if assigned {
 		return &target
 	}

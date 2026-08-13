@@ -757,6 +757,32 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			EventGroup: eventGroup,
 			TempTarget: tempTarget,
 		}
+	case nightscout.CannulaFill:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+		}
+	case nightscout.Prime:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+		}
+	case nightscout.ReservoirChange:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			ComponentEvent: componentEvent,
+		}
+	case nightscout.Calibration:
+		return site.EventGroupsBundle{
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			ComponentEvent: componentEvent,
+		}
+	case nightscout.Bolus:
+		return site.EventGroupsBundle{
+			EventGroup:  eventGroup,
+			InsulinDose: insulinDose,
+		}
 	}
 
 	return site.EventGroupsBundle{EventGroup: eventGroup}

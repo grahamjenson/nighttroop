@@ -45,6 +45,7 @@ func VerifyAuth(dep nsutils.Dependencies) http.HandlerFunc {
 func StatusJSON(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+			"status":            "ok",
 			"apiEnabled":        true,
 			"careportalEnabled": true,
 			"settings": map[string]any{
