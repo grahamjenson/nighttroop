@@ -100,6 +100,12 @@ ASSERT_STATUS 201
 ASSERT {{ assertEquals 104 "@result.sgv" }}
 ASSERT {{ assertEquals "AnotherFunID" "@result.identifier" }}
 
+NAME update_put_entries_v3
+PUT http://{{ .site }}.ns.localhost/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+B {"sgv": 104, "app": "test-app", "date": {{ dig "put_entry_v1.result.date" }}}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
 //////
 // DELETE
 //////

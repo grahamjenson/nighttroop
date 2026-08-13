@@ -414,7 +414,21 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
 			"dig": func(path string) any {
-				return templateDig(ctx, path)
+				dug := templateDig(ctx, path)
+				switch dug.(type) {
+				case nil:
+					return "no_value"
+				case string:
+					return dug.(string)
+				case float64:
+					return fmt.Sprintf("%.0f", dug.(float64))
+				case int:
+					return dug.(int)
+				case bool:
+					return dug.(bool)
+				default:
+					return dug
+				}
 			},
 
 			"token": func() string {

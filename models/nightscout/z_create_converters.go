@@ -80,9 +80,7 @@ func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseRea
 	if source.Reading != nil {
 		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Reading)
 	}
-	if source.Type != nil {
-		siteCreateGlucoseReadingParams.ReadingType = string(*source.Type)
-	}
+	siteCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64

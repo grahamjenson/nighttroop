@@ -47,7 +47,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName      | AssignCreatedByName
 	//
 	// goverter:ignore Notes Reason
-	// goverter:map Type ReadingType
+	// goverter:map . ReadingType | SetReadingType
 	EntryToCreate(source Entry, ctx ConverterContext) site.CreateGlucoseReadingParams
 
 	///////
@@ -153,4 +153,17 @@ func FlexibleInt64ToInt64(source FlexibleInt64) int64 {
 }
 func ShortStringToString(source ShortString) string {
 	return string(source)
+}
+
+func SetReadingType(source Entry) string {
+	if source.Type != nil {
+		return source.Type.String()
+	}
+	if source.SGV != nil {
+		return "sgv"
+	}
+	if source.MBG != nil {
+		return "mbg"
+	}
+	return "sgv"
 }
