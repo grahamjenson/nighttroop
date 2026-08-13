@@ -53,6 +53,14 @@ func (f FlexibleFloat64) Float64() float64 {
 	return float64(f)
 }
 
+func (f *FlexibleFloat64) Float64p() *float64 {
+	if f == nil {
+		return nil
+	}
+	v := float64(*f)
+	return &v
+}
+
 // //////
 // FlexibleInt64
 // ///////
@@ -471,6 +479,14 @@ type SanitizedString string
 
 func (s *SanitizedString) String() string {
 	return string(*s)
+}
+
+func (s *SanitizedString) Stringp() *string {
+	if s == nil {
+		return nil
+	}
+	str := string(*s)
+	return &str
 }
 
 var tagRe = regexp.MustCompile(`<[^>]*>`)

@@ -632,41 +632,15 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) site.EventGroupsBundle {
 	eventGroup := nightscout.TreatmentToEventGroup(treatment)
 
-	glucoseReading := ptr(nightscout.TreatmentToGlucoseReading(treatment))
-	insulinDose := ptr(nightscout.TreatmentToInsulinDose(treatment))
-	foodIntake := ptr(nightscout.TreatmentToFoodIntake(treatment))
-	tempBasal := ptr(nightscout.TreatmentToTempBasal(treatment))
-	tempTarget := ptr(nightscout.TreatmentToTempTarget(treatment))
-	profileSwitch := ptr(nightscout.TreatmentToProfileSwitch(treatment))
-	componentEvent := ptr(nightscout.TreatmentToComponentEvent(treatment))
-	activity := ptr(nightscout.TreatmentToActivity(treatment))
-	notificationEvent := ptr(nightscout.TreatmentToNotificationEvent(treatment))
-
-	///////
-	// VALIDATE THE CREATED VALUES
-	///////
-
-	if glucoseReading.ReadingType == "Sensor" {
-		glucoseReading.ReadingType = "sgv"
-	}
-
-	insulinDose.DoseType = "bolus"
-
-	/////
-	// Filter the values
-	/////
-
-	if glucoseReading.Reading == 0 {
-		glucoseReading = nil
-	}
-
-	if insulinDose.Dose == 0 {
-		insulinDose = nil
-	}
-
-	if foodIntake.Name == nil && foodIntake.Category == nil && foodIntake.Subcategory == nil && foodIntake.Carbs == nil && foodIntake.Fat == nil && foodIntake.Protein == nil && foodIntake.Fibre == nil && foodIntake.Energy == nil && foodIntake.Portions == nil {
-		foodIntake = nil
-	}
+	glucoseReading := nightscout.TreatmentToGlucoseReading(treatment)
+	insulinDose := nightscout.TreatmentToInsulinDose(treatment)
+	foodIntake := nightscout.TreatmentToFoodIntake(treatment)
+	tempBasal := nightscout.TreatmentToTempBasal(treatment)
+	tempTarget := nightscout.TreatmentToTempTarget(treatment)
+	profileSwitch := nightscout.TreatmentToProfileSwitch(treatment)
+	componentEvent := nightscout.TreatmentToComponentEvent(treatment)
+	activity := nightscout.TreatmentToActivity(treatment)
+	notificationEvent := nightscout.TreatmentToNotificationEvent(treatment)
 
 	//////
 	// Limit the values to only the ones that are relevant to the event type
@@ -788,9 +762,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	return site.EventGroupsBundle{EventGroup: eventGroup}
 }
 
-// We Have taken the bundle
 func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventGroupsBundle) {
-
 	nightscout.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
 
 	if updateBundle.InsulinDose != nil {

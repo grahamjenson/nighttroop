@@ -226,127 +226,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
 
-	////////////////////////////////////////
-	// TREATMENT TO CREATE/UPDATE
-	////////////////////////////////////////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NotificationEventID
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map EventType GroupType
-	TreatmentToEventGroup(source Treatment) site.EventGroup
-
-	///////
-	// Food Intake
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:map Date OccurredAt | OrNow
-	TreatmentToFoodIntake(source Treatment) site.FoodIntake
-
-	///////
-	// Glucose Reading
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:map Glucose Reading
-	// goverter:map GlucoseType ReadingType
-	TreatmentToGlucoseReading(source Treatment) site.GlucoseReading
-
-	///////
-	// Insulin Dose
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:ignore DoseType
-	// goverter:map Insulin Dose
-	TreatmentToInsulinDose(source Treatment) site.InsulinDose
-
-	///////
-	// NotificationEvents
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:map EventType NotificationType
-	// goverter:map Name Title
-	// goverter:map Notes Content
-	// goverter:map Severity | Zero
-	TreatmentToNotificationEvent(source Treatment) site.NotificationEvent
-
-	///////
-	// Profile Switch
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone
-	// goverter:map Duration DurationMinutes
-	// goverter:map Percentage Percent
-	TreatmentToProfileSwitch(source Treatment) site.ProfileSwitch
-
-	///////
-	// Temp Basal
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:map Duration DurationMinutes
-	// goverter:map Percentage Percent
-	TreatmentToTempBasal(source Treatment) site.TempBasal
-
-	///////
-	// Temp Targets
-	///////
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:map Duration DurationMinutes
-	// goverter:map TargetTop HighTarget
-	// goverter:map TargetBottom LowTarget
-	TreatmentToTempTarget(source Treatment) site.TempTarget
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	TreatmentToComponentEvent(source Treatment) site.ComponentEvent
-
-	// goverter:map Date OccurredAt | OrNow
-	// goverter:map App CreatedByAppName
-	// goverter:map Device CreatedByDeviceName
-	//
-	// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-	// goverter:map Duration DurationMinutes
-	TreatmentToActivity(source Treatment) site.Activity
-
 	//////
 	// Update Override
 	//////
@@ -392,6 +271,308 @@ type TreatmentsEvenetConverter interface {
 	UpdateToActivity(source *site.Activity, target *site.Activity)
 }
 
-func Zero() int64 {
-	return 0
+////////////////////////////////////////
+// TREATMENT TO CREATE/UPDATE
+////////////////////////////////////////
+
+func TreatmentToEventGroup(source Treatment) site.EventGroup {
+	target := site.EventGroup{}
+	SharedTreatmentConvertion(source, &target)
+
+	target.GroupType = source.EventType.String()
+
+	return target
+}
+
+///////
+// Food Intake
+///////
+
+func TreatmentToFoodIntake(source Treatment) *site.FoodIntake {
+	assigned := false
+	target := site.FoodIntake{}
+	SharedTreatmentConvertion(source, &target)
+
+	if source.Name != nil {
+		target.Name = source.Name.Stringp()
+	}
+	if source.Category != nil {
+		target.Category = source.Category.Stringp()
+	}
+	if source.Subcategory != nil {
+		target.Subcategory = source.Subcategory.Stringp()
+	}
+	if source.Carbs != nil {
+		assigned = true
+		target.Carbs = source.Carbs.Float64p()
+	}
+	if source.Fat != nil {
+		assigned = true
+		target.Fat = source.Fat.Float64p()
+	}
+	if source.Protein != nil {
+		assigned = true
+		target.Protein = source.Protein.Float64p()
+	}
+	if source.Fibre != nil {
+		assigned = true
+		target.Fibre = source.Fibre.Float64p()
+	}
+	if source.Energy != nil {
+		assigned = true
+		target.Energy = source.Energy.Float64p()
+	}
+	if source.Portions != nil {
+		assigned = true
+		target.Portions = source.Portions.Float64p()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Glucose Reading
+///////
+
+func TreatmentToGlucoseReading(source Treatment) *site.GlucoseReading {
+	assigned := false
+	target := site.GlucoseReading{ReadingType: "sgv"}
+	SharedTreatmentConvertion(source, &target)
+
+	if source.Glucose != nil {
+		assigned = true
+		target.Reading = source.Glucose.Float64()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Insulin Dose
+///////
+
+func TreatmentToInsulinDose(source Treatment) *site.InsulinDose {
+	assigned := false
+	target := site.InsulinDose{DoseType: "bolus"}
+	SharedTreatmentConvertion(source, &target)
+
+	if source.Insulin != nil {
+		assigned = true
+		target.Dose = source.Insulin.Float64()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+///////
+// NotificationEvents
+///////
+
+// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
+// goverter:map EventType NotificationType
+// goverter:map Name Title
+// goverter:map Notes Content
+// goverter:map Severity | Zero
+func TreatmentToNotificationEvent(source Treatment) *site.NotificationEvent {
+	assigned := false
+	target := site.NotificationEvent{
+		Severity:         0,
+		NotificationType: "announcement",
+		Title:            "Treatment Event",
+	}
+	SharedTreatmentConvertion(source, &target)
+
+	// Always is assigned
+	assigned = true
+
+	if source.Name != nil {
+		target.Title = source.Name.String()
+	}
+	if source.Notes != nil {
+		target.Content = source.Notes.Stringp()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Profile Switch
+///////
+
+func TreatmentToProfileSwitch(source Treatment) *site.ProfileSwitch {
+	assigned := false
+	target := site.ProfileSwitch{}
+	SharedTreatmentConvertion(source, &target)
+
+	// TODO: This is the bit that will need more work, with the json of profile
+	if source.Name != nil {
+		assigned = true
+		target.Name = source.Name.String()
+	}
+	if source.Percentage != nil {
+		assigned = true
+		target.Percent = source.Percentage.Float64()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Temp Basal
+///////
+
+//
+// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
+
+// goverter:map Percentage Percent
+func TreatmentToTempBasal(source Treatment) *site.TempBasal {
+	assigned := false
+	target := site.TempBasal{}
+	SharedTreatmentConvertion(source, &target)
+
+	if source.Absolute != nil {
+		assigned = true
+		target.Absolute = source.Absolute.Float64()
+	} else if source.Rate != nil {
+		assigned = true
+		target.Absolute = source.Rate.Float64()
+	}
+
+	if source.Percentage != nil {
+		target.Percent = source.Percentage.Float64p()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Temp Targets
+///////
+
+//
+// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
+
+// goverter:map TargetTop HighTarget
+// goverter:map TargetBottom LowTarget
+func TreatmentToTempTarget(source Treatment) *site.TempTarget {
+	assigned := false
+	target := site.TempTarget{}
+	SharedTreatmentConvertion(source, &target)
+
+	if source.TargetTop != nil {
+		assigned = true
+		target.HighTarget = source.TargetTop.Float64()
+	} else if source.TargetBottom != nil {
+		// If Target Top is missing then we assume both targets are the same
+		assigned = true
+		target.HighTarget = source.TargetBottom.Float64()
+	}
+
+	if source.TargetBottom != nil {
+		assigned = true
+		target.LowTarget = source.TargetBottom.Float64()
+	} else if source.TargetTop != nil {
+		// If Target Bottom is missing then we assume both targets are the same
+		assigned = true
+		target.LowTarget = source.TargetTop.Float64()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+func TreatmentToComponentEvent(source Treatment) *site.ComponentEvent {
+	assigned := false
+	target := site.ComponentEvent{EventType: source.EventType.String()}
+	SharedTreatmentConvertion(source, &target)
+
+	assigned = true
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+//
+// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
+
+func TreatmentToActivity(source Treatment) *site.Activity {
+	assigned := false
+	target := site.Activity{}
+	SharedTreatmentConvertion(source, &target)
+
+	if source.Name != nil {
+		assigned = true
+		target.Name = source.Name.Stringp()
+	}
+
+	if source.ActivityType != nil {
+		assigned = true
+		target.ActivityType = source.ActivityType.String()
+	}
+
+	if source.Calories != nil {
+		assigned = true
+		target.Calories = source.Calories.Int64p()
+	}
+
+	if source.Steps != nil {
+		assigned = true
+		target.Steps = source.Steps.Int64p()
+	}
+
+	if source.HeartRate != nil {
+		assigned = true
+		target.HeartRate = source.HeartRate.Int64p()
+	}
+
+	if assigned {
+		return &target
+	}
+	return nil
+}
+
+func SharedTreatmentConvertion(source Treatment, target interface {
+	SetOccurredAt(int64)
+	SetCreatedByAppName(*string)
+	SetCreatedByDeviceName(*string)
+	SetNotes(*string)
+	SetReason(*string)
+	SetRawJsonData(*string)
+	SetUtcOffsetMinutes(*int64)
+}) {
+	target.SetOccurredAt(OrNow(source.Date))
+	target.SetCreatedByAppName(source.App.Stringp())
+	target.SetCreatedByDeviceName(source.Device.Stringp())
+	target.SetNotes(source.Notes.Stringp())
+	target.SetReason(source.Reason.Stringp())
+	target.SetRawJsonData(&source.RawJsonData)
+	target.SetUtcOffsetMinutes(source.UtcOffsetMinutes.Int64p())
+
+	if value, ok := target.(interface {
+		SetDurationMinutes(*int64)
+	}); ok {
+		value.SetDurationMinutes(source.Duration.Int64p())
+	}
 }
