@@ -147,9 +147,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
 	}
-	if q.getSiteSettingsStmt, err = db.PrepareContext(ctx, getSiteSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSiteSettings: %w", err)
-	}
 	if q.getTempBasalStmt, err = db.PrepareContext(ctx, getTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempBasal: %w", err)
 	}
@@ -329,9 +326,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateProfileSwitchStmt, err = db.PrepareContext(ctx, updateProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateProfileSwitch: %w", err)
-	}
-	if q.updateSiteSettingsStmt, err = db.PrepareContext(ctx, updateSiteSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSiteSettings: %w", err)
 	}
 	if q.updateTempBasalStmt, err = db.PrepareContext(ctx, updateTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempBasal: %w", err)
@@ -547,11 +541,6 @@ func (q *Queries) Close() error {
 	if q.getProfileSwitchStmt != nil {
 		if cerr := q.getProfileSwitchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
-		}
-	}
-	if q.getSiteSettingsStmt != nil {
-		if cerr := q.getSiteSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSiteSettingsStmt: %w", cerr)
 		}
 	}
 	if q.getTempBasalStmt != nil {
@@ -854,11 +843,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateProfileSwitchStmt: %w", cerr)
 		}
 	}
-	if q.updateSiteSettingsStmt != nil {
-		if cerr := q.updateSiteSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSiteSettingsStmt: %w", cerr)
-		}
-	}
 	if q.updateTempBasalStmt != nil {
 		if cerr := q.updateTempBasalStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateTempBasalStmt: %w", cerr)
@@ -949,7 +933,6 @@ type Queries struct {
 	getProfilePresetStmt                *sql.Stmt
 	getProfileStoreStmt                 *sql.Stmt
 	getProfileSwitchStmt                *sql.Stmt
-	getSiteSettingsStmt                 *sql.Stmt
 	getTempBasalStmt                    *sql.Stmt
 	getTempTargetStmt                   *sql.Stmt
 	hardDeleteActivitiesByTypeStmt      *sql.Stmt
@@ -1010,7 +993,6 @@ type Queries struct {
 	updateNotificationEventStmt         *sql.Stmt
 	updateProfilePresetStmt             *sql.Stmt
 	updateProfileSwitchStmt             *sql.Stmt
-	updateSiteSettingsStmt              *sql.Stmt
 	updateTempBasalStmt                 *sql.Stmt
 	updateTempTargetStmt                *sql.Stmt
 }
@@ -1060,7 +1042,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfilePresetStmt:                q.getProfilePresetStmt,
 		getProfileStoreStmt:                 q.getProfileStoreStmt,
 		getProfileSwitchStmt:                q.getProfileSwitchStmt,
-		getSiteSettingsStmt:                 q.getSiteSettingsStmt,
 		getTempBasalStmt:                    q.getTempBasalStmt,
 		getTempTargetStmt:                   q.getTempTargetStmt,
 		hardDeleteActivitiesByTypeStmt:      q.hardDeleteActivitiesByTypeStmt,
@@ -1121,7 +1102,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateNotificationEventStmt:         q.updateNotificationEventStmt,
 		updateProfilePresetStmt:             q.updateProfilePresetStmt,
 		updateProfileSwitchStmt:             q.updateProfileSwitchStmt,
-		updateSiteSettingsStmt:              q.updateSiteSettingsStmt,
 		updateTempBasalStmt:                 q.updateTempBasalStmt,
 		updateTempTargetStmt:                q.updateTempTargetStmt,
 	}

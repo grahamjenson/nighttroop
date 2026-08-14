@@ -43,9 +43,6 @@ type ToCreateParams interface {
 	ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams
 	ProfilePresetToUpdate(source ProfilePreset) UpdateProfilePresetParams
 
-	// SITE SETTINGS
-	SiteSettingsToUpdate(source SiteSetting) UpdateSiteSettingsParams
-
 	// EVENT GROUP
 	EventGroupToCreate(source EventGroup) CreateEventGroupParams
 	EventGroupToUpdate(source EventGroup) UpdateEventGroupParams

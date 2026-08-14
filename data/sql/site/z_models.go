@@ -245,50 +245,6 @@ type ProfileSwitch struct {
 	CreatedByIdentityName    string
 }
 
-type SiteSetting struct {
-	ID                        string
-	Units                     *string
-	Timezone                  *string
-	Language                  *string
-	DateFormat                *string
-	TimeFormat                *string
-	WeekStartDay              *string
-	BolusDiaHours             *float64
-	BolusOnsetMinutes         *float64
-	BolusPeakMinutes          *float64
-	BasalDiaHours             *float64
-	BasalOnsetMinutes         *float64
-	BasalPeakMinutes          *float64
-	DefaultInsulinSensitivity *float64
-	DefaultCarbRatio          *float64
-	DefaultBasalRate          *float64
-	CarbMaxAbsorptionHours    *float64
-	CarbMin5mImpact           *float64
-	AlarmUrgentLow            *int64
-	AlarmLow                  *int64
-	AlarmLowMinutes           *int64
-	AlarmLowPredicted         *int64
-	AlarmHigh                 *int64
-	AlarmHighMinutes          *int64
-	AlarmUrgentHigh           *int64
-	AlarmFastRise             *int64
-	AlarmFastRiseMinutes      *int64
-	AlarmFastDrop             *int64
-	AlarmFastDropMinutes      *int64
-	AlarmNoDataMinutes        *int64
-	AlarmBatteryLowPercent    *int64
-	AlarmBatteryLowPwdPercent *int64
-	AlarmLowReservoirUnits    *int64
-	NotificationsEnabled      *int64
-	NotifyUrgentLow           *int64
-	NotifyLow                 *int64
-	NotifyHigh                *int64
-	NotifyUrgentHigh          *int64
-	NotifyFastRise            *int64
-	NotifyFastDrop            *int64
-	UpdatedAt                 *int64
-}
-
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64

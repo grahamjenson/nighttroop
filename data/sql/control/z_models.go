@@ -26,21 +26,64 @@ type Event struct {
 }
 
 type Identity struct {
-	ID                    int64
-	Subdomain             string
-	Name                  string
-	Password              string
-	TotpSecret            string
-	Role                  consts.IdentityRole
-	CreatedAt             int64
-	LastSeenAt            *int64
-	LastWriteAt           *int64
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	CreatedByIdentityID   int64
-	CreatedByIdentityName string
-	DeletedAt             *int64
-	Enabled               bool
+	ID                        int64
+	Subdomain                 string
+	Name                      string
+	Password                  string
+	TotpSecret                string
+	Role                      consts.IdentityRole
+	CreatedAt                 int64
+	LastSeenAt                *int64
+	LastWriteAt               *int64
+	UpdatedByIdentityID       *int64
+	UpdatedByIdentityName     *string
+	CreatedByIdentityID       int64
+	CreatedByIdentityName     string
+	DeletedAt                 *int64
+	Enabled                   bool
+	Units                     *string
+	Timezone                  *string
+	Language                  *string
+	DateFormat                *string
+	TimeFormat                *string
+	WeekStartDay              *string
+	BolusDiaHours             *float64
+	BolusOnsetMinutes         *float64
+	BolusPeakMinutes          *float64
+	BasalDiaHours             *float64
+	BasalOnsetMinutes         *float64
+	BasalPeakMinutes          *float64
+	DefaultInsulinSensitivity *float64
+	DefaultCarbRatio          *float64
+	DefaultBasalRate          *float64
+	CarbMaxAbsorptionHours    *float64
+	CarbMin5mImpact           *float64
+	AlarmUrgentLowEnabled     bool
+	AlarmUrgentLow            *int64
+	AlarmLowEnabled           bool
+	AlarmLow                  *int64
+	AlarmLowMinutes           *int64
+	AlarmLowPredictionEnabled bool
+	AlarmHighEnabled          bool
+	AlarmHigh                 *int64
+	AlarmHighMinutes          *int64
+	AlarmUrgentHighEnabled    bool
+	AlarmUrgentHigh           *int64
+	AlarmFastRiseEnabled      bool
+	AlarmFastRise             *int64
+	AlarmFastRiseMinutes      *int64
+	AlarmFastDropEnabled      bool
+	AlarmFastDrop             *int64
+	AlarmFastDropMinutes      *int64
+	AlarmNoDataEnabled        bool
+	AlarmNoDataMinutes        *int64
+	AlarmBatteryLowEnabled    bool
+	AlarmBatteryLowPercent    *int64
+	AlarmBatteryLowPwdEnabled bool
+	AlarmBatteryLowPwdPercent *int64
+	AlarmLowReservoirEnabled  bool
+	AlarmLowReservoirUnits    *int64
+	NotificationsEnabled      bool
 }
 
 type Job struct {
@@ -71,15 +114,32 @@ type JobStatsDaily struct {
 }
 
 type Site struct {
-	ID               int64
-	Subdomain        string
-	Batch            string
-	BackupKeyHash    string
-	CreatedAt        int64
-	MaxDbSizeKbLimit *int64
-	LastSeenAt       *int64
-	LastWriteAt      *int64
-	DeletedAt        *int64
+	ID                        int64
+	Subdomain                 string
+	Batch                     string
+	BackupKeyHash             string
+	CreatedAt                 int64
+	MaxDbSizeKbLimit          *int64
+	LastSeenAt                *int64
+	LastWriteAt               *int64
+	DeletedAt                 *int64
+	Units                     *string
+	Timezone                  *string
+	Language                  *string
+	DateFormat                *string
+	TimeFormat                *string
+	WeekStartDay              *string
+	BolusDiaHours             *float64
+	BolusOnsetMinutes         *float64
+	BolusPeakMinutes          *float64
+	BasalDiaHours             *float64
+	BasalOnsetMinutes         *float64
+	BasalPeakMinutes          *float64
+	DefaultInsulinSensitivity *float64
+	DefaultCarbRatio          *float64
+	DefaultBasalRate          *float64
+	CarbMaxAbsorptionHours    *float64
+	CarbMin5mImpact           *float64
 }
 
 type SiteSyncSource struct {

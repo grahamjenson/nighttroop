@@ -13,6 +13,7 @@ INSERT INTO identities (
     created_by_identity_name
 ) VALUES (?, ?, ?, ?, ?, ?, ?);
 
+
 -- name: CreateIfNotExistsIdentity :exec
 INSERT INTO identities (
     subdomain,

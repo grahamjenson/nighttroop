@@ -11,7 +11,7 @@ import (
 
 const createSite = `-- name: CreateSite :one
 INSERT INTO sites (subdomain, backup_key_hash)
-VALUES (?, ?) RETURNING id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at
+VALUES (?, ?) RETURNING id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact
 `
 
 type CreateSiteParams struct {
@@ -32,6 +32,23 @@ func (q *Queries) CreateSite(ctx context.Context, arg CreateSiteParams) (*Site, 
 		&i.LastSeenAt,
 		&i.LastWriteAt,
 		&i.DeletedAt,
+		&i.Units,
+		&i.Timezone,
+		&i.Language,
+		&i.DateFormat,
+		&i.TimeFormat,
+		&i.WeekStartDay,
+		&i.BolusDiaHours,
+		&i.BolusOnsetMinutes,
+		&i.BolusPeakMinutes,
+		&i.BasalDiaHours,
+		&i.BasalOnsetMinutes,
+		&i.BasalPeakMinutes,
+		&i.DefaultInsulinSensitivity,
+		&i.DefaultCarbRatio,
+		&i.DefaultBasalRate,
+		&i.CarbMaxAbsorptionHours,
+		&i.CarbMin5mImpact,
 	)
 	return &i, err
 }
@@ -72,7 +89,7 @@ func (q *Queries) DeleteSites(ctx context.Context, arg DeleteSitesParams) ([]str
 }
 
 const getAllSites = `-- name: GetAllSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM sites
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites
 `
 
 func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
@@ -94,6 +111,23 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 			&i.LastSeenAt,
 			&i.LastWriteAt,
 			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
 		); err != nil {
 			return nil, err
 		}
@@ -109,7 +143,7 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 }
 
 const getBatchSites = `-- name: GetBatchSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM sites 
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites 
     WHERE batch = ? AND deleted_at IS NULL ORDER BY subdomain DESC
 `
 
@@ -136,6 +170,23 @@ func (q *Queries) GetBatchSites(ctx context.Context, arg GetBatchSitesParams) ([
 			&i.LastSeenAt,
 			&i.LastWriteAt,
 			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
 		); err != nil {
 			return nil, err
 		}
@@ -151,7 +202,7 @@ func (q *Queries) GetBatchSites(ctx context.Context, arg GetBatchSitesParams) ([
 }
 
 const getInactiveSites = `-- name: GetInactiveSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM sites 
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites 
 WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
 `
 
@@ -182,6 +233,23 @@ func (q *Queries) GetInactiveSites(ctx context.Context, arg GetInactiveSitesPara
 			&i.LastSeenAt,
 			&i.LastWriteAt,
 			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
 		); err != nil {
 			return nil, err
 		}
@@ -197,7 +265,7 @@ func (q *Queries) GetInactiveSites(ctx context.Context, arg GetInactiveSitesPara
 }
 
 const getNeverSeenSites = `-- name: GetNeverSeenSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM sites WHERE deleted_at IS NULL 
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE deleted_at IS NULL 
     AND (
             (last_seen_at IS NULL AND created_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes')) 
             OR 
@@ -236,6 +304,23 @@ func (q *Queries) GetNeverSeenSites(ctx context.Context, arg GetNeverSeenSitesPa
 			&i.LastSeenAt,
 			&i.LastWriteAt,
 			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
 		); err != nil {
 			return nil, err
 		}
@@ -251,7 +336,7 @@ func (q *Queries) GetNeverSeenSites(ctx context.Context, arg GetNeverSeenSitesPa
 }
 
 const getNotDeletedSites = `-- name: GetNotDeletedSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM sites WHERE deleted_at IS NULL
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE deleted_at IS NULL
 `
 
 func (q *Queries) GetNotDeletedSites(ctx context.Context) ([]*Site, error) {
@@ -273,6 +358,23 @@ func (q *Queries) GetNotDeletedSites(ctx context.Context) ([]*Site, error) {
 			&i.LastSeenAt,
 			&i.LastWriteAt,
 			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
 		); err != nil {
 			return nil, err
 		}
@@ -288,7 +390,7 @@ func (q *Queries) GetNotDeletedSites(ctx context.Context) ([]*Site, error) {
 }
 
 const getSite = `-- name: GetSite :one
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at FROM sites WHERE subdomain = ? AND deleted_at IS NULL
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE subdomain = ? AND deleted_at IS NULL
 `
 
 type GetSiteParams struct {
@@ -308,6 +410,23 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 		&i.LastSeenAt,
 		&i.LastWriteAt,
 		&i.DeletedAt,
+		&i.Units,
+		&i.Timezone,
+		&i.Language,
+		&i.DateFormat,
+		&i.TimeFormat,
+		&i.WeekStartDay,
+		&i.BolusDiaHours,
+		&i.BolusOnsetMinutes,
+		&i.BolusPeakMinutes,
+		&i.BasalDiaHours,
+		&i.BasalOnsetMinutes,
+		&i.BasalPeakMinutes,
+		&i.DefaultInsulinSensitivity,
+		&i.DefaultCarbRatio,
+		&i.DefaultBasalRate,
+		&i.CarbMaxAbsorptionHours,
+		&i.CarbMin5mImpact,
 	)
 	return &i, err
 }
