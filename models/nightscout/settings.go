@@ -1,19 +1,26 @@
 package nightscout
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+
+	"nighttroop.t1d.nz/data/sql/control"
+)
 
 type Setting struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
 	Type       *ShortString      `json:"type,omitempty"`
+	Value      any               `json:"value,omitempty"`
 
-	Value *ShortString `json:"value,omitempty"`
+	Date *FlexibleInt64 `json:"date,omitempty"`
 }
 
 func (t *Setting) UnmarshalJSON(data []byte) error {
 	type Alias Setting
+
 	aux := struct {
-		ID IdentifierString `json:"_id"`
 		*Alias
+		Value json.RawMessage `json:"value,omitempty"`
 	}{
 		Alias: (*Alias)(t),
 	}
@@ -22,10 +29,58 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Identitfiers
-	if t.Identifier == nil {
-		t.Identifier = &aux.ID
+	// We are going to look up the type of the setting, and then process the Value into the correct safe/converting type.
+	var value any
+	typeOfSetting, ok := control.ALL_SETTINGS_TYPES[t.Identifier.String()]
+	if !ok {
+		value = new(ShortString)
+	} else {
+		switch typeOfSetting {
+		case "string":
+			value = new(ShortString)
+		case "number":
+			value = new(FlexibleFloat64)
+		case "boolean":
+			value = new(FlexibleBool)
+		default:
+			value = new(ShortString)
+		}
+	}
+	if err := json.Unmarshal(aux.Value, value); err != nil {
+		return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
 	}
 
+	t.Value = value
+
 	return nil
+}
+
+func (t Setting) GetDevice() *string {
+	return ptr("")
+}
+
+func (t Setting) GetApp() *string {
+	return ptr("")
+}
+
+func (t Setting) GetSubject() *string {
+	return ptr("")
+}
+
+func (t Setting) GetDate() *int64 {
+	if t.Date == nil {
+		return ptr(int64(0))
+	}
+	return t.Date.Int64p()
+}
+
+func (t Setting) GetUtcOffsetMinutes() *int64 {
+	return ptr(int64(0))
+}
+
+func (t Setting) GetIdentifier() *string {
+	if t.Identifier == nil {
+		return ptr("")
+	}
+	return t.Identifier.Stringp()
 }

@@ -5,6 +5,8 @@ import (
 	"reflect"
 
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -16,27 +18,74 @@ type SettingsCollection struct {
 
 func NewSettingsCollection() SettingsCollection {
 	return SettingsCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Settings, NOOP),
+		converter: nsutils.DBModelToRecord(nsutils.Settings, ConvertFromNSToSetting),
 	}
 }
 
-func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Name() string {
+	return "settings"
+}
+
+func (c SettingsCollection) Convert(dr *Setting) nsutils.Record {
+	return c.converter(dr)
+}
+
+// Cannot change properties
+
+func (c SettingsCollection) Validate(nsModel nightscout.Setting, dbModel *Setting) *nsutils.HTTPError {
+	if dbModel == nil {
+		return nil
+	}
+
+	return nil
+
+}
+
+func (c SettingsCollection) ValidatePatch(nsModel nightscout.Setting, dbModel *Setting) *nsutils.HTTPError {
+	return c.Validate(nsModel, dbModel)
+}
+
+func (c SettingsCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Setting, cc nightscout.ConverterContext, overrideIdentifier *string) (*Setting, error) {
+	siteContext := httputils.GetSiteContext(ctx)
 	// if creating default need settings:admin permissions
 	setting := Setting{
 		Identifier: "asd",
 		identity:   siteContext.IdentityModel,
 		site:       siteContext.SiteModel,
 	}
-	return ptr(c.converter(&setting)), nil
+	return &setting, nil
+
 }
 
-func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*Setting, error) {
+	siteContext := httputils.GetSiteContext(ctx)
 	settingsMap := GetSettingsMap(siteContext.SiteModel, siteContext.IdentityModel)
 	setting, ok := settingsMap[identifier]
 	if !ok {
 		return nil, nsutils.ErrNotFound
 	}
-	return ptr(c.converter(&setting)), nil
+	return &setting, nil
+}
+
+func (c SettingsCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Setting, identifier string, dbModel *Setting, uc nightscout.ConverterContext) (*Setting, error) {
+	siteContext := httputils.GetSiteContext(ctx)
+	settingsMap := GetSettingsMap(siteContext.SiteModel, siteContext.IdentityModel)
+	setting, ok := settingsMap[identifier]
+	if !ok {
+		return nil, nsutils.ErrNotFound
+	}
+	return &setting, nil
+}
+
+// ///////
+// HTTP funcs
+// ///////
+func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data)
+}
+
+func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier)
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -65,16 +114,19 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 }
 
 func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	settingsMap := GetSettingsMap(siteContext.SiteModel, siteContext.IdentityModel)
-	setting, ok := settingsMap[identifier]
-	if !ok {
-		return nil, nsutils.ErrNotFound
-	}
-	return ptr(c.converter(&setting)), nil
+	return MetaPatch(c, ctx, siteContext, identifier, patch)
 }
 
-func NOOP(s *Setting) *Setting {
-	return s
+///////
+// SETTINGS TYPE
+///////
+
+func ConvertFromNSToSetting(s *Setting) nightscout.Setting {
+	return nightscout.Setting{
+		Identifier: ptr(nightscout.IdentifierString(s.Identifier)),
+		Value:      s.Value,
+		Type:       ptr(nightscout.ShortString(s.Type)),
+	}
 }
 
 type Setting struct {
@@ -87,41 +139,49 @@ type Setting struct {
 	identity  *control.Identity `json:"-"`
 }
 
-func (s *Setting) GetID() string {
+func (s Setting) GetID() string {
 	return s.Identifier
 }
 
-func (s *Setting) GetDeletedAt() *int64 {
+func (s Setting) GetDeletedAt() *int64 {
 	return nil
 }
 
-func (s *Setting) GetCreatedAt() int64 {
+func (s Setting) GetCreatedAt() int64 {
 	if s.isDefault {
 		return s.site.CreatedAt
 	}
 	return s.identity.CreatedAt
 }
 
-func (s *Setting) GetUpdatedAt() int64 {
+func (s Setting) GetUpdatedAt() int64 {
 	if s.isDefault {
 		return s.site.CreatedAt
 	}
 	return s.identity.CreatedAt
 }
 
-func (s *Setting) GetCreatedByIdentityName() string {
-	return s.identity.Name
+func (s Setting) GetCreatedByIdentityName() string {
+	return ""
 }
 
-func (s *Setting) GetUtcOffsetMinutes() *int64 {
+func (s Setting) GetUtcOffsetMinutes() *int64 {
 	return nil
 }
 
-func (s *Setting) GetOccurredAt() int64 {
+func (s Setting) GetOccurredAt() int64 {
 	if s.isDefault {
 		return s.site.CreatedAt
 	}
 	return s.identity.CreatedAt
+}
+
+func (s Setting) GetCreatedByAppName() *string {
+	return ptr("")
+}
+
+func (s Setting) GetCreatedByDeviceName() *string {
+	return ptr("")
 }
 
 func GetSettingsMap(site *control.Site, identity *control.Identity) map[string]Setting {

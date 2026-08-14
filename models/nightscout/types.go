@@ -551,6 +551,9 @@ func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 type IdentifierString string
 
 func (i *IdentifierString) String() string {
+	if i == nil {
+		return ""
+	}
 	return string(*i)
 }
 

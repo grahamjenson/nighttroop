@@ -19,19 +19,27 @@ NAME jwt
 SET {{ .jwtauth.token }}
 
 
-#####
-# CREATE
-#####
 
+
+# Returns all the settings
 NAME get_all_settings_v3
 GET http://{{ .site }}.ns.localhost/api/v3/settings
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
+NAME get_settings_unit_v3
+GET http://{{ .site }}.ns.localhost/api/v3/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mmol/L" "@result.value" }}
+ASSERT {{ assertEquals "string" "@result.type" }}
+
+# Returns all the 
 NAME create_settings_v3
 POST http://{{ .site }}.ns.localhost/api/v3/settings
 H Authorization: Bearer {{ jwt }}
-B { "app": "asd", "type": "units", "value": "mmol/L" }
+B { "app": "asd", "identifier": "units", "type": "string", "value": "mmol/L" }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 ASSERT {{ assertEquals "units" "@result.type" }}
@@ -47,7 +55,7 @@ ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 ASSERT {{ assertEquals "units" "@result.type" }}
 
 NAME create_put_default_timezone_settings_v3
-PUT http://{{ .site }}.ns.localhost/api/v3/settings/default_timezone
+PUT http://{{ .site }}.ns.localhost/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 B {"app": "asd", "value": "America/New_York"}
 ASSERT_STATUS 200
@@ -67,13 +75,20 @@ ASSERT {{ assertEquals "units" "@result.identifier" }}
 ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 
 NAME get_default_settings_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings/default_units
+GET http://{{ .site }}.ns.localhost/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_units" "@result.identifier" }}
-ASSERT {{ assertEquals "units" "@result.type" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+ASSERT {{ assertEquals "timezone" "@result.identifier" }}
+ASSERT {{ assertEquals "timezone" "@result.type" }}
+ASSERT {{ assertEquals "America/New_York" "@result.value" }}
 
+NAME get_default_settings_v3
+GET http://{{ .site }}.ns.localhost/api/v3/settings/language
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "language" "@result.identifier" }}
+ASSERT {{ assertEquals "language" "@result.type" }}
+ASSERT {{ assertEquals "en" "@result.value" }}
 ####
 # UPDATE
 ####
