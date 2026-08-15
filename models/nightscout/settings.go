@@ -11,8 +11,6 @@ type Setting struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
 	Type       *ShortString      `json:"type,omitempty"`
 	Value      any               `json:"value,omitempty"`
-
-	Date *FlexibleInt64 `json:"date,omitempty"`
 }
 
 func (t *Setting) UnmarshalJSON(data []byte) error {
@@ -76,10 +74,7 @@ func (t Setting) GetSubject() *string {
 }
 
 func (t Setting) GetDate() *int64 {
-	if t.Date == nil {
-		return ptr(int64(0))
-	}
-	return t.Date.Int64p()
+	return nil
 }
 
 func (t Setting) GetUtcOffsetMinutes() *int64 {

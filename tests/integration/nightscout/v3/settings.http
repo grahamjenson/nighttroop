@@ -19,8 +19,6 @@ NAME jwt
 SET {{ .jwtauth.token }}
 
 
-
-
 # Returns all the settings
 NAME get_all_settings_v3
 GET http://{{ .site }}.ns.localhost/api/v3/settings
