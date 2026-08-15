@@ -33,7 +33,8 @@ var AttributeNameMap = map[string]string{}
 
 var TypeLookupMap = map[string]map[string]string{
 	"Identity": {
-		"Role": "consts.IdentityRole",
+		"Role":    "consts.IdentityRole",
+		"Enabled": "bool",
 	},
 	"Job": {
 		"Errors": "errors.ErrorList",
@@ -47,6 +48,7 @@ var TypeLookupMap = map[string]map[string]string{
 	"SiteSyncSource": {
 		"Type":         "consts.SyncSourceType",
 		"DexcomRegion": "consts.DexcomRegion",
+		"Enabled":      "bool",
 	},
 	"SyncSourceReport": {
 		"PreviousSyncErrors": "errors.ErrorList",
@@ -314,15 +316,16 @@ func generateParamGetters(paramName string, columns []*plugin.Column) string {
 }
 
 func typeLookup(schemaName, fieldName string) string {
-	if strings.HasSuffix(strings.ToLower(fieldName), "enabled") {
-		return "bool"
-	}
 
 	if schemaMap, ok := TypeLookupMap[schemaName]; ok {
 		if goType, ok := schemaMap[fieldName]; ok {
 			return goType
 		}
 	}
+	if strings.HasSuffix(strings.ToLower(fieldName), "enabled") {
+		return "*bool"
+	}
+
 	return ""
 }
 

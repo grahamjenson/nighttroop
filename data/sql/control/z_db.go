@@ -135,6 +135,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateIdentityDateFlags: %w", err)
 	}
+	if q.updateIdentitySettingsStmt, err = db.PrepareContext(ctx, updateIdentitySettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateIdentitySettings: %w", err)
+	}
 	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
 	}
@@ -346,6 +349,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateIdentityDateFlagsStmt: %w", cerr)
 		}
 	}
+	if q.updateIdentitySettingsStmt != nil {
+		if cerr := q.updateIdentitySettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateIdentitySettingsStmt: %w", cerr)
+		}
+	}
 	if q.updateJobStatsDailyStmt != nil {
 		if cerr := q.updateJobStatsDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateJobStatsDailyStmt: %w", cerr)
@@ -457,6 +465,7 @@ type Queries struct {
 	updateDexcomSyncSourceStmt                    *sql.Stmt
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
 	updateIdentityDateFlagsStmt                   *sql.Stmt
+	updateIdentitySettingsStmt                    *sql.Stmt
 	updateJobStatsDailyStmt                       *sql.Stmt
 	updateNightscoutSyncSourceStmt                *sql.Stmt
 	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
@@ -507,6 +516,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateDexcomSyncSourceStmt:                    q.updateDexcomSyncSourceStmt,
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
 		updateIdentityDateFlagsStmt:                   q.updateIdentityDateFlagsStmt,
+		updateIdentitySettingsStmt:                    q.updateIdentitySettingsStmt,
 		updateJobStatsDailyStmt:                       q.updateJobStatsDailyStmt,
 		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
 		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,

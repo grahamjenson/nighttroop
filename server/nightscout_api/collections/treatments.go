@@ -13,20 +13,6 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type SQLResultCustomResult struct {
-	LastInsertIdInt int64
-	RowsAffectedInt int64
-	Err             error
-}
-
-func (s SQLResultCustomResult) LastInsertId() (int64, error) {
-	return s.LastInsertIdInt, s.Err
-}
-
-func (s SQLResultCustomResult) RowsAffected() (int64, error) {
-	return s.RowsAffectedInt, s.Err
-}
-
 type TreatmentCollection struct {
 	converter func(c *site.EventGroupsBundle) nsutils.Record
 }
@@ -167,7 +153,7 @@ func (c TreatmentCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.C
 
 		}
 	}
-	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
+	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
 func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
@@ -184,7 +170,7 @@ func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.C
 
 		}
 	}
-	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
+	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
 // ///
@@ -498,7 +484,7 @@ func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 
 	if eventGroup == nil {
 		slog.Error("failed to hard delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
-		return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
+		return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
 	}
 
 	if eventGroup.GlucoseReadingID != nil {
@@ -556,7 +542,7 @@ func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 		}
 	}
 
-	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
+	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
 
 func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) (sql.Result, error) {
@@ -568,7 +554,7 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 
 	if eventGroup == nil {
 		slog.Error("failed to soft delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
-		return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
+		return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
 	}
 
 	if eventGroup.GlucoseReadingID != nil {
@@ -626,7 +612,7 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 		}
 	}
 
-	return SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
+	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
 
 func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) site.EventGroupsBundle {

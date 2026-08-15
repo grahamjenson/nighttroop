@@ -20,13 +20,18 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 
 	aux := struct {
 		*Alias
-		Value json.RawMessage `json:"value,omitempty"`
+		ID    *IdentifierString `json:"_id"`
+		Value json.RawMessage   `json:"value,omitempty"`
 	}{
 		Alias: (*Alias)(t),
 	}
 
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
+	}
+
+	if t.Identifier == nil {
+		t.Identifier = aux.ID
 	}
 
 	// We are going to look up the type of the setting, and then process the Value into the correct safe/converting type.
@@ -47,6 +52,9 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 		}
 	}
 	if err := json.Unmarshal(aux.Value, value); err != nil {
+		if t.Identifier == nil {
+			return fmt.Errorf("invalid value for setting: %w", err)
+		}
 		return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
 	}
 

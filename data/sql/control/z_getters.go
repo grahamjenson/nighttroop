@@ -428,12 +428,12 @@ func (m *Identity) SetCarbMin5mImpact(v *float64) {
 }
 
 // GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
-func (m Identity) GetAlarmUrgentLowEnabled() bool {
+func (m Identity) GetAlarmUrgentLowEnabled() *bool {
 	return m.AlarmUrgentLowEnabled
 }
 
 // SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmUrgentLowEnabled(v bool) {
+func (m *Identity) SetAlarmUrgentLowEnabled(v *bool) {
 	m.AlarmUrgentLowEnabled = v
 }
 
@@ -448,12 +448,12 @@ func (m *Identity) SetAlarmUrgentLow(v *int64) {
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
-func (m Identity) GetAlarmLowEnabled() bool {
+func (m Identity) GetAlarmLowEnabled() *bool {
 	return m.AlarmLowEnabled
 }
 
 // SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmLowEnabled(v bool) {
+func (m *Identity) SetAlarmLowEnabled(v *bool) {
 	m.AlarmLowEnabled = v
 }
 
@@ -478,22 +478,22 @@ func (m *Identity) SetAlarmLowMinutes(v *int64) {
 }
 
 // GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
-func (m Identity) GetAlarmLowPredictionEnabled() bool {
+func (m Identity) GetAlarmLowPredictionEnabled() *bool {
 	return m.AlarmLowPredictionEnabled
 }
 
 // SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmLowPredictionEnabled(v bool) {
+func (m *Identity) SetAlarmLowPredictionEnabled(v *bool) {
 	m.AlarmLowPredictionEnabled = v
 }
 
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
-func (m Identity) GetAlarmHighEnabled() bool {
+func (m Identity) GetAlarmHighEnabled() *bool {
 	return m.AlarmHighEnabled
 }
 
 // SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmHighEnabled(v bool) {
+func (m *Identity) SetAlarmHighEnabled(v *bool) {
 	m.AlarmHighEnabled = v
 }
 
@@ -518,12 +518,12 @@ func (m *Identity) SetAlarmHighMinutes(v *int64) {
 }
 
 // GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
-func (m Identity) GetAlarmUrgentHighEnabled() bool {
+func (m Identity) GetAlarmUrgentHighEnabled() *bool {
 	return m.AlarmUrgentHighEnabled
 }
 
 // SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmUrgentHighEnabled(v bool) {
+func (m *Identity) SetAlarmUrgentHighEnabled(v *bool) {
 	m.AlarmUrgentHighEnabled = v
 }
 
@@ -538,12 +538,12 @@ func (m *Identity) SetAlarmUrgentHigh(v *int64) {
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
-func (m Identity) GetAlarmFastRiseEnabled() bool {
+func (m Identity) GetAlarmFastRiseEnabled() *bool {
 	return m.AlarmFastRiseEnabled
 }
 
 // SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmFastRiseEnabled(v bool) {
+func (m *Identity) SetAlarmFastRiseEnabled(v *bool) {
 	m.AlarmFastRiseEnabled = v
 }
 
@@ -568,12 +568,12 @@ func (m *Identity) SetAlarmFastRiseMinutes(v *int64) {
 }
 
 // GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
-func (m Identity) GetAlarmFastDropEnabled() bool {
+func (m Identity) GetAlarmFastDropEnabled() *bool {
 	return m.AlarmFastDropEnabled
 }
 
 // SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmFastDropEnabled(v bool) {
+func (m *Identity) SetAlarmFastDropEnabled(v *bool) {
 	m.AlarmFastDropEnabled = v
 }
 
@@ -598,12 +598,12 @@ func (m *Identity) SetAlarmFastDropMinutes(v *int64) {
 }
 
 // GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
-func (m Identity) GetAlarmNoDataEnabled() bool {
+func (m Identity) GetAlarmNoDataEnabled() *bool {
 	return m.AlarmNoDataEnabled
 }
 
 // SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmNoDataEnabled(v bool) {
+func (m *Identity) SetAlarmNoDataEnabled(v *bool) {
 	m.AlarmNoDataEnabled = v
 }
 
@@ -618,12 +618,12 @@ func (m *Identity) SetAlarmNoDataMinutes(v *int64) {
 }
 
 // GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m Identity) GetAlarmBatteryLowEnabled() bool {
+func (m Identity) GetAlarmBatteryLowEnabled() *bool {
 	return m.AlarmBatteryLowEnabled
 }
 
 // SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmBatteryLowEnabled(v bool) {
+func (m *Identity) SetAlarmBatteryLowEnabled(v *bool) {
 	m.AlarmBatteryLowEnabled = v
 }
 
@@ -638,12 +638,12 @@ func (m *Identity) SetAlarmBatteryLowPercent(v *int64) {
 }
 
 // GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m Identity) GetAlarmBatteryLowPwdEnabled() bool {
+func (m Identity) GetAlarmBatteryLowPwdEnabled() *bool {
 	return m.AlarmBatteryLowPwdEnabled
 }
 
 // SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmBatteryLowPwdEnabled(v bool) {
+func (m *Identity) SetAlarmBatteryLowPwdEnabled(v *bool) {
 	m.AlarmBatteryLowPwdEnabled = v
 }
 
@@ -658,12 +658,12 @@ func (m *Identity) SetAlarmBatteryLowPwdPercent(v *int64) {
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
-func (m Identity) GetAlarmLowReservoirEnabled() bool {
+func (m Identity) GetAlarmLowReservoirEnabled() *bool {
 	return m.AlarmLowReservoirEnabled
 }
 
 // SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmLowReservoirEnabled(v bool) {
+func (m *Identity) SetAlarmLowReservoirEnabled(v *bool) {
 	m.AlarmLowReservoirEnabled = v
 }
 
@@ -678,12 +678,12 @@ func (m *Identity) SetAlarmLowReservoirUnits(v *int64) {
 }
 
 // GetNotificationsEnabled returns the NotificationsEnabled value.
-func (m Identity) GetNotificationsEnabled() bool {
+func (m Identity) GetNotificationsEnabled() *bool {
 	return m.NotificationsEnabled
 }
 
 // SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated Identity.
-func (m *Identity) SetNotificationsEnabled(v bool) {
+func (m *Identity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
@@ -1684,6 +1684,501 @@ func (m UpdateIdentityDateFlagsParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateIdentityDateFlagsParams.
 func (m UpdateIdentityDateFlagsParams) SetID(v int64) UpdateIdentityDateFlagsParams {
 	m.ID = v
+	return m
+}
+
+// GetUnits returns the Units value.
+func (m UpdateIdentitySettingsParams) GetUnits() *string {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetUnits(v *string) UpdateIdentitySettingsParams {
+	m.Units = v
+	return m
+}
+
+// GetTimezone returns the Timezone value.
+func (m UpdateIdentitySettingsParams) GetTimezone() *string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetTimezone(v *string) UpdateIdentitySettingsParams {
+	m.Timezone = v
+	return m
+}
+
+// GetLanguage returns the Language value.
+func (m UpdateIdentitySettingsParams) GetLanguage() *string {
+	return m.Language
+}
+
+// SetLanguage sets the Language value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetLanguage(v *string) UpdateIdentitySettingsParams {
+	m.Language = v
+	return m
+}
+
+// GetDateFormat returns the DateFormat value.
+func (m UpdateIdentitySettingsParams) GetDateFormat() *string {
+	return m.DateFormat
+}
+
+// SetDateFormat sets the DateFormat value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetDateFormat(v *string) UpdateIdentitySettingsParams {
+	m.DateFormat = v
+	return m
+}
+
+// GetTimeFormat returns the TimeFormat value.
+func (m UpdateIdentitySettingsParams) GetTimeFormat() *string {
+	return m.TimeFormat
+}
+
+// SetTimeFormat sets the TimeFormat value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetTimeFormat(v *string) UpdateIdentitySettingsParams {
+	m.TimeFormat = v
+	return m
+}
+
+// GetWeekStartDay returns the WeekStartDay value.
+func (m UpdateIdentitySettingsParams) GetWeekStartDay() *string {
+	return m.WeekStartDay
+}
+
+// SetWeekStartDay sets the WeekStartDay value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetWeekStartDay(v *string) UpdateIdentitySettingsParams {
+	m.WeekStartDay = v
+	return m
+}
+
+// GetBolusDiaHours returns the BolusDiaHours value.
+func (m UpdateIdentitySettingsParams) GetBolusDiaHours() *float64 {
+	return m.BolusDiaHours
+}
+
+// SetBolusDiaHours sets the BolusDiaHours value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetBolusDiaHours(v *float64) UpdateIdentitySettingsParams {
+	m.BolusDiaHours = v
+	return m
+}
+
+// GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
+func (m UpdateIdentitySettingsParams) GetBolusOnsetMinutes() *float64 {
+	return m.BolusOnsetMinutes
+}
+
+// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetBolusOnsetMinutes(v *float64) UpdateIdentitySettingsParams {
+	m.BolusOnsetMinutes = v
+	return m
+}
+
+// GetBolusPeakMinutes returns the BolusPeakMinutes value.
+func (m UpdateIdentitySettingsParams) GetBolusPeakMinutes() *float64 {
+	return m.BolusPeakMinutes
+}
+
+// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetBolusPeakMinutes(v *float64) UpdateIdentitySettingsParams {
+	m.BolusPeakMinutes = v
+	return m
+}
+
+// GetBasalDiaHours returns the BasalDiaHours value.
+func (m UpdateIdentitySettingsParams) GetBasalDiaHours() *float64 {
+	return m.BasalDiaHours
+}
+
+// SetBasalDiaHours sets the BasalDiaHours value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetBasalDiaHours(v *float64) UpdateIdentitySettingsParams {
+	m.BasalDiaHours = v
+	return m
+}
+
+// GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
+func (m UpdateIdentitySettingsParams) GetBasalOnsetMinutes() *float64 {
+	return m.BasalOnsetMinutes
+}
+
+// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetBasalOnsetMinutes(v *float64) UpdateIdentitySettingsParams {
+	m.BasalOnsetMinutes = v
+	return m
+}
+
+// GetBasalPeakMinutes returns the BasalPeakMinutes value.
+func (m UpdateIdentitySettingsParams) GetBasalPeakMinutes() *float64 {
+	return m.BasalPeakMinutes
+}
+
+// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetBasalPeakMinutes(v *float64) UpdateIdentitySettingsParams {
+	m.BasalPeakMinutes = v
+	return m
+}
+
+// GetDefaultInsulinSensitivity returns the DefaultInsulinSensitivity value.
+func (m UpdateIdentitySettingsParams) GetDefaultInsulinSensitivity() *float64 {
+	return m.DefaultInsulinSensitivity
+}
+
+// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetDefaultInsulinSensitivity(v *float64) UpdateIdentitySettingsParams {
+	m.DefaultInsulinSensitivity = v
+	return m
+}
+
+// GetDefaultCarbRatio returns the DefaultCarbRatio value.
+func (m UpdateIdentitySettingsParams) GetDefaultCarbRatio() *float64 {
+	return m.DefaultCarbRatio
+}
+
+// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetDefaultCarbRatio(v *float64) UpdateIdentitySettingsParams {
+	m.DefaultCarbRatio = v
+	return m
+}
+
+// GetDefaultBasalRate returns the DefaultBasalRate value.
+func (m UpdateIdentitySettingsParams) GetDefaultBasalRate() *float64 {
+	return m.DefaultBasalRate
+}
+
+// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetDefaultBasalRate(v *float64) UpdateIdentitySettingsParams {
+	m.DefaultBasalRate = v
+	return m
+}
+
+// GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
+func (m UpdateIdentitySettingsParams) GetCarbMaxAbsorptionHours() *float64 {
+	return m.CarbMaxAbsorptionHours
+}
+
+// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetCarbMaxAbsorptionHours(v *float64) UpdateIdentitySettingsParams {
+	m.CarbMaxAbsorptionHours = v
+	return m
+}
+
+// GetCarbMin5mImpact returns the CarbMin5mImpact value.
+func (m UpdateIdentitySettingsParams) GetCarbMin5mImpact() *float64 {
+	return m.CarbMin5mImpact
+}
+
+// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetCarbMin5mImpact(v *float64) UpdateIdentitySettingsParams {
+	m.CarbMin5mImpact = v
+	return m
+}
+
+// GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmUrgentLowEnabled() *bool {
+	return m.AlarmUrgentLowEnabled
+}
+
+// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmUrgentLowEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmUrgentLowEnabled = v
+	return m
+}
+
+// GetAlarmUrgentLow returns the AlarmUrgentLow value.
+func (m UpdateIdentitySettingsParams) GetAlarmUrgentLow() *int64 {
+	return m.AlarmUrgentLow
+}
+
+// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmUrgentLow(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmUrgentLow = v
+	return m
+}
+
+// GetAlarmLowEnabled returns the AlarmLowEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmLowEnabled() *bool {
+	return m.AlarmLowEnabled
+}
+
+// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmLowEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmLowEnabled = v
+	return m
+}
+
+// GetAlarmLow returns the AlarmLow value.
+func (m UpdateIdentitySettingsParams) GetAlarmLow() *int64 {
+	return m.AlarmLow
+}
+
+// SetAlarmLow sets the AlarmLow value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmLow(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmLow = v
+	return m
+}
+
+// GetAlarmLowMinutes returns the AlarmLowMinutes value.
+func (m UpdateIdentitySettingsParams) GetAlarmLowMinutes() *int64 {
+	return m.AlarmLowMinutes
+}
+
+// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmLowMinutes(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmLowMinutes = v
+	return m
+}
+
+// GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmLowPredictionEnabled() *bool {
+	return m.AlarmLowPredictionEnabled
+}
+
+// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmLowPredictionEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmLowPredictionEnabled = v
+	return m
+}
+
+// GetAlarmHighEnabled returns the AlarmHighEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmHighEnabled() *bool {
+	return m.AlarmHighEnabled
+}
+
+// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmHighEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmHighEnabled = v
+	return m
+}
+
+// GetAlarmHigh returns the AlarmHigh value.
+func (m UpdateIdentitySettingsParams) GetAlarmHigh() *int64 {
+	return m.AlarmHigh
+}
+
+// SetAlarmHigh sets the AlarmHigh value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmHigh(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmHigh = v
+	return m
+}
+
+// GetAlarmHighMinutes returns the AlarmHighMinutes value.
+func (m UpdateIdentitySettingsParams) GetAlarmHighMinutes() *int64 {
+	return m.AlarmHighMinutes
+}
+
+// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmHighMinutes(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmHighMinutes = v
+	return m
+}
+
+// GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmUrgentHighEnabled() *bool {
+	return m.AlarmUrgentHighEnabled
+}
+
+// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmUrgentHighEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmUrgentHighEnabled = v
+	return m
+}
+
+// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
+func (m UpdateIdentitySettingsParams) GetAlarmUrgentHigh() *int64 {
+	return m.AlarmUrgentHigh
+}
+
+// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmUrgentHigh(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmUrgentHigh = v
+	return m
+}
+
+// GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmFastRiseEnabled() *bool {
+	return m.AlarmFastRiseEnabled
+}
+
+// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmFastRiseEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmFastRiseEnabled = v
+	return m
+}
+
+// GetAlarmFastRise returns the AlarmFastRise value.
+func (m UpdateIdentitySettingsParams) GetAlarmFastRise() *int64 {
+	return m.AlarmFastRise
+}
+
+// SetAlarmFastRise sets the AlarmFastRise value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmFastRise(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmFastRise = v
+	return m
+}
+
+// GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
+func (m UpdateIdentitySettingsParams) GetAlarmFastRiseMinutes() *int64 {
+	return m.AlarmFastRiseMinutes
+}
+
+// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmFastRiseMinutes(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmFastRiseMinutes = v
+	return m
+}
+
+// GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmFastDropEnabled() *bool {
+	return m.AlarmFastDropEnabled
+}
+
+// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmFastDropEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmFastDropEnabled = v
+	return m
+}
+
+// GetAlarmFastDrop returns the AlarmFastDrop value.
+func (m UpdateIdentitySettingsParams) GetAlarmFastDrop() *int64 {
+	return m.AlarmFastDrop
+}
+
+// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmFastDrop(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmFastDrop = v
+	return m
+}
+
+// GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
+func (m UpdateIdentitySettingsParams) GetAlarmFastDropMinutes() *int64 {
+	return m.AlarmFastDropMinutes
+}
+
+// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmFastDropMinutes(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmFastDropMinutes = v
+	return m
+}
+
+// GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmNoDataEnabled() *bool {
+	return m.AlarmNoDataEnabled
+}
+
+// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmNoDataEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmNoDataEnabled = v
+	return m
+}
+
+// GetAlarmNoDataMinutes returns the AlarmNoDataMinutes value.
+func (m UpdateIdentitySettingsParams) GetAlarmNoDataMinutes() *int64 {
+	return m.AlarmNoDataMinutes
+}
+
+// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmNoDataMinutes(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmNoDataMinutes = v
+	return m
+}
+
+// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowEnabled() *bool {
+	return m.AlarmBatteryLowEnabled
+}
+
+// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmBatteryLowEnabled = v
+	return m
+}
+
+// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
+func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowPercent() *int64 {
+	return m.AlarmBatteryLowPercent
+}
+
+// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowPercent(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmBatteryLowPercent = v
+	return m
+}
+
+// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowPwdEnabled() *bool {
+	return m.AlarmBatteryLowPwdEnabled
+}
+
+// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowPwdEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmBatteryLowPwdEnabled = v
+	return m
+}
+
+// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
+func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowPwdPercent() *int64 {
+	return m.AlarmBatteryLowPwdPercent
+}
+
+// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowPwdPercent(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmBatteryLowPwdPercent = v
+	return m
+}
+
+// GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
+func (m UpdateIdentitySettingsParams) GetAlarmLowReservoirEnabled() *bool {
+	return m.AlarmLowReservoirEnabled
+}
+
+// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmLowReservoirEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.AlarmLowReservoirEnabled = v
+	return m
+}
+
+// GetAlarmLowReservoirUnits returns the AlarmLowReservoirUnits value.
+func (m UpdateIdentitySettingsParams) GetAlarmLowReservoirUnits() *int64 {
+	return m.AlarmLowReservoirUnits
+}
+
+// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetAlarmLowReservoirUnits(v *int64) UpdateIdentitySettingsParams {
+	m.AlarmLowReservoirUnits = v
+	return m
+}
+
+// GetNotificationsEnabled returns the NotificationsEnabled value.
+func (m UpdateIdentitySettingsParams) GetNotificationsEnabled() *bool {
+	return m.NotificationsEnabled
+}
+
+// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetNotificationsEnabled(v *bool) UpdateIdentitySettingsParams {
+	m.NotificationsEnabled = v
+	return m
+}
+
+// GetID returns the ID value.
+func (m UpdateIdentitySettingsParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetID(v int64) UpdateIdentitySettingsParams {
+	m.ID = v
+	return m
+}
+
+// GetSubdomain returns the Subdomain value.
+func (m UpdateIdentitySettingsParams) GetSubdomain() string {
+	return m.Subdomain
+}
+
+// SetSubdomain sets the Subdomain value and returns the updated UpdateIdentitySettingsParams.
+func (m UpdateIdentitySettingsParams) SetSubdomain(v string) UpdateIdentitySettingsParams {
+	m.Subdomain = v
 	return m
 }
 

@@ -28,7 +28,7 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
 NAME get_settings_unit_v3
-GET http://{{ .site }}.ns.localhost/api/v3/units
+GET http://{{ .site }}.ns.localhost/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "units" "@result.identifier" }}
@@ -39,29 +39,32 @@ ASSERT {{ assertEquals "string" "@result.type" }}
 NAME create_settings_v3
 POST http://{{ .site }}.ns.localhost/api/v3/settings
 H Authorization: Bearer {{ jwt }}
-B { "app": "asd", "identifier": "units", "type": "string", "value": "mmol/L" }
-ASSERT_STATUS 200
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
-ASSERT {{ assertEquals "units" "@result.type" }}
-
-NAME create_put_settings_v3
-PUT http://{{ .site }}.ns.localhost/api/v3/settings/units
-H Authorization: Bearer {{ jwt }}
-B {"app": "asd", "value": "mg/dL"}
-H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
+B {"identifier": "units", "type": "string", "value": "mg/dL" }
+ASSERT_STATUS 201
 ASSERT {{ assertEquals "units" "@result.identifier" }}
 ASSERT {{ assertEquals "mg/dL" "@result.value" }}
-ASSERT {{ assertEquals "units" "@result.type" }}
+ASSERT {{ assertEquals "string" "@result.type" }}
 
-NAME create_put_default_timezone_settings_v3
-PUT http://{{ .site }}.ns.localhost/api/v3/settings/timezone
+NAME create_put_settings_v3
+PUT http://{{ .site }}.ns.localhost/api/v3/settings/bolus_onset_minutes
 H Authorization: Bearer {{ jwt }}
-B {"app": "asd", "value": "America/New_York"}
+B { "value": 30 }
+H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_timezone" "@result.identifier" }}
-ASSERT {{ assertEquals "America/New_York" "@result.value" }}
-ASSERT {{ assertEquals "timezone" "@result.type" }}
+ASSERT {{ assertEquals "bolus_onset_minutes" "@result.identifier" }}
+ASSERT {{ assertEquals 30 "@result.value" }}
+ASSERT {{ assertEquals "number" "@result.type" }}
+
+NAME create_patch_settings_v3
+PATCH http://{{ .site }}.ns.localhost/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "alarm_low_enabled" "@result.identifier" }}
+ASSERT {{ assertEquals true "@result.value" }}
+ASSERT {{ assertEquals "boolean" "@result.type" }}
+
 
 #####
 # READ 
@@ -74,21 +77,22 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals "units" "@result.identifier" }}
 ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 
-NAME get_default_settings_v3
+NAME get_timezone_settings_v3
 GET http://{{ .site }}.ns.localhost/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "timezone" "@result.identifier" }}
-ASSERT {{ assertEquals "timezone" "@result.type" }}
-ASSERT {{ assertEquals "America/New_York" "@result.value" }}
+ASSERT {{ assertEquals "string" "@result.type" }}
+ASSERT {{ assertEquals "UTC" "@result.value" }}
 
-NAME get_default_settings_v3
+NAME get_language_settings_v3
 GET http://{{ .site }}.ns.localhost/api/v3/settings/language
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "language" "@result.identifier" }}
-ASSERT {{ assertEquals "language" "@result.type" }}
-ASSERT {{ assertEquals "en" "@result.value" }}
+ASSERT {{ assertEquals "string" "@result.type" }}
+ASSERT {{ assertEquals "en-NZ" "@result.value" }}
+
 ####
 # UPDATE
 ####
@@ -112,11 +116,3 @@ NAME delete_settings_v3
 DELETE http://{{ .site }}.ns.localhost/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-
-NAME get_unit_after_delete_ settings_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings/units
-H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_units" "@result.identifier" }}
-ASSERT {{ assertEquals "units" "@result.type" }}
-ASSERT {{ assertEquals "mmol/L" "@result.value" }}

@@ -76,6 +76,12 @@ var (
 	BadNumericFieldError = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing numeric field %s", field)}
 	}
+	BadStringFieldError = func(field string) *HTTPError {
+		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing string field %s", field)}
+	}
+	BadBoolFieldError = func(field string) *HTTPError {
+		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing bool field %s", field)}
+	}
 )
 
 // Bad Updates

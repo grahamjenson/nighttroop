@@ -103,31 +103,31 @@ CREATE TABLE sites (
     deleted_at INTEGER,
 
     -- SITE SETTINGS
-    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')) DEFAULT 'mmol/L', -- mg/dL, mmol/L
+    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')),
 
     -- DATE
-    timezone TEXT CHECK(length(timezone) <= 64) DEFAULT 'Pacific/Auckland',
-    language TEXT CHECK(length(language) <= 12) DEFAULT 'en-NZ',
-    date_format TEXT CHECK(date_format IN ('YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY')) DEFAULT 'YYYY-MM-DD',
-    time_format TEXT CHECK(time_format IN ('HH:mm:ss', 'hh:mm:ss a')) DEFAULT 'HH:mm:ss',
-    week_start_day TEXT CHECK (week_start_day IN ('monday', 'sunday')) DEFAULT 'monday',
+    timezone TEXT CHECK(length(timezone) <= 64),
+    language TEXT CHECK(length(language) <= 12),
+    date_format TEXT CHECK(date_format IN ('YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY')),
+    time_format TEXT CHECK(time_format IN ('HH:mm:ss', 'hh:mm:ss a')),
+    week_start_day TEXT CHECK (week_start_day IN ('monday', 'sunday')),
 
     -- INSULIN
-    bolus_dia_hours REAL DEFAULT 6,
-    bolus_onset_minutes REAL DEFAULT 20,
-    bolus_peak_minutes REAL DEFAULT 60,
+    bolus_dia_hours REAL,
+    bolus_onset_minutes REAL,
+    bolus_peak_minutes REAL,
 
-    basal_dia_hours REAL DEFAULT 24,
-    basal_onset_minutes REAL DEFAULT 60,
-    basal_peak_minutes REAL DEFAULT 120,
+    basal_dia_hours REAL,
+    basal_onset_minutes REAL,
+    basal_peak_minutes REAL,
 
-    default_insulin_sensitivity REAL DEFAULT 10,
-    default_carb_ratio REAL DEFAULT 10,
-    default_basal_rate REAL DEFAULT 1,
+    default_insulin_sensitivity REAL,
+    default_carb_ratio REAL,
+    default_basal_rate REAL,
 
     -- CARBS
-    carb_max_absorption_hours REAL DEFAULT 6,
-    carb_min_5m_impact REAL DEFAULT 10
+    carb_max_absorption_hours REAL,
+    carb_min_5m_impact REAL
 );
 
 
@@ -185,42 +185,42 @@ CREATE TABLE identities (
 
 
     -- ALERTS
-    alarm_urgent_low_enabled INTEGER DEFAULT 1,
-    alarm_urgent_low INTEGER DEFAULT 56,
+    alarm_urgent_low_enabled INTEGER,
+    alarm_urgent_low INTEGER,
 
-    alarm_low_enabled INTEGER DEFAULT 1,
-    alarm_low INTEGER DEFAULT 72,
-    alarm_low_minutes INTEGER DEFAULT 5,
-    alarm_low_prediction_enabled INTEGER DEFAULT 1,
+    alarm_low_enabled INTEGER,
+    alarm_low INTEGER,
+    alarm_low_minutes INTEGER,
+    alarm_low_prediction_enabled INTEGER,
 
-    alarm_high_enabled INTEGER DEFAULT 1,
-    alarm_high INTEGER DEFAULT 180,
-    alarm_high_minutes INTEGER DEFAULT 30,
+    alarm_high_enabled INTEGER,
+    alarm_high INTEGER,
+    alarm_high_minutes INTEGER,
     
-    alarm_urgent_high_enabled INTEGER DEFAULT 1,
-    alarm_urgent_high INTEGER DEFAULT 270,
+    alarm_urgent_high_enabled INTEGER,
+    alarm_urgent_high INTEGER,
 
-    alarm_fast_rise_enabled INTEGER DEFAULT 1,
-    alarm_fast_rise INTEGER DEFAULT 18,
-    alarm_fast_rise_minutes INTEGER DEFAULT 15,
+    alarm_fast_rise_enabled INTEGER,
+    alarm_fast_rise INTEGER,
+    alarm_fast_rise_minutes INTEGER,
 
-    alarm_fast_drop_enabled INTEGER DEFAULT 1,
-    alarm_fast_drop INTEGER DEFAULT 18,
-    alarm_fast_drop_minutes INTEGER DEFAULT 15,
+    alarm_fast_drop_enabled INTEGER,
+    alarm_fast_drop INTEGER,
+    alarm_fast_drop_minutes INTEGER,
 
-    alarm_no_data_enabled INTEGER DEFAULT 1,
-    alarm_no_data_minutes INTEGER DEFAULT 20,
+    alarm_no_data_enabled INTEGER,
+    alarm_no_data_minutes INTEGER,
 
-    alarm_battery_low_enabled INTEGER DEFAULT 1,
-    alarm_battery_low_percent INTEGER DEFAULT 20,
-    alarm_battery_low_pwd_enabled INTEGER DEFAULT 1,
-    alarm_battery_low_pwd_percent INTEGER DEFAULT 20,
+    alarm_battery_low_enabled INTEGER,
+    alarm_battery_low_percent INTEGER,
+    alarm_battery_low_pwd_enabled INTEGER,
+    alarm_battery_low_pwd_percent INTEGER,
 
-    alarm_low_reservoir_enabled INTEGER DEFAULT 1,
-    alarm_low_reservoir_units  INTEGER DEFAULT 25,
+    alarm_low_reservoir_enabled INTEGER,
+    alarm_low_reservoir_units  INTEGER,
 
     -- NOTIFICATIONS
-    notifications_enabled INTEGER DEFAULT 0,
+    notifications_enabled INTEGER,
 
     -- Constraints
     UNIQUE(subdomain, name)

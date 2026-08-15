@@ -58,32 +58,32 @@ type Identity struct {
 	DefaultBasalRate          *float64
 	CarbMaxAbsorptionHours    *float64
 	CarbMin5mImpact           *float64
-	AlarmUrgentLowEnabled     bool
+	AlarmUrgentLowEnabled     *bool
 	AlarmUrgentLow            *int64
-	AlarmLowEnabled           bool
+	AlarmLowEnabled           *bool
 	AlarmLow                  *int64
 	AlarmLowMinutes           *int64
-	AlarmLowPredictionEnabled bool
-	AlarmHighEnabled          bool
+	AlarmLowPredictionEnabled *bool
+	AlarmHighEnabled          *bool
 	AlarmHigh                 *int64
 	AlarmHighMinutes          *int64
-	AlarmUrgentHighEnabled    bool
+	AlarmUrgentHighEnabled    *bool
 	AlarmUrgentHigh           *int64
-	AlarmFastRiseEnabled      bool
+	AlarmFastRiseEnabled      *bool
 	AlarmFastRise             *int64
 	AlarmFastRiseMinutes      *int64
-	AlarmFastDropEnabled      bool
+	AlarmFastDropEnabled      *bool
 	AlarmFastDrop             *int64
 	AlarmFastDropMinutes      *int64
-	AlarmNoDataEnabled        bool
+	AlarmNoDataEnabled        *bool
 	AlarmNoDataMinutes        *int64
-	AlarmBatteryLowEnabled    bool
+	AlarmBatteryLowEnabled    *bool
 	AlarmBatteryLowPercent    *int64
-	AlarmBatteryLowPwdEnabled bool
+	AlarmBatteryLowPwdEnabled *bool
 	AlarmBatteryLowPwdPercent *int64
-	AlarmLowReservoirEnabled  bool
+	AlarmLowReservoirEnabled  *bool
 	AlarmLowReservoirUnits    *int64
-	NotificationsEnabled      bool
+	NotificationsEnabled      *bool
 }
 
 type Job struct {
