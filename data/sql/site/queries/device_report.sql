@@ -67,6 +67,20 @@ WHERE
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+
+--
+-- This will select the latest information (assuming if you report the iob it is the PWD device)
+-- Limit to 20 minutes search window
+-- name: GetLatestDeviceReportWithPWDInformation :one
+SELECT * from device_reports
+WHERE 
+    deleted_at IS NULL AND 
+    occurred_at <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
+    loop_iob IS NOT NULL
+ORDER BY occurred_at DESC
+LIMIT 1;
+
+
 --------
 -- UPDATE
 --------

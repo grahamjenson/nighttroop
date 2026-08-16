@@ -204,6 +204,47 @@ func (q *Queries) GetDeviceReport(ctx context.Context, arg GetDeviceReportParams
 	return &i, err
 }
 
+const getLatestDeviceReportWithPWDInformation = `-- name: GetLatestDeviceReportWithPWDInformation :one
+SELECT id, device_battery_percent, device_charging_state, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name from device_reports
+WHERE 
+    deleted_at IS NULL AND 
+    occurred_at <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
+    loop_iob IS NOT NULL
+ORDER BY occurred_at DESC
+LIMIT 1
+`
+
+// This will select the latest information (assuming if you report the iob it is the PWD device)
+// Limit to 20 minutes search window
+func (q *Queries) GetLatestDeviceReportWithPWDInformation(ctx context.Context) (*DeviceReport, error) {
+	row := q.queryRow(ctx, q.getLatestDeviceReportWithPWDInformationStmt, getLatestDeviceReportWithPWDInformation)
+	var i DeviceReport
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceBatteryPercent,
+		&i.DeviceChargingState,
+		&i.PumpState,
+		&i.PumpReservoir,
+		&i.PumpBatteryPercent,
+		&i.PumpChargingState,
+		&i.LoopIob,
+		&i.LoopIobBasal,
+		&i.LoopIobTreatment,
+		&i.LoopCob,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const hardDeleteDeviceReport = `-- name: HardDeleteDeviceReport :execresult
 DELETE FROM device_reports WHERE id = ?
 `

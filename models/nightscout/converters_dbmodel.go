@@ -47,7 +47,7 @@ type DBModelConverter interface {
 	// DEVICE REPORT TO DEVICE STATUS
 	///////
 
-	// goverter:ignore Uploader Loop Pump OpenAPS MergedLoopStatus
+	// goverter:ignore Uploader Loop Pump OpenAPS
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device

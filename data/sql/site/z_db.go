@@ -108,6 +108,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getComponentEventStmt, err = db.PrepareContext(ctx, getComponentEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query GetComponentEvent: %w", err)
 	}
+	if q.getComponentEventByTypeStmt, err = db.PrepareContext(ctx, getComponentEventByType); err != nil {
+		return nil, fmt.Errorf("error preparing query GetComponentEventByType: %w", err)
+	}
 	if q.getDeviceReportStmt, err = db.PrepareContext(ctx, getDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDeviceReport: %w", err)
 	}
@@ -131,6 +134,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getInsulinDoseStmt, err = db.PrepareContext(ctx, getInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query GetInsulinDose: %w", err)
+	}
+	if q.getLatestDeviceReportWithPWDInformationStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithPWDInformation); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithPWDInformation: %w", err)
 	}
 	if q.getMostRecentProfileStoreStmt, err = db.PrepareContext(ctx, getMostRecentProfileStore); err != nil {
 		return nil, fmt.Errorf("error preparing query GetMostRecentProfileStore: %w", err)
@@ -478,6 +484,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getComponentEventStmt: %w", cerr)
 		}
 	}
+	if q.getComponentEventByTypeStmt != nil {
+		if cerr := q.getComponentEventByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getComponentEventByTypeStmt: %w", cerr)
+		}
+	}
 	if q.getDeviceReportStmt != nil {
 		if cerr := q.getDeviceReportStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getDeviceReportStmt: %w", cerr)
@@ -516,6 +527,11 @@ func (q *Queries) Close() error {
 	if q.getInsulinDoseStmt != nil {
 		if cerr := q.getInsulinDoseStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getInsulinDoseStmt: %w", cerr)
+		}
+	}
+	if q.getLatestDeviceReportWithPWDInformationStmt != nil {
+		if cerr := q.getLatestDeviceReportWithPWDInformationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLatestDeviceReportWithPWDInformationStmt: %w", cerr)
 		}
 	}
 	if q.getMostRecentProfileStoreStmt != nil {
@@ -890,219 +906,223 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                  DBTX
-	tx                                  *sql.Tx
-	allActivitiesStmt                   *sql.Stmt
-	allComponentEventsStmt              *sql.Stmt
-	allDeviceReportsStmt                *sql.Stmt
-	allEventGroupsStmt                  *sql.Stmt
-	allFoodIntakesStmt                  *sql.Stmt
-	allFoodPresetsStmt                  *sql.Stmt
-	allGlucoseReadingsStmt              *sql.Stmt
-	allInsulinDosesStmt                 *sql.Stmt
-	allNotificationEventsStmt           *sql.Stmt
-	allProfilePresetsStmt               *sql.Stmt
-	allProfileSwitchesStmt              *sql.Stmt
-	allTempBasalsStmt                   *sql.Stmt
-	allTempTargetsStmt                  *sql.Stmt
-	createActivityStmt                  *sql.Stmt
-	createComponentEventStmt            *sql.Stmt
-	createDeviceReportStmt              *sql.Stmt
-	createEventGroupStmt                *sql.Stmt
-	createFoodIntakeStmt                *sql.Stmt
-	createFoodPresetStmt                *sql.Stmt
-	createGlucoseReadingStmt            *sql.Stmt
-	createInsulinDoseStmt               *sql.Stmt
-	createNotificationEventStmt         *sql.Stmt
-	createProfilePresetStmt             *sql.Stmt
-	createProfileSwitchStmt             *sql.Stmt
-	createTempBasalStmt                 *sql.Stmt
-	createTempTargetStmt                *sql.Stmt
-	getActivityStmt                     *sql.Stmt
-	getComponentEventStmt               *sql.Stmt
-	getDeviceReportStmt                 *sql.Stmt
-	getEventGroupStmt                   *sql.Stmt
-	getEventGroupOfTypeWithoutJoinsStmt *sql.Stmt
-	getEventGroupWithoutJoinsStmt       *sql.Stmt
-	getFoodIntakeStmt                   *sql.Stmt
-	getFoodPresetStmt                   *sql.Stmt
-	getGlucoseReadingStmt               *sql.Stmt
-	getInsulinDoseStmt                  *sql.Stmt
-	getMostRecentProfileStoreStmt       *sql.Stmt
-	getNotificationEventStmt            *sql.Stmt
-	getProfilePresetStmt                *sql.Stmt
-	getProfileStoreStmt                 *sql.Stmt
-	getProfileSwitchStmt                *sql.Stmt
-	getTempBasalStmt                    *sql.Stmt
-	getTempTargetStmt                   *sql.Stmt
-	hardDeleteActivitiesByTypeStmt      *sql.Stmt
-	hardDeleteActivityStmt              *sql.Stmt
-	hardDeleteComponentEventStmt        *sql.Stmt
-	hardDeleteDeviceReportStmt          *sql.Stmt
-	hardDeleteEventGroupStmt            *sql.Stmt
-	hardDeleteEventGroupsByTypeStmt     *sql.Stmt
-	hardDeleteFoodIntakeStmt            *sql.Stmt
-	hardDeleteFoodIntakesByTypeStmt     *sql.Stmt
-	hardDeleteFoodPresetStmt            *sql.Stmt
-	hardDeleteFoodPresetsByTypeStmt     *sql.Stmt
-	hardDeleteGlucoseReadingStmt        *sql.Stmt
-	hardDeleteGlucoseReadingsByTypeStmt *sql.Stmt
-	hardDeleteInsulinDoseStmt           *sql.Stmt
-	hardDeleteNotificationEventStmt     *sql.Stmt
-	hardDeleteProfilePresetStmt         *sql.Stmt
-	hardDeleteProfileStoreStmt          *sql.Stmt
-	hardDeleteProfileSwitchStmt         *sql.Stmt
-	hardDeleteTempBasalStmt             *sql.Stmt
-	hardDeleteTempTargetStmt            *sql.Stmt
-	searchActivitiesStmt                *sql.Stmt
-	searchComponentEventsStmt           *sql.Stmt
-	searchDeviceReportsStmt             *sql.Stmt
-	searchEventGroupsStmt               *sql.Stmt
-	searchFoodIntakesStmt               *sql.Stmt
-	searchFoodPresetsStmt               *sql.Stmt
-	searchGlucoseReadingsStmt           *sql.Stmt
-	searchInsulinDosesStmt              *sql.Stmt
-	searchNotificationEventsStmt        *sql.Stmt
-	searchProfileStoresStmt             *sql.Stmt
-	searchProfileSwitchesStmt           *sql.Stmt
-	searchTempBasalsStmt                *sql.Stmt
-	searchTempTargetsStmt               *sql.Stmt
-	softDeleteActivitiesByTypeStmt      *sql.Stmt
-	softDeleteActivityStmt              *sql.Stmt
-	softDeleteComponentEventStmt        *sql.Stmt
-	softDeleteDeviceReportStmt          *sql.Stmt
-	softDeleteEventGroupStmt            *sql.Stmt
-	softDeleteEventGroupsByTypeStmt     *sql.Stmt
-	softDeleteFoodIntakeStmt            *sql.Stmt
-	softDeleteFoodIntakesByTypeStmt     *sql.Stmt
-	softDeleteGlucoseReadingStmt        *sql.Stmt
-	softDeleteGlucoseReadingsByTypeStmt *sql.Stmt
-	softDeleteInsulinDoseStmt           *sql.Stmt
-	softDeleteNotificationEventStmt     *sql.Stmt
-	softDeleteProfileSwitchStmt         *sql.Stmt
-	softDeleteTempBasalStmt             *sql.Stmt
-	softDeleteTempTargetStmt            *sql.Stmt
-	updateActivityStmt                  *sql.Stmt
-	updateComponentEventStmt            *sql.Stmt
-	updateDeviceReportStmt              *sql.Stmt
-	updateEventGroupStmt                *sql.Stmt
-	updateFoodIntakeStmt                *sql.Stmt
-	updateFoodPresetStmt                *sql.Stmt
-	updateGlucoseReadingStmt            *sql.Stmt
-	updateInsulinDoseStmt               *sql.Stmt
-	updateNotificationEventStmt         *sql.Stmt
-	updateProfilePresetStmt             *sql.Stmt
-	updateProfileSwitchStmt             *sql.Stmt
-	updateTempBasalStmt                 *sql.Stmt
-	updateTempTargetStmt                *sql.Stmt
+	db                                          DBTX
+	tx                                          *sql.Tx
+	allActivitiesStmt                           *sql.Stmt
+	allComponentEventsStmt                      *sql.Stmt
+	allDeviceReportsStmt                        *sql.Stmt
+	allEventGroupsStmt                          *sql.Stmt
+	allFoodIntakesStmt                          *sql.Stmt
+	allFoodPresetsStmt                          *sql.Stmt
+	allGlucoseReadingsStmt                      *sql.Stmt
+	allInsulinDosesStmt                         *sql.Stmt
+	allNotificationEventsStmt                   *sql.Stmt
+	allProfilePresetsStmt                       *sql.Stmt
+	allProfileSwitchesStmt                      *sql.Stmt
+	allTempBasalsStmt                           *sql.Stmt
+	allTempTargetsStmt                          *sql.Stmt
+	createActivityStmt                          *sql.Stmt
+	createComponentEventStmt                    *sql.Stmt
+	createDeviceReportStmt                      *sql.Stmt
+	createEventGroupStmt                        *sql.Stmt
+	createFoodIntakeStmt                        *sql.Stmt
+	createFoodPresetStmt                        *sql.Stmt
+	createGlucoseReadingStmt                    *sql.Stmt
+	createInsulinDoseStmt                       *sql.Stmt
+	createNotificationEventStmt                 *sql.Stmt
+	createProfilePresetStmt                     *sql.Stmt
+	createProfileSwitchStmt                     *sql.Stmt
+	createTempBasalStmt                         *sql.Stmt
+	createTempTargetStmt                        *sql.Stmt
+	getActivityStmt                             *sql.Stmt
+	getComponentEventStmt                       *sql.Stmt
+	getComponentEventByTypeStmt                 *sql.Stmt
+	getDeviceReportStmt                         *sql.Stmt
+	getEventGroupStmt                           *sql.Stmt
+	getEventGroupOfTypeWithoutJoinsStmt         *sql.Stmt
+	getEventGroupWithoutJoinsStmt               *sql.Stmt
+	getFoodIntakeStmt                           *sql.Stmt
+	getFoodPresetStmt                           *sql.Stmt
+	getGlucoseReadingStmt                       *sql.Stmt
+	getInsulinDoseStmt                          *sql.Stmt
+	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
+	getMostRecentProfileStoreStmt               *sql.Stmt
+	getNotificationEventStmt                    *sql.Stmt
+	getProfilePresetStmt                        *sql.Stmt
+	getProfileStoreStmt                         *sql.Stmt
+	getProfileSwitchStmt                        *sql.Stmt
+	getTempBasalStmt                            *sql.Stmt
+	getTempTargetStmt                           *sql.Stmt
+	hardDeleteActivitiesByTypeStmt              *sql.Stmt
+	hardDeleteActivityStmt                      *sql.Stmt
+	hardDeleteComponentEventStmt                *sql.Stmt
+	hardDeleteDeviceReportStmt                  *sql.Stmt
+	hardDeleteEventGroupStmt                    *sql.Stmt
+	hardDeleteEventGroupsByTypeStmt             *sql.Stmt
+	hardDeleteFoodIntakeStmt                    *sql.Stmt
+	hardDeleteFoodIntakesByTypeStmt             *sql.Stmt
+	hardDeleteFoodPresetStmt                    *sql.Stmt
+	hardDeleteFoodPresetsByTypeStmt             *sql.Stmt
+	hardDeleteGlucoseReadingStmt                *sql.Stmt
+	hardDeleteGlucoseReadingsByTypeStmt         *sql.Stmt
+	hardDeleteInsulinDoseStmt                   *sql.Stmt
+	hardDeleteNotificationEventStmt             *sql.Stmt
+	hardDeleteProfilePresetStmt                 *sql.Stmt
+	hardDeleteProfileStoreStmt                  *sql.Stmt
+	hardDeleteProfileSwitchStmt                 *sql.Stmt
+	hardDeleteTempBasalStmt                     *sql.Stmt
+	hardDeleteTempTargetStmt                    *sql.Stmt
+	searchActivitiesStmt                        *sql.Stmt
+	searchComponentEventsStmt                   *sql.Stmt
+	searchDeviceReportsStmt                     *sql.Stmt
+	searchEventGroupsStmt                       *sql.Stmt
+	searchFoodIntakesStmt                       *sql.Stmt
+	searchFoodPresetsStmt                       *sql.Stmt
+	searchGlucoseReadingsStmt                   *sql.Stmt
+	searchInsulinDosesStmt                      *sql.Stmt
+	searchNotificationEventsStmt                *sql.Stmt
+	searchProfileStoresStmt                     *sql.Stmt
+	searchProfileSwitchesStmt                   *sql.Stmt
+	searchTempBasalsStmt                        *sql.Stmt
+	searchTempTargetsStmt                       *sql.Stmt
+	softDeleteActivitiesByTypeStmt              *sql.Stmt
+	softDeleteActivityStmt                      *sql.Stmt
+	softDeleteComponentEventStmt                *sql.Stmt
+	softDeleteDeviceReportStmt                  *sql.Stmt
+	softDeleteEventGroupStmt                    *sql.Stmt
+	softDeleteEventGroupsByTypeStmt             *sql.Stmt
+	softDeleteFoodIntakeStmt                    *sql.Stmt
+	softDeleteFoodIntakesByTypeStmt             *sql.Stmt
+	softDeleteGlucoseReadingStmt                *sql.Stmt
+	softDeleteGlucoseReadingsByTypeStmt         *sql.Stmt
+	softDeleteInsulinDoseStmt                   *sql.Stmt
+	softDeleteNotificationEventStmt             *sql.Stmt
+	softDeleteProfileSwitchStmt                 *sql.Stmt
+	softDeleteTempBasalStmt                     *sql.Stmt
+	softDeleteTempTargetStmt                    *sql.Stmt
+	updateActivityStmt                          *sql.Stmt
+	updateComponentEventStmt                    *sql.Stmt
+	updateDeviceReportStmt                      *sql.Stmt
+	updateEventGroupStmt                        *sql.Stmt
+	updateFoodIntakeStmt                        *sql.Stmt
+	updateFoodPresetStmt                        *sql.Stmt
+	updateGlucoseReadingStmt                    *sql.Stmt
+	updateInsulinDoseStmt                       *sql.Stmt
+	updateNotificationEventStmt                 *sql.Stmt
+	updateProfilePresetStmt                     *sql.Stmt
+	updateProfileSwitchStmt                     *sql.Stmt
+	updateTempBasalStmt                         *sql.Stmt
+	updateTempTargetStmt                        *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                  tx,
-		tx:                                  tx,
-		allActivitiesStmt:                   q.allActivitiesStmt,
-		allComponentEventsStmt:              q.allComponentEventsStmt,
-		allDeviceReportsStmt:                q.allDeviceReportsStmt,
-		allEventGroupsStmt:                  q.allEventGroupsStmt,
-		allFoodIntakesStmt:                  q.allFoodIntakesStmt,
-		allFoodPresetsStmt:                  q.allFoodPresetsStmt,
-		allGlucoseReadingsStmt:              q.allGlucoseReadingsStmt,
-		allInsulinDosesStmt:                 q.allInsulinDosesStmt,
-		allNotificationEventsStmt:           q.allNotificationEventsStmt,
-		allProfilePresetsStmt:               q.allProfilePresetsStmt,
-		allProfileSwitchesStmt:              q.allProfileSwitchesStmt,
-		allTempBasalsStmt:                   q.allTempBasalsStmt,
-		allTempTargetsStmt:                  q.allTempTargetsStmt,
-		createActivityStmt:                  q.createActivityStmt,
-		createComponentEventStmt:            q.createComponentEventStmt,
-		createDeviceReportStmt:              q.createDeviceReportStmt,
-		createEventGroupStmt:                q.createEventGroupStmt,
-		createFoodIntakeStmt:                q.createFoodIntakeStmt,
-		createFoodPresetStmt:                q.createFoodPresetStmt,
-		createGlucoseReadingStmt:            q.createGlucoseReadingStmt,
-		createInsulinDoseStmt:               q.createInsulinDoseStmt,
-		createNotificationEventStmt:         q.createNotificationEventStmt,
-		createProfilePresetStmt:             q.createProfilePresetStmt,
-		createProfileSwitchStmt:             q.createProfileSwitchStmt,
-		createTempBasalStmt:                 q.createTempBasalStmt,
-		createTempTargetStmt:                q.createTempTargetStmt,
-		getActivityStmt:                     q.getActivityStmt,
-		getComponentEventStmt:               q.getComponentEventStmt,
-		getDeviceReportStmt:                 q.getDeviceReportStmt,
-		getEventGroupStmt:                   q.getEventGroupStmt,
-		getEventGroupOfTypeWithoutJoinsStmt: q.getEventGroupOfTypeWithoutJoinsStmt,
-		getEventGroupWithoutJoinsStmt:       q.getEventGroupWithoutJoinsStmt,
-		getFoodIntakeStmt:                   q.getFoodIntakeStmt,
-		getFoodPresetStmt:                   q.getFoodPresetStmt,
-		getGlucoseReadingStmt:               q.getGlucoseReadingStmt,
-		getInsulinDoseStmt:                  q.getInsulinDoseStmt,
-		getMostRecentProfileStoreStmt:       q.getMostRecentProfileStoreStmt,
-		getNotificationEventStmt:            q.getNotificationEventStmt,
-		getProfilePresetStmt:                q.getProfilePresetStmt,
-		getProfileStoreStmt:                 q.getProfileStoreStmt,
-		getProfileSwitchStmt:                q.getProfileSwitchStmt,
-		getTempBasalStmt:                    q.getTempBasalStmt,
-		getTempTargetStmt:                   q.getTempTargetStmt,
-		hardDeleteActivitiesByTypeStmt:      q.hardDeleteActivitiesByTypeStmt,
-		hardDeleteActivityStmt:              q.hardDeleteActivityStmt,
-		hardDeleteComponentEventStmt:        q.hardDeleteComponentEventStmt,
-		hardDeleteDeviceReportStmt:          q.hardDeleteDeviceReportStmt,
-		hardDeleteEventGroupStmt:            q.hardDeleteEventGroupStmt,
-		hardDeleteEventGroupsByTypeStmt:     q.hardDeleteEventGroupsByTypeStmt,
-		hardDeleteFoodIntakeStmt:            q.hardDeleteFoodIntakeStmt,
-		hardDeleteFoodIntakesByTypeStmt:     q.hardDeleteFoodIntakesByTypeStmt,
-		hardDeleteFoodPresetStmt:            q.hardDeleteFoodPresetStmt,
-		hardDeleteFoodPresetsByTypeStmt:     q.hardDeleteFoodPresetsByTypeStmt,
-		hardDeleteGlucoseReadingStmt:        q.hardDeleteGlucoseReadingStmt,
-		hardDeleteGlucoseReadingsByTypeStmt: q.hardDeleteGlucoseReadingsByTypeStmt,
-		hardDeleteInsulinDoseStmt:           q.hardDeleteInsulinDoseStmt,
-		hardDeleteNotificationEventStmt:     q.hardDeleteNotificationEventStmt,
-		hardDeleteProfilePresetStmt:         q.hardDeleteProfilePresetStmt,
-		hardDeleteProfileStoreStmt:          q.hardDeleteProfileStoreStmt,
-		hardDeleteProfileSwitchStmt:         q.hardDeleteProfileSwitchStmt,
-		hardDeleteTempBasalStmt:             q.hardDeleteTempBasalStmt,
-		hardDeleteTempTargetStmt:            q.hardDeleteTempTargetStmt,
-		searchActivitiesStmt:                q.searchActivitiesStmt,
-		searchComponentEventsStmt:           q.searchComponentEventsStmt,
-		searchDeviceReportsStmt:             q.searchDeviceReportsStmt,
-		searchEventGroupsStmt:               q.searchEventGroupsStmt,
-		searchFoodIntakesStmt:               q.searchFoodIntakesStmt,
-		searchFoodPresetsStmt:               q.searchFoodPresetsStmt,
-		searchGlucoseReadingsStmt:           q.searchGlucoseReadingsStmt,
-		searchInsulinDosesStmt:              q.searchInsulinDosesStmt,
-		searchNotificationEventsStmt:        q.searchNotificationEventsStmt,
-		searchProfileStoresStmt:             q.searchProfileStoresStmt,
-		searchProfileSwitchesStmt:           q.searchProfileSwitchesStmt,
-		searchTempBasalsStmt:                q.searchTempBasalsStmt,
-		searchTempTargetsStmt:               q.searchTempTargetsStmt,
-		softDeleteActivitiesByTypeStmt:      q.softDeleteActivitiesByTypeStmt,
-		softDeleteActivityStmt:              q.softDeleteActivityStmt,
-		softDeleteComponentEventStmt:        q.softDeleteComponentEventStmt,
-		softDeleteDeviceReportStmt:          q.softDeleteDeviceReportStmt,
-		softDeleteEventGroupStmt:            q.softDeleteEventGroupStmt,
-		softDeleteEventGroupsByTypeStmt:     q.softDeleteEventGroupsByTypeStmt,
-		softDeleteFoodIntakeStmt:            q.softDeleteFoodIntakeStmt,
-		softDeleteFoodIntakesByTypeStmt:     q.softDeleteFoodIntakesByTypeStmt,
-		softDeleteGlucoseReadingStmt:        q.softDeleteGlucoseReadingStmt,
-		softDeleteGlucoseReadingsByTypeStmt: q.softDeleteGlucoseReadingsByTypeStmt,
-		softDeleteInsulinDoseStmt:           q.softDeleteInsulinDoseStmt,
-		softDeleteNotificationEventStmt:     q.softDeleteNotificationEventStmt,
-		softDeleteProfileSwitchStmt:         q.softDeleteProfileSwitchStmt,
-		softDeleteTempBasalStmt:             q.softDeleteTempBasalStmt,
-		softDeleteTempTargetStmt:            q.softDeleteTempTargetStmt,
-		updateActivityStmt:                  q.updateActivityStmt,
-		updateComponentEventStmt:            q.updateComponentEventStmt,
-		updateDeviceReportStmt:              q.updateDeviceReportStmt,
-		updateEventGroupStmt:                q.updateEventGroupStmt,
-		updateFoodIntakeStmt:                q.updateFoodIntakeStmt,
-		updateFoodPresetStmt:                q.updateFoodPresetStmt,
-		updateGlucoseReadingStmt:            q.updateGlucoseReadingStmt,
-		updateInsulinDoseStmt:               q.updateInsulinDoseStmt,
-		updateNotificationEventStmt:         q.updateNotificationEventStmt,
-		updateProfilePresetStmt:             q.updateProfilePresetStmt,
-		updateProfileSwitchStmt:             q.updateProfileSwitchStmt,
-		updateTempBasalStmt:                 q.updateTempBasalStmt,
-		updateTempTargetStmt:                q.updateTempTargetStmt,
+		db:                                          tx,
+		tx:                                          tx,
+		allActivitiesStmt:                           q.allActivitiesStmt,
+		allComponentEventsStmt:                      q.allComponentEventsStmt,
+		allDeviceReportsStmt:                        q.allDeviceReportsStmt,
+		allEventGroupsStmt:                          q.allEventGroupsStmt,
+		allFoodIntakesStmt:                          q.allFoodIntakesStmt,
+		allFoodPresetsStmt:                          q.allFoodPresetsStmt,
+		allGlucoseReadingsStmt:                      q.allGlucoseReadingsStmt,
+		allInsulinDosesStmt:                         q.allInsulinDosesStmt,
+		allNotificationEventsStmt:                   q.allNotificationEventsStmt,
+		allProfilePresetsStmt:                       q.allProfilePresetsStmt,
+		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
+		allTempBasalsStmt:                           q.allTempBasalsStmt,
+		allTempTargetsStmt:                          q.allTempTargetsStmt,
+		createActivityStmt:                          q.createActivityStmt,
+		createComponentEventStmt:                    q.createComponentEventStmt,
+		createDeviceReportStmt:                      q.createDeviceReportStmt,
+		createEventGroupStmt:                        q.createEventGroupStmt,
+		createFoodIntakeStmt:                        q.createFoodIntakeStmt,
+		createFoodPresetStmt:                        q.createFoodPresetStmt,
+		createGlucoseReadingStmt:                    q.createGlucoseReadingStmt,
+		createInsulinDoseStmt:                       q.createInsulinDoseStmt,
+		createNotificationEventStmt:                 q.createNotificationEventStmt,
+		createProfilePresetStmt:                     q.createProfilePresetStmt,
+		createProfileSwitchStmt:                     q.createProfileSwitchStmt,
+		createTempBasalStmt:                         q.createTempBasalStmt,
+		createTempTargetStmt:                        q.createTempTargetStmt,
+		getActivityStmt:                             q.getActivityStmt,
+		getComponentEventStmt:                       q.getComponentEventStmt,
+		getComponentEventByTypeStmt:                 q.getComponentEventByTypeStmt,
+		getDeviceReportStmt:                         q.getDeviceReportStmt,
+		getEventGroupStmt:                           q.getEventGroupStmt,
+		getEventGroupOfTypeWithoutJoinsStmt:         q.getEventGroupOfTypeWithoutJoinsStmt,
+		getEventGroupWithoutJoinsStmt:               q.getEventGroupWithoutJoinsStmt,
+		getFoodIntakeStmt:                           q.getFoodIntakeStmt,
+		getFoodPresetStmt:                           q.getFoodPresetStmt,
+		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
+		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
+		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,
+		getMostRecentProfileStoreStmt:               q.getMostRecentProfileStoreStmt,
+		getNotificationEventStmt:                    q.getNotificationEventStmt,
+		getProfilePresetStmt:                        q.getProfilePresetStmt,
+		getProfileStoreStmt:                         q.getProfileStoreStmt,
+		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
+		getTempBasalStmt:                            q.getTempBasalStmt,
+		getTempTargetStmt:                           q.getTempTargetStmt,
+		hardDeleteActivitiesByTypeStmt:              q.hardDeleteActivitiesByTypeStmt,
+		hardDeleteActivityStmt:                      q.hardDeleteActivityStmt,
+		hardDeleteComponentEventStmt:                q.hardDeleteComponentEventStmt,
+		hardDeleteDeviceReportStmt:                  q.hardDeleteDeviceReportStmt,
+		hardDeleteEventGroupStmt:                    q.hardDeleteEventGroupStmt,
+		hardDeleteEventGroupsByTypeStmt:             q.hardDeleteEventGroupsByTypeStmt,
+		hardDeleteFoodIntakeStmt:                    q.hardDeleteFoodIntakeStmt,
+		hardDeleteFoodIntakesByTypeStmt:             q.hardDeleteFoodIntakesByTypeStmt,
+		hardDeleteFoodPresetStmt:                    q.hardDeleteFoodPresetStmt,
+		hardDeleteFoodPresetsByTypeStmt:             q.hardDeleteFoodPresetsByTypeStmt,
+		hardDeleteGlucoseReadingStmt:                q.hardDeleteGlucoseReadingStmt,
+		hardDeleteGlucoseReadingsByTypeStmt:         q.hardDeleteGlucoseReadingsByTypeStmt,
+		hardDeleteInsulinDoseStmt:                   q.hardDeleteInsulinDoseStmt,
+		hardDeleteNotificationEventStmt:             q.hardDeleteNotificationEventStmt,
+		hardDeleteProfilePresetStmt:                 q.hardDeleteProfilePresetStmt,
+		hardDeleteProfileStoreStmt:                  q.hardDeleteProfileStoreStmt,
+		hardDeleteProfileSwitchStmt:                 q.hardDeleteProfileSwitchStmt,
+		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
+		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
+		searchActivitiesStmt:                        q.searchActivitiesStmt,
+		searchComponentEventsStmt:                   q.searchComponentEventsStmt,
+		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
+		searchEventGroupsStmt:                       q.searchEventGroupsStmt,
+		searchFoodIntakesStmt:                       q.searchFoodIntakesStmt,
+		searchFoodPresetsStmt:                       q.searchFoodPresetsStmt,
+		searchGlucoseReadingsStmt:                   q.searchGlucoseReadingsStmt,
+		searchInsulinDosesStmt:                      q.searchInsulinDosesStmt,
+		searchNotificationEventsStmt:                q.searchNotificationEventsStmt,
+		searchProfileStoresStmt:                     q.searchProfileStoresStmt,
+		searchProfileSwitchesStmt:                   q.searchProfileSwitchesStmt,
+		searchTempBasalsStmt:                        q.searchTempBasalsStmt,
+		searchTempTargetsStmt:                       q.searchTempTargetsStmt,
+		softDeleteActivitiesByTypeStmt:              q.softDeleteActivitiesByTypeStmt,
+		softDeleteActivityStmt:                      q.softDeleteActivityStmt,
+		softDeleteComponentEventStmt:                q.softDeleteComponentEventStmt,
+		softDeleteDeviceReportStmt:                  q.softDeleteDeviceReportStmt,
+		softDeleteEventGroupStmt:                    q.softDeleteEventGroupStmt,
+		softDeleteEventGroupsByTypeStmt:             q.softDeleteEventGroupsByTypeStmt,
+		softDeleteFoodIntakeStmt:                    q.softDeleteFoodIntakeStmt,
+		softDeleteFoodIntakesByTypeStmt:             q.softDeleteFoodIntakesByTypeStmt,
+		softDeleteGlucoseReadingStmt:                q.softDeleteGlucoseReadingStmt,
+		softDeleteGlucoseReadingsByTypeStmt:         q.softDeleteGlucoseReadingsByTypeStmt,
+		softDeleteInsulinDoseStmt:                   q.softDeleteInsulinDoseStmt,
+		softDeleteNotificationEventStmt:             q.softDeleteNotificationEventStmt,
+		softDeleteProfileSwitchStmt:                 q.softDeleteProfileSwitchStmt,
+		softDeleteTempBasalStmt:                     q.softDeleteTempBasalStmt,
+		softDeleteTempTargetStmt:                    q.softDeleteTempTargetStmt,
+		updateActivityStmt:                          q.updateActivityStmt,
+		updateComponentEventStmt:                    q.updateComponentEventStmt,
+		updateDeviceReportStmt:                      q.updateDeviceReportStmt,
+		updateEventGroupStmt:                        q.updateEventGroupStmt,
+		updateFoodIntakeStmt:                        q.updateFoodIntakeStmt,
+		updateFoodPresetStmt:                        q.updateFoodPresetStmt,
+		updateGlucoseReadingStmt:                    q.updateGlucoseReadingStmt,
+		updateInsulinDoseStmt:                       q.updateInsulinDoseStmt,
+		updateNotificationEventStmt:                 q.updateNotificationEventStmt,
+		updateProfilePresetStmt:                     q.updateProfilePresetStmt,
+		updateProfileSwitchStmt:                     q.updateProfileSwitchStmt,
+		updateTempBasalStmt:                         q.updateTempBasalStmt,
+		updateTempTargetStmt:                        q.updateTempTargetStmt,
 	}
 }

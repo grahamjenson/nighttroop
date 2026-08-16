@@ -5,6 +5,9 @@
 INSERT INTO component_events (
     id,
     event_type,
+    
+    pump_serial,
+    pump_type,
 
     utc_offset_minutes,
     occurred_at,
@@ -13,7 +16,7 @@ INSERT INTO component_events (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -64,6 +67,15 @@ WHERE
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
+
+
+
+-- name: GetComponentEventByType :one
+SELECT * FROM component_events
+WHERE event_type = ? AND deleted_at IS NULL
+ORDER BY occurred_at DESC
+LIMIT 1;
 
 --------
 -- UPDATE

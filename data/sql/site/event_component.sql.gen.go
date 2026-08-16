@@ -12,7 +12,7 @@ import (
 
 const allComponentEvents = `-- name: AllComponentEvents :many
 
-SELECT id, event_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
+SELECT id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -39,6 +39,8 @@ func (q *Queries) AllComponentEvents(ctx context.Context, arg AllComponentEvents
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventType,
+			&i.PumpSerial,
+			&i.PumpType,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -69,6 +71,9 @@ const createComponentEvent = `-- name: CreateComponentEvent :one
 INSERT INTO component_events (
     id,
     event_type,
+    
+    pump_serial,
+    pump_type,
 
     utc_offset_minutes,
     occurred_at,
@@ -77,13 +82,15 @@ INSERT INTO component_events (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, event_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type CreateComponentEventParams struct {
 	ID                    string
 	EventType             string
+	PumpSerial            *string
+	PumpType              *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	RawJsonData           *string
@@ -99,6 +106,8 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 	row := q.queryRow(ctx, q.createComponentEventStmt, createComponentEvent,
 		arg.ID,
 		arg.EventType,
+		arg.PumpSerial,
+		arg.PumpType,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
 		arg.RawJsonData,
@@ -110,6 +119,8 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -127,7 +138,7 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 }
 
 const getComponentEvent = `-- name: GetComponentEvent :one
-SELECT id, event_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events WHERE id = ?
+SELECT id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events WHERE id = ?
 `
 
 type GetComponentEventParams struct {
@@ -140,6 +151,43 @@ func (q *Queries) GetComponentEvent(ctx context.Context, arg GetComponentEventPa
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
+		&i.PumpSerial,
+		&i.PumpType,
+		&i.Notes,
+		&i.Reason,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
+const getComponentEventByType = `-- name: GetComponentEventByType :one
+SELECT id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
+WHERE event_type = ? AND deleted_at IS NULL
+ORDER BY occurred_at DESC
+LIMIT 1
+`
+
+type GetComponentEventByTypeParams struct {
+	EventType string
+}
+
+func (q *Queries) GetComponentEventByType(ctx context.Context, arg GetComponentEventByTypeParams) (*ComponentEvent, error) {
+	row := q.queryRow(ctx, q.getComponentEventByTypeStmt, getComponentEventByType, arg.EventType)
+	var i ComponentEvent
+	err := row.Scan(
+		&i.ID,
+		&i.EventType,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -169,7 +217,7 @@ func (q *Queries) HardDeleteComponentEvent(ctx context.Context, arg HardDeleteCo
 }
 
 const searchComponentEvents = `-- name: SearchComponentEvents :many
-SELECT id, event_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
+SELECT id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -266,6 +314,8 @@ func (q *Queries) SearchComponentEvents(ctx context.Context, arg SearchComponent
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventType,
+			&i.PumpSerial,
+			&i.PumpType,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -320,7 +370,7 @@ UPDATE component_events SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?3
 WHERE id = ?4 AND deleted_at IS NULL
-RETURNING id, event_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+RETURNING id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type UpdateComponentEventParams struct {
@@ -344,6 +394,8 @@ func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentE
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,

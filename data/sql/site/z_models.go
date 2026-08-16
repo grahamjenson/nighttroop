@@ -29,6 +29,8 @@ type Activity struct {
 type ComponentEvent struct {
 	ID                    string
 	EventType             string
+	PumpSerial            *string
+	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

@@ -121,28 +121,41 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 type TreatmentEventType string
 
 const (
-	Announcement      TreatmentEventType = "Announcement"
-	BGCheck           TreatmentEventType = "BG Check"
-	BolusWizard       TreatmentEventType = "Bolus Wizard"
-	Bolus             TreatmentEventType = "Bolus"
-	CarbCorrection    TreatmentEventType = "Carb Correction"
-	ComboBolus        TreatmentEventType = "Combo Bolus"
-	CorrectionBolus   TreatmentEventType = "Correction Bolus"
-	DADAlert          TreatmentEventType = "D.A.D. Alert"
-	Exercise          TreatmentEventType = "Exercise"
-	InsulinChange     TreatmentEventType = "Insulin Change" // device event
-	MealBolus         TreatmentEventType = "Meal Bolus"
-	Note              TreatmentEventType = "Note"
-	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline" // device event
-	ProfileSwitch     TreatmentEventType = "Profile Switch"
-	PumpBatteryChange TreatmentEventType = "Pump Battery Change" // device event
-	Question          TreatmentEventType = "Question"
-	SensorChange      TreatmentEventType = "Sensor Change" // device event
-	SensorStart       TreatmentEventType = "Sensor Start"  // device event
-	SiteChange        TreatmentEventType = "Site Change"   // device event
-	SnackBolus        TreatmentEventType = "Snack Bolus"
-	TempBasal         TreatmentEventType = "Temp Basal"
-	TemporaryTarget   TreatmentEventType = "Temporary Target"
+	// Records & alerts
+	Announcement TreatmentEventType = "Announcement"
+	Note         TreatmentEventType = "Note"
+	Question     TreatmentEventType = "Question"
+	DADAlert     TreatmentEventType = "D.A.D. Alert"
+
+	// Glucose
+	BGCheck TreatmentEventType = "BG Check"
+
+	//Carbs
+	CarbCorrection TreatmentEventType = "Carb Correction"
+
+	// Boluses
+	Bolus           TreatmentEventType = "Bolus"
+	BolusWizard     TreatmentEventType = "Bolus Wizard"
+	ComboBolus      TreatmentEventType = "Combo Bolus"
+	CorrectionBolus TreatmentEventType = "Correction Bolus"
+	MealBolus       TreatmentEventType = "Meal Bolus"
+	SnackBolus      TreatmentEventType = "Snack Bolus"
+
+	// Activity
+	Exercise TreatmentEventType = "Exercise"
+
+	// Algorithms
+	ProfileSwitch   TreatmentEventType = "Profile Switch"
+	TempBasal       TreatmentEventType = "Temp Basal"
+	TemporaryTarget TreatmentEventType = "Temporary Target"
+
+	// Device Events
+	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
+	PumpBatteryChange TreatmentEventType = "Pump Battery Change"
+	SensorChange      TreatmentEventType = "Sensor Change"
+	SensorStart       TreatmentEventType = "Sensor Start"
+	SiteChange        TreatmentEventType = "Site Change"
+	InsulinChange     TreatmentEventType = "Insulin Change"
 	CannulaFill       TreatmentEventType = "Cannula Fill"
 	Prime             TreatmentEventType = "Prime"
 	ReservoirChange   TreatmentEventType = "Reservoir Change"

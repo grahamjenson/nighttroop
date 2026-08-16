@@ -89,22 +89,30 @@ func ComponentEventCreate(source site.ComponentEvent, context ConverterContext) 
 	var siteCreateComponentEventParams site.CreateComponentEventParams
 	siteCreateComponentEventParams.ID = AssignID()
 	siteCreateComponentEventParams.EventType = source.EventType
+	if source.PumpSerial != nil {
+		xstring := *source.PumpSerial
+		siteCreateComponentEventParams.PumpSerial = &xstring
+	}
+	if source.PumpType != nil {
+		xstring2 := *source.PumpType
+		siteCreateComponentEventParams.PumpType = &xstring2
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateComponentEventParams.UtcOffsetMinutes = &xint64
 	}
 	siteCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteCreateComponentEventParams.RawJsonData = &xstring
+		xstring3 := *source.RawJsonData
+		siteCreateComponentEventParams.RawJsonData = &xstring3
 	}
 	if source.CreatedByAppName != nil {
-		xstring2 := *source.CreatedByAppName
-		siteCreateComponentEventParams.CreatedByAppName = &xstring2
+		xstring4 := *source.CreatedByAppName
+		siteCreateComponentEventParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring3 := *source.CreatedByDeviceName
-		siteCreateComponentEventParams.CreatedByDeviceName = &xstring3
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateComponentEventParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateComponentEventParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateComponentEventParams
@@ -1015,17 +1023,25 @@ func UpdateToActivity(source *site.Activity, target *site.Activity) {
 func UpdateToComponentEvent(source *site.ComponentEvent, target *site.ComponentEvent) {
 	if source != nil {
 		target.EventType = source.EventType
+		if source.PumpSerial != nil {
+			xstring := *source.PumpSerial
+			target.PumpSerial = &xstring
+		}
+		if source.PumpType != nil {
+			xstring2 := *source.PumpType
+			target.PumpType = &xstring2
+		}
 		if source.Notes != nil {
-			xstring := *source.Notes
-			target.Notes = &xstring
+			xstring3 := *source.Notes
+			target.Notes = &xstring3
 		}
 		if source.Reason != nil {
-			xstring2 := *source.Reason
-			target.Reason = &xstring2
+			xstring4 := *source.Reason
+			target.Reason = &xstring4
 		}
 		if source.RawJsonData != nil {
-			xstring3 := *source.RawJsonData
-			target.RawJsonData = &xstring3
+			xstring5 := *source.RawJsonData
+			target.RawJsonData = &xstring5
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -1039,16 +1055,16 @@ func UpdateToComponentEvent(source *site.ComponentEvent, target *site.ComponentE
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.UpdatedByIdentityName != nil {
-			xstring4 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring4
+			xstring6 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring6
 		}
 		if source.CreatedByAppName != nil {
-			xstring5 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring5
+			xstring7 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring7
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring6 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring6
+			xstring8 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring8
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}

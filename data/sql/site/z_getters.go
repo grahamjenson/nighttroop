@@ -212,6 +212,26 @@ func (m *ComponentEvent) SetEventType(v string) {
 	m.EventType = v
 }
 
+// GetPumpSerial returns the PumpSerial value.
+func (m ComponentEvent) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m ComponentEvent) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetPumpType(v *string) {
+	m.PumpType = v
+}
+
 // GetNotes returns the Notes value.
 func (m ComponentEvent) GetNotes() *string {
 	return m.Notes
@@ -3601,6 +3621,28 @@ func (m CreateComponentEventParams) SetEventType(v string) CreateComponentEventP
 	return m
 }
 
+// GetPumpSerial returns the PumpSerial value.
+func (m CreateComponentEventParams) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated CreateComponentEventParams.
+func (m CreateComponentEventParams) SetPumpSerial(v *string) CreateComponentEventParams {
+	m.PumpSerial = v
+	return m
+}
+
+// GetPumpType returns the PumpType value.
+func (m CreateComponentEventParams) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated CreateComponentEventParams.
+func (m CreateComponentEventParams) SetPumpType(v *string) CreateComponentEventParams {
+	m.PumpType = v
+	return m
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m CreateComponentEventParams) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -3961,6 +4003,17 @@ func (m SearchComponentEventsParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated SearchComponentEventsParams.
 func (m SearchComponentEventsParams) SetLimit(v int64) SearchComponentEventsParams {
 	m.Limit = v
+	return m
+}
+
+// GetEventType returns the EventType value.
+func (m GetComponentEventByTypeParams) GetEventType() string {
+	return m.EventType
+}
+
+// SetEventType sets the EventType value and returns the updated GetComponentEventByTypeParams.
+func (m GetComponentEventByTypeParams) SetEventType(v string) GetComponentEventByTypeParams {
+	m.EventType = v
 	return m
 }
 

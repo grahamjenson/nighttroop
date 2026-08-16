@@ -90,22 +90,30 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	var siteCreateComponentEventParams CreateComponentEventParams
 	siteCreateComponentEventParams.ID = source.ID
 	siteCreateComponentEventParams.EventType = source.EventType
+	if source.PumpSerial != nil {
+		xstring := *source.PumpSerial
+		siteCreateComponentEventParams.PumpSerial = &xstring
+	}
+	if source.PumpType != nil {
+		xstring2 := *source.PumpType
+		siteCreateComponentEventParams.PumpType = &xstring2
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateComponentEventParams.UtcOffsetMinutes = &xint64
 	}
 	siteCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring := *source.RawJsonData
-		siteCreateComponentEventParams.RawJsonData = &xstring
+		xstring3 := *source.RawJsonData
+		siteCreateComponentEventParams.RawJsonData = &xstring3
 	}
 	if source.CreatedByAppName != nil {
-		xstring2 := *source.CreatedByAppName
-		siteCreateComponentEventParams.CreatedByAppName = &xstring2
+		xstring4 := *source.CreatedByAppName
+		siteCreateComponentEventParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring3 := *source.CreatedByDeviceName
-		siteCreateComponentEventParams.CreatedByDeviceName = &xstring3
+		xstring5 := *source.CreatedByDeviceName
+		siteCreateComponentEventParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateComponentEventParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateComponentEventParams

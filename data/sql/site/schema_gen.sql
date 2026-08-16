@@ -32,6 +32,9 @@ CREATE TABLE component_events (
 
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
+    pump_serial TEXT CHECK(length(pump_serial) <= 32),
+    pump_type TEXT CHECK(length(pump_type) <= 64),
+
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
