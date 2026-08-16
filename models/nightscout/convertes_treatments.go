@@ -387,11 +387,6 @@ func TreatmentToInsulinDose(source Treatment) *site.InsulinDose {
 // NotificationEvents
 ///////
 
-// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-// goverter:map EventType NotificationType
-// goverter:map Name Title
-// goverter:map Notes Content
-// goverter:map Severity | Zero
 func TreatmentToNotificationEvent(source Treatment) *site.NotificationEvent {
 	assigned := false
 	target := site.NotificationEvent{
@@ -446,10 +441,6 @@ func TreatmentToProfileSwitch(source Treatment) *site.ProfileSwitch {
 // Temp Basal
 ///////
 
-//
-// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-
-// goverter:map Percentage Percent
 func TreatmentToTempBasal(source Treatment) *site.TempBasal {
 	assigned := false
 	target := site.TempBasal{}
@@ -477,11 +468,6 @@ func TreatmentToTempBasal(source Treatment) *site.TempBasal {
 // Temp Targets
 ///////
 
-//
-// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
-
-// goverter:map TargetTop HighTarget
-// goverter:map TargetBottom LowTarget
 func TreatmentToTempTarget(source Treatment) *site.TempTarget {
 	assigned := false
 	target := site.TempTarget{}
@@ -523,9 +509,6 @@ func TreatmentToComponentEvent(source Treatment) *site.ComponentEvent {
 	}
 	return nil
 }
-
-//
-// goverter:ignore ID DeletedAt CreatedAt UpdatedAt CreatedByIdentityName UpdatedByIdentityName
 
 func TreatmentToActivity(source Treatment) *site.Activity {
 	assigned := false

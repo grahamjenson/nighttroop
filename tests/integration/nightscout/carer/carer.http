@@ -1,0 +1,67 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+NAME jwtauth
+GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+
+# Uri entryEndpoint(nsURL, token, DateTime gteCreatedAt) =>
+# Uri.parse('$nsURL/api/v1/entries.json?token=$token&find[date][\$gte]=${gteCreatedAt.millisecondsSinceEpoch}&count=1000');
+
+# Uri treatmentsEndpoint(nsURL, token, DateTime gteCreatedAt) =>
+#     Uri.parse('$nsURL/api/v1/treatments.json?token=$token&find[created_at][\$gte]=${toNSDateString(gteCreatedAt)}&count=1000');
+
+# Uri treatmentsProfileSwitch(nsURL, token, int count) =>
+# Uri.parse('$nsURL/api/v1/treatments.json?token=$token&find[eventType]=Profile+Switch&count=$count');
+# Uri treatmentsNote(nsURL, token, int count) => Uri.parse('$nsURL/api/v1/treatments.json?token=$token&find[eventType]=Note&count=$count');
+
+# Uri currentProfile(nsURL, token) => Uri.parse('$nsURL/api/v1/profile/current.json?token=$token');
+
+# Uri deviceStatusEndpoint(nsURL, token) => Uri.parse('$nsURL/api/v1/devicestatus.json?token=$token&count=1');
+
+# // Add Carbs endpoint
+# Uri v3TreatmentsEndpoint(nsURL, token) => Uri.parse('$nsURL/api/v3/treatments');
+
+
+######
+# TEST SETUP
+######
+
+NAME create_treatmentses_v1
+POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+B [
+  {
+    "eventType": "Profile Switch",
+    "created_at": "{{ time 9 }}",
+    "notes": "Profile Switch 1"
+  },
+  {
+    "eventType": "Profile Switch",
+    "created_at": "{{ time 9 }}",
+    "notes": "Profile Switch 2"
+  },
+  {
+    "eventType": "Note",
+    "created_at": "{{ time 12 }}",
+    "notes": "Note 1"
+  },
+  {
+    "eventType": "Note",
+    "created_at": "{{ time 13 }}",
+    "notes": "Note 2"
+  }
+ ]
+ASSERT_STATUS 200

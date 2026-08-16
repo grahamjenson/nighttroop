@@ -1,0 +1,117 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}
+
+NAME jwtauth
+GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+//////
+// CREATE
+//////
+
+
+NAME create_devicestatus_v1
+POST http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}
+B {
+  "device": "aaps",
+  "created_at": "{{ time 0 }}",
+
+  "uploader": {
+    "battery": 87,
+    "batteryVoltage": 4.05
+  },
+
+
+  "pump": {
+    "clock": "2026-06-16T08:42:15Z",
+    "reservoir": 97.4,
+    "battery": {
+      "percent": 68,
+      "voltage": 1.42
+    },
+    "status": {
+      "bolusing": false,
+      "suspended": false
+    }
+  },
+
+  "openaps": {
+    "enacted": {
+      "timestamp": "2026-06-16T08:42:00Z",
+      "rate": 1.2,
+      "duration": 30
+    },
+    "suggested": {
+      "timestamp": "2026-06-16T08:41:55Z",
+      "rate": 1.2,
+      "duration": 30,
+      "reason": "Eventual BG 126"
+    }
+  }
+ }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "iphone" "@result.device" }}
+ASSERT {{ assertExists "@result.identifier" }}
+ASSERT {{ assertExists "@result.date" }}
+ASSERT {{ assertExists "@result.subject" }}
+ASSERT {{ assertExists "@result.utcOffset" }}
+ASSERT {{ assertExists "@result.srvCreated" }}
+ASSERT {{ assertExists "@result.srvModified" }}
+
+
+// {
+//   "upbat": {
+//     "min": {
+//       "battery": 87,
+//       "value": 87,
+//       "display": "87%",
+//       "level": 75
+//     }
+//   },
+//   "iob": {
+//     "iob": 1.983,
+//     "basaliob": -0.669,
+//     "treatmentIob": 3.464
+//   },
+//   "cob": {
+//     "cob": 12.39360495744192
+//   },
+//   "cage": {
+//     "treatmentDate": 1722497240926,
+//   },
+//   "sage": {
+//     "Sensor Start": {
+//       "found": false
+//     },
+//     "Sensor Change": {
+//       "treatmentDate": 1721978583000
+//     },
+//     "min": "Sensor Change"
+//   }
+// }
+NAME get_properties_v2
+GET http://{{ .site }}.ns.localhost/api/v2/properties?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 87 "@upbat.min.battery" }}
+ASSERT {{ assertEquals 1.5 "@openaps.lastIOB.iob" }}
+ASSERT {{ assertEquals 1.5 "@openaps.lastSuggested.IOB" }}
+ASSERT {{ assertEquals 1.5 "@iob.iob" }}
+ASSERT {{ assertEquals 1.2 "@iob.treatmentIob" }}
+ASSERT {{ assertEquals 0.3 "@openaps.lastIOB.basaliob" }}
+ASSERT {{ assertEquals 0.3 "@iob.basaliob" }}
+ASSERT {{ assertEquals 12 "@openaps.lastSuggested.COB" }}
+ASSERT {{ assertEquals 12 "@cob.cob" }}
+ASSERT {{ assertEquals 1721123 "@cage.treatmentDate" }}
+ASSERT {{ assertEquals 1720123 "@sage.Sensor Change.treatmentDate" }}

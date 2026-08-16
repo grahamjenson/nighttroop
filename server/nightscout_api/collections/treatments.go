@@ -690,7 +690,12 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		}
 	case nightscout.Note:
 		return site.EventGroupsBundle{
-			EventGroup: eventGroup,
+			EventGroup:     eventGroup,
+			GlucoseReading: glucoseReading,
+			InsulinDose:    insulinDose,
+			FoodIntake:     foodIntake,
+			ProfileSwitch:  profileSwitch,
+			Activity:       activity,
 		}
 	case nightscout.OpenAPSOffline:
 		return site.EventGroupsBundle{
