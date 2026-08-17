@@ -5,15 +5,17 @@
 INSERT INTO device_reports (
     id,
     device_battery_percent,
-    device_charging_state,
+    is_device_charging,
     pump_state,
     pump_reservoir,
     pump_battery_percent,
     pump_charging_state,
+    loop_name,
     loop_iob,
     loop_iob_basal,
     loop_iob_treatment,
     loop_cob,
+    loop_predictions,
 
     utc_offset_minutes,
     occurred_at,
@@ -22,7 +24,7 @@ INSERT INTO device_reports (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -69,14 +71,14 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 --
--- This will select the latest information (assuming if you report the iob it is the PWD device)
+-- This will select the latest information (assuming if you report loop information with PWD device)
 -- Limit to 20 minutes search window
 -- name: GetLatestDeviceReportWithPWDInformation :one
 SELECT * from device_reports
 WHERE 
     deleted_at IS NULL AND 
-    occurred_at <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
-    loop_iob IS NOT NULL
+    occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000
+    loop_name IS NOT NULL
 ORDER BY occurred_at DESC
 LIMIT 1;
 

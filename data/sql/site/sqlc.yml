@@ -36,3 +36,6 @@ overrides:
       - column: "profile_presets.is_default"
         go_type:
           type: "bool"
+      - column: "device_reports.is_device_charging"
+        go_type:
+          type: "*bool"

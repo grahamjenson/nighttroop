@@ -59,7 +59,7 @@ CREATE TABLE device_reports (
     -- uploader
     -- device is created_by_device_name
     device_battery_percent REAL,
-    device_charging_state TEXT CHECK(length(device_charging_state) <= 32),
+    is_device_charging INTEGER DEFAULT 0,
 
     -- PUMP
     pump_state TEXT CHECK(length(pump_state) <= 64),
@@ -68,10 +68,12 @@ CREATE TABLE device_reports (
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
     -- LOOP
+    loop_name TEXT CHECK( loop_name IN ('openaps', 'loop')),
     loop_iob REAL,
     loop_iob_basal REAL,
     loop_iob_treatment REAL,
     loop_cob REAL,
+    loop_predictions TEXT CHECK(length(loop_predictions) <= 8192 AND json_valid(loop_predictions)), -- This is the largest user derived string, and should be culled quickly
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192), -- This is the largest user derived string, and should be culled quickly

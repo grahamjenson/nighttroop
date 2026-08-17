@@ -325,7 +325,9 @@ func typeLookup(schemaName, fieldName string) string {
 	if strings.HasSuffix(strings.ToLower(fieldName), "enabled") {
 		return "*bool"
 	}
-
+	if strings.HasPrefix(strings.ToLower(fieldName), "is") {
+		return "*bool"
+	}
 	return ""
 }
 

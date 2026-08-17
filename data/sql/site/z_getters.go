@@ -372,14 +372,14 @@ func (m *DeviceReport) SetDeviceBatteryPercent(v *float64) {
 	m.DeviceBatteryPercent = v
 }
 
-// GetDeviceChargingState returns the DeviceChargingState value.
-func (m DeviceReport) GetDeviceChargingState() *string {
-	return m.DeviceChargingState
+// GetIsDeviceCharging returns the IsDeviceCharging value.
+func (m DeviceReport) GetIsDeviceCharging() *bool {
+	return m.IsDeviceCharging
 }
 
-// SetDeviceChargingState sets the DeviceChargingState value and returns the updated DeviceReport.
-func (m *DeviceReport) SetDeviceChargingState(v *string) {
-	m.DeviceChargingState = v
+// SetIsDeviceCharging sets the IsDeviceCharging value and returns the updated DeviceReport.
+func (m *DeviceReport) SetIsDeviceCharging(v *bool) {
+	m.IsDeviceCharging = v
 }
 
 // GetPumpState returns the PumpState value.
@@ -422,6 +422,16 @@ func (m *DeviceReport) SetPumpChargingState(v *string) {
 	m.PumpChargingState = v
 }
 
+// GetLoopName returns the LoopName value.
+func (m DeviceReport) GetLoopName() *string {
+	return m.LoopName
+}
+
+// SetLoopName sets the LoopName value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopName(v *string) {
+	m.LoopName = v
+}
+
 // GetLoopIob returns the LoopIob value.
 func (m DeviceReport) GetLoopIob() *float64 {
 	return m.LoopIob
@@ -460,6 +470,16 @@ func (m DeviceReport) GetLoopCob() *float64 {
 // SetLoopCob sets the LoopCob value and returns the updated DeviceReport.
 func (m *DeviceReport) SetLoopCob(v *float64) {
 	m.LoopCob = v
+}
+
+// GetLoopPredictions returns the LoopPredictions value.
+func (m DeviceReport) GetLoopPredictions() *string {
+	return m.LoopPredictions
+}
+
+// SetLoopPredictions sets the LoopPredictions value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopPredictions(v *string) {
+	m.LoopPredictions = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -2444,14 +2464,14 @@ func (m CreateDeviceReportParams) SetDeviceBatteryPercent(v *float64) CreateDevi
 	return m
 }
 
-// GetDeviceChargingState returns the DeviceChargingState value.
-func (m CreateDeviceReportParams) GetDeviceChargingState() *string {
-	return m.DeviceChargingState
+// GetIsDeviceCharging returns the IsDeviceCharging value.
+func (m CreateDeviceReportParams) GetIsDeviceCharging() *bool {
+	return m.IsDeviceCharging
 }
 
-// SetDeviceChargingState sets the DeviceChargingState value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetDeviceChargingState(v *string) CreateDeviceReportParams {
-	m.DeviceChargingState = v
+// SetIsDeviceCharging sets the IsDeviceCharging value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetIsDeviceCharging(v *bool) CreateDeviceReportParams {
+	m.IsDeviceCharging = v
 	return m
 }
 
@@ -2499,6 +2519,17 @@ func (m CreateDeviceReportParams) SetPumpChargingState(v *string) CreateDeviceRe
 	return m
 }
 
+// GetLoopName returns the LoopName value.
+func (m CreateDeviceReportParams) GetLoopName() *string {
+	return m.LoopName
+}
+
+// SetLoopName sets the LoopName value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetLoopName(v *string) CreateDeviceReportParams {
+	m.LoopName = v
+	return m
+}
+
 // GetLoopIob returns the LoopIob value.
 func (m CreateDeviceReportParams) GetLoopIob() *float64 {
 	return m.LoopIob
@@ -2540,6 +2571,17 @@ func (m CreateDeviceReportParams) GetLoopCob() *float64 {
 // SetLoopCob sets the LoopCob value and returns the updated CreateDeviceReportParams.
 func (m CreateDeviceReportParams) SetLoopCob(v *float64) CreateDeviceReportParams {
 	m.LoopCob = v
+	return m
+}
+
+// GetLoopPredictions returns the LoopPredictions value.
+func (m CreateDeviceReportParams) GetLoopPredictions() *string {
+	return m.LoopPredictions
+}
+
+// SetLoopPredictions sets the LoopPredictions value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetLoopPredictions(v *string) CreateDeviceReportParams {
+	m.LoopPredictions = v
 	return m
 }
 

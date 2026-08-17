@@ -18,7 +18,7 @@ type ProfileCollection struct {
 }
 
 func NewProfileCollection() ProfileCollection {
-	return ProfileCollection{converter: nsutils.DBModelToRecord(nsutils.Profile, DBToNightscout)}
+	return ProfileCollection{converter: nsutils.DBModelToRecord(nsutils.Profile, DBToNightscoutProfileStore)}
 }
 
 func (c ProfileCollection) Name() string {
@@ -38,7 +38,7 @@ func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *si
 }
 
 func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.ProfilePresetBundle, error) {
-	manyCreateParams := NightscoutToDBCreate(nsModel, cc)
+	manyCreateParams := NightscoutToDBCreateProfilePreset(nsModel, cc)
 
 	ret := site.ProfilePresetBundle([]*site.ProfilePreset{})
 
@@ -119,7 +119,7 @@ func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscout(source *site.ProfilePresetBundle) nightscout.ProfileStore {
+func DBToNightscoutProfileStore(source *site.ProfilePresetBundle) nightscout.ProfileStore {
 	if source == nil {
 		return nightscout.ProfileStore{}
 	}
@@ -153,7 +153,7 @@ func DBToNightscout(source *site.ProfilePresetBundle) nightscout.ProfileStore {
 // NIGHTSCOUT TO DB
 ///////
 
-func NightscoutToDBCreate(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []site.CreateProfilePresetParams {
+func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []site.CreateProfilePresetParams {
 	createParams := []site.CreateProfilePresetParams{}
 	profileStoreID := nightscout.AssignID()
 	for name, profile := range source.Store {
@@ -191,53 +191,6 @@ func NightscoutToDBCreate(source nightscout.ProfileStore, ctx nightscout.Convert
 
 	return createParams
 }
-
-///////
-// ProfileStore To Profile Preset
-///////
-
-// func ProfileStoreToSingleCreate(source ProfileStore, name string, profile Profile, ctx CreateContext) site.CreateProfilePresetParams {
-// 	params := site.CreateProfilePresetParams{
-// 		Name:                  name,
-// 		IsDefault:             source.DefaultProfile != nil && *source.DefaultProfile == ShortString(name),
-// 		CreatedByAppName:      ctx.CreatedByAppName,
-// 		CreatedByDeviceName:   ctx.CreatedByDeviceName,
-// 		CreatedByIdentityName: ctx.CreatedByIdentityName,
-// 	}
-
-// 	if profile.Dia != nil {
-// 		params.Dia = *profile.Dia
-// 	}
-// 	if profile.CarbRatio != nil {
-// 		params.CarbRatiosJson = ScheduleValuesToJson(profile.CarbRatio)
-// 	}
-// 	if profile.Sens != nil {
-// 		params.InsulinSensitivitiesJson = ScheduleValuesToJson(profile.Sens)
-// 	}
-// 	if profile.Basal != nil {
-// 		params.BasalRatesJson = ScheduleValuesToJson(profile.Basal)
-// 	}
-// 	if profile.TargetLow != nil || profile.TargetHigh != nil {
-// 		params.TargetsJson = TargetsToJson(profile.TargetLow, profile.TargetHigh)
-// 	}
-// 	if profile.Timezone != nil {
-// 		params.Timezone = string(*profile.Timezone)
-// 	}
-// 	if profile.Units != nil {
-// 		params.Units = string(*profile.Units)
-// 	}
-
-// 	return params
-// }
-
-// func ProfileStoreToCreateAll(source ProfileStore, profile Profile, ctx CreateContext) []site.CreateProfilePresetParams {
-// 	creates := []site.CreateProfilePresetParams{}
-// 	for profileName, profile := range source.Store {
-// 		create := ProfileStoreToSingleCreate(source, string(profileName), profile, ctx)
-// 		creates = append(creates, create)
-// 	}
-// 	return creates
-// }
 
 func ScheduleValuesToJson(svs []*nightscout.ScheduleValue) *string {
 	if len(svs) == 0 {

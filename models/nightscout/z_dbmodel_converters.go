@@ -68,10 +68,6 @@ func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
 			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
 			nightscoutDeviceStatus.Device = &nightscoutShortString
 		}
-		if (*source).DeviceBatteryPercent != nil {
-			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).DeviceBatteryPercent)
-			nightscoutDeviceStatus.UploaderBattery = &nightscoutFlexibleFloat64
-		}
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByAppName != nil {
 			nightscoutShortString2 := ShortString(*(*source).CreatedByAppName)
@@ -87,22 +83,6 @@ func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
 		}
 		if (*source).RawJsonData != nil {
 			nightscoutDeviceStatus.RawJsonData = *(*source).RawJsonData
-		}
-		if (*source).LoopIob != nil {
-			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).LoopIob)
-			nightscoutDeviceStatus.LoopIob = &nightscoutFlexibleFloat642
-		}
-		if (*source).LoopIobBasal != nil {
-			nightscoutFlexibleFloat643 := FlexibleFloat64(*(*source).LoopIobBasal)
-			nightscoutDeviceStatus.LoopIobBasal = &nightscoutFlexibleFloat643
-		}
-		if (*source).LoopIobTreatment != nil {
-			nightscoutFlexibleFloat644 := FlexibleFloat64(*(*source).LoopIobTreatment)
-			nightscoutDeviceStatus.LoopIobTreatment = &nightscoutFlexibleFloat644
-		}
-		if (*source).LoopCob != nil {
-			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).LoopCob)
-			nightscoutDeviceStatus.LoopCob = &nightscoutFlexibleFloat645
 		}
 	}
 	return nightscoutDeviceStatus

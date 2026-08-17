@@ -1,8 +1,6 @@
 package v2
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -29,114 +27,6 @@ func PropertiesList(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Re
 
 		nsutils.WriteJSON(w, http.StatusOK, properties)
 	}
-}
-
-func LastDeviceStatusFromPWD(q *site.Queries, ctx context.Context) *site.DeviceReport {
-	// We are going to ignore the error here, because not important
-	ret, _ := q.GetLatestDeviceReportWithPWDInformation(ctx)
-	return ret
-}
-
-func GetLastSensorChangeCannulaChange(q *site.Queries, ctx context.Context) (*site.ComponentEvent, *site.ComponentEvent, *site.ComponentEvent) {
-	lastSensorChange, _ := q.GetComponentEventByType(ctx, site.GetComponentEventByTypeParams{
-		EventType: "Sensor Change",
-	})
-
-	lastSensorStart, _ := q.GetComponentEventByType(ctx, site.GetComponentEventByTypeParams{
-		EventType: "Sensor Start",
-	})
-
-	lastCannulaChange, _ := q.GetComponentEventByType(ctx, site.GetComponentEventByTypeParams{
-		EventType: "Insulin Change",
-	})
-
-	return lastSensorStart, lastSensorChange, lastCannulaChange
-}
-
-/////
-// MODELS
-/////
-
-func GetUptimeBattery(dr *site.DeviceReport) UptimeBattery {
-	if dr == nil || dr.DeviceBatteryPercent == nil {
-		return UptimeBattery{
-			Found: ptr(false),
-		}
-	}
-
-	return UptimeBattery{
-		Min: &BatteryStatus{
-			Battery: dr.DeviceBatteryPercent,
-			Value:   dr.DeviceBatteryPercent,
-			Display: ptr(fmt.Sprintf("%v%%", *dr.DeviceBatteryPercent)),
-			Level:   dr.DeviceBatteryPercent,
-		},
-	}
-}
-
-func GetIOB(dr *site.DeviceReport) IOB {
-	if dr == nil {
-		return IOB{
-			Found: ptr(false),
-		}
-	}
-
-	return IOB{
-		IOB:          dr.LoopIob,
-		BasalIOB:     dr.LoopIobBasal,
-		TreatmentIOB: dr.LoopIobTreatment,
-	}
-}
-
-func GetCOB(dr *site.DeviceReport) COB {
-	if dr == nil {
-		return COB{
-			Found: ptr(false),
-		}
-	}
-
-	return COB{
-		COB: dr.LoopCob,
-	}
-}
-
-func GetDeviceTime(lastCannulaChange *site.ComponentEvent) DeviceTime {
-	if lastCannulaChange == nil {
-		return DeviceTime{
-			Found: ptr(false),
-		}
-	}
-
-	return DeviceTime{
-		TreatmentDate: &lastCannulaChange.OccurredAt,
-	}
-}
-
-func GetSensorAge(lastSensorStart, lastSensorChange *site.ComponentEvent) SensorAge {
-	ssTime := GetDeviceTime(lastSensorStart)
-	scTime := GetDeviceTime(lastSensorChange)
-	var min *string
-	if ssTime.TreatmentDate == nil && scTime.TreatmentDate != nil {
-		min = ptr("Sensor Change")
-	} else if ssTime.TreatmentDate != nil && scTime.TreatmentDate == nil {
-		min = ptr("Sensor Start")
-	} else if ssTime.TreatmentDate != nil && scTime.TreatmentDate != nil {
-		if *ssTime.TreatmentDate < *scTime.TreatmentDate {
-			min = ptr("Sensor Start")
-		} else {
-			min = ptr("Sensor Change")
-		}
-	}
-
-	return SensorAge{
-		SensorStart:  &ssTime,
-		SensorChange: &scTime,
-		Min:          min,
-	}
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }
 
 // {
@@ -211,4 +101,65 @@ type SensorAge struct {
 	SensorStart  *DeviceTime `json:"Sensor Start,omitempty"`
 	SensorChange *DeviceTime `json:"Sensor Change,omitempty"`
 	Min          *string     `json:"min,omitempty"`
+}
+
+func GetIOB(dr *site.DeviceReport) IOB {
+	if dr == nil {
+		return IOB{
+			Found: ptr(false),
+		}
+	}
+
+	return IOB{
+		IOB:          dr.LoopIob,
+		BasalIOB:     dr.LoopIobBasal,
+		TreatmentIOB: dr.LoopIobTreatment,
+	}
+}
+
+func GetCOB(dr *site.DeviceReport) COB {
+	if dr == nil {
+		return COB{
+			Found: ptr(false),
+		}
+	}
+
+	return COB{
+		COB: dr.LoopCob,
+	}
+}
+
+func GetDeviceTime(lastDevice *site.ComponentEvent) DeviceTime {
+	if lastDevice == nil {
+		return DeviceTime{
+			Found: ptr(false),
+		}
+	}
+
+	return DeviceTime{
+		TreatmentDate: &lastDevice.OccurredAt,
+	}
+}
+
+func GetSensorAge(lastSensorStart, lastSensorChange *site.ComponentEvent) SensorAge {
+	ssTime := GetDeviceTime(lastSensorStart)
+	scTime := GetDeviceTime(lastSensorChange)
+	var min *string
+	if ssTime.TreatmentDate == nil && scTime.TreatmentDate != nil {
+		min = ptr("Sensor Change")
+	} else if ssTime.TreatmentDate != nil && scTime.TreatmentDate == nil {
+		min = ptr("Sensor Start")
+	} else if ssTime.TreatmentDate != nil && scTime.TreatmentDate != nil {
+		if *ssTime.TreatmentDate < *scTime.TreatmentDate {
+			min = ptr("Sensor Start")
+		} else {
+			min = ptr("Sensor Change")
+		}
+	}
+
+	return SensorAge{
+		SensorStart:  &ssTime,
+		SensorChange: &scTime,
+		Min:          min,
+	}
 }

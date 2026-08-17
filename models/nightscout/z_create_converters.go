@@ -52,38 +52,6 @@ func ActivityToCreate(source Activity, context ConverterContext) site.CreateActi
 func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterContext) site.CreateDeviceReportParams {
 	var siteCreateDeviceReportParams site.CreateDeviceReportParams
 	siteCreateDeviceReportParams.ID = AssignID()
-	var pNightscoutFlexibleFloat64 *FlexibleFloat64
-	if source.Uploader != nil {
-		pNightscoutFlexibleFloat64 = source.Uploader.Battery
-	}
-	if pNightscoutFlexibleFloat64 != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat64)
-		siteCreateDeviceReportParams.DeviceBatteryPercent = &xfloat64
-	}
-	var pNightscoutFlexibleFloat642 *FlexibleFloat64
-	if source.Pump != nil {
-		pNightscoutFlexibleFloat642 = source.Pump.Reservoir
-	}
-	if pNightscoutFlexibleFloat642 != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*pNightscoutFlexibleFloat642)
-		siteCreateDeviceReportParams.PumpReservoir = &xfloat642
-	}
-	if source.LoopIob != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.LoopIob)
-		siteCreateDeviceReportParams.LoopIob = &xfloat643
-	}
-	if source.LoopIobBasal != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.LoopIobBasal)
-		siteCreateDeviceReportParams.LoopIobBasal = &xfloat644
-	}
-	if source.LoopIobTreatment != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.LoopIobTreatment)
-		siteCreateDeviceReportParams.LoopIobTreatment = &xfloat645
-	}
-	if source.LoopCob != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.LoopCob)
-		siteCreateDeviceReportParams.LoopCob = &xfloat646
-	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateDeviceReportParams.UtcOffsetMinutes = &xint64

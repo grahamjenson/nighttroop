@@ -87,12 +87,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore DeviceChargingState PumpState PumpBatteryPercent PumpChargingState
-	// goverter:map UploaderBattery DeviceBatteryPercent
-	// goverter:map Uploader.Battery DeviceBatteryPercent
-	//
-	// goverter:map Pump.Reservoir PumpReservoir
-	//
+	// goverter:ignore LoopName LoopPredictions IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir  LoopIob LoopIobBasal LoopIobTreatment LoopCob
 	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) site.CreateDeviceReportParams
 }
 

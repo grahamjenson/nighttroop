@@ -53,8 +53,9 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
-	// goverter:map DeviceBatteryPercent UploaderBattery
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
+	//
+	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop
 	DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus
 
 	///////

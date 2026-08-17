@@ -48,15 +48,17 @@ type ComponentEvent struct {
 type DeviceReport struct {
 	ID                    string
 	DeviceBatteryPercent  *float64
-	DeviceChargingState   *string
+	IsDeviceCharging      *bool
 	PumpState             *string
 	PumpReservoir         *float64
 	PumpBatteryPercent    *float64
 	PumpChargingState     *string
+	LoopName              *string
 	LoopIob               *float64
 	LoopIobBasal          *float64
 	LoopIobTreatment      *float64
 	LoopCob               *float64
+	LoopPredictions       *string
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

@@ -27,4 +27,6 @@ func registerPropertiesRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Get("/properties", dep.Auth.Require("api:properties:read", true, PropertiesList(dep)))
 	r.Get("/properties.json", dep.Auth.Require("api:properties:read", true, PropertiesList(dep)))
 
+	r.Get("/summary", dep.Auth.Require("api:summary:read", true, Summary(dep)))
+	r.Get("/summary.json", dep.Auth.Require("api:summary:read", true, Summary(dep)))
 }

@@ -6,6 +6,7 @@
     1. Separate Device and Identity and App OR Join Them
     1. Check Sync Creds before save/enable
 
+1. use json_valid, and json_patch to keep raw json 
 
 1. Carer & AAPS minimal compatability 
     1. Nightscout API Treatments

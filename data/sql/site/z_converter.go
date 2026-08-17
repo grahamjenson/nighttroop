@@ -142,13 +142,13 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xfloat64 := *source.DeviceBatteryPercent
 		siteCreateDeviceReportParams.DeviceBatteryPercent = &xfloat64
 	}
-	if source.DeviceChargingState != nil {
-		xstring := *source.DeviceChargingState
-		siteCreateDeviceReportParams.DeviceChargingState = &xstring
+	if source.IsDeviceCharging != nil {
+		xbool := *source.IsDeviceCharging
+		siteCreateDeviceReportParams.IsDeviceCharging = &xbool
 	}
 	if source.PumpState != nil {
-		xstring2 := *source.PumpState
-		siteCreateDeviceReportParams.PumpState = &xstring2
+		xstring := *source.PumpState
+		siteCreateDeviceReportParams.PumpState = &xstring
 	}
 	if source.PumpReservoir != nil {
 		xfloat642 := *source.PumpReservoir
@@ -159,8 +159,12 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		siteCreateDeviceReportParams.PumpBatteryPercent = &xfloat643
 	}
 	if source.PumpChargingState != nil {
-		xstring3 := *source.PumpChargingState
-		siteCreateDeviceReportParams.PumpChargingState = &xstring3
+		xstring2 := *source.PumpChargingState
+		siteCreateDeviceReportParams.PumpChargingState = &xstring2
+	}
+	if source.LoopName != nil {
+		xstring3 := *source.LoopName
+		siteCreateDeviceReportParams.LoopName = &xstring3
 	}
 	if source.LoopIob != nil {
 		xfloat644 := *source.LoopIob
@@ -178,22 +182,26 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xfloat647 := *source.LoopCob
 		siteCreateDeviceReportParams.LoopCob = &xfloat647
 	}
+	if source.LoopPredictions != nil {
+		xstring4 := *source.LoopPredictions
+		siteCreateDeviceReportParams.LoopPredictions = &xstring4
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateDeviceReportParams.UtcOffsetMinutes = &xint64
 	}
 	siteCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring4 := *source.RawJsonData
-		siteCreateDeviceReportParams.RawJsonData = &xstring4
+		xstring5 := *source.RawJsonData
+		siteCreateDeviceReportParams.RawJsonData = &xstring5
 	}
 	if source.CreatedByAppName != nil {
-		xstring5 := *source.CreatedByAppName
-		siteCreateDeviceReportParams.CreatedByAppName = &xstring5
+		xstring6 := *source.CreatedByAppName
+		siteCreateDeviceReportParams.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring6 := *source.CreatedByDeviceName
-		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring6
+		xstring7 := *source.CreatedByDeviceName
+		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring7
 	}
 	siteCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateDeviceReportParams
