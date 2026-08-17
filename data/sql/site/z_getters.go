@@ -2904,6 +2904,17 @@ func (m SearchDeviceReportsParams) SetLimit(v int64) SearchDeviceReportsParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateDeviceReportParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateDeviceReportParams.
+func (m UpdateDeviceReportParams) SetRawJsonData(v *string) UpdateDeviceReportParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateDeviceReportParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName

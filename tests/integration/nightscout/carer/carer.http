@@ -127,7 +127,8 @@ B [
   {
     "eventType": "Profile Switch",
     "created_at": "{{ time 9 }}",
-    "notes": "Profile Switch 1"
+    "notes": "Profile Switch 1",
+    "defaultProfile": "Dash-2025"
   },
   {
     "eventType": "Profile Switch",

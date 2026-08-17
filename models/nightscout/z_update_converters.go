@@ -43,6 +43,8 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 }
 func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterContext) site.UpdateDeviceReportParams {
 	var siteUpdateDeviceReportParams site.UpdateDeviceReportParams
+	pString := source.RawJsonData
+	siteUpdateDeviceReportParams.RawJsonData = &pString
 	siteUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateDeviceReportParams.ID = string(*source.Identifier)

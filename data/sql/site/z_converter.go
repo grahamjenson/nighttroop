@@ -208,9 +208,13 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 }
 func DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams {
 	var siteUpdateDeviceReportParams UpdateDeviceReportParams
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteUpdateDeviceReportParams.RawJsonData = &xstring
+	}
 	if source.UpdatedByIdentityName != nil {
-		xstring := *source.UpdatedByIdentityName
-		siteUpdateDeviceReportParams.UpdatedByIdentityName = &xstring
+		xstring2 := *source.UpdatedByIdentityName
+		siteUpdateDeviceReportParams.UpdatedByIdentityName = &xstring2
 	}
 	siteUpdateDeviceReportParams.ID = source.ID
 	return siteUpdateDeviceReportParams
