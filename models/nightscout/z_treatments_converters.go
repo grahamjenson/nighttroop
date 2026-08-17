@@ -81,6 +81,10 @@ func ActivityUpdate(source site.Activity, context ConverterContext) site.UpdateA
 		xstring3 := *source.Reason
 		siteUpdateActivityParams.Reason = &xstring3
 	}
+	if source.RawJsonData != nil {
+		xstring4 := *source.RawJsonData
+		siteUpdateActivityParams.RawJsonData = &xstring4
+	}
 	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateActivityParams.ID = source.ID
 	return siteUpdateActivityParams
@@ -126,6 +130,10 @@ func ComponentEventUpdate(source site.ComponentEvent, context ConverterContext) 
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateComponentEventParams.Reason = &xstring2
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteUpdateComponentEventParams.RawJsonData = &xstring3
 	}
 	siteUpdateComponentEventParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateComponentEventParams.ID = source.ID
@@ -469,6 +477,10 @@ func EventGroupUpdate(source site.EventGroup, context ConverterContext) site.Upd
 		xstring11 := *source.Reason
 		siteUpdateEventGroupParams.Reason = &xstring11
 	}
+	if source.RawJsonData != nil {
+		xstring12 := *source.RawJsonData
+		siteUpdateEventGroupParams.RawJsonData = &xstring12
+	}
 	siteUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateEventGroupParams.ID = source.ID
 	return siteUpdateEventGroupParams
@@ -586,6 +598,10 @@ func FoodIntakeUpdate(source site.FoodIntake, context ConverterContext) site.Upd
 		xstring5 := *source.Reason
 		siteUpdateFoodIntakeParams.Reason = &xstring5
 	}
+	if source.RawJsonData != nil {
+		xstring6 := *source.RawJsonData
+		siteUpdateFoodIntakeParams.RawJsonData = &xstring6
+	}
 	siteUpdateFoodIntakeParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateFoodIntakeParams.ID = source.ID
 	return siteUpdateFoodIntakeParams
@@ -634,6 +650,10 @@ func GlucoseReadingUpdate(source site.GlucoseReading, context ConverterContext) 
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateGlucoseReadingParams.Reason = &xstring2
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteUpdateGlucoseReadingParams.RawJsonData = &xstring3
 	}
 	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateGlucoseReadingParams.ID = source.ID
@@ -685,6 +705,10 @@ func InsulinDoseUpdate(source site.InsulinDose, context ConverterContext) site.U
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateInsulinDoseParams.Reason = &xstring2
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteUpdateInsulinDoseParams.RawJsonData = &xstring3
 	}
 	siteUpdateInsulinDoseParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateInsulinDoseParams.ID = source.ID
@@ -747,6 +771,10 @@ func NotificationEventUpdate(source site.NotificationEvent, context ConverterCon
 	if source.Reason != nil {
 		xstring3 := *source.Reason
 		siteUpdateNotificationEventParams.Reason = &xstring3
+	}
+	if source.RawJsonData != nil {
+		xstring4 := *source.RawJsonData
+		siteUpdateNotificationEventParams.RawJsonData = &xstring4
 	}
 	siteUpdateNotificationEventParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateNotificationEventParams.ID = source.ID
@@ -834,6 +862,10 @@ func ProfileSwitchUpdate(source site.ProfileSwitch, context ConverterContext) si
 		xstring2 := *source.Reason
 		siteUpdateProfileSwitchParams.Reason = &xstring2
 	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteUpdateProfileSwitchParams.RawJsonData = &xstring3
+	}
 	siteUpdateProfileSwitchParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateProfileSwitchParams.ID = source.ID
 	return siteUpdateProfileSwitchParams
@@ -842,6 +874,10 @@ func ProfileUpdate(source site.ProfilePreset, context ConverterContext) site.Upd
 	var siteUpdateProfilePresetParams site.UpdateProfilePresetParams
 	pString := source.Name
 	siteUpdateProfilePresetParams.Name = &pString
+	if source.RawJsonData != nil {
+		xstring := *source.RawJsonData
+		siteUpdateProfilePresetParams.RawJsonData = &xstring
+	}
 	siteUpdateProfilePresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateProfilePresetParams.ID = source.ID
 	return siteUpdateProfilePresetParams
@@ -901,6 +937,10 @@ func TempBasalUpdate(source site.TempBasal, context ConverterContext) site.Updat
 		xstring2 := *source.Reason
 		siteUpdateTempBasalParams.Reason = &xstring2
 	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteUpdateTempBasalParams.RawJsonData = &xstring3
+	}
 	siteUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateTempBasalParams.ID = source.ID
 	return siteUpdateTempBasalParams
@@ -954,6 +994,10 @@ func TempTargetUpdate(source site.TempTarget, context ConverterContext) site.Upd
 	if source.Reason != nil {
 		xstring2 := *source.Reason
 		siteUpdateTempTargetParams.Reason = &xstring2
+	}
+	if source.RawJsonData != nil {
+		xstring3 := *source.RawJsonData
+		siteUpdateTempTargetParams.RawJsonData = &xstring3
 	}
 	siteUpdateTempTargetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	siteUpdateTempTargetParams.ID = source.ID

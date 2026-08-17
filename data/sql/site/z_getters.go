@@ -3564,6 +3564,17 @@ func (m UpdateActivityParams) SetReason(v *string) UpdateActivityParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateActivityParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateActivityParams.
+func (m UpdateActivityParams) SetRawJsonData(v *string) UpdateActivityParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateActivityParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -4089,6 +4100,17 @@ func (m UpdateComponentEventParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateComponentEventParams.
 func (m UpdateComponentEventParams) SetReason(v *string) UpdateComponentEventParams {
 	m.Reason = v
+	return m
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateComponentEventParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateComponentEventParams.
+func (m UpdateComponentEventParams) SetRawJsonData(v *string) UpdateComponentEventParams {
+	m.RawJsonData = v
 	return m
 }
 
@@ -4829,6 +4851,17 @@ func (m UpdateFoodIntakeParams) SetReason(v *string) UpdateFoodIntakeParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateFoodIntakeParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetRawJsonData(v *string) UpdateFoodIntakeParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateFoodIntakeParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -5420,6 +5453,17 @@ func (m UpdateGlucoseReadingParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateGlucoseReadingParams.
 func (m UpdateGlucoseReadingParams) SetReason(v *string) UpdateGlucoseReadingParams {
 	m.Reason = v
+	return m
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateGlucoseReadingParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateGlucoseReadingParams.
+func (m UpdateGlucoseReadingParams) SetRawJsonData(v *string) UpdateGlucoseReadingParams {
+	m.RawJsonData = v
 	return m
 }
 
@@ -6391,6 +6435,17 @@ func (m UpdateEventGroupParams) SetReason(v *string) UpdateEventGroupParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateEventGroupParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateEventGroupParams.
+func (m UpdateEventGroupParams) SetRawJsonData(v *string) UpdateEventGroupParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateEventGroupParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -6996,6 +7051,17 @@ func (m UpdateInsulinDoseParams) SetReason(v *string) UpdateInsulinDoseParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateInsulinDoseParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateInsulinDoseParams.
+func (m UpdateInsulinDoseParams) SetRawJsonData(v *string) UpdateInsulinDoseParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateInsulinDoseParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -7521,6 +7587,17 @@ func (m UpdateNotificationEventParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateNotificationEventParams.
 func (m UpdateNotificationEventParams) SetReason(v *string) UpdateNotificationEventParams {
 	m.Reason = v
+	return m
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateNotificationEventParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateNotificationEventParams.
+func (m UpdateNotificationEventParams) SetRawJsonData(v *string) UpdateNotificationEventParams {
+	m.RawJsonData = v
 	return m
 }
 
@@ -8173,6 +8250,17 @@ func (m UpdateProfileSwitchParams) SetReason(v *string) UpdateProfileSwitchParam
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateProfileSwitchParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfileSwitchParams.
+func (m UpdateProfileSwitchParams) SetRawJsonData(v *string) UpdateProfileSwitchParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateProfileSwitchParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -8723,6 +8811,17 @@ func (m UpdateTempBasalParams) SetReason(v *string) UpdateTempBasalParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateTempBasalParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateTempBasalParams.
+func (m UpdateTempBasalParams) SetRawJsonData(v *string) UpdateTempBasalParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateTempBasalParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -9270,6 +9369,17 @@ func (m UpdateTempTargetParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateTempTargetParams.
 func (m UpdateTempTargetParams) SetReason(v *string) UpdateTempTargetParams {
 	m.Reason = v
+	return m
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateTempTargetParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateTempTargetParams.
+func (m UpdateTempTargetParams) SetRawJsonData(v *string) UpdateTempTargetParams {
+	m.RawJsonData = v
 	return m
 }
 
@@ -9922,6 +10032,17 @@ func (m UpdateFoodPresetParams) SetEnergy(v *float64) UpdateFoodPresetParams {
 	return m
 }
 
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateFoodPresetParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetRawJsonData(v *string) UpdateFoodPresetParams {
+	m.RawJsonData = v
+	return m
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateFoodPresetParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -10205,6 +10326,17 @@ func (m UpdateProfilePresetParams) GetName() *string {
 // SetName sets the Name value and returns the updated UpdateProfilePresetParams.
 func (m UpdateProfilePresetParams) SetName(v *string) UpdateProfilePresetParams {
 	m.Name = v
+	return m
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m UpdateProfilePresetParams) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfilePresetParams.
+func (m UpdateProfilePresetParams) SetRawJsonData(v *string) UpdateProfilePresetParams {
+	m.RawJsonData = v
 	return m
 }
 

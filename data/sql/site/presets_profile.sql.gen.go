@@ -481,14 +481,20 @@ const updateProfilePreset = `-- name: UpdateProfilePreset :one
 
 UPDATE profile_presets SET
     name = COALESCE(?1, name),
+
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?2 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?2
-WHERE id = ?3
+    updated_by_identity_name = ?3
+WHERE id = ?4
 RETURNING id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateProfilePresetParams struct {
 	Name                  *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -497,7 +503,12 @@ type UpdateProfilePresetParams struct {
 // UPDATE
 // ------
 func (q *Queries) UpdateProfilePreset(ctx context.Context, arg UpdateProfilePresetParams) (*ProfilePreset, error) {
-	row := q.queryRow(ctx, q.updateProfilePresetStmt, updateProfilePreset, arg.Name, arg.UpdatedByIdentityName, arg.ID)
+	row := q.queryRow(ctx, q.updateProfilePresetStmt, updateProfilePreset,
+		arg.Name,
+		arg.RawJsonData,
+		arg.UpdatedByIdentityName,
+		arg.ID,
+	)
 	var i ProfilePreset
 	err := row.Scan(
 		&i.ID,

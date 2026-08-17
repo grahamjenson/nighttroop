@@ -35,6 +35,8 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 		xstring3 := string(*source.Notes)
 		siteUpdateActivityParams.Notes = &xstring3
 	}
+	pString := source.RawJsonData
+	siteUpdateActivityParams.RawJsonData = &pString
 	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateActivityParams.ID = string(*source.Identifier)
@@ -57,6 +59,8 @@ func EntryToUpdate(source Entry, context ConverterContext) site.UpdateGlucoseRea
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Reading)
 		siteUpdateGlucoseReadingParams.Reading = &xfloat64
 	}
+	pString := source.RawJsonData
+	siteUpdateGlucoseReadingParams.RawJsonData = &pString
 	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateGlucoseReadingParams.ID = string(*source.Identifier)
@@ -101,6 +105,8 @@ func FoodToUpdate(source Food, context ConverterContext) site.UpdateFoodPresetPa
 		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
 		siteUpdateFoodPresetParams.Energy = &xfloat646
 	}
+	pString := source.RawJsonData
+	siteUpdateFoodPresetParams.RawJsonData = &pString
 	siteUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		siteUpdateFoodPresetParams.ID = string(*source.Identifier)

@@ -92,6 +92,10 @@ UPDATE food_presets SET
     fibre = COALESCE(sqlc.narg('Fibre'), fibre),
     energy = COALESCE(sqlc.narg('Energy'), energy),
 
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(sqlc.narg('RawJsonData') AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID')

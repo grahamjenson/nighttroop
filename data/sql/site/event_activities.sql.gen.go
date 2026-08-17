@@ -405,9 +405,13 @@ UPDATE activities SET
     notes = COALESCE(?7, notes),
     reason = COALESCE(?8, reason),
 
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?9 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?9
-WHERE id = ?10 AND deleted_at IS NULL
+    updated_by_identity_name = ?10
+WHERE id = ?11 AND deleted_at IS NULL
 RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -420,6 +424,7 @@ type UpdateActivityParams struct {
 	HeartRate             *int64
 	Notes                 *string
 	Reason                *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -437,6 +442,7 @@ func (q *Queries) UpdateActivity(ctx context.Context, arg UpdateActivityParams) 
 		arg.HeartRate,
 		arg.Notes,
 		arg.Reason,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

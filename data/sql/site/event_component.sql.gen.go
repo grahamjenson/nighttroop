@@ -367,15 +367,21 @@ const updateComponentEvent = `-- name: UpdateComponentEvent :one
 UPDATE component_events SET
     notes = COALESCE(?1, notes),
     reason = COALESCE(?2, reason),
+
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?3 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?3
-WHERE id = ?4 AND deleted_at IS NULL
+    updated_by_identity_name = ?4
+WHERE id = ?5 AND deleted_at IS NULL
 RETURNING id, event_type, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type UpdateComponentEventParams struct {
 	Notes                 *string
 	Reason                *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -387,6 +393,7 @@ func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentE
 	row := q.queryRow(ctx, q.updateComponentEventStmt, updateComponentEvent,
 		arg.Notes,
 		arg.Reason,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

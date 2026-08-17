@@ -1256,9 +1256,13 @@ UPDATE event_groups SET
     notes = COALESCE(?10, notes),
     reason = COALESCE(?11, reason),
 
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?12 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?12
-WHERE id = ?13 AND deleted_at IS NULL
+    updated_by_identity_name = ?13
+WHERE id = ?14 AND deleted_at IS NULL
 RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -1274,6 +1278,7 @@ type UpdateEventGroupParams struct {
 	NotificationEventID   *string
 	Notes                 *string
 	Reason                *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -1294,6 +1299,7 @@ func (q *Queries) UpdateEventGroup(ctx context.Context, arg UpdateEventGroupPara
 		arg.NotificationEventID,
 		arg.Notes,
 		arg.Reason,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

@@ -366,9 +366,13 @@ UPDATE food_presets SET
     fibre = COALESCE(?8, fibre),
     energy = COALESCE(?9, energy),
 
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?10 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?10
-WHERE id = ?11
+    updated_by_identity_name = ?11
+WHERE id = ?12
 RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -382,6 +386,7 @@ type UpdateFoodPresetParams struct {
 	Protein               *float64
 	Fibre                 *float64
 	Energy                *float64
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -400,6 +405,7 @@ func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetPara
 		arg.Protein,
 		arg.Fibre,
 		arg.Energy,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

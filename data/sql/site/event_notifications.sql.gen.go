@@ -338,9 +338,13 @@ UPDATE notification_events SET
     notes = COALESCE(?5, notes),
     reason = COALESCE(?6, reason),
     
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?7 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?7
-WHERE id = ?8 AND deleted_at IS NULL
+    updated_by_identity_name = ?8
+WHERE id = ?9 AND deleted_at IS NULL
 RETURNING id, notification_type, title, severity, content, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -351,6 +355,7 @@ type UpdateNotificationEventParams struct {
 	Content               *string
 	Notes                 *string
 	Reason                *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -366,6 +371,7 @@ func (q *Queries) UpdateNotificationEvent(ctx context.Context, arg UpdateNotific
 		arg.Content,
 		arg.Notes,
 		arg.Reason,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

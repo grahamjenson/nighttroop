@@ -439,9 +439,14 @@ UPDATE food_intakes SET
     notes = COALESCE(?10, notes),
     reason = COALESCE(?11, reason),
 
+
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?12 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?12
-WHERE id = ?13 AND deleted_at IS NULL
+    updated_by_identity_name = ?13
+WHERE id = ?14 AND deleted_at IS NULL
 RETURNING id, name, category, subcategory, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -457,6 +462,7 @@ type UpdateFoodIntakeParams struct {
 	Portions              *float64
 	Notes                 *string
 	Reason                *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -477,6 +483,7 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 		arg.Portions,
 		arg.Notes,
 		arg.Reason,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)

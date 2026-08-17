@@ -343,9 +343,13 @@ UPDATE temp_basals SET
     notes = COALESCE(?4, notes),
     reason = COALESCE(?5, reason),
 
+    raw_json_data = json_patch(
+        COALESCE(raw_json_data, '{}'),
+        COALESCE(CAST(?6 AS TEXT), '{}')
+    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?6
-WHERE id = ?7 AND deleted_at IS NULL
+    updated_by_identity_name = ?7
+WHERE id = ?8 AND deleted_at IS NULL
 RETURNING id, duration_minutes, absolute, percent, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -355,6 +359,7 @@ type UpdateTempBasalParams struct {
 	Percent               *float64
 	Notes                 *string
 	Reason                *string
+	RawJsonData           *string
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -369,6 +374,7 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		arg.Percent,
 		arg.Notes,
 		arg.Reason,
+		arg.RawJsonData,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
