@@ -127,3 +127,8 @@ ASSERT {{ assertEquals -0.444 "@0.openaps.iob.basaliob" }}
 ASSERT {{ assertEquals 46 "@0.pump.reservoir" }}
 ASSERT {{ assertEquals 1.0870623804830117 "@1.loop.iob.iob" }}
 ASSERT {{ assertEquals 5.0947962907626785 "@1.loop.cob.cob" }}
+
+NAME get_raw_devicestatus_v1
+GET http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}&raw=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals false "@1.pump.bolusing" }}

@@ -14,7 +14,7 @@ import (
 )
 
 type TreatmentCollection struct {
-	converter func(c *site.EventGroupsBundle) nsutils.Record
+	converter func(c *site.EventGroupsBundle, raw bool) nsutils.Record
 }
 
 func NewTreatmentCollection() TreatmentCollection {
@@ -31,8 +31,8 @@ func (c TreatmentCollection) Name() string {
 	return "treatments"
 }
 
-func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle) nsutils.Record {
-	return c.converter(dr)
+func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle, raw bool) nsutils.Record {
+	return c.converter(dr, raw)
 }
 
 func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
@@ -177,12 +177,12 @@ func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.C
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
 
-func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data)
+func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier)
+func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -191,7 +191,7 @@ func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.
 		return nil, rerr
 	}
 
-	return nsutils.CreateRecordSlice(treatments, c.converter), nil
+	return nsutils.CreateRecordSlice(treatments, c.converter, query.Raw), nil
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -203,13 +203,13 @@ func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httput
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
-func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
+func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
 }
 
-func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
 	// We will always repalce because it is way harder otherwise
-	return MetaPatch(c, ctx, siteContext, identifier, patch)
+	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
 }
 
 func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.EventGroupsBundle, *nsutils.HTTPError) {

@@ -404,7 +404,7 @@ UPDATE activities SET
     heart_rate = COALESCE(?6, heart_rate),
     notes = COALESCE(?7, notes),
     reason = COALESCE(?8, reason),
-    
+
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?9
 WHERE id = ?10 AND deleted_at IS NULL

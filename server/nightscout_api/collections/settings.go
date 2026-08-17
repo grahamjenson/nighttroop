@@ -16,7 +16,7 @@ import (
 )
 
 type SettingsCollection struct {
-	converter func(c *Setting) nsutils.Record
+	converter func(c *Setting, raw bool) nsutils.Record
 }
 
 func NewSettingsCollection() SettingsCollection {
@@ -30,7 +30,7 @@ func NewSettingsCollection() SettingsCollection {
 // You have to pass an identifier along to match with the settings
 // ///
 
-func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
 	var nsModel nightscout.Setting
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
@@ -65,10 +65,10 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 		return nil, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(setting)), nil
+	return ptr(c.converter(setting, raw)), nil
 }
 
-func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	if identifier == "" {
 		slog.Error("setting identifier not available", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
@@ -115,10 +115,10 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(setting)), false, nil
+	return ptr(c.converter(setting, raw)), false, nil
 }
 
-func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
 	if identifier == "" {
 		slog.Error("setting identifier not available", "data", patch, "collection", "settings")
 		return nil, nsutils.ErrNotFound
@@ -127,7 +127,7 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 		patch["identifier"] = identifier
 	}
 
-	record, _, err := c.Replace(ctx, siteContext, identifier, patch, false)
+	record, _, err := c.Replace(ctx, siteContext, identifier, patch, false, raw)
 	if err != nil {
 		return nil, err
 	}
@@ -161,14 +161,14 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 	return nil
 }
 
-func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
 	settingsMap := GetSettingsMap(siteContext.SiteModel, siteContext.IdentityModel)
 	setting, ok := settingsMap[identifier]
 	if !ok {
 		return nil, nsutils.ErrNotFound
 	}
 
-	return ptr(c.converter(setting)), nil
+	return ptr(c.converter(setting, query.Raw)), nil
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -177,7 +177,7 @@ func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.S
 	for _, setting := range settingsMap {
 		settingsList = append(settingsList, setting)
 	}
-	return nsutils.CreateRecordSlice(settingsList, c.converter), nil
+	return nsutils.CreateRecordSlice(settingsList, c.converter, query.Raw), nil
 }
 
 func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
@@ -264,6 +264,10 @@ func (s Setting) GetCreatedByAppName() *string {
 
 func (s Setting) GetCreatedByDeviceName() *string {
 	return ptr("")
+}
+
+func (s Setting) GetRawJsonData() *string {
+	return nil
 }
 
 func GetIdentitySettingsMap(identity *control.Identity) map[string]*Setting {

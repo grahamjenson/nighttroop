@@ -1,6 +1,7 @@
 package nsutils
 
 import (
+	"encoding/json"
 	"time"
 
 	"nighttroop.t1d.nz/utils"
@@ -74,7 +75,8 @@ type ConverterToRecordFN[T any, PT interface {
 	GetCreatedAt() int64
 	GetUpdatedAt() int64
 	GetCreatedByIdentityName() string
-}] func(PT) Record
+	GetRawJsonData() *string
+}] func(PT, bool) Record
 
 func DBModelToRecord[T any, PT interface {
 	*T
@@ -85,18 +87,31 @@ func DBModelToRecord[T any, PT interface {
 	GetCreatedByIdentityName() string
 	GetUtcOffsetMinutes() *int64
 	GetOccurredAt() int64
+	GetRawJsonData() *string
 }, S any](collectionName Collection, convertFunc func(PT) S) ConverterToRecordFN[T, PT] {
-	return func(dbModel PT) Record {
+	return func(dbModel PT, raw bool) Record {
 		if dbModel == nil {
 			return Record{}
 		}
 
-		nsModel := convertFunc(dbModel)
+		var data map[string]any
 
-		mapModel, err := utils.ToMap(&nsModel)
-		if err != nil {
-			return Record{}
+		rawJSONData := dbModel.GetRawJsonData()
+		if raw && rawJSONData != nil {
+			err := json.Unmarshal([]byte(*rawJSONData), &data)
+			if err != nil {
+				return Record{}
+			}
+		} else {
+			nsModel := convertFunc(dbModel)
+
+			nsModelData, err := utils.ToMap(&nsModel)
+			if err != nil {
+				return Record{}
+			}
+			data = nsModelData
 		}
+
 		utcOffset := int64(0)
 		if dbModel.GetUtcOffsetMinutes() != nil {
 			utcOffset = *dbModel.GetUtcOffsetMinutes()
@@ -105,7 +120,7 @@ func DBModelToRecord[T any, PT interface {
 		record := Record{
 			Collection:  string(collectionName),
 			ID:          dbModel.GetID(),
-			Data:        mapModel,
+			Data:        data,
 			SrvCreated:  dbModel.GetCreatedAt(),
 			SrvModified: dbModel.GetUpdatedAt(),
 			Subject:     dbModel.GetCreatedByIdentityName(),
@@ -117,10 +132,10 @@ func DBModelToRecord[T any, PT interface {
 	}
 }
 
-func CreateRecordSlice[T any](in []T, fn func(T) Record) []Record {
+func CreateRecordSlice[T any](in []T, fn func(T, bool) Record, raw bool) []Record {
 	out := make([]Record, len(in))
 	for i, v := range in {
-		out[i] = fn(v)
+		out[i] = fn(v, raw)
 	}
 	return out
 }

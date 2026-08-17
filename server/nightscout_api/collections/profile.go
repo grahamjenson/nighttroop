@@ -14,7 +14,7 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *site.ProfilePresetBundle) nsutils.Record
+	converter func(c *site.ProfilePresetBundle, raw bool) nsutils.Record
 }
 
 func NewProfileCollection() ProfileCollection {
@@ -25,8 +25,8 @@ func (c ProfileCollection) Name() string {
 	return "profile"
 }
 
-func (c ProfileCollection) Convert(dr *site.ProfilePresetBundle) nsutils.Record {
-	return c.converter(dr)
+func (c ProfileCollection) Convert(dr *site.ProfilePresetBundle, raw bool) nsutils.Record {
+	return c.converter(dr, raw)
 }
 
 func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *site.ProfilePresetBundle) *nsutils.HTTPError {
@@ -72,12 +72,12 @@ func (c ProfileCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context
 // ////
 // HTTP METHODS
 // ////
-func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data)
+func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier)
+func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }
 
 func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -96,7 +96,7 @@ func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 	wrappers := site.ManyPresetsToMayWrappers(profilePresets)
-	return nsutils.CreateRecordSlice[*site.ProfilePresetBundle](wrappers, c.converter), nil
+	return nsutils.CreateRecordSlice[*site.ProfilePresetBundle](wrappers, c.converter, query.Raw), nil
 }
 
 func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -107,11 +107,11 @@ func (c ProfileCollection) DeleteType(ctx context.Context, siteContext *httputil
 	return 0, nsutils.ErrNotImplemented
 }
 
-func (c ProfileCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
+func (c ProfileCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
 }
 
-func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
 	return nil, nsutils.ErrNotImplemented
 }
 

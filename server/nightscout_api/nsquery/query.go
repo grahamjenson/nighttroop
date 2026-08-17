@@ -36,6 +36,7 @@ type Query struct {
 
 	IncludeDeleted *bool
 
+	Raw bool
 	// Altering Return values or structure
 	// Limits
 	Limit int64

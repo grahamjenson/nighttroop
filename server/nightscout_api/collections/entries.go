@@ -13,7 +13,7 @@ import (
 )
 
 type EntriesCollection struct {
-	converter func(c *site.GlucoseReading) nsutils.Record
+	converter func(c *site.GlucoseReading, raw bool) nsutils.Record
 }
 
 func NewEntriesCollection() EntriesCollection {
@@ -30,8 +30,8 @@ func (c EntriesCollection) Name() string {
 	return "entries"
 }
 
-func (c EntriesCollection) Convert(dr *site.GlucoseReading) nsutils.Record {
-	return c.converter(dr)
+func (c EntriesCollection) Convert(dr *site.GlucoseReading, raw bool) nsutils.Record {
+	return c.converter(dr, raw)
 }
 
 // Cannot change properties
@@ -93,12 +93,12 @@ func (c EntriesCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsM
 // END OF FUNCTIONS USED BY META COLLECTIONS
 /////
 
-func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data)
+func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier)
+func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }
 
 func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -109,8 +109,8 @@ func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputil
 	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
 }
 
-func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch)
+func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
 }
 
 func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -129,10 +129,10 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(entries, c.converter), nil
+	return nsutils.CreateRecordSlice(entries, c.converter, query.Raw), nil
 }
 
 // Replace will delete then create the record again, BUT it will not
-func (c EntriesCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
+func (c EntriesCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
 }

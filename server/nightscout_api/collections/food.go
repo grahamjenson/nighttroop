@@ -13,7 +13,7 @@ import (
 )
 
 type FoodCollection struct {
-	converter func(c *site.FoodPreset) nsutils.Record
+	converter func(c *site.FoodPreset, raw bool) nsutils.Record
 }
 
 func NewFoodCollection() FoodCollection {
@@ -30,8 +30,8 @@ func (c FoodCollection) Name() string {
 	return "food"
 }
 
-func (c FoodCollection) Convert(dr *site.FoodPreset) nsutils.Record {
-	return c.converter(dr)
+func (c FoodCollection) Convert(dr *site.FoodPreset, raw bool) nsutils.Record {
+	return c.converter(dr, raw)
 }
 
 func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
@@ -93,16 +93,16 @@ func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsMode
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
 
-func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data)
+func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier)
+func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }
 
-func (c FoodCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch)
+func (c FoodCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
 }
 
 func (c FoodCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -129,9 +129,9 @@ func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteC
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(foodPresets, c.converter), nil
+	return nsutils.CreateRecordSlice(foodPresets, c.converter, query.Raw), nil
 }
 
-func (c FoodCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
+func (c FoodCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
 }

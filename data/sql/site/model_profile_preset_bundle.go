@@ -59,6 +59,13 @@ func (c ProfilePresetBundle) GetCreatedByDeviceName() *string {
 	return c[0].CreatedByDeviceName
 }
 
+func (c ProfilePresetBundle) GetRawJsonData() *string {
+	if len(c) == 0 || c[0] == nil {
+		return nil
+	}
+	return c[0].RawJsonData
+}
+
 ///////
 // Many to Many
 ///////

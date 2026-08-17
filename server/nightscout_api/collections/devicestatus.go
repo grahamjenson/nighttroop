@@ -14,7 +14,7 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	converter func(c *site.DeviceReport) nsutils.Record
+	converter func(c *site.DeviceReport, raw bool) nsutils.Record
 }
 
 func NewDeviceStatusCollection() DeviceStatusCollection {
@@ -30,8 +30,8 @@ func (c DeviceStatusCollection) Name() string {
 	return "devicestatus"
 }
 
-func (c DeviceStatusCollection) Convert(dr *site.DeviceReport) nsutils.Record {
-	return c.converter(dr)
+func (c DeviceStatusCollection) Convert(dr *site.DeviceReport, raw bool) nsutils.Record {
+	return c.converter(dr, raw)
 }
 
 func (c DeviceStatusCollection) Validate(nsModel nightscout.DeviceStatus, dbModel *site.DeviceReport) *nsutils.HTTPError {
@@ -77,12 +77,12 @@ func (c DeviceStatusCollection) PatchDBFunc(q *site.Queries, ctx context.Context
 // END OF FUNCTIONS USED BY META COLLECTIONS
 /////
 
-func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data)
+func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier)
+func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }
 
 func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -101,7 +101,7 @@ func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputi
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(deviceStatuses, c.converter), nil
+	return nsutils.CreateRecordSlice(deviceStatuses, c.converter, query.Raw), nil
 }
 
 func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -112,13 +112,13 @@ func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *htt
 	return 0, nsutils.ErrNotImplemented
 }
 
-func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch)
+func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
 }
 
 // Replace will delete then create the record again, BUT it will not
-func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
+func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
 }
 
 /////

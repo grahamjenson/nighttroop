@@ -12,11 +12,11 @@ import (
 )
 
 type CollectionStore interface {
-	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError)
-	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError)
+	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError)
+	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
-	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError)
-	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError)
+	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
+	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
 }
@@ -29,7 +29,7 @@ type NightTroopAPIStore struct {
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, raw bool) (nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
@@ -38,7 +38,7 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Create(ctx, siteContext, data)
+	record, err := collectionsStore.Create(ctx, siteContext, data, raw)
 
 	if err != nil {
 		return nsutils.Record{}, err
@@ -50,7 +50,7 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 
 }
 
-func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
@@ -59,7 +59,7 @@ func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Colle
 	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Get(ctx, siteContext, identifier)
+	record, err := collectionsStore.Get(ctx, siteContext, identifier, query)
 	if err != nil {
 		return nsutils.Record{}, err
 	}
@@ -88,7 +88,7 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 
 }
 
-func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool) (nsutils.Record, bool, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Record, bool, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, false, nsutils.ErrInvalidCollection
@@ -97,7 +97,7 @@ func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.C
 	if siteContext == nil {
 		return nsutils.Record{}, false, nsutils.ErrMissingCredentials
 	}
-	record, created, err := collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate)
+	record, created, err := collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw)
 	if err != nil {
 		return nsutils.Record{}, false, err
 	}
@@ -107,7 +107,7 @@ func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.C
 	return *record, created, nil
 }
 
-func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, raw bool) (nsutils.Record, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
 		return nsutils.Record{}, nsutils.ErrInvalidCollection
@@ -116,7 +116,7 @@ func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Col
 	if siteContext == nil {
 		return nsutils.Record{}, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Patch(ctx, siteContext, identifier, patch)
+	record, err := collectionsStore.Patch(ctx, siteContext, identifier, patch, raw)
 	if err != nil {
 		return nsutils.Record{}, err
 	}

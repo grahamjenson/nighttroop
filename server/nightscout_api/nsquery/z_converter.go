@@ -917,6 +917,9 @@ func QueryValueToQuery(source QueryValues) Query {
 		xbool := nightscoutFlexibleBoolToBool(*source.IncludeDeleted)
 		nsqueryQuery.IncludeDeleted = &xbool
 	}
+	if source.Raw != nil {
+		nsqueryQuery.Raw = nightscoutFlexibleBoolToBool(*source.Raw)
+	}
 	nsqueryQuery.Limit = GetLimitInt64(source)
 	nsqueryQuery.Skip = GetSkipInt64(source)
 	if source.SgvEQ != nil {

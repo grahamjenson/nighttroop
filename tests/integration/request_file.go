@@ -341,15 +341,17 @@ func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (c
 
 func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, ctx map[string]any) {
 	code := r.AssertStatus.Code
+	outputRaw, _ := json.Marshal(output)
+
 	if code != 0 {
-		message := fmt.Sprintf("request %s expected status %d but got %d with body %v", r.Name, code, statusCode, output)
+		message := fmt.Sprintf("request %s expected status %d but got %d with body %v", r.Name, code, statusCode, string(outputRaw))
 		AssertEqual(t, code, statusCode, message, r.AssertStatus.Path, r.AssertStatus.Line)
 	}
 
 	for _, assertStruct := range r.Assert {
 		_, err := assertTemplateCheck(assertStruct, ctx, output, t)
 		if err != nil {
-			t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", r.Name, assertStruct.Raw, output, err)
+			t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", r.Name, assertStruct.Raw, string(outputRaw), err)
 		}
 	}
 }

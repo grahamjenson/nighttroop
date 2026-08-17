@@ -1,10 +1,12 @@
 package v1
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
@@ -32,7 +34,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		records := []nsutils.Record{}
 		if query.IDEq != nil {
-			record, err := dep.Store.Get(r.Context(), collection, *query.IDEq)
+			record, err := dep.Store.Get(r.Context(), collection, *query.IDEq, query)
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -79,6 +81,12 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
+		var raw nightscout.FlexibleBool
+		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
+		if rawError != nil {
+			raw = nightscout.FlexibleBool(false)
+		}
+
 		// Loop over the array of models sent
 		for _, item := range arrayOfModels {
 			doc, ok := item.(map[string]any)
@@ -88,7 +96,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 				return
 			}
 
-			record, err := dep.Store.Create(r.Context(), collection, doc)
+			record, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -209,7 +217,13 @@ func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
-		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate)
+		var raw nightscout.FlexibleBool
+		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
+		if rawError != nil {
+			raw = nightscout.FlexibleBool(false)
+		}
+
+		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate, raw.Bool())
 		if herr != nil {
 			nsutils.WriteError(w, herr)
 			return

@@ -1,11 +1,13 @@
 package v3
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
@@ -23,14 +25,14 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		record, err := dep.Store.Get(r.Context(), collection, identifier)
+		query, _ := nsutils.ParseQuery(r.URL.Query())
 
+		record, err := dep.Store.Get(r.Context(), collection, identifier, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
 
-		query, _ := nsutils.ParseQuery(r.URL.Query())
 		nsutils.WriteRecordV3(w, record, query.Fields, false)
 
 	}
@@ -69,13 +71,20 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
+		var raw nightscout.FlexibleBool
+		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
+		if rawError != nil {
+			raw = nightscout.FlexibleBool(false)
+		}
+
 		// The Actual Create
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil || len(doc) == 0 {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Bad or missing request body"})
 			return
 		}
-		record, err := dep.Store.Create(r.Context(), collection, doc)
+
+		record, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
@@ -161,13 +170,19 @@ func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
+		var raw nightscout.FlexibleBool
+		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
+		if rawError != nil {
+			raw = nightscout.FlexibleBool(false)
+		}
+
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
-		record, created, err := dep.Store.Replace(r.Context(), collection, identifier, doc, canCreate)
+		record, created, err := dep.Store.Replace(r.Context(), collection, identifier, doc, canCreate, raw.Bool())
 
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -193,6 +208,12 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
+		var raw nightscout.FlexibleBool
+		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
+		if rawError != nil {
+			raw = nightscout.FlexibleBool(false)
+		}
+
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -200,7 +221,7 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
 
-		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc)
+		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc, raw.Bool())
 
 		if err != nil {
 			nsutils.WriteError(w, err)

@@ -90,6 +90,9 @@ type QueryValues struct {
 
 	IncludeDeleted *nightscout.FlexibleBool `mapstructure:"includeDeleted,omitempty" json:"includeDeleted,omitempty"`
 
+	// This is Nighttroops value to show RawJsonData
+	Raw *nightscout.FlexibleBool `mapstructure:"raw,omitempty" json:"raw,omitempty"`
+
 	Token *string `mapstructure:"token,omitempty" json:"-"`
 
 	Other map[string]interface{} `mapstructure:",remain"`
@@ -297,6 +300,7 @@ var nonFilters = map[string]bool{
 	"Envelope": true,
 	"Fields":   true,
 	"Token":    true,
+	"Raw":      true,
 	"Other":    true,
 }
 

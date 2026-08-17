@@ -13,7 +13,7 @@ import (
 )
 
 type ActivityCollection struct {
-	converter func(c *site.Activity) nsutils.Record
+	converter func(c *site.Activity, raw bool) nsutils.Record
 }
 
 func NewActivityCollection() ActivityCollection {
@@ -30,8 +30,8 @@ func (c ActivityCollection) Name() string {
 	return "activity"
 }
 
-func (c ActivityCollection) Convert(dr *site.Activity) nsutils.Record {
-	return c.converter(dr)
+func (c ActivityCollection) Convert(dr *site.Activity, raw bool) nsutils.Record {
+	return c.converter(dr, raw)
 }
 
 func (c ActivityCollection) Validate(nsModel nightscout.Activity, dbModel *site.Activity) *nsutils.HTTPError {
@@ -90,12 +90,12 @@ func (c ActivityCollection) PatchDBFunc(q *site.Queries, ctx context.Context, ns
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
 
-func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data)
+func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier)
+func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }
 
 func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -114,7 +114,7 @@ func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.S
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(activities, c.converter), nil
+	return nsutils.CreateRecordSlice(activities, c.converter, query.Raw), nil
 }
 
 func (c ActivityCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -125,10 +125,10 @@ func (c ActivityCollection) DeleteType(ctx context.Context, siteContext *httputi
 	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
 }
 
-func (c ActivityCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate)
+func (c ActivityCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
 }
 
-func (c ActivityCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch)
+func (c ActivityCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
 }
