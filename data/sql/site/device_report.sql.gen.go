@@ -220,6 +220,7 @@ const getLatestDeviceReportWithPWDInformation = `-- name: GetLatestDeviceReportW
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name from device_reports
 WHERE 
     deleted_at IS NULL AND 
+    occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
     loop_name IS NOT NULL
 ORDER BY occurred_at DESC
 LIMIT 1

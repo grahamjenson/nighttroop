@@ -77,7 +77,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 SELECT * from device_reports
 WHERE 
     deleted_at IS NULL AND 
-    occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000
+    occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
     loop_name IS NOT NULL
 ORDER BY occurred_at DESC
 LIMIT 1;
