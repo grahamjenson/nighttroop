@@ -187,14 +187,16 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map EventGroup.OccurredAt Date
 	// goverter:map EventGroup.Notes Notes
 	// goverter:map EventGroup.Reason Reason
-	//
-	// goverter:ignore PreBolus SplitNow SplitExt Profile Units PumpType ProfileJSON Timeshift
 	// goverter:map EventGroup.GroupType EventType
+	//
+	// goverter:ignore PreBolus SplitNow SplitExt Units ProfileJSON Timeshift
+	//
 	//
 	// goverter:map GlucoseReading.Reading Glucose
 	// goverter:map GlucoseReading.ReadingType GlucoseType
 	//
 	// goverter:map InsulinDose.Dose Insulin
+	// goverter:map InsulinDose.DoseType Type
 	//
 	// goverter:map FoodIntake.Category Category
 	// goverter:map FoodIntake.Subcategory Subcategory
@@ -205,11 +207,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map FoodIntake.Fibre Fibre
 	// goverter:map FoodIntake.Energy Energy
 	//
-	// goverter:map TempBasal.DurationMinutes Duration
 	// goverter:map TempBasal.Percent Rate
 	// goverter:map TempBasal.Absolute Absolute
 	//
-	// goverter:map TempTarget.DurationMinutes Duration
 	// goverter:map TempTarget.HighTarget TargetTop
 	// goverter:map TempTarget.LowTarget TargetBottom
 	//
@@ -221,9 +221,15 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Activity.ActivityType ActivityType
 	// goverter:map Activity.Steps Steps
 	// goverter:map Activity.Calories Calories
-	// goverter:map Activity.DurationMinutes Duration
 	// goverter:map Activity.HeartRate HeartRate
 	//
+	// goverter:map ComponentEvent.PumpID PumpID
+	// goverter:map ComponentEvent.PumpType PumpType
+	// goverter:map ComponentEvent.PumpSerial PumpSerial
+	//
+	// SHARED FIELDS
+	// goverter:map . DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map . Duration                | DurationSelect
 	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
 
 	//////
@@ -369,13 +375,15 @@ func TreatmentToGlucoseReading(source Treatment) *site.GlucoseReading {
 
 func TreatmentToInsulinDose(source Treatment) *site.InsulinDose {
 	assigned := false
-	target := site.InsulinDose{DoseType: "bolus"}
+	target := site.InsulinDose{}
 	SharedTreatmentConvertion(source, &target)
 
 	if source.Insulin != nil {
 		assigned = true
 		target.Dose = source.Insulin.Float64()
 	}
+
+	target.DoseType = source.Type.Stringp()
 
 	if assigned {
 		return &target
@@ -458,6 +466,8 @@ func TreatmentToTempBasal(source Treatment) *site.TempBasal {
 		target.Percent = source.Percentage.Float64p()
 	}
 
+	target.DurationMinutes = source.Duration.Int64()
+
 	if assigned {
 		return &target
 	}
@@ -491,6 +501,8 @@ func TreatmentToTempTarget(source Treatment) *site.TempTarget {
 		target.LowTarget = source.TargetTop.Float64()
 	}
 
+	target.DurationMinutes = source.Duration.Int64()
+
 	if assigned {
 		return &target
 	}
@@ -502,7 +514,18 @@ func TreatmentToComponentEvent(source Treatment) *site.ComponentEvent {
 	target := site.ComponentEvent{EventType: source.EventType.String()}
 	SharedTreatmentConvertion(source, &target)
 
-	assigned = true
+	if source.PumpID != nil {
+		assigned = true
+		target.PumpID = source.PumpID.Stringp()
+	}
+	if source.PumpSerial != nil {
+		assigned = true
+		target.PumpSerial = source.PumpSerial.Stringp()
+	}
+	if source.PumpType != nil {
+		assigned = true
+		target.PumpType = source.PumpType.Stringp()
+	}
 
 	if assigned {
 		return &target
@@ -568,4 +591,41 @@ func SharedTreatmentConvertion(source Treatment, target interface {
 	}); ok {
 		value.SetDurationMinutes(source.Duration.Int64p())
 	}
+}
+
+func MinutesToMilliseconds(source *site.EventGroupsBundle) *FlexibleInt64 {
+
+	if source.TempBasal != nil {
+		value := FlexibleInt64(source.TempBasal.DurationMinutes * 60 * 1000)
+		return &value
+	}
+	if source.TempTarget != nil {
+		value := FlexibleInt64(source.TempTarget.DurationMinutes * 60 * 1000)
+		return &value
+
+	}
+	if source.Activity != nil && source.Activity.DurationMinutes != nil {
+		value := FlexibleInt64(*source.Activity.DurationMinutes * 60 * 1000)
+		return &value
+	}
+
+	return nil
+}
+
+func DurationSelect(source *site.EventGroupsBundle) *FlexibleInt64 {
+	if source.TempBasal != nil {
+		value := FlexibleInt64(source.TempBasal.DurationMinutes)
+		return &value
+	}
+	if source.TempTarget != nil {
+		value := FlexibleInt64(source.TempTarget.DurationMinutes)
+		return &value
+
+	}
+	if source.Activity != nil && source.Activity.DurationMinutes != nil {
+		value := FlexibleInt64(*source.Activity.DurationMinutes)
+		return &value
+	}
+
+	return nil
 }

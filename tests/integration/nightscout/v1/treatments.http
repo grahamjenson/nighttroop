@@ -467,3 +467,4 @@ NAME get_treatments_after_user_id_create_v1
 GET http://{{ .site }}.ns.localhost/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
+

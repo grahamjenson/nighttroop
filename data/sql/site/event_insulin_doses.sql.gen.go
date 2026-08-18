@@ -89,7 +89,7 @@ RETURNING id, dose, dose_type, notes, reason, raw_json_data, deleted_at, utc_off
 type CreateInsulinDoseParams struct {
 	ID                    string
 	Dose                  float64
-	DoseType              string
+	DoseType              *string
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64

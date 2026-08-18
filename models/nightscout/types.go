@@ -452,13 +452,26 @@ func (s *JSONString) String() string {
 type ShortString string
 
 func (s *ShortString) UnmarshalJSON(data []byte) error {
-	var str string
-	if err := json.Unmarshal(data, &str); err != nil {
-		return fmt.Errorf("expected short string, got %s", data)
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("expected notes string, got %s", data)
 	}
+	var str string
+	switch v := v.(type) {
+	case string:
+		str = v
+	case float64:
+		str = strconv.FormatFloat(v, 'f', -1, 64)
+	case bool:
+		str = strconv.FormatBool(v)
+	default:
+		str = fmt.Sprintf("%v", v)
+	}
+
 	if len(str) > 64 {
 		str = str[:64]
 	}
+
 	*s = ShortString(str)
 	return nil
 }

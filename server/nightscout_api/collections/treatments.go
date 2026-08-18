@@ -97,14 +97,19 @@ func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, ide
 	if err != nil {
 		return nil, err
 	}
+
 	egb := site.GetEventGroupToEventGroupsBundle(*dbModel)
+
 	return &egb, nil
 }
 
 func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *site.EventGroupsBundle, cc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
 	// This will be a partial update
+
 	nsModel.EventType = ptr(nightscout.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
+
 	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
+
 	MergeUpdateBundle(dbModel, updateBundle)
 
 	// Do something with the update bundle to merge it into the dbModel
@@ -649,6 +654,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.CarbCorrection:
 		return site.EventGroupsBundle{
@@ -661,11 +667,13 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.CorrectionBolus:
 		return site.EventGroupsBundle{
-			EventGroup:  eventGroup,
-			InsulinDose: insulinDose,
+			EventGroup:     eventGroup,
+			InsulinDose:    insulinDose,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.DADAlert:
 		return site.EventGroupsBundle{
@@ -687,6 +695,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.Note:
 		return site.EventGroupsBundle{
@@ -696,6 +705,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			FoodIntake:     foodIntake,
 			ProfileSwitch:  profileSwitch,
 			Activity:       activity,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.OpenAPSOffline:
 		return site.EventGroupsBundle{
@@ -737,6 +747,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
 			FoodIntake:     foodIntake,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.TempBasal:
 		return site.EventGroupsBundle{
@@ -771,8 +782,9 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		}
 	case nightscout.Bolus:
 		return site.EventGroupsBundle{
-			EventGroup:  eventGroup,
-			InsulinDose: insulinDose,
+			EventGroup:     eventGroup,
+			InsulinDose:    insulinDose,
+			ComponentEvent: componentEvent,
 		}
 	}
 

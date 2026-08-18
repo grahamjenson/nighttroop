@@ -212,6 +212,16 @@ func (m *ComponentEvent) SetEventType(v string) {
 	m.EventType = v
 }
 
+// GetPumpID returns the PumpID value.
+func (m ComponentEvent) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
 // GetPumpSerial returns the PumpSerial value.
 func (m ComponentEvent) GetPumpSerial() *string {
 	return m.PumpSerial
@@ -1373,12 +1383,12 @@ func (m *InsulinDose) SetDose(v float64) {
 }
 
 // GetDoseType returns the DoseType value.
-func (m InsulinDose) GetDoseType() string {
+func (m InsulinDose) GetDoseType() *string {
 	return m.DoseType
 }
 
 // SetDoseType sets the DoseType value and returns the updated InsulinDose.
-func (m *InsulinDose) SetDoseType(v string) {
+func (m *InsulinDose) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
@@ -3682,6 +3692,17 @@ func (m CreateComponentEventParams) GetEventType() string {
 // SetEventType sets the EventType value and returns the updated CreateComponentEventParams.
 func (m CreateComponentEventParams) SetEventType(v string) CreateComponentEventParams {
 	m.EventType = v
+	return m
+}
+
+// GetPumpID returns the PumpID value.
+func (m CreateComponentEventParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated CreateComponentEventParams.
+func (m CreateComponentEventParams) SetPumpID(v *string) CreateComponentEventParams {
+	m.PumpID = v
 	return m
 }
 
@@ -6557,12 +6578,12 @@ func (m CreateInsulinDoseParams) SetDose(v float64) CreateInsulinDoseParams {
 }
 
 // GetDoseType returns the DoseType value.
-func (m CreateInsulinDoseParams) GetDoseType() string {
+func (m CreateInsulinDoseParams) GetDoseType() *string {
 	return m.DoseType
 }
 
 // SetDoseType sets the DoseType value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetDoseType(v string) CreateInsulinDoseParams {
+func (m CreateInsulinDoseParams) SetDoseType(v *string) CreateInsulinDoseParams {
 	m.DoseType = v
 	return m
 }

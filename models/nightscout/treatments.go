@@ -22,6 +22,7 @@ type Treatment struct {
 	GlucoseType *GlucoseType     `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
 
 	// Food
+	Type        *ShortString `json:"type,omitempty"` // Type of food
 	Category    *ShortString `json:"category,omitempty"`
 	Subcategory *ShortString `json:"subcategory,omitempty"`
 
@@ -43,7 +44,8 @@ type Treatment struct {
 	SplitNow *FlexibleFloat64 `json:"splitNow,omitempty"`
 	SplitExt *FlexibleFloat64 `json:"splitExt,omitempty"`
 
-	Duration *FlexibleInt64 `json:"duration,omitempty"` // minutes
+	Duration               *FlexibleInt64 `json:"duration,omitempty"`               // minutes
+	DurationInMilliseconds *FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
 
 	Notes     *SanitizedString `json:"notes,omitempty"`
 	EnteredBy *ShortString     `json:"enteredBy,omitempty"`
@@ -61,7 +63,10 @@ type Treatment struct {
 	TargetTop    *FlexibleFloat64 `json:"targetTop,omitempty"`
 	TargetBottom *FlexibleFloat64 `json:"targetBottom,omitempty"`
 	Units        *Units           `json:"units,omitempty"`
-	PumpType     *ShortString     `json:"pumpType,omitempty"`
+
+	PumpID     *ShortString `json:"pumpId,omitempty"`
+	PumpSerial *ShortString `json:"pumpSerial,omitempty"`
+	PumpType   *ShortString `json:"pumpType,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity

@@ -125,28 +125,27 @@ NAME create_treatmentses_v1
 POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
 B [
   {
-    "eventType": "Profile Switch",
-    "created_at": "{{ time 9 }}",
-    "notes": "Profile Switch 1",
-    "defaultProfile": "Dash-2025"
+    "eventType": "Temporary Target",
+    "reason": "Eating Soon",
+    "targetBottom": 72,
+    "targetTop": 81,
+    "units": "mg/dl",
+    "duration": 16,
+    "durationInMilliseconds": 982623,
+    "app": "carer",
+    "utcOffset": 720
   },
   {
-    "eventType": "Profile Switch",
-    "created_at": "{{ time 9 }}",
-    "notes": "Profile Switch 2"
-  },
-  {
-    "eventType": "Note",
-    "created_at": "{{ time 12 }}",
-    "notes": "Note 1"
-  },
-  {
-    "eventType": "Note",
-    "created_at": "{{ time 13 }}",
-    "notes": "Note 2"
+    "eventType": "Carb Correction",
+    "carbs": 5,
+    "app": "carer",
+    "utcOffset": 720,
+    "created_at": "2026-08-14T03:42:45.402Z",
+    "insulin": null
   }
  ]
 ASSERT_STATUS 200
+
 
 
 

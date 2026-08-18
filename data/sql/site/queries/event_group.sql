@@ -342,15 +342,15 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateEventGroup :one
 UPDATE event_groups SET
-    glucose_reading_id = COALESCE(sqlc.narg('GlucoseReadingID'), glucose_reading_id),
-    insulin_dose_id = COALESCE(sqlc.narg('InsulinDoseID'), insulin_dose_id),
-    food_intake_id = COALESCE(sqlc.narg('FoodIntakeID'), food_intake_id),
-    temp_basal_id = COALESCE(sqlc.narg('TempBasalID'), temp_basal_id),
-    temp_target_id = COALESCE(sqlc.narg('TempTargetID'), temp_target_id),
-    profile_switch_id = COALESCE(sqlc.narg('ProfileSwitchID'), profile_switch_id),
-    component_event_id = COALESCE(sqlc.narg('ComponentEventID'), component_event_id),
-    activity_id = COALESCE(sqlc.narg('ActivityID'), activity_id),
-    notification_event_id = COALESCE(sqlc.narg('NotificationEventID'), notification_event_id),
+    glucose_reading_id = sqlc.narg('GlucoseReadingID'),
+    insulin_dose_id = sqlc.narg('InsulinDoseID'),
+    food_intake_id = sqlc.narg('FoodIntakeID'),
+    temp_basal_id = sqlc.narg('TempBasalID'),
+    temp_target_id = sqlc.narg('TempTargetID'),
+    profile_switch_id = sqlc.narg('ProfileSwitchID'),
+    component_event_id = sqlc.narg('ComponentEventID'),
+    activity_id = sqlc.narg('ActivityID'),
+    notification_event_id = sqlc.narg('NotificationEventID'),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

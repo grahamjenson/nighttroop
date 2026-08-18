@@ -25,7 +25,6 @@ POST http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}
 B {
     "app": "AAPS",
     "configuration": {},
-    "date": 1786919988777,
     "device": "openaps://CUBOT KINGKONG MINI 3",
     "isCharging": false,
     "openaps": {
@@ -110,3 +109,89 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals false "@0.isCharging" }} 
+
+NAME create_treatmentses_v1
+POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+B [
+    {
+    "app": "AAPS",
+    "enteredBy": "AndroidAPS",
+    "eventType": "Sensor Change",
+    "units": "mmol",
+    "utcOffset": 720,
+    "created_at": "2026-08-15T20:45:43.000Z"
+  },
+  {
+    "app": "AAPS",
+    "enteredBy": "AndroidAPS",
+    "eventType": "Insulin Change",
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "created_at": "2026-08-14T07:24:07.699Z"
+  },
+  {
+    "absolute": 0,
+    "app": "AAPS",
+    "duration": 90,
+    "durationInMilliseconds": 5400000,
+    "eventType": "Temp Basal",
+    "pumpId": 1736455956352,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "rate": 0,
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2026-08-18T02:14:54.696Z"    
+  },
+  {
+    "app": "AAPS",
+    "duration": 15,
+    "durationInMilliseconds": 900000,
+    "eventType": "Temporary Target",
+    "reason": "Automation",
+    "targetBottom": 144.00000000000003,
+    "targetTop": 144.00000000000003,
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "created_at": "2026-08-18T01:31:19.718Z"  
+  },
+  {  
+    "app": "AAPS",
+    "eventType": "Meal Bolus",
+    "insulin": 1,
+    "isBasalInsulin": false,
+    "pumpId": 1736455956313,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2026-08-17T21:29:53.952Z"
+  },
+  {
+    "app": "AAPS",
+    "eventType": "Meal Bolus",
+    "insulin": 0.3,
+    "isBasalInsulin": false,
+    "pumpId": 1736455955308,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "NORMAL",
+    "utcOffset": 720,
+    "created_at": "2026-08-14T07:24:34.301Z"
+  },
+  {  
+    "app": "AAPS",
+    "eventType": "Correction Bolus",
+    "insulin": 0.4,
+    "isBasalInsulin": false,
+    "pumpId": 1736455956350,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "type": "SMB",
+    "utcOffset": 720,
+    "created_at": "2026-08-18T02:10:00.787Z"
+  }
+  ]
+ASSERT_STATUS 200

@@ -1243,15 +1243,15 @@ func (q *Queries) SoftDeleteEventGroupsByType(ctx context.Context, arg SoftDelet
 const updateEventGroup = `-- name: UpdateEventGroup :one
 
 UPDATE event_groups SET
-    glucose_reading_id = COALESCE(?1, glucose_reading_id),
-    insulin_dose_id = COALESCE(?2, insulin_dose_id),
-    food_intake_id = COALESCE(?3, food_intake_id),
-    temp_basal_id = COALESCE(?4, temp_basal_id),
-    temp_target_id = COALESCE(?5, temp_target_id),
-    profile_switch_id = COALESCE(?6, profile_switch_id),
-    component_event_id = COALESCE(?7, component_event_id),
-    activity_id = COALESCE(?8, activity_id),
-    notification_event_id = COALESCE(?9, notification_event_id),
+    glucose_reading_id = ?1,
+    insulin_dose_id = ?2,
+    food_intake_id = ?3,
+    temp_basal_id = ?4,
+    temp_target_id = ?5,
+    profile_switch_id = ?6,
+    component_event_id = ?7,
+    activity_id = ?8,
+    notification_event_id = ?9,
 
     notes = COALESCE(?10, notes),
     reason = COALESCE(?11, reason),

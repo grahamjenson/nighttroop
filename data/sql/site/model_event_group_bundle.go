@@ -130,11 +130,11 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		}
 	}
 
-	if source.InsulinDoseID != nil && source.InsulinDose != nil && source.InsulinDoseType != nil {
+	if source.InsulinDoseID != nil && source.InsulinDose != nil {
 		egb.InsulinDose = &InsulinDose{
 			ID:       *source.InsulinDoseID,
 			Dose:     *source.InsulinDose,
-			DoseType: *source.InsulinDoseType,
+			DoseType: source.InsulinDoseType,
 			Notes:    source.EventGroup.Notes,
 			Reason:   source.EventGroup.Reason,
 		}

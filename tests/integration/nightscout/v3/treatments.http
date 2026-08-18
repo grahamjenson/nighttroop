@@ -34,7 +34,7 @@ B {
   "glucoseType": "Sensor",
 
   "carbs": 46,
-  "insulin": 4.3,
+  "insulin":1.54,
 
   "notes": "Here are some notes",
   "reason": "lunch"
@@ -45,7 +45,7 @@ ASSERT {{ assertExists "@result.created_at" }}
 ASSERT {{ assertEquals 150 "@result.glucose" }}
 ASSERT {{ assertEquals "sgv" "@result.glucoseType" }}
 ASSERT {{ assertEquals 46 "@result.carbs" }}
-ASSERT {{ assertEquals 4.3 "@result.insulin" }}
+ASSERT {{ assertEquals 1.54 "@result.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}
 ASSERT {{ assertEquals "lunch" "@result.reason" }}
 ASSERT {{ assertExists "@result.identifier" }}
@@ -84,6 +84,7 @@ H Authorization: Bearer {{ jwt }}
 B { "app": "AAPS", "date": 1786184674000, "eventType": "Meal Bolus", "insulin": 4.3}
 ASSERT_STATUS 201
 ASSERT {{ assertEquals "Meal Bolus" "@result.eventType" }}
+ASSERT {{ assertEquals 4.3 "@result.insulin" }}
 
 NAME patch_test_v3
 PATCH http://{{ .site }}.ns.localhost/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}

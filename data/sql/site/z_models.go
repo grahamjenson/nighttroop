@@ -29,6 +29,7 @@ type Activity struct {
 type ComponentEvent struct {
 	ID                    string
 	EventType             string
+	PumpID                *string
 	PumpSerial            *string
 	PumpType              *string
 	Notes                 *string
@@ -163,7 +164,7 @@ type GlucoseReading struct {
 type InsulinDose struct {
 	ID                    string
 	Dose                  float64
-	DoseType              string
+	DoseType              *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

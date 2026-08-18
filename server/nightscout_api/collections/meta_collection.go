@@ -371,6 +371,7 @@ func MetaPatch[NS interface {
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	updateingModel, err := m.GetDBFunc(q, ctx, identifier)
+
 	if err == sql.ErrNoRows {
 		// Check no Record exists
 		return nil, nsutils.ErrNotFound

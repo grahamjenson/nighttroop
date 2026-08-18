@@ -32,6 +32,7 @@ CREATE TABLE component_events (
 
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
+    pump_id TEXT CHECK(length(pump_id) <= 32),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
 
@@ -209,7 +210,7 @@ CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     dose REAL NOT NULL,
-    dose_type TEXT NOT NULL CHECK(dose_type IN ('bolus', 'basal')) DEFAULT 'bolus',
+    dose_type TEXT CHECK(length(dose_type) <= 32),
 
 
     -- Default Stuff
