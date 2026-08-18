@@ -7,10 +7,10 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
 # Auth with JWT
@@ -23,7 +23,7 @@ SET {{ .jwtauth.token }}
 
 
 NAME create_aaps_devicestatus_v1
-POST http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}
+POST http://{{ .site }}/api/v1/devicestatus?token={{ token }}
 B {
     "app": "AAPS",
     "configuration": {},
@@ -57,7 +57,7 @@ ASSERT {{ assertEquals -0.444 "@0.openaps.iob.basaliob" }}
 ASSERT {{ assertEquals 46 "@0.pump.reservoir" }}
 
 NAME create_loop_devicestatus_v1
-POST http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}
+POST http://{{ .site }}/api/v1/devicestatus?token={{ token }}
 B {
     "device": "loop://iPhone",
     "uploader": {
@@ -118,7 +118,7 @@ ASSERT {{ assertEquals 5.0947962907626785 "@0.loop.cob.cob" }}
 # READ
 ####
 NAME get_devicestatus_v1
-GET http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}
+GET http://{{ .site }}/api/v1/devicestatus?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "AAPS" "@0.app" }}
 ASSERT {{ assertEquals true "@0.isCharging" }}
@@ -129,6 +129,6 @@ ASSERT {{ assertEquals 1.0870623804830117 "@1.loop.iob.iob" }}
 ASSERT {{ assertEquals 5.0947962907626785 "@1.loop.cob.cob" }}
 
 NAME get_raw_devicestatus_v1
-GET http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}&raw=true
+GET http://{{ .site }}/api/v1/devicestatus?token={{ token }}&raw=true
 ASSERT_STATUS 200
 ASSERT {{ assertEquals false "@1.pump.bolusing" }}

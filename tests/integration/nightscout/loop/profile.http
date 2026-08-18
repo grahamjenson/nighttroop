@@ -7,10 +7,10 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
 # Auth with JWT
@@ -20,7 +20,7 @@ SET {{ .jwtauth.token }}
 
 
 NAME create_profile_v1
-POST http://{{ .site }}.ns.localhost/api/v1/profiles?token={{ token }}
+POST http://{{ .site }}/api/v1/profiles?token={{ token }}
 B {
     "_id": "6821b76124e3e5030c3a6d6a",
     "defaultProfile": "loopProfile",

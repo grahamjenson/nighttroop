@@ -7,10 +7,10 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
 # Auth with JWT
@@ -18,6 +18,6 @@ NAME jwt
 SET {{ .jwtauth.token }}
 
 NAME get_summary_v2
-GET http://{{ .site }}.ns.localhost/api/v2/summary?token={{ token }}
+GET http://{{ .site }}/api/v2/summary?token={{ token }}
 ASSERT_STATUS 200
 

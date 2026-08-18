@@ -7,10 +7,10 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
 # Auth with JWT
@@ -23,7 +23,7 @@ SET {{ .jwtauth.token }}
 
 
 NAME create_devicestatus_v1
-POST http://{{ .site }}.ns.localhost/api/v1/devicestatus?token={{ token }}
+POST http://{{ .site }}/api/v1/devicestatus?token={{ token }}
 B {
     "app": "AAPS",
     "configuration": {},
@@ -58,7 +58,7 @@ B {
 ASSERT_STATUS 200
 
 NAME create_treatmentses_v1
-POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B [
     {
         "eventType": "Insulin Change",
@@ -76,7 +76,7 @@ ASSERT_STATUS 200
 
 
 NAME get_properties_v2
-GET http://{{ .site }}.ns.localhost/api/v2/properties?token={{ token }}
+GET http://{{ .site }}/api/v2/properties?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 90 "@upbat.min.battery" }}
 ASSERT {{ assertEquals 1.127 "@iob.iob" }}

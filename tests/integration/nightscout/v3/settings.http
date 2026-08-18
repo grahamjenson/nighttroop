@@ -7,10 +7,10 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
 
@@ -21,12 +21,12 @@ SET {{ .jwtauth.token }}
 
 # Returns all the settings
 NAME get_all_settings_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings
+GET http://{{ .site }}/api/v3/settings
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
 NAME get_settings_unit_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings/units
+GET http://{{ .site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "units" "@result.identifier" }}
@@ -35,7 +35,7 @@ ASSERT {{ assertEquals "string" "@result.type" }}
 
 # Returns all the 
 NAME create_settings_v3
-POST http://{{ .site }}.ns.localhost/api/v3/settings
+POST http://{{ .site }}/api/v3/settings
 H Authorization: Bearer {{ jwt }}
 B {"identifier": "units", "type": "string", "value": "mg/dL" }
 ASSERT_STATUS 201
@@ -44,7 +44,7 @@ ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 ASSERT {{ assertEquals "string" "@result.type" }}
 
 NAME create_put_settings_v3
-PUT http://{{ .site }}.ns.localhost/api/v3/settings/bolus_onset_minutes
+PUT http://{{ .site }}/api/v3/settings/bolus_onset_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 30 }
 H Authorization: Bearer {{ jwt }}
@@ -54,7 +54,7 @@ ASSERT {{ assertEquals 30 "@result.value" }}
 ASSERT {{ assertEquals "number" "@result.type" }}
 
 NAME create_patch_settings_v3
-PATCH http://{{ .site }}.ns.localhost/api/v3/settings/alarm_low_enabled
+PATCH http://{{ .site }}/api/v3/settings/alarm_low_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 H Authorization: Bearer {{ jwt }}
@@ -69,14 +69,14 @@ ASSERT {{ assertEquals "boolean" "@result.type" }}
 #####
 
 NAME get_unit_settings_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings/units
+GET http://{{ .site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "units" "@result.identifier" }}
 ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 
 NAME get_timezone_settings_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings/timezone
+GET http://{{ .site }}/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "timezone" "@result.identifier" }}
@@ -84,7 +84,7 @@ ASSERT {{ assertEquals "string" "@result.type" }}
 ASSERT {{ assertEquals "UTC" "@result.value" }}
 
 NAME get_language_settings_v3
-GET http://{{ .site }}.ns.localhost/api/v3/settings/language
+GET http://{{ .site }}/api/v3/settings/language
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "language" "@result.identifier" }}
@@ -97,7 +97,7 @@ ASSERT {{ assertEquals "en-NZ" "@result.value" }}
 
 #patch
 NAME update_patch_settings_v3
-PATCH http://{{ .site }}.ns.localhost/api/v3/settings/timezone
+PATCH http://{{ .site }}/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 B {"value":  "Europe/London"}
 ASSERT_STATUS 200
@@ -111,6 +111,6 @@ ASSERT {{ assertEquals "Europe/London" "@result.value" }}
 
 # DELETING A USER SETTING SHOULD REVERT TO THE DEFAULT VALUE WHEN GETTING
 NAME delete_settings_v3
-DELETE http://{{ .site }}.ns.localhost/api/v3/settings/units
+DELETE http://{{ .site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200

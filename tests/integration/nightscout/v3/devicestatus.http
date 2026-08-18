@@ -7,10 +7,10 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}.ns.localhost/api/v2/authorization/request/token={{ .token }}
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
 ASSERT_STATUS 200
 
 # Auth with JWT
@@ -23,7 +23,7 @@ SET {{ .jwtauth.token }}
 
 
 NAME create_devicestatus_v1
-POST http://{{ .site }}.ns.localhost/api/v3/devicestatus
+POST http://{{ .site }}/api/v3/devicestatus
 H Authorization: Bearer {{ jwt }}
 B { "device": "iphone" }
 ASSERT_STATUS 201
@@ -41,19 +41,19 @@ ASSERT {{ assertExists "@result.srvModified" }}
 //////
 
 NAME get_devicestatus_v1
-GET http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+GET http://{{ .site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "iphone" "@result.device" }}
 
 NAME search_device_v1
-GET http://{{ .site }}.ns.localhost/api/v3/devicestatus?device=iphone%
+GET http://{{ .site }}/api/v3/devicestatus?device=iphone%
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "iphone" "@result.0.device" }}
 
 NAME get_404_devicestatus_v1
-GET http://{{ .site }}.ns.localhost/api/v3/devicestatus/NonExistentID
+GET http://{{ .site }}/api/v3/devicestatus/NonExistentID
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 404
 
@@ -62,7 +62,7 @@ ASSERT_STATUS 404
 //////
 
 NAME put_devicestatus_v1
-PUT http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+PUT http://{{ .site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "device": "iphone", "uploaderBattery": 10 }
 ASSERT_STATUS 200
@@ -70,20 +70,20 @@ ASSERT {{ assertEquals "iphone" "@result.device" }}
 // ASSERT {{ assertEquals 10 "@result.uploaderBattery" }}
 
 NAME check_put_devicestatus_v1
-GET http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+GET http://{{ .site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "iphone" "@result.device" }}
 // ASSERT {{ assertEquals 10 "@result.uploaderBattery" }}
 
 NAME patch_devicestatus_v1
-PATCH http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+PATCH http://{{ .site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "device": "iphone", "uploaderBattery": 20 }
 ASSERT_STATUS 200
 
 NAME check_patch_devicestatus_v1
-GET http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+GET http://{{ .site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 B { "uploaderBattery": 25 }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
@@ -91,7 +91,7 @@ ASSERT {{ assertEquals "iphone" "@result.device" }}
 // ASSERT {{ assertEquals 20 "@result.uploaderBattery" }}
 
 NAME update_entries_force_create_v3
-PUT http://{{ .site }}.ns.localhost/api/v3/devicestatus/AnotherFunID
+PUT http://{{ .site }}/api/v3/devicestatus/AnotherFunID
 H Authorization: Bearer {{ jwt }}
 B { "device": "iphone", "uploaderBattery": 30 }
 ASSERT_STATUS 201
@@ -103,6 +103,6 @@ ASSERT {{ assertEquals "iphone" "@result.device" }}
 //////
 
 NAME delete_soft_devicestatus_v1
-DELETE http://{{ .site }}.ns.localhost/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+DELETE http://{{ .site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200

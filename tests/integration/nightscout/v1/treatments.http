@@ -7,13 +7,13 @@ NAME token
 SET {{ .create_new_site.pwd_nstoken }}
 
 NAME site
-SET {{ .create_new_site.site_subdomain }}
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 /////
 // CREATE
 //////
 NAME create_meal_bolus_v1
-POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Meal Bolus",
   "created_at": "{{ time 0 }}",
@@ -40,7 +40,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME create_minimal_correction_bolus_v1
-POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Correction Bolus", "insulin": 4.2 }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Correction Bolus" "@0.eventType" }}
@@ -50,7 +50,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME create_treatmentses_v1
-POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B [
   {
     "eventType": "Announcement",
@@ -179,7 +179,7 @@ B [
 ASSERT_STATUS 200
 
 NAME create_treatmentses_more_v1
-POST http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B [
   {
     "eventType": "BG Check",
@@ -418,7 +418,7 @@ ASSERT_STATUS 200
 // GET
 //////
 NAME get_treatments_v1
-GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
+GET http://{{ .site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
@@ -432,14 +432,14 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME get_treatments_type_v1
-GET http://{{ .site }}.ns.localhost/api/v1/treatments/Meal%20Bolus?token={{ token }}
+GET http://{{ .site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
 
 NAME put_update_treatments_v1
-PUT http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+PUT http://{{ .site }}/api/v1/treatments?token={{ token }}
 B {
   "_id": "{{ dig "create_meal_bolus_v1.0._id" }}",
   "eventType": "Meal Bolus",
@@ -448,12 +448,12 @@ B {
 ASSERT_STATUS 200
 
 NAME get_treatments_after_updates_v1
-GET http://{{ .site }}.ns.localhost/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
+GET http://{{ .site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_update_treatments_v1" "@0.notes" }}
 
 NAME put_create_treatments_v1
-PUT http://{{ .site }}.ns.localhost/api/v1/treatments?token={{ token }}
+PUT http://{{ .site }}/api/v1/treatments?token={{ token }}
 B {
   "_id": "myveryownid",
   "eventType": "Meal Bolus",
@@ -464,7 +464,7 @@ ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@notes" }}
 ASSERT {{ assertEquals "myveryownid" "@_id" }}
 
 NAME get_treatments_after_user_id_create_v1
-GET http://{{ .site }}.ns.localhost/api/v1/treatments/myveryownid?token={{ token }}
+GET http://{{ .site }}/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
 
