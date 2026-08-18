@@ -302,89 +302,83 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 			nightscoutShortString6 := ShortString(*pString7)
 			nightscoutTreatment.Profile = &nightscoutShortString6
 		}
-		var pString8 *string
-		if (*source).ProfileSwitch != nil {
-			pString8 = &(*source).ProfileSwitch.Name
-		}
-		if pString8 != nil {
-			nightscoutShortString7 := ShortString(*pString8)
-			nightscoutTreatment.OriginalProfileName = &nightscoutShortString7
-		}
+		nightscoutTreatment.ProfileJSON = ToProfileJSON(source)
+		nightscoutTreatment.Percentage = PercentageSelect(source)
 		var pFloat649 *float64
-		if (*source).ProfileSwitch != nil {
-			pFloat649 = &(*source).ProfileSwitch.Percent
+		if (*source).TempBasal != nil {
+			pFloat649 = (*source).TempBasal.Percent
 		}
 		if pFloat649 != nil {
 			nightscoutFlexibleFloat649 := FlexibleFloat64(*pFloat649)
-			nightscoutTreatment.Percentage = &nightscoutFlexibleFloat649
+			nightscoutTreatment.Rate = &nightscoutFlexibleFloat649
 		}
 		var pFloat6410 *float64
 		if (*source).TempBasal != nil {
-			pFloat6410 = (*source).TempBasal.Percent
+			pFloat6410 = &(*source).TempBasal.Absolute
 		}
 		if pFloat6410 != nil {
 			nightscoutFlexibleFloat6410 := FlexibleFloat64(*pFloat6410)
-			nightscoutTreatment.Rate = &nightscoutFlexibleFloat6410
+			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6410
+		}
+		if (*source).EventGroup.Reason != nil {
+			nightscoutShortString7 := ShortString(*(*source).EventGroup.Reason)
+			nightscoutTreatment.Reason = &nightscoutShortString7
 		}
 		var pFloat6411 *float64
-		if (*source).TempBasal != nil {
-			pFloat6411 = &(*source).TempBasal.Absolute
+		if (*source).TempTarget != nil {
+			pFloat6411 = &(*source).TempTarget.HighTarget
 		}
 		if pFloat6411 != nil {
 			nightscoutFlexibleFloat6411 := FlexibleFloat64(*pFloat6411)
-			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6411
-		}
-		if (*source).EventGroup.Reason != nil {
-			nightscoutShortString8 := ShortString(*(*source).EventGroup.Reason)
-			nightscoutTreatment.Reason = &nightscoutShortString8
+			nightscoutTreatment.TargetTop = &nightscoutFlexibleFloat6411
 		}
 		var pFloat6412 *float64
 		if (*source).TempTarget != nil {
-			pFloat6412 = &(*source).TempTarget.HighTarget
+			pFloat6412 = &(*source).TempTarget.LowTarget
 		}
 		if pFloat6412 != nil {
 			nightscoutFlexibleFloat6412 := FlexibleFloat64(*pFloat6412)
-			nightscoutTreatment.TargetTop = &nightscoutFlexibleFloat6412
+			nightscoutTreatment.TargetBottom = &nightscoutFlexibleFloat6412
 		}
-		var pFloat6413 *float64
-		if (*source).TempTarget != nil {
-			pFloat6413 = &(*source).TempTarget.LowTarget
+		var pString8 *string
+		if (*source).ProfileSwitch != nil {
+			pString8 = (*source).ProfileSwitch.Units
 		}
-		if pFloat6413 != nil {
-			nightscoutFlexibleFloat6413 := FlexibleFloat64(*pFloat6413)
-			nightscoutTreatment.TargetBottom = &nightscoutFlexibleFloat6413
+		if pString8 != nil {
+			nightscoutUnits := Units(*pString8)
+			nightscoutTreatment.Units = &nightscoutUnits
 		}
 		var pString9 *string
 		if (*source).ComponentEvent != nil {
 			pString9 = (*source).ComponentEvent.PumpID
 		}
 		if pString9 != nil {
-			nightscoutShortString9 := ShortString(*pString9)
-			nightscoutTreatment.PumpID = &nightscoutShortString9
+			nightscoutShortString8 := ShortString(*pString9)
+			nightscoutTreatment.PumpID = &nightscoutShortString8
 		}
 		var pString10 *string
 		if (*source).ComponentEvent != nil {
 			pString10 = (*source).ComponentEvent.PumpSerial
 		}
 		if pString10 != nil {
-			nightscoutShortString10 := ShortString(*pString10)
-			nightscoutTreatment.PumpSerial = &nightscoutShortString10
+			nightscoutShortString9 := ShortString(*pString10)
+			nightscoutTreatment.PumpSerial = &nightscoutShortString9
 		}
 		var pString11 *string
 		if (*source).ComponentEvent != nil {
 			pString11 = (*source).ComponentEvent.PumpType
 		}
 		if pString11 != nil {
-			nightscoutShortString11 := ShortString(*pString11)
-			nightscoutTreatment.PumpType = &nightscoutShortString11
+			nightscoutShortString10 := ShortString(*pString11)
+			nightscoutTreatment.PumpType = &nightscoutShortString10
 		}
 		if (*source).EventGroup.CreatedByDeviceName != nil {
-			nightscoutShortString12 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
-			nightscoutTreatment.Device = &nightscoutShortString12
+			nightscoutShortString11 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
+			nightscoutTreatment.Device = &nightscoutShortString11
 		}
 		if (*source).EventGroup.CreatedByAppName != nil {
-			nightscoutShortString13 := ShortString(*(*source).EventGroup.CreatedByAppName)
-			nightscoutTreatment.App = &nightscoutShortString13
+			nightscoutShortString12 := ShortString(*(*source).EventGroup.CreatedByAppName)
+			nightscoutTreatment.App = &nightscoutShortString12
 		}
 		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByIdentityName)
 		nightscoutTreatment.Subject = &pNightscoutShortString2
@@ -828,10 +822,13 @@ func ProfileSwitchCreate(source site.ProfileSwitch, context ConverterContext) si
 	siteCreateProfileSwitchParams.ID = AssignID()
 	siteCreateProfileSwitchParams.Name = source.Name
 	siteCreateProfileSwitchParams.DurationMinutes = source.DurationMinutes
-	siteCreateProfileSwitchParams.Percent = source.Percent
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteCreateProfileSwitchParams.Percent = &xfloat64
+	}
 	if source.Dia != nil {
-		xfloat64 := *source.Dia
-		siteCreateProfileSwitchParams.Dia = &xfloat64
+		xfloat642 := *source.Dia
+		siteCreateProfileSwitchParams.Dia = &xfloat642
 	}
 	if source.Units != nil {
 		xstring := *source.Units
@@ -895,8 +892,10 @@ func ProfileSwitchUpdate(source site.ProfileSwitch, context ConverterContext) si
 	siteUpdateProfileSwitchParams.Name = &pString
 	pInt64 := source.DurationMinutes
 	siteUpdateProfileSwitchParams.DurationMinutes = &pInt64
-	pFloat64 := source.Percent
-	siteUpdateProfileSwitchParams.Percent = &pFloat64
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteUpdateProfileSwitchParams.Percent = &xfloat64
+	}
 	if source.Notes != nil {
 		xstring := *source.Notes
 		siteUpdateProfileSwitchParams.Notes = &xstring
@@ -1449,10 +1448,17 @@ func UpdateToProfileSwitch(source *site.ProfileSwitch, target *site.ProfileSwitc
 	if source != nil {
 		target.Name = source.Name
 		target.DurationMinutes = source.DurationMinutes
-		target.Percent = source.Percent
+		if source.Percent != nil {
+			xfloat64 := *source.Percent
+			target.Percent = &xfloat64
+		}
+		if source.Timeshift != nil {
+			xint64 := *source.Timeshift
+			target.Timeshift = &xint64
+		}
 		if source.Dia != nil {
-			xfloat64 := *source.Dia
-			target.Dia = &xfloat64
+			xfloat642 := *source.Dia
+			target.Dia = &xfloat642
 		}
 		if source.Units != nil {
 			xstring := *source.Units
@@ -1495,12 +1501,12 @@ func UpdateToProfileSwitch(source *site.ProfileSwitch, target *site.ProfileSwitc
 			target.RawJsonData = &xstring10
 		}
 		if source.DeletedAt != nil {
-			xint64 := *source.DeletedAt
-			target.DeletedAt = &xint64
+			xint642 := *source.DeletedAt
+			target.DeletedAt = &xint642
 		}
 		if source.UtcOffsetMinutes != nil {
-			xint642 := *source.UtcOffsetMinutes
-			target.UtcOffsetMinutes = &xint642
+			xint643 := *source.UtcOffsetMinutes
+			target.UtcOffsetMinutes = &xint643
 		}
 		target.OccurredAt = source.OccurredAt
 		target.CreatedAt = source.CreatedAt

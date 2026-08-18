@@ -227,7 +227,8 @@ type ProfileSwitch struct {
 	ID                       string
 	Name                     string
 	DurationMinutes          int64
-	Percent                  float64
+	Percent                  *float64
+	Timeshift                *int64
 	Dia                      *float64
 	Units                    *string
 	Timezone                 *string

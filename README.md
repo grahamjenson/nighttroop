@@ -2,11 +2,7 @@
 
 ## Before Alpha Testing
 1. Structural
-    1. Nightscout models in DB
-    1. Separate Device and Identity and App OR Join Them
     1. Check Sync Creds before save/enable
-
-1. use json_valid, and json_patch to keep raw json 
 
 1. Carer & AAPS minimal compatability 
     1. Nightscout API Treatments
@@ -17,6 +13,7 @@
     1. Nightsout profile/current.json
     1. Test AAPS uploads
     1. Test Carer 
+    1. Ensure loop stuff works
 
 1. Litestream for just Control (everything needed for rebuild in control DB)
 1. write wrapper for cron to report runtimes and job stats

@@ -48,6 +48,7 @@ SELECT
     ps.name as profile_switch_name,
     ps.dia as profile_switch_dia,
     ps.units as profile_switch_units,
+    ps.timeshift as profile_switch_timeshift,
     ps.duration_minutes as profile_switch_duration_minutes,
     ps.percent as profile_switch_percent,
     ps.carb_ratios_json as profile_switch_carb_ratios_json,
@@ -123,6 +124,7 @@ type AllEventGroupsRow struct {
 	ProfileSwitchName                     *string
 	ProfileSwitchDia                      *float64
 	ProfileSwitchUnits                    *string
+	ProfileSwitchTimeshift                *int64
 	ProfileSwitchDurationMinutes          *int64
 	ProfileSwitchPercent                  *float64
 	ProfileSwitchCarbRatiosJson           *string
@@ -206,6 +208,7 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.ProfileSwitchName,
 			&i.ProfileSwitchDia,
 			&i.ProfileSwitchUnits,
+			&i.ProfileSwitchTimeshift,
 			&i.ProfileSwitchDurationMinutes,
 			&i.ProfileSwitchPercent,
 			&i.ProfileSwitchCarbRatiosJson,
@@ -383,6 +386,7 @@ SELECT
     ps.name as profile_switch_name,
     ps.dia as profile_switch_dia,
     ps.units as profile_switch_units,
+    ps.timeshift as profile_switch_timeshift,
     ps.duration_minutes as profile_switch_duration_minutes,
     ps.percent as profile_switch_percent,
     ps.carb_ratios_json as profile_switch_carb_ratios_json,
@@ -455,6 +459,7 @@ type GetEventGroupRow struct {
 	ProfileSwitchName                     *string
 	ProfileSwitchDia                      *float64
 	ProfileSwitchUnits                    *string
+	ProfileSwitchTimeshift                *int64
 	ProfileSwitchDurationMinutes          *int64
 	ProfileSwitchPercent                  *float64
 	ProfileSwitchCarbRatiosJson           *string
@@ -532,6 +537,7 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.ProfileSwitchName,
 		&i.ProfileSwitchDia,
 		&i.ProfileSwitchUnits,
+		&i.ProfileSwitchTimeshift,
 		&i.ProfileSwitchDurationMinutes,
 		&i.ProfileSwitchPercent,
 		&i.ProfileSwitchCarbRatiosJson,
@@ -787,6 +793,7 @@ SELECT
     ps.name as profile_switch_name,
     ps.dia as profile_switch_dia,
     ps.units as profile_switch_units,
+    ps.timeshift as profile_switch_timeshift,
     ps.duration_minutes as profile_switch_duration_minutes,
     ps.percent as profile_switch_percent,
     ps.carb_ratios_json as profile_switch_carb_ratios_json,
@@ -970,6 +977,7 @@ type SearchEventGroupsRow struct {
 	ProfileSwitchName                     *string
 	ProfileSwitchDia                      *float64
 	ProfileSwitchUnits                    *string
+	ProfileSwitchTimeshift                *int64
 	ProfileSwitchDurationMinutes          *int64
 	ProfileSwitchPercent                  *float64
 	ProfileSwitchCarbRatiosJson           *string
@@ -1098,6 +1106,7 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.ProfileSwitchName,
 			&i.ProfileSwitchDia,
 			&i.ProfileSwitchUnits,
+			&i.ProfileSwitchTimeshift,
 			&i.ProfileSwitchDurationMinutes,
 			&i.ProfileSwitchPercent,
 			&i.ProfileSwitchCarbRatiosJson,

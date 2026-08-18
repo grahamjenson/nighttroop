@@ -1,6 +1,9 @@
 package nightscout
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"nighttroop.t1d.nz/data/sql/site"
 )
 
@@ -189,7 +192,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map EventGroup.Reason Reason
 	// goverter:map EventGroup.GroupType EventType
 	//
-	// goverter:ignore PreBolus SplitNow SplitExt Units ProfileJSON Timeshift
+	// goverter:ignore PreBolus SplitNow SplitExt Timeshift OriginalProfileName
 	//
 	//
 	// goverter:map GlucoseReading.Reading Glucose
@@ -215,8 +218,9 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map ProfileSwitch.Name Name
 	// goverter:map ProfileSwitch.Name Profile
-	// goverter:map ProfileSwitch.Name OriginalProfileName
-	// goverter:map ProfileSwitch.Percent Percentage
+	// goverter:map ProfileSwitch.Timeshift Timeshift
+	// goverter:map ProfileSwitch.Units Units
+	// goverter:map . ProfileJSON | ToProfileJSON
 	//
 	// goverter:map Activity.ActivityType ActivityType
 	// goverter:map Activity.Steps Steps
@@ -228,8 +232,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map ComponentEvent.PumpSerial PumpSerial
 	//
 	// SHARED FIELDS
-	// goverter:map . DurationInMilliseconds | MinutesToMilliseconds
-	// goverter:map . Duration                | DurationSelect
+	// goverter:map . DurationInMilliseconds     | MinutesToMilliseconds
+	// goverter:map . Duration                   | DurationSelect
+	// goverter:map . Percentage                 | PercentageSelect
 	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
 
 	//////
@@ -433,12 +438,71 @@ func TreatmentToProfileSwitch(source Treatment) *site.ProfileSwitch {
 	if source.Name != nil {
 		assigned = true
 		target.Name = source.Name.String()
-	}
-	if source.Percentage != nil {
+	} else if source.Profile != nil {
 		assigned = true
-		target.Percent = source.Percentage.Float64()
+		target.Name = source.Profile.String()
 	}
 
+	if source.Percentage != nil {
+		assigned = true
+		target.Percent = source.Percentage.Float64p()
+	}
+	if source.Duration != nil {
+		assigned = true
+		target.DurationMinutes = source.Duration.Int64()
+	}
+	if source.Timeshift != nil {
+		assigned = true
+		target.Timeshift = source.Timeshift.Int64p()
+	}
+
+	if source.ProfileJSON != nil {
+		var profileJSON Profile
+		err := json.Unmarshal([]byte(*source.ProfileJSON), &profileJSON)
+		if err == nil {
+			assigned = true
+			target.Dia = profileJSON.Dia.Float64p()
+			target.Timezone = profileJSON.Timezone.Stringp()
+			target.Units = profileJSON.Units.Stringp()
+
+			basalBytes, _ := json.Marshal(profileJSON.Basal)
+			carbRatioBytes, _ := json.Marshal(profileJSON.CarbRatio)
+			sensBytes, _ := json.Marshal(profileJSON.Sens)
+			targetLowBytes, _ := json.Marshal(profileJSON.TargetLow)
+			targetHighBytes, _ := json.Marshal(profileJSON.TargetHigh)
+
+			if basalBytes != nil {
+				target.BasalRatesJson = ptr(string(basalBytes))
+			} else {
+				target.BasalRatesJson = ptr("[]")
+			}
+
+			if carbRatioBytes != nil {
+				target.CarbRatiosJson = ptr(string(carbRatioBytes))
+			} else {
+				target.CarbRatiosJson = ptr("[]")
+			}
+
+			if sensBytes != nil {
+				target.InsulinSensitivitiesJson = ptr(string(sensBytes))
+			} else {
+				target.InsulinSensitivitiesJson = ptr("[]")
+			}
+
+			if targetLowBytes != nil {
+				target.TargetsLowJson = ptr(string(targetLowBytes))
+			} else {
+				target.TargetsLowJson = ptr("[]")
+			}
+
+			if targetHighBytes != nil {
+				target.TargetsHighJson = ptr(string(targetHighBytes))
+			} else {
+				target.TargetsHighJson = ptr("[]")
+			}
+		}
+
+	}
 	if assigned {
 		return &target
 	}
@@ -604,6 +668,12 @@ func MinutesToMilliseconds(source *site.EventGroupsBundle) *FlexibleInt64 {
 		return &value
 
 	}
+
+	if source.ProfileSwitch != nil {
+		value := FlexibleInt64(source.ProfileSwitch.DurationMinutes * 60 * 1000)
+		return &value
+	}
+
 	if source.Activity != nil && source.Activity.DurationMinutes != nil {
 		value := FlexibleInt64(*source.Activity.DurationMinutes * 60 * 1000)
 		return &value
@@ -617,15 +687,81 @@ func DurationSelect(source *site.EventGroupsBundle) *FlexibleInt64 {
 		value := FlexibleInt64(source.TempBasal.DurationMinutes)
 		return &value
 	}
+
 	if source.TempTarget != nil {
 		value := FlexibleInt64(source.TempTarget.DurationMinutes)
 		return &value
 
 	}
+
+	if source.ProfileSwitch != nil {
+		value := FlexibleInt64(source.ProfileSwitch.DurationMinutes)
+		return &value
+	}
+
 	if source.Activity != nil && source.Activity.DurationMinutes != nil {
 		value := FlexibleInt64(*source.Activity.DurationMinutes)
 		return &value
 	}
 
 	return nil
+}
+
+func PercentageSelect(source *site.EventGroupsBundle) *FlexibleFloat64 {
+	if source.TempBasal != nil {
+		if source.TempBasal.Percent != nil {
+			value := FlexibleFloat64(*source.TempBasal.Percent)
+			return &value
+		}
+	}
+
+	if source.ProfileSwitch != nil {
+		if source.ProfileSwitch.Percent != nil {
+			value := FlexibleFloat64(*source.ProfileSwitch.Percent)
+			return &value
+		}
+	}
+
+	return nil
+}
+
+func ToProfileJSON(source *site.EventGroupsBundle) *LongJSONString {
+	fmt.Println("AHSOFHASOUFHSAOUFHOUASHOFUASHOUIFAHSOIUFHOIAHOIFASHOIFSAHOIASFHOIAFS123123")
+	if source == nil || source.ProfileSwitch == nil {
+		return nil
+	}
+	profile := Profile{}
+	profileSwitch := *source.ProfileSwitch
+	if profileSwitch.Dia != nil {
+		profile.Dia = ptr(FlexibleFloat64(*profileSwitch.Dia))
+	}
+	if profileSwitch.Timezone != nil {
+		profile.Timezone = ptr(Timezone(*profileSwitch.Timezone))
+	}
+	if profileSwitch.Units != nil {
+		profile.Units = ptr(Units(*profileSwitch.Units))
+	}
+	if profileSwitch.CarbRatiosJson != nil {
+		json.Unmarshal([]byte(*profileSwitch.CarbRatiosJson), &profile.CarbRatio)
+	}
+	if profileSwitch.InsulinSensitivitiesJson != nil {
+		json.Unmarshal([]byte(*profileSwitch.InsulinSensitivitiesJson), &profile.Sens)
+	}
+	if profileSwitch.BasalRatesJson != nil {
+		json.Unmarshal([]byte(*profileSwitch.BasalRatesJson), &profile.Basal)
+	}
+	if profileSwitch.TargetsLowJson != nil {
+		json.Unmarshal([]byte(*profileSwitch.TargetsLowJson), &profile.TargetLow)
+	}
+	if profileSwitch.TargetsHighJson != nil {
+		json.Unmarshal([]byte(*profileSwitch.TargetsHighJson), &profile.TargetHigh)
+	}
+	fmt.Println("AHSOFHASOUFHSAOUFHOUASHOFUASHOUIFAHSOIUFHOIAHOIFASHOIFSAHOIASFHOIAFS123123")
+	profileBytes, err := json.Marshal(profile)
+	if err != nil {
+		fmt.Println("AHSOFHASOUFHSAOUFHOUASHOFUASHOUIFAHSOIUFHOIAHOIFASHOIFSAHOIASFHOIAFS", err)
+		return nil
+	}
+	profileJSON := LongJSONString(string(profileBytes))
+	return &profileJSON
 }

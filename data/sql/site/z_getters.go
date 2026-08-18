@@ -1923,13 +1923,23 @@ func (m *ProfileSwitch) SetDurationMinutes(v int64) {
 }
 
 // GetPercent returns the Percent value.
-func (m ProfileSwitch) GetPercent() float64 {
+func (m ProfileSwitch) GetPercent() *float64 {
 	return m.Percent
 }
 
 // SetPercent sets the Percent value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetPercent(v float64) {
+func (m *ProfileSwitch) SetPercent(v *float64) {
 	m.Percent = v
+}
+
+// GetTimeshift returns the Timeshift value.
+func (m ProfileSwitch) GetTimeshift() *int64 {
+	return m.Timeshift
+}
+
+// SetTimeshift sets the Timeshift value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetTimeshift(v *int64) {
+	m.Timeshift = v
 }
 
 // GetDia returns the Dia value.
@@ -7711,12 +7721,12 @@ func (m CreateProfileSwitchParams) SetDurationMinutes(v int64) CreateProfileSwit
 }
 
 // GetPercent returns the Percent value.
-func (m CreateProfileSwitchParams) GetPercent() float64 {
+func (m CreateProfileSwitchParams) GetPercent() *float64 {
 	return m.Percent
 }
 
 // SetPercent sets the Percent value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetPercent(v float64) CreateProfileSwitchParams {
+func (m CreateProfileSwitchParams) SetPercent(v *float64) CreateProfileSwitchParams {
 	m.Percent = v
 	return m
 }

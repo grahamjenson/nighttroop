@@ -53,7 +53,7 @@ type Treatment struct {
 	// Treatment-specific fields
 	Profile             *ShortString     `json:"profile,omitempty"`
 	OriginalProfileName *ShortString     `json:"originalProfileName,omitempty"`
-	ProfileJSON         *SanitizedString `json:"profileJson,omitempty"`
+	ProfileJSON         *LongJSONString  `json:"profileJson,omitempty"`
 	Percentage          *FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *FlexibleInt64   `json:"timeshift,omitempty"`
 

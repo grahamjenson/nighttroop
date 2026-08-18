@@ -297,18 +297,19 @@ CREATE TABLE profile_switches (
     
     -- Profile Switch Specific
     duration_minutes INTEGER NOT NULL default 0, -- e.g. 0 means it is forever unless another profile overrides it
-    percent REAL NOT NULL default 100, 
+    percent REAL default 100, 
+    timeshift INTEGER default 0, -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
 
     -- Profile Stuff
     dia REAL, -- in hours
     units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
     timezone TEXT CHECK(length(timezone) <= 32),
     
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048), -- 
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048), -- {"value": "110", "time": "00:00"},
-    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048), -- { [high, low] }
-    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048                     AND json_valid(carb_ratios_json)), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048                     AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048                   AND json_valid(targets_high_json)), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048                     AND json_valid(targets_low_json)), -- { [high, low] }
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

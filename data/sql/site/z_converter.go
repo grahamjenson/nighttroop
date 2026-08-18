@@ -849,10 +849,13 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 	siteCreateProfileSwitchParams.ID = source.ID
 	siteCreateProfileSwitchParams.Name = source.Name
 	siteCreateProfileSwitchParams.DurationMinutes = source.DurationMinutes
-	siteCreateProfileSwitchParams.Percent = source.Percent
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteCreateProfileSwitchParams.Percent = &xfloat64
+	}
 	if source.Dia != nil {
-		xfloat64 := *source.Dia
-		siteCreateProfileSwitchParams.Dia = &xfloat64
+		xfloat642 := *source.Dia
+		siteCreateProfileSwitchParams.Dia = &xfloat642
 	}
 	if source.Units != nil {
 		xstring := *source.Units
@@ -916,8 +919,10 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	siteUpdateProfileSwitchParams.Name = &pString
 	pInt64 := source.DurationMinutes
 	siteUpdateProfileSwitchParams.DurationMinutes = &pInt64
-	pFloat64 := source.Percent
-	siteUpdateProfileSwitchParams.Percent = &pFloat64
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteUpdateProfileSwitchParams.Percent = &xfloat64
+	}
 	if source.Notes != nil {
 		xstring := *source.Notes
 		siteUpdateProfileSwitchParams.Notes = &xstring
@@ -1052,9 +1057,13 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		xstring13 := *source.ProfileSwitchUnits
 		siteGetEventGroupRow.ProfileSwitchUnits = &xstring13
 	}
+	if source.ProfileSwitchTimeshift != nil {
+		xint643 := *source.ProfileSwitchTimeshift
+		siteGetEventGroupRow.ProfileSwitchTimeshift = &xint643
+	}
 	if source.ProfileSwitchDurationMinutes != nil {
-		xint643 := *source.ProfileSwitchDurationMinutes
-		siteGetEventGroupRow.ProfileSwitchDurationMinutes = &xint643
+		xint644 := *source.ProfileSwitchDurationMinutes
+		siteGetEventGroupRow.ProfileSwitchDurationMinutes = &xint644
 	}
 	if source.ProfileSwitchPercent != nil {
 		xfloat6414 := *source.ProfileSwitchPercent
@@ -1097,20 +1106,20 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		siteGetEventGroupRow.ActivityType = &xstring22
 	}
 	if source.ActivityDurationMinutes != nil {
-		xint644 := *source.ActivityDurationMinutes
-		siteGetEventGroupRow.ActivityDurationMinutes = &xint644
+		xint645 := *source.ActivityDurationMinutes
+		siteGetEventGroupRow.ActivityDurationMinutes = &xint645
 	}
 	if source.ActivityCalories != nil {
-		xint645 := *source.ActivityCalories
-		siteGetEventGroupRow.ActivityCalories = &xint645
+		xint646 := *source.ActivityCalories
+		siteGetEventGroupRow.ActivityCalories = &xint646
 	}
 	if source.ActivitySteps != nil {
-		xint646 := *source.ActivitySteps
-		siteGetEventGroupRow.ActivitySteps = &xint646
+		xint647 := *source.ActivitySteps
+		siteGetEventGroupRow.ActivitySteps = &xint647
 	}
 	if source.ActivityHeartRate != nil {
-		xint647 := *source.ActivityHeartRate
-		siteGetEventGroupRow.ActivityHeartRate = &xint647
+		xint648 := *source.ActivityHeartRate
+		siteGetEventGroupRow.ActivityHeartRate = &xint648
 	}
 	if source.NotificationEventID != nil {
 		xstring23 := *source.NotificationEventID
@@ -1121,8 +1130,8 @@ func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupR
 		siteGetEventGroupRow.NotificationEventTitle = &xstring24
 	}
 	if source.NotificationEventSeverity != nil {
-		xint648 := *source.NotificationEventSeverity
-		siteGetEventGroupRow.NotificationEventSeverity = &xint648
+		xint649 := *source.NotificationEventSeverity
+		siteGetEventGroupRow.NotificationEventSeverity = &xint649
 	}
 	if source.NotificationEventContent != nil {
 		xstring25 := *source.NotificationEventContent

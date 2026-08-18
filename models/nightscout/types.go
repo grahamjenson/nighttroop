@@ -488,6 +488,43 @@ func (s *ShortString) Stringp() *string {
 	return &str
 }
 
+type LongJSONString string
+
+func (s *LongJSONString) String() string {
+	return string(*s)
+}
+
+func (s *LongJSONString) Stringp() *string {
+	if s == nil {
+		return nil
+	}
+	str := string(*s)
+	return &str
+}
+
+func (n *LongJSONString) UnmarshalJSON(data []byte) error {
+	// We are going to sanitize notes here, no html allowed, trim white space, convert to string
+	var v string
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("expected notes string, got %s", data)
+	}
+
+	// Test that this is valid json string
+	var testJSON any
+	err := json.Unmarshal([]byte(v), &testJSON)
+	if err != nil {
+		return fmt.Errorf("invalid JSON string, got %s", data)
+	}
+
+	// Concat to 1024 characters
+	if len(v) > 4024 {
+		v = v[:4024]
+	}
+
+	*n = LongJSONString(v)
+	return nil
+}
+
 type SanitizedString string
 
 func (s *SanitizedString) String() string {
