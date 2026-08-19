@@ -85,6 +85,30 @@ func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseRea
 		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Reading)
 	}
 	siteCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
+	if source.Trend != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Trend)
+		siteCreateGlucoseReadingParams.Delta = &xfloat64
+	}
+	if source.Direction != nil {
+		xstring := *source.Direction
+		siteCreateGlucoseReadingParams.Direction = &xstring
+	}
+	if source.Noise != nil {
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Noise)
+		siteCreateGlucoseReadingParams.Noise = &xfloat642
+	}
+	if source.Filtered != nil {
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Filtered)
+		siteCreateGlucoseReadingParams.Filtered = &xfloat643
+	}
+	if source.Unfiltered != nil {
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Unfiltered)
+		siteCreateGlucoseReadingParams.Unfiltered = &xfloat644
+	}
+	if source.RSSI != nil {
+		xfloat645 := FlexibleFloat64ToFloat64(*source.RSSI)
+		siteCreateGlucoseReadingParams.Rssi = &xfloat645
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
@@ -93,12 +117,12 @@ func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseRea
 	pString := source.RawJsonData
 	siteCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring := ShortStringToString(*source.App)
-		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring
+		xstring2 := ShortStringToString(*source.App)
+		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
-		xstring2 := ShortStringToString(*source.Device)
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring2
+		xstring3 := ShortStringToString(*source.Device)
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
 	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams

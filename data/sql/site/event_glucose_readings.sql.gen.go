@@ -12,7 +12,7 @@ import (
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
-SELECT id, reading, reading_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
+SELECT id, reading, reading_type, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -41,6 +41,12 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadings
 			&i.ID,
 			&i.Reading,
 			&i.ReadingType,
+			&i.Delta,
+			&i.Direction,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -74,6 +80,13 @@ INSERT INTO glucose_readings (
     reading,
     reading_type,
     
+    delta,
+    direction,
+    noise,
+    filtered,
+    unfiltered,
+    rssi,
+
     notes,
     reason,
     utc_offset_minutes,
@@ -87,22 +100,36 @@ VALUES (
     ?1,
     ?2,
     ?3,
+    
     ?4,
     ?5,
     ?6,
     ?7,
     ?8,
     ?9,
+
     ?10,
-    ?11
+    ?11,
+    ?12,
+    ?13,
+    ?14,
+    ?15,
+    ?16,
+    ?17
 )
-RETURNING id, reading, reading_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, reading, reading_type, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateGlucoseReadingParams struct {
 	ID                    string
 	Reading               float64
 	ReadingType           string
+	Delta                 *float64
+	Direction             *string
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
@@ -121,6 +148,12 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.ID,
 		arg.Reading,
 		arg.ReadingType,
+		arg.Delta,
+		arg.Direction,
+		arg.Noise,
+		arg.Filtered,
+		arg.Unfiltered,
+		arg.Rssi,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -135,6 +168,12 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		&i.ID,
 		&i.Reading,
 		&i.ReadingType,
+		&i.Delta,
+		&i.Direction,
+		&i.Noise,
+		&i.Filtered,
+		&i.Unfiltered,
+		&i.Rssi,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -153,7 +192,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, reading, reading_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE id = ?
+SELECT id, reading, reading_type, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE id = ?
 `
 
 type GetGlucoseReadingParams struct {
@@ -170,6 +209,12 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 		&i.ID,
 		&i.Reading,
 		&i.ReadingType,
+		&i.Delta,
+		&i.Direction,
+		&i.Noise,
+		&i.Filtered,
+		&i.Unfiltered,
+		&i.Rssi,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -211,7 +256,7 @@ func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardD
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, reading, reading_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
+SELECT id, reading, reading_type, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -323,6 +368,12 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 			&i.ID,
 			&i.Reading,
 			&i.ReadingType,
+			&i.Delta,
+			&i.Direction,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -401,7 +452,7 @@ UPDATE glucose_readings SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?5
 WHERE id = ?6 AND deleted_at IS NULL
-RETURNING id, reading, reading_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, reading, reading_type, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
@@ -430,6 +481,12 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		&i.ID,
 		&i.Reading,
 		&i.ReadingType,
+		&i.Delta,
+		&i.Direction,
+		&i.Noise,
+		&i.Filtered,
+		&i.Unfiltered,
+		&i.Rssi,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,

@@ -13,6 +13,13 @@ CREATE TABLE glucose_readings (
     reading REAL NOT NULL,
     reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
 
+    delta REAL,
+    direction TEXT CHECK(length(direction) <= 16),
+    noise REAL,
+    filtered REAL,
+    unfiltered REAL,
+    rssi REAL,
+
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),

@@ -100,6 +100,30 @@ func DBModelToEntry(source *site.GlucoseReading) Entry {
 		nightscoutEntry.Type = &pNightscoutEntryType
 		nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue((*source))
 		nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue((*source))
+		if (*source).Direction != nil {
+			xstring := *(*source).Direction
+			nightscoutEntry.Direction = &xstring
+		}
+		if (*source).Delta != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Delta)
+			nightscoutEntry.Trend = &nightscoutFlexibleFloat64
+		}
+		if (*source).Filtered != nil {
+			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).Filtered)
+			nightscoutEntry.Filtered = &nightscoutFlexibleFloat642
+		}
+		if (*source).Unfiltered != nil {
+			nightscoutFlexibleFloat643 := FlexibleFloat64(*(*source).Unfiltered)
+			nightscoutEntry.Unfiltered = &nightscoutFlexibleFloat643
+		}
+		if (*source).Rssi != nil {
+			nightscoutFlexibleFloat644 := FlexibleFloat64(*(*source).Rssi)
+			nightscoutEntry.RSSI = &nightscoutFlexibleFloat644
+		}
+		if (*source).Noise != nil {
+			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).Noise)
+			nightscoutEntry.Noise = &nightscoutFlexibleFloat645
+		}
 		pNightscoutDateInt := DateInt((*source).OccurredAt)
 		nightscoutEntry.Date = &pNightscoutDateInt
 		nightscoutEntry.DateString = ModelDateStringFromDateIntAndUTCOffset((*source))

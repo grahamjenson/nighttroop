@@ -22,6 +22,32 @@ ASSERT {{ assertEquals "sgv" "@0.type" }}
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
+NAME create_full_entry_v1
+POST http://{{ .site }}/api/v1/entries?token={{ token}}
+B {
+    "sgv": 100,
+    "type": "sgv",
+    "app": "test-app",
+    "direction": "Flat",
+    "trend": 3,
+    "dateString": "{{ time 0 }}",
+    "filtered": 139.2,
+    "unfiltered": 141.7, 
+    "rssi": -62, 
+    "noise": 1 
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 100 "@0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@0.type" }}
+ASSERT {{ assertEquals "test-app" "@0.app" }}
+ASSERT {{ assertEquals "Flat" "@0.direction" }}
+ASSERT {{ assertEquals 3 "@0.trend" }}
+ASSERT {{ assertExists "@0.dateString" }}
+ASSERT {{ assertEquals 139.2 "@0.filtered" }}
+ASSERT {{ assertEquals 141.7 "@0.unfiltered" }}
+ASSERT {{ assertEquals -62 "@0.rssi" }}
+ASSERT {{ assertEquals 1 "@0.noise" }}
+
 
 
 ///////

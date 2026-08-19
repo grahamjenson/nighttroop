@@ -216,6 +216,12 @@ type GlucoseReading struct {
 	ID                    string
 	Reading               float64
 	ReadingType           string
+	Delta                 *float64
+	Direction             *string
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -234,6 +240,12 @@ type GlucoseReadingsVw struct {
 	ID                    *string
 	Reading               *float64
 	ReadingType           *string
+	Delta                 *float64
+	Direction             *string
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

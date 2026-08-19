@@ -651,13 +651,37 @@ func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) 
 	siteCreateGlucoseReadingParams.ID = AssignID()
 	siteCreateGlucoseReadingParams.Reading = source.Reading
 	siteCreateGlucoseReadingParams.ReadingType = source.ReadingType
+	if source.Delta != nil {
+		xfloat64 := *source.Delta
+		siteCreateGlucoseReadingParams.Delta = &xfloat64
+	}
+	if source.Direction != nil {
+		xstring := *source.Direction
+		siteCreateGlucoseReadingParams.Direction = &xstring
+	}
+	if source.Noise != nil {
+		xfloat642 := *source.Noise
+		siteCreateGlucoseReadingParams.Noise = &xfloat642
+	}
+	if source.Filtered != nil {
+		xfloat643 := *source.Filtered
+		siteCreateGlucoseReadingParams.Filtered = &xfloat643
+	}
+	if source.Unfiltered != nil {
+		xfloat644 := *source.Unfiltered
+		siteCreateGlucoseReadingParams.Unfiltered = &xfloat644
+	}
+	if source.Rssi != nil {
+		xfloat645 := *source.Rssi
+		siteCreateGlucoseReadingParams.Rssi = &xfloat645
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		siteCreateGlucoseReadingParams.Notes = &xstring
+		xstring2 := *source.Notes
+		siteCreateGlucoseReadingParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		siteCreateGlucoseReadingParams.Reason = &xstring2
+		xstring3 := *source.Reason
+		siteCreateGlucoseReadingParams.Reason = &xstring3
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -665,16 +689,16 @@ func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) 
 	}
 	siteCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		siteCreateGlucoseReadingParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		siteCreateGlucoseReadingParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring6
 	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams
@@ -1322,17 +1346,41 @@ func UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseRea
 	if source != nil {
 		target.Reading = source.Reading
 		target.ReadingType = source.ReadingType
+		if source.Delta != nil {
+			xfloat64 := *source.Delta
+			target.Delta = &xfloat64
+		}
+		if source.Direction != nil {
+			xstring := *source.Direction
+			target.Direction = &xstring
+		}
+		if source.Noise != nil {
+			xfloat642 := *source.Noise
+			target.Noise = &xfloat642
+		}
+		if source.Filtered != nil {
+			xfloat643 := *source.Filtered
+			target.Filtered = &xfloat643
+		}
+		if source.Unfiltered != nil {
+			xfloat644 := *source.Unfiltered
+			target.Unfiltered = &xfloat644
+		}
+		if source.Rssi != nil {
+			xfloat645 := *source.Rssi
+			target.Rssi = &xfloat645
+		}
 		if source.Notes != nil {
-			xstring := *source.Notes
-			target.Notes = &xstring
+			xstring2 := *source.Notes
+			target.Notes = &xstring2
 		}
 		if source.Reason != nil {
-			xstring2 := *source.Reason
-			target.Reason = &xstring2
+			xstring3 := *source.Reason
+			target.Reason = &xstring3
 		}
 		if source.RawJsonData != nil {
-			xstring3 := *source.RawJsonData
-			target.RawJsonData = &xstring3
+			xstring4 := *source.RawJsonData
+			target.RawJsonData = &xstring4
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -1346,16 +1394,16 @@ func UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseRea
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring4 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring4
+			xstring5 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring5
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring5 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring5
+			xstring6 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring6
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring6 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring6
+			xstring7 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring7
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}

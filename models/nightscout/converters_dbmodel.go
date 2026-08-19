@@ -30,7 +30,7 @@ type DBModelConverter interface {
 	// ENTRIES TO GLUCOSE READINGS
 	///////
 
-	// goverter:ignore Direction Trend Units Filtered Unfiltered RSSI Noise SysTime
+	// goverter:ignore SysTime Units
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
@@ -41,6 +41,8 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Mills
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
+	// goverter:map Delta Trend
+	// goverter:map Rssi RSSI
 	DBModelToEntry(source *site.GlucoseReading) Entry
 
 	///////

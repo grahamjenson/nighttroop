@@ -1262,6 +1262,66 @@ func (m *GlucoseReading) SetReadingType(v string) {
 	m.ReadingType = v
 }
 
+// GetDelta returns the Delta value.
+func (m GlucoseReading) GetDelta() *float64 {
+	return m.Delta
+}
+
+// SetDelta sets the Delta value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetDelta(v *float64) {
+	m.Delta = v
+}
+
+// GetDirection returns the Direction value.
+func (m GlucoseReading) GetDirection() *string {
+	return m.Direction
+}
+
+// SetDirection sets the Direction value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetDirection(v *string) {
+	m.Direction = v
+}
+
+// GetNoise returns the Noise value.
+func (m GlucoseReading) GetNoise() *float64 {
+	return m.Noise
+}
+
+// SetNoise sets the Noise value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m GlucoseReading) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m GlucoseReading) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m GlucoseReading) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetRssi(v *float64) {
+	m.Rssi = v
+}
+
 // GetNotes returns the Notes value.
 func (m GlucoseReading) GetNotes() *string {
 	return m.Notes
@@ -3090,6 +3150,66 @@ func (m GlucoseReadingsVw) GetReadingType() *string {
 // SetReadingType sets the ReadingType value and returns the updated GlucoseReadingsVw.
 func (m *GlucoseReadingsVw) SetReadingType(v *string) {
 	m.ReadingType = v
+}
+
+// GetDelta returns the Delta value.
+func (m GlucoseReadingsVw) GetDelta() *float64 {
+	return m.Delta
+}
+
+// SetDelta sets the Delta value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetDelta(v *float64) {
+	m.Delta = v
+}
+
+// GetDirection returns the Direction value.
+func (m GlucoseReadingsVw) GetDirection() *string {
+	return m.Direction
+}
+
+// SetDirection sets the Direction value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetDirection(v *string) {
+	m.Direction = v
+}
+
+// GetNoise returns the Noise value.
+func (m GlucoseReadingsVw) GetNoise() *float64 {
+	return m.Noise
+}
+
+// SetNoise sets the Noise value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m GlucoseReadingsVw) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m GlucoseReadingsVw) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m GlucoseReadingsVw) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetRssi(v *float64) {
+	m.Rssi = v
 }
 
 // GetNotes returns the Notes value.
@@ -6695,6 +6815,72 @@ func (m CreateGlucoseReadingParams) GetReadingType() string {
 // SetReadingType sets the ReadingType value and returns the updated CreateGlucoseReadingParams.
 func (m CreateGlucoseReadingParams) SetReadingType(v string) CreateGlucoseReadingParams {
 	m.ReadingType = v
+	return m
+}
+
+// GetDelta returns the Delta value.
+func (m CreateGlucoseReadingParams) GetDelta() *float64 {
+	return m.Delta
+}
+
+// SetDelta sets the Delta value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetDelta(v *float64) CreateGlucoseReadingParams {
+	m.Delta = v
+	return m
+}
+
+// GetDirection returns the Direction value.
+func (m CreateGlucoseReadingParams) GetDirection() *string {
+	return m.Direction
+}
+
+// SetDirection sets the Direction value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetDirection(v *string) CreateGlucoseReadingParams {
+	m.Direction = v
+	return m
+}
+
+// GetNoise returns the Noise value.
+func (m CreateGlucoseReadingParams) GetNoise() *float64 {
+	return m.Noise
+}
+
+// SetNoise sets the Noise value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetNoise(v *float64) CreateGlucoseReadingParams {
+	m.Noise = v
+	return m
+}
+
+// GetFiltered returns the Filtered value.
+func (m CreateGlucoseReadingParams) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetFiltered(v *float64) CreateGlucoseReadingParams {
+	m.Filtered = v
+	return m
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m CreateGlucoseReadingParams) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetUnfiltered(v *float64) CreateGlucoseReadingParams {
+	m.Unfiltered = v
+	return m
+}
+
+// GetRssi returns the Rssi value.
+func (m CreateGlucoseReadingParams) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetRssi(v *float64) CreateGlucoseReadingParams {
+	m.Rssi = v
 	return m
 }
 
