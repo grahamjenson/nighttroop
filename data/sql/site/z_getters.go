@@ -2483,6 +2483,1626 @@ func (m *TempTarget) SetCreatedByIdentityName(v string) {
 }
 
 // GetID returns the ID value.
+func (m ActivitiesVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m ActivitiesVw) GetName() *string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetName(v *string) {
+	m.Name = v
+}
+
+// GetActivityType returns the ActivityType value.
+func (m ActivitiesVw) GetActivityType() *string {
+	return m.ActivityType
+}
+
+// SetActivityType sets the ActivityType value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetActivityType(v *string) {
+	m.ActivityType = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m ActivitiesVw) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetCalories returns the Calories value.
+func (m ActivitiesVw) GetCalories() *int64 {
+	return m.Calories
+}
+
+// SetCalories sets the Calories value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCalories(v *int64) {
+	m.Calories = v
+}
+
+// GetSteps returns the Steps value.
+func (m ActivitiesVw) GetSteps() *int64 {
+	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetSteps(v *int64) {
+	m.Steps = v
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m ActivitiesVw) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
+// SetHeartRate sets the HeartRate value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetHeartRate(v *int64) {
+	m.HeartRate = v
+}
+
+// GetNotes returns the Notes value.
+func (m ActivitiesVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m ActivitiesVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m ActivitiesVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m ActivitiesVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m ActivitiesVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m ActivitiesVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m ActivitiesVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m ActivitiesVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m ActivitiesVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m ActivitiesVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m ActivitiesVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m ActivitiesVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m ComponentEventsVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetEventType returns the EventType value.
+func (m ComponentEventsVw) GetEventType() *string {
+	return m.EventType
+}
+
+// SetEventType sets the EventType value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetEventType(v *string) {
+	m.EventType = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m ComponentEventsVw) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m ComponentEventsVw) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m ComponentEventsVw) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetPumpType(v *string) {
+	m.PumpType = v
+}
+
+// GetNotes returns the Notes value.
+func (m ComponentEventsVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m ComponentEventsVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m ComponentEventsVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m ComponentEventsVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m ComponentEventsVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m ComponentEventsVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m ComponentEventsVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m ComponentEventsVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m ComponentEventsVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m ComponentEventsVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m ComponentEventsVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m ComponentEventsVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m FoodIntakesVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m FoodIntakesVw) GetName() *string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetName(v *string) {
+	m.Name = v
+}
+
+// GetCategory returns the Category value.
+func (m FoodIntakesVw) GetCategory() *string {
+	return m.Category
+}
+
+// SetCategory sets the Category value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m FoodIntakesVw) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetCarbs returns the Carbs value.
+func (m FoodIntakesVw) GetCarbs() *float64 {
+	return m.Carbs
+}
+
+// SetCarbs sets the Carbs value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCarbs(v *float64) {
+	m.Carbs = v
+}
+
+// GetFat returns the Fat value.
+func (m FoodIntakesVw) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m FoodIntakesVw) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m FoodIntakesVw) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m FoodIntakesVw) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m FoodIntakesVw) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetNotes returns the Notes value.
+func (m FoodIntakesVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m FoodIntakesVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m FoodIntakesVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m FoodIntakesVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m FoodIntakesVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m FoodIntakesVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m FoodIntakesVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m FoodIntakesVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m FoodIntakesVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m FoodIntakesVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m FoodIntakesVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m FoodIntakesVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m GlucoseReadingsVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetReading returns the Reading value.
+func (m GlucoseReadingsVw) GetReading() *float64 {
+	return m.Reading
+}
+
+// SetReading sets the Reading value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetReading(v *float64) {
+	m.Reading = v
+}
+
+// GetReadingType returns the ReadingType value.
+func (m GlucoseReadingsVw) GetReadingType() *string {
+	return m.ReadingType
+}
+
+// SetReadingType sets the ReadingType value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetReadingType(v *string) {
+	m.ReadingType = v
+}
+
+// GetNotes returns the Notes value.
+func (m GlucoseReadingsVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m GlucoseReadingsVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m GlucoseReadingsVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m GlucoseReadingsVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m GlucoseReadingsVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m GlucoseReadingsVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m GlucoseReadingsVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m GlucoseReadingsVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m GlucoseReadingsVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m GlucoseReadingsVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m GlucoseReadingsVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m GlucoseReadingsVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m InsulinDosesVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetDose returns the Dose value.
+func (m InsulinDosesVw) GetDose() *float64 {
+	return m.Dose
+}
+
+// SetDose sets the Dose value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetDose(v *float64) {
+	m.Dose = v
+}
+
+// GetDoseType returns the DoseType value.
+func (m InsulinDosesVw) GetDoseType() *string {
+	return m.DoseType
+}
+
+// SetDoseType sets the DoseType value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetDoseType(v *string) {
+	m.DoseType = v
+}
+
+// GetNotes returns the Notes value.
+func (m InsulinDosesVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m InsulinDosesVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m InsulinDosesVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m InsulinDosesVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m InsulinDosesVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m InsulinDosesVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m InsulinDosesVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m InsulinDosesVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m InsulinDosesVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m InsulinDosesVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m InsulinDosesVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m InsulinDosesVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m NotificationEventsVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetNotificationType returns the NotificationType value.
+func (m NotificationEventsVw) GetNotificationType() *string {
+	return m.NotificationType
+}
+
+// SetNotificationType sets the NotificationType value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetNotificationType(v *string) {
+	m.NotificationType = v
+}
+
+// GetTitle returns the Title value.
+func (m NotificationEventsVw) GetTitle() *string {
+	return m.Title
+}
+
+// SetTitle sets the Title value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetTitle(v *string) {
+	m.Title = v
+}
+
+// GetSeverity returns the Severity value.
+func (m NotificationEventsVw) GetSeverity() *int64 {
+	return m.Severity
+}
+
+// SetSeverity sets the Severity value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetSeverity(v *int64) {
+	m.Severity = v
+}
+
+// GetContent returns the Content value.
+func (m NotificationEventsVw) GetContent() *string {
+	return m.Content
+}
+
+// SetContent sets the Content value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetContent(v *string) {
+	m.Content = v
+}
+
+// GetNotes returns the Notes value.
+func (m NotificationEventsVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m NotificationEventsVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m NotificationEventsVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m NotificationEventsVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m NotificationEventsVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m NotificationEventsVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m NotificationEventsVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m NotificationEventsVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m NotificationEventsVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m NotificationEventsVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m NotificationEventsVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m NotificationEventsVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m ProfileSwitchesVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m ProfileSwitchesVw) GetName() *string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetName(v *string) {
+	m.Name = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m ProfileSwitchesVw) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetPercent returns the Percent value.
+func (m ProfileSwitchesVw) GetPercent() *float64 {
+	return m.Percent
+}
+
+// SetPercent sets the Percent value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetPercent(v *float64) {
+	m.Percent = v
+}
+
+// GetTimeshift returns the Timeshift value.
+func (m ProfileSwitchesVw) GetTimeshift() *int64 {
+	return m.Timeshift
+}
+
+// SetTimeshift sets the Timeshift value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetTimeshift(v *int64) {
+	m.Timeshift = v
+}
+
+// GetDia returns the Dia value.
+func (m ProfileSwitchesVw) GetDia() *float64 {
+	return m.Dia
+}
+
+// SetDia sets the Dia value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetDia(v *float64) {
+	m.Dia = v
+}
+
+// GetUnits returns the Units value.
+func (m ProfileSwitchesVw) GetUnits() *string {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetUnits(v *string) {
+	m.Units = v
+}
+
+// GetTimezone returns the Timezone value.
+func (m ProfileSwitchesVw) GetTimezone() *string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetTimezone(v *string) {
+	m.Timezone = v
+}
+
+// GetCarbRatiosJson returns the CarbRatiosJson value.
+func (m ProfileSwitchesVw) GetCarbRatiosJson() *string {
+	return m.CarbRatiosJson
+}
+
+// SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCarbRatiosJson(v *string) {
+	m.CarbRatiosJson = v
+}
+
+// GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
+func (m ProfileSwitchesVw) GetInsulinSensitivitiesJson() *string {
+	return m.InsulinSensitivitiesJson
+}
+
+// SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetInsulinSensitivitiesJson(v *string) {
+	m.InsulinSensitivitiesJson = v
+}
+
+// GetBasalRatesJson returns the BasalRatesJson value.
+func (m ProfileSwitchesVw) GetBasalRatesJson() *string {
+	return m.BasalRatesJson
+}
+
+// SetBasalRatesJson sets the BasalRatesJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetBasalRatesJson(v *string) {
+	m.BasalRatesJson = v
+}
+
+// GetTargetsHighJson returns the TargetsHighJson value.
+func (m ProfileSwitchesVw) GetTargetsHighJson() *string {
+	return m.TargetsHighJson
+}
+
+// SetTargetsHighJson sets the TargetsHighJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetTargetsHighJson(v *string) {
+	m.TargetsHighJson = v
+}
+
+// GetTargetsLowJson returns the TargetsLowJson value.
+func (m ProfileSwitchesVw) GetTargetsLowJson() *string {
+	return m.TargetsLowJson
+}
+
+// SetTargetsLowJson sets the TargetsLowJson value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetTargetsLowJson(v *string) {
+	m.TargetsLowJson = v
+}
+
+// GetNotes returns the Notes value.
+func (m ProfileSwitchesVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m ProfileSwitchesVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m ProfileSwitchesVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m ProfileSwitchesVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m ProfileSwitchesVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m ProfileSwitchesVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m ProfileSwitchesVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m ProfileSwitchesVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m ProfileSwitchesVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m ProfileSwitchesVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m ProfileSwitchesVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m ProfileSwitchesVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m TempBasalsVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m TempBasalsVw) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetAbsolute returns the Absolute value.
+func (m TempBasalsVw) GetAbsolute() *float64 {
+	return m.Absolute
+}
+
+// SetAbsolute sets the Absolute value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetAbsolute(v *float64) {
+	m.Absolute = v
+}
+
+// GetPercent returns the Percent value.
+func (m TempBasalsVw) GetPercent() *float64 {
+	return m.Percent
+}
+
+// SetPercent sets the Percent value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetPercent(v *float64) {
+	m.Percent = v
+}
+
+// GetNotes returns the Notes value.
+func (m TempBasalsVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m TempBasalsVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m TempBasalsVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m TempBasalsVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m TempBasalsVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m TempBasalsVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m TempBasalsVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m TempBasalsVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m TempBasalsVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m TempBasalsVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m TempBasalsVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m TempBasalsVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m TempTargetsVw) GetID() *string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetID(v *string) {
+	m.ID = v
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m TempTargetsVw) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
+// GetHighTarget returns the HighTarget value.
+func (m TempTargetsVw) GetHighTarget() *float64 {
+	return m.HighTarget
+}
+
+// SetHighTarget sets the HighTarget value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetHighTarget(v *float64) {
+	m.HighTarget = v
+}
+
+// GetLowTarget returns the LowTarget value.
+func (m TempTargetsVw) GetLowTarget() *float64 {
+	return m.LowTarget
+}
+
+// SetLowTarget sets the LowTarget value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetLowTarget(v *float64) {
+	m.LowTarget = v
+}
+
+// GetNotes returns the Notes value.
+func (m TempTargetsVw) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m TempTargetsVw) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetRawJsonData returns the RawJsonData value.
+func (m TempTargetsVw) GetRawJsonData() *string {
+	return m.RawJsonData
+}
+
+// SetRawJsonData sets the RawJsonData value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetRawJsonData(v *string) {
+	m.RawJsonData = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m TempTargetsVw) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
+func (m TempTargetsVw) GetUtcOffsetMinutes() *int64 {
+	return m.UtcOffsetMinutes
+}
+
+// SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetUtcOffsetMinutes(v *int64) {
+	m.UtcOffsetMinutes = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m TempTargetsVw) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m TempTargetsVw) GetCreatedAt() *int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetCreatedAt(v *int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m TempTargetsVw) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByAppName returns the CreatedByAppName value.
+func (m TempTargetsVw) GetCreatedByAppName() *string {
+	return m.CreatedByAppName
+}
+
+// SetCreatedByAppName sets the CreatedByAppName value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetCreatedByAppName(v *string) {
+	m.CreatedByAppName = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m TempTargetsVw) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m TempTargetsVw) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m TempTargetsVw) GetCreatedByIdentityName() *string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetCreatedByIdentityName(v *string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
 func (m CreateDeviceReportParams) GetID() string {
 	return m.ID
 }

@@ -43,75 +43,29 @@ SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     sqlc.embed(eg),
-
-    gr.id as glucose_reading_id,   
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
     
-    idose.id as insulin_dose_id,
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    fi.id as food_intake_id,
-    fi.name as food_intake_name,
-    fi.category as food_intake_category,
-    fi.subcategory as food_intake_subcategory,
-    fi.carbs as food_intake_carbs,
-    fi.fat as food_intake_fat,
-    fi.protein as food_intake_protein,
-    fi.fibre as food_intake_fibre,
-    fi.energy as food_intake_energy,
-    fi.portions as food_intake_portions,
-
-    tb.id as temp_basal_id,
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,    
-    tb.percent as temp_basal_percent,
-
-    tt.id as temp_target_id,
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    ps.id as profile_switch_id,
-    ps.name as profile_switch_name,
-    ps.dia as profile_switch_dia,
-    ps.units as profile_switch_units,
-    ps.timeshift as profile_switch_timeshift,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_high_json as profile_switch_targets_high_json,
-    ps.targets_low_json as profile_switch_targets_low_json,
-
-    ce.id as component_event_id,
-
-    a.id as activity_id,
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    n.id as notification_event_id,
-    n.title as notification_event_title,
-    n.severity as notification_event_severity,
-    n.content as notification_event_content,
-    n.notification_type as notification_event_notification_type
+    sqlc.embed(gr),
+    sqlc.embed(idose),
+    sqlc.embed(fi),
+    sqlc.embed(tb),
+    sqlc.embed(tt),
+    sqlc.embed(ps),
+    sqlc.embed(ce),
+    sqlc.embed(a),
+    sqlc.embed(n)
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events ce ON eg.component_event_id = ce.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
+
+
 WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
@@ -122,75 +76,27 @@ SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     sqlc.embed(eg),
-
-    gr.id as glucose_reading_id,   
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
     
-    idose.id as insulin_dose_id,
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    fi.id as food_intake_id,
-    fi.name as food_intake_name,
-    fi.category as food_intake_category,
-    fi.subcategory as food_intake_subcategory,
-    fi.carbs as food_intake_carbs,
-    fi.fat as food_intake_fat,
-    fi.protein as food_intake_protein,
-    fi.fibre as food_intake_fibre,
-    fi.energy as food_intake_energy,
-    fi.portions as food_intake_portions,
-
-    tb.id as temp_basal_id,
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,    
-    tb.percent as temp_basal_percent,
-
-    tt.id as temp_target_id,
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    ps.id as profile_switch_id,
-    ps.name as profile_switch_name,
-    ps.dia as profile_switch_dia,
-    ps.units as profile_switch_units,
-    ps.timeshift as profile_switch_timeshift,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_high_json as profile_switch_targets_high_json,
-    ps.targets_low_json as profile_switch_targets_low_json,
-
-    ce.id as component_event_id,
-
-    a.id as activity_id,
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    n.id as notification_event_id,
-    n.title as notification_event_title,
-    n.severity as notification_event_severity,
-    n.content as notification_event_content,
-    n.notification_type as notification_event_notification_type
+    sqlc.embed(gr),
+    sqlc.embed(idose),
+    sqlc.embed(fi),
+    sqlc.embed(tb),
+    sqlc.embed(tt),
+    sqlc.embed(ps),
+    sqlc.embed(ce),
+    sqlc.embed(a),
+    sqlc.embed(n)
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events ce ON eg.component_event_id = ce.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 WHERE eg.id = ?;
 
@@ -199,75 +105,27 @@ SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     sqlc.embed(eg),
-
-    gr.id as glucose_reading_id,   
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
     
-    idose.id as insulin_dose_id,
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    fi.id as food_intake_id,
-    fi.name as food_intake_name,
-    fi.category as food_intake_category,
-    fi.subcategory as food_intake_subcategory,
-    fi.carbs as food_intake_carbs,
-    fi.fat as food_intake_fat,
-    fi.protein as food_intake_protein,
-    fi.fibre as food_intake_fibre,
-    fi.energy as food_intake_energy,
-    fi.portions as food_intake_portions,
-
-    tb.id as temp_basal_id,
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,    
-    tb.percent as temp_basal_percent,
-
-    tt.id as temp_target_id,
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    ps.id as profile_switch_id,
-    ps.name as profile_switch_name,
-    ps.dia as profile_switch_dia,
-    ps.units as profile_switch_units,
-    ps.timeshift as profile_switch_timeshift,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_high_json as profile_switch_targets_high_json,
-    ps.targets_low_json as profile_switch_targets_low_json,
-
-    ce.id as component_event_id,
-
-    a.id as activity_id,
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    n.id as notification_event_id,
-    n.title as notification_event_title,
-    n.severity as notification_event_severity,
-    n.content as notification_event_content,
-    n.notification_type as notification_event_notification_type
+    sqlc.embed(gr),
+    sqlc.embed(idose),
+    sqlc.embed(fi),
+    sqlc.embed(tb),
+    sqlc.embed(tt),
+    sqlc.embed(ps),
+    sqlc.embed(ce),
+    sqlc.embed(a),
+    sqlc.embed(n)
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events ce ON eg.component_event_id = ce.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 
 WHERE

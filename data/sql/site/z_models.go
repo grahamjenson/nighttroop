@@ -4,6 +4,28 @@
 
 package site
 
+type ActivitiesVw struct {
+	ID                    *string
+	Name                  *string
+	ActivityType          *string
+	DurationMinutes       *int64
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
+}
+
 type Activity struct {
 	ID                    string
 	Name                  *string
@@ -44,6 +66,26 @@ type ComponentEvent struct {
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
 	CreatedByIdentityName string
+}
+
+type ComponentEventsVw struct {
+	ID                    *string
+	EventType             *string
+	PumpID                *string
+	PumpSerial            *string
+	PumpType              *string
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	UpdatedByIdentityName *string
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	CreatedByIdentityName *string
 }
 
 type DeviceReport struct {
@@ -125,6 +167,31 @@ type FoodIntake struct {
 	CreatedByIdentityName string
 }
 
+type FoodIntakesVw struct {
+	ID                    *string
+	Name                  *string
+	Category              *string
+	Subcategory           *string
+	Carbs                 *float64
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Energy                *float64
+	Portions              *float64
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
+}
+
 type FoodPreset struct {
 	ID                    string
 	Name                  string
@@ -163,6 +230,24 @@ type GlucoseReading struct {
 	CreatedByIdentityName string
 }
 
+type GlucoseReadingsVw struct {
+	ID                    *string
+	Reading               *float64
+	ReadingType           *string
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
+}
+
 type InsulinDose struct {
 	ID                    string
 	Dose                  float64
@@ -179,6 +264,24 @@ type InsulinDose struct {
 	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
+}
+
+type InsulinDosesVw struct {
+	ID                    *string
+	Dose                  *float64
+	DoseType              *string
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
 }
 
 type NotificationEvent struct {
@@ -199,6 +302,26 @@ type NotificationEvent struct {
 	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
+}
+
+type NotificationEventsVw struct {
+	ID                    *string
+	NotificationType      *string
+	Title                 *string
+	Severity              *int64
+	Content               *string
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
 }
 
 type ProfilePreset struct {
@@ -253,6 +376,34 @@ type ProfileSwitch struct {
 	CreatedByIdentityName    string
 }
 
+type ProfileSwitchesVw struct {
+	ID                       *string
+	Name                     *string
+	DurationMinutes          *int64
+	Percent                  *float64
+	Timeshift                *int64
+	Dia                      *float64
+	Units                    *string
+	Timezone                 *string
+	CarbRatiosJson           *string
+	InsulinSensitivitiesJson *string
+	BasalRatesJson           *string
+	TargetsHighJson          *string
+	TargetsLowJson           *string
+	Notes                    *string
+	Reason                   *string
+	RawJsonData              *string
+	DeletedAt                *int64
+	UtcOffsetMinutes         *int64
+	OccurredAt               *int64
+	CreatedAt                *int64
+	UpdatedAt                *int64
+	CreatedByAppName         *string
+	CreatedByDeviceName      *string
+	UpdatedByIdentityName    *string
+	CreatedByIdentityName    *string
+}
+
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64
@@ -272,6 +423,25 @@ type TempBasal struct {
 	CreatedByIdentityName string
 }
 
+type TempBasalsVw struct {
+	ID                    *string
+	DurationMinutes       *int64
+	Absolute              *float64
+	Percent               *float64
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
+}
+
 type TempTarget struct {
 	ID                    string
 	DurationMinutes       int64
@@ -289,4 +459,23 @@ type TempTarget struct {
 	CreatedByDeviceName   *string
 	UpdatedByIdentityName *string
 	CreatedByIdentityName string
+}
+
+type TempTargetsVw struct {
+	ID                    *string
+	DurationMinutes       *int64
+	HighTarget            *float64
+	LowTarget             *float64
+	Notes                 *string
+	Reason                *string
+	RawJsonData           *string
+	DeletedAt             *int64
+	UtcOffsetMinutes      *int64
+	OccurredAt            *int64
+	CreatedAt             *int64
+	UpdatedAt             *int64
+	CreatedByAppName      *string
+	CreatedByDeviceName   *string
+	UpdatedByIdentityName *string
+	CreatedByIdentityName *string
 }

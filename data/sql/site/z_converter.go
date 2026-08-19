@@ -961,202 +961,15 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 func SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow {
 	var siteGetEventGroupRow GetEventGroupRow
 	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source.EventGroup)
-	if source.GlucoseReadingID != nil {
-		xstring := *source.GlucoseReadingID
-		siteGetEventGroupRow.GlucoseReadingID = &xstring
-	}
-	if source.GlucoseReading != nil {
-		xfloat64 := *source.GlucoseReading
-		siteGetEventGroupRow.GlucoseReading = &xfloat64
-	}
-	if source.GlucoseReadingType != nil {
-		xstring2 := *source.GlucoseReadingType
-		siteGetEventGroupRow.GlucoseReadingType = &xstring2
-	}
-	if source.InsulinDoseID != nil {
-		xstring3 := *source.InsulinDoseID
-		siteGetEventGroupRow.InsulinDoseID = &xstring3
-	}
-	if source.InsulinDose != nil {
-		xfloat642 := *source.InsulinDose
-		siteGetEventGroupRow.InsulinDose = &xfloat642
-	}
-	if source.InsulinDoseType != nil {
-		xstring4 := *source.InsulinDoseType
-		siteGetEventGroupRow.InsulinDoseType = &xstring4
-	}
-	if source.FoodIntakeID != nil {
-		xstring5 := *source.FoodIntakeID
-		siteGetEventGroupRow.FoodIntakeID = &xstring5
-	}
-	if source.FoodIntakeName != nil {
-		xstring6 := *source.FoodIntakeName
-		siteGetEventGroupRow.FoodIntakeName = &xstring6
-	}
-	if source.FoodIntakeCategory != nil {
-		xstring7 := *source.FoodIntakeCategory
-		siteGetEventGroupRow.FoodIntakeCategory = &xstring7
-	}
-	if source.FoodIntakeSubcategory != nil {
-		xstring8 := *source.FoodIntakeSubcategory
-		siteGetEventGroupRow.FoodIntakeSubcategory = &xstring8
-	}
-	if source.FoodIntakeCarbs != nil {
-		xfloat643 := *source.FoodIntakeCarbs
-		siteGetEventGroupRow.FoodIntakeCarbs = &xfloat643
-	}
-	if source.FoodIntakeFat != nil {
-		xfloat644 := *source.FoodIntakeFat
-		siteGetEventGroupRow.FoodIntakeFat = &xfloat644
-	}
-	if source.FoodIntakeProtein != nil {
-		xfloat645 := *source.FoodIntakeProtein
-		siteGetEventGroupRow.FoodIntakeProtein = &xfloat645
-	}
-	if source.FoodIntakeFibre != nil {
-		xfloat646 := *source.FoodIntakeFibre
-		siteGetEventGroupRow.FoodIntakeFibre = &xfloat646
-	}
-	if source.FoodIntakeEnergy != nil {
-		xfloat647 := *source.FoodIntakeEnergy
-		siteGetEventGroupRow.FoodIntakeEnergy = &xfloat647
-	}
-	if source.FoodIntakePortions != nil {
-		xfloat648 := *source.FoodIntakePortions
-		siteGetEventGroupRow.FoodIntakePortions = &xfloat648
-	}
-	if source.TempBasalID != nil {
-		xstring9 := *source.TempBasalID
-		siteGetEventGroupRow.TempBasalID = &xstring9
-	}
-	if source.TempBasalDurationMinutes != nil {
-		xint64 := *source.TempBasalDurationMinutes
-		siteGetEventGroupRow.TempBasalDurationMinutes = &xint64
-	}
-	if source.TempBasalAbsolute != nil {
-		xfloat649 := *source.TempBasalAbsolute
-		siteGetEventGroupRow.TempBasalAbsolute = &xfloat649
-	}
-	if source.TempBasalPercent != nil {
-		xfloat6410 := *source.TempBasalPercent
-		siteGetEventGroupRow.TempBasalPercent = &xfloat6410
-	}
-	if source.TempTargetID != nil {
-		xstring10 := *source.TempTargetID
-		siteGetEventGroupRow.TempTargetID = &xstring10
-	}
-	if source.TempTargetDurationMinutes != nil {
-		xint642 := *source.TempTargetDurationMinutes
-		siteGetEventGroupRow.TempTargetDurationMinutes = &xint642
-	}
-	if source.TempTargetHighTarget != nil {
-		xfloat6411 := *source.TempTargetHighTarget
-		siteGetEventGroupRow.TempTargetHighTarget = &xfloat6411
-	}
-	if source.TempTargetLowTarget != nil {
-		xfloat6412 := *source.TempTargetLowTarget
-		siteGetEventGroupRow.TempTargetLowTarget = &xfloat6412
-	}
-	if source.ProfileSwitchID != nil {
-		xstring11 := *source.ProfileSwitchID
-		siteGetEventGroupRow.ProfileSwitchID = &xstring11
-	}
-	if source.ProfileSwitchName != nil {
-		xstring12 := *source.ProfileSwitchName
-		siteGetEventGroupRow.ProfileSwitchName = &xstring12
-	}
-	if source.ProfileSwitchDia != nil {
-		xfloat6413 := *source.ProfileSwitchDia
-		siteGetEventGroupRow.ProfileSwitchDia = &xfloat6413
-	}
-	if source.ProfileSwitchUnits != nil {
-		xstring13 := *source.ProfileSwitchUnits
-		siteGetEventGroupRow.ProfileSwitchUnits = &xstring13
-	}
-	if source.ProfileSwitchTimeshift != nil {
-		xint643 := *source.ProfileSwitchTimeshift
-		siteGetEventGroupRow.ProfileSwitchTimeshift = &xint643
-	}
-	if source.ProfileSwitchDurationMinutes != nil {
-		xint644 := *source.ProfileSwitchDurationMinutes
-		siteGetEventGroupRow.ProfileSwitchDurationMinutes = &xint644
-	}
-	if source.ProfileSwitchPercent != nil {
-		xfloat6414 := *source.ProfileSwitchPercent
-		siteGetEventGroupRow.ProfileSwitchPercent = &xfloat6414
-	}
-	if source.ProfileSwitchCarbRatiosJson != nil {
-		xstring14 := *source.ProfileSwitchCarbRatiosJson
-		siteGetEventGroupRow.ProfileSwitchCarbRatiosJson = &xstring14
-	}
-	if source.ProfileSwitchInsulinSensitivitiesJson != nil {
-		xstring15 := *source.ProfileSwitchInsulinSensitivitiesJson
-		siteGetEventGroupRow.ProfileSwitchInsulinSensitivitiesJson = &xstring15
-	}
-	if source.ProfileSwitchBasalRatesJson != nil {
-		xstring16 := *source.ProfileSwitchBasalRatesJson
-		siteGetEventGroupRow.ProfileSwitchBasalRatesJson = &xstring16
-	}
-	if source.ProfileSwitchTargetsHighJson != nil {
-		xstring17 := *source.ProfileSwitchTargetsHighJson
-		siteGetEventGroupRow.ProfileSwitchTargetsHighJson = &xstring17
-	}
-	if source.ProfileSwitchTargetsLowJson != nil {
-		xstring18 := *source.ProfileSwitchTargetsLowJson
-		siteGetEventGroupRow.ProfileSwitchTargetsLowJson = &xstring18
-	}
-	if source.ComponentEventID != nil {
-		xstring19 := *source.ComponentEventID
-		siteGetEventGroupRow.ComponentEventID = &xstring19
-	}
-	if source.ActivityID != nil {
-		xstring20 := *source.ActivityID
-		siteGetEventGroupRow.ActivityID = &xstring20
-	}
-	if source.ActivityName != nil {
-		xstring21 := *source.ActivityName
-		siteGetEventGroupRow.ActivityName = &xstring21
-	}
-	if source.ActivityType != nil {
-		xstring22 := *source.ActivityType
-		siteGetEventGroupRow.ActivityType = &xstring22
-	}
-	if source.ActivityDurationMinutes != nil {
-		xint645 := *source.ActivityDurationMinutes
-		siteGetEventGroupRow.ActivityDurationMinutes = &xint645
-	}
-	if source.ActivityCalories != nil {
-		xint646 := *source.ActivityCalories
-		siteGetEventGroupRow.ActivityCalories = &xint646
-	}
-	if source.ActivitySteps != nil {
-		xint647 := *source.ActivitySteps
-		siteGetEventGroupRow.ActivitySteps = &xint647
-	}
-	if source.ActivityHeartRate != nil {
-		xint648 := *source.ActivityHeartRate
-		siteGetEventGroupRow.ActivityHeartRate = &xint648
-	}
-	if source.NotificationEventID != nil {
-		xstring23 := *source.NotificationEventID
-		siteGetEventGroupRow.NotificationEventID = &xstring23
-	}
-	if source.NotificationEventTitle != nil {
-		xstring24 := *source.NotificationEventTitle
-		siteGetEventGroupRow.NotificationEventTitle = &xstring24
-	}
-	if source.NotificationEventSeverity != nil {
-		xint649 := *source.NotificationEventSeverity
-		siteGetEventGroupRow.NotificationEventSeverity = &xint649
-	}
-	if source.NotificationEventContent != nil {
-		xstring25 := *source.NotificationEventContent
-		siteGetEventGroupRow.NotificationEventContent = &xstring25
-	}
-	if source.NotificationEventNotificationType != nil {
-		xstring26 := *source.NotificationEventNotificationType
-		siteGetEventGroupRow.NotificationEventNotificationType = &xstring26
-	}
+	siteGetEventGroupRow.GlucoseReadingsVw = siteGlucoseReadingsVwToSiteGlucoseReadingsVw(source.GlucoseReadingsVw)
+	siteGetEventGroupRow.InsulinDosesVw = siteInsulinDosesVwToSiteInsulinDosesVw(source.InsulinDosesVw)
+	siteGetEventGroupRow.FoodIntakesVw = siteFoodIntakesVwToSiteFoodIntakesVw(source.FoodIntakesVw)
+	siteGetEventGroupRow.TempBasalsVw = siteTempBasalsVwToSiteTempBasalsVw(source.TempBasalsVw)
+	siteGetEventGroupRow.TempTargetsVw = siteTempTargetsVwToSiteTempTargetsVw(source.TempTargetsVw)
+	siteGetEventGroupRow.ProfileSwitchesVw = siteProfileSwitchesVwToSiteProfileSwitchesVw(source.ProfileSwitchesVw)
+	siteGetEventGroupRow.ComponentEventsVw = siteComponentEventsVwToSiteComponentEventsVw(source.ComponentEventsVw)
+	siteGetEventGroupRow.ActivitiesVw = siteActivitiesVwToSiteActivitiesVw(source.ActivitiesVw)
+	siteGetEventGroupRow.NotificationEventsVw = siteNotificationEventsVwToSiteNotificationEventsVw(source.NotificationEventsVw)
 	return siteGetEventGroupRow
 }
 func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
@@ -1286,6 +1099,158 @@ func TempTargetToUpdate(source TempTarget) UpdateTempTargetParams {
 	siteUpdateTempTargetParams.ID = source.ID
 	return siteUpdateTempTargetParams
 }
+func siteActivitiesVwToSiteActivitiesVw(source ActivitiesVw) ActivitiesVw {
+	var siteActivitiesVw ActivitiesVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteActivitiesVw.ID = &xstring
+	}
+	if source.Name != nil {
+		xstring2 := *source.Name
+		siteActivitiesVw.Name = &xstring2
+	}
+	if source.ActivityType != nil {
+		xstring3 := *source.ActivityType
+		siteActivitiesVw.ActivityType = &xstring3
+	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteActivitiesVw.DurationMinutes = &xint64
+	}
+	if source.Calories != nil {
+		xint642 := *source.Calories
+		siteActivitiesVw.Calories = &xint642
+	}
+	if source.Steps != nil {
+		xint643 := *source.Steps
+		siteActivitiesVw.Steps = &xint643
+	}
+	if source.HeartRate != nil {
+		xint644 := *source.HeartRate
+		siteActivitiesVw.HeartRate = &xint644
+	}
+	if source.Notes != nil {
+		xstring4 := *source.Notes
+		siteActivitiesVw.Notes = &xstring4
+	}
+	if source.Reason != nil {
+		xstring5 := *source.Reason
+		siteActivitiesVw.Reason = &xstring5
+	}
+	if source.RawJsonData != nil {
+		xstring6 := *source.RawJsonData
+		siteActivitiesVw.RawJsonData = &xstring6
+	}
+	if source.DeletedAt != nil {
+		xint645 := *source.DeletedAt
+		siteActivitiesVw.DeletedAt = &xint645
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint646 := *source.UtcOffsetMinutes
+		siteActivitiesVw.UtcOffsetMinutes = &xint646
+	}
+	if source.OccurredAt != nil {
+		xint647 := *source.OccurredAt
+		siteActivitiesVw.OccurredAt = &xint647
+	}
+	if source.CreatedAt != nil {
+		xint648 := *source.CreatedAt
+		siteActivitiesVw.CreatedAt = &xint648
+	}
+	if source.UpdatedAt != nil {
+		xint649 := *source.UpdatedAt
+		siteActivitiesVw.UpdatedAt = &xint649
+	}
+	if source.CreatedByAppName != nil {
+		xstring7 := *source.CreatedByAppName
+		siteActivitiesVw.CreatedByAppName = &xstring7
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring8 := *source.CreatedByDeviceName
+		siteActivitiesVw.CreatedByDeviceName = &xstring8
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring9 := *source.UpdatedByIdentityName
+		siteActivitiesVw.UpdatedByIdentityName = &xstring9
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring10 := *source.CreatedByIdentityName
+		siteActivitiesVw.CreatedByIdentityName = &xstring10
+	}
+	return siteActivitiesVw
+}
+func siteComponentEventsVwToSiteComponentEventsVw(source ComponentEventsVw) ComponentEventsVw {
+	var siteComponentEventsVw ComponentEventsVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteComponentEventsVw.ID = &xstring
+	}
+	if source.EventType != nil {
+		xstring2 := *source.EventType
+		siteComponentEventsVw.EventType = &xstring2
+	}
+	if source.PumpID != nil {
+		xstring3 := *source.PumpID
+		siteComponentEventsVw.PumpID = &xstring3
+	}
+	if source.PumpSerial != nil {
+		xstring4 := *source.PumpSerial
+		siteComponentEventsVw.PumpSerial = &xstring4
+	}
+	if source.PumpType != nil {
+		xstring5 := *source.PumpType
+		siteComponentEventsVw.PumpType = &xstring5
+	}
+	if source.Notes != nil {
+		xstring6 := *source.Notes
+		siteComponentEventsVw.Notes = &xstring6
+	}
+	if source.Reason != nil {
+		xstring7 := *source.Reason
+		siteComponentEventsVw.Reason = &xstring7
+	}
+	if source.RawJsonData != nil {
+		xstring8 := *source.RawJsonData
+		siteComponentEventsVw.RawJsonData = &xstring8
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteComponentEventsVw.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteComponentEventsVw.UtcOffsetMinutes = &xint642
+	}
+	if source.OccurredAt != nil {
+		xint643 := *source.OccurredAt
+		siteComponentEventsVw.OccurredAt = &xint643
+	}
+	if source.CreatedAt != nil {
+		xint644 := *source.CreatedAt
+		siteComponentEventsVw.CreatedAt = &xint644
+	}
+	if source.UpdatedAt != nil {
+		xint645 := *source.UpdatedAt
+		siteComponentEventsVw.UpdatedAt = &xint645
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring9 := *source.UpdatedByIdentityName
+		siteComponentEventsVw.UpdatedByIdentityName = &xstring9
+	}
+	if source.CreatedByAppName != nil {
+		xstring10 := *source.CreatedByAppName
+		siteComponentEventsVw.CreatedByAppName = &xstring10
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring11 := *source.CreatedByDeviceName
+		siteComponentEventsVw.CreatedByDeviceName = &xstring11
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring12 := *source.CreatedByIdentityName
+		siteComponentEventsVw.CreatedByIdentityName = &xstring12
+	}
+	return siteComponentEventsVw
+}
 func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
 	var siteEventGroup EventGroup
 	siteEventGroup.ID = source.ID
@@ -1363,4 +1328,536 @@ func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
 	}
 	siteEventGroup.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteEventGroup
+}
+func siteFoodIntakesVwToSiteFoodIntakesVw(source FoodIntakesVw) FoodIntakesVw {
+	var siteFoodIntakesVw FoodIntakesVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteFoodIntakesVw.ID = &xstring
+	}
+	if source.Name != nil {
+		xstring2 := *source.Name
+		siteFoodIntakesVw.Name = &xstring2
+	}
+	if source.Category != nil {
+		xstring3 := *source.Category
+		siteFoodIntakesVw.Category = &xstring3
+	}
+	if source.Subcategory != nil {
+		xstring4 := *source.Subcategory
+		siteFoodIntakesVw.Subcategory = &xstring4
+	}
+	if source.Carbs != nil {
+		xfloat64 := *source.Carbs
+		siteFoodIntakesVw.Carbs = &xfloat64
+	}
+	if source.Fat != nil {
+		xfloat642 := *source.Fat
+		siteFoodIntakesVw.Fat = &xfloat642
+	}
+	if source.Protein != nil {
+		xfloat643 := *source.Protein
+		siteFoodIntakesVw.Protein = &xfloat643
+	}
+	if source.Fibre != nil {
+		xfloat644 := *source.Fibre
+		siteFoodIntakesVw.Fibre = &xfloat644
+	}
+	if source.Energy != nil {
+		xfloat645 := *source.Energy
+		siteFoodIntakesVw.Energy = &xfloat645
+	}
+	if source.Portions != nil {
+		xfloat646 := *source.Portions
+		siteFoodIntakesVw.Portions = &xfloat646
+	}
+	if source.Notes != nil {
+		xstring5 := *source.Notes
+		siteFoodIntakesVw.Notes = &xstring5
+	}
+	if source.Reason != nil {
+		xstring6 := *source.Reason
+		siteFoodIntakesVw.Reason = &xstring6
+	}
+	if source.RawJsonData != nil {
+		xstring7 := *source.RawJsonData
+		siteFoodIntakesVw.RawJsonData = &xstring7
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteFoodIntakesVw.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteFoodIntakesVw.UtcOffsetMinutes = &xint642
+	}
+	if source.OccurredAt != nil {
+		xint643 := *source.OccurredAt
+		siteFoodIntakesVw.OccurredAt = &xint643
+	}
+	if source.CreatedAt != nil {
+		xint644 := *source.CreatedAt
+		siteFoodIntakesVw.CreatedAt = &xint644
+	}
+	if source.UpdatedAt != nil {
+		xint645 := *source.UpdatedAt
+		siteFoodIntakesVw.UpdatedAt = &xint645
+	}
+	if source.CreatedByAppName != nil {
+		xstring8 := *source.CreatedByAppName
+		siteFoodIntakesVw.CreatedByAppName = &xstring8
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring9 := *source.CreatedByDeviceName
+		siteFoodIntakesVw.CreatedByDeviceName = &xstring9
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring10 := *source.UpdatedByIdentityName
+		siteFoodIntakesVw.UpdatedByIdentityName = &xstring10
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring11 := *source.CreatedByIdentityName
+		siteFoodIntakesVw.CreatedByIdentityName = &xstring11
+	}
+	return siteFoodIntakesVw
+}
+func siteGlucoseReadingsVwToSiteGlucoseReadingsVw(source GlucoseReadingsVw) GlucoseReadingsVw {
+	var siteGlucoseReadingsVw GlucoseReadingsVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteGlucoseReadingsVw.ID = &xstring
+	}
+	if source.Reading != nil {
+		xfloat64 := *source.Reading
+		siteGlucoseReadingsVw.Reading = &xfloat64
+	}
+	if source.ReadingType != nil {
+		xstring2 := *source.ReadingType
+		siteGlucoseReadingsVw.ReadingType = &xstring2
+	}
+	if source.Notes != nil {
+		xstring3 := *source.Notes
+		siteGlucoseReadingsVw.Notes = &xstring3
+	}
+	if source.Reason != nil {
+		xstring4 := *source.Reason
+		siteGlucoseReadingsVw.Reason = &xstring4
+	}
+	if source.RawJsonData != nil {
+		xstring5 := *source.RawJsonData
+		siteGlucoseReadingsVw.RawJsonData = &xstring5
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteGlucoseReadingsVw.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteGlucoseReadingsVw.UtcOffsetMinutes = &xint642
+	}
+	if source.OccurredAt != nil {
+		xint643 := *source.OccurredAt
+		siteGlucoseReadingsVw.OccurredAt = &xint643
+	}
+	if source.CreatedAt != nil {
+		xint644 := *source.CreatedAt
+		siteGlucoseReadingsVw.CreatedAt = &xint644
+	}
+	if source.UpdatedAt != nil {
+		xint645 := *source.UpdatedAt
+		siteGlucoseReadingsVw.UpdatedAt = &xint645
+	}
+	if source.CreatedByAppName != nil {
+		xstring6 := *source.CreatedByAppName
+		siteGlucoseReadingsVw.CreatedByAppName = &xstring6
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring7 := *source.CreatedByDeviceName
+		siteGlucoseReadingsVw.CreatedByDeviceName = &xstring7
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring8 := *source.UpdatedByIdentityName
+		siteGlucoseReadingsVw.UpdatedByIdentityName = &xstring8
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring9 := *source.CreatedByIdentityName
+		siteGlucoseReadingsVw.CreatedByIdentityName = &xstring9
+	}
+	return siteGlucoseReadingsVw
+}
+func siteInsulinDosesVwToSiteInsulinDosesVw(source InsulinDosesVw) InsulinDosesVw {
+	var siteInsulinDosesVw InsulinDosesVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteInsulinDosesVw.ID = &xstring
+	}
+	if source.Dose != nil {
+		xfloat64 := *source.Dose
+		siteInsulinDosesVw.Dose = &xfloat64
+	}
+	if source.DoseType != nil {
+		xstring2 := *source.DoseType
+		siteInsulinDosesVw.DoseType = &xstring2
+	}
+	if source.Notes != nil {
+		xstring3 := *source.Notes
+		siteInsulinDosesVw.Notes = &xstring3
+	}
+	if source.Reason != nil {
+		xstring4 := *source.Reason
+		siteInsulinDosesVw.Reason = &xstring4
+	}
+	if source.RawJsonData != nil {
+		xstring5 := *source.RawJsonData
+		siteInsulinDosesVw.RawJsonData = &xstring5
+	}
+	if source.DeletedAt != nil {
+		xint64 := *source.DeletedAt
+		siteInsulinDosesVw.DeletedAt = &xint64
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint642 := *source.UtcOffsetMinutes
+		siteInsulinDosesVw.UtcOffsetMinutes = &xint642
+	}
+	if source.OccurredAt != nil {
+		xint643 := *source.OccurredAt
+		siteInsulinDosesVw.OccurredAt = &xint643
+	}
+	if source.CreatedAt != nil {
+		xint644 := *source.CreatedAt
+		siteInsulinDosesVw.CreatedAt = &xint644
+	}
+	if source.UpdatedAt != nil {
+		xint645 := *source.UpdatedAt
+		siteInsulinDosesVw.UpdatedAt = &xint645
+	}
+	if source.CreatedByAppName != nil {
+		xstring6 := *source.CreatedByAppName
+		siteInsulinDosesVw.CreatedByAppName = &xstring6
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring7 := *source.CreatedByDeviceName
+		siteInsulinDosesVw.CreatedByDeviceName = &xstring7
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring8 := *source.UpdatedByIdentityName
+		siteInsulinDosesVw.UpdatedByIdentityName = &xstring8
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring9 := *source.CreatedByIdentityName
+		siteInsulinDosesVw.CreatedByIdentityName = &xstring9
+	}
+	return siteInsulinDosesVw
+}
+func siteNotificationEventsVwToSiteNotificationEventsVw(source NotificationEventsVw) NotificationEventsVw {
+	var siteNotificationEventsVw NotificationEventsVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteNotificationEventsVw.ID = &xstring
+	}
+	if source.NotificationType != nil {
+		xstring2 := *source.NotificationType
+		siteNotificationEventsVw.NotificationType = &xstring2
+	}
+	if source.Title != nil {
+		xstring3 := *source.Title
+		siteNotificationEventsVw.Title = &xstring3
+	}
+	if source.Severity != nil {
+		xint64 := *source.Severity
+		siteNotificationEventsVw.Severity = &xint64
+	}
+	if source.Content != nil {
+		xstring4 := *source.Content
+		siteNotificationEventsVw.Content = &xstring4
+	}
+	if source.Notes != nil {
+		xstring5 := *source.Notes
+		siteNotificationEventsVw.Notes = &xstring5
+	}
+	if source.Reason != nil {
+		xstring6 := *source.Reason
+		siteNotificationEventsVw.Reason = &xstring6
+	}
+	if source.RawJsonData != nil {
+		xstring7 := *source.RawJsonData
+		siteNotificationEventsVw.RawJsonData = &xstring7
+	}
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteNotificationEventsVw.DeletedAt = &xint642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := *source.UtcOffsetMinutes
+		siteNotificationEventsVw.UtcOffsetMinutes = &xint643
+	}
+	if source.OccurredAt != nil {
+		xint644 := *source.OccurredAt
+		siteNotificationEventsVw.OccurredAt = &xint644
+	}
+	if source.CreatedAt != nil {
+		xint645 := *source.CreatedAt
+		siteNotificationEventsVw.CreatedAt = &xint645
+	}
+	if source.UpdatedAt != nil {
+		xint646 := *source.UpdatedAt
+		siteNotificationEventsVw.UpdatedAt = &xint646
+	}
+	if source.CreatedByAppName != nil {
+		xstring8 := *source.CreatedByAppName
+		siteNotificationEventsVw.CreatedByAppName = &xstring8
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring9 := *source.CreatedByDeviceName
+		siteNotificationEventsVw.CreatedByDeviceName = &xstring9
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring10 := *source.UpdatedByIdentityName
+		siteNotificationEventsVw.UpdatedByIdentityName = &xstring10
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring11 := *source.CreatedByIdentityName
+		siteNotificationEventsVw.CreatedByIdentityName = &xstring11
+	}
+	return siteNotificationEventsVw
+}
+func siteProfileSwitchesVwToSiteProfileSwitchesVw(source ProfileSwitchesVw) ProfileSwitchesVw {
+	var siteProfileSwitchesVw ProfileSwitchesVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteProfileSwitchesVw.ID = &xstring
+	}
+	if source.Name != nil {
+		xstring2 := *source.Name
+		siteProfileSwitchesVw.Name = &xstring2
+	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteProfileSwitchesVw.DurationMinutes = &xint64
+	}
+	if source.Percent != nil {
+		xfloat64 := *source.Percent
+		siteProfileSwitchesVw.Percent = &xfloat64
+	}
+	if source.Timeshift != nil {
+		xint642 := *source.Timeshift
+		siteProfileSwitchesVw.Timeshift = &xint642
+	}
+	if source.Dia != nil {
+		xfloat642 := *source.Dia
+		siteProfileSwitchesVw.Dia = &xfloat642
+	}
+	if source.Units != nil {
+		xstring3 := *source.Units
+		siteProfileSwitchesVw.Units = &xstring3
+	}
+	if source.Timezone != nil {
+		xstring4 := *source.Timezone
+		siteProfileSwitchesVw.Timezone = &xstring4
+	}
+	if source.CarbRatiosJson != nil {
+		xstring5 := *source.CarbRatiosJson
+		siteProfileSwitchesVw.CarbRatiosJson = &xstring5
+	}
+	if source.InsulinSensitivitiesJson != nil {
+		xstring6 := *source.InsulinSensitivitiesJson
+		siteProfileSwitchesVw.InsulinSensitivitiesJson = &xstring6
+	}
+	if source.BasalRatesJson != nil {
+		xstring7 := *source.BasalRatesJson
+		siteProfileSwitchesVw.BasalRatesJson = &xstring7
+	}
+	if source.TargetsHighJson != nil {
+		xstring8 := *source.TargetsHighJson
+		siteProfileSwitchesVw.TargetsHighJson = &xstring8
+	}
+	if source.TargetsLowJson != nil {
+		xstring9 := *source.TargetsLowJson
+		siteProfileSwitchesVw.TargetsLowJson = &xstring9
+	}
+	if source.Notes != nil {
+		xstring10 := *source.Notes
+		siteProfileSwitchesVw.Notes = &xstring10
+	}
+	if source.Reason != nil {
+		xstring11 := *source.Reason
+		siteProfileSwitchesVw.Reason = &xstring11
+	}
+	if source.RawJsonData != nil {
+		xstring12 := *source.RawJsonData
+		siteProfileSwitchesVw.RawJsonData = &xstring12
+	}
+	if source.DeletedAt != nil {
+		xint643 := *source.DeletedAt
+		siteProfileSwitchesVw.DeletedAt = &xint643
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint644 := *source.UtcOffsetMinutes
+		siteProfileSwitchesVw.UtcOffsetMinutes = &xint644
+	}
+	if source.OccurredAt != nil {
+		xint645 := *source.OccurredAt
+		siteProfileSwitchesVw.OccurredAt = &xint645
+	}
+	if source.CreatedAt != nil {
+		xint646 := *source.CreatedAt
+		siteProfileSwitchesVw.CreatedAt = &xint646
+	}
+	if source.UpdatedAt != nil {
+		xint647 := *source.UpdatedAt
+		siteProfileSwitchesVw.UpdatedAt = &xint647
+	}
+	if source.CreatedByAppName != nil {
+		xstring13 := *source.CreatedByAppName
+		siteProfileSwitchesVw.CreatedByAppName = &xstring13
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring14 := *source.CreatedByDeviceName
+		siteProfileSwitchesVw.CreatedByDeviceName = &xstring14
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring15 := *source.UpdatedByIdentityName
+		siteProfileSwitchesVw.UpdatedByIdentityName = &xstring15
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring16 := *source.CreatedByIdentityName
+		siteProfileSwitchesVw.CreatedByIdentityName = &xstring16
+	}
+	return siteProfileSwitchesVw
+}
+func siteTempBasalsVwToSiteTempBasalsVw(source TempBasalsVw) TempBasalsVw {
+	var siteTempBasalsVw TempBasalsVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteTempBasalsVw.ID = &xstring
+	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteTempBasalsVw.DurationMinutes = &xint64
+	}
+	if source.Absolute != nil {
+		xfloat64 := *source.Absolute
+		siteTempBasalsVw.Absolute = &xfloat64
+	}
+	if source.Percent != nil {
+		xfloat642 := *source.Percent
+		siteTempBasalsVw.Percent = &xfloat642
+	}
+	if source.Notes != nil {
+		xstring2 := *source.Notes
+		siteTempBasalsVw.Notes = &xstring2
+	}
+	if source.Reason != nil {
+		xstring3 := *source.Reason
+		siteTempBasalsVw.Reason = &xstring3
+	}
+	if source.RawJsonData != nil {
+		xstring4 := *source.RawJsonData
+		siteTempBasalsVw.RawJsonData = &xstring4
+	}
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteTempBasalsVw.DeletedAt = &xint642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := *source.UtcOffsetMinutes
+		siteTempBasalsVw.UtcOffsetMinutes = &xint643
+	}
+	if source.OccurredAt != nil {
+		xint644 := *source.OccurredAt
+		siteTempBasalsVw.OccurredAt = &xint644
+	}
+	if source.CreatedAt != nil {
+		xint645 := *source.CreatedAt
+		siteTempBasalsVw.CreatedAt = &xint645
+	}
+	if source.UpdatedAt != nil {
+		xint646 := *source.UpdatedAt
+		siteTempBasalsVw.UpdatedAt = &xint646
+	}
+	if source.CreatedByAppName != nil {
+		xstring5 := *source.CreatedByAppName
+		siteTempBasalsVw.CreatedByAppName = &xstring5
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring6 := *source.CreatedByDeviceName
+		siteTempBasalsVw.CreatedByDeviceName = &xstring6
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring7 := *source.UpdatedByIdentityName
+		siteTempBasalsVw.UpdatedByIdentityName = &xstring7
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring8 := *source.CreatedByIdentityName
+		siteTempBasalsVw.CreatedByIdentityName = &xstring8
+	}
+	return siteTempBasalsVw
+}
+func siteTempTargetsVwToSiteTempTargetsVw(source TempTargetsVw) TempTargetsVw {
+	var siteTempTargetsVw TempTargetsVw
+	if source.ID != nil {
+		xstring := *source.ID
+		siteTempTargetsVw.ID = &xstring
+	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteTempTargetsVw.DurationMinutes = &xint64
+	}
+	if source.HighTarget != nil {
+		xfloat64 := *source.HighTarget
+		siteTempTargetsVw.HighTarget = &xfloat64
+	}
+	if source.LowTarget != nil {
+		xfloat642 := *source.LowTarget
+		siteTempTargetsVw.LowTarget = &xfloat642
+	}
+	if source.Notes != nil {
+		xstring2 := *source.Notes
+		siteTempTargetsVw.Notes = &xstring2
+	}
+	if source.Reason != nil {
+		xstring3 := *source.Reason
+		siteTempTargetsVw.Reason = &xstring3
+	}
+	if source.RawJsonData != nil {
+		xstring4 := *source.RawJsonData
+		siteTempTargetsVw.RawJsonData = &xstring4
+	}
+	if source.DeletedAt != nil {
+		xint642 := *source.DeletedAt
+		siteTempTargetsVw.DeletedAt = &xint642
+	}
+	if source.UtcOffsetMinutes != nil {
+		xint643 := *source.UtcOffsetMinutes
+		siteTempTargetsVw.UtcOffsetMinutes = &xint643
+	}
+	if source.OccurredAt != nil {
+		xint644 := *source.OccurredAt
+		siteTempTargetsVw.OccurredAt = &xint644
+	}
+	if source.CreatedAt != nil {
+		xint645 := *source.CreatedAt
+		siteTempTargetsVw.CreatedAt = &xint645
+	}
+	if source.UpdatedAt != nil {
+		xint646 := *source.UpdatedAt
+		siteTempTargetsVw.UpdatedAt = &xint646
+	}
+	if source.CreatedByAppName != nil {
+		xstring5 := *source.CreatedByAppName
+		siteTempTargetsVw.CreatedByAppName = &xstring5
+	}
+	if source.CreatedByDeviceName != nil {
+		xstring6 := *source.CreatedByDeviceName
+		siteTempTargetsVw.CreatedByDeviceName = &xstring6
+	}
+	if source.UpdatedByIdentityName != nil {
+		xstring7 := *source.UpdatedByIdentityName
+		siteTempTargetsVw.UpdatedByIdentityName = &xstring7
+	}
+	if source.CreatedByIdentityName != nil {
+		xstring8 := *source.CreatedByIdentityName
+		siteTempTargetsVw.CreatedByIdentityName = &xstring8
+	}
+	return siteTempTargetsVw
 }

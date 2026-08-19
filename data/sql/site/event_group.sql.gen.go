@@ -14,75 +14,29 @@ SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.notes, eg.reason, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
-
-    gr.id as glucose_reading_id,   
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
     
-    idose.id as insulin_dose_id,
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    fi.id as food_intake_id,
-    fi.name as food_intake_name,
-    fi.category as food_intake_category,
-    fi.subcategory as food_intake_subcategory,
-    fi.carbs as food_intake_carbs,
-    fi.fat as food_intake_fat,
-    fi.protein as food_intake_protein,
-    fi.fibre as food_intake_fibre,
-    fi.energy as food_intake_energy,
-    fi.portions as food_intake_portions,
-
-    tb.id as temp_basal_id,
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,    
-    tb.percent as temp_basal_percent,
-
-    tt.id as temp_target_id,
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    ps.id as profile_switch_id,
-    ps.name as profile_switch_name,
-    ps.dia as profile_switch_dia,
-    ps.units as profile_switch_units,
-    ps.timeshift as profile_switch_timeshift,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_high_json as profile_switch_targets_high_json,
-    ps.targets_low_json as profile_switch_targets_low_json,
-
-    ce.id as component_event_id,
-
-    a.id as activity_id,
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    n.id as notification_event_id,
-    n.title as notification_event_title,
-    n.severity as notification_event_severity,
-    n.content as notification_event_content,
-    n.notification_type as notification_event_notification_type
+    gr.id, gr.reading, gr.reading_type, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_name, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_name, idose.created_by_identity_name,
+    fi.id, fi.name, fi.category, fi.subcategory, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_name, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.absolute, tb.percent, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_name, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target, tt.low_target, tt.notes, tt.reason, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_name, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.percent, ps.timeshift, ps.dia, ps.units, ps.timezone, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_name, ps.created_by_identity_name,
+    ce.id, ce.event_type, ce.pump_id, ce.pump_serial, ce.pump_type, ce.notes, ce.reason, ce.raw_json_data, ce.deleted_at, ce.utc_offset_minutes, ce.occurred_at, ce.created_at, ce.updated_at, ce.updated_by_identity_name, ce.created_by_app_name, ce.created_by_device_name, ce.created_by_identity_name,
+    a.id, a.name, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.notes, a.reason, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
+    n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events ce ON eg.component_event_id = ce.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
+
+
 WHERE (CAST(?1 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -95,56 +49,16 @@ type AllEventGroupsParams struct {
 }
 
 type AllEventGroupsRow struct {
-	EventGroup                            EventGroup
-	GlucoseReadingID                      *string
-	GlucoseReading                        *float64
-	GlucoseReadingType                    *string
-	InsulinDoseID                         *string
-	InsulinDose                           *float64
-	InsulinDoseType                       *string
-	FoodIntakeID                          *string
-	FoodIntakeName                        *string
-	FoodIntakeCategory                    *string
-	FoodIntakeSubcategory                 *string
-	FoodIntakeCarbs                       *float64
-	FoodIntakeFat                         *float64
-	FoodIntakeProtein                     *float64
-	FoodIntakeFibre                       *float64
-	FoodIntakeEnergy                      *float64
-	FoodIntakePortions                    *float64
-	TempBasalID                           *string
-	TempBasalDurationMinutes              *int64
-	TempBasalAbsolute                     *float64
-	TempBasalPercent                      *float64
-	TempTargetID                          *string
-	TempTargetDurationMinutes             *int64
-	TempTargetHighTarget                  *float64
-	TempTargetLowTarget                   *float64
-	ProfileSwitchID                       *string
-	ProfileSwitchName                     *string
-	ProfileSwitchDia                      *float64
-	ProfileSwitchUnits                    *string
-	ProfileSwitchTimeshift                *int64
-	ProfileSwitchDurationMinutes          *int64
-	ProfileSwitchPercent                  *float64
-	ProfileSwitchCarbRatiosJson           *string
-	ProfileSwitchInsulinSensitivitiesJson *string
-	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsHighJson          *string
-	ProfileSwitchTargetsLowJson           *string
-	ComponentEventID                      *string
-	ActivityID                            *string
-	ActivityName                          *string
-	ActivityType                          *string
-	ActivityDurationMinutes               *int64
-	ActivityCalories                      *int64
-	ActivitySteps                         *int64
-	ActivityHeartRate                     *int64
-	NotificationEventID                   *string
-	NotificationEventTitle                *string
-	NotificationEventSeverity             *int64
-	NotificationEventContent              *string
-	NotificationEventNotificationType     *string
+	EventGroup           EventGroup
+	GlucoseReadingsVw    GlucoseReadingsVw
+	InsulinDosesVw       InsulinDosesVw
+	FoodIntakesVw        FoodIntakesVw
+	TempBasalsVw         TempBasalsVw
+	TempTargetsVw        TempTargetsVw
+	ProfileSwitchesVw    ProfileSwitchesVw
+	ComponentEventsVw    ComponentEventsVw
+	ActivitiesVw         ActivitiesVw
+	NotificationEventsVw NotificationEventsVw
 }
 
 func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) ([]*AllEventGroupsRow, error) {
@@ -180,55 +94,168 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.EventGroup.CreatedByDeviceName,
 			&i.EventGroup.UpdatedByIdentityName,
 			&i.EventGroup.CreatedByIdentityName,
-			&i.GlucoseReadingID,
-			&i.GlucoseReading,
-			&i.GlucoseReadingType,
-			&i.InsulinDoseID,
-			&i.InsulinDose,
-			&i.InsulinDoseType,
-			&i.FoodIntakeID,
-			&i.FoodIntakeName,
-			&i.FoodIntakeCategory,
-			&i.FoodIntakeSubcategory,
-			&i.FoodIntakeCarbs,
-			&i.FoodIntakeFat,
-			&i.FoodIntakeProtein,
-			&i.FoodIntakeFibre,
-			&i.FoodIntakeEnergy,
-			&i.FoodIntakePortions,
-			&i.TempBasalID,
-			&i.TempBasalDurationMinutes,
-			&i.TempBasalAbsolute,
-			&i.TempBasalPercent,
-			&i.TempTargetID,
-			&i.TempTargetDurationMinutes,
-			&i.TempTargetHighTarget,
-			&i.TempTargetLowTarget,
-			&i.ProfileSwitchID,
-			&i.ProfileSwitchName,
-			&i.ProfileSwitchDia,
-			&i.ProfileSwitchUnits,
-			&i.ProfileSwitchTimeshift,
-			&i.ProfileSwitchDurationMinutes,
-			&i.ProfileSwitchPercent,
-			&i.ProfileSwitchCarbRatiosJson,
-			&i.ProfileSwitchInsulinSensitivitiesJson,
-			&i.ProfileSwitchBasalRatesJson,
-			&i.ProfileSwitchTargetsHighJson,
-			&i.ProfileSwitchTargetsLowJson,
-			&i.ComponentEventID,
-			&i.ActivityID,
-			&i.ActivityName,
-			&i.ActivityType,
-			&i.ActivityDurationMinutes,
-			&i.ActivityCalories,
-			&i.ActivitySteps,
-			&i.ActivityHeartRate,
-			&i.NotificationEventID,
-			&i.NotificationEventTitle,
-			&i.NotificationEventSeverity,
-			&i.NotificationEventContent,
-			&i.NotificationEventNotificationType,
+			&i.GlucoseReadingsVw.ID,
+			&i.GlucoseReadingsVw.Reading,
+			&i.GlucoseReadingsVw.ReadingType,
+			&i.GlucoseReadingsVw.Notes,
+			&i.GlucoseReadingsVw.Reason,
+			&i.GlucoseReadingsVw.RawJsonData,
+			&i.GlucoseReadingsVw.DeletedAt,
+			&i.GlucoseReadingsVw.UtcOffsetMinutes,
+			&i.GlucoseReadingsVw.OccurredAt,
+			&i.GlucoseReadingsVw.CreatedAt,
+			&i.GlucoseReadingsVw.UpdatedAt,
+			&i.GlucoseReadingsVw.CreatedByAppName,
+			&i.GlucoseReadingsVw.CreatedByDeviceName,
+			&i.GlucoseReadingsVw.UpdatedByIdentityName,
+			&i.GlucoseReadingsVw.CreatedByIdentityName,
+			&i.InsulinDosesVw.ID,
+			&i.InsulinDosesVw.Dose,
+			&i.InsulinDosesVw.DoseType,
+			&i.InsulinDosesVw.Notes,
+			&i.InsulinDosesVw.Reason,
+			&i.InsulinDosesVw.RawJsonData,
+			&i.InsulinDosesVw.DeletedAt,
+			&i.InsulinDosesVw.UtcOffsetMinutes,
+			&i.InsulinDosesVw.OccurredAt,
+			&i.InsulinDosesVw.CreatedAt,
+			&i.InsulinDosesVw.UpdatedAt,
+			&i.InsulinDosesVw.CreatedByAppName,
+			&i.InsulinDosesVw.CreatedByDeviceName,
+			&i.InsulinDosesVw.UpdatedByIdentityName,
+			&i.InsulinDosesVw.CreatedByIdentityName,
+			&i.FoodIntakesVw.ID,
+			&i.FoodIntakesVw.Name,
+			&i.FoodIntakesVw.Category,
+			&i.FoodIntakesVw.Subcategory,
+			&i.FoodIntakesVw.Carbs,
+			&i.FoodIntakesVw.Fat,
+			&i.FoodIntakesVw.Protein,
+			&i.FoodIntakesVw.Fibre,
+			&i.FoodIntakesVw.Energy,
+			&i.FoodIntakesVw.Portions,
+			&i.FoodIntakesVw.Notes,
+			&i.FoodIntakesVw.Reason,
+			&i.FoodIntakesVw.RawJsonData,
+			&i.FoodIntakesVw.DeletedAt,
+			&i.FoodIntakesVw.UtcOffsetMinutes,
+			&i.FoodIntakesVw.OccurredAt,
+			&i.FoodIntakesVw.CreatedAt,
+			&i.FoodIntakesVw.UpdatedAt,
+			&i.FoodIntakesVw.CreatedByAppName,
+			&i.FoodIntakesVw.CreatedByDeviceName,
+			&i.FoodIntakesVw.UpdatedByIdentityName,
+			&i.FoodIntakesVw.CreatedByIdentityName,
+			&i.TempBasalsVw.ID,
+			&i.TempBasalsVw.DurationMinutes,
+			&i.TempBasalsVw.Absolute,
+			&i.TempBasalsVw.Percent,
+			&i.TempBasalsVw.Notes,
+			&i.TempBasalsVw.Reason,
+			&i.TempBasalsVw.RawJsonData,
+			&i.TempBasalsVw.DeletedAt,
+			&i.TempBasalsVw.UtcOffsetMinutes,
+			&i.TempBasalsVw.OccurredAt,
+			&i.TempBasalsVw.CreatedAt,
+			&i.TempBasalsVw.UpdatedAt,
+			&i.TempBasalsVw.CreatedByAppName,
+			&i.TempBasalsVw.CreatedByDeviceName,
+			&i.TempBasalsVw.UpdatedByIdentityName,
+			&i.TempBasalsVw.CreatedByIdentityName,
+			&i.TempTargetsVw.ID,
+			&i.TempTargetsVw.DurationMinutes,
+			&i.TempTargetsVw.HighTarget,
+			&i.TempTargetsVw.LowTarget,
+			&i.TempTargetsVw.Notes,
+			&i.TempTargetsVw.Reason,
+			&i.TempTargetsVw.RawJsonData,
+			&i.TempTargetsVw.DeletedAt,
+			&i.TempTargetsVw.UtcOffsetMinutes,
+			&i.TempTargetsVw.OccurredAt,
+			&i.TempTargetsVw.CreatedAt,
+			&i.TempTargetsVw.UpdatedAt,
+			&i.TempTargetsVw.CreatedByAppName,
+			&i.TempTargetsVw.CreatedByDeviceName,
+			&i.TempTargetsVw.UpdatedByIdentityName,
+			&i.TempTargetsVw.CreatedByIdentityName,
+			&i.ProfileSwitchesVw.ID,
+			&i.ProfileSwitchesVw.Name,
+			&i.ProfileSwitchesVw.DurationMinutes,
+			&i.ProfileSwitchesVw.Percent,
+			&i.ProfileSwitchesVw.Timeshift,
+			&i.ProfileSwitchesVw.Dia,
+			&i.ProfileSwitchesVw.Units,
+			&i.ProfileSwitchesVw.Timezone,
+			&i.ProfileSwitchesVw.CarbRatiosJson,
+			&i.ProfileSwitchesVw.InsulinSensitivitiesJson,
+			&i.ProfileSwitchesVw.BasalRatesJson,
+			&i.ProfileSwitchesVw.TargetsHighJson,
+			&i.ProfileSwitchesVw.TargetsLowJson,
+			&i.ProfileSwitchesVw.Notes,
+			&i.ProfileSwitchesVw.Reason,
+			&i.ProfileSwitchesVw.RawJsonData,
+			&i.ProfileSwitchesVw.DeletedAt,
+			&i.ProfileSwitchesVw.UtcOffsetMinutes,
+			&i.ProfileSwitchesVw.OccurredAt,
+			&i.ProfileSwitchesVw.CreatedAt,
+			&i.ProfileSwitchesVw.UpdatedAt,
+			&i.ProfileSwitchesVw.CreatedByAppName,
+			&i.ProfileSwitchesVw.CreatedByDeviceName,
+			&i.ProfileSwitchesVw.UpdatedByIdentityName,
+			&i.ProfileSwitchesVw.CreatedByIdentityName,
+			&i.ComponentEventsVw.ID,
+			&i.ComponentEventsVw.EventType,
+			&i.ComponentEventsVw.PumpID,
+			&i.ComponentEventsVw.PumpSerial,
+			&i.ComponentEventsVw.PumpType,
+			&i.ComponentEventsVw.Notes,
+			&i.ComponentEventsVw.Reason,
+			&i.ComponentEventsVw.RawJsonData,
+			&i.ComponentEventsVw.DeletedAt,
+			&i.ComponentEventsVw.UtcOffsetMinutes,
+			&i.ComponentEventsVw.OccurredAt,
+			&i.ComponentEventsVw.CreatedAt,
+			&i.ComponentEventsVw.UpdatedAt,
+			&i.ComponentEventsVw.UpdatedByIdentityName,
+			&i.ComponentEventsVw.CreatedByAppName,
+			&i.ComponentEventsVw.CreatedByDeviceName,
+			&i.ComponentEventsVw.CreatedByIdentityName,
+			&i.ActivitiesVw.ID,
+			&i.ActivitiesVw.Name,
+			&i.ActivitiesVw.ActivityType,
+			&i.ActivitiesVw.DurationMinutes,
+			&i.ActivitiesVw.Calories,
+			&i.ActivitiesVw.Steps,
+			&i.ActivitiesVw.HeartRate,
+			&i.ActivitiesVw.Notes,
+			&i.ActivitiesVw.Reason,
+			&i.ActivitiesVw.RawJsonData,
+			&i.ActivitiesVw.DeletedAt,
+			&i.ActivitiesVw.UtcOffsetMinutes,
+			&i.ActivitiesVw.OccurredAt,
+			&i.ActivitiesVw.CreatedAt,
+			&i.ActivitiesVw.UpdatedAt,
+			&i.ActivitiesVw.CreatedByAppName,
+			&i.ActivitiesVw.CreatedByDeviceName,
+			&i.ActivitiesVw.UpdatedByIdentityName,
+			&i.ActivitiesVw.CreatedByIdentityName,
+			&i.NotificationEventsVw.ID,
+			&i.NotificationEventsVw.NotificationType,
+			&i.NotificationEventsVw.Title,
+			&i.NotificationEventsVw.Severity,
+			&i.NotificationEventsVw.Content,
+			&i.NotificationEventsVw.Notes,
+			&i.NotificationEventsVw.Reason,
+			&i.NotificationEventsVw.RawJsonData,
+			&i.NotificationEventsVw.DeletedAt,
+			&i.NotificationEventsVw.UtcOffsetMinutes,
+			&i.NotificationEventsVw.OccurredAt,
+			&i.NotificationEventsVw.CreatedAt,
+			&i.NotificationEventsVw.UpdatedAt,
+			&i.NotificationEventsVw.CreatedByAppName,
+			&i.NotificationEventsVw.CreatedByDeviceName,
+			&i.NotificationEventsVw.UpdatedByIdentityName,
+			&i.NotificationEventsVw.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
 		}
@@ -352,75 +379,27 @@ SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.notes, eg.reason, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
-
-    gr.id as glucose_reading_id,   
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
     
-    idose.id as insulin_dose_id,
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    fi.id as food_intake_id,
-    fi.name as food_intake_name,
-    fi.category as food_intake_category,
-    fi.subcategory as food_intake_subcategory,
-    fi.carbs as food_intake_carbs,
-    fi.fat as food_intake_fat,
-    fi.protein as food_intake_protein,
-    fi.fibre as food_intake_fibre,
-    fi.energy as food_intake_energy,
-    fi.portions as food_intake_portions,
-
-    tb.id as temp_basal_id,
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,    
-    tb.percent as temp_basal_percent,
-
-    tt.id as temp_target_id,
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    ps.id as profile_switch_id,
-    ps.name as profile_switch_name,
-    ps.dia as profile_switch_dia,
-    ps.units as profile_switch_units,
-    ps.timeshift as profile_switch_timeshift,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_high_json as profile_switch_targets_high_json,
-    ps.targets_low_json as profile_switch_targets_low_json,
-
-    ce.id as component_event_id,
-
-    a.id as activity_id,
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    n.id as notification_event_id,
-    n.title as notification_event_title,
-    n.severity as notification_event_severity,
-    n.content as notification_event_content,
-    n.notification_type as notification_event_notification_type
+    gr.id, gr.reading, gr.reading_type, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_name, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_name, idose.created_by_identity_name,
+    fi.id, fi.name, fi.category, fi.subcategory, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_name, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.absolute, tb.percent, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_name, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target, tt.low_target, tt.notes, tt.reason, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_name, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.percent, ps.timeshift, ps.dia, ps.units, ps.timezone, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_name, ps.created_by_identity_name,
+    ce.id, ce.event_type, ce.pump_id, ce.pump_serial, ce.pump_type, ce.notes, ce.reason, ce.raw_json_data, ce.deleted_at, ce.utc_offset_minutes, ce.occurred_at, ce.created_at, ce.updated_at, ce.updated_by_identity_name, ce.created_by_app_name, ce.created_by_device_name, ce.created_by_identity_name,
+    a.id, a.name, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.notes, a.reason, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
+    n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events ce ON eg.component_event_id = ce.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 WHERE eg.id = ?
 `
@@ -430,56 +409,16 @@ type GetEventGroupParams struct {
 }
 
 type GetEventGroupRow struct {
-	EventGroup                            EventGroup
-	GlucoseReadingID                      *string
-	GlucoseReading                        *float64
-	GlucoseReadingType                    *string
-	InsulinDoseID                         *string
-	InsulinDose                           *float64
-	InsulinDoseType                       *string
-	FoodIntakeID                          *string
-	FoodIntakeName                        *string
-	FoodIntakeCategory                    *string
-	FoodIntakeSubcategory                 *string
-	FoodIntakeCarbs                       *float64
-	FoodIntakeFat                         *float64
-	FoodIntakeProtein                     *float64
-	FoodIntakeFibre                       *float64
-	FoodIntakeEnergy                      *float64
-	FoodIntakePortions                    *float64
-	TempBasalID                           *string
-	TempBasalDurationMinutes              *int64
-	TempBasalAbsolute                     *float64
-	TempBasalPercent                      *float64
-	TempTargetID                          *string
-	TempTargetDurationMinutes             *int64
-	TempTargetHighTarget                  *float64
-	TempTargetLowTarget                   *float64
-	ProfileSwitchID                       *string
-	ProfileSwitchName                     *string
-	ProfileSwitchDia                      *float64
-	ProfileSwitchUnits                    *string
-	ProfileSwitchTimeshift                *int64
-	ProfileSwitchDurationMinutes          *int64
-	ProfileSwitchPercent                  *float64
-	ProfileSwitchCarbRatiosJson           *string
-	ProfileSwitchInsulinSensitivitiesJson *string
-	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsHighJson          *string
-	ProfileSwitchTargetsLowJson           *string
-	ComponentEventID                      *string
-	ActivityID                            *string
-	ActivityName                          *string
-	ActivityType                          *string
-	ActivityDurationMinutes               *int64
-	ActivityCalories                      *int64
-	ActivitySteps                         *int64
-	ActivityHeartRate                     *int64
-	NotificationEventID                   *string
-	NotificationEventTitle                *string
-	NotificationEventSeverity             *int64
-	NotificationEventContent              *string
-	NotificationEventNotificationType     *string
+	EventGroup           EventGroup
+	GlucoseReadingsVw    GlucoseReadingsVw
+	InsulinDosesVw       InsulinDosesVw
+	FoodIntakesVw        FoodIntakesVw
+	TempBasalsVw         TempBasalsVw
+	TempTargetsVw        TempTargetsVw
+	ProfileSwitchesVw    ProfileSwitchesVw
+	ComponentEventsVw    ComponentEventsVw
+	ActivitiesVw         ActivitiesVw
+	NotificationEventsVw NotificationEventsVw
 }
 
 func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*GetEventGroupRow, error) {
@@ -509,55 +448,168 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.EventGroup.CreatedByDeviceName,
 		&i.EventGroup.UpdatedByIdentityName,
 		&i.EventGroup.CreatedByIdentityName,
-		&i.GlucoseReadingID,
-		&i.GlucoseReading,
-		&i.GlucoseReadingType,
-		&i.InsulinDoseID,
-		&i.InsulinDose,
-		&i.InsulinDoseType,
-		&i.FoodIntakeID,
-		&i.FoodIntakeName,
-		&i.FoodIntakeCategory,
-		&i.FoodIntakeSubcategory,
-		&i.FoodIntakeCarbs,
-		&i.FoodIntakeFat,
-		&i.FoodIntakeProtein,
-		&i.FoodIntakeFibre,
-		&i.FoodIntakeEnergy,
-		&i.FoodIntakePortions,
-		&i.TempBasalID,
-		&i.TempBasalDurationMinutes,
-		&i.TempBasalAbsolute,
-		&i.TempBasalPercent,
-		&i.TempTargetID,
-		&i.TempTargetDurationMinutes,
-		&i.TempTargetHighTarget,
-		&i.TempTargetLowTarget,
-		&i.ProfileSwitchID,
-		&i.ProfileSwitchName,
-		&i.ProfileSwitchDia,
-		&i.ProfileSwitchUnits,
-		&i.ProfileSwitchTimeshift,
-		&i.ProfileSwitchDurationMinutes,
-		&i.ProfileSwitchPercent,
-		&i.ProfileSwitchCarbRatiosJson,
-		&i.ProfileSwitchInsulinSensitivitiesJson,
-		&i.ProfileSwitchBasalRatesJson,
-		&i.ProfileSwitchTargetsHighJson,
-		&i.ProfileSwitchTargetsLowJson,
-		&i.ComponentEventID,
-		&i.ActivityID,
-		&i.ActivityName,
-		&i.ActivityType,
-		&i.ActivityDurationMinutes,
-		&i.ActivityCalories,
-		&i.ActivitySteps,
-		&i.ActivityHeartRate,
-		&i.NotificationEventID,
-		&i.NotificationEventTitle,
-		&i.NotificationEventSeverity,
-		&i.NotificationEventContent,
-		&i.NotificationEventNotificationType,
+		&i.GlucoseReadingsVw.ID,
+		&i.GlucoseReadingsVw.Reading,
+		&i.GlucoseReadingsVw.ReadingType,
+		&i.GlucoseReadingsVw.Notes,
+		&i.GlucoseReadingsVw.Reason,
+		&i.GlucoseReadingsVw.RawJsonData,
+		&i.GlucoseReadingsVw.DeletedAt,
+		&i.GlucoseReadingsVw.UtcOffsetMinutes,
+		&i.GlucoseReadingsVw.OccurredAt,
+		&i.GlucoseReadingsVw.CreatedAt,
+		&i.GlucoseReadingsVw.UpdatedAt,
+		&i.GlucoseReadingsVw.CreatedByAppName,
+		&i.GlucoseReadingsVw.CreatedByDeviceName,
+		&i.GlucoseReadingsVw.UpdatedByIdentityName,
+		&i.GlucoseReadingsVw.CreatedByIdentityName,
+		&i.InsulinDosesVw.ID,
+		&i.InsulinDosesVw.Dose,
+		&i.InsulinDosesVw.DoseType,
+		&i.InsulinDosesVw.Notes,
+		&i.InsulinDosesVw.Reason,
+		&i.InsulinDosesVw.RawJsonData,
+		&i.InsulinDosesVw.DeletedAt,
+		&i.InsulinDosesVw.UtcOffsetMinutes,
+		&i.InsulinDosesVw.OccurredAt,
+		&i.InsulinDosesVw.CreatedAt,
+		&i.InsulinDosesVw.UpdatedAt,
+		&i.InsulinDosesVw.CreatedByAppName,
+		&i.InsulinDosesVw.CreatedByDeviceName,
+		&i.InsulinDosesVw.UpdatedByIdentityName,
+		&i.InsulinDosesVw.CreatedByIdentityName,
+		&i.FoodIntakesVw.ID,
+		&i.FoodIntakesVw.Name,
+		&i.FoodIntakesVw.Category,
+		&i.FoodIntakesVw.Subcategory,
+		&i.FoodIntakesVw.Carbs,
+		&i.FoodIntakesVw.Fat,
+		&i.FoodIntakesVw.Protein,
+		&i.FoodIntakesVw.Fibre,
+		&i.FoodIntakesVw.Energy,
+		&i.FoodIntakesVw.Portions,
+		&i.FoodIntakesVw.Notes,
+		&i.FoodIntakesVw.Reason,
+		&i.FoodIntakesVw.RawJsonData,
+		&i.FoodIntakesVw.DeletedAt,
+		&i.FoodIntakesVw.UtcOffsetMinutes,
+		&i.FoodIntakesVw.OccurredAt,
+		&i.FoodIntakesVw.CreatedAt,
+		&i.FoodIntakesVw.UpdatedAt,
+		&i.FoodIntakesVw.CreatedByAppName,
+		&i.FoodIntakesVw.CreatedByDeviceName,
+		&i.FoodIntakesVw.UpdatedByIdentityName,
+		&i.FoodIntakesVw.CreatedByIdentityName,
+		&i.TempBasalsVw.ID,
+		&i.TempBasalsVw.DurationMinutes,
+		&i.TempBasalsVw.Absolute,
+		&i.TempBasalsVw.Percent,
+		&i.TempBasalsVw.Notes,
+		&i.TempBasalsVw.Reason,
+		&i.TempBasalsVw.RawJsonData,
+		&i.TempBasalsVw.DeletedAt,
+		&i.TempBasalsVw.UtcOffsetMinutes,
+		&i.TempBasalsVw.OccurredAt,
+		&i.TempBasalsVw.CreatedAt,
+		&i.TempBasalsVw.UpdatedAt,
+		&i.TempBasalsVw.CreatedByAppName,
+		&i.TempBasalsVw.CreatedByDeviceName,
+		&i.TempBasalsVw.UpdatedByIdentityName,
+		&i.TempBasalsVw.CreatedByIdentityName,
+		&i.TempTargetsVw.ID,
+		&i.TempTargetsVw.DurationMinutes,
+		&i.TempTargetsVw.HighTarget,
+		&i.TempTargetsVw.LowTarget,
+		&i.TempTargetsVw.Notes,
+		&i.TempTargetsVw.Reason,
+		&i.TempTargetsVw.RawJsonData,
+		&i.TempTargetsVw.DeletedAt,
+		&i.TempTargetsVw.UtcOffsetMinutes,
+		&i.TempTargetsVw.OccurredAt,
+		&i.TempTargetsVw.CreatedAt,
+		&i.TempTargetsVw.UpdatedAt,
+		&i.TempTargetsVw.CreatedByAppName,
+		&i.TempTargetsVw.CreatedByDeviceName,
+		&i.TempTargetsVw.UpdatedByIdentityName,
+		&i.TempTargetsVw.CreatedByIdentityName,
+		&i.ProfileSwitchesVw.ID,
+		&i.ProfileSwitchesVw.Name,
+		&i.ProfileSwitchesVw.DurationMinutes,
+		&i.ProfileSwitchesVw.Percent,
+		&i.ProfileSwitchesVw.Timeshift,
+		&i.ProfileSwitchesVw.Dia,
+		&i.ProfileSwitchesVw.Units,
+		&i.ProfileSwitchesVw.Timezone,
+		&i.ProfileSwitchesVw.CarbRatiosJson,
+		&i.ProfileSwitchesVw.InsulinSensitivitiesJson,
+		&i.ProfileSwitchesVw.BasalRatesJson,
+		&i.ProfileSwitchesVw.TargetsHighJson,
+		&i.ProfileSwitchesVw.TargetsLowJson,
+		&i.ProfileSwitchesVw.Notes,
+		&i.ProfileSwitchesVw.Reason,
+		&i.ProfileSwitchesVw.RawJsonData,
+		&i.ProfileSwitchesVw.DeletedAt,
+		&i.ProfileSwitchesVw.UtcOffsetMinutes,
+		&i.ProfileSwitchesVw.OccurredAt,
+		&i.ProfileSwitchesVw.CreatedAt,
+		&i.ProfileSwitchesVw.UpdatedAt,
+		&i.ProfileSwitchesVw.CreatedByAppName,
+		&i.ProfileSwitchesVw.CreatedByDeviceName,
+		&i.ProfileSwitchesVw.UpdatedByIdentityName,
+		&i.ProfileSwitchesVw.CreatedByIdentityName,
+		&i.ComponentEventsVw.ID,
+		&i.ComponentEventsVw.EventType,
+		&i.ComponentEventsVw.PumpID,
+		&i.ComponentEventsVw.PumpSerial,
+		&i.ComponentEventsVw.PumpType,
+		&i.ComponentEventsVw.Notes,
+		&i.ComponentEventsVw.Reason,
+		&i.ComponentEventsVw.RawJsonData,
+		&i.ComponentEventsVw.DeletedAt,
+		&i.ComponentEventsVw.UtcOffsetMinutes,
+		&i.ComponentEventsVw.OccurredAt,
+		&i.ComponentEventsVw.CreatedAt,
+		&i.ComponentEventsVw.UpdatedAt,
+		&i.ComponentEventsVw.UpdatedByIdentityName,
+		&i.ComponentEventsVw.CreatedByAppName,
+		&i.ComponentEventsVw.CreatedByDeviceName,
+		&i.ComponentEventsVw.CreatedByIdentityName,
+		&i.ActivitiesVw.ID,
+		&i.ActivitiesVw.Name,
+		&i.ActivitiesVw.ActivityType,
+		&i.ActivitiesVw.DurationMinutes,
+		&i.ActivitiesVw.Calories,
+		&i.ActivitiesVw.Steps,
+		&i.ActivitiesVw.HeartRate,
+		&i.ActivitiesVw.Notes,
+		&i.ActivitiesVw.Reason,
+		&i.ActivitiesVw.RawJsonData,
+		&i.ActivitiesVw.DeletedAt,
+		&i.ActivitiesVw.UtcOffsetMinutes,
+		&i.ActivitiesVw.OccurredAt,
+		&i.ActivitiesVw.CreatedAt,
+		&i.ActivitiesVw.UpdatedAt,
+		&i.ActivitiesVw.CreatedByAppName,
+		&i.ActivitiesVw.CreatedByDeviceName,
+		&i.ActivitiesVw.UpdatedByIdentityName,
+		&i.ActivitiesVw.CreatedByIdentityName,
+		&i.NotificationEventsVw.ID,
+		&i.NotificationEventsVw.NotificationType,
+		&i.NotificationEventsVw.Title,
+		&i.NotificationEventsVw.Severity,
+		&i.NotificationEventsVw.Content,
+		&i.NotificationEventsVw.Notes,
+		&i.NotificationEventsVw.Reason,
+		&i.NotificationEventsVw.RawJsonData,
+		&i.NotificationEventsVw.DeletedAt,
+		&i.NotificationEventsVw.UtcOffsetMinutes,
+		&i.NotificationEventsVw.OccurredAt,
+		&i.NotificationEventsVw.CreatedAt,
+		&i.NotificationEventsVw.UpdatedAt,
+		&i.NotificationEventsVw.CreatedByAppName,
+		&i.NotificationEventsVw.CreatedByDeviceName,
+		&i.NotificationEventsVw.UpdatedByIdentityName,
+		&i.NotificationEventsVw.CreatedByIdentityName,
 	)
 	return &i, err
 }
@@ -759,75 +811,27 @@ SELECT
     -- It would be awesome if sqlc worked with embed null objects
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.notes, eg.reason, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_name, eg.created_by_identity_name,
-
-    gr.id as glucose_reading_id,   
-    gr.reading as glucose_reading,
-    gr.reading_type as glucose_reading_type,
     
-    idose.id as insulin_dose_id,
-    idose.dose as insulin_dose,
-    idose.dose_type as insulin_dose_type,
-
-    fi.id as food_intake_id,
-    fi.name as food_intake_name,
-    fi.category as food_intake_category,
-    fi.subcategory as food_intake_subcategory,
-    fi.carbs as food_intake_carbs,
-    fi.fat as food_intake_fat,
-    fi.protein as food_intake_protein,
-    fi.fibre as food_intake_fibre,
-    fi.energy as food_intake_energy,
-    fi.portions as food_intake_portions,
-
-    tb.id as temp_basal_id,
-    tb.duration_minutes as temp_basal_duration_minutes,
-    tb.absolute as temp_basal_absolute,    
-    tb.percent as temp_basal_percent,
-
-    tt.id as temp_target_id,
-    tt.duration_minutes as temp_target_duration_minutes,
-    tt.high_target as temp_target_high_target,
-    tt.low_target as temp_target_low_target,
-
-    ps.id as profile_switch_id,
-    ps.name as profile_switch_name,
-    ps.dia as profile_switch_dia,
-    ps.units as profile_switch_units,
-    ps.timeshift as profile_switch_timeshift,
-    ps.duration_minutes as profile_switch_duration_minutes,
-    ps.percent as profile_switch_percent,
-    ps.carb_ratios_json as profile_switch_carb_ratios_json,
-    ps.insulin_sensitivities_json as profile_switch_insulin_sensitivities_json,
-    ps.basal_rates_json as profile_switch_basal_rates_json,
-    ps.targets_high_json as profile_switch_targets_high_json,
-    ps.targets_low_json as profile_switch_targets_low_json,
-
-    ce.id as component_event_id,
-
-    a.id as activity_id,
-    a.name as activity_name,
-    a.activity_type as activity_type,
-    a.duration_minutes as activity_duration_minutes,
-    a.calories as activity_calories,
-    a.steps as activity_steps,
-    a.heart_rate as activity_heart_rate,
-
-    n.id as notification_event_id,
-    n.title as notification_event_title,
-    n.severity as notification_event_severity,
-    n.content as notification_event_content,
-    n.notification_type as notification_event_notification_type
+    gr.id, gr.reading, gr.reading_type, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_name, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_name, idose.created_by_identity_name,
+    fi.id, fi.name, fi.category, fi.subcategory, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_name, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.absolute, tb.percent, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_name, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target, tt.low_target, tt.notes, tt.reason, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_name, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.percent, ps.timeshift, ps.dia, ps.units, ps.timezone, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_name, ps.created_by_identity_name,
+    ce.id, ce.event_type, ce.pump_id, ce.pump_serial, ce.pump_type, ce.notes, ce.reason, ce.raw_json_data, ce.deleted_at, ce.utc_offset_minutes, ce.occurred_at, ce.created_at, ce.updated_at, ce.updated_by_identity_name, ce.created_by_app_name, ce.created_by_device_name, ce.created_by_identity_name,
+    a.id, a.name, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.notes, a.reason, a.raw_json_data, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_name, a.created_by_identity_name,
+    n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_name, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events ce ON eg.component_event_id = ce.id
-LEFT JOIN activities a ON eg.activity_id = a.id
-LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 
 WHERE
@@ -948,56 +952,16 @@ type SearchEventGroupsParams struct {
 }
 
 type SearchEventGroupsRow struct {
-	EventGroup                            EventGroup
-	GlucoseReadingID                      *string
-	GlucoseReading                        *float64
-	GlucoseReadingType                    *string
-	InsulinDoseID                         *string
-	InsulinDose                           *float64
-	InsulinDoseType                       *string
-	FoodIntakeID                          *string
-	FoodIntakeName                        *string
-	FoodIntakeCategory                    *string
-	FoodIntakeSubcategory                 *string
-	FoodIntakeCarbs                       *float64
-	FoodIntakeFat                         *float64
-	FoodIntakeProtein                     *float64
-	FoodIntakeFibre                       *float64
-	FoodIntakeEnergy                      *float64
-	FoodIntakePortions                    *float64
-	TempBasalID                           *string
-	TempBasalDurationMinutes              *int64
-	TempBasalAbsolute                     *float64
-	TempBasalPercent                      *float64
-	TempTargetID                          *string
-	TempTargetDurationMinutes             *int64
-	TempTargetHighTarget                  *float64
-	TempTargetLowTarget                   *float64
-	ProfileSwitchID                       *string
-	ProfileSwitchName                     *string
-	ProfileSwitchDia                      *float64
-	ProfileSwitchUnits                    *string
-	ProfileSwitchTimeshift                *int64
-	ProfileSwitchDurationMinutes          *int64
-	ProfileSwitchPercent                  *float64
-	ProfileSwitchCarbRatiosJson           *string
-	ProfileSwitchInsulinSensitivitiesJson *string
-	ProfileSwitchBasalRatesJson           *string
-	ProfileSwitchTargetsHighJson          *string
-	ProfileSwitchTargetsLowJson           *string
-	ComponentEventID                      *string
-	ActivityID                            *string
-	ActivityName                          *string
-	ActivityType                          *string
-	ActivityDurationMinutes               *int64
-	ActivityCalories                      *int64
-	ActivitySteps                         *int64
-	ActivityHeartRate                     *int64
-	NotificationEventID                   *string
-	NotificationEventTitle                *string
-	NotificationEventSeverity             *int64
-	NotificationEventContent              *string
-	NotificationEventNotificationType     *string
+	EventGroup           EventGroup
+	GlucoseReadingsVw    GlucoseReadingsVw
+	InsulinDosesVw       InsulinDosesVw
+	FoodIntakesVw        FoodIntakesVw
+	TempBasalsVw         TempBasalsVw
+	TempTargetsVw        TempTargetsVw
+	ProfileSwitchesVw    ProfileSwitchesVw
+	ComponentEventsVw    ComponentEventsVw
+	ActivitiesVw         ActivitiesVw
+	NotificationEventsVw NotificationEventsVw
 }
 
 func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsParams) ([]*SearchEventGroupsRow, error) {
@@ -1078,55 +1042,168 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.EventGroup.CreatedByDeviceName,
 			&i.EventGroup.UpdatedByIdentityName,
 			&i.EventGroup.CreatedByIdentityName,
-			&i.GlucoseReadingID,
-			&i.GlucoseReading,
-			&i.GlucoseReadingType,
-			&i.InsulinDoseID,
-			&i.InsulinDose,
-			&i.InsulinDoseType,
-			&i.FoodIntakeID,
-			&i.FoodIntakeName,
-			&i.FoodIntakeCategory,
-			&i.FoodIntakeSubcategory,
-			&i.FoodIntakeCarbs,
-			&i.FoodIntakeFat,
-			&i.FoodIntakeProtein,
-			&i.FoodIntakeFibre,
-			&i.FoodIntakeEnergy,
-			&i.FoodIntakePortions,
-			&i.TempBasalID,
-			&i.TempBasalDurationMinutes,
-			&i.TempBasalAbsolute,
-			&i.TempBasalPercent,
-			&i.TempTargetID,
-			&i.TempTargetDurationMinutes,
-			&i.TempTargetHighTarget,
-			&i.TempTargetLowTarget,
-			&i.ProfileSwitchID,
-			&i.ProfileSwitchName,
-			&i.ProfileSwitchDia,
-			&i.ProfileSwitchUnits,
-			&i.ProfileSwitchTimeshift,
-			&i.ProfileSwitchDurationMinutes,
-			&i.ProfileSwitchPercent,
-			&i.ProfileSwitchCarbRatiosJson,
-			&i.ProfileSwitchInsulinSensitivitiesJson,
-			&i.ProfileSwitchBasalRatesJson,
-			&i.ProfileSwitchTargetsHighJson,
-			&i.ProfileSwitchTargetsLowJson,
-			&i.ComponentEventID,
-			&i.ActivityID,
-			&i.ActivityName,
-			&i.ActivityType,
-			&i.ActivityDurationMinutes,
-			&i.ActivityCalories,
-			&i.ActivitySteps,
-			&i.ActivityHeartRate,
-			&i.NotificationEventID,
-			&i.NotificationEventTitle,
-			&i.NotificationEventSeverity,
-			&i.NotificationEventContent,
-			&i.NotificationEventNotificationType,
+			&i.GlucoseReadingsVw.ID,
+			&i.GlucoseReadingsVw.Reading,
+			&i.GlucoseReadingsVw.ReadingType,
+			&i.GlucoseReadingsVw.Notes,
+			&i.GlucoseReadingsVw.Reason,
+			&i.GlucoseReadingsVw.RawJsonData,
+			&i.GlucoseReadingsVw.DeletedAt,
+			&i.GlucoseReadingsVw.UtcOffsetMinutes,
+			&i.GlucoseReadingsVw.OccurredAt,
+			&i.GlucoseReadingsVw.CreatedAt,
+			&i.GlucoseReadingsVw.UpdatedAt,
+			&i.GlucoseReadingsVw.CreatedByAppName,
+			&i.GlucoseReadingsVw.CreatedByDeviceName,
+			&i.GlucoseReadingsVw.UpdatedByIdentityName,
+			&i.GlucoseReadingsVw.CreatedByIdentityName,
+			&i.InsulinDosesVw.ID,
+			&i.InsulinDosesVw.Dose,
+			&i.InsulinDosesVw.DoseType,
+			&i.InsulinDosesVw.Notes,
+			&i.InsulinDosesVw.Reason,
+			&i.InsulinDosesVw.RawJsonData,
+			&i.InsulinDosesVw.DeletedAt,
+			&i.InsulinDosesVw.UtcOffsetMinutes,
+			&i.InsulinDosesVw.OccurredAt,
+			&i.InsulinDosesVw.CreatedAt,
+			&i.InsulinDosesVw.UpdatedAt,
+			&i.InsulinDosesVw.CreatedByAppName,
+			&i.InsulinDosesVw.CreatedByDeviceName,
+			&i.InsulinDosesVw.UpdatedByIdentityName,
+			&i.InsulinDosesVw.CreatedByIdentityName,
+			&i.FoodIntakesVw.ID,
+			&i.FoodIntakesVw.Name,
+			&i.FoodIntakesVw.Category,
+			&i.FoodIntakesVw.Subcategory,
+			&i.FoodIntakesVw.Carbs,
+			&i.FoodIntakesVw.Fat,
+			&i.FoodIntakesVw.Protein,
+			&i.FoodIntakesVw.Fibre,
+			&i.FoodIntakesVw.Energy,
+			&i.FoodIntakesVw.Portions,
+			&i.FoodIntakesVw.Notes,
+			&i.FoodIntakesVw.Reason,
+			&i.FoodIntakesVw.RawJsonData,
+			&i.FoodIntakesVw.DeletedAt,
+			&i.FoodIntakesVw.UtcOffsetMinutes,
+			&i.FoodIntakesVw.OccurredAt,
+			&i.FoodIntakesVw.CreatedAt,
+			&i.FoodIntakesVw.UpdatedAt,
+			&i.FoodIntakesVw.CreatedByAppName,
+			&i.FoodIntakesVw.CreatedByDeviceName,
+			&i.FoodIntakesVw.UpdatedByIdentityName,
+			&i.FoodIntakesVw.CreatedByIdentityName,
+			&i.TempBasalsVw.ID,
+			&i.TempBasalsVw.DurationMinutes,
+			&i.TempBasalsVw.Absolute,
+			&i.TempBasalsVw.Percent,
+			&i.TempBasalsVw.Notes,
+			&i.TempBasalsVw.Reason,
+			&i.TempBasalsVw.RawJsonData,
+			&i.TempBasalsVw.DeletedAt,
+			&i.TempBasalsVw.UtcOffsetMinutes,
+			&i.TempBasalsVw.OccurredAt,
+			&i.TempBasalsVw.CreatedAt,
+			&i.TempBasalsVw.UpdatedAt,
+			&i.TempBasalsVw.CreatedByAppName,
+			&i.TempBasalsVw.CreatedByDeviceName,
+			&i.TempBasalsVw.UpdatedByIdentityName,
+			&i.TempBasalsVw.CreatedByIdentityName,
+			&i.TempTargetsVw.ID,
+			&i.TempTargetsVw.DurationMinutes,
+			&i.TempTargetsVw.HighTarget,
+			&i.TempTargetsVw.LowTarget,
+			&i.TempTargetsVw.Notes,
+			&i.TempTargetsVw.Reason,
+			&i.TempTargetsVw.RawJsonData,
+			&i.TempTargetsVw.DeletedAt,
+			&i.TempTargetsVw.UtcOffsetMinutes,
+			&i.TempTargetsVw.OccurredAt,
+			&i.TempTargetsVw.CreatedAt,
+			&i.TempTargetsVw.UpdatedAt,
+			&i.TempTargetsVw.CreatedByAppName,
+			&i.TempTargetsVw.CreatedByDeviceName,
+			&i.TempTargetsVw.UpdatedByIdentityName,
+			&i.TempTargetsVw.CreatedByIdentityName,
+			&i.ProfileSwitchesVw.ID,
+			&i.ProfileSwitchesVw.Name,
+			&i.ProfileSwitchesVw.DurationMinutes,
+			&i.ProfileSwitchesVw.Percent,
+			&i.ProfileSwitchesVw.Timeshift,
+			&i.ProfileSwitchesVw.Dia,
+			&i.ProfileSwitchesVw.Units,
+			&i.ProfileSwitchesVw.Timezone,
+			&i.ProfileSwitchesVw.CarbRatiosJson,
+			&i.ProfileSwitchesVw.InsulinSensitivitiesJson,
+			&i.ProfileSwitchesVw.BasalRatesJson,
+			&i.ProfileSwitchesVw.TargetsHighJson,
+			&i.ProfileSwitchesVw.TargetsLowJson,
+			&i.ProfileSwitchesVw.Notes,
+			&i.ProfileSwitchesVw.Reason,
+			&i.ProfileSwitchesVw.RawJsonData,
+			&i.ProfileSwitchesVw.DeletedAt,
+			&i.ProfileSwitchesVw.UtcOffsetMinutes,
+			&i.ProfileSwitchesVw.OccurredAt,
+			&i.ProfileSwitchesVw.CreatedAt,
+			&i.ProfileSwitchesVw.UpdatedAt,
+			&i.ProfileSwitchesVw.CreatedByAppName,
+			&i.ProfileSwitchesVw.CreatedByDeviceName,
+			&i.ProfileSwitchesVw.UpdatedByIdentityName,
+			&i.ProfileSwitchesVw.CreatedByIdentityName,
+			&i.ComponentEventsVw.ID,
+			&i.ComponentEventsVw.EventType,
+			&i.ComponentEventsVw.PumpID,
+			&i.ComponentEventsVw.PumpSerial,
+			&i.ComponentEventsVw.PumpType,
+			&i.ComponentEventsVw.Notes,
+			&i.ComponentEventsVw.Reason,
+			&i.ComponentEventsVw.RawJsonData,
+			&i.ComponentEventsVw.DeletedAt,
+			&i.ComponentEventsVw.UtcOffsetMinutes,
+			&i.ComponentEventsVw.OccurredAt,
+			&i.ComponentEventsVw.CreatedAt,
+			&i.ComponentEventsVw.UpdatedAt,
+			&i.ComponentEventsVw.UpdatedByIdentityName,
+			&i.ComponentEventsVw.CreatedByAppName,
+			&i.ComponentEventsVw.CreatedByDeviceName,
+			&i.ComponentEventsVw.CreatedByIdentityName,
+			&i.ActivitiesVw.ID,
+			&i.ActivitiesVw.Name,
+			&i.ActivitiesVw.ActivityType,
+			&i.ActivitiesVw.DurationMinutes,
+			&i.ActivitiesVw.Calories,
+			&i.ActivitiesVw.Steps,
+			&i.ActivitiesVw.HeartRate,
+			&i.ActivitiesVw.Notes,
+			&i.ActivitiesVw.Reason,
+			&i.ActivitiesVw.RawJsonData,
+			&i.ActivitiesVw.DeletedAt,
+			&i.ActivitiesVw.UtcOffsetMinutes,
+			&i.ActivitiesVw.OccurredAt,
+			&i.ActivitiesVw.CreatedAt,
+			&i.ActivitiesVw.UpdatedAt,
+			&i.ActivitiesVw.CreatedByAppName,
+			&i.ActivitiesVw.CreatedByDeviceName,
+			&i.ActivitiesVw.UpdatedByIdentityName,
+			&i.ActivitiesVw.CreatedByIdentityName,
+			&i.NotificationEventsVw.ID,
+			&i.NotificationEventsVw.NotificationType,
+			&i.NotificationEventsVw.Title,
+			&i.NotificationEventsVw.Severity,
+			&i.NotificationEventsVw.Content,
+			&i.NotificationEventsVw.Notes,
+			&i.NotificationEventsVw.Reason,
+			&i.NotificationEventsVw.RawJsonData,
+			&i.NotificationEventsVw.DeletedAt,
+			&i.NotificationEventsVw.UtcOffsetMinutes,
+			&i.NotificationEventsVw.OccurredAt,
+			&i.NotificationEventsVw.CreatedAt,
+			&i.NotificationEventsVw.UpdatedAt,
+			&i.NotificationEventsVw.CreatedByAppName,
+			&i.NotificationEventsVw.CreatedByDeviceName,
+			&i.NotificationEventsVw.UpdatedByIdentityName,
+			&i.NotificationEventsVw.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
 		}

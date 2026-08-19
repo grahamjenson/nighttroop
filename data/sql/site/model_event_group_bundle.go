@@ -1,5 +1,7 @@
 package site
 
+import "nighttroop.t1d.nz/utils"
+
 /////////
 // Event Group Stuff
 /////////
@@ -120,116 +122,42 @@ func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle
 		EventGroup: source.EventGroup,
 	}
 
-	if source.GlucoseReadingID != nil && source.GlucoseReading != nil && source.GlucoseReadingType != nil {
-		egb.GlucoseReading = &GlucoseReading{
-			ID:          *source.GlucoseReadingID,
-			Reading:     *source.GlucoseReading,
-			ReadingType: *source.GlucoseReadingType,
-			Notes:       source.EventGroup.Notes,
-			Reason:      source.EventGroup.Reason,
-		}
+	if source.GlucoseReadingsVw.ID != nil {
+		utils.ConvertViaJSON(source.GlucoseReadingsVw, &egb.GlucoseReading)
 	}
 
-	if source.InsulinDoseID != nil && source.InsulinDose != nil {
-		egb.InsulinDose = &InsulinDose{
-			ID:       *source.InsulinDoseID,
-			Dose:     *source.InsulinDose,
-			DoseType: source.InsulinDoseType,
-			Notes:    source.EventGroup.Notes,
-			Reason:   source.EventGroup.Reason,
-		}
-	}
-
-	if source.FoodIntakeID != nil {
-		egb.FoodIntake = &FoodIntake{
-			ID:          *source.FoodIntakeID,
-			Name:        source.FoodIntakeName,
-			Category:    source.FoodIntakeCategory,
-			Subcategory: source.FoodIntakeSubcategory,
-			Carbs:       source.FoodIntakeCarbs,
-			Fat:         source.FoodIntakeFat,
-			Protein:     source.FoodIntakeProtein,
-			Fibre:       source.FoodIntakeFibre,
-			Energy:      source.FoodIntakeEnergy,
-			Portions:    source.FoodIntakePortions,
-			Notes:       source.EventGroup.Notes,
-			Reason:      source.EventGroup.Reason,
-		}
-	}
-
-	if source.TempBasalID != nil && source.TempBasalDurationMinutes != nil && source.TempBasalAbsolute != nil {
-		egb.TempBasal = &TempBasal{
-			ID:              *source.TempBasalID,
-			Absolute:        *source.TempBasalAbsolute,
-			DurationMinutes: *source.TempBasalDurationMinutes,
-			Percent:         source.TempBasalPercent,
-			Notes:           source.EventGroup.Notes,
-			Reason:          source.EventGroup.Reason,
-		}
-	}
-
-	if source.TempTargetID != nil && source.TempTargetDurationMinutes != nil && source.TempTargetHighTarget != nil && source.TempTargetLowTarget != nil {
-		egb.TempTarget = &TempTarget{
-			ID:              *source.TempTargetID,
-			DurationMinutes: *source.TempTargetDurationMinutes,
-			HighTarget:      *source.TempTargetHighTarget,
-			LowTarget:       *source.TempTargetLowTarget,
-			Notes:           source.EventGroup.Notes,
-			Reason:          source.EventGroup.Reason,
-		}
-	}
-
-	if source.ProfileSwitchID != nil && source.ProfileSwitchName != nil && source.ProfileSwitchDurationMinutes != nil && source.ProfileSwitchPercent != nil {
-		egb.ProfileSwitch = &ProfileSwitch{
-			ID:                       *source.ProfileSwitchID,
-			Name:                     *source.ProfileSwitchName,
-			DurationMinutes:          *source.ProfileSwitchDurationMinutes,
-			Percent:                  source.ProfileSwitchPercent,
-			Timeshift:                source.ProfileSwitchTimeshift,
-			CarbRatiosJson:           source.ProfileSwitchCarbRatiosJson,
-			InsulinSensitivitiesJson: source.ProfileSwitchInsulinSensitivitiesJson,
-			BasalRatesJson:           source.ProfileSwitchBasalRatesJson,
-			TargetsHighJson:          source.ProfileSwitchTargetsHighJson,
-			TargetsLowJson:           source.ProfileSwitchTargetsLowJson,
-			Notes:                    source.EventGroup.Notes,
-			Reason:                   source.EventGroup.Reason,
-		}
+	if source.InsulinDosesVw.ID != nil {
+		utils.ConvertViaJSON(source.InsulinDosesVw, &egb.InsulinDose)
 
 	}
 
-	if source.ComponentEventID != nil {
-		egb.ComponentEvent = &ComponentEvent{
-			ID:        *source.ComponentEventID,
-			EventType: source.EventGroup.GroupType,
-			Notes:     source.EventGroup.Notes,
-			Reason:    source.EventGroup.Reason,
-		}
+	if source.FoodIntakesVw.ID != nil {
+		utils.ConvertViaJSON(source.FoodIntakesVw, &egb.FoodIntake)
 	}
 
-	if source.ActivityID != nil && source.ActivityType != nil {
-		egb.Activity = &Activity{
-			ID:              *source.ActivityID,
-			Name:            source.ActivityName,
-			ActivityType:    *source.ActivityType,
-			DurationMinutes: source.ActivityDurationMinutes,
-			Calories:        source.ActivityCalories,
-			Steps:           source.ActivitySteps,
-			HeartRate:       source.ActivityHeartRate,
-			Notes:           source.EventGroup.Notes,
-			Reason:          source.EventGroup.Reason,
-		}
+	if source.TempBasalsVw.ID != nil {
+		utils.ConvertViaJSON(source.TempBasalsVw, &egb.TempBasal)
 	}
 
-	if source.NotificationEventID != nil {
-		egb.NotificationEvent = &NotificationEvent{
-			ID:               *source.NotificationEventID,
-			Title:            *source.NotificationEventTitle,
-			Severity:         *source.NotificationEventSeverity,
-			Content:          source.NotificationEventContent,
-			NotificationType: *source.NotificationEventNotificationType,
-			Notes:            source.EventGroup.Notes,
-			Reason:           source.EventGroup.Reason,
-		}
+	if source.TempTargetsVw.ID != nil {
+		utils.ConvertViaJSON(source.TempTargetsVw, &egb.TempTarget)
+	}
+
+	if source.ProfileSwitchesVw.ID != nil {
+		utils.ConvertViaJSON(source.ProfileSwitchesVw, &egb.ProfileSwitch)
+
+	}
+
+	if source.ComponentEventsVw.ID != nil {
+		utils.ConvertViaJSON(source.ComponentEventsVw, &egb.ComponentEvent)
+	}
+
+	if source.ActivitiesVw.ID != nil {
+		utils.ConvertViaJSON(source.ActivitiesVw, &egb.Activity)
+	}
+
+	if source.NotificationEventsVw.ID != nil {
+		utils.ConvertViaJSON(source.NotificationEventsVw, &egb.NotificationEvent)
 	}
 
 	return egb

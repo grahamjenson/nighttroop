@@ -2,13 +2,7 @@ package site
 
 import (
 	"strings"
-	"time"
 )
-
-func (model *GlucoseReading) CreatedAtDate() time.Time {
-	t := time.UnixMilli(model.CreatedAt)
-	return t
-}
 
 func IsDuplicateID(err error) bool {
 	// Exmaple Error String is "UNIQUE constraint failed: glucose_readings.id"

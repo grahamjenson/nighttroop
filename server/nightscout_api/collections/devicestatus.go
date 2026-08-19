@@ -186,11 +186,15 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 				},
 				Suggested: &nightscout.OpenAPSSuggested{
 					COB: cob,
+
 					PredBGs: &nightscout.OpenAPSPredBGs{
 						IOB: predictions_default,
 						ZT:  predictions_zt,
 					},
 				},
+			}
+			if source.LoopPredictionsStartTime != nil {
+				nsModel.OpenAPS.Suggested.Timestamp = ptr(nightscout.DateStringFromInt64AndUTCOffset(*source.LoopPredictionsStartTime, nil))
 			}
 		case "loop":
 			nsModel.Loop = &nightscout.LoopStatus{

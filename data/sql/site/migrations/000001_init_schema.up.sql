@@ -30,6 +30,9 @@ CREATE TABLE glucose_readings (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW glucose_readings_vw AS SELECT glucose_readings.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN glucose_readings ON TRUE;
+
+
 CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
@@ -53,6 +56,8 @@ CREATE TABLE insulin_doses (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
+
+CREATE VIEW insulin_doses_vw AS SELECT insulin_doses.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN insulin_doses ON TRUE;
 
 CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -85,6 +90,7 @@ CREATE TABLE food_intakes (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW food_intakes_vw AS SELECT food_intakes.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN food_intakes ON TRUE;
 
 CREATE TABLE activities (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -115,6 +121,7 @@ CREATE TABLE activities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW activities_vw AS SELECT activities.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN activities ON TRUE;
 
 CREATE TABLE notification_events (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -140,6 +147,8 @@ CREATE TABLE notification_events (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
+
+CREATE VIEW notification_events_vw AS SELECT notification_events.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN notification_events ON TRUE;
 
 -- temp_basals, temp_targets and profile_switches are all ranges over a time period so start is occured_at until duration (unless another overide happens)
 -- activity also has a duration
@@ -167,6 +176,8 @@ CREATE TABLE temp_basals (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW temp_basals_vw AS SELECT temp_basals.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN temp_basals ON TRUE;
+
 CREATE TABLE temp_targets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
@@ -191,6 +202,7 @@ CREATE TABLE temp_targets (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW temp_targets_vw AS SELECT temp_targets.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN temp_targets ON TRUE;
 
 -- Profile Switches are tricksy, they have a percent, but the values stored in here already contain that percent
 CREATE TABLE profile_switches (
@@ -230,6 +242,8 @@ CREATE TABLE profile_switches (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW profile_switches_vw AS SELECT profile_switches.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN profile_switches ON TRUE;
+
 CREATE TABLE component_events (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
@@ -257,6 +271,7 @@ CREATE TABLE component_events (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32)
 );
 
+CREATE VIEW component_events_vw AS SELECT component_events.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN component_events ON TRUE;
 
 
 -- EventGroup is when multiple events happen together, like a meal with insulin and glucose reading
