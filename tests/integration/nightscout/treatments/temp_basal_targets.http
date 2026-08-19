@@ -1,0 +1,40 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+
+NAME create_profile_switch_v3
+POST http://{{ .site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B   {
+    "date": 97,
+    "duration": 120,
+    "eventType": "Temp Basal",
+    "pumpId": 1714289927165,
+    "pumpSerial": "4241",
+    "pumpType": "OMNIPOD_DASH",
+    "rate": 0,
+    "type": "NORMAL",
+    "created_at": "2024-07-15T06:41:17.050+12:00"
+  }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "Temp Basal" "@result.eventType" }}
+ASSERT {{ assertEquals 7200000 "@result.durationInMilliseconds" }}
+ASSERT {{ assertEquals 720 "@result.utcOffset" }}
+ASSERT {{ assertEquals 0 "@result.absolute" }}
+    

@@ -751,8 +751,9 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		}
 	case nightscout.TempBasal:
 		return site.EventGroupsBundle{
-			EventGroup: eventGroup,
-			TempBasal:  tempBasal,
+			EventGroup:     eventGroup,
+			TempBasal:      tempBasal,
+			ComponentEvent: componentEvent,
 		}
 	case nightscout.TemporaryTarget:
 		return site.EventGroupsBundle{

@@ -482,14 +482,34 @@ func (m *DeviceReport) SetLoopCob(v *float64) {
 	m.LoopCob = v
 }
 
-// GetLoopPredictions returns the LoopPredictions value.
-func (m DeviceReport) GetLoopPredictions() *string {
-	return m.LoopPredictions
+// GetLoopPredictionsStartTime returns the LoopPredictionsStartTime value.
+func (m DeviceReport) GetLoopPredictionsStartTime() *int64 {
+	return m.LoopPredictionsStartTime
 }
 
-// SetLoopPredictions sets the LoopPredictions value and returns the updated DeviceReport.
-func (m *DeviceReport) SetLoopPredictions(v *string) {
-	m.LoopPredictions = v
+// SetLoopPredictionsStartTime sets the LoopPredictionsStartTime value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopPredictionsStartTime(v *int64) {
+	m.LoopPredictionsStartTime = v
+}
+
+// GetLoopPredictionsDefault returns the LoopPredictionsDefault value.
+func (m DeviceReport) GetLoopPredictionsDefault() *string {
+	return m.LoopPredictionsDefault
+}
+
+// SetLoopPredictionsDefault sets the LoopPredictionsDefault value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopPredictionsDefault(v *string) {
+	m.LoopPredictionsDefault = v
+}
+
+// GetLoopPredictionsZt returns the LoopPredictionsZt value.
+func (m DeviceReport) GetLoopPredictionsZt() *string {
+	return m.LoopPredictionsZt
+}
+
+// SetLoopPredictionsZt sets the LoopPredictionsZt value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopPredictionsZt(v *string) {
+	m.LoopPredictionsZt = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -2594,14 +2614,36 @@ func (m CreateDeviceReportParams) SetLoopCob(v *float64) CreateDeviceReportParam
 	return m
 }
 
-// GetLoopPredictions returns the LoopPredictions value.
-func (m CreateDeviceReportParams) GetLoopPredictions() *string {
-	return m.LoopPredictions
+// GetLoopPredictionsStartTime returns the LoopPredictionsStartTime value.
+func (m CreateDeviceReportParams) GetLoopPredictionsStartTime() *int64 {
+	return m.LoopPredictionsStartTime
 }
 
-// SetLoopPredictions sets the LoopPredictions value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopPredictions(v *string) CreateDeviceReportParams {
-	m.LoopPredictions = v
+// SetLoopPredictionsStartTime sets the LoopPredictionsStartTime value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetLoopPredictionsStartTime(v *int64) CreateDeviceReportParams {
+	m.LoopPredictionsStartTime = v
+	return m
+}
+
+// GetLoopPredictionsDefault returns the LoopPredictionsDefault value.
+func (m CreateDeviceReportParams) GetLoopPredictionsDefault() *string {
+	return m.LoopPredictionsDefault
+}
+
+// SetLoopPredictionsDefault sets the LoopPredictionsDefault value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetLoopPredictionsDefault(v *string) CreateDeviceReportParams {
+	m.LoopPredictionsDefault = v
+	return m
+}
+
+// GetLoopPredictionsZt returns the LoopPredictionsZt value.
+func (m CreateDeviceReportParams) GetLoopPredictionsZt() *string {
+	return m.LoopPredictionsZt
+}
+
+// SetLoopPredictionsZt sets the LoopPredictionsZt value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetLoopPredictionsZt(v *string) CreateDeviceReportParams {
+	m.LoopPredictionsZt = v
 	return m
 }
 

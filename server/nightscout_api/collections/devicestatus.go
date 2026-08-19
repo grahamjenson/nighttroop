@@ -145,13 +145,22 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 
 	///////
 	/// Extracting values
-	var predictions []*nightscout.FlexibleFloat64
-	if source.LoopPredictions != nil {
-		err := json.Unmarshal([]byte(*source.LoopPredictions), &predictions)
+	var predictions_default []*nightscout.FlexibleFloat64
+	if source.LoopPredictionsDefault != nil {
+		err := json.Unmarshal([]byte(*source.LoopPredictionsDefault), &predictions_default)
 		if err != nil {
 			slog.Error("failed to unmarshal loop predictions", "error", err)
 		}
 	}
+
+	var predictions_zt []*nightscout.FlexibleFloat64
+	if source.LoopPredictionsZt != nil {
+		err := json.Unmarshal([]byte(*source.LoopPredictionsZt), &predictions_zt)
+		if err != nil {
+			slog.Error("failed to unmarshal loop predictions", "error", err)
+		}
+	}
+
 	var iob *nightscout.FlexibleFloat64
 	if source.LoopIob != nil {
 		iob = ptr(nightscout.FlexibleFloat64(*source.LoopIob))
@@ -178,7 +187,8 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 				Suggested: &nightscout.OpenAPSSuggested{
 					COB: cob,
 					PredBGs: &nightscout.OpenAPSPredBGs{
-						IOB: predictions,
+						IOB: predictions_default,
+						ZT:  predictions_zt,
 					},
 				},
 			}
@@ -191,7 +201,7 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 					COB: cob,
 				},
 				Predicted: &nightscout.LoopPrediction{
-					Values: predictions,
+					Values: predictions_default,
 				},
 			}
 		}
@@ -244,11 +254,22 @@ func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nights
 
 		if source.OpenAPS.Suggested != nil {
 			createParams.LoopCob = source.OpenAPS.Suggested.COB.Float64p()
+
+			if source.OpenAPS.Suggested.Timestamp != nil {
+				createParams.LoopPredictionsStartTime = source.OpenAPS.Suggested.Timestamp.UnixMillip()
+			}
 			if source.OpenAPS.Suggested.PredBGs != nil {
 				if source.OpenAPS.Suggested.PredBGs.IOB != nil {
 					out, err := json.Marshal(source.OpenAPS.Suggested.PredBGs.IOB)
 					if err == nil {
-						createParams.LoopPredictions = ptr(string(out))
+						createParams.LoopPredictionsDefault = ptr(string(out))
+					}
+				}
+
+				if source.OpenAPS.Suggested.PredBGs.ZT != nil {
+					out, err := json.Marshal(source.OpenAPS.Suggested.PredBGs.ZT)
+					if err == nil {
+						createParams.LoopPredictionsZt = ptr(string(out))
 					}
 				}
 
@@ -280,8 +301,11 @@ func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nights
 			if source.Loop.Predicted.Values != nil {
 				out, err := json.Marshal(source.Loop.Predicted.Values)
 				if err == nil {
-					createParams.LoopPredictions = ptr(string(out))
+					createParams.LoopPredictionsDefault = ptr(string(out))
 				}
+			}
+			if source.Loop.Predicted.StartDate != nil {
+				createParams.LoopPredictionsStartTime = source.Loop.Predicted.StartDate.UnixMillip()
 			}
 		}
 

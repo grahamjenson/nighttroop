@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/data/sql/site"
 )
@@ -42,23 +41,6 @@ func GetLastSensorChangeCannulaChange(q *site.Queries, ctx context.Context) (*si
 /////
 // MODELS
 /////
-
-func GetUptimeBattery(dr *site.DeviceReport) UptimeBattery {
-	if dr == nil || dr.DeviceBatteryPercent == nil {
-		return UptimeBattery{
-			Found: ptr(false),
-		}
-	}
-
-	return UptimeBattery{
-		Min: &BatteryStatus{
-			Battery: dr.DeviceBatteryPercent,
-			Value:   dr.DeviceBatteryPercent,
-			Display: ptr(fmt.Sprintf("%v%%", *dr.DeviceBatteryPercent)),
-			Level:   dr.DeviceBatteryPercent,
-		},
-	}
-}
 
 func ptr[T any](v T) *T {
 	return &v

@@ -227,6 +227,12 @@ func (d *DateString) Timep() *time.Time {
 	return &t
 }
 
+func (d *DateString) UnixMillip() *int64 {
+	t := d.Time()
+	dateInt := t.UnixMilli()
+	return &dateInt
+}
+
 func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
 	t := d.Time()
 	_, offsetSeconds := t.Zone()

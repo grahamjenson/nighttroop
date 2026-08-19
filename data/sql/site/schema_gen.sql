@@ -74,8 +74,11 @@ CREATE TABLE device_reports (
     loop_iob_basal REAL,
     loop_iob_treatment REAL,
     loop_cob REAL,
-    loop_predictions TEXT CHECK(length(loop_predictions) <= 8192 AND json_valid(loop_predictions)), -- This is the largest user derived string, and should be culled quickly
 
+    loop_predictions_start_time INTEGER,
+    loop_predictions_default TEXT CHECK(length(loop_predictions_default) <= 2048 AND json_valid(loop_predictions_default)), -- iob for openaps, normal for loop
+    loop_predictions_zt TEXT CHECK(length(loop_predictions_zt) <= 2048 AND json_valid(loop_predictions_zt)),
+    
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 

@@ -47,29 +47,31 @@ type ComponentEvent struct {
 }
 
 type DeviceReport struct {
-	ID                    string
-	DeviceBatteryPercent  *float64
-	IsDeviceCharging      *bool
-	PumpState             *string
-	PumpReservoir         *float64
-	PumpBatteryPercent    *float64
-	PumpChargingState     *string
-	LoopName              *string
-	LoopIob               *float64
-	LoopIobBasal          *float64
-	LoopIobTreatment      *float64
-	LoopCob               *float64
-	LoopPredictions       *string
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	UpdatedByIdentityName *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityName string
+	ID                       string
+	DeviceBatteryPercent     *float64
+	IsDeviceCharging         *bool
+	PumpState                *string
+	PumpReservoir            *float64
+	PumpBatteryPercent       *float64
+	PumpChargingState        *string
+	LoopName                 *string
+	LoopIob                  *float64
+	LoopIobBasal             *float64
+	LoopIobTreatment         *float64
+	LoopCob                  *float64
+	LoopPredictionsStartTime *int64
+	LoopPredictionsDefault   *string
+	LoopPredictionsZt        *string
+	RawJsonData              *string
+	DeletedAt                *int64
+	UtcOffsetMinutes         *int64
+	OccurredAt               int64
+	CreatedAt                int64
+	UpdatedAt                int64
+	UpdatedByIdentityName    *string
+	CreatedByAppName         *string
+	CreatedByDeviceName      *string
+	CreatedByIdentityName    string
 }
 
 type EventGroup struct {

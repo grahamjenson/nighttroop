@@ -202,26 +202,34 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xfloat647 := *source.LoopCob
 		siteCreateDeviceReportParams.LoopCob = &xfloat647
 	}
-	if source.LoopPredictions != nil {
-		xstring4 := *source.LoopPredictions
-		siteCreateDeviceReportParams.LoopPredictions = &xstring4
+	if source.LoopPredictionsStartTime != nil {
+		xint64 := *source.LoopPredictionsStartTime
+		siteCreateDeviceReportParams.LoopPredictionsStartTime = &xint64
+	}
+	if source.LoopPredictionsDefault != nil {
+		xstring4 := *source.LoopPredictionsDefault
+		siteCreateDeviceReportParams.LoopPredictionsDefault = &xstring4
+	}
+	if source.LoopPredictionsZt != nil {
+		xstring5 := *source.LoopPredictionsZt
+		siteCreateDeviceReportParams.LoopPredictionsZt = &xstring5
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteCreateDeviceReportParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		siteCreateDeviceReportParams.UtcOffsetMinutes = &xint642
 	}
 	siteCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring5 := *source.RawJsonData
-		siteCreateDeviceReportParams.RawJsonData = &xstring5
+		xstring6 := *source.RawJsonData
+		siteCreateDeviceReportParams.RawJsonData = &xstring6
 	}
 	if source.CreatedByAppName != nil {
-		xstring6 := *source.CreatedByAppName
-		siteCreateDeviceReportParams.CreatedByAppName = &xstring6
+		xstring7 := *source.CreatedByAppName
+		siteCreateDeviceReportParams.CreatedByAppName = &xstring7
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring7 := *source.CreatedByDeviceName
-		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring7
+		xstring8 := *source.CreatedByDeviceName
+		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring8
 	}
 	siteCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateDeviceReportParams

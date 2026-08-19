@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"fmt"
 	"net/http"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -161,5 +162,22 @@ func GetSensorAge(lastSensorStart, lastSensorChange *site.ComponentEvent) Sensor
 		SensorStart:  &ssTime,
 		SensorChange: &scTime,
 		Min:          min,
+	}
+}
+
+func GetUptimeBattery(dr *site.DeviceReport) UptimeBattery {
+	if dr == nil || dr.DeviceBatteryPercent == nil {
+		return UptimeBattery{
+			Found: ptr(false),
+		}
+	}
+
+	return UptimeBattery{
+		Min: &BatteryStatus{
+			Battery: dr.DeviceBatteryPercent,
+			Value:   dr.DeviceBatteryPercent,
+			Display: ptr(fmt.Sprintf("%v%%", *dr.DeviceBatteryPercent)),
+			Level:   dr.DeviceBatteryPercent,
+		},
 	}
 }
