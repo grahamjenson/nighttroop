@@ -129,11 +129,12 @@ type SiteCreateMaterial struct {
 }
 
 type SiteCreateResult struct {
-	SiteDB         *SiteDB
-	AdminPassword  string
-	TotpSecret     string
-	PwdNSToken     string
-	BackupPassword string
+	SiteDB          *SiteDB
+	AdminPassword   string
+	TotpSecret      string
+	PwdNSToken      string
+	ReadOnlyNSToken string
+	BackupPassword  string
 }
 
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
@@ -153,7 +154,6 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 
 	siteDB, err := NewSiteDB(context.TODO(), subdomain, false, db.serverConfig)
 	if err != nil {
-		fmt.Println("faasff asf", err)
 		siteDB.TryCloseAndDelete()
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
 	}
@@ -180,7 +180,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	// Setup the new SiteDB
 	////
 
-	adminIdentity, pwdIdentity, err := db.createDefaultIdentities(subdomain)
+	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createDefaultIdentities(subdomain)
 
 	if err != nil {
 		siteDB.TryCloseAndDelete()
@@ -190,11 +190,12 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	db.sites[subdomain] = siteDB
 
 	return &SiteCreateResult{
-		SiteDB:         siteDB,
-		AdminPassword:  adminIdentity.Password,
-		TotpSecret:     *adminIdentity.TotpSecret,
-		PwdNSToken:     *pwdIdentity.NSToken,
-		BackupPassword: backupPassword,
+		SiteDB:          siteDB,
+		AdminPassword:   adminIdentity.Password,
+		TotpSecret:      *adminIdentity.TotpSecret,
+		PwdNSToken:      *pwdIdentity.NSToken,
+		ReadOnlyNSToken: *readOnlyIdentity.NSToken,
+		BackupPassword:  backupPassword,
 	}, nil
 }
 
@@ -445,27 +446,36 @@ func (db *ControlDB) Close() error {
 // Identities
 // ////
 
-func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, error) {
+func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
 	adminIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
+		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
 	if adminIdentity.TotpSecret == nil {
-		return nil, nil, fmt.Errorf("Failed to Create Default Admin User: TOTP Secret is nil")
+		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User: TOTP Secret is nil")
 	}
 
 	// Create Default PWD User (Able to write data on the ns API)
 
 	pwdIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
+		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
 	}
 	if pwdIdentity.NSToken == nil {
-		return nil, nil, fmt.Errorf("Failed to Create Default PWD User: NSToken is nil")
+		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User: NSToken is nil")
 	}
 
-	return adminIdentity, pwdIdentity, nil
+	// Create Default Read-Only User
+	readOnlyIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User:	 %w", err)
+	}
+	if readOnlyIdentity.NSToken == nil {
+		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User: NSToken is nil")
+	}
+
+	return adminIdentity, pwdIdentity, readOnlyIdentity, nil
 }
 
 type IdentityValues struct {

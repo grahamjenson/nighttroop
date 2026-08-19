@@ -15,6 +15,7 @@ type Activity struct {
 	Calories     *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
 	HeartRate    *FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
 	Notes        *SanitizedString `json:"notes,omitempty"`        // Notes
+	Reason       *SanitizedString `json:"reason,omitempty"`       // Reason
 
 	// Date fields
 	CreatedAt *DateString `json:"created_at,omitempty"` // ISO 8601 string

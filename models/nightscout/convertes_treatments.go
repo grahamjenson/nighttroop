@@ -2,7 +2,6 @@ package nightscout
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"nighttroop.t1d.nz/data/sql/site"
 )
@@ -726,7 +725,6 @@ func PercentageSelect(source *site.EventGroupsBundle) *FlexibleFloat64 {
 }
 
 func ToProfileJSON(source *site.EventGroupsBundle) *LongJSONString {
-	fmt.Println("AHSOFHASOUFHSAOUFHOUASHOFUASHOUIFAHSOIUFHOIAHOIFASHOIFSAHOIASFHOIAFS123123")
 	if source == nil || source.ProfileSwitch == nil {
 		return nil
 	}
@@ -756,10 +754,9 @@ func ToProfileJSON(source *site.EventGroupsBundle) *LongJSONString {
 	if profileSwitch.TargetsHighJson != nil {
 		json.Unmarshal([]byte(*profileSwitch.TargetsHighJson), &profile.TargetHigh)
 	}
-	fmt.Println("AHSOFHASOUFHSAOUFHOUASHOFUASHOUIFAHSOIUFHOIAHOIFASHOIFSAHOIASFHOIAFS123123")
+
 	profileBytes, err := json.Marshal(profile)
 	if err != nil {
-		fmt.Println("AHSOFHASOUFHSAOUFHOUASHOFUASHOUIFAHSOIUFHOIAHOIFASHOIFSAHOIASFHOIAFS", err)
 		return nil
 	}
 	profileJSON := LongJSONString(string(profileBytes))

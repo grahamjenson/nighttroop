@@ -44,7 +44,7 @@ func (f *FlexibleFloat64) UnmarshalJSON(data []byte) error {
 		}
 		*f = FlexibleFloat64(newF)
 	default:
-		return fmt.Errorf("expected number or string for float, got %T", v)
+		return fmt.Errorf("expected number or string for float, got %v:%T", v, v)
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package nightscout
 
 import (
+	"bytes"
 	"encoding/json"
 )
 
@@ -69,6 +70,44 @@ type ScheduleValue struct {
 	Time          *ScheduleTime    `json:"time,omitempty"`
 	TimeAsSeconds *FlexibleInt64   `json:"timeAsSeconds,omitempty"`
 	Value         *FlexibleFloat64 `json:"value,omitempty"`
+}
+
+func (t *ScheduleValue) UnmarshalJSON(data []byte) error {
+	type Alias ScheduleValue
+
+	aux := struct {
+		Time          *ScheduleTime   `json:"time,omitempty"`
+		TimeAsSeconds *FlexibleInt64  `json:"timeAsSeconds,omitempty"`
+		Value         json.RawMessage `json:"value,omitempty"`
+	}{
+		Time:          t.Time,
+		TimeAsSeconds: t.TimeAsSeconds,
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	t.Time = aux.Time
+	t.TimeAsSeconds = aux.TimeAsSeconds
+
+	if bytes.Equal(bytes.TrimSpace(aux.Value), []byte("false")) {
+		t.Value = nil
+		return nil
+	}
+
+	if len(aux.Value) == 0 || bytes.Equal(bytes.TrimSpace(aux.Value), []byte("null")) {
+		t.Value = nil
+		return nil
+	}
+
+	var value FlexibleFloat64
+	if err := json.Unmarshal(aux.Value, &value); err != nil {
+		return err
+	}
+
+	t.Value = &value
+	return nil
 }
 
 type ScheduleTime string

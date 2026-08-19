@@ -10,6 +10,8 @@ INSERT INTO activities (
     calories,
     steps,
     heart_rate,
+    notes,
+    reason, 
 
     occurred_at,
     utc_offset_minutes,
@@ -18,7 +20,7 @@ INSERT INTO activities (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

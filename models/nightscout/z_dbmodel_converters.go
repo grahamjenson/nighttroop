@@ -36,6 +36,10 @@ func DBModelToActivity(source *site.Activity) Activity {
 			nightscoutSanitizedString := SanitizedString(*(*source).Notes)
 			nightscoutActivity.Notes = &nightscoutSanitizedString
 		}
+		if (*source).Reason != nil {
+			nightscoutSanitizedString2 := SanitizedString(*(*source).Reason)
+			nightscoutActivity.Reason = &nightscoutSanitizedString2
+		}
 		nightscoutActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByDeviceName != nil {
 			nightscoutShortString2 := ShortString(*(*source).CreatedByDeviceName)

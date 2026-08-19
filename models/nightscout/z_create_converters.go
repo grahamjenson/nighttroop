@@ -31,6 +31,14 @@ func ActivityToCreate(source Activity, context ConverterContext) site.CreateActi
 		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
 		siteCreateActivityParams.HeartRate = &xint644
 	}
+	if source.Notes != nil {
+		xstring2 := nightscoutSanitizedStringToString(*source.Notes)
+		siteCreateActivityParams.Notes = &xstring2
+	}
+	if source.Reason != nil {
+		xstring3 := nightscoutSanitizedStringToString(*source.Reason)
+		siteCreateActivityParams.Reason = &xstring3
+	}
 	siteCreateActivityParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
@@ -39,12 +47,12 @@ func ActivityToCreate(source Activity, context ConverterContext) site.CreateActi
 	pString := source.RawJsonData
 	siteCreateActivityParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		siteCreateActivityParams.CreatedByAppName = &xstring2
+		xstring4 := ShortStringToString(*source.App)
+		siteCreateActivityParams.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		siteCreateActivityParams.CreatedByDeviceName = &xstring3
+		xstring5 := ShortStringToString(*source.Device)
+		siteCreateActivityParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateActivityParams
@@ -166,4 +174,7 @@ func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) 
 	}
 	siteCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateProfilePresetParams
+}
+func nightscoutSanitizedStringToString(source SanitizedString) string {
+	return string(source)
 }

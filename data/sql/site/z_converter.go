@@ -27,22 +27,30 @@ func ActivityToCreate(source Activity) CreateActivityParams {
 		xint644 := *source.HeartRate
 		siteCreateActivityParams.HeartRate = &xint644
 	}
+	if source.Notes != nil {
+		xstring2 := *source.Notes
+		siteCreateActivityParams.Notes = &xstring2
+	}
+	if source.Reason != nil {
+		xstring3 := *source.Reason
+		siteCreateActivityParams.Reason = &xstring3
+	}
 	siteCreateActivityParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint645 := *source.UtcOffsetMinutes
 		siteCreateActivityParams.UtcOffsetMinutes = &xint645
 	}
 	if source.RawJsonData != nil {
-		xstring2 := *source.RawJsonData
-		siteCreateActivityParams.RawJsonData = &xstring2
+		xstring4 := *source.RawJsonData
+		siteCreateActivityParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring3 := *source.CreatedByAppName
-		siteCreateActivityParams.CreatedByAppName = &xstring3
+		xstring5 := *source.CreatedByAppName
+		siteCreateActivityParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring4 := *source.CreatedByDeviceName
-		siteCreateActivityParams.CreatedByDeviceName = &xstring4
+		xstring6 := *source.CreatedByDeviceName
+		siteCreateActivityParams.CreatedByDeviceName = &xstring6
 	}
 	siteCreateActivityParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateActivityParams

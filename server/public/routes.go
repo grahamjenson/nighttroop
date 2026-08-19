@@ -13,11 +13,12 @@ import (
 )
 
 type CreateUserResponse struct {
-	SiteSubdomain string `json:"site_subdomain"`
-	APIKey        string `json:"api_key"`
-	TOTPSecret    string `json:"totp_secret"`
-	BackupKey     string `json:"backup_key"`
-	PWDNSToken    string `json:"pwd_nstoken"`
+	SiteSubdomain   string `json:"site_subdomain"`
+	APIKey          string `json:"api_key"`
+	TOTPSecret      string `json:"totp_secret"`
+	BackupKey       string `json:"backup_key"`
+	PWDNSToken      string `json:"pwd_nstoken"`
+	ReadOnlyNSToken string `json:"read_only_nstoken"`
 }
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
@@ -35,8 +36,16 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		allowed, remainingTime := httputils.CreateSiteAllowed(config, r)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			public_templ.CreateSiteRateLimited(remainingTime+1).Render(r.Context(), w)
-			return
+			if httputils.GetAcceptType(r).API() {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]string{
+					"error": "Too many requests",
+				})
+				return
+			} else {
+				public_templ.CreateSiteRateLimited(remainingTime+1).Render(r.Context(), w)
+				return
+			}
 		}
 
 		// Check to see if there is 10k sites and return error if there is
@@ -54,11 +63,12 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config config.ServerConfig) 
 		}
 
 		responseModel := CreateUserResponse{
-			SiteSubdomain: siteCreateResult.SiteDB.Subdomain,
-			APIKey:        siteCreateResult.AdminPassword,
-			BackupKey:     siteCreateResult.BackupPassword,
-			TOTPSecret:    siteCreateResult.TotpSecret,
-			PWDNSToken:    siteCreateResult.PwdNSToken,
+			SiteSubdomain:   siteCreateResult.SiteDB.Subdomain,
+			APIKey:          siteCreateResult.AdminPassword,
+			BackupKey:       siteCreateResult.BackupPassword,
+			TOTPSecret:      siteCreateResult.TotpSecret,
+			PWDNSToken:      siteCreateResult.PwdNSToken,
+			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
 		}
 
 		slog.Info("Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())

@@ -37,6 +37,7 @@ func (mode ServerMode) Normalize() (ServerMode, error) {
 
 const FIRST_ADMIN_NAME = "admin"
 const FIRST_PWD_NAME = "pwd_phone"
+const FIRST_READ_ONLY_NAME = "read_only"
 
 const DEXCOM_SYNC_IDENTITY_NAME = "dexcom_sync"
 const NIGHTSCOUT_SYNC_IDENTITY_NAME = "nightscout_sync"

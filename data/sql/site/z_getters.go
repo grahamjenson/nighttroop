@@ -3067,6 +3067,28 @@ func (m CreateActivityParams) SetHeartRate(v *int64) CreateActivityParams {
 	return m
 }
 
+// GetNotes returns the Notes value.
+func (m CreateActivityParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateActivityParams.
+func (m CreateActivityParams) SetNotes(v *string) CreateActivityParams {
+	m.Notes = v
+	return m
+}
+
+// GetReason returns the Reason value.
+func (m CreateActivityParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateActivityParams.
+func (m CreateActivityParams) SetReason(v *string) CreateActivityParams {
+	m.Reason = v
+	return m
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateActivityParams) GetOccurredAt() int64 {
 	return m.OccurredAt

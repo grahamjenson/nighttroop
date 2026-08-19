@@ -91,3 +91,54 @@ B {
     "units": "mg/dL"
  }
 ASSERT_STATUS 200
+
+
+
+NAME create_profile_v3
+POST http://{{ .site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "loopProfile",
+    "store": {
+        "loopProfile": {
+            "sens": [ { "value": 40, "timeAsSeconds": 0, "time": "00:00" } ],
+            "basal": [{"value": 0.8,"timeAsSeconds": 0,"time": "00:00"},{"timeAsSeconds": 14400,"time": "04:00","value": 1},{"time": "06:00","timeAsSeconds": 21600,"value": 1.1},{"timeAsSeconds": 36000,"time": "10:00","value": 1}],
+            "carbratio": [{"time": "00:00","value": 6.5,"timeAsSeconds": 0},{"value": 5.4,"time": "08:30","timeAsSeconds": 30600},{"timeAsSeconds": 41400,"time": "11:30","value": 6.5}],
+            "carbs_hr": "0",
+            "dia": 6,
+            "target_high": [{"timeAsSeconds": 0,"time": "00:00","value": 100},{"time": "08:00","timeAsSeconds": 28800,"value": 95}],
+            "target_low": [{"time": "00:00","timeAsSeconds": 0,"value": 100},{"time": "08:00","value": 95,"timeAsSeconds": 28800}],
+            "units": "mg/dL",
+            "delay": "0",
+            "timezone": "ETC/GMT-8"
+        }
+    },
+    "loopSettings": {
+        "dosingEnabled": true,
+        "dosingStrategy": "automaticBolus",
+        "bundleIdentifier": "com.libre.new3.loopkit.Loop.Loop",
+        "maximumBasalRatePerHour": 4,
+        "maximumBolus": 12,
+        "minimumBGGuard": 75,
+        "deviceToken": "asddsfdfgghfghfghaswqeadssawqqwe",
+        "overridePresets": [
+            {
+                "symbol": "🏐",
+                "name": "b",
+                "insulinNeedsScaleFactor": 0.7,
+                "targetRange": [
+                    150,
+                    180
+                ],
+                "duration": 0
+            }
+        ],
+        "preMealTargetRange": [
+            80,
+            85
+        ]
+    },
+    "startDate": "2025-05-12T08:54:57Z",
+    "units": "mg/dL"
+ }
+ASSERT_STATUS 201

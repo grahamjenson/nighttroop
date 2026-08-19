@@ -79,6 +79,8 @@ INSERT INTO activities (
     calories,
     steps,
     heart_rate,
+    notes,
+    reason, 
 
     occurred_at,
     utc_offset_minutes,
@@ -87,7 +89,7 @@ INSERT INTO activities (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -99,6 +101,8 @@ type CreateActivityParams struct {
 	Calories              *int64
 	Steps                 *int64
 	HeartRate             *int64
+	Notes                 *string
+	Reason                *string
 	OccurredAt            int64
 	UtcOffsetMinutes      *int64
 	RawJsonData           *string
@@ -119,6 +123,8 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		arg.Calories,
 		arg.Steps,
 		arg.HeartRate,
+		arg.Notes,
+		arg.Reason,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.RawJsonData,
