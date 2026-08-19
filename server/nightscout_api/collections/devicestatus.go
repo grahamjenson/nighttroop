@@ -145,17 +145,17 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 
 	///////
 	/// Extracting values
-	var predictions_default []*nightscout.FlexibleFloat64
+	var predictionsDefault []*nightscout.FlexibleFloat64
 	if source.LoopPredictionsDefault != nil {
-		err := json.Unmarshal([]byte(*source.LoopPredictionsDefault), &predictions_default)
+		err := json.Unmarshal([]byte(*source.LoopPredictionsDefault), &predictionsDefault)
 		if err != nil {
 			slog.Error("failed to unmarshal loop predictions", "error", err)
 		}
 	}
 
-	var predictions_zt []*nightscout.FlexibleFloat64
+	var predictionsZt []*nightscout.FlexibleFloat64
 	if source.LoopPredictionsZt != nil {
-		err := json.Unmarshal([]byte(*source.LoopPredictionsZt), &predictions_zt)
+		err := json.Unmarshal([]byte(*source.LoopPredictionsZt), &predictionsZt)
 		if err != nil {
 			slog.Error("failed to unmarshal loop predictions", "error", err)
 		}
@@ -188,8 +188,8 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 					COB: cob,
 
 					PredBGs: &nightscout.OpenAPSPredBGs{
-						IOB: predictions_default,
-						ZT:  predictions_zt,
+						IOB: predictionsDefault,
+						ZT:  predictionsZt,
 					},
 				},
 			}
@@ -205,7 +205,7 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 					COB: cob,
 				},
 				Predicted: &nightscout.LoopPrediction{
-					Values: predictions_default,
+					Values: predictionsDefault,
 				},
 			}
 		}
@@ -330,16 +330,3 @@ func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nights
 	}
 	return createParams
 }
-
-// IsDeviceCharging
-// DeviceBatteryPercent
-// PumpState
-// PumpReservoir
-// PumpBatteryPercent
-// PumpChargingState
-// LoopName
-// LoopPredictions
-// LoopIob
-// LoopIobBasal
-// LoopIobTreatment
-// LoopCob
