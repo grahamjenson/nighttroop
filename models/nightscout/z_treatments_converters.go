@@ -314,7 +314,7 @@ func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
 		nightscoutTreatment.Percentage = PercentageSelect(source)
 		var pFloat649 *float64
 		if (*source).TempBasal != nil {
-			pFloat649 = (*source).TempBasal.Percent
+			pFloat649 = &(*source).TempBasal.Absolute
 		}
 		if pFloat649 != nil {
 			nightscoutFlexibleFloat649 := FlexibleFloat64(*pFloat649)

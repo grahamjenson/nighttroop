@@ -209,8 +209,8 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map FoodIntake.Fibre Fibre
 	// goverter:map FoodIntake.Energy Energy
 	//
-	// goverter:map TempBasal.Percent Rate
 	// goverter:map TempBasal.Absolute Absolute
+	// goverter:map TempBasal.Absolute Rate
 	//
 	// goverter:map TempTarget.HighTarget TargetTop
 	// goverter:map TempTarget.LowTarget TargetBottom
