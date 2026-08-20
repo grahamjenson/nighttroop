@@ -475,6 +475,115 @@ ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
 // FULL TESTS
 ////////
 
+# Announcement TreatmentEventType = "Announcement"
+# return site.EventGroupsBundle{
+# 	EventGroup:        eventGroup,
+# 	NotificationEvent: notificationEvent,
+# }
+
+NAME create_full_announcement_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Announcement",
+  "created_at": "{{ time 0 }}",
+  "notes": "Announcement"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Announcement" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Announcement" "@0.notes" }}
+
+
+# Note         TreatmentEventType = "Note"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	GlucoseReading: glucoseReading,
+# 	InsulinDose:    insulinDose,
+# 	FoodIntake:     foodIntake,
+# 	ProfileSwitch:  profileSwitch,
+# 	Activity:       activity,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_note_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Note",
+  "created_at": "{{ time 0 }}",
+  "notes": "Note"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Note" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Note" "@0.notes" }}
+
+
+# Question     TreatmentEventType = "Question"
+# return site.EventGroupsBundle{
+# 	EventGroup: eventGroup,
+# }
+NAME create_full_question_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Question",
+  "created_at": "{{ time 0 }}",
+  "notes": "Question"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Question" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Question" "@0.notes" }}
+
+
+# DADAlert     TreatmentEventType = "D.A.D. Alert"
+# return site.EventGroupsBundle{
+# 	EventGroup: eventGroup,
+# }
+NAME create_full_dad_alert_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "D.A.D. Alert",
+  "created_at": "{{ time 0 }}",
+  "notes": "D.A.D. Alert"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "D.A.D. Alert" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "D.A.D. Alert" "@0.notes" }}
+
+
+# BGCheck TreatmentEventType = "BG Check"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	GlucoseReading: glucoseReading,
+# }
+
+NAME create_full_bg_check_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "BG Check",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 145,
+  "glucoseType": "Meter",
+  "units": "mg/dL",
+
+
+  "notes": "Pizza is nice",
+  "reason": "lunch"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "BG Check" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals 145 "@0.glucose" }}
+ASSERT {{ assertEquals "Meter" "@0.glucoseType" }}
+ASSERT {{ assertEquals "mg/dL" "@0.units" }}
+
+# CarbCorrection TreatmentEventType = "Carb Correction"
+# return site.EventGroupsBundle{
+# 			EventGroup: eventGroup,
+# 			FoodIntake: foodIntake,
+# 		}
+
 NAME create_full_carb_correction_v1
 POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B {
@@ -515,24 +624,361 @@ ASSERT {{ assertEquals 2 "@0.portions" }}
 ASSERT {{ assertEquals "Pizza is nice" "@0.notes" }}
 ASSERT {{ assertEquals "lunch" "@0.reason" }}
 
-
-NAME create_full_bg_check_v1
+# Bolus           TreatmentEventType = "Bolus"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	InsulinDose:    insulinDose,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_bolus_v1
 POST http://{{ .site }}/api/v1/treatments?token={{ token }}
 B {
-  "eventType": "BG Check",
+  "eventType": "Bolus",
   "created_at": "{{ time 0 }}",
-
-  "glucose": 145,
-  "glucoseType": "Meter",
-  "units": "mg/dL",
-
-
-  "notes": "Pizza is nice",
-  "reason": "lunch"
+  "notes": "Bolus"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "BG Check" "@0.eventType" }}
+ASSERT {{ assertEquals "Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 145 "@0.glucose" }}
-ASSERT {{ assertEquals "Meter" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mg/dL" "@0.units" }}
+ASSERT {{ assertEquals "Bolus" "@0.notes" }}
+
+# BolusWizard     TreatmentEventType = "Bolus Wizard"
+# return site.EventGroupsBundle{
+# 			EventGroup:     eventGroup,
+# 			GlucoseReading: glucoseReading,
+# 			InsulinDose:    insulinDose,
+# 			FoodIntake:     foodIntake,
+# 			ComponentEvent: componentEvent,
+# 		}
+NAME create_full_bolus_wizard_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Bolus Wizard",
+  "created_at": "{{ time 0 }}",
+  "notes": "Bolus Wizard"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Bolus Wizard" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Bolus Wizard" "@0.notes" }}
+
+# ComboBolus      TreatmentEventType = "Combo Bolus"
+# return site.EventGroupsBundle{
+# 			EventGroup:     eventGroup,
+# 			GlucoseReading: glucoseReading,
+# 			InsulinDose:    insulinDose,
+# 			FoodIntake:     foodIntake,
+# 			ComponentEvent: componentEvent,
+# 		}
+NAME create_full_combo_bolus_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Combo Bolus",
+  "created_at": "{{ time 0 }}",
+  "notes": "Combo Bolus"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Combo Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Combo Bolus" "@0.notes" }}
+
+# CorrectionBolus TreatmentEventType = "Correction Bolus"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	InsulinDose:    insulinDose,
+# 	GlucoseReading: glucoseReading,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_correction_bolus_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Correction Bolus",
+  "created_at": "{{ time 0 }}",
+  "notes": "Correction Bolus"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Correction Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Correction Bolus" "@0.notes" }}
+
+# MealBolus       TreatmentEventType = "Meal Bolus"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	GlucoseReading: glucoseReading,
+# 	InsulinDose:    insulinDose,
+# 	FoodIntake:     foodIntake,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_meal_bolus_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Meal Bolus",
+  "created_at": "{{ time 0 }}",
+  "notes": "Meal Bolus"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Meal Bolus" "@0.notes" }}
+
+# SnackBolus      TreatmentEventType = "Snack Bolus"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	GlucoseReading: glucoseReading,
+# 	InsulinDose:    insulinDose,
+# 	FoodIntake:     foodIntake,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_snack_bolus_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Snack Bolus",
+  "created_at": "{{ time 0 }}",
+  "notes": "Snack Bolus"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Snack Bolus" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Snack Bolus" "@0.notes" }}
+
+# Exercise TreatmentEventType = "Exercise"
+# return site.EventGroupsBundle{
+# 	EventGroup: eventGroup,
+# 	Activity:   activity,
+# }
+NAME create_full_exercise_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Exercise",
+  "created_at": "{{ time 0 }}",
+  "notes": "Exercise"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Exercise" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Exercise" "@0.notes" }}
+
+# ProfileSwitch   TreatmentEventType = "Profile Switch"
+# return site.EventGroupsBundle{
+# 	EventGroup:    eventGroup,
+# 	ProfileSwitch: profileSwitch,
+# }
+NAME create_full_profile_switch_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Profile Switch",
+  "created_at": "{{ time 0 }}",
+  "notes": "Profile Switch"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Profile Switch" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Profile Switch" "@0.notes" }}
+
+# TempBasal       TreatmentEventType = "Temp Basal"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	TempBasal:      tempBasal,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_temp_basal_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Temp Basal",
+  "created_at": "{{ time 0 }}",
+  "notes": "Temp Basal"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Temp Basal" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Temp Basal" "@0.notes" }}
+
+# TemporaryTarget TreatmentEventType = "Temporary Target"
+# return site.EventGroupsBundle{
+# 	EventGroup: eventGroup,
+# 	TempTarget: tempTarget,
+# }
+NAME create_full_temporary_target_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Temporary Target",
+  "created_at": "{{ time 0 }}",
+  "notes": "Temporary Target"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Temporary Target" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Temporary Target" "@0.notes" }}
+
+# OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_openaps_offline_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "OpenAPS Offline",
+  "created_at": "{{ time 0 }}",
+  "notes": "OpenAPS Offline"
+ }
+
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "OpenAPS Offline" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "OpenAPS Offline" "@0.notes" }}
+
+# PumpBatteryChange TreatmentEventType = "Pump Battery Change"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_pump_battery_change_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Pump Battery Change",
+  "created_at": "{{ time 0 }}",
+  "notes": "Pump Battery Change"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Pump Battery Change" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Pump Battery Change" "@0.notes" }}
+
+# SensorChange      TreatmentEventType = "Sensor Change"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_sensor_change_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Sensor Change",
+  "created_at": "{{ time 0 }}",
+  "notes": "Sensor Change"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Sensor Change" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Sensor Change" "@0.notes" }}
+
+# SensorStart       TreatmentEventType = "Sensor Start"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_sensor_start_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Sensor Start",
+  "created_at": "{{ time 0 }}",
+  "notes": "Sensor Start"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Sensor Start" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Sensor Start" "@0.notes" }}
+
+# SiteChange        TreatmentEventType = "Site Change"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_site_change_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Site Change",
+  "created_at": "{{ time 0 }}",
+  "notes": "Site Change"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Site Change" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Site Change" "@0.notes" }}
+
+# InsulinChange     TreatmentEventType = "Insulin Change"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_insulin_change_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Insulin Change",
+  "created_at": "{{ time 0 }}",
+  "notes": "Insulin Change"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Insulin Change" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Insulin Change" "@0.notes" }}
+
+# CannulaFill       TreatmentEventType = "Cannula Fill"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_cannula_fill_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Cannula Fill",
+  "created_at": "{{ time 0 }}",
+  "notes": "Cannula Fill"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Cannula Fill" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Cannula Fill" "@0.notes" }}
+
+# Prime             TreatmentEventType = "Prime"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_prime_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Prime",
+  "created_at": "{{ time 0 }}",
+  "notes": "Prime"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Prime" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Prime" "@0.notes" }}
+
+# ReservoirChange   TreatmentEventType = "Reservoir Change"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_reservoir_change_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Reservoir Change",
+  "created_at": "{{ time 0 }}",
+  "notes": "Reservoir Change"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Reservoir Change" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Reservoir Change" "@0.notes" }}
+
+# Calibration       TreatmentEventType = "Calibration"
+# return site.EventGroupsBundle{
+# 	EventGroup:     eventGroup,
+# 	GlucoseReading: glucoseReading,
+# 	ComponentEvent: componentEvent,
+# }
+NAME create_full_calibration_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Calibration",
+  "created_at": "{{ time 0 }}",
+  "notes": "Calibration"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Calibration" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Calibration" "@0.notes" }}
+
