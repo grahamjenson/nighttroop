@@ -11,6 +11,7 @@ import (
 // Version reports the application and API version metadata for API v3.
 func Version(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
@@ -45,11 +46,12 @@ func Test(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsut
 // collection.
 func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food}
+		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food, nsutils.Settings}
 		lastModifiedMap := make(map[nsutils.Collection]int64)
 		for _, collection := range collections {
-			record, err := dep.Store.Search(r.Context(), collection, nsquery.Query{Limit: 1, SortOrder: ptr(nsquery.SortUpdatedAtDesc)})
+			record, err := dep.Store.Search(r.Context(), collection, nsquery.Query{Limit: 1})
 			if err != nil || record == nil || len(record) == 0 {
+				lastModifiedMap[collection] = 0
 				continue
 			}
 			lastModifiedMap[collection] = record[0].SrvModified

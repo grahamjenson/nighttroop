@@ -1,0 +1,49 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+//////
+// other
+//////
+
+NAME create_entry_v1
+POST http://{{ .site }}/api/v1/entries?token={{ token }}
+B { "sgv": 101, "type": "sgv"}
+ASSERT_STATUS 200
+
+NAME create_minimal_correction_bolus_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "insulin": 4.2 }
+ASSERT_STATUS 200
+
+
+
+NAME get_version
+GET http://{{ .site }}/api/v3/version
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_lastmodified
+GET http://{{ .site }}/api/v3/lastmodified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_status
+GET http://{{ .site }}/api/v3/status
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200

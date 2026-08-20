@@ -16,6 +16,7 @@ func NewNightscoutV3Router(dep nsutils.Dependencies) http.Handler {
 	r.Get("/version", Version(dep))
 	r.Get("/status", dep.Auth.Require("api:entries:read", false, Status(dep)))
 	r.Get("/test", dep.Auth.Require("api:entries:read", false, Test(dep)))
+	r.Get("/lastmodified", dep.Auth.Require("api:entries:read", false, LastModified(dep)))
 	r.Get("/lastModified", dep.Auth.Require("api:entries:read", false, LastModified(dep)))
 
 	r.Get("/{collection}/history/{since}", History(dep))
