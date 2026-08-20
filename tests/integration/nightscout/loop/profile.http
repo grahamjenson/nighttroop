@@ -67,7 +67,7 @@ B {
         "maximumBasalRatePerHour": 4,
         "maximumBolus": 12,
         "minimumBGGuard": 75,
-        "deviceToken": "fc775bd624237950691b277fde2e2a53ab12adb8bc796ee54c12d7aa9ad8ea69",
+        "deviceToken": "asd",
         "overridePresets": [
             {
                 "symbol": "🏐",
@@ -120,7 +120,7 @@ B {
         "maximumBasalRatePerHour": 4,
         "maximumBolus": 12,
         "minimumBGGuard": 75,
-        "deviceToken": "asddsfdfgghfghfghaswqeadssawqqwe",
+        "deviceToken": "asddsfdfgghfghfghaswqeadssawqqweasddsfdfgghfghfghaswqeadssawqqwe",
         "overridePresets": [
             {
                 "symbol": "🏐",
@@ -142,3 +142,19 @@ B {
     "units": "mg/dL"
  }
 ASSERT_STATUS 201
+ASSERT {{ assertEquals 6 "@result.store.loopProfile.dia" }}
+ASSERT {{ assertEquals true "@result.loopSettings.dosingEnabled" }}
+ASSERT {{ assertEquals "automaticBolus" "@result.loopSettings.dosingStrategy" }}
+ASSERT {{ assertEquals "com.libre.new3.loopkit.Loop.Loop" "@result.loopSettings.bundleIdentifier" }}
+ASSERT {{ assertEquals 4 "@result.loopSettings.maximumBasalRatePerHour" }}
+ASSERT {{ assertEquals 12 "@result.loopSettings.maximumBolus" }}
+ASSERT {{ assertEquals 75 "@result.loopSettings.minimumBGGuard" }}
+ASSERT {{ assertEquals "asddsfdfgghfghfghaswqeadssawqqweasddsfdfgghfghfghaswqeadssawqqwe" "@result.loopSettings.deviceToken" }}
+ASSERT {{ assertEquals "🏐" "@result.loopSettings.overridePresets.0.symbol" }}
+ASSERT {{ assertEquals "b" "@result.loopSettings.overridePresets.0.name" }}
+ASSERT {{ assertEquals 0.7 "@result.loopSettings.overridePresets.0.insulinNeedsScaleFactor" }}
+ASSERT {{ assertEquals 150 "@result.loopSettings.overridePresets.0.targetRange.0" }}
+ASSERT {{ assertEquals 180 "@result.loopSettings.overridePresets.0.targetRange.1" }}
+ASSERT {{ assertEquals 0 "@result.loopSettings.overridePresets.0.duration" }}
+ASSERT {{ assertEquals 80 "@result.loopSettings.preMealTargetRange.0" }}
+ASSERT {{ assertEquals 85 "@result.loopSettings.preMealTargetRange.1" }}

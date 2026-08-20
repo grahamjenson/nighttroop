@@ -156,10 +156,15 @@ func DBToNightscoutProfileStore(source *site.ProfilePresetBundle) nightscout.Pro
 func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []site.CreateProfilePresetParams {
 	createParams := []site.CreateProfilePresetParams{}
 	profileStoreID := nightscout.AssignID()
+	var loopSettingsJSON *string
+	if source.LoopSettings != nil {
+		loopSettingsJSON = TryValueToJSON(source.LoopSettings)
+	}
+
 	for name, profile := range source.Store {
 		createParam := nightscout.PartialProfileStoreToCreate(source, ctx)
 		createParam.ProfileStoreID = profileStoreID
-
+		createParam.LoopSettingsJson = loopSettingsJSON
 		createParam.Name = string(name)
 		createParam.IsDefault = source.DefaultProfile != nil && *source.DefaultProfile == name
 
@@ -170,20 +175,20 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 		createParam.Units = profile.Units.Stringp()
 		createParam.Timezone = profile.Timezone.Stringp()
 
-		if profile.CarbRatio != nil {
-			createParam.CarbRatiosJson = ScheduleValuesToJson(profile.CarbRatio)
+		if len(profile.CarbRatio) > 0 {
+			createParam.CarbRatiosJson = TryValueToJSON(profile.CarbRatio)
 		}
-		if profile.Sens != nil {
-			createParam.InsulinSensitivitiesJson = ScheduleValuesToJson(profile.Sens)
+		if len(profile.Sens) > 0 {
+			createParam.InsulinSensitivitiesJson = TryValueToJSON(profile.Sens)
 		}
-		if profile.Basal != nil {
-			createParam.BasalRatesJson = ScheduleValuesToJson(profile.Basal)
+		if len(profile.Basal) > 0 {
+			createParam.BasalRatesJson = TryValueToJSON(profile.Basal)
 		}
-		if profile.TargetLow != nil {
-			createParam.TargetsLowJson = ScheduleValuesToJson(profile.TargetLow)
+		if len(profile.TargetLow) > 0 {
+			createParam.TargetsLowJson = TryValueToJSON(profile.TargetLow)
 		}
-		if profile.TargetHigh != nil {
-			createParam.TargetsHighJson = ScheduleValuesToJson(profile.TargetHigh)
+		if len(profile.TargetHigh) > 0 {
+			createParam.TargetsHighJson = TryValueToJSON(profile.TargetHigh)
 		}
 
 		createParams = append(createParams, createParam)
@@ -192,13 +197,11 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 	return createParams
 }
 
-func ScheduleValuesToJson(svs []*nightscout.ScheduleValue) *string {
-	if len(svs) == 0 {
-		return nil
-	}
+func TryValueToJSON(svs any) *string {
+
 	jsonBytes, err := json.Marshal(svs)
 	if err != nil {
-		slog.Error("error marshalling schedule values to JSON", "error", err)
+		slog.Error("error marshalling profile values to JSON", "error", err)
 		return nil
 	}
 	jsonStr := string(jsonBytes)

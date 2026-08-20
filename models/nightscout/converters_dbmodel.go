@@ -87,6 +87,7 @@ type DBModelConverter interface {
 	// goverter:ignore Store
 	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
+	// goverter:map LoopSettingsJson LoopSettings | JSONToLoopSettings
 	DBModelToProfileStore(source *site.ProfilePreset) ProfileStore
 
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
@@ -158,4 +159,16 @@ func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
 		}
 	}
 	return result
+}
+
+func JSONToLoopSettings(jsonStr *string) *LoopSettings {
+	if jsonStr == nil {
+		return nil
+	}
+	var result LoopSettings
+	err := json.Unmarshal([]byte(*jsonStr), &result)
+	if err != nil {
+		return nil
+	}
+	return &result
 }

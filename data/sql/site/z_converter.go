@@ -849,22 +849,26 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring7 := *source.TargetsLowJson
 		siteCreateProfilePresetParams.TargetsLowJson = &xstring7
 	}
+	if source.LoopSettingsJson != nil {
+		xstring8 := *source.LoopSettingsJson
+		siteCreateProfilePresetParams.LoopSettingsJson = &xstring8
+	}
 	siteCreateProfilePresetParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		siteCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		siteCreateProfilePresetParams.RawJsonData = &xstring8
+		xstring9 := *source.RawJsonData
+		siteCreateProfilePresetParams.RawJsonData = &xstring9
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		siteCreateProfilePresetParams.CreatedByAppName = &xstring9
+		xstring10 := *source.CreatedByAppName
+		siteCreateProfilePresetParams.CreatedByAppName = &xstring10
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring10
+		xstring11 := *source.CreatedByDeviceName
+		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring11
 	}
 	siteCreateProfilePresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateProfilePresetParams

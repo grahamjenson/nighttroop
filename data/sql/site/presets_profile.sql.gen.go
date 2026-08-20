@@ -12,7 +12,7 @@ import (
 
 const allProfilePresets = `-- name: AllProfilePresets :many
 
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
 ORDER BY created_at DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -47,6 +47,7 @@ func (q *Queries) AllProfilePresets(ctx context.Context, arg AllProfilePresetsPa
 			&i.BasalRatesJson,
 			&i.TargetsHighJson,
 			&i.TargetsLowJson,
+			&i.LoopSettingsJson,
 			&i.RawJsonData,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -87,6 +88,8 @@ INSERT INTO profile_presets (
     targets_high_json,
     targets_low_json,
 
+    loop_settings_json,
+    
     occurred_at,
     utc_offset_minutes,
     raw_json_data,
@@ -94,8 +97,8 @@ INSERT INTO profile_presets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateProfilePresetParams struct {
@@ -111,6 +114,7 @@ type CreateProfilePresetParams struct {
 	BasalRatesJson           *string
 	TargetsHighJson          *string
 	TargetsLowJson           *string
+	LoopSettingsJson         *string
 	OccurredAt               int64
 	UtcOffsetMinutes         *int64
 	RawJsonData              *string
@@ -136,6 +140,7 @@ func (q *Queries) CreateProfilePreset(ctx context.Context, arg CreateProfilePres
 		arg.BasalRatesJson,
 		arg.TargetsHighJson,
 		arg.TargetsLowJson,
+		arg.LoopSettingsJson,
 		arg.OccurredAt,
 		arg.UtcOffsetMinutes,
 		arg.RawJsonData,
@@ -157,6 +162,7 @@ func (q *Queries) CreateProfilePreset(ctx context.Context, arg CreateProfilePres
 		&i.BasalRatesJson,
 		&i.TargetsHighJson,
 		&i.TargetsLowJson,
+		&i.LoopSettingsJson,
 		&i.RawJsonData,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -172,7 +178,7 @@ func (q *Queries) CreateProfilePreset(ctx context.Context, arg CreateProfilePres
 
 const getMostRecentProfileStore = `-- name: GetMostRecentProfileStore :many
 
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 FROM profile_presets
 WHERE profile_store_id = (
     SELECT profile_store_id
@@ -211,6 +217,7 @@ func (q *Queries) GetMostRecentProfileStore(ctx context.Context) ([]*ProfilePres
 			&i.BasalRatesJson,
 			&i.TargetsHighJson,
 			&i.TargetsLowJson,
+			&i.LoopSettingsJson,
 			&i.RawJsonData,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -235,7 +242,7 @@ func (q *Queries) GetMostRecentProfileStore(ctx context.Context) ([]*ProfilePres
 }
 
 const getProfilePreset = `-- name: GetProfilePreset :one
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE id = ?
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE id = ?
 `
 
 type GetProfilePresetParams struct {
@@ -258,6 +265,7 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 		&i.BasalRatesJson,
 		&i.TargetsHighJson,
 		&i.TargetsLowJson,
+		&i.LoopSettingsJson,
 		&i.RawJsonData,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -272,7 +280,7 @@ func (q *Queries) GetProfilePreset(ctx context.Context, arg GetProfilePresetPara
 }
 
 const getProfileStore = `-- name: GetProfileStore :many
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DESC
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DESC
 `
 
 type GetProfileStoreParams struct {
@@ -301,6 +309,7 @@ func (q *Queries) GetProfileStore(ctx context.Context, arg GetProfileStoreParams
 			&i.BasalRatesJson,
 			&i.TargetsHighJson,
 			&i.TargetsLowJson,
+			&i.LoopSettingsJson,
 			&i.RawJsonData,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -385,7 +394,7 @@ WITH distinct_profile_store_ids AS (
     ORDER BY occurred_at DESC
     LIMIT ?19 OFFSET ?18
 )
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
 WHERE profile_store_id IN (SELECT profile_store_id FROM distinct_profile_store_ids)
 ORDER BY created_at DESC
 `
@@ -454,6 +463,7 @@ func (q *Queries) SearchProfileStores(ctx context.Context, arg SearchProfileStor
 			&i.BasalRatesJson,
 			&i.TargetsHighJson,
 			&i.TargetsLowJson,
+			&i.LoopSettingsJson,
 			&i.RawJsonData,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -489,7 +499,7 @@ UPDATE profile_presets SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?3
 WHERE id = ?4
-RETURNING id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateProfilePresetParams struct {
@@ -523,6 +533,7 @@ func (q *Queries) UpdateProfilePreset(ctx context.Context, arg UpdateProfilePres
 		&i.BasalRatesJson,
 		&i.TargetsHighJson,
 		&i.TargetsLowJson,
+		&i.LoopSettingsJson,
 		&i.RawJsonData,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,

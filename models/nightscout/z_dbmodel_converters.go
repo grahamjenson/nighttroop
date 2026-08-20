@@ -242,6 +242,7 @@ func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
 			nightscoutUnits := Units(*(*source).Units)
 			nightscoutProfileStore.Units = &nightscoutUnits
 		}
+		nightscoutProfileStore.LoopSettings = JSONToLoopSettings((*source).LoopSettingsJson)
 		if (*source).CreatedByDeviceName != nil {
 			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
 			nightscoutProfileStore.Device = &nightscoutShortString

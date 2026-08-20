@@ -1882,6 +1882,16 @@ func (m *ProfilePreset) SetTargetsLowJson(v *string) {
 	m.TargetsLowJson = v
 }
 
+// GetLoopSettingsJson returns the LoopSettingsJson value.
+func (m ProfilePreset) GetLoopSettingsJson() *string {
+	return m.LoopSettingsJson
+}
+
+// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetLoopSettingsJson(v *string) {
+	m.LoopSettingsJson = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m ProfilePreset) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -12117,6 +12127,17 @@ func (m CreateProfilePresetParams) GetTargetsLowJson() *string {
 // SetTargetsLowJson sets the TargetsLowJson value and returns the updated CreateProfilePresetParams.
 func (m CreateProfilePresetParams) SetTargetsLowJson(v *string) CreateProfilePresetParams {
 	m.TargetsLowJson = v
+	return m
+}
+
+// GetLoopSettingsJson returns the LoopSettingsJson value.
+func (m CreateProfilePresetParams) GetLoopSettingsJson() *string {
+	return m.LoopSettingsJson
+}
+
+// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateProfilePresetParams.
+func (m CreateProfilePresetParams) SetLoopSettingsJson(v *string) CreateProfilePresetParams {
+	m.LoopSettingsJson = v
 	return m
 }
 

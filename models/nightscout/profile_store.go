@@ -11,6 +11,8 @@ type ProfileStore struct {
 	Store          map[ShortString]Profile `json:"store,omitempty"`
 	Units          *Units                  `json:"units,omitempty"`
 
+	LoopSettings *LoopSettings `json:"loopSettings,omitempty"`
+
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
 	App     *ShortString `json:"app,omitempty"`     // App used for the activity
@@ -274,6 +276,26 @@ func (s *ScheduleTime) UnmarshalJSON(data []byte) error {
 	*s = ScheduleTime(str)
 
 	return nil
+}
+
+type LoopSettings struct {
+	MaximumBasalRatePerHour *FlexibleFloat64   `json:"maximumBasalRatePerHour,omitempty"`
+	MaximumBolus            *FlexibleFloat64   `json:"maximumBolus,omitempty"`
+	DosingStrategy          *ShortString       `json:"dosingStrategy,omitempty"`
+	DosingEnabled           *FlexibleBool      `json:"dosingEnabled,omitempty"`
+	MinimumBGGuard          *FlexibleFloat64   `json:"minimumBGGuard,omitempty"`
+	DeviceToken             *ShortString       `json:"deviceToken,omitempty"`
+	BundleIdentifier        *ShortString       `json:"bundleIdentifier,omitempty"`
+	PreMealTargetRange      []*FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
+	OverridePresets         []*OverridePreset  `json:"overridePresets,omitempty"`
+}
+
+type OverridePreset struct {
+	Symbol                  *ShortString       `json:"symbol,omitempty"`
+	Name                    *ShortString       `json:"name,omitempty"`
+	TargetRange             []*FlexibleFloat64 `json:"targetRange,omitempty"`
+	Duration                *FlexibleInt64     `json:"duration,omitempty"`
+	InsulinNeedsScaleFactor *FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
 }
 
 func (t ProfileStore) GetDevice() *string {

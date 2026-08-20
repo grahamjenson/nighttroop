@@ -349,6 +349,7 @@ type ProfilePreset struct {
 	BasalRatesJson           *string
 	TargetsHighJson          *string
 	TargetsLowJson           *string
+	LoopSettingsJson         *string
 	RawJsonData              *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64

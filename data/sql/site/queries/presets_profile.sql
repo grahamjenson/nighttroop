@@ -18,6 +18,8 @@ INSERT INTO profile_presets (
     targets_high_json,
     targets_low_json,
 
+    loop_settings_json,
+    
     occurred_at,
     utc_offset_minutes,
     raw_json_data,
@@ -25,7 +27,7 @@ INSERT INTO profile_presets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

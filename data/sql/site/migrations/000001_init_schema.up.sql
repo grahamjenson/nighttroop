@@ -411,6 +411,9 @@ CREATE TABLE profile_presets (
     targets_high_json TEXT CHECK(length(targets_high_json) <= 2048), -- { [high, low] }
     targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
 
+    -- loop settings
+    loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)),
+
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
