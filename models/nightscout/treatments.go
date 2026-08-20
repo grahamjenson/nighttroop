@@ -51,9 +51,6 @@ type Treatment struct {
 	DurationMinutes        *FlexibleInt64 `json:"duration,omitempty"`               // minutes
 	DurationInMilliseconds *FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
 
-	Notes     *SanitizedString `json:"notes,omitempty"`
-	EnteredBy *ShortString     `json:"enteredBy,omitempty"`
-
 	// Treatment-specific fields
 	Profile             *ShortString     `json:"profile,omitempty"`
 	OriginalProfileName *ShortString     `json:"originalProfileName,omitempty"`
@@ -61,9 +58,9 @@ type Treatment struct {
 	Percent             *FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *FlexibleInt64   `json:"timeshift,omitempty"`
 
-	Rate       *FlexibleFloat64 `json:"rate,omitempty"`
-	Absolute   *FlexibleFloat64 `json:"absolute,omitempty"`
-	Reason     *ShortString     `json:"reason,omitempty"`
+	Rate     *FlexibleFloat64 `json:"rate,omitempty"`
+	Absolute *FlexibleFloat64 `json:"absolute,omitempty"`
+
 	HighTarget *FlexibleFloat64 `json:"targetTop,omitempty"`
 	LowTarget  *FlexibleFloat64 `json:"targetBottom,omitempty"`
 	Units      *Units           `json:"units,omitempty"`
@@ -71,6 +68,10 @@ type Treatment struct {
 	PumpID     *ShortString `json:"pumpId,omitempty"`
 	PumpSerial *ShortString `json:"pumpSerial,omitempty"`
 	PumpType   *ShortString `json:"pumpType,omitempty"`
+
+	Notes     *SanitizedString `json:"notes,omitempty"`
+	EnteredBy *ShortString     `json:"enteredBy,omitempty"`
+	Reason    *ShortString     `json:"reason,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity

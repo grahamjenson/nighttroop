@@ -182,68 +182,82 @@ type TreatmentsEvenetConverter interface {
 	// EventGroup
 	///////
 
+	// goverter:ignoreMissing
+	//
+	// goverter:map ID Identifier
+	// goverter:map GroupType EventType
+	// goverter:map CreatedByIdentityName Subject
+	// goverter:map CreatedByIdentityName EnteredBy
+	// goverter:map CreatedByAppName App
+	// goverter:map CreatedByDeviceName Device
+	// goverter:map OccurredAt Date
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
-	// goverter:map EventGroup.UtcOffsetMinutes UtcOffsetMinutes
-	// goverter:map EventGroup.RawJsonData RawJsonData
-	// goverter:map EventGroup.CreatedByIdentityName Subject
-	// goverter:map EventGroup.CreatedByIdentityName EnteredBy
-	// goverter:map EventGroup.CreatedByAppName App
-	// goverter:map EventGroup.CreatedByDeviceName Device
-	// goverter:map EventGroup.ID Identifier
-	// goverter:map EventGroup.OccurredAt Date
-	// goverter:map EventGroup.Notes Notes
-	// goverter:map EventGroup.Reason Reason
-	// goverter:map EventGroup.GroupType EventType
+	EventGroupToTreatment(source site.EventGroup) *Treatment
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
 	//
-	// goverter:ignore  SplitExt OriginalProfileName
+	// goverter:ignoreMissing
+	// goverter:map Reading Glucose
+	// goverter:map ReadingType GlucoseType
+	UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
+	// goverter:map Dose Insulin
+	// goverter:map DoseType Type
+	UpdateInsulinDoseToTreatment(source *site.InsulinDose, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map GlucoseReading.Reading Glucose
-	// goverter:map GlucoseReading.ReadingType GlucoseType
+	UpdateFoodIntakeToTreatment(source *site.FoodIntake, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map InsulinDose.Dose Insulin
-	// goverter:map InsulinDose.DoseType Type
-	// goverter:map InsulinDose.SplitNow SplitNow
-	// goverter:map InsulinDose.SplitExt SplitExt
+	// goverter:map Absolute Rate
+	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	UpdateTempBasalToTreatment(source *site.TempBasal, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map FoodIntake.FoodType FoodType
-	// goverter:map FoodIntake.AbsorptionTimeMinutes AbsorptionTimeMinutes
-	// goverter:map FoodIntake.PreBolus PreBolus
-	// goverter:map FoodIntake.Category Category
-	// goverter:map FoodIntake.Subcategory Subcategory
-	// goverter:map FoodIntake.Portions Portions
-	// goverter:map FoodIntake.Carbs Carbs
-	// goverter:map FoodIntake.Protein Protein
-	// goverter:map FoodIntake.Fat Fat
-	// goverter:map FoodIntake.Fibre Fibre
-	// goverter:map FoodIntake.Energy Energy
+	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	UpdateTempTargetToTreatment(source *site.TempTarget, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map TempBasal.Absolute Absolute
-	// goverter:map TempBasal.Absolute Rate
+	UpdateNotificationEventToTreatment(source *site.NotificationEvent, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map TempTarget.HighTarget HighTarget
-	// goverter:map TempTarget.LowTarget LowTarget
-	//
-	// goverter:map ProfileSwitch.Name Name
-	// goverter:map ProfileSwitch.Name Profile
-	// goverter:map ProfileSwitch.Timeshift Timeshift
-	// goverter:map ProfileSwitch.Units Units
+	// goverter:map Name Profile
 	// goverter:map . ProfileJSON | ToProfileJSON
+	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map Activity.ActivityType ActivityType
-	// goverter:map Activity.Steps Steps
-	// goverter:map Activity.Calories Calories
-	// goverter:map Activity.HeartRate HeartRate
+	UpdateComponentEventToTreatment(source *site.ComponentEvent, target *Treatment)
+
+	// goverter:update target
+	// goverter:ignore CreatedAt
+	// goverter:ignoreMissing
 	//
-	// goverter:map ComponentEvent.PumpID PumpID
-	// goverter:map ComponentEvent.PumpType PumpType
-	// goverter:map ComponentEvent.PumpSerial PumpSerial
-	//
-	// SHARED FIELDS
-	// goverter:map . DurationInMilliseconds     | MinutesToMilliseconds
-	// goverter:map . DurationMinutes            | DurationSelect
-	// goverter:map . Percent                    | PercentageSelect
-	DBModelToTreatment(source *site.EventGroupsBundle) Treatment
+	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	UpdateActivityToTreatment(source *site.Activity, target *Treatment)
 
 	//////
 	// Update Override
@@ -368,103 +382,57 @@ type TreatmentsEvenetConverter interface {
 	TreatmentToEventGroup(source Treatment) site.EventGroup
 }
 
-func MinutesToMilliseconds(source *site.EventGroupsBundle) *FlexibleInt64 {
-
-	if source.TempBasal != nil {
-		value := FlexibleInt64(source.TempBasal.DurationMinutes * 60 * 1000)
+func MinutesToMilliseconds(durationMinutes any) *FlexibleInt64 {
+	switch v := durationMinutes.(type) {
+	case int64:
+		value := FlexibleInt64(v * 60 * 1000)
 		return &value
-	}
-	if source.TempTarget != nil {
-		value := FlexibleInt64(source.TempTarget.DurationMinutes * 60 * 1000)
-		return &value
-
-	}
-
-	if source.ProfileSwitch != nil {
-		value := FlexibleInt64(source.ProfileSwitch.DurationMinutes * 60 * 1000)
-		return &value
-	}
-
-	if source.Activity != nil && source.Activity.DurationMinutes != nil {
-		value := FlexibleInt64(*source.Activity.DurationMinutes * 60 * 1000)
-		return &value
-	}
-
-	return nil
-}
-
-func DurationSelect(source *site.EventGroupsBundle) *FlexibleInt64 {
-	if source.TempBasal != nil {
-		value := FlexibleInt64(source.TempBasal.DurationMinutes)
-		return &value
-	}
-
-	if source.TempTarget != nil {
-		value := FlexibleInt64(source.TempTarget.DurationMinutes)
-		return &value
-
-	}
-
-	if source.ProfileSwitch != nil {
-		value := FlexibleInt64(source.ProfileSwitch.DurationMinutes)
-		return &value
-	}
-
-	if source.Activity != nil && source.Activity.DurationMinutes != nil {
-		value := FlexibleInt64(*source.Activity.DurationMinutes)
-		return &value
-	}
-
-	return nil
-}
-
-func PercentageSelect(source *site.EventGroupsBundle) *FlexibleFloat64 {
-	if source.TempBasal != nil {
-		if source.TempBasal.Percent != nil {
-			value := FlexibleFloat64(*source.TempBasal.Percent)
-			return &value
+	case *int64:
+		if v == nil {
+			return nil
 		}
-	}
-
-	if source.ProfileSwitch != nil {
-		if source.ProfileSwitch.Percent != nil {
-			value := FlexibleFloat64(*source.ProfileSwitch.Percent)
-			return &value
-		}
+		value := FlexibleInt64(*v * 60 * 1000)
+		return &value
 	}
 
 	return nil
 }
 
-func ToProfileJSON(source *site.EventGroupsBundle) *LongJSONString {
-	if source == nil || source.ProfileSwitch == nil {
-		return nil
-	}
+func ToProfileJSON(source interface {
+	GetDia() *float64
+	GetTimezone() *string
+	GetUnits() *string
+	GetCarbRatiosJson() *string
+	GetInsulinSensitivitiesJson() *string
+	GetBasalRatesJson() *string
+	GetTargetsLowJson() *string
+	GetTargetsHighJson() *string
+}) *LongJSONString {
 	profile := Profile{}
-	profileSwitch := *source.ProfileSwitch
-	if profileSwitch.Dia != nil {
-		profile.Dia = ptr(FlexibleFloat64(*profileSwitch.Dia))
+
+	if source.GetDia() != nil {
+		profile.Dia = ptr(FlexibleFloat64(*source.GetDia()))
 	}
-	if profileSwitch.Timezone != nil {
-		profile.Timezone = ptr(Timezone(*profileSwitch.Timezone))
+	if source.GetTimezone() != nil {
+		profile.Timezone = ptr(Timezone(*source.GetTimezone()))
 	}
-	if profileSwitch.Units != nil {
-		profile.Units = ptr(Units(*profileSwitch.Units))
+	if source.GetUnits() != nil {
+		profile.Units = ptr(Units(*source.GetUnits()))
 	}
-	if profileSwitch.CarbRatiosJson != nil {
-		json.Unmarshal([]byte(*profileSwitch.CarbRatiosJson), &profile.CarbRatio)
+	if source.GetCarbRatiosJson() != nil {
+		json.Unmarshal([]byte(*source.GetCarbRatiosJson()), &profile.CarbRatio)
 	}
-	if profileSwitch.InsulinSensitivitiesJson != nil {
-		json.Unmarshal([]byte(*profileSwitch.InsulinSensitivitiesJson), &profile.Sens)
+	if source.GetInsulinSensitivitiesJson() != nil {
+		json.Unmarshal([]byte(*source.GetInsulinSensitivitiesJson()), &profile.Sens)
 	}
-	if profileSwitch.BasalRatesJson != nil {
-		json.Unmarshal([]byte(*profileSwitch.BasalRatesJson), &profile.Basal)
+	if source.GetBasalRatesJson() != nil {
+		json.Unmarshal([]byte(*source.GetBasalRatesJson()), &profile.Basal)
 	}
-	if profileSwitch.TargetsLowJson != nil {
-		json.Unmarshal([]byte(*profileSwitch.TargetsLowJson), &profile.TargetLow)
+	if source.GetTargetsLowJson() != nil {
+		json.Unmarshal([]byte(*source.GetTargetsLowJson()), &profile.TargetLow)
 	}
-	if profileSwitch.TargetsHighJson != nil {
-		json.Unmarshal([]byte(*profileSwitch.TargetsHighJson), &profile.TargetHigh)
+	if source.GetTargetsHighJson() != nil {
+		json.Unmarshal([]byte(*source.GetTargetsHighJson()), &profile.TargetHigh)
 	}
 
 	profileBytes, err := json.Marshal(profile)

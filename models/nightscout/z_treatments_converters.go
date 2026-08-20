@@ -151,298 +151,6 @@ func ComponentEventUpdate(source site.ComponentEvent, context ConverterContext) 
 	siteUpdateComponentEventParams.ID = source.ID
 	return siteUpdateComponentEventParams
 }
-func DBModelToTreatment(source *site.EventGroupsBundle) Treatment {
-	var nightscoutTreatment Treatment
-	if source != nil {
-		pNightscoutIdentifierString := IdentifierString((*source).EventGroup.ID)
-		nightscoutTreatment.Identifier = &pNightscoutIdentifierString
-		pNightscoutTreatmentEventType := TreatmentEventType((*source).EventGroup.GroupType)
-		nightscoutTreatment.EventType = &pNightscoutTreatmentEventType
-		var pString *string
-		if (*source).ProfileSwitch != nil {
-			pString = &(*source).ProfileSwitch.Name
-		}
-		if pString != nil {
-			nightscoutShortString := ShortString(*pString)
-			nightscoutTreatment.Name = &nightscoutShortString
-		}
-		var pFloat64 *float64
-		if (*source).GlucoseReading != nil {
-			pFloat64 = &(*source).GlucoseReading.Reading
-		}
-		if pFloat64 != nil {
-			nightscoutFlexibleFloat64 := FlexibleFloat64(*pFloat64)
-			nightscoutTreatment.Glucose = &nightscoutFlexibleFloat64
-		}
-		var pString2 *string
-		if (*source).GlucoseReading != nil {
-			pString2 = &(*source).GlucoseReading.ReadingType
-		}
-		if pString2 != nil {
-			nightscoutGlucoseType := GlucoseType(*pString2)
-			nightscoutTreatment.GlucoseType = &nightscoutGlucoseType
-		}
-		var pFloat642 *float64
-		if (*source).FoodIntake != nil {
-			pFloat642 = (*source).FoodIntake.Carbs
-		}
-		if pFloat642 != nil {
-			nightscoutFlexibleFloat642 := FlexibleFloat64(*pFloat642)
-			nightscoutTreatment.Carbs = &nightscoutFlexibleFloat642
-		}
-		var pFloat643 *float64
-		if (*source).FoodIntake != nil {
-			pFloat643 = (*source).FoodIntake.Protein
-		}
-		if pFloat643 != nil {
-			nightscoutFlexibleFloat643 := FlexibleFloat64(*pFloat643)
-			nightscoutTreatment.Protein = &nightscoutFlexibleFloat643
-		}
-		var pFloat644 *float64
-		if (*source).FoodIntake != nil {
-			pFloat644 = (*source).FoodIntake.Fat
-		}
-		if pFloat644 != nil {
-			nightscoutFlexibleFloat644 := FlexibleFloat64(*pFloat644)
-			nightscoutTreatment.Fat = &nightscoutFlexibleFloat644
-		}
-		var pString3 *string
-		if (*source).FoodIntake != nil {
-			pString3 = (*source).FoodIntake.FoodType
-		}
-		if pString3 != nil {
-			nightscoutShortString2 := ShortString(*pString3)
-			nightscoutTreatment.FoodType = &nightscoutShortString2
-		}
-		var pInt64 *int64
-		if (*source).FoodIntake != nil {
-			pInt64 = (*source).FoodIntake.AbsorptionTimeMinutes
-		}
-		if pInt64 != nil {
-			nightscoutFlexibleInt64 := FlexibleInt64(*pInt64)
-			nightscoutTreatment.AbsorptionTimeMinutes = &nightscoutFlexibleInt64
-		}
-		var pString4 *string
-		if (*source).FoodIntake != nil {
-			pString4 = (*source).FoodIntake.Category
-		}
-		if pString4 != nil {
-			nightscoutShortString3 := ShortString(*pString4)
-			nightscoutTreatment.Category = &nightscoutShortString3
-		}
-		var pString5 *string
-		if (*source).FoodIntake != nil {
-			pString5 = (*source).FoodIntake.Subcategory
-		}
-		if pString5 != nil {
-			nightscoutShortString4 := ShortString(*pString5)
-			nightscoutTreatment.Subcategory = &nightscoutShortString4
-		}
-		var pFloat645 *float64
-		if (*source).FoodIntake != nil {
-			pFloat645 = (*source).FoodIntake.PreBolus
-		}
-		if pFloat645 != nil {
-			nightscoutFlexibleFloat645 := FlexibleFloat64(*pFloat645)
-			nightscoutTreatment.PreBolus = &nightscoutFlexibleFloat645
-		}
-		var pFloat646 *float64
-		if (*source).FoodIntake != nil {
-			pFloat646 = (*source).FoodIntake.Fibre
-		}
-		if pFloat646 != nil {
-			nightscoutFlexibleFloat646 := FlexibleFloat64(*pFloat646)
-			nightscoutTreatment.Fibre = &nightscoutFlexibleFloat646
-		}
-		var pFloat647 *float64
-		if (*source).FoodIntake != nil {
-			pFloat647 = (*source).FoodIntake.Energy
-		}
-		if pFloat647 != nil {
-			nightscoutFlexibleFloat647 := FlexibleFloat64(*pFloat647)
-			nightscoutTreatment.Energy = &nightscoutFlexibleFloat647
-		}
-		var pFloat648 *float64
-		if (*source).FoodIntake != nil {
-			pFloat648 = (*source).FoodIntake.Portions
-		}
-		if pFloat648 != nil {
-			nightscoutFlexibleFloat648 := FlexibleFloat64(*pFloat648)
-			nightscoutTreatment.Portions = &nightscoutFlexibleFloat648
-		}
-		var pFloat649 *float64
-		if (*source).InsulinDose != nil {
-			pFloat649 = &(*source).InsulinDose.Dose
-		}
-		if pFloat649 != nil {
-			nightscoutFlexibleFloat649 := FlexibleFloat64(*pFloat649)
-			nightscoutTreatment.Insulin = &nightscoutFlexibleFloat649
-		}
-		var pFloat6410 *float64
-		if (*source).InsulinDose != nil {
-			pFloat6410 = (*source).InsulinDose.SplitNow
-		}
-		if pFloat6410 != nil {
-			nightscoutFlexibleFloat6410 := FlexibleFloat64(*pFloat6410)
-			nightscoutTreatment.SplitNow = &nightscoutFlexibleFloat6410
-		}
-		var pString6 *string
-		if (*source).InsulinDose != nil {
-			pString6 = (*source).InsulinDose.DoseType
-		}
-		if pString6 != nil {
-			nightscoutShortString5 := ShortString(*pString6)
-			nightscoutTreatment.Type = &nightscoutShortString5
-		}
-		var pString7 *string
-		if (*source).Activity != nil {
-			pString7 = &(*source).Activity.ActivityType
-		}
-		if pString7 != nil {
-			nightscoutShortString6 := ShortString(*pString7)
-			nightscoutTreatment.ActivityType = &nightscoutShortString6
-		}
-		var pInt642 *int64
-		if (*source).Activity != nil {
-			pInt642 = (*source).Activity.Steps
-		}
-		if pInt642 != nil {
-			nightscoutFlexibleInt642 := FlexibleInt64(*pInt642)
-			nightscoutTreatment.Steps = &nightscoutFlexibleInt642
-		}
-		var pInt643 *int64
-		if (*source).Activity != nil {
-			pInt643 = (*source).Activity.Calories
-		}
-		if pInt643 != nil {
-			nightscoutFlexibleInt643 := FlexibleInt64(*pInt643)
-			nightscoutTreatment.Calories = &nightscoutFlexibleInt643
-		}
-		var pInt644 *int64
-		if (*source).Activity != nil {
-			pInt644 = (*source).Activity.HeartRate
-		}
-		if pInt644 != nil {
-			nightscoutFlexibleInt644 := FlexibleInt64(*pInt644)
-			nightscoutTreatment.HeartRate = &nightscoutFlexibleInt644
-		}
-		nightscoutTreatment.DurationMinutes = DurationSelect(source)
-		nightscoutTreatment.DurationInMilliseconds = MinutesToMilliseconds(source)
-		if (*source).EventGroup.Notes != nil {
-			nightscoutSanitizedString := SanitizedString(*(*source).EventGroup.Notes)
-			nightscoutTreatment.Notes = &nightscoutSanitizedString
-		}
-		pNightscoutShortString := ShortString((*source).EventGroup.CreatedByIdentityName)
-		nightscoutTreatment.EnteredBy = &pNightscoutShortString
-		var pString8 *string
-		if (*source).ProfileSwitch != nil {
-			pString8 = &(*source).ProfileSwitch.Name
-		}
-		if pString8 != nil {
-			nightscoutShortString7 := ShortString(*pString8)
-			nightscoutTreatment.Profile = &nightscoutShortString7
-		}
-		nightscoutTreatment.ProfileJSON = ToProfileJSON(source)
-		nightscoutTreatment.Percent = PercentageSelect(source)
-		var pInt645 *int64
-		if (*source).ProfileSwitch != nil {
-			pInt645 = (*source).ProfileSwitch.Timeshift
-		}
-		if pInt645 != nil {
-			nightscoutFlexibleInt645 := FlexibleInt64(*pInt645)
-			nightscoutTreatment.Timeshift = &nightscoutFlexibleInt645
-		}
-		var pFloat6411 *float64
-		if (*source).TempBasal != nil {
-			pFloat6411 = &(*source).TempBasal.Absolute
-		}
-		if pFloat6411 != nil {
-			nightscoutFlexibleFloat6411 := FlexibleFloat64(*pFloat6411)
-			nightscoutTreatment.Rate = &nightscoutFlexibleFloat6411
-		}
-		var pFloat6412 *float64
-		if (*source).TempBasal != nil {
-			pFloat6412 = &(*source).TempBasal.Absolute
-		}
-		if pFloat6412 != nil {
-			nightscoutFlexibleFloat6412 := FlexibleFloat64(*pFloat6412)
-			nightscoutTreatment.Absolute = &nightscoutFlexibleFloat6412
-		}
-		if (*source).EventGroup.Reason != nil {
-			nightscoutShortString8 := ShortString(*(*source).EventGroup.Reason)
-			nightscoutTreatment.Reason = &nightscoutShortString8
-		}
-		var pFloat6413 *float64
-		if (*source).TempTarget != nil {
-			pFloat6413 = &(*source).TempTarget.HighTarget
-		}
-		if pFloat6413 != nil {
-			nightscoutFlexibleFloat6413 := FlexibleFloat64(*pFloat6413)
-			nightscoutTreatment.HighTarget = &nightscoutFlexibleFloat6413
-		}
-		var pFloat6414 *float64
-		if (*source).TempTarget != nil {
-			pFloat6414 = &(*source).TempTarget.LowTarget
-		}
-		if pFloat6414 != nil {
-			nightscoutFlexibleFloat6414 := FlexibleFloat64(*pFloat6414)
-			nightscoutTreatment.LowTarget = &nightscoutFlexibleFloat6414
-		}
-		var pString9 *string
-		if (*source).ProfileSwitch != nil {
-			pString9 = (*source).ProfileSwitch.Units
-		}
-		if pString9 != nil {
-			nightscoutUnits := Units(*pString9)
-			nightscoutTreatment.Units = &nightscoutUnits
-		}
-		var pString10 *string
-		if (*source).ComponentEvent != nil {
-			pString10 = (*source).ComponentEvent.PumpID
-		}
-		if pString10 != nil {
-			nightscoutShortString9 := ShortString(*pString10)
-			nightscoutTreatment.PumpID = &nightscoutShortString9
-		}
-		var pString11 *string
-		if (*source).ComponentEvent != nil {
-			pString11 = (*source).ComponentEvent.PumpSerial
-		}
-		if pString11 != nil {
-			nightscoutShortString10 := ShortString(*pString11)
-			nightscoutTreatment.PumpSerial = &nightscoutShortString10
-		}
-		var pString12 *string
-		if (*source).ComponentEvent != nil {
-			pString12 = (*source).ComponentEvent.PumpType
-		}
-		if pString12 != nil {
-			nightscoutShortString11 := ShortString(*pString12)
-			nightscoutTreatment.PumpType = &nightscoutShortString11
-		}
-		if (*source).EventGroup.CreatedByDeviceName != nil {
-			nightscoutShortString12 := ShortString(*(*source).EventGroup.CreatedByDeviceName)
-			nightscoutTreatment.Device = &nightscoutShortString12
-		}
-		if (*source).EventGroup.CreatedByAppName != nil {
-			nightscoutShortString13 := ShortString(*(*source).EventGroup.CreatedByAppName)
-			nightscoutTreatment.App = &nightscoutShortString13
-		}
-		pNightscoutShortString2 := ShortString((*source).EventGroup.CreatedByIdentityName)
-		nightscoutTreatment.Subject = &pNightscoutShortString2
-		nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutDateInt := DateInt((*source).EventGroup.OccurredAt)
-		nightscoutTreatment.Date = &pNightscoutDateInt
-		if (*source).EventGroup.UtcOffsetMinutes != nil {
-			nightscoutFlexibleInt646 := FlexibleInt64(*(*source).EventGroup.UtcOffsetMinutes)
-			nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt646
-		}
-		if (*source).EventGroup.RawJsonData != nil {
-			nightscoutTreatment.RawJsonData = *(*source).EventGroup.RawJsonData
-		}
-	}
-	return nightscoutTreatment
-}
 func EventGroupCreate(source site.EventGroup, context ConverterContext) site.CreateEventGroupParams {
 	var siteCreateEventGroupParams site.CreateEventGroupParams
 	siteCreateEventGroupParams.ID = AssignID()
@@ -510,6 +218,44 @@ func EventGroupCreate(source site.EventGroup, context ConverterContext) site.Cre
 	}
 	siteCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateEventGroupParams
+}
+func EventGroupToTreatment(source site.EventGroup) *Treatment {
+	var nightscoutTreatment Treatment
+	pNightscoutIdentifierString := IdentifierString(source.ID)
+	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
+	pNightscoutTreatmentEventType := TreatmentEventType(source.GroupType)
+	nightscoutTreatment.EventType = &pNightscoutTreatmentEventType
+	if source.Notes != nil {
+		nightscoutSanitizedString := SanitizedString(*source.Notes)
+		nightscoutTreatment.Notes = &nightscoutSanitizedString
+	}
+	pNightscoutShortString := ShortString(source.CreatedByIdentityName)
+	nightscoutTreatment.EnteredBy = &pNightscoutShortString
+	if source.Reason != nil {
+		nightscoutShortString := ShortString(*source.Reason)
+		nightscoutTreatment.Reason = &nightscoutShortString
+	}
+	if source.CreatedByDeviceName != nil {
+		nightscoutShortString2 := ShortString(*source.CreatedByDeviceName)
+		nightscoutTreatment.Device = &nightscoutShortString2
+	}
+	if source.CreatedByAppName != nil {
+		nightscoutShortString3 := ShortString(*source.CreatedByAppName)
+		nightscoutTreatment.App = &nightscoutShortString3
+	}
+	pNightscoutShortString2 := ShortString(source.CreatedByIdentityName)
+	nightscoutTreatment.Subject = &pNightscoutShortString2
+	nightscoutTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
+	pNightscoutDateInt := DateInt(source.OccurredAt)
+	nightscoutTreatment.Date = &pNightscoutDateInt
+	if source.UtcOffsetMinutes != nil {
+		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+		nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+	}
+	if source.RawJsonData != nil {
+		nightscoutTreatment.RawJsonData = *source.RawJsonData
+	}
+	return &nightscoutTreatment
 }
 func EventGroupUpdate(source site.EventGroup, context ConverterContext) site.UpdateEventGroupParams {
 	var siteUpdateEventGroupParams site.UpdateEventGroupParams
@@ -1570,6 +1316,318 @@ func TreatmentToEventGroup(source Treatment) site.EventGroup {
 		siteEventGroup.CreatedByDeviceName = &xstring4
 	}
 	return siteEventGroup
+}
+func UpdateActivityToTreatment(source *site.Activity, target *Treatment) {
+	if source != nil {
+		if source.Name != nil {
+			nightscoutShortString := ShortString(*source.Name)
+			target.Name = &nightscoutShortString
+		}
+		pNightscoutShortString := ShortString(source.ActivityType)
+		target.ActivityType = &pNightscoutShortString
+		if source.Steps != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.Steps)
+			target.Steps = &nightscoutFlexibleInt64
+		}
+		if source.Calories != nil {
+			nightscoutFlexibleInt642 := FlexibleInt64(*source.Calories)
+			target.Calories = &nightscoutFlexibleInt642
+		}
+		if source.HeartRate != nil {
+			nightscoutFlexibleInt643 := FlexibleInt64(*source.HeartRate)
+			target.HeartRate = &nightscoutFlexibleInt643
+		}
+		if source.DurationMinutes != nil {
+			nightscoutFlexibleInt644 := FlexibleInt64(*source.DurationMinutes)
+			target.DurationMinutes = &nightscoutFlexibleInt644
+		}
+		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString2 := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString2
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt645 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt645
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateComponentEventToTreatment(source *site.ComponentEvent, target *Treatment) {
+	if source != nil {
+		pNightscoutTreatmentEventType := TreatmentEventType(source.EventType)
+		target.EventType = &pNightscoutTreatmentEventType
+		if source.PumpID != nil {
+			nightscoutShortString := ShortString(*source.PumpID)
+			target.PumpID = &nightscoutShortString
+		}
+		if source.PumpSerial != nil {
+			nightscoutShortString2 := ShortString(*source.PumpSerial)
+			target.PumpSerial = &nightscoutShortString2
+		}
+		if source.PumpType != nil {
+			nightscoutShortString3 := ShortString(*source.PumpType)
+			target.PumpType = &nightscoutShortString3
+		}
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString4 := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString4
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateFoodIntakeToTreatment(source *site.FoodIntake, target *Treatment) {
+	if source != nil {
+		if source.Name != nil {
+			nightscoutShortString := ShortString(*source.Name)
+			target.Name = &nightscoutShortString
+		}
+		if source.Carbs != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*source.Carbs)
+			target.Carbs = &nightscoutFlexibleFloat64
+		}
+		if source.Protein != nil {
+			nightscoutFlexibleFloat642 := FlexibleFloat64(*source.Protein)
+			target.Protein = &nightscoutFlexibleFloat642
+		}
+		if source.Fat != nil {
+			nightscoutFlexibleFloat643 := FlexibleFloat64(*source.Fat)
+			target.Fat = &nightscoutFlexibleFloat643
+		}
+		if source.FoodType != nil {
+			nightscoutShortString2 := ShortString(*source.FoodType)
+			target.FoodType = &nightscoutShortString2
+		}
+		if source.AbsorptionTimeMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.AbsorptionTimeMinutes)
+			target.AbsorptionTimeMinutes = &nightscoutFlexibleInt64
+		}
+		if source.Category != nil {
+			nightscoutShortString3 := ShortString(*source.Category)
+			target.Category = &nightscoutShortString3
+		}
+		if source.Subcategory != nil {
+			nightscoutShortString4 := ShortString(*source.Subcategory)
+			target.Subcategory = &nightscoutShortString4
+		}
+		if source.PreBolus != nil {
+			nightscoutFlexibleFloat644 := FlexibleFloat64(*source.PreBolus)
+			target.PreBolus = &nightscoutFlexibleFloat644
+		}
+		if source.Fibre != nil {
+			nightscoutFlexibleFloat645 := FlexibleFloat64(*source.Fibre)
+			target.Fibre = &nightscoutFlexibleFloat645
+		}
+		if source.Energy != nil {
+			nightscoutFlexibleFloat646 := FlexibleFloat64(*source.Energy)
+			target.Energy = &nightscoutFlexibleFloat646
+		}
+		if source.Portions != nil {
+			nightscoutFlexibleFloat647 := FlexibleFloat64(*source.Portions)
+			target.Portions = &nightscoutFlexibleFloat647
+		}
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString5 := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString5
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt642 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt642
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment) {
+	if source != nil {
+		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Reading)
+		target.Glucose = &pNightscoutFlexibleFloat64
+		pNightscoutGlucoseType := GlucoseType(source.ReadingType)
+		target.GlucoseType = &pNightscoutGlucoseType
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateInsulinDoseToTreatment(source *site.InsulinDose, target *Treatment) {
+	if source != nil {
+		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Dose)
+		target.Insulin = &pNightscoutFlexibleFloat64
+		if source.SplitNow != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*source.SplitNow)
+			target.SplitNow = &nightscoutFlexibleFloat64
+		}
+		if source.SplitExt != nil {
+			nightscoutFlexibleFloat642 := FlexibleFloat64(*source.SplitExt)
+			target.SplitExt = &nightscoutFlexibleFloat642
+		}
+		if source.DoseType != nil {
+			nightscoutShortString := ShortString(*source.DoseType)
+			target.Type = &nightscoutShortString
+		}
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString2 := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString2
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateNotificationEventToTreatment(source *site.NotificationEvent, target *Treatment) {
+	if source != nil {
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatment) {
+	if source != nil {
+		pNightscoutShortString := ShortString(source.Name)
+		target.Name = &pNightscoutShortString
+		pNightscoutFlexibleInt64 := FlexibleInt64(source.DurationMinutes)
+		target.DurationMinutes = &pNightscoutFlexibleInt64
+		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		pNightscoutShortString2 := ShortString(source.Name)
+		target.Profile = &pNightscoutShortString2
+		target.ProfileJSON = ToProfileJSON(source)
+		if source.Percent != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*source.Percent)
+			target.Percent = &nightscoutFlexibleFloat64
+		}
+		if source.Timeshift != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.Timeshift)
+			target.Timeshift = &nightscoutFlexibleInt64
+		}
+		if source.Units != nil {
+			nightscoutUnits := Units(*source.Units)
+			target.Units = &nightscoutUnits
+		}
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt642 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt642
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateTempBasalToTreatment(source *site.TempBasal, target *Treatment) {
+	if source != nil {
+		pNightscoutFlexibleInt64 := FlexibleInt64(source.DurationMinutes)
+		target.DurationMinutes = &pNightscoutFlexibleInt64
+		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		if source.Percent != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*source.Percent)
+			target.Percent = &nightscoutFlexibleFloat64
+		}
+		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Absolute)
+		target.Rate = &pNightscoutFlexibleFloat64
+		pNightscoutFlexibleFloat642 := FlexibleFloat64(source.Absolute)
+		target.Absolute = &pNightscoutFlexibleFloat642
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
+}
+func UpdateTempTargetToTreatment(source *site.TempTarget, target *Treatment) {
+	if source != nil {
+		pNightscoutFlexibleInt64 := FlexibleInt64(source.DurationMinutes)
+		target.DurationMinutes = &pNightscoutFlexibleInt64
+		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
+		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.HighTarget)
+		target.HighTarget = &pNightscoutFlexibleFloat64
+		pNightscoutFlexibleFloat642 := FlexibleFloat64(source.LowTarget)
+		target.LowTarget = &pNightscoutFlexibleFloat642
+		if source.Notes != nil {
+			nightscoutSanitizedString := SanitizedString(*source.Notes)
+			target.Notes = &nightscoutSanitizedString
+		}
+		if source.Reason != nil {
+			nightscoutShortString := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString
+		}
+		if source.UtcOffsetMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		}
+		if source.RawJsonData != nil {
+			target.RawJsonData = *source.RawJsonData
+		}
+	}
 }
 func UpdateToActivity(source *site.Activity, target *site.Activity) {
 	if source != nil {

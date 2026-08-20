@@ -21,7 +21,7 @@ type TreatmentCollection struct {
 
 func NewTreatmentCollection() TreatmentCollection {
 	return TreatmentCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Treatments, nightscout.DBModelToTreatment),
+		converter: nsutils.DBModelToRecord(nsutils.Treatments, DBModelToTreatment),
 	}
 }
 
@@ -242,7 +242,12 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 // Private Methods
 // ///////////////////////
 
-// createUpdateEventGroup goes through an EventGroupsBundle if the EventGroup has an ID it will update, if not it will attempt to create
+// createUpdateEventGroup takes an event bundle and tries to sync it to the DB
+// 1. Delete if the EventGroup has an model ID but no model
+// 2. Create if the EventGroup has no ID but has a model
+// 3. Update if the EventGroup has an ID and a model
+//
+// TODO: This means events are always updated, we should selectivly update.
 func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.EventGroupsBundle, cc nightscout.ConverterContext) error {
 
 	// GlucoseReading
@@ -622,6 +627,7 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
 
+// Converts an incomming treatment to EventGroups
 func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) site.EventGroupsBundle {
 	eventGroup := nightscout.TreatmentToEventGroup(treatment)
 
@@ -794,6 +800,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	return site.EventGroupsBundle{EventGroup: eventGroup}
 }
 
+// Merge a DB Event Group with one created from the
 func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventGroupsBundle) {
 	nightscout.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
 
@@ -1075,4 +1082,20 @@ func isAssigned(values ...any) bool {
 	}
 
 	return false
+}
+
+func DBModelToTreatment(source *site.EventGroupsBundle) nightscout.Treatment {
+	treatment := nightscout.EventGroupToTreatment(source.EventGroup)
+
+	nightscout.UpdateGlucoseReadingToTreatment(source.GlucoseReading, treatment)
+	nightscout.UpdateInsulinDoseToTreatment(source.InsulinDose, treatment)
+	nightscout.UpdateFoodIntakeToTreatment(source.FoodIntake, treatment)
+	nightscout.UpdateTempBasalToTreatment(source.TempBasal, treatment)
+	nightscout.UpdateTempTargetToTreatment(source.TempTarget, treatment)
+	nightscout.UpdateProfileSwitchToTreatment(source.ProfileSwitch, treatment)
+	nightscout.UpdateComponentEventToTreatment(source.ComponentEvent, treatment)
+	nightscout.UpdateActivityToTreatment(source.Activity, treatment)
+	nightscout.UpdateNotificationEventToTreatment(source.NotificationEvent, treatment)
+
+	return *treatment
 }
