@@ -160,7 +160,7 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 	if source.LoopSettings != nil {
 		loopSettingsJSON = TryValueToJSON(source.LoopSettings)
 	}
-
+	defaultUnits := source.Units.Stringp()
 	for name, profile := range source.Store {
 		createParam := nightscout.PartialProfileStoreToCreate(source, ctx)
 		createParam.ProfileStoreID = profileStoreID
@@ -168,12 +168,14 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 		createParam.Name = string(name)
 		createParam.IsDefault = source.DefaultProfile != nil && *source.DefaultProfile == name
 
-		if profile.Dia != nil {
-			createParam.Dia = ptr(profile.Dia.Float64())
-		}
-
-		createParam.Units = profile.Units.Stringp()
+		createParam.Dia = profile.Dia.Float64p()
 		createParam.Timezone = profile.Timezone.Stringp()
+
+		if profile.Units != nil {
+			createParam.Units = profile.Units.Stringp()
+		} else {
+			createParam.Units = defaultUnits
+		}
 
 		if len(profile.CarbRatio) > 0 {
 			createParam.CarbRatiosJson = TryValueToJSON(profile.CarbRatio)
