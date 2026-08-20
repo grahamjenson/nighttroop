@@ -73,37 +73,49 @@ func FoodToUpdate(source Food, context ConverterContext) site.UpdateFoodPresetPa
 		xstring := ShortStringToString(*source.Name)
 		siteUpdateFoodPresetParams.Name = &xstring
 	}
+	if source.FoodType != nil {
+		xstring2 := ShortStringToString(*source.FoodType)
+		siteUpdateFoodPresetParams.FoodType = &xstring2
+	}
 	if source.Category != nil {
-		xstring2 := ShortStringToString(*source.Category)
-		siteUpdateFoodPresetParams.Category = &xstring2
+		xstring3 := ShortStringToString(*source.Category)
+		siteUpdateFoodPresetParams.Category = &xstring3
 	}
 	if source.Subcategory != nil {
-		xstring3 := ShortStringToString(*source.Subcategory)
-		siteUpdateFoodPresetParams.Subcategory = &xstring3
+		xstring4 := ShortStringToString(*source.Subcategory)
+		siteUpdateFoodPresetParams.Subcategory = &xstring4
+	}
+	if source.AbsorptionTimeMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.AbsorptionTimeMinutes)
+		siteUpdateFoodPresetParams.AbsorptionTimeMinutes = &xint64
+	}
+	if source.PreBolus != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.PreBolus)
+		siteUpdateFoodPresetParams.PreBolus = &xfloat64
 	}
 	if source.Portions != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Portions)
-		siteUpdateFoodPresetParams.Portions = &xfloat64
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Portions)
+		siteUpdateFoodPresetParams.Portions = &xfloat642
 	}
 	if source.Carbs != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteUpdateFoodPresetParams.Carbs = &xfloat642
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Carbs)
+		siteUpdateFoodPresetParams.Carbs = &xfloat643
 	}
 	if source.Fat != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteUpdateFoodPresetParams.Fat = &xfloat643
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fat)
+		siteUpdateFoodPresetParams.Fat = &xfloat644
 	}
 	if source.Protein != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteUpdateFoodPresetParams.Protein = &xfloat644
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Protein)
+		siteUpdateFoodPresetParams.Protein = &xfloat645
 	}
 	if source.Fibre != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteUpdateFoodPresetParams.Fibre = &xfloat645
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Fibre)
+		siteUpdateFoodPresetParams.Fibre = &xfloat646
 	}
 	if source.Energy != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteUpdateFoodPresetParams.Energy = &xfloat646
+		xfloat647 := FlexibleFloat64ToFloat64(*source.Energy)
+		siteUpdateFoodPresetParams.Energy = &xfloat647
 	}
 	pString := source.RawJsonData
 	siteUpdateFoodPresetParams.RawJsonData = &pString

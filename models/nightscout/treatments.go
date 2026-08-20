@@ -17,23 +17,27 @@ type Treatment struct {
 
 	Name *ShortString `json:"name,omitempty"` // Name of the activity
 
-	// GlucoseReading
+	// Glucose
 	Glucose     *FlexibleFloat64 `json:"glucose,omitempty"`
 	GlucoseType *GlucoseType     `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
 
-	// Food
-	Type        *ShortString `json:"type,omitempty"` // Type of food
-	Category    *ShortString `json:"category,omitempty"`
-	Subcategory *ShortString `json:"subcategory,omitempty"`
+	Type *ShortString `json:"type,omitempty"`
 
-	Carbs    *FlexibleFloat64 `json:"carbs,omitempty"`
-	Insulin  *FlexibleFloat64 `json:"insulin,omitempty"`
-	Protein  *FlexibleFloat64 `json:"protein,omitempty"`
-	Fat      *FlexibleFloat64 `json:"fat,omitempty"`
+	// Nutrition
+	Carbs                 *FlexibleFloat64 `json:"carbs,omitempty"`
+	Protein               *FlexibleFloat64 `json:"protein,omitempty"`
+	Fat                   *FlexibleFloat64 `json:"fat,omitempty"`
+	FoodType              *ShortString     `json:"foodType,omitempty"` // Type of food
+	AbsorptionTimeMinutes *FlexibleInt64   `json:"absorptionTime,omitempty"`
+	Category              *ShortString     `json:"category,omitempty"`
+	Subcategory           *ShortString     `json:"subcategory,omitempty"`
+	PreBolus              *FlexibleFloat64 `json:"preBolus,omitempty"`
+	// additional
 	Fibre    *FlexibleFloat64 `json:"fibre,omitempty"`
 	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
-	PreBolus *FlexibleFloat64 `json:"preBolus,omitempty"`
 	Portions *FlexibleFloat64 `json:"portions,omitempty"`
+
+	Insulin *FlexibleFloat64 `json:"insulin,omitempty"`
 
 	// Exercise
 	ActivityType *ShortString   `json:"activityType,omitempty"` // Type of activity

@@ -145,8 +145,11 @@ type EventGroup struct {
 type FoodIntake struct {
 	ID                    string
 	Name                  *string
+	FoodType              *string
 	Category              *string
 	Subcategory           *string
+	AbsorptionTimeMinutes *int64
+	PreBolus              *float64
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
@@ -170,8 +173,11 @@ type FoodIntake struct {
 type FoodIntakesVw struct {
 	ID                    *string
 	Name                  *string
+	FoodType              *string
 	Category              *string
 	Subcategory           *string
+	AbsorptionTimeMinutes *int64
+	PreBolus              *float64
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64
@@ -195,8 +201,11 @@ type FoodIntakesVw struct {
 type FoodPreset struct {
 	ID                    string
 	Name                  string
+	FoodType              *string
 	Category              *string
 	Subcategory           *string
+	AbsorptionTimeMinutes *int64
+	PreBolus              *float64
 	Carbs                 *float64
 	Fat                   *float64
 	Protein               *float64

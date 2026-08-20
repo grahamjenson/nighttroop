@@ -862,6 +862,16 @@ func (m *FoodIntake) SetName(v *string) {
 	m.Name = v
 }
 
+// GetFoodType returns the FoodType value.
+func (m FoodIntake) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated FoodIntake.
+func (m *FoodIntake) SetFoodType(v *string) {
+	m.FoodType = v
+}
+
 // GetCategory returns the Category value.
 func (m FoodIntake) GetCategory() *string {
 	return m.Category
@@ -880,6 +890,26 @@ func (m FoodIntake) GetSubcategory() *string {
 // SetSubcategory sets the Subcategory value and returns the updated FoodIntake.
 func (m *FoodIntake) SetSubcategory(v *string) {
 	m.Subcategory = v
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m FoodIntake) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated FoodIntake.
+func (m *FoodIntake) SetAbsorptionTimeMinutes(v *int64) {
+	m.AbsorptionTimeMinutes = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m FoodIntake) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated FoodIntake.
+func (m *FoodIntake) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetCarbs returns the Carbs value.
@@ -1082,6 +1112,16 @@ func (m *FoodPreset) SetName(v string) {
 	m.Name = v
 }
 
+// GetFoodType returns the FoodType value.
+func (m FoodPreset) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated FoodPreset.
+func (m *FoodPreset) SetFoodType(v *string) {
+	m.FoodType = v
+}
+
 // GetCategory returns the Category value.
 func (m FoodPreset) GetCategory() *string {
 	return m.Category
@@ -1100,6 +1140,26 @@ func (m FoodPreset) GetSubcategory() *string {
 // SetSubcategory sets the Subcategory value and returns the updated FoodPreset.
 func (m *FoodPreset) SetSubcategory(v *string) {
 	m.Subcategory = v
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m FoodPreset) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated FoodPreset.
+func (m *FoodPreset) SetAbsorptionTimeMinutes(v *int64) {
+	m.AbsorptionTimeMinutes = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m FoodPreset) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated FoodPreset.
+func (m *FoodPreset) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetCarbs returns the Carbs value.
@@ -2932,6 +2992,16 @@ func (m *FoodIntakesVw) SetName(v *string) {
 	m.Name = v
 }
 
+// GetFoodType returns the FoodType value.
+func (m FoodIntakesVw) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetFoodType(v *string) {
+	m.FoodType = v
+}
+
 // GetCategory returns the Category value.
 func (m FoodIntakesVw) GetCategory() *string {
 	return m.Category
@@ -2950,6 +3020,26 @@ func (m FoodIntakesVw) GetSubcategory() *string {
 // SetSubcategory sets the Subcategory value and returns the updated FoodIntakesVw.
 func (m *FoodIntakesVw) SetSubcategory(v *string) {
 	m.Subcategory = v
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m FoodIntakesVw) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetAbsorptionTimeMinutes(v *int64) {
+	m.AbsorptionTimeMinutes = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m FoodIntakesVw) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetCarbs returns the Carbs value.
@@ -6036,6 +6126,17 @@ func (m CreateFoodIntakeParams) SetName(v *string) CreateFoodIntakeParams {
 	return m
 }
 
+// GetFoodType returns the FoodType value.
+func (m CreateFoodIntakeParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetFoodType(v *string) CreateFoodIntakeParams {
+	m.FoodType = v
+	return m
+}
+
 // GetCategory returns the Category value.
 func (m CreateFoodIntakeParams) GetCategory() *string {
 	return m.Category
@@ -6055,6 +6156,28 @@ func (m CreateFoodIntakeParams) GetSubcategory() *string {
 // SetSubcategory sets the Subcategory value and returns the updated CreateFoodIntakeParams.
 func (m CreateFoodIntakeParams) SetSubcategory(v *string) CreateFoodIntakeParams {
 	m.Subcategory = v
+	return m
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m CreateFoodIntakeParams) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) CreateFoodIntakeParams {
+	m.AbsorptionTimeMinutes = v
+	return m
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m CreateFoodIntakeParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated CreateFoodIntakeParams.
+func (m CreateFoodIntakeParams) SetPreBolus(v *float64) CreateFoodIntakeParams {
+	m.PreBolus = v
 	return m
 }
 
@@ -6586,6 +6709,17 @@ func (m UpdateFoodIntakeParams) SetName(v *string) UpdateFoodIntakeParams {
 	return m
 }
 
+// GetFoodType returns the FoodType value.
+func (m UpdateFoodIntakeParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetFoodType(v *string) UpdateFoodIntakeParams {
+	m.FoodType = v
+	return m
+}
+
 // GetCategory returns the Category value.
 func (m UpdateFoodIntakeParams) GetCategory() *string {
 	return m.Category
@@ -6660,6 +6794,28 @@ func (m UpdateFoodIntakeParams) GetEnergy() *float64 {
 // SetEnergy sets the Energy value and returns the updated UpdateFoodIntakeParams.
 func (m UpdateFoodIntakeParams) SetEnergy(v *float64) UpdateFoodIntakeParams {
 	m.Energy = v
+	return m
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m UpdateFoodIntakeParams) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) UpdateFoodIntakeParams {
+	m.AbsorptionTimeMinutes = v
+	return m
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m UpdateFoodIntakeParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated UpdateFoodIntakeParams.
+func (m UpdateFoodIntakeParams) SetPreBolus(v *float64) UpdateFoodIntakeParams {
+	m.PreBolus = v
 	return m
 }
 
@@ -6773,25 +6929,25 @@ func (m SoftDeleteFoodIntakesByTypeParams) SetUpdatedByIdentityName(v *string) S
 	return m
 }
 
-// GetCategory returns the Category value.
-func (m SoftDeleteFoodIntakesByTypeParams) GetCategory() *string {
-	return m.Category
+// GetFoodType returns the FoodType value.
+func (m SoftDeleteFoodIntakesByTypeParams) GetFoodType() *string {
+	return m.FoodType
 }
 
-// SetCategory sets the Category value and returns the updated SoftDeleteFoodIntakesByTypeParams.
-func (m SoftDeleteFoodIntakesByTypeParams) SetCategory(v *string) SoftDeleteFoodIntakesByTypeParams {
-	m.Category = v
+// SetFoodType sets the FoodType value and returns the updated SoftDeleteFoodIntakesByTypeParams.
+func (m SoftDeleteFoodIntakesByTypeParams) SetFoodType(v *string) SoftDeleteFoodIntakesByTypeParams {
+	m.FoodType = v
 	return m
 }
 
-// GetCategory returns the Category value.
-func (m HardDeleteFoodIntakesByTypeParams) GetCategory() *string {
-	return m.Category
+// GetFoodType returns the FoodType value.
+func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() *string {
+	return m.FoodType
 }
 
-// SetCategory sets the Category value and returns the updated HardDeleteFoodIntakesByTypeParams.
-func (m HardDeleteFoodIntakesByTypeParams) SetCategory(v *string) HardDeleteFoodIntakesByTypeParams {
-	m.Category = v
+// SetFoodType sets the FoodType value and returns the updated HardDeleteFoodIntakesByTypeParams.
+func (m HardDeleteFoodIntakesByTypeParams) SetFoodType(v *string) HardDeleteFoodIntakesByTypeParams {
+	m.FoodType = v
 	return m
 }
 
@@ -11371,6 +11527,17 @@ func (m CreateFoodPresetParams) SetName(v string) CreateFoodPresetParams {
 	return m
 }
 
+// GetFoodType returns the FoodType value.
+func (m CreateFoodPresetParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetFoodType(v *string) CreateFoodPresetParams {
+	m.FoodType = v
+	return m
+}
+
 // GetCategory returns the Category value.
 func (m CreateFoodPresetParams) GetCategory() *string {
 	return m.Category
@@ -11390,6 +11557,28 @@ func (m CreateFoodPresetParams) GetSubcategory() *string {
 // SetSubcategory sets the Subcategory value and returns the updated CreateFoodPresetParams.
 func (m CreateFoodPresetParams) SetSubcategory(v *string) CreateFoodPresetParams {
 	m.Subcategory = v
+	return m
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m CreateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) CreateFoodPresetParams {
+	m.AbsorptionTimeMinutes = v
+	return m
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m CreateFoodPresetParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated CreateFoodPresetParams.
+func (m CreateFoodPresetParams) SetPreBolus(v *float64) CreateFoodPresetParams {
+	m.PreBolus = v
 	return m
 }
 
@@ -11855,6 +12044,17 @@ func (m UpdateFoodPresetParams) SetName(v *string) UpdateFoodPresetParams {
 	return m
 }
 
+// GetFoodType returns the FoodType value.
+func (m UpdateFoodPresetParams) GetFoodType() *string {
+	return m.FoodType
+}
+
+// SetFoodType sets the FoodType value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetFoodType(v *string) UpdateFoodPresetParams {
+	m.FoodType = v
+	return m
+}
+
 // GetCategory returns the Category value.
 func (m UpdateFoodPresetParams) GetCategory() *string {
 	return m.Category
@@ -11874,6 +12074,28 @@ func (m UpdateFoodPresetParams) GetSubcategory() *string {
 // SetSubcategory sets the Subcategory value and returns the updated UpdateFoodPresetParams.
 func (m UpdateFoodPresetParams) SetSubcategory(v *string) UpdateFoodPresetParams {
 	m.Subcategory = v
+	return m
+}
+
+// GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
+func (m UpdateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
+	return m.AbsorptionTimeMinutes
+}
+
+// SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) UpdateFoodPresetParams {
+	m.AbsorptionTimeMinutes = v
+	return m
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m UpdateFoodPresetParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated UpdateFoodPresetParams.
+func (m UpdateFoodPresetParams) SetPreBolus(v *float64) UpdateFoodPresetParams {
+	m.PreBolus = v
 	return m
 }
 
@@ -11987,14 +12209,14 @@ func (m HardDeleteFoodPresetParams) SetID(v string) HardDeleteFoodPresetParams {
 	return m
 }
 
-// GetCategory returns the Category value.
-func (m HardDeleteFoodPresetsByTypeParams) GetCategory() *string {
-	return m.Category
+// GetFoodType returns the FoodType value.
+func (m HardDeleteFoodPresetsByTypeParams) GetFoodType() *string {
+	return m.FoodType
 }
 
-// SetCategory sets the Category value and returns the updated HardDeleteFoodPresetsByTypeParams.
-func (m HardDeleteFoodPresetsByTypeParams) SetCategory(v *string) HardDeleteFoodPresetsByTypeParams {
-	m.Category = v
+// SetFoodType sets the FoodType value and returns the updated HardDeleteFoodPresetsByTypeParams.
+func (m HardDeleteFoodPresetsByTypeParams) SetFoodType(v *string) HardDeleteFoodPresetsByTypeParams {
+	m.FoodType = v
 	return m
 }
 

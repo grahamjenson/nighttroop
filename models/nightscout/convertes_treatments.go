@@ -191,7 +191,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map EventGroup.Reason Reason
 	// goverter:map EventGroup.GroupType EventType
 	//
-	// goverter:ignore PreBolus SplitNow SplitExt Timeshift OriginalProfileName
+	// goverter:ignore SplitNow SplitExt Timeshift OriginalProfileName
 	//
 	//
 	// goverter:map GlucoseReading.Reading Glucose
@@ -200,6 +200,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map InsulinDose.Dose Insulin
 	// goverter:map InsulinDose.DoseType Type
 	//
+	// goverter:map FoodIntake.FoodType FoodType
+	// goverter:map FoodIntake.AbsorptionTimeMinutes AbsorptionTimeMinutes
+	// goverter:map FoodIntake.PreBolus PreBolus
 	// goverter:map FoodIntake.Category Category
 	// goverter:map FoodIntake.Subcategory Subcategory
 	// goverter:map FoodIntake.Portions Portions
@@ -305,6 +308,16 @@ func TreatmentToFoodIntake(source Treatment) *site.FoodIntake {
 
 	if source.Name != nil {
 		target.Name = source.Name.Stringp()
+	}
+	if source.FoodType != nil {
+		assigned = true
+		target.FoodType = source.FoodType.Stringp()
+	}
+	if source.AbsorptionTimeMinutes != nil {
+		target.AbsorptionTimeMinutes = source.AbsorptionTimeMinutes.Int64p()
+	}
+	if source.PreBolus != nil {
+		target.PreBolus = source.PreBolus.Float64p()
 	}
 	if source.Category != nil {
 		target.Category = source.Category.Stringp()

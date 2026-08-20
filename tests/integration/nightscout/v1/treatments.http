@@ -468,3 +468,43 @@ GET http://{{ .site }}/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
 
+
+NAME create_full_carb_correction_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Carb Correction",
+  "created_at": "{{ time 0 }}",
+
+  "foodType": "Pizza",
+  "category": "Fast Food",
+  "subcategory": "Italian",
+
+  "carbs": 45,
+  "preBolus": 10,
+  "absorptionTime": 120,
+
+  "protein": 20,
+  "fat": 10,
+  "fibre": 5,
+  "energy": 300,
+  "portions": 2,
+
+  "notes": "Pizza is nice",
+  "reason": "lunch"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "Carb Correction" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
+ASSERT {{ assertEquals "Fast Food" "@0.category" }}
+ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
+ASSERT {{ assertEquals 45 "@0.carbs" }}
+ASSERT {{ assertEquals 10 "@0.preBolus" }}
+ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
+ASSERT {{ assertEquals 20 "@0.protein" }}
+ASSERT {{ assertEquals 10 "@0.fat" }}
+ASSERT {{ assertEquals 5 "@0.fibre" }}
+ASSERT {{ assertEquals 300 "@0.energy" }}
+ASSERT {{ assertEquals 2 "@0.portions" }}
+ASSERT {{ assertEquals "Pizza is nice" "@0.notes" }}
+ASSERT {{ assertEquals "lunch" "@0.reason" }}

@@ -158,45 +158,57 @@ func DBModelToFood(source *site.FoodPreset) Food {
 		nightscoutFood.Identifier = &pNightscoutIdentifierString
 		pNightscoutShortString := ShortString((*source).Name)
 		nightscoutFood.Name = &pNightscoutShortString
+		if (*source).FoodType != nil {
+			nightscoutShortString := ShortString(*(*source).FoodType)
+			nightscoutFood.FoodType = &nightscoutShortString
+		}
 		if (*source).Category != nil {
-			nightscoutShortString := ShortString(*(*source).Category)
-			nightscoutFood.Category = &nightscoutShortString
+			nightscoutShortString2 := ShortString(*(*source).Category)
+			nightscoutFood.Category = &nightscoutShortString2
 		}
 		if (*source).Subcategory != nil {
-			nightscoutShortString2 := ShortString(*(*source).Subcategory)
-			nightscoutFood.Subcategory = &nightscoutShortString2
+			nightscoutShortString3 := ShortString(*(*source).Subcategory)
+			nightscoutFood.Subcategory = &nightscoutShortString3
+		}
+		if (*source).AbsorptionTimeMinutes != nil {
+			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).AbsorptionTimeMinutes)
+			nightscoutFood.AbsorptionTimeMinutes = &nightscoutFlexibleInt64
+		}
+		if (*source).PreBolus != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).PreBolus)
+			nightscoutFood.PreBolus = &nightscoutFlexibleFloat64
 		}
 		if (*source).Carbs != nil {
-			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Carbs)
-			nightscoutFood.Carbs = &nightscoutFlexibleFloat64
+			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).Carbs)
+			nightscoutFood.Carbs = &nightscoutFlexibleFloat642
 		}
 		if (*source).Fat != nil {
-			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).Fat)
-			nightscoutFood.Fat = &nightscoutFlexibleFloat642
+			nightscoutFlexibleFloat643 := FlexibleFloat64(*(*source).Fat)
+			nightscoutFood.Fat = &nightscoutFlexibleFloat643
 		}
 		if (*source).Protein != nil {
-			nightscoutFlexibleFloat643 := FlexibleFloat64(*(*source).Protein)
-			nightscoutFood.Protein = &nightscoutFlexibleFloat643
+			nightscoutFlexibleFloat644 := FlexibleFloat64(*(*source).Protein)
+			nightscoutFood.Protein = &nightscoutFlexibleFloat644
 		}
 		if (*source).Fibre != nil {
-			nightscoutFlexibleFloat644 := FlexibleFloat64(*(*source).Fibre)
-			nightscoutFood.Fibre = &nightscoutFlexibleFloat644
+			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).Fibre)
+			nightscoutFood.Fibre = &nightscoutFlexibleFloat645
 		}
 		if (*source).Energy != nil {
-			nightscoutFlexibleFloat645 := FlexibleFloat64(*(*source).Energy)
-			nightscoutFood.Energy = &nightscoutFlexibleFloat645
+			nightscoutFlexibleFloat646 := FlexibleFloat64(*(*source).Energy)
+			nightscoutFood.Energy = &nightscoutFlexibleFloat646
 		}
 		if (*source).Portions != nil {
-			nightscoutFlexibleFloat646 := FlexibleFloat64(*(*source).Portions)
-			nightscoutFood.Portions = &nightscoutFlexibleFloat646
+			nightscoutFlexibleFloat647 := FlexibleFloat64(*(*source).Portions)
+			nightscoutFood.Portions = &nightscoutFlexibleFloat647
 		}
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutShortString3 := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutFood.Device = &nightscoutShortString3
+			nightscoutShortString4 := ShortString(*(*source).CreatedByDeviceName)
+			nightscoutFood.Device = &nightscoutShortString4
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutShortString4 := ShortString(*(*source).CreatedByAppName)
-			nightscoutFood.App = &nightscoutShortString4
+			nightscoutShortString5 := ShortString(*(*source).CreatedByAppName)
+			nightscoutFood.App = &nightscoutShortString5
 		}
 		pNightscoutShortString2 := ShortString((*source).CreatedByIdentityName)
 		nightscoutFood.Subject = &pNightscoutShortString2

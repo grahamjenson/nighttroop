@@ -132,8 +132,12 @@ CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT CHECK(length(name) <= 64), -- this could be a reference to a preset
 
+    food_type TEXT CHECK(length(food_type) <= 32), -- Type of food
     category TEXT CHECK(length(category) <= 64),
     subcategory TEXT CHECK(length(subcategory) <= 64),
+
+    absorption_time_minutes INTEGER,
+    pre_bolus REAL,
 
     carbs REAL,
     fat REAL,
@@ -162,9 +166,13 @@ CREATE TABLE food_intakes (
 CREATE TABLE food_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL CHECK(length(name) <= 64),
-    
+
+    food_type TEXT CHECK(length(food_type) <= 32),     
     category TEXT CHECK(length(category) <= 64),
     subcategory TEXT CHECK(length(subcategory) <= 64),
+
+    absorption_time_minutes INTEGER,
+    pre_bolus REAL,
 
     carbs REAL,
     fat REAL,

@@ -74,12 +74,12 @@ func (c FoodCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, i
 }
 
 func (c FoodCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
-	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{Category: &typeOF})
+	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
 }
 
 // SoftDeleteDBFunc Only Hard Deletes For Presets
 func (c FoodCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
-	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{Category: &typeOF})
+	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
 }
 
 func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, identifier string, dbModel *site.FoodPreset, uc nightscout.ConverterContext) (*site.FoodPreset, error) {

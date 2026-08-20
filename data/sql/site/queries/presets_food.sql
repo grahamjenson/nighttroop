@@ -5,9 +5,13 @@
 INSERT INTO food_presets (
     id,
     name,
+    food_type,
     category,
     subcategory,
 
+    
+    absorption_time_minutes,
+    pre_bolus,
     portions,
     carbs,
     fat,
@@ -20,7 +24,7 @@ INSERT INTO food_presets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -62,10 +66,10 @@ WHERE
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
     
-    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR category = sqlc.narg('TypeEq'))
-    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR category != sqlc.narg('TypeNeq'))
-    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR category IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
-    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR category NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
+    AND (CAST(sqlc.narg('TypeEq') AS TEXT) IS NULL OR food_type = sqlc.narg('TypeEq'))
+    AND (CAST(sqlc.narg('TypeNeq') AS TEXT) IS NULL OR food_type != sqlc.narg('TypeNeq'))
+    AND (CAST(sqlc.narg('TypeIn') AS TEXT) IS NULL OR food_type IN (SELECT value FROM json_each(sqlc.narg('TypeIn'))))
+    AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR food_type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
 
     AND (CAST(sqlc.narg('CarbsEQ') AS INTEGER) IS NULL OR carbs = sqlc.narg('CarbsEQ'))
     AND (CAST(sqlc.narg('CarbsGTE') AS INTEGER) IS NULL OR carbs >= sqlc.narg('CarbsGTE'))
@@ -82,9 +86,12 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: UpdateFoodPreset :one
 UPDATE food_presets SET
     name = COALESCE(sqlc.narg('Name'), name),
+    food_type = COALESCE(sqlc.narg('FoodType'), food_type),
     category = COALESCE(sqlc.narg('Category'), category),
     subcategory = COALESCE(sqlc.narg('Subcategory'), subcategory),
 
+    absorption_time_minutes = COALESCE(sqlc.narg('AbsorptionTimeMinutes'), absorption_time_minutes),
+    pre_bolus = COALESCE(sqlc.narg('PreBolus'), pre_bolus),
     portions = COALESCE(sqlc.narg('Portions'), portions),
     carbs = COALESCE(sqlc.narg('Carbs'), carbs),
     fat = COALESCE(sqlc.narg('Fat'), fat),
@@ -110,4 +117,4 @@ RETURNING *;
 DELETE FROM food_presets WHERE id = ?;
 
 -- name: HardDeleteFoodPresetsByType :execresult
-DELETE FROM food_presets WHERE category = ?;
+DELETE FROM food_presets WHERE food_type = ?;

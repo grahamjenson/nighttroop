@@ -133,47 +133,59 @@ func FoodToCreate(source Food, context ConverterContext) site.CreateFoodPresetPa
 	if source.Name != nil {
 		siteCreateFoodPresetParams.Name = ShortStringToString(*source.Name)
 	}
+	if source.FoodType != nil {
+		xstring := ShortStringToString(*source.FoodType)
+		siteCreateFoodPresetParams.FoodType = &xstring
+	}
 	if source.Category != nil {
-		xstring := ShortStringToString(*source.Category)
-		siteCreateFoodPresetParams.Category = &xstring
+		xstring2 := ShortStringToString(*source.Category)
+		siteCreateFoodPresetParams.Category = &xstring2
 	}
 	if source.Subcategory != nil {
-		xstring2 := ShortStringToString(*source.Subcategory)
-		siteCreateFoodPresetParams.Subcategory = &xstring2
+		xstring3 := ShortStringToString(*source.Subcategory)
+		siteCreateFoodPresetParams.Subcategory = &xstring3
+	}
+	if source.AbsorptionTimeMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.AbsorptionTimeMinutes)
+		siteCreateFoodPresetParams.AbsorptionTimeMinutes = &xint64
+	}
+	if source.PreBolus != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.PreBolus)
+		siteCreateFoodPresetParams.PreBolus = &xfloat64
 	}
 	if source.Portions != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Portions)
-		siteCreateFoodPresetParams.Portions = &xfloat64
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Portions)
+		siteCreateFoodPresetParams.Portions = &xfloat642
 	}
 	if source.Carbs != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteCreateFoodPresetParams.Carbs = &xfloat642
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Carbs)
+		siteCreateFoodPresetParams.Carbs = &xfloat643
 	}
 	if source.Fat != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteCreateFoodPresetParams.Fat = &xfloat643
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fat)
+		siteCreateFoodPresetParams.Fat = &xfloat644
 	}
 	if source.Protein != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteCreateFoodPresetParams.Protein = &xfloat644
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Protein)
+		siteCreateFoodPresetParams.Protein = &xfloat645
 	}
 	if source.Fibre != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteCreateFoodPresetParams.Fibre = &xfloat645
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Fibre)
+		siteCreateFoodPresetParams.Fibre = &xfloat646
 	}
 	if source.Energy != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteCreateFoodPresetParams.Energy = &xfloat646
+		xfloat647 := FlexibleFloat64ToFloat64(*source.Energy)
+		siteCreateFoodPresetParams.Energy = &xfloat647
 	}
 	pString := source.RawJsonData
 	siteCreateFoodPresetParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring3 := ShortStringToString(*source.App)
-		siteCreateFoodPresetParams.CreatedByAppName = &xstring3
+		xstring4 := ShortStringToString(*source.App)
+		siteCreateFoodPresetParams.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
-		xstring4 := ShortStringToString(*source.Device)
-		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring4
+		xstring5 := ShortStringToString(*source.Device)
+		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring5
 	}
 	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateFoodPresetParams
