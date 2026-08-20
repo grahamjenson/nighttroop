@@ -2,6 +2,18 @@
 
 This document describes the setup needed to develop Nighttroop.
 
+# Generated Code
+
+This project uses generated code extensively, at the root if you run `go generate  ./...` it will generate all the code.
+
+If a file has a prefix `z_<file>` or suffix `.gen.go` the code is generated and should not be altered.
+
+The primary generators are:
+
+1. SQLc which
+2. goverter
+3. go migrate
+4. custom scripts like `getters` which live in `gen` folders
 
 # Submitting changes
 

@@ -1,6 +1,6 @@
 # $0.01 Per-User Per-Year: NightTroop
 
-Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL to, and my wife, our school and me can see on devices like phones, watches and smart devices. We also are able to upload information to Nightscout that controls his insulin pump, like carbs he has eaten, or target BGLs for exercise or eating. It is an integral part of how we manage T1D. 
+Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL to that my wife, our school and me can download and see on devices like phones, watches and smart devices. We also are able to upload information to Nightscout that controls his insulin pump, like carbs he has eaten, or target BGLs for exercise or eating. It is an integral part of how we manage T1D. 
 
 Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout for you. These are useful, but can cost as much as $12 per month. 
 
