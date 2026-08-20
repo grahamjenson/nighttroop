@@ -85,13 +85,17 @@ func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseRea
 		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Reading)
 	}
 	siteCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
+	if source.Units != nil {
+		xstring := string(*source.Units)
+		siteCreateGlucoseReadingParams.Units = &xstring
+	}
 	if source.Trend != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Trend)
 		siteCreateGlucoseReadingParams.Delta = &xfloat64
 	}
 	if source.Direction != nil {
-		xstring := *source.Direction
-		siteCreateGlucoseReadingParams.Direction = &xstring
+		xstring2 := *source.Direction
+		siteCreateGlucoseReadingParams.Direction = &xstring2
 	}
 	if source.Noise != nil {
 		xfloat642 := FlexibleFloat64ToFloat64(*source.Noise)
@@ -117,12 +121,12 @@ func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseRea
 	pString := source.RawJsonData
 	siteCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring2 := ShortStringToString(*source.App)
-		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring2
+		xstring3 := ShortStringToString(*source.App)
+		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring3
 	}
 	if source.Device != nil {
-		xstring3 := ShortStringToString(*source.Device)
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
+		xstring4 := ShortStringToString(*source.Device)
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring4
 	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams

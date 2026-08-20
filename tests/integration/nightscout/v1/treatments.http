@@ -20,6 +20,7 @@ B {
 
   "glucose": 148,
   "glucoseType": "Sensor",
+  "units": "mg/dL",
 
   "carbs": 45,
   "insulin": 4.2,
@@ -31,7 +32,8 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
-ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT {{ assertEquals "mg/dL" "@0.units" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
@@ -423,7 +425,7 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
-ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
@@ -436,7 +438,7 @@ GET http://{{ .site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
-ASSERT {{ assertEquals "sgv" "@0.glucoseType" }}
+ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 
 NAME put_update_treatments_v1
 PUT http://{{ .site }}/api/v1/treatments?token={{ token }}
@@ -468,6 +470,10 @@ GET http://{{ .site }}/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
 
+
+////////
+// FULL TESTS
+////////
 
 NAME create_full_carb_correction_v1
 POST http://{{ .site }}/api/v1/treatments?token={{ token }}
@@ -508,3 +514,25 @@ ASSERT {{ assertEquals 300 "@0.energy" }}
 ASSERT {{ assertEquals 2 "@0.portions" }}
 ASSERT {{ assertEquals "Pizza is nice" "@0.notes" }}
 ASSERT {{ assertEquals "lunch" "@0.reason" }}
+
+
+NAME create_full_bg_check_v1
+POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "BG Check",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 145,
+  "glucoseType": "Meter",
+  "units": "mg/dL",
+
+
+  "notes": "Pizza is nice",
+  "reason": "lunch"
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "BG Check" "@0.eventType" }}
+ASSERT {{ assertExists "@0.created_at" }}
+ASSERT {{ assertEquals 145 "@0.glucose" }}
+ASSERT {{ assertEquals "Meter" "@0.glucoseType" }}
+ASSERT {{ assertEquals "mg/dL" "@0.units" }}

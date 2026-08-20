@@ -46,7 +46,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                         | AssignID
 	// goverter:map CreatedByIdentityName      | AssignCreatedByName
 	//
-	// goverter:ignore Notes Reason
+	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
 	// goverter:map RSSI Rssi

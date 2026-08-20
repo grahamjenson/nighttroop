@@ -43,7 +43,7 @@ ASSERT_STATUS 201
 ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
 ASSERT {{ assertExists "@result.created_at" }}
 ASSERT {{ assertEquals 150 "@result.glucose" }}
-ASSERT {{ assertEquals "sgv" "@result.glucoseType" }}
+ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
 ASSERT {{ assertEquals 46 "@result.carbs" }}
 ASSERT {{ assertEquals 1.54 "@result.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}

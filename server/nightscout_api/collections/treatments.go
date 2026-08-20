@@ -681,6 +681,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		return site.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			InsulinDose:    insulinDose,
+			GlucoseReading: glucoseReading,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.DADAlert:

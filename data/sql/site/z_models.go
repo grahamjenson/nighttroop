@@ -229,6 +229,8 @@ type GlucoseReading struct {
 	ID                    string
 	Reading               float64
 	ReadingType           string
+	Units                 *string
+	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
 	Noise                 *float64
@@ -253,6 +255,8 @@ type GlucoseReadingsVw struct {
 	ID                    *string
 	Reading               *float64
 	ReadingType           *string
+	Units                 *string
+	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
 	Noise                 *float64

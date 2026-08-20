@@ -8,13 +8,16 @@ INSERT INTO glucose_readings (
     id,
     reading,
     reading_type,
-    
+    units,
+    measurement_method,
+
     delta,
     direction,
     noise,
     filtered,
     unfiltered,
     rssi,
+
 
     notes,
     reason,
@@ -29,7 +32,9 @@ VALUES (
     sqlc.arg('ID'),
     sqlc.arg('Reading'),
     sqlc.arg('ReadingType'),
-    
+    sqlc.arg('Units'),
+    sqlc.arg('MeasurementMethod'),
+
     sqlc.arg('Delta'),
     sqlc.arg('Direction'),
     sqlc.arg('Noise'),
