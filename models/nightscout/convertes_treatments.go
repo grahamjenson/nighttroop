@@ -228,6 +228,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
+	// goverter:map . CorrectionRange | ToCorrectionRange
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
 	UpdateTempTargetToTreatment(source *site.TempTarget, target *Treatment)
 
@@ -441,4 +442,16 @@ func ToProfileJSON(source interface {
 	}
 	profileJSON := LongJSONString(string(profileBytes))
 	return &profileJSON
+}
+
+func ToCorrectionRange(source interface {
+	GetLowTarget() float64
+	GetHighTarget() float64
+}) []*FlexibleFloat64 {
+
+	correctionRange := []*FlexibleFloat64{
+		ptr(FlexibleFloat64(source.GetLowTarget())),
+		ptr(FlexibleFloat64(source.GetHighTarget())),
+	}
+	return correctionRange
 }

@@ -61,9 +61,15 @@ type Treatment struct {
 	Rate     *FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *FlexibleFloat64 `json:"absolute,omitempty"`
 
-	HighTarget *FlexibleFloat64 `json:"targetTop,omitempty"`
-	LowTarget  *FlexibleFloat64 `json:"targetBottom,omitempty"`
-	Units      *Units           `json:"units,omitempty"`
+	HighTarget              *FlexibleFloat64   `json:"targetTop,omitempty"`
+	LowTarget               *FlexibleFloat64   `json:"targetBottom,omitempty"`
+	CorrectionRange         []*FlexibleFloat64 `json:"correctionRange,omitempty"` // [low, high]
+	InsulinNeedsScaleFactor *FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
+
+	Units *Units `json:"units,omitempty"`
+
+	SensorCode    *ShortString `json:"sensorCode,omitempty"`
+	TransmitterID *ShortString `json:"transmitterId,omitempty"`
 
 	PumpID     *ShortString `json:"pumpId,omitempty"`
 	PumpSerial *ShortString `json:"pumpSerial,omitempty"`
@@ -89,8 +95,11 @@ type Treatment struct {
 
 func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
+	// We here extract some fields used by other models as a unique identfier
 	aux := struct {
-		ID *IdentifierString `json:"_id"`
+		LegacyID       *IdentifierString `json:"_id"`
+		SyncIdentifier *IdentifierString `json:"syncIdentifier"`
+		UUID           *IdentifierString `json:"uuid"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -105,7 +114,13 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	// Identitfiers
 	if t.Identifier == nil {
-		t.Identifier = aux.ID
+		t.Identifier = aux.LegacyID
+	}
+	if t.Identifier == nil {
+		t.Identifier = aux.SyncIdentifier
+	}
+	if t.Identifier == nil {
+		t.Identifier = aux.UUID
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)

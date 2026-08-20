@@ -12,7 +12,7 @@ import (
 
 const allTempTargets = `-- name: AllTempTargets :many
 
-SELECT id, duration_minutes, high_target, low_target, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets
+SELECT id, duration_minutes, high_target, low_target, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -41,6 +41,7 @@ func (q *Queries) AllTempTargets(ctx context.Context, arg AllTempTargetsParams) 
 			&i.DurationMinutes,
 			&i.HighTarget,
 			&i.LowTarget,
+			&i.InsulinNeedsScaleFactor,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -73,6 +74,7 @@ INSERT INTO temp_targets (
     duration_minutes,
     high_target,
     low_target,
+    insulin_needs_scale_factor,
     notes,
     reason,
     utc_offset_minutes,
@@ -82,23 +84,24 @@ INSERT INTO temp_targets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, duration_minutes, high_target, low_target, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, duration_minutes, high_target, low_target, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateTempTargetParams struct {
-	ID                    string
-	DurationMinutes       int64
-	HighTarget            float64
-	LowTarget             float64
-	Notes                 *string
-	Reason                *string
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	RawJsonData           *string
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	CreatedByIdentityName string
+	ID                      string
+	DurationMinutes         int64
+	HighTarget              float64
+	LowTarget               float64
+	InsulinNeedsScaleFactor *float64
+	Notes                   *string
+	Reason                  *string
+	UtcOffsetMinutes        *int64
+	OccurredAt              int64
+	RawJsonData             *string
+	CreatedByAppName        *string
+	CreatedByDeviceName     *string
+	CreatedByIdentityName   string
 }
 
 // -----
@@ -110,6 +113,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		arg.DurationMinutes,
 		arg.HighTarget,
 		arg.LowTarget,
+		arg.InsulinNeedsScaleFactor,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -125,6 +129,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 		&i.DurationMinutes,
 		&i.HighTarget,
 		&i.LowTarget,
+		&i.InsulinNeedsScaleFactor,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -142,7 +147,7 @@ func (q *Queries) CreateTempTarget(ctx context.Context, arg CreateTempTargetPara
 }
 
 const getTempTarget = `-- name: GetTempTarget :one
-SELECT id, duration_minutes, high_target, low_target, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets WHERE id = ?
+SELECT id, duration_minutes, high_target, low_target, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets WHERE id = ?
 `
 
 type GetTempTargetParams struct {
@@ -157,6 +162,7 @@ func (q *Queries) GetTempTarget(ctx context.Context, arg GetTempTargetParams) (*
 		&i.DurationMinutes,
 		&i.HighTarget,
 		&i.LowTarget,
+		&i.InsulinNeedsScaleFactor,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -186,7 +192,7 @@ func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTa
 }
 
 const searchTempTargets = `-- name: SearchTempTargets :many
-SELECT id, duration_minutes, high_target, low_target, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets
+SELECT id, duration_minutes, high_target, low_target, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM temp_targets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -286,6 +292,7 @@ func (q *Queries) SearchTempTargets(ctx context.Context, arg SearchTempTargetsPa
 			&i.DurationMinutes,
 			&i.HighTarget,
 			&i.LowTarget,
+			&i.InsulinNeedsScaleFactor,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -349,7 +356,7 @@ UPDATE temp_targets SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?7
 WHERE id = ?8 AND deleted_at IS NULL
-RETURNING id, duration_minutes, high_target, low_target, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, duration_minutes, high_target, low_target, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateTempTargetParams struct {
@@ -383,6 +390,7 @@ func (q *Queries) UpdateTempTarget(ctx context.Context, arg UpdateTempTargetPara
 		&i.DurationMinutes,
 		&i.HighTarget,
 		&i.LowTarget,
+		&i.InsulinNeedsScaleFactor,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,

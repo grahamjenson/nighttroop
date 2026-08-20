@@ -1027,6 +1027,14 @@ func TreatmentToTempBasal(source nightscout.Treatment) *site.TempBasal {
 
 func TreatmentToTempTarget(source nightscout.Treatment) *site.TempTarget {
 
+	if len(source.CorrectionRange) == 2 {
+		source.LowTarget = source.CorrectionRange[0]
+		source.HighTarget = source.CorrectionRange[1]
+	} else if len(source.CorrectionRange) == 1 {
+		source.LowTarget = source.CorrectionRange[0]
+		source.HighTarget = source.CorrectionRange[0]
+	}
+
 	target := nightscout.PartialTreatmentToTempTarget(source)
 
 	if source.HighTarget != nil {

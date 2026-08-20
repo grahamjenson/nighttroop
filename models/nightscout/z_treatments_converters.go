@@ -730,25 +730,33 @@ func PartialTreatmentToComponentEvent(source Treatment) site.ComponentEvent {
 	if source.EventType != nil {
 		siteComponentEvent.EventType = string(*source.EventType)
 	}
+	if source.SensorCode != nil {
+		xstring := ShortStringToString(*source.SensorCode)
+		siteComponentEvent.SensorCode = &xstring
+	}
+	if source.TransmitterID != nil {
+		xstring2 := ShortStringToString(*source.TransmitterID)
+		siteComponentEvent.TransmitterID = &xstring2
+	}
 	if source.PumpID != nil {
-		xstring := ShortStringToString(*source.PumpID)
-		siteComponentEvent.PumpID = &xstring
+		xstring3 := ShortStringToString(*source.PumpID)
+		siteComponentEvent.PumpID = &xstring3
 	}
 	if source.PumpSerial != nil {
-		xstring2 := ShortStringToString(*source.PumpSerial)
-		siteComponentEvent.PumpSerial = &xstring2
+		xstring4 := ShortStringToString(*source.PumpSerial)
+		siteComponentEvent.PumpSerial = &xstring4
 	}
 	if source.PumpType != nil {
-		xstring3 := ShortStringToString(*source.PumpType)
-		siteComponentEvent.PumpType = &xstring3
+		xstring5 := ShortStringToString(*source.PumpType)
+		siteComponentEvent.PumpType = &xstring5
 	}
 	if source.Notes != nil {
-		xstring4 := SanitizedStringToString(*source.Notes)
-		siteComponentEvent.Notes = &xstring4
+		xstring6 := SanitizedStringToString(*source.Notes)
+		siteComponentEvent.Notes = &xstring6
 	}
 	if source.Reason != nil {
-		xstring5 := ShortStringToString(*source.Reason)
-		siteComponentEvent.Reason = &xstring5
+		xstring7 := ShortStringToString(*source.Reason)
+		siteComponentEvent.Reason = &xstring7
 	}
 	pString := source.RawJsonData
 	siteComponentEvent.RawJsonData = &pString
@@ -758,12 +766,12 @@ func PartialTreatmentToComponentEvent(source Treatment) site.ComponentEvent {
 	}
 	siteComponentEvent.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring6 := ShortStringToString(*source.App)
-		siteComponentEvent.CreatedByAppName = &xstring6
+		xstring8 := ShortStringToString(*source.App)
+		siteComponentEvent.CreatedByAppName = &xstring8
 	}
 	if source.Device != nil {
-		xstring7 := ShortStringToString(*source.Device)
-		siteComponentEvent.CreatedByDeviceName = &xstring7
+		xstring9 := ShortStringToString(*source.Device)
+		siteComponentEvent.CreatedByDeviceName = &xstring9
 	}
 	return siteComponentEvent
 }
@@ -1034,6 +1042,10 @@ func PartialTreatmentToTempTarget(source Treatment) site.TempTarget {
 	if source.LowTarget != nil {
 		siteTempTarget.LowTarget = FlexibleFloat64ToFloat64(*source.LowTarget)
 	}
+	if source.InsulinNeedsScaleFactor != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.InsulinNeedsScaleFactor)
+		siteTempTarget.InsulinNeedsScaleFactor = &xfloat64
+	}
 	if source.Notes != nil {
 		xstring := SanitizedStringToString(*source.Notes)
 		siteTempTarget.Notes = &xstring
@@ -1235,6 +1247,10 @@ func TempTargetCreate(source site.TempTarget, context ConverterContext) site.Cre
 	siteCreateTempTargetParams.DurationMinutes = source.DurationMinutes
 	siteCreateTempTargetParams.HighTarget = source.HighTarget
 	siteCreateTempTargetParams.LowTarget = source.LowTarget
+	if source.InsulinNeedsScaleFactor != nil {
+		xfloat64 := *source.InsulinNeedsScaleFactor
+		siteCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
+	}
 	if source.Notes != nil {
 		xstring := *source.Notes
 		siteCreateTempTargetParams.Notes = &xstring
@@ -1363,25 +1379,33 @@ func UpdateComponentEventToTreatment(source *site.ComponentEvent, target *Treatm
 	if source != nil {
 		pNightscoutTreatmentEventType := TreatmentEventType(source.EventType)
 		target.EventType = &pNightscoutTreatmentEventType
+		if source.SensorCode != nil {
+			nightscoutShortString := ShortString(*source.SensorCode)
+			target.SensorCode = &nightscoutShortString
+		}
+		if source.TransmitterID != nil {
+			nightscoutShortString2 := ShortString(*source.TransmitterID)
+			target.TransmitterID = &nightscoutShortString2
+		}
 		if source.PumpID != nil {
-			nightscoutShortString := ShortString(*source.PumpID)
-			target.PumpID = &nightscoutShortString
+			nightscoutShortString3 := ShortString(*source.PumpID)
+			target.PumpID = &nightscoutShortString3
 		}
 		if source.PumpSerial != nil {
-			nightscoutShortString2 := ShortString(*source.PumpSerial)
-			target.PumpSerial = &nightscoutShortString2
+			nightscoutShortString4 := ShortString(*source.PumpSerial)
+			target.PumpSerial = &nightscoutShortString4
 		}
 		if source.PumpType != nil {
-			nightscoutShortString3 := ShortString(*source.PumpType)
-			target.PumpType = &nightscoutShortString3
+			nightscoutShortString5 := ShortString(*source.PumpType)
+			target.PumpType = &nightscoutShortString5
 		}
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)
 			target.Notes = &nightscoutSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutShortString4 := ShortString(*source.Reason)
-			target.Reason = &nightscoutShortString4
+			nightscoutShortString6 := ShortString(*source.Reason)
+			target.Reason = &nightscoutShortString6
 		}
 		if source.UtcOffsetMinutes != nil {
 			nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1612,6 +1636,11 @@ func UpdateTempTargetToTreatment(source *site.TempTarget, target *Treatment) {
 		target.HighTarget = &pNightscoutFlexibleFloat64
 		pNightscoutFlexibleFloat642 := FlexibleFloat64(source.LowTarget)
 		target.LowTarget = &pNightscoutFlexibleFloat642
+		target.CorrectionRange = ToCorrectionRange(source)
+		if source.InsulinNeedsScaleFactor != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*source.InsulinNeedsScaleFactor)
+			target.InsulinNeedsScaleFactor = &nightscoutFlexibleFloat64
+		}
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)
 			target.Notes = &nightscoutSanitizedString
@@ -1693,29 +1722,37 @@ func UpdateToActivity(source *site.Activity, target *site.Activity) {
 func UpdateToComponentEvent(source *site.ComponentEvent, target *site.ComponentEvent) {
 	if source != nil {
 		target.EventType = source.EventType
+		if source.SensorCode != nil {
+			xstring := *source.SensorCode
+			target.SensorCode = &xstring
+		}
+		if source.TransmitterID != nil {
+			xstring2 := *source.TransmitterID
+			target.TransmitterID = &xstring2
+		}
 		if source.PumpID != nil {
-			xstring := *source.PumpID
-			target.PumpID = &xstring
+			xstring3 := *source.PumpID
+			target.PumpID = &xstring3
 		}
 		if source.PumpSerial != nil {
-			xstring2 := *source.PumpSerial
-			target.PumpSerial = &xstring2
+			xstring4 := *source.PumpSerial
+			target.PumpSerial = &xstring4
 		}
 		if source.PumpType != nil {
-			xstring3 := *source.PumpType
-			target.PumpType = &xstring3
+			xstring5 := *source.PumpType
+			target.PumpType = &xstring5
 		}
 		if source.Notes != nil {
-			xstring4 := *source.Notes
-			target.Notes = &xstring4
+			xstring6 := *source.Notes
+			target.Notes = &xstring6
 		}
 		if source.Reason != nil {
-			xstring5 := *source.Reason
-			target.Reason = &xstring5
+			xstring7 := *source.Reason
+			target.Reason = &xstring7
 		}
 		if source.RawJsonData != nil {
-			xstring6 := *source.RawJsonData
-			target.RawJsonData = &xstring6
+			xstring8 := *source.RawJsonData
+			target.RawJsonData = &xstring8
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -1729,16 +1766,16 @@ func UpdateToComponentEvent(source *site.ComponentEvent, target *site.ComponentE
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.UpdatedByIdentityName != nil {
-			xstring7 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring7
+			xstring9 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring9
 		}
 		if source.CreatedByAppName != nil {
-			xstring8 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring8
+			xstring10 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring10
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring9 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring9
+			xstring11 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring11
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2205,6 +2242,10 @@ func UpdateToTempTarget(source *site.TempTarget, target *site.TempTarget) {
 		target.DurationMinutes = source.DurationMinutes
 		target.HighTarget = source.HighTarget
 		target.LowTarget = source.LowTarget
+		if source.InsulinNeedsScaleFactor != nil {
+			xfloat64 := *source.InsulinNeedsScaleFactor
+			target.InsulinNeedsScaleFactor = &xfloat64
+		}
 		if source.Notes != nil {
 			xstring := *source.Notes
 			target.Notes = &xstring

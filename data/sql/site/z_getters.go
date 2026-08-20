@@ -212,6 +212,26 @@ func (m *ComponentEvent) SetEventType(v string) {
 	m.EventType = v
 }
 
+// GetSensorCode returns the SensorCode value.
+func (m ComponentEvent) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m ComponentEvent) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetTransmitterID(v *string) {
+	m.TransmitterID = v
+}
+
 // GetPumpID returns the PumpID value.
 func (m ComponentEvent) GetPumpID() *string {
 	return m.PumpID
@@ -2512,6 +2532,16 @@ func (m *TempTarget) SetLowTarget(v float64) {
 	m.LowTarget = v
 }
 
+// GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
+func (m TempTarget) GetInsulinNeedsScaleFactor() *float64 {
+	return m.InsulinNeedsScaleFactor
+}
+
+// SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated TempTarget.
+func (m *TempTarget) SetInsulinNeedsScaleFactor(v *float64) {
+	m.InsulinNeedsScaleFactor = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempTarget) GetNotes() *string {
 	return m.Notes
@@ -2840,6 +2870,26 @@ func (m ComponentEventsVw) GetEventType() *string {
 // SetEventType sets the EventType value and returns the updated ComponentEventsVw.
 func (m *ComponentEventsVw) SetEventType(v *string) {
 	m.EventType = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m ComponentEventsVw) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m ComponentEventsVw) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetTransmitterID(v *string) {
+	m.TransmitterID = v
 }
 
 // GetPumpID returns the PumpID value.
@@ -4240,6 +4290,16 @@ func (m TempTargetsVw) GetLowTarget() *float64 {
 // SetLowTarget sets the LowTarget value and returns the updated TempTargetsVw.
 func (m *TempTargetsVw) SetLowTarget(v *float64) {
 	m.LowTarget = v
+}
+
+// GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
+func (m TempTargetsVw) GetInsulinNeedsScaleFactor() *float64 {
+	return m.InsulinNeedsScaleFactor
+}
+
+// SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetInsulinNeedsScaleFactor(v *float64) {
+	m.InsulinNeedsScaleFactor = v
 }
 
 // GetNotes returns the Notes value.
@@ -11069,6 +11129,17 @@ func (m CreateTempTargetParams) GetLowTarget() float64 {
 // SetLowTarget sets the LowTarget value and returns the updated CreateTempTargetParams.
 func (m CreateTempTargetParams) SetLowTarget(v float64) CreateTempTargetParams {
 	m.LowTarget = v
+	return m
+}
+
+// GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
+func (m CreateTempTargetParams) GetInsulinNeedsScaleFactor() *float64 {
+	return m.InsulinNeedsScaleFactor
+}
+
+// SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated CreateTempTargetParams.
+func (m CreateTempTargetParams) SetInsulinNeedsScaleFactor(v *float64) CreateTempTargetParams {
+	m.InsulinNeedsScaleFactor = v
 	return m
 }
 

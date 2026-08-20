@@ -51,6 +51,8 @@ type Activity struct {
 type ComponentEvent struct {
 	ID                    string
 	EventType             string
+	SensorCode            *string
+	TransmitterID         *string
 	PumpID                *string
 	PumpSerial            *string
 	PumpType              *string
@@ -71,6 +73,8 @@ type ComponentEvent struct {
 type ComponentEventsVw struct {
 	ID                    *string
 	EventType             *string
+	SensorCode            *string
+	TransmitterID         *string
 	PumpID                *string
 	PumpSerial            *string
 	PumpType              *string
@@ -469,39 +473,41 @@ type TempBasalsVw struct {
 }
 
 type TempTarget struct {
-	ID                    string
-	DurationMinutes       int64
-	HighTarget            float64
-	LowTarget             float64
-	Notes                 *string
-	Reason                *string
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            int64
-	CreatedAt             int64
-	UpdatedAt             int64
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	UpdatedByIdentityName *string
-	CreatedByIdentityName string
+	ID                      string
+	DurationMinutes         int64
+	HighTarget              float64
+	LowTarget               float64
+	InsulinNeedsScaleFactor *float64
+	Notes                   *string
+	Reason                  *string
+	RawJsonData             *string
+	DeletedAt               *int64
+	UtcOffsetMinutes        *int64
+	OccurredAt              int64
+	CreatedAt               int64
+	UpdatedAt               int64
+	CreatedByAppName        *string
+	CreatedByDeviceName     *string
+	UpdatedByIdentityName   *string
+	CreatedByIdentityName   string
 }
 
 type TempTargetsVw struct {
-	ID                    *string
-	DurationMinutes       *int64
-	HighTarget            *float64
-	LowTarget             *float64
-	Notes                 *string
-	Reason                *string
-	RawJsonData           *string
-	DeletedAt             *int64
-	UtcOffsetMinutes      *int64
-	OccurredAt            *int64
-	CreatedAt             *int64
-	UpdatedAt             *int64
-	CreatedByAppName      *string
-	CreatedByDeviceName   *string
-	UpdatedByIdentityName *string
-	CreatedByIdentityName *string
+	ID                      *string
+	DurationMinutes         *int64
+	HighTarget              *float64
+	LowTarget               *float64
+	InsulinNeedsScaleFactor *float64
+	Notes                   *string
+	Reason                  *string
+	RawJsonData             *string
+	DeletedAt               *int64
+	UtcOffsetMinutes        *int64
+	OccurredAt              *int64
+	CreatedAt               *int64
+	UpdatedAt               *int64
+	CreatedByAppName        *string
+	CreatedByDeviceName     *string
+	UpdatedByIdentityName   *string
+	CreatedByIdentityName   *string
 }

@@ -32,6 +32,9 @@ CREATE TABLE component_events (
 
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
+    sensor_code TEXT CHECK(length(sensor_code) <= 64),
+    transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
+
     pump_id TEXT CHECK(length(pump_id) <= 32),
     pump_serial TEXT CHECK(length(pump_serial) <= 32),
     pump_type TEXT CHECK(length(pump_type) <= 64),
@@ -381,6 +384,7 @@ CREATE TABLE temp_targets (
     duration_minutes INTEGER NOT NULL,
     high_target REAL NOT NULL,
     low_target REAL NOT NULL,
+    insulin_needs_scale_factor REAL,
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

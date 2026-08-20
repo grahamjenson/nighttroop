@@ -1136,6 +1136,10 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	siteCreateTempTargetParams.DurationMinutes = source.DurationMinutes
 	siteCreateTempTargetParams.HighTarget = source.HighTarget
 	siteCreateTempTargetParams.LowTarget = source.LowTarget
+	if source.InsulinNeedsScaleFactor != nil {
+		xfloat64 := *source.InsulinNeedsScaleFactor
+		siteCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
+	}
 	if source.Notes != nil {
 		xstring := *source.Notes
 		siteCreateTempTargetParams.Notes = &xstring
@@ -1281,29 +1285,37 @@ func siteComponentEventsVwToSiteComponentEventsVw(source ComponentEventsVw) Comp
 		xstring2 := *source.EventType
 		siteComponentEventsVw.EventType = &xstring2
 	}
+	if source.SensorCode != nil {
+		xstring3 := *source.SensorCode
+		siteComponentEventsVw.SensorCode = &xstring3
+	}
+	if source.TransmitterID != nil {
+		xstring4 := *source.TransmitterID
+		siteComponentEventsVw.TransmitterID = &xstring4
+	}
 	if source.PumpID != nil {
-		xstring3 := *source.PumpID
-		siteComponentEventsVw.PumpID = &xstring3
+		xstring5 := *source.PumpID
+		siteComponentEventsVw.PumpID = &xstring5
 	}
 	if source.PumpSerial != nil {
-		xstring4 := *source.PumpSerial
-		siteComponentEventsVw.PumpSerial = &xstring4
+		xstring6 := *source.PumpSerial
+		siteComponentEventsVw.PumpSerial = &xstring6
 	}
 	if source.PumpType != nil {
-		xstring5 := *source.PumpType
-		siteComponentEventsVw.PumpType = &xstring5
+		xstring7 := *source.PumpType
+		siteComponentEventsVw.PumpType = &xstring7
 	}
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		siteComponentEventsVw.Notes = &xstring6
+		xstring8 := *source.Notes
+		siteComponentEventsVw.Notes = &xstring8
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		siteComponentEventsVw.Reason = &xstring7
+		xstring9 := *source.Reason
+		siteComponentEventsVw.Reason = &xstring9
 	}
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		siteComponentEventsVw.RawJsonData = &xstring8
+		xstring10 := *source.RawJsonData
+		siteComponentEventsVw.RawJsonData = &xstring10
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -1326,20 +1338,20 @@ func siteComponentEventsVwToSiteComponentEventsVw(source ComponentEventsVw) Comp
 		siteComponentEventsVw.UpdatedAt = &xint645
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring9 := *source.UpdatedByIdentityName
-		siteComponentEventsVw.UpdatedByIdentityName = &xstring9
+		xstring11 := *source.UpdatedByIdentityName
+		siteComponentEventsVw.UpdatedByIdentityName = &xstring11
 	}
 	if source.CreatedByAppName != nil {
-		xstring10 := *source.CreatedByAppName
-		siteComponentEventsVw.CreatedByAppName = &xstring10
+		xstring12 := *source.CreatedByAppName
+		siteComponentEventsVw.CreatedByAppName = &xstring12
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring11 := *source.CreatedByDeviceName
-		siteComponentEventsVw.CreatedByDeviceName = &xstring11
+		xstring13 := *source.CreatedByDeviceName
+		siteComponentEventsVw.CreatedByDeviceName = &xstring13
 	}
 	if source.CreatedByIdentityName != nil {
-		xstring12 := *source.CreatedByIdentityName
-		siteComponentEventsVw.CreatedByIdentityName = &xstring12
+		xstring14 := *source.CreatedByIdentityName
+		siteComponentEventsVw.CreatedByIdentityName = &xstring14
 	}
 	return siteComponentEventsVw
 }
@@ -1946,6 +1958,10 @@ func siteTempTargetsVwToSiteTempTargetsVw(source TempTargetsVw) TempTargetsVw {
 	if source.LowTarget != nil {
 		xfloat642 := *source.LowTarget
 		siteTempTargetsVw.LowTarget = &xfloat642
+	}
+	if source.InsulinNeedsScaleFactor != nil {
+		xfloat643 := *source.InsulinNeedsScaleFactor
+		siteTempTargetsVw.InsulinNeedsScaleFactor = &xfloat643
 	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes

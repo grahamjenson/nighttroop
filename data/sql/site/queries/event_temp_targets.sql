@@ -7,6 +7,7 @@ INSERT INTO temp_targets (
     duration_minutes,
     high_target,
     low_target,
+    insulin_needs_scale_factor,
     notes,
     reason,
     utc_offset_minutes,
@@ -16,7 +17,7 @@ INSERT INTO temp_targets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
