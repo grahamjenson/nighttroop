@@ -735,6 +735,14 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		xstring := *source.DoseType
 		siteCreateInsulinDoseParams.DoseType = &xstring
 	}
+	if source.SplitNow != nil {
+		xfloat64 := *source.SplitNow
+		siteCreateInsulinDoseParams.SplitNow = &xfloat64
+	}
+	if source.SplitExt != nil {
+		xfloat642 := *source.SplitExt
+		siteCreateInsulinDoseParams.SplitExt = &xfloat642
+	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		siteCreateInsulinDoseParams.Notes = &xstring2
@@ -771,6 +779,14 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	}
 	pFloat64 := source.Dose
 	siteUpdateInsulinDoseParams.Dose = &pFloat64
+	if source.SplitNow != nil {
+		xfloat64 := *source.SplitNow
+		siteUpdateInsulinDoseParams.SplitNow = &xfloat64
+	}
+	if source.SplitExt != nil {
+		xfloat642 := *source.SplitExt
+		siteUpdateInsulinDoseParams.SplitExt = &xfloat642
+	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		siteUpdateInsulinDoseParams.Notes = &xstring2
@@ -1610,6 +1626,14 @@ func siteInsulinDosesVwToSiteInsulinDosesVw(source InsulinDosesVw) InsulinDosesV
 	if source.DoseType != nil {
 		xstring2 := *source.DoseType
 		siteInsulinDosesVw.DoseType = &xstring2
+	}
+	if source.SplitNow != nil {
+		xfloat642 := *source.SplitNow
+		siteInsulinDosesVw.SplitNow = &xfloat642
+	}
+	if source.SplitExt != nil {
+		xfloat643 := *source.SplitExt
+		siteInsulinDosesVw.SplitExt = &xfloat643
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes

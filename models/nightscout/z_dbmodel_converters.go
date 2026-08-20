@@ -18,7 +18,7 @@ func DBModelToActivity(source *site.Activity) Activity {
 		nightscoutActivity.ActivityType = &pNightscoutShortString
 		if (*source).DurationMinutes != nil {
 			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).DurationMinutes)
-			nightscoutActivity.Duration = &nightscoutFlexibleInt64
+			nightscoutActivity.DurationMinutes = &nightscoutFlexibleInt64
 		}
 		if (*source).Steps != nil {
 			nightscoutFlexibleInt642 := FlexibleInt64(*(*source).Steps)

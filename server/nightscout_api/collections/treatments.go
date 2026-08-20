@@ -3,8 +3,10 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"reflect"
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
@@ -623,15 +625,15 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) site.EventGroupsBundle {
 	eventGroup := nightscout.TreatmentToEventGroup(treatment)
 
-	glucoseReading := nightscout.TreatmentToGlucoseReading(treatment)
-	insulinDose := nightscout.TreatmentToInsulinDose(treatment)
-	foodIntake := nightscout.TreatmentToFoodIntake(treatment)
-	tempBasal := nightscout.TreatmentToTempBasal(treatment)
-	tempTarget := nightscout.TreatmentToTempTarget(treatment)
-	profileSwitch := nightscout.TreatmentToProfileSwitch(treatment)
-	componentEvent := nightscout.TreatmentToComponentEvent(treatment)
-	activity := nightscout.TreatmentToActivity(treatment)
-	notificationEvent := nightscout.TreatmentToNotificationEvent(treatment)
+	glucoseReading := TreatmentToGlucoseReading(treatment)
+	insulinDose := TreatmentToInsulinDose(treatment)
+	foodIntake := TreatmentToFoodIntake(treatment)
+	tempBasal := TreatmentToTempBasal(treatment)
+	tempTarget := TreatmentToTempTarget(treatment)
+	profileSwitch := TreatmentToProfileSwitch(treatment)
+	componentEvent := TreatmentToComponentEvent(treatment)
+	activity := TreatmentToActivity(treatment)
+	notificationEvent := TreatmentToNotificationEvent(treatment)
 
 	//////
 	// Limit the values to only the ones that are relevant to the event type
@@ -860,4 +862,217 @@ func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventG
 			nightscout.UpdateToNotificationEvent(updateBundle.NotificationEvent, dbModel.NotificationEvent)
 		}
 	}
+}
+
+////////////////////////////////////////
+// TREATMENT TO CREATE/UPDATE
+////////////////////////////////////////
+
+///////
+// Food Intake
+///////
+
+func TreatmentToFoodIntake(source nightscout.Treatment) *site.FoodIntake {
+	// Check some needed fields are assigned
+	if isAssigned(source.FoodType, source.PreBolus, source.Category, source.Subcategory, source.Carbs, source.Fat, source.Protein, source.Fibre, source.Energy, source.Portions) {
+		return ptr(nightscout.PartialTreatmentToFoodIntake(source))
+	}
+	return nil
+}
+
+///////
+// Glucose Reading
+///////
+
+func TreatmentToGlucoseReading(source nightscout.Treatment) *site.GlucoseReading {
+	target := nightscout.PartialTreatmentToGlucoseReading(source)
+	target.ReadingType = "sgv"
+
+	if source.GlucoseType != nil {
+		switch *source.GlucoseType {
+		case nightscout.Sensor:
+			target.ReadingType = "sgv"
+		case nightscout.Finger:
+			target.ReadingType = "mbg"
+		case nightscout.Meter:
+			target.ReadingType = "mbg"
+		}
+	}
+	if isAssigned(source.Glucose) {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Insulin Dose
+///////
+
+func TreatmentToInsulinDose(source nightscout.Treatment) *site.InsulinDose {
+	if isAssigned(source.Insulin) {
+		return ptr(nightscout.PartialTreatmentToInsulinDose(source))
+	}
+	return nil
+}
+
+///////
+// NotificationEvents
+///////
+
+func TreatmentToNotificationEvent(source nightscout.Treatment) *site.NotificationEvent {
+	target := nightscout.PartialTreatmentToNotificationEvent(source)
+
+	target.Severity = 0
+	target.NotificationType = "announcement"
+	target.Title = "Treatment Event"
+
+	// Always is assigned
+	if source.Name != nil {
+		target.Title = source.Name.String()
+	}
+
+	return &target
+}
+
+///////
+// Profile Switch
+///////
+
+func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
+	target := nightscout.PartialTreatmentToProfileSwitch(source)
+
+	// TODO: This is the bit that will need more work, with the json of profile
+	if source.Name != nil {
+
+		target.Name = source.Name.String()
+	} else if source.Profile != nil {
+
+		target.Name = source.Profile.String()
+	}
+
+	if source.ProfileJSON != nil {
+		var profileJSON nightscout.Profile
+		err := json.Unmarshal([]byte(*source.ProfileJSON), &profileJSON)
+		if err == nil {
+
+			target.Dia = profileJSON.Dia.Float64p()
+			target.Timezone = profileJSON.Timezone.Stringp()
+			target.Units = profileJSON.Units.Stringp()
+
+			basalBytes, _ := json.Marshal(profileJSON.Basal)
+			carbRatioBytes, _ := json.Marshal(profileJSON.CarbRatio)
+			sensBytes, _ := json.Marshal(profileJSON.Sens)
+			targetLowBytes, _ := json.Marshal(profileJSON.TargetLow)
+			targetHighBytes, _ := json.Marshal(profileJSON.TargetHigh)
+
+			if basalBytes != nil {
+				target.BasalRatesJson = ptr(string(basalBytes))
+			} else {
+				target.BasalRatesJson = ptr("[]")
+			}
+
+			if carbRatioBytes != nil {
+				target.CarbRatiosJson = ptr(string(carbRatioBytes))
+			} else {
+				target.CarbRatiosJson = ptr("[]")
+			}
+
+			if sensBytes != nil {
+				target.InsulinSensitivitiesJson = ptr(string(sensBytes))
+			} else {
+				target.InsulinSensitivitiesJson = ptr("[]")
+			}
+
+			if targetLowBytes != nil {
+				target.TargetsLowJson = ptr(string(targetLowBytes))
+			} else {
+				target.TargetsLowJson = ptr("[]")
+			}
+
+			if targetHighBytes != nil {
+				target.TargetsHighJson = ptr(string(targetHighBytes))
+			} else {
+				target.TargetsHighJson = ptr("[]")
+			}
+		}
+
+	}
+	if isAssigned(source.Name, source.Profile, source.ProfileJSON) {
+		return &target
+	}
+	return nil
+}
+
+///////
+// Temp Basal
+///////
+
+func TreatmentToTempBasal(source nightscout.Treatment) *site.TempBasal {
+	if isAssigned(source.Absolute, source.Rate, source.Percent, source.DurationMinutes) {
+		return ptr(nightscout.PartialTreatmentToTempBasal(source))
+	}
+	return nil
+}
+
+///////
+// Temp Targets
+///////
+
+func TreatmentToTempTarget(source nightscout.Treatment) *site.TempTarget {
+
+	target := nightscout.PartialTreatmentToTempTarget(source)
+
+	if source.HighTarget != nil {
+		target.HighTarget = source.HighTarget.Float64()
+	} else if source.LowTarget != nil {
+		// If Target Top is missing then we assume both targets are the same
+		target.HighTarget = source.LowTarget.Float64()
+	}
+
+	if source.LowTarget != nil {
+		target.LowTarget = source.LowTarget.Float64()
+	} else if source.HighTarget != nil {
+		// If Target Bottom is missing then we assume both targets are the same
+		target.LowTarget = source.HighTarget.Float64()
+	}
+
+	if isAssigned(source.HighTarget, source.LowTarget, source.DurationMinutes) {
+		return &target
+	}
+	return nil
+}
+
+func TreatmentToComponentEvent(source nightscout.Treatment) *site.ComponentEvent {
+	if isAssigned(source.PumpID, source.PumpSerial, source.PumpType) {
+		return ptr(nightscout.PartialTreatmentToComponentEvent(source))
+	}
+	return nil
+}
+
+func TreatmentToActivity(source nightscout.Treatment) *site.Activity {
+	if isAssigned(source.Name, source.ActivityType, source.Calories, source.Steps, source.HeartRate) {
+		return ptr(nightscout.PartialTreatmentToActivity(source))
+	}
+	return nil
+}
+
+func isAssigned(values ...any) bool {
+	for _, value := range values {
+		if value == nil {
+			continue
+		}
+
+		v := reflect.ValueOf(value)
+
+		switch v.Kind() {
+		case reflect.Ptr, reflect.Map, reflect.Slice, reflect.Interface, reflect.Func:
+			if !v.IsNil() {
+				return true
+			}
+		default:
+			return true
+		}
+	}
+
+	return false
 }

@@ -229,7 +229,9 @@ CREATE TABLE insulin_doses (
 
     dose REAL NOT NULL,
     dose_type TEXT CHECK(length(dose_type) <= 32),
-
+    
+    split_now REAL,
+    split_ext REAL,
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

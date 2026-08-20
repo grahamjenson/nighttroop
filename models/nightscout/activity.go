@@ -9,13 +9,13 @@ type Activity struct {
 
 	Name *ShortString `json:"name,omitempty"` // Name of the activity
 
-	ActivityType *ShortString     `json:"activityType,omitempty"` // Type of activity
-	Duration     *FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
-	Steps        *FlexibleInt64   `json:"steps,omitempty"`        // Step count
-	Calories     *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
-	HeartRate    *FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
-	Notes        *SanitizedString `json:"notes,omitempty"`        // Notes
-	Reason       *SanitizedString `json:"reason,omitempty"`       // Reason
+	ActivityType    *ShortString     `json:"activityType,omitempty"` // Type of activity
+	DurationMinutes *FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
+	Steps           *FlexibleInt64   `json:"steps,omitempty"`        // Step count
+	Calories        *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
+	HeartRate       *FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
+	Notes           *SanitizedString `json:"notes,omitempty"`        // Notes
+	Reason          *SanitizedString `json:"reason,omitempty"`       // Reason
 
 	// Date fields
 	CreatedAt *DateString `json:"created_at,omitempty"` // ISO 8601 string

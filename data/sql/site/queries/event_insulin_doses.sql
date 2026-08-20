@@ -6,6 +6,8 @@ INSERT INTO insulin_doses (
     id,
     dose,
     dose_type,
+    split_now, 
+    split_ext,
 
     notes,
     reason,
@@ -17,7 +19,7 @@ INSERT INTO insulin_doses (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -82,7 +84,8 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 UPDATE insulin_doses SET
     dose_type = COALESCE(sqlc.narg('DoseType'), dose_type),
     dose = COALESCE(sqlc.narg('Dose'), dose),
-
+    split_now = COALESCE(sqlc.narg('SplitNow'), split_now),
+    split_ext = COALESCE(sqlc.narg('SplitExt'), split_ext),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 
@@ -90,6 +93,7 @@ UPDATE insulin_doses SET
         COALESCE(raw_json_data, '{}'),
         COALESCE(CAST(sqlc.narg('RawJsonData') AS TEXT), '{}')
     ),
+    
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL

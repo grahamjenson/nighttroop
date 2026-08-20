@@ -15,8 +15,8 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 		xstring2 := ShortStringToString(*source.ActivityType)
 		siteUpdateActivityParams.ActivityType = &xstring2
 	}
-	if source.Duration != nil {
-		xint64 := FlexibleInt64ToInt64(*source.Duration)
+	if source.DurationMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
 		siteUpdateActivityParams.DurationMinutes = &xint64
 	}
 	if source.Calories != nil {
@@ -32,7 +32,7 @@ func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActi
 		siteUpdateActivityParams.HeartRate = &xint644
 	}
 	if source.Notes != nil {
-		xstring3 := string(*source.Notes)
+		xstring3 := SanitizedStringToString(*source.Notes)
 		siteUpdateActivityParams.Notes = &xstring3
 	}
 	pString := source.RawJsonData

@@ -23,7 +23,6 @@ type DBModelConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
 	//
-	// goverter:map DurationMinutes Duration
 	DBModelToActivity(source *site.Activity) Activity
 
 	///////

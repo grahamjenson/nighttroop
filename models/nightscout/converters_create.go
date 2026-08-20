@@ -19,6 +19,7 @@ type ConverterContext struct {
 // goverter:extend FlexibleFloat64ToFloat64
 // goverter:extend FlexibleInt64ToInt64
 // goverter:extend ShortStringToString
+// goverter:extend SanitizedStringToString
 type CreateMapConverter interface {
 
 	///////
@@ -32,7 +33,6 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:map Duration DurationMinutes
 	ActivityToCreate(source Activity, ctx ConverterContext) site.CreateActivityParams
 
 	///////
@@ -155,7 +155,9 @@ func FlexibleInt64ToInt64(source FlexibleInt64) int64 {
 func ShortStringToString(source ShortString) string {
 	return string(source)
 }
-
+func SanitizedStringToString(source SanitizedString) string {
+	return string(source)
+}
 func SetReadingType(source Entry) string {
 	if source.Type != nil {
 		return source.Type.String()

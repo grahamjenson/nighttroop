@@ -11,6 +11,7 @@ import (
 // goverter:extend FlexibleFloat64ToFloat64
 // goverter:extend FlexibleInt64ToInt64
 // goverter:extend ShortStringToString
+// goverter:extend SanitizedStringToString
 type UpdateMapConverter interface {
 
 	///////
@@ -22,7 +23,6 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore Reason
-	// goverter:map Duration DurationMinutes
 	ActivityToUpdate(source Activity, ctx ConverterContext) site.UpdateActivityParams
 
 	///////

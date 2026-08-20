@@ -21,8 +21,6 @@ type Treatment struct {
 	Glucose     *FlexibleFloat64 `json:"glucose,omitempty"`
 	GlucoseType *GlucoseType     `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
 
-	Type *ShortString `json:"type,omitempty"`
-
 	// Nutrition
 	Carbs                 *FlexibleFloat64 `json:"carbs,omitempty"`
 	Protein               *FlexibleFloat64 `json:"protein,omitempty"`
@@ -37,7 +35,12 @@ type Treatment struct {
 	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
 	Portions *FlexibleFloat64 `json:"portions,omitempty"`
 
-	Insulin *FlexibleFloat64 `json:"insulin,omitempty"`
+	// Insulin
+	Insulin  *FlexibleFloat64 `json:"insulin,omitempty"`
+	SplitNow *FlexibleFloat64 `json:"splitNow,omitempty"`
+	SplitExt *FlexibleFloat64 `json:"splitExt,omitempty"`
+	// additional
+	Type *ShortString `json:"type,omitempty"`
 
 	// Exercise
 	ActivityType *ShortString   `json:"activityType,omitempty"` // Type of activity
@@ -45,10 +48,7 @@ type Treatment struct {
 	Calories     *FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
 	HeartRate    *FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
 
-	SplitNow *FlexibleFloat64 `json:"splitNow,omitempty"`
-	SplitExt *FlexibleFloat64 `json:"splitExt,omitempty"`
-
-	Duration               *FlexibleInt64 `json:"duration,omitempty"`               // minutes
+	DurationMinutes        *FlexibleInt64 `json:"duration,omitempty"`               // minutes
 	DurationInMilliseconds *FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
 
 	Notes     *SanitizedString `json:"notes,omitempty"`
@@ -58,15 +58,15 @@ type Treatment struct {
 	Profile             *ShortString     `json:"profile,omitempty"`
 	OriginalProfileName *ShortString     `json:"originalProfileName,omitempty"`
 	ProfileJSON         *LongJSONString  `json:"profileJson,omitempty"`
-	Percentage          *FlexibleFloat64 `json:"percentage,omitempty"`
+	Percent             *FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *FlexibleInt64   `json:"timeshift,omitempty"`
 
-	Rate         *FlexibleFloat64 `json:"rate,omitempty"`
-	Absolute     *FlexibleFloat64 `json:"absolute,omitempty"`
-	Reason       *ShortString     `json:"reason,omitempty"`
-	TargetTop    *FlexibleFloat64 `json:"targetTop,omitempty"`
-	TargetBottom *FlexibleFloat64 `json:"targetBottom,omitempty"`
-	Units        *Units           `json:"units,omitempty"`
+	Rate       *FlexibleFloat64 `json:"rate,omitempty"`
+	Absolute   *FlexibleFloat64 `json:"absolute,omitempty"`
+	Reason     *ShortString     `json:"reason,omitempty"`
+	HighTarget *FlexibleFloat64 `json:"targetTop,omitempty"`
+	LowTarget  *FlexibleFloat64 `json:"targetBottom,omitempty"`
+	Units      *Units           `json:"units,omitempty"`
 
 	PumpID     *ShortString `json:"pumpId,omitempty"`
 	PumpSerial *ShortString `json:"pumpSerial,omitempty"`
