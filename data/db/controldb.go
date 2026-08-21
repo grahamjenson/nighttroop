@@ -138,7 +138,7 @@ type SiteCreateResult struct {
 }
 
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
-	subdomain := utils.NextSiteSubdomain(db.serverConfig.IsDev())
+	subdomain := utils.NextSiteSubdomain(db.serverConfig.IsDev() || db.serverConfig.IsTest())
 	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
 		subdomain = utils.NextSiteSubdomain(false)

@@ -1,19 +1,8 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
-
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
-
 /////
 // CREATE
 //////
 NAME create_meal_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Meal Bolus",
   "created_at": "{{ time 0 }}",
@@ -42,7 +31,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME create_minimal_correction_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Correction Bolus", "insulin": 4.2 }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Correction Bolus" "@0.eventType" }}
@@ -52,7 +41,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME create_treatmentses_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B [
   {
     "eventType": "Announcement",
@@ -181,7 +170,7 @@ B [
 ASSERT_STATUS 200
 
 NAME create_treatmentses_more_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B [
   {
     "eventType": "BG Check",
@@ -420,7 +409,7 @@ ASSERT_STATUS 200
 // GET
 //////
 NAME get_treatments_v1
-GET http://{{ .site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
+GET http://{{ site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
@@ -434,14 +423,14 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME get_treatments_type_v1
-GET http://{{ .site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
+GET http://{{ site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertEquals 148 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 
 NAME put_update_treatments_v1
-PUT http://{{ .site }}/api/v1/treatments?token={{ token }}
+PUT http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "_id": "{{ dig "create_meal_bolus_v1.0._id" }}",
   "eventType": "Meal Bolus",
@@ -450,12 +439,12 @@ B {
 ASSERT_STATUS 200
 
 NAME get_treatments_after_updates_v1
-GET http://{{ .site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
+GET http://{{ site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_update_treatments_v1" "@0.notes" }}
 
 NAME put_create_treatments_v1
-PUT http://{{ .site }}/api/v1/treatments?token={{ token }}
+PUT http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "_id": "myveryownid",
   "eventType": "Meal Bolus",
@@ -466,7 +455,7 @@ ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@notes" }}
 ASSERT {{ assertEquals "myveryownid" "@_id" }}
 
 NAME get_treatments_after_user_id_create_v1
-GET http://{{ .site }}/api/v1/treatments/myveryownid?token={{ token }}
+GET http://{{ site }}/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
 
@@ -482,7 +471,7 @@ ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
 # }
 
 NAME create_full_announcement_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Announcement",
   "created_at": "{{ time 0 }}",
@@ -505,7 +494,7 @@ ASSERT {{ assertEquals "Announcement" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_note_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Note",
   "created_at": "{{ time 0 }}",
@@ -522,7 +511,7 @@ ASSERT {{ assertEquals "Note" "@0.notes" }}
 # 	EventGroup: eventGroup,
 # }
 NAME create_full_question_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Question",
   "created_at": "{{ time 0 }}",
@@ -539,7 +528,7 @@ ASSERT {{ assertEquals "Question" "@0.notes" }}
 # 	EventGroup: eventGroup,
 # }
 NAME create_full_dad_alert_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "D.A.D. Alert",
   "created_at": "{{ time 0 }}",
@@ -558,7 +547,7 @@ ASSERT {{ assertEquals "D.A.D. Alert" "@0.notes" }}
 # }
 
 NAME create_full_bg_check_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "BG Check",
   "created_at": "{{ time 0 }}",
@@ -585,7 +574,7 @@ ASSERT {{ assertEquals "mg/dL" "@0.units" }}
 # 		}
 
 NAME create_full_carb_correction_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Carb Correction",
   "created_at": "{{ time 0 }}",
@@ -631,7 +620,7 @@ ASSERT {{ assertEquals "lunch" "@0.reason" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Bolus",
   "created_at": "{{ time 0 }}",
@@ -651,7 +640,7 @@ ASSERT {{ assertEquals "Bolus" "@0.notes" }}
 # 			ComponentEvent: componentEvent,
 # 		}
 NAME create_full_bolus_wizard_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Bolus Wizard",
   "created_at": "{{ time 0 }}",
@@ -671,7 +660,7 @@ ASSERT {{ assertEquals "Bolus Wizard" "@0.notes" }}
 # 			ComponentEvent: componentEvent,
 # 		}
 NAME create_full_combo_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Combo Bolus",
   "created_at": "{{ time 0 }}",
@@ -690,7 +679,7 @@ ASSERT {{ assertEquals "Combo Bolus" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_correction_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Correction Bolus",
   "created_at": "{{ time 0 }}",
@@ -710,7 +699,7 @@ ASSERT {{ assertEquals "Correction Bolus" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_meal_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Meal Bolus",
   "created_at": "{{ time 0 }}",
@@ -730,7 +719,7 @@ ASSERT {{ assertEquals "Meal Bolus" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_snack_bolus_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Snack Bolus",
   "created_at": "{{ time 0 }}",
@@ -747,7 +736,7 @@ ASSERT {{ assertEquals "Snack Bolus" "@0.notes" }}
 # 	Activity:   activity,
 # }
 NAME create_full_exercise_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Exercise",
   "created_at": "{{ time 0 }}",
@@ -764,7 +753,7 @@ ASSERT {{ assertEquals "Exercise" "@0.notes" }}
 # 	ProfileSwitch: profileSwitch,
 # }
 NAME create_full_profile_switch_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Profile Switch",
   "created_at": "{{ time 0 }}",
@@ -782,7 +771,7 @@ ASSERT {{ assertEquals "Profile Switch" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_temp_basal_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Temp Basal",
   "created_at": "{{ time 0 }}",
@@ -799,7 +788,7 @@ ASSERT {{ assertEquals "Temp Basal" "@0.notes" }}
 # 	TempTarget: tempTarget,
 # }
 NAME create_full_temporary_target_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Temporary Target",
   "created_at": "{{ time 0 }}",
@@ -816,7 +805,7 @@ ASSERT {{ assertEquals "Temporary Target" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_openaps_offline_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "OpenAPS Offline",
   "created_at": "{{ time 0 }}",
@@ -834,7 +823,7 @@ ASSERT {{ assertEquals "OpenAPS Offline" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_pump_battery_change_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Pump Battery Change",
   "created_at": "{{ time 0 }}",
@@ -851,7 +840,7 @@ ASSERT {{ assertEquals "Pump Battery Change" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_sensor_change_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Sensor Change",
   "created_at": "{{ time 0 }}",
@@ -868,7 +857,7 @@ ASSERT {{ assertEquals "Sensor Change" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_sensor_start_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Sensor Start",
   "created_at": "{{ time 0 }}",
@@ -885,7 +874,7 @@ ASSERT {{ assertEquals "Sensor Start" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_site_change_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Site Change",
   "created_at": "{{ time 0 }}",
@@ -902,7 +891,7 @@ ASSERT {{ assertEquals "Site Change" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_insulin_change_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Insulin Change",
   "created_at": "{{ time 0 }}",
@@ -919,7 +908,7 @@ ASSERT {{ assertEquals "Insulin Change" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_cannula_fill_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Cannula Fill",
   "created_at": "{{ time 0 }}",
@@ -936,7 +925,7 @@ ASSERT {{ assertEquals "Cannula Fill" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_prime_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Prime",
   "created_at": "{{ time 0 }}",
@@ -953,7 +942,7 @@ ASSERT {{ assertEquals "Prime" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_reservoir_change_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Reservoir Change",
   "created_at": "{{ time 0 }}",
@@ -971,7 +960,7 @@ ASSERT {{ assertEquals "Reservoir Change" "@0.notes" }}
 # 	ComponentEvent: componentEvent,
 # }
 NAME create_full_calibration_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Calibration",
   "created_at": "{{ time 0 }}",

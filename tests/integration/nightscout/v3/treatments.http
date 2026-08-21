@@ -1,22 +1,4 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
 
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
-
-NAME jwtauth
-GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
-ASSERT_STATUS 200
-
-
-# Auth with JWT
-NAME jwt
-SET {{ .jwtauth.token }}
 
 ////////
 // Create
@@ -24,7 +6,7 @@ SET {{ .jwtauth.token }}
 
 
 NAME create_bolus_wizard_v3
-POST http://{{ .site }}/api/v3/treatments
+POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B {
   "eventType": "Bolus Wizard",
@@ -56,7 +38,7 @@ ASSERT {{ assertExists "@result.srvCreated" }}
 ASSERT {{ assertExists "@result.srvModified" }}
 
 NAME create_profile_switch_v3
-POST http://{{ .site }}/api/v3/treatments
+POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B {
     "app": "AAPS",
@@ -79,7 +61,7 @@ ASSERT {{ assertEquals "Profile Switch" "@result.eventType" }}
 
 
 NAME create_patch_test_v3
-POST http://{{ .site }}/api/v3/treatments
+POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B { "app": "AAPS", "date": 1786184674000, "eventType": "Meal Bolus", "insulin": 4.3}
 ASSERT_STATUS 201
@@ -87,7 +69,7 @@ ASSERT {{ assertEquals "Meal Bolus" "@result.eventType" }}
 ASSERT {{ assertEquals 4.3 "@result.insulin" }}
 
 NAME patch_test_v3
-PATCH http://{{ .site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "carbs": 45, "notes": "Updated notes from patch_test_v3" }
 ASSERT_STATUS 200
@@ -96,7 +78,7 @@ ASSERT {{ assertEquals 45 "@result.carbs" }}
 ASSERT {{ assertEquals 4.3 "@result.insulin" }}
 
 NAME get_patched_test_v3
-GET http://{{ .site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated notes from patch_test_v3" "@result.notes" }}
@@ -104,7 +86,7 @@ ASSERT {{ assertEquals 45 "@result.carbs" }}
 ASSERT {{ assertEquals 4.3 "@result.insulin" }}
 
 NAME patch_patched_again_note_v3
-PATCH http://{{ .site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "notes": "Updated by patch_patched_again_note_v3", "carbs": 20, "insulin": 1.2 }
 ASSERT_STATUS 200
@@ -114,7 +96,7 @@ ASSERT {{ assertEquals 1.2 "@result.insulin" }}
 
 
 NAME get_patched_test_v3_again
-GET http://{{ .site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated by patch_patched_again_note_v3" "@result.notes" }}
@@ -122,14 +104,14 @@ ASSERT {{ assertEquals 20 "@result.carbs" }}
 ASSERT {{ assertEquals 1.2 "@result.insulin" }}
 
 NAME patch_test_v3_again_again
-PATCH http://{{ .site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "carbs": 0 }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 0 "@result.carbs" }}
 
 NAME get_patched_test_v3_again_again
-GET http://{{ .site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
+GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated by patch_patched_again_note_v3" "@result.notes" }}

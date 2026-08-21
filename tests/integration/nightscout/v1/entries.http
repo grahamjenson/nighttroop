@@ -1,20 +1,10 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
-
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 //////
 // CREATE
 //////
 
 NAME create_entry_v1
-POST http://{{ .site }}/api/v1/entries?token={{ token }}
+POST http://{{ site }}/api/v1/entries?token={{ token }}
 B { "sgv": 101, "type": "sgv"}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@0.sgv" }}
@@ -23,7 +13,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME create_full_entry_v1
-POST http://{{ .site }}/api/v1/entries?token={{ token}}
+POST http://{{ site }}/api/v1/entries?token={{ token}}
 B {
     "sgv": 100,
     "type": "sgv",
@@ -55,7 +45,7 @@ ASSERT {{ assertEquals 1 "@0.noise" }}
 ///////
 
 NAME get_entries_v1
-GET http://{{ .site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
@@ -63,7 +53,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME get_entries_type_v1
-GET http://{{ .site }}/api/v1/entries/sgv?token={{ token }}
+GET http://{{ site }}/api/v1/entries/sgv?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
@@ -73,19 +63,19 @@ ASSERT {{ assertEquals "sgv" "@0.type" }}
 /////
 
 NAME update_entries_v1
-PUT http://{{ .site }}/api/v1/entries?token={{ token }}
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
 B { "_id": "{{ dig "create_entry_v1.0._id" }}", "sgv": 102, "type": "sgv" }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 102 "@sgv" }}
 
 NAME get_entries_after_put_v1
-GET http://{{ .site }}/api/v1/entries/sgv?token={{ token }}
+GET http://{{ site }}/api/v1/entries/sgv?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 102 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
 
 NAME update_entries_force_create_v1
-PUT http://{{ .site }}/api/v1/entries?token={{ token }}
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
 B { "_id": "MyVeryOwnID", "sgv": 102, "type": "sgv" }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 102 "@sgv" }}
@@ -95,7 +85,7 @@ ASSERT {{ assertEquals 102 "@sgv" }}
 ///////
 
 NAME delete_entries_v1
-DELETE http://{{ .site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 1 "@deletedCount" }}
 
@@ -105,7 +95,7 @@ ASSERT {{ assertEquals 1 "@deletedCount" }}
 ///////
 
 NAME create_entry_for_bad_tests_v1
-POST http://{{ .site }}/api/v1/entries?token={{ token }}
+POST http://{{ site }}/api/v1/entries?token={{ token }}
 B { "sgv": 101, "type": "sgv", "device": "my-device", "app": "my-app" }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@0.sgv" }}
@@ -114,7 +104,7 @@ ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME bad_update_but_change_device_v1
-PUT http://{{ .site }}/api/v1/entries?token={{ token }}
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
 B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "not-device", "sgv": 104, "type": "sgv" }
 ASSERT_STATUS 400
 ASSERT {{ assertEquals "Field device cannot be modified by the client" "@message" }}

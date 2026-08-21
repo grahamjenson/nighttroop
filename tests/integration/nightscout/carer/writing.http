@@ -1,21 +1,4 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
 
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
-
-NAME jwtauth
-GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
-ASSERT_STATUS 200
-
-# Auth with JWT
-NAME jwt
-SET {{ .jwtauth.token }}
 
 
 # Uri entryEndpoint(nsURL, token, DateTime gteCreatedAt) =>
@@ -41,7 +24,7 @@ SET {{ .jwtauth.token }}
 ######
 
 NAME create_devicestatus_v1
-POST http://{{ .site }}/api/v1/devicestatus?token={{ token }}
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
 B {
     "app": "AAPS",
     "configuration": {},
@@ -122,7 +105,7 @@ ASSERT_STATUS 200
 
 
 NAME create_treatmentses_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B [
   {
     "eventType": "Temporary Target",

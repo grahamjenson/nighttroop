@@ -7,3 +7,6 @@ tmp
 master_key.bin
 bin
 coverage.out
+
+*.pprof
+*.test

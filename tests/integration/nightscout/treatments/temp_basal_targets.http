@@ -10,7 +10,7 @@ NAME site
 SET {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
-GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
 ASSERT_STATUS 200
 
 # Auth with JWT
@@ -19,7 +19,7 @@ SET {{ .jwtauth.token }}
 
 
 NAME create_profile_switch_v3
-POST http://{{ .site }}/api/v3/treatments
+POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B   {
     "date": 97,

@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -24,9 +25,15 @@ var embeddedFiles embed.FS
 
 func TestRequests(t *testing.T) {
 
-	config, controlDB, err := testutils.GetConfigControlDBForTest()
+	config, controlDB, siteInformation, err := testutils.GetConfigControlDBAndSiteDBForTest()
+
 	if err != nil {
 		t.Fatalf("failed to get config and databases: %v", err)
+	}
+
+	defaultJwt, _, err := config.Security.GenerateUserJWTToken(siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
+	if err != nil {
+		t.Fatalf("failed to generate JWT token: %v", err)
 	}
 
 	router := server.GetMainHandler(controlDB, config)
@@ -46,7 +53,7 @@ func TestRequests(t *testing.T) {
 			return nil
 		}
 
-		runTheRequestFileAsATest(t, path, router)
+		runTheRequestFileAsATest(t, path, router, siteInformation, defaultJwt)
 
 		return nil
 	})
@@ -57,7 +64,8 @@ func TestRequests(t *testing.T) {
 
 }
 
-func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.Handler) {
+func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.Handler, siteInformation *db.SiteCreateResult, defaultJwt string) {
+
 	removeNightscout := strings.TrimPrefix(requestFilePath, "nightscout/")
 	t.Run(removeNightscout, func(t *testing.T) {
 		requestFileBytes, err := embeddedFiles.ReadFile(requestFilePath)
@@ -69,7 +77,11 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 		fmt.Printf("Running request file: %s\n", requestFilePath)
 		fmt.Println("===============================================")
 
-		requestContext := map[string]any{}
+		requestContext := map[string]any{
+			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
+			"default_token": siteInformation.PwdNSToken,
+			"default_jwt":   defaultJwt,
+		}
 		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext, requestFilePath)
 		if err != nil {
 			t.Fatalf("failed to parse request file: %v", err)
@@ -94,6 +106,8 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 				fmt.Println()
 				fmt.Println("- - - - - - - - - - - - - - - - ")
 				fmt.Println()
+				// default information
+
 				statusCode, output, _, newContext, err := realRequest.ExecuteRequest(router, requestContext)
 				if err != nil {
 					t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, realRequest.Method, realRequest.URL)

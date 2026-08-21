@@ -1,27 +1,9 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
-
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
-
-NAME jwtauth
-GET http://{{ .site }}/api/v2/authorization/request/token={{ .token }}
-ASSERT_STATUS 200
-
-# Auth with JWT
-NAME jwt
-SET {{ .jwtauth.token }}
 
 ######
 # CREATE
 ######
 NAME create_devicestatus_v1
-POST http://{{ .site }}/api/v1/devicestatus?token={{ token }}
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
 B {
     "app": "AAPS",
     "configuration": {},
@@ -111,7 +93,7 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals false "@0.isCharging" }} 
 
 NAME create_treatmentses_v1
-POST http://{{ .site }}/api/v1/treatments?token={{ token }}
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B [
     {
     "app": "AAPS",
@@ -395,7 +377,7 @@ ASSERT_STATUS 200
 
 
 NAME create_profile_v3
-POST http://{{ .site }}/api/v3/profiles
+POST http://{{ site }}/api/v3/profiles
 H Authorization: Bearer {{ jwt }}
 B {
     "defaultProfile": "currentProfileName",
@@ -431,7 +413,7 @@ ASSERT_STATUS 201
 
 
 NAME create_aaps_entries_v1
-POST http://{{ .site }}/api/v1/entries?token={{ token }}
+POST http://{{ site }}/api/v1/entries?token={{ token }}
 B [
   {
     "date": 1705525996000,

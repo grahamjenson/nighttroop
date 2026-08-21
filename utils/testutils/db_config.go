@@ -33,7 +33,7 @@ func GetConfigControlDBForTest() (config.ServerConfig, *db.ControlDB, error) {
 	return cfg, controlDB, nil
 }
 
-func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteDB, error) {
+func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteCreateResult, error) {
 	cfg := GetTestServerConfig()
 
 	controlDB, err := db.NewControlDB(cfg)
@@ -46,5 +46,5 @@ func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *
 		return cfg, nil, nil, fmt.Errorf("cannot create site db: %w", err)
 	}
 
-	return cfg, controlDB, identityValues.SiteDB, nil
+	return cfg, controlDB, identityValues, nil
 }

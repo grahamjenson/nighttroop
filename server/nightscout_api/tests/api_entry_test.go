@@ -55,7 +55,8 @@ var testAPIEntries = []testAPIEntry{
 }
 
 func TestAPIEntry(t *testing.T) {
-	cfg, controlDB, userDB, _ := testutils.GetConfigControlDBAndSiteDBForTest()
+	cfg, controlDB, userDBSite, _ := testutils.GetConfigControlDBAndSiteDBForTest()
+	userDB := userDBSite.SiteDB
 	path := fmt.Sprintf("%s://ns.%s.%s/api/v3/entries", cfg.HostProtocol, userDB.Subdomain, cfg.HostNameWithPort)
 	mainHandler := server.GetMainHandler(controlDB, cfg)
 	for _, entry := range testAPIEntries {

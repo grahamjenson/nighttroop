@@ -1,20 +1,9 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
-
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
-
 //////
 // CREATE
 //////
 
 NAME create_profile_v1
-POST http://{{ .site }}/api/v1/profiles?token={{ token }}
+POST http://{{ site }}/api/v1/profiles?token={{ token }}
 B {
     "units": "mg/dL",
     "startDate": "{{ time 0 }}",
@@ -70,7 +59,7 @@ ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 
 
 NAME create_profile_aaps_v1
-POST http://{{ .site }}/api/v1/profiles?token={{ token }}
+POST http://{{ site }}/api/v1/profiles?token={{ token }}
 B {
     "defaultProfile": "ArmDash-2025",
     "date": 1786253633284,
@@ -383,7 +372,7 @@ ASSERT {{ assertEquals "Pacific/Auckland" "@0.store.ArmDash-2025.timezone" }}
 ///////
 
 NAME get_profiles_type_v1
-GET http://{{ .site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
+GET http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
 ASSERT {{ assertEquals "mg/dL" "@0.units" }}
@@ -401,6 +390,6 @@ ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 ///////
 
 NAME delete_entries_v1
-DELETE http://{{ .site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
+DELETE http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 1 "@deletedCount" }}

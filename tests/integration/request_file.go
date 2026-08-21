@@ -432,15 +432,26 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 					return dug
 				}
 			},
-
+			"site": func() string {
+				if v, ok := ctx["site"]; ok && v != nil {
+					return ctx["site"].(string)
+				}
+				return ctx["default_site"].(string)
+			},
 			"token": func() string {
-				return ctx["token"].(string)
+				if v, ok := ctx["token"]; ok && v != nil {
+					return ctx["token"].(string)
+				}
+				return ctx["default_token"].(string)
 			},
 			"read_token": func() string {
 				return ctx["read_token"].(string)
 			},
 			"jwt": func() string {
-				return ctx["jwt"].(string)
+				if v, ok := ctx["jwt"]; ok && v != nil {
+					return ctx["jwt"].(string)
+				}
+				return ctx["default_jwt"].(string)
 			},
 			"read_jwt": func() string {
 				return ctx["read_jwt"].(string)
