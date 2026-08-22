@@ -223,23 +223,23 @@ func DBModelToFood(source *site.FoodPreset) Food {
 func DBModelToProfile(source *site.ProfilePreset) Profile {
 	var nightscoutProfile Profile
 	if source != nil {
-		if (*source).Dia != nil {
-			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Dia)
-			nightscoutProfile.Dia = &nightscoutFlexibleFloat64
-		}
-		nightscoutProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
-		nightscoutProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
-		nightscoutProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
-		nightscoutProfile.TargetLow = JSONToScheduleValueSlice((*source).TargetsLowJson)
-		nightscoutProfile.TargetHigh = JSONToScheduleValueSlice((*source).TargetsHighJson)
-		if (*source).Timezone != nil {
-			nightscoutTimezone := Timezone(*(*source).Timezone)
-			nightscoutProfile.Timezone = &nightscoutTimezone
-		}
 		if (*source).Units != nil {
 			nightscoutUnits := Units(*(*source).Units)
 			nightscoutProfile.Units = &nightscoutUnits
 		}
+		if (*source).Dia != nil {
+			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Dia)
+			nightscoutProfile.Dia = &nightscoutFlexibleFloat64
+		}
+		if (*source).Timezone != nil {
+			nightscoutTimezone := Timezone(*(*source).Timezone)
+			nightscoutProfile.Timezone = &nightscoutTimezone
+		}
+		nightscoutProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
+		nightscoutProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
+		nightscoutProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
+		nightscoutProfile.TargetLow = JSONToScheduleValueSlice((*source).TargetsLowJson)
+		nightscoutProfile.TargetHigh = JSONToScheduleValueSlice((*source).TargetsHighJson)
 	}
 	return nightscoutProfile
 }

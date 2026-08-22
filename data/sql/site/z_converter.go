@@ -102,17 +102,25 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	var siteCreateComponentEventParams CreateComponentEventParams
 	siteCreateComponentEventParams.ID = source.ID
 	siteCreateComponentEventParams.EventType = source.EventType
+	if source.SensorCode != nil {
+		xstring := *source.SensorCode
+		siteCreateComponentEventParams.SensorCode = &xstring
+	}
+	if source.TransmitterID != nil {
+		xstring2 := *source.TransmitterID
+		siteCreateComponentEventParams.TransmitterID = &xstring2
+	}
 	if source.PumpID != nil {
-		xstring := *source.PumpID
-		siteCreateComponentEventParams.PumpID = &xstring
+		xstring3 := *source.PumpID
+		siteCreateComponentEventParams.PumpID = &xstring3
 	}
 	if source.PumpSerial != nil {
-		xstring2 := *source.PumpSerial
-		siteCreateComponentEventParams.PumpSerial = &xstring2
+		xstring4 := *source.PumpSerial
+		siteCreateComponentEventParams.PumpSerial = &xstring4
 	}
 	if source.PumpType != nil {
-		xstring3 := *source.PumpType
-		siteCreateComponentEventParams.PumpType = &xstring3
+		xstring5 := *source.PumpType
+		siteCreateComponentEventParams.PumpType = &xstring5
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -120,16 +128,16 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	}
 	siteCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring4 := *source.RawJsonData
-		siteCreateComponentEventParams.RawJsonData = &xstring4
+		xstring6 := *source.RawJsonData
+		siteCreateComponentEventParams.RawJsonData = &xstring6
 	}
 	if source.CreatedByAppName != nil {
-		xstring5 := *source.CreatedByAppName
-		siteCreateComponentEventParams.CreatedByAppName = &xstring5
+		xstring7 := *source.CreatedByAppName
+		siteCreateComponentEventParams.CreatedByAppName = &xstring7
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring6 := *source.CreatedByDeviceName
-		siteCreateComponentEventParams.CreatedByDeviceName = &xstring6
+		xstring8 := *source.CreatedByDeviceName
+		siteCreateComponentEventParams.CreatedByDeviceName = &xstring8
 	}
 	siteCreateComponentEventParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateComponentEventParams
@@ -981,6 +989,10 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 		xstring2 := *source.Timezone
 		siteCreateProfileSwitchParams.Timezone = &xstring2
 	}
+	if source.Timeshift != nil {
+		xint64 := *source.Timeshift
+		siteCreateProfileSwitchParams.Timeshift = &xint64
+	}
 	if source.CarbRatiosJson != nil {
 		xstring3 := *source.CarbRatiosJson
 		siteCreateProfileSwitchParams.CarbRatiosJson = &xstring3
@@ -1010,8 +1022,8 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 		siteCreateProfileSwitchParams.Reason = &xstring9
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		siteCreateProfileSwitchParams.UtcOffsetMinutes = &xint642
 	}
 	siteCreateProfileSwitchParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {

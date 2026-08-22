@@ -639,7 +639,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	profileSwitch := TreatmentToProfileSwitch(treatment)
 	componentEvent := TreatmentToComponentEvent(treatment)
 	activity := TreatmentToActivity(treatment)
-	notificationEvent := TreatmentToNotificationEvent(treatment)
+	notificationEvent := TreatmentToNotificationEvent(treatment, *treatment.EventType)
 
 	//////
 	// Limit the values to only the ones that are relevant to the event type
@@ -733,7 +733,8 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 		}
 	case nightscout.Question:
 		return site.EventGroupsBundle{
-			EventGroup: eventGroup,
+			EventGroup:        eventGroup,
+			NotificationEvent: notificationEvent,
 		}
 	case nightscout.SensorChange:
 		return site.EventGroupsBundle{
@@ -927,12 +928,22 @@ func TreatmentToInsulinDose(source nightscout.Treatment) *site.InsulinDose {
 // NotificationEvents
 ///////
 
-func TreatmentToNotificationEvent(source nightscout.Treatment) *site.NotificationEvent {
+func TreatmentToNotificationEvent(source nightscout.Treatment, eventType nightscout.TreatmentEventType) *site.NotificationEvent {
 	target := nightscout.PartialTreatmentToNotificationEvent(source)
 
-	target.Severity = 0
-	target.NotificationType = "announcement"
-	target.Title = "Treatment Event"
+	if eventType == nightscout.Announcement {
+		target.Severity = 0
+		target.NotificationType = "announcement"
+		target.Title = "Announcement"
+	} else if eventType == nightscout.Question {
+		target.Severity = 1
+		target.NotificationType = "question"
+		target.Title = "Question"
+	} else {
+		target.Severity = 0
+		target.NotificationType = "announcement"
+		target.Title = "Treatment Event"
+	}
 
 	// Always is assigned
 	if source.Name != nil {
@@ -950,11 +961,7 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
 	target := nightscout.PartialTreatmentToProfileSwitch(source)
 
 	// TODO: This is the bit that will need more work, with the json of profile
-	if source.Name != nil {
-
-		target.Name = source.Name.String()
-	} else if source.Profile != nil {
-
+	if source.Profile != nil {
 		target.Name = source.Profile.String()
 	}
 

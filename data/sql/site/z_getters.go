@@ -5749,6 +5749,28 @@ func (m CreateComponentEventParams) SetEventType(v string) CreateComponentEventP
 	return m
 }
 
+// GetSensorCode returns the SensorCode value.
+func (m CreateComponentEventParams) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated CreateComponentEventParams.
+func (m CreateComponentEventParams) SetSensorCode(v *string) CreateComponentEventParams {
+	m.SensorCode = v
+	return m
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m CreateComponentEventParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated CreateComponentEventParams.
+func (m CreateComponentEventParams) SetTransmitterID(v *string) CreateComponentEventParams {
+	m.TransmitterID = v
+	return m
+}
+
 // GetPumpID returns the PumpID value.
 func (m CreateComponentEventParams) GetPumpID() *string {
 	return m.PumpID
@@ -10003,6 +10025,17 @@ func (m CreateProfileSwitchParams) GetTimezone() *string {
 // SetTimezone sets the Timezone value and returns the updated CreateProfileSwitchParams.
 func (m CreateProfileSwitchParams) SetTimezone(v *string) CreateProfileSwitchParams {
 	m.Timezone = v
+	return m
+}
+
+// GetTimeshift returns the Timeshift value.
+func (m CreateProfileSwitchParams) GetTimeshift() *int64 {
+	return m.Timeshift
+}
+
+// SetTimeshift sets the Timeshift value and returns the updated CreateProfileSwitchParams.
+func (m CreateProfileSwitchParams) SetTimeshift(v *int64) CreateProfileSwitchParams {
+	m.Timeshift = v
 	return m
 }
 

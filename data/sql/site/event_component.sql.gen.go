@@ -74,6 +74,8 @@ const createComponentEvent = `-- name: CreateComponentEvent :one
 INSERT INTO component_events (
     id,
     event_type,
+    sensor_code,
+    transmitter_id,
     pump_id,
     pump_serial,
     pump_type,
@@ -85,13 +87,15 @@ INSERT INTO component_events (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
 `
 
 type CreateComponentEventParams struct {
 	ID                    string
 	EventType             string
+	SensorCode            *string
+	TransmitterID         *string
 	PumpID                *string
 	PumpSerial            *string
 	PumpType              *string
@@ -110,6 +114,8 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 	row := q.queryRow(ctx, q.createComponentEventStmt, createComponentEvent,
 		arg.ID,
 		arg.EventType,
+		arg.SensorCode,
+		arg.TransmitterID,
 		arg.PumpID,
 		arg.PumpSerial,
 		arg.PumpType,

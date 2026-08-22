@@ -86,6 +86,7 @@ INSERT INTO profile_switches (
     dia,
     units,
     timezone,
+    timeshift,
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
@@ -102,7 +103,7 @@ INSERT INTO profile_switches (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, name, duration_minutes, percent, timeshift, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
@@ -114,6 +115,7 @@ type CreateProfileSwitchParams struct {
 	Dia                      *float64
 	Units                    *string
 	Timezone                 *string
+	Timeshift                *int64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -141,6 +143,7 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 		arg.Dia,
 		arg.Units,
 		arg.Timezone,
+		arg.Timeshift,
 		arg.CarbRatiosJson,
 		arg.InsulinSensitivitiesJson,
 		arg.BasalRatesJson,

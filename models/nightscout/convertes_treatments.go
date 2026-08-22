@@ -236,6 +236,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
+	// goverter:map Title Name
 	UpdateNotificationEventToTreatment(source *site.NotificationEvent, target *Treatment)
 
 	// goverter:update target

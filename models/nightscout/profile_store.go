@@ -57,15 +57,15 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 }
 
 type Profile struct {
-	Dia        *FlexibleFloat64 `json:"dia,omitempty"`
-	CarbRatio  []*ScheduleValue `json:"carbratio,omitempty"`
+	Units    *Units           `json:"units,omitempty"`
+	Dia      *FlexibleFloat64 `json:"dia,omitempty"`
+	Timezone *Timezone        `json:"timezone,omitempty"`
+
 	Sens       []*ScheduleValue `json:"sens,omitempty"`
+	CarbRatio  []*ScheduleValue `json:"carbratio,omitempty"`
 	Basal      []*ScheduleValue `json:"basal,omitempty"`
 	TargetLow  []*ScheduleValue `json:"target_low,omitempty"`
 	TargetHigh []*ScheduleValue `json:"target_high,omitempty"`
-
-	Timezone *Timezone `json:"timezone,omitempty"`
-	Units    *Units    `json:"units,omitempty"`
 }
 
 type ScheduleValue struct {

@@ -5,6 +5,8 @@
 INSERT INTO component_events (
     id,
     event_type,
+    sensor_code,
+    transmitter_id,
     pump_id,
     pump_serial,
     pump_type,
@@ -16,7 +18,7 @@ INSERT INTO component_events (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
