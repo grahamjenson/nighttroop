@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -243,6 +244,17 @@ func (config *ServerConfig) IsProd() bool {
 
 func (config *ServerConfig) IsTest() bool {
 	return config.Mode == consts.Test
+}
+
+func (config *ServerConfig) IsDevOrTest() bool {
+	return config.IsDev() || config.IsTest()
+}
+
+func (config *ServerConfig) GetBcryptCost() int {
+	if config.IsDevOrTest() {
+		return bcrypt.MinCost
+	}
+	return bcrypt.DefaultCost
 }
 
 func (config *ServerConfig) ValidateClean() error {

@@ -138,7 +138,7 @@ type SiteCreateResult struct {
 }
 
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
-	subdomain := utils.NextSiteSubdomain(db.serverConfig.IsDev() || db.serverConfig.IsTest())
+	subdomain := utils.NextSiteSubdomain(db.serverConfig.IsDevOrTest())
 	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
 		subdomain = utils.NextSiteSubdomain(false)
@@ -147,7 +147,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 		}
 	}
 
-	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain + ":")
+	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain+":", db.serverConfig.GetBcryptCost())
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}

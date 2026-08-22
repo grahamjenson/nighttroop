@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pquerna/otp/totp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
@@ -31,13 +32,14 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 }
 
 func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, err error) {
-	password, hashedPassword, err = SecureCredentials()
 
 	if cfg.IsDevOrTest() {
 		// We are going to override this stuff in dev, just to make it easier
 		password = *cfg.DevelopmentDangerousHardcodedAdminPassword
-		hashedPassword = HashPassword(password)
+		hashedPassword = HashPassword(password, bcrypt.MinCost)
+		return password, hashedPassword, nil
 	}
+	password, hashedPassword, err = SecureCredentials(bcrypt.DefaultCost)
 
 	if err != nil {
 		return "", "", fmt.Errorf("cannot generate secure credentials: %w", err)

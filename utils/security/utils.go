@@ -44,18 +44,18 @@ func SecureRandomString(length int, charset string) string {
 	return string(bytes)
 }
 
-func SecureCredentials() (password string, hashedPassword string, err error) {
-	return SecureCredentialsWithPrefix("")
+func SecureCredentials(cost int) (password string, hashedPassword string, err error) {
+	return SecureCredentialsWithPrefix("", cost)
 }
 
-func SecureCredentialsWithPrefix(prefix string) (password string, hashedPassword string, err error) {
+func SecureCredentialsWithPrefix(prefix string, cost int) (password string, hashedPassword string, err error) {
 	// 1. Generate a secure random string for the password
 	password = SecureRandomString(12, API_KEY_CHAR_SET)
 	password = prefix + password
 
 	// 2. Hash the password
 	// Bcrypt automatically generates a unique salt
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	if err != nil {
 		return "", "", err
 	}
@@ -64,8 +64,8 @@ func SecureCredentialsWithPrefix(prefix string) (password string, hashedPassword
 }
 
 // This is not used normally so we should be fine
-func HashPassword(password string) string {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func HashPassword(password string, cost int) string {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	if err != nil {
 		log.Fatal("Error hashing password: ", err)
 	}
