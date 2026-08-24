@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"strings"
 
@@ -25,6 +26,9 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		fmt.Println("SAFSAFASFASF")
+		fmt.Println("Request Host:", r.Host)
+		fmt.Println("FSDFSDFSDFDSF")
 		// Global Rate Limit
 		allowed := config.RateLimiters.GlobalRateLimiter.Allow()
 		if !allowed {
@@ -42,47 +46,40 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 			slog.Info("Global IP rate limit exceeded", "ip", ipAddress)
 			return
 		}
-
-		subdomain, err := GetSubdomainFromHeader(r.Host, config.HostName)
+		host, _, err := net.SplitHostPort(r.Host)
 		if err != nil {
-			slog.Error("Main router 404 for host header", "host", r.Host, "error", err)
+			host = r.Host
+		}
+		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, []string{config.HostName, "localhost", "t1d.nz"})
+		if err != nil {
+			slog.Error("Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
 			return
 		}
 
-		switch {
-		case subdomain == "control" || subdomain == "admin":
+		switch routeTarget {
+		case RouteTargetControl:
 			controlRouter.ServeHTTP(w, r.WithContext(ctx))
-		case subdomain == "www" || subdomain == "public" || subdomain == "":
+		case RouteTargetPublic:
 			public.ServeHTTP(w, r.WithContext(ctx))
-		case strings.HasSuffix(subdomain, ".ns") || strings.HasPrefix(subdomain, "ns."):
-			userSubdomain := strings.TrimSuffix(subdomain, ".ns")
-			userSubdomain = strings.TrimPrefix(userSubdomain, "ns.")
-
-			if !utils.SyntacticallyValidateSiteID(userSubdomain) {
-				slog.Error("Main router 404 for nightscout subdomain with invalid site id format", "subdomain", subdomain)
-				http.NotFound(w, r)
-				return
-			}
+		case RouteTargetNightscout:
 			// so <siteid>.ns.domain routes to the nightscout compatible API
-			if exists, ctx := SiteExistsAndWriteToContext(controlDB, userSubdomain, r); exists {
+			if exists, ctx := SiteExistsAndWriteToContext(controlDB, siteSubdomain, r); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
-				slog.Error("Main router 404 for nightscout subdomain", "subdomain", subdomain)
+				slog.Error("Main router 404 for nightscout subdomain", "subdomain", siteSubdomain)
 				http.NotFound(w, r)
 			}
-		case utils.SyntacticallyValidateSiteID(subdomain):
-			// Check to see if in memory map
-			// SHOULD ATTACH USER DB AND MODEL TO THE CONTEXT AT THIS POINT
-
-			if exists, ctx := SiteExistsAndWriteToContext(controlDB, subdomain, r); exists {
+		case RouteTargetSite:
+			// Attach userdb and model to the context
+			if exists, ctx := SiteExistsAndWriteToContext(controlDB, siteSubdomain, r); exists {
 				siteRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
-				slog.Error("Main router 404 for subdomain", "subdomain", subdomain)
+				slog.Error("Main router 404 for subdomain", "subdomain", siteSubdomain)
 				http.NotFound(w, r)
 			}
 		default:
-			slog.Error("Main router 404 for subdomain", "subdomain", subdomain)
+			slog.Error("Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
 		}
 	})
@@ -101,46 +98,55 @@ func SiteExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *h
 	return true, ctx
 }
 
-// This is a bit annoying but for subdomain routing we need to get the subdomain from the host header
-// For this we need to know the expected host like nt.t1d.nz and then summize the subdomain from there
-// What we do is we get the header, remove the port, remove the expected host and leave the subdomain
-// We also have to deal with localhost
-func GetSubdomainFromHeader(host_header, hostname string) (string, error) {
-	// remove port if present
-	host := host_header
-	// Remove the port if it is there
-	if before, _, ok := strings.Cut(host_header, ":"); ok {
-		host = before
-	}
+type RouteTarget int
 
-	endsWithHostName := strings.HasSuffix(host, hostname)
-	endsWithLocalhost := strings.HasSuffix(host, "localhost")
-	localhost_len := 9
+const (
+	RouteTargetPublic RouteTarget = iota
+	RouteTargetControl
+	RouteTargetSite
+	RouteTargetNightscout
+)
 
-	// If the host doesnt end with the host name OR localhost (for dev) then something is wrong, return null to trigger a 404;
-	if !endsWithHostName && !endsWithLocalhost {
-		return "", fmt.Errorf("invalid host: %s", host)
-	}
+func GetRouteTargetFromSubdomain(host_header string, validHostnames []string) (RouteTarget, string, error) {
 
-	if len(host) == len(hostname) || len(host) == len("localhost") {
-		return "", nil // This means there is no subdomain, just the main domain, so we return empty string
-	}
-
-	if endsWithHostName {
-		// If there is no '.' seperating the host from subdomain
-		if host[len(host)-len(hostname)-1] != '.' {
-			return "", fmt.Errorf("invalid host format: %s", host) // This should always be he case, and incase it isnt means something bad
+	allowedHost := false
+	for _, hostname := range validHostnames {
+		if strings.HasSuffix(host_header, hostname) {
+			allowedHost = true
+			break
 		}
-		return host[0 : len(host)-len(hostname)-1], nil
+	}
+	if !allowedHost {
+		return RouteTargetPublic, "", fmt.Errorf("host header %s does not match any valid hostnames", host_header)
 	}
 
-	if endsWithLocalhost {
-		// If there is no '.' seperating the host from subdomain
-		if host[len(host)-localhost_len-1] != '.' {
-			return "", fmt.Errorf("invalid host format: %s", host) // This should always be he case, and incase it isnt means something bad
+	if strings.HasPrefix(host_header, "control.") || strings.HasPrefix(host_header, "admin.") {
+		return RouteTargetControl, "", nil
+	}
+
+	if strings.HasPrefix(host_header, "public.") || strings.HasPrefix(host_header, "www.") {
+		return RouteTargetPublic, "", nil
+	}
+
+	subdomains := strings.Split(host_header, ".")
+	// 0 is undefined
+	// e.g. localhost = 1
+	// e.g alicezzz.localhost = 2
+	// e.g alicezzz.ns.localhost = 3
+	subdomainLength := len(subdomains)
+
+	if subdomainLength <= 1 {
+		return RouteTargetPublic, "", nil
+	}
+
+	// First subdomain should always be site
+	siteSubdomain := subdomains[0]
+	if utils.SyntacticallyValidateSiteID(siteSubdomain) {
+		if subdomains[1] == "ns" {
+			return RouteTargetNightscout, siteSubdomain, nil
 		}
-		return host[0 : len(host)-localhost_len-1], nil
+		return RouteTargetSite, siteSubdomain, nil
 	}
 
-	return "", fmt.Errorf("unexpected error parsing host: %s", host) // This should never happen but just in case
+	return RouteTargetPublic, siteSubdomain, nil
 }

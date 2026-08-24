@@ -82,5 +82,5 @@ func (db *SiteDB) URL() string {
 }
 
 func (db *SiteDB) NSURL() string {
-	return fmt.Sprintf("%s://ns.%s.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
+	return fmt.Sprintf("%s://%s.ns.%s:%d", db.serverConfig.HostProtocol, db.Subdomain, db.serverConfig.HostName, db.serverConfig.HostPort)
 }

@@ -14,6 +14,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/background/backup"
 	"nighttroop.t1d.nz/data/db"
@@ -147,7 +148,7 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.
 }
 
 func ValidateServer(c *s3utils.S3Client) error {
-	_, _, err := security.SecureCredentials()
+	_, _, err := security.SecureCredentials(bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("error generating secure credentials: %w", err)
 	}

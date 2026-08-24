@@ -57,3 +57,33 @@ In Development all initial passwords are `password` and all TOTP is `123123`
 ```
 got -coverpkg=./... -coverprofile=coverage.out tests && go tool cover -html=coverage.out
 ```
+
+
+# Profiling
+
+```
+got -cpuprofile=cpu.pprof gover
+```
+
+```
+go tool pprof -http=:8080 cpu.pprof 
+```
+
+
+# Intercepting client Calls to add values
+
+```
+brew install mitmproxy
+```
+
+run the server 
+
+```
+air | spretty
+```
+
+Run the mitm
+
+```
+mitmweb --listen-port 80 --mode reverse:http://localhost:8080
+```
