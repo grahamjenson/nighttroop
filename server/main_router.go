@@ -26,9 +26,6 @@ func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		fmt.Println("SAFSAFASFASF")
-		fmt.Println("Request Host:", r.Host)
-		fmt.Println("FSDFSDFSDFDSF")
 		// Global Rate Limit
 		allowed := config.RateLimiters.GlobalRateLimiter.Allow()
 		if !allowed {

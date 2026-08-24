@@ -1,0 +1,324 @@
+// We need to check that all return values satisfy the core/nssdk models
+
+// First AAPS will call status to check if logged in and other stats
+
+NAME get_status
+GET http://{{ site }}/api/v3/status
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// Then call lastModified to see if it needs to download any new data
+NAME get_last_modified
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// grabs the food
+NAME get_food
+GET http://{{ site }}/api/v3/food?limit=1000
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// Not sure what it is doing here, probably checking past devicestatuses
+// TODO
+NAME get_devicestatus_history
+GET http://{{ site }}/api/v3/devicestatus/history/{{ itime 5 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+// Adds all the entries
+NAME add_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787481585647,
+    "device": "Random",
+    "direction": "FortyFiveUp",
+    "filtered": 0.0,
+    "isReadOnly": false,
+    "isValid": true,
+    "sgv": 196.41645726265494,
+    "type": "sgv",
+    "unfiltered": 0.0,
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals 196.41645726265494 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+ASSERT {{ assertEquals 720 "@result.utcOffset" }}
+ASSERT {{ assertExists "@result.identifier" }}
+ASSERT {{ assertExists "@result.date" }}
+ASSERT {{ assertEquals "AAPS" "@result.app" }}
+ASSERT {{ assertEquals "Random" "@result.device" }}
+ASSERT {{ assertEquals "FortyFiveUp" "@result.direction" }}
+ASSERT {{ assertEquals 0.0 "@result.filtered" }}
+ASSERT {{ assertEquals 0.0 "@result.unfiltered" }}
+ASSERT {{ assertEquals true "@result.isValid" }}
+ASSERT {{ assertEquals false "@result.isReadOnly" }}
+
+
+NAME add_treatment_cc
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 5.0,
+    "date": 1787483317000,
+    "eventType": "Carb Correction",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 38.0,
+    "date": 1787501760000,
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "Random carbs",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_temp_basal
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "absolute": 0.0,
+    "app": "AAPS",
+    "date": 1787540162237,
+    "duration": 90,
+    "durationInMilliseconds": 5400000,
+    "eventType": "Temp Basal",
+    "isReadOnly": false,
+    "isValid": true,
+    "pumpId": 1787540162237,
+    "pumpSerial": "",
+    "pumpType": "GENERIC_AAPS",
+    "rate": 0.0,
+    "type": "NORMAL",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787480957000,
+    "duration": 0,
+    "eventType": "Profile Switch",
+    "isReadOnly": false,
+    "isValid": true,
+    "originalDuration": 0,
+    "originalProfileName": "FirstProfile",
+    "percentage": 100,
+    "profile": "FirstProfile",
+    "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":10}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.6},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.54}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
+    "timeshift": 0,
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_profile_switch_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787480962627,
+    "eventType": "Note",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "FirstProfile",
+    "originalCustomizedName": "FirstProfile",
+    "originalDuration": 0,
+    "originalEnd": 1787480957000,
+    "originalPercentage": 100,
+    "originalProfileName": "FirstProfile",
+    "originalTimeshift": 0,
+    "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.6},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.54}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME add_treatment_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787480009190,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "eventType": "Note",
+    "isReadOnly": false,
+    "isValid": true,
+    "notes": "AAPS started - Google sdk_gphone64_arm64",
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+
+NAME add_device_status
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "configuration": {
+        "aps": "SMB",
+        "apsConfiguration": {
+            "use_dynamic_sensitivity": false,
+            "DynISFAdjust": 100
+        },
+        "insulin": 2,
+        "insulinConfiguration": {},
+        "overviewConfiguration": {
+            "units": "mmol",
+            "eatingsoon_duration": 45,
+            "eatingsoon_target": 90,
+            "activity_duration": 90,
+            "activity_target": 140,
+            "hypo_duration": 60,
+            "hypo_target": 160,
+            "low_mark": 4,
+            "high_mark": 10,
+            "statuslights_cage_warning": 48,
+            "statuslights_cage_critical": 72,
+            "statuslights_iage_warning": 72,
+            "statuslights_iage_critical": 144,
+            "statuslights_sage_warning": 216,
+            "statuslights_sage_critical": 240,
+            "statuslights_sbat_warning": 25,
+            "statuslights_sbat_critical": 5,
+            "statuslights_bage_warning": 216,
+            "statuslights_bage_critical": 240,
+            "statuslights_res_warning": 80,
+            "statuslights_res_critical": 10,
+            "statuslights_bat_warning": 51,
+            "statuslights_bat_critical": 26,
+            "boluswizard_percentage": 100,
+            "used_autosens_on_main_phone": false
+        },
+        "pump": "Generic AAPS",
+        "safetyConfiguration": {
+            "age": "teenage",
+            "treatmentssafety_maxbolus": 3,
+            "treatmentssafety_maxcarbs": 48
+        },
+        "sensitivity": 2,
+        "sensitivityConfiguration": {
+            "openaps_smb_min_5m_carbimpact": 8,
+            "absorption_cutoff": 6,
+            "autosens_min": 0.7,
+            "autosens_max": 1.2
+        },
+        "smoothing": "NoSmoothingPlugin",
+        "version": "3.3.1.0"
+    },
+    "date": 1787481213748,
+    "device": "openaps://Google sdk_gphone64_arm64",
+    "isCharging": false,
+    "openaps": {},
+    "pump": {
+        "battery": {},
+        "status": {}
+    },
+    "uploader": {},
+    "uploaderBattery": 100
+ }
+ASSERT_STATUS 201
+
+
+NAME add_profile
+POST http://{{ site }}/api/v3/profile
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "FirstProfile",
+    "date": 1787480950196,
+    "created_at": "2026-08-23T10:29:10.1960000Z",
+    "startDate": "2026-08-23T10:29:10.1960000Z",
+    "store": {
+        "FirstProfile": {
+            "dia": 5,
+            "carbratio": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 10
+                }
+            ],
+            "sens": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 10
+                }
+            ],
+            "basal": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 0.6
+                },
+                {
+                    "time": "01:00",
+                    "timeAsSeconds": 3600,
+                    "value": 0.54
+                }
+            ],
+            "target_low": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 6
+                }
+            ],
+            "target_high": [
+                {
+                    "time": "00:00",
+                    "timeAsSeconds": 0,
+                    "value": 10
+                }
+            ],
+            "units": "mmol",
+            "timezone": "Pacific/Auckland"
+        }
+    },
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// This I think runs until there are no more treatments, as like a sync method
+// This should actually work
+NAME get_treatments_from_history_new
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertLength 10 "@result" }}
+
+
+NAME get_treatments_from_history_old
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 30 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertLength 0 "@result" }}

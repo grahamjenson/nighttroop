@@ -502,6 +502,16 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 				AssertNotNil(t, actual, message, assertStruct.Path, assertStruct.Line)
 				return "true"
 			},
+			"assertLength": func(expectedLength int, rawActual any) string {
+				_, actual := normalizeExpectedAndAcutal(rawActual, rawActual, localResult)
+				actualLength := -1
+				if arr, ok := actual.([]any); ok {
+					actualLength = len(arr)
+				}
+				message := fmt.Sprintf("assertLength failed: expected length %d, got %d from [%v], output: %s", expectedLength, actualLength, rawActual, prettyOutput)
+				AssertEqual(t, expectedLength, actualLength, message, assertStruct.Path, assertStruct.Line)
+				return "true"
+			},
 		}).
 		Parse(assertStruct.Raw)
 	if err != nil {

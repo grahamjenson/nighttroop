@@ -41,6 +41,7 @@ func (r Record) ToMap(version3 bool) map[string]any {
 		out["srvModified"] = r.SrvModified
 		out["subject"] = r.Subject
 		out["isValid"] = r.DeletedAt == nil
+		out["isReadOnly"] = false
 		delete(out, "_id")
 	} else {
 		out["_id"] = id

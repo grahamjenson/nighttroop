@@ -98,5 +98,4 @@ var (
 	ErrCannotChangeCreatedAt  = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvCreated cannot be modified by the client"}
 	ErrCannotChangeModifiedAt = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvModified cannot be modified by the client"}
 	ErrCannotChangeModifiedBy = &HTTPError{Status: http.StatusBadRequest, Message: "Field modifiedBy cannot be modified by the client"}
-	ErrCannotChangeIsValid    = &HTTPError{Status: http.StatusBadRequest, Message: "Field isValid cannot be modified by the client"}
 )

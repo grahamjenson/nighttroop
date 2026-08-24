@@ -427,9 +427,6 @@ func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {
 	if _, ok := nsModelMap["modifiedBy"]; ok {
 		return nsutils.ErrCannotChangeModifiedBy
 	}
-	if _, ok := nsModelMap["isValid"]; ok {
-		return nsutils.ErrCannotChangeIsValid
-	}
 
 	return nil
 }
