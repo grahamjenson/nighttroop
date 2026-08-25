@@ -33,8 +33,7 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		nsutils.WriteRecordV3(w, record, query.Fields, false)
-
+		nsutils.WriteRecordV3(w, record, query.Fields, nsutils.Found)
 	}
 }
 
@@ -84,14 +83,18 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		record, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
+		record, duplicate, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
 		}
 
 		w.Header().Set("Location", fmt.Sprintf("/api/v3/%s/%s", collection, record.Identifier()))
-		nsutils.WriteRecordV3(w, record, nil, true)
+		if duplicate {
+			nsutils.WriteRecordV3(w, record, nil, nsutils.FoundDuplicate)
+			return
+		}
+		nsutils.WriteRecordV3(w, record, nil, nsutils.Created)
 
 	}
 }
@@ -189,7 +192,11 @@ func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		nsutils.WriteRecordV3(w, record, nil, created)
+		if created {
+			nsutils.WriteRecordV3(w, record, nil, nsutils.Created)
+		} else {
+			nsutils.WriteRecordV3(w, record, nil, nsutils.Replaced)
+		}
 	}
 }
 
@@ -228,6 +235,6 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		nsutils.WriteRecordV3(w, record, nil, false)
+		nsutils.WriteRecordV3(w, record, nil, nsutils.Replaced)
 	}
 }

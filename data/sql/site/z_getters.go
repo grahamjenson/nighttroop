@@ -4759,6 +4759,17 @@ func (m SearchDeviceReportsParams) SetDateLTE(v *int64) SearchDeviceReportsParam
 	return m
 }
 
+// GetDateEQ returns the DateEQ value.
+func (m SearchDeviceReportsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchDeviceReportsParams.
+func (m SearchDeviceReportsParams) SetDateEQ(v *int64) SearchDeviceReportsParams {
+	m.DateEQ = v
+	return m
+}
+
 // GetDateGT returns the DateGT value.
 func (m SearchDeviceReportsParams) GetDateGT() *int64 {
 	return m.DateGT
@@ -5240,6 +5251,17 @@ func (m SearchActivitiesParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchActivitiesParams.
 func (m SearchActivitiesParams) SetDateLTE(v *int64) SearchActivitiesParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchActivitiesParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchActivitiesParams.
+func (m SearchActivitiesParams) SetDateEQ(v *int64) SearchActivitiesParams {
+	m.DateEQ = v
 	return m
 }
 
@@ -5936,6 +5958,17 @@ func (m SearchComponentEventsParams) SetDateLTE(v *int64) SearchComponentEventsP
 	return m
 }
 
+// GetDateEQ returns the DateEQ value.
+func (m SearchComponentEventsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchComponentEventsParams.
+func (m SearchComponentEventsParams) SetDateEQ(v *int64) SearchComponentEventsParams {
+	m.DateEQ = v
+	return m
+}
+
 // GetDateGT returns the DateGT value.
 func (m SearchComponentEventsParams) GetDateGT() *int64 {
 	return m.DateGT
@@ -6560,6 +6593,17 @@ func (m SearchFoodIntakesParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchFoodIntakesParams.
 func (m SearchFoodIntakesParams) SetDateLTE(v *int64) SearchFoodIntakesParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchFoodIntakesParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchFoodIntakesParams.
+func (m SearchFoodIntakesParams) SetDateEQ(v *int64) SearchFoodIntakesParams {
+	m.DateEQ = v
 	return m
 }
 
@@ -7388,6 +7432,17 @@ func (m SearchGlucoseReadingsParams) SetDateLTE(v *int64) SearchGlucoseReadingsP
 	return m
 }
 
+// GetDateEQ returns the DateEQ value.
+func (m SearchGlucoseReadingsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchGlucoseReadingsParams.
+func (m SearchGlucoseReadingsParams) SetDateEQ(v *int64) SearchGlucoseReadingsParams {
+	m.DateEQ = v
+	return m
+}
+
 // GetDateGT returns the DateGT value.
 func (m SearchGlucoseReadingsParams) GetDateGT() *int64 {
 	return m.DateGT
@@ -8100,6 +8155,17 @@ func (m SearchEventGroupsParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchEventGroupsParams.
 func (m SearchEventGroupsParams) SetDateLTE(v *int64) SearchEventGroupsParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchEventGroupsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchEventGroupsParams.
+func (m SearchEventGroupsParams) SetDateEQ(v *int64) SearchEventGroupsParams {
+	m.DateEQ = v
 	return m
 }
 
@@ -8994,6 +9060,17 @@ func (m SearchInsulinDosesParams) SetDateLTE(v *int64) SearchInsulinDosesParams 
 	return m
 }
 
+// GetDateEQ returns the DateEQ value.
+func (m SearchInsulinDosesParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchInsulinDosesParams.
+func (m SearchInsulinDosesParams) SetDateEQ(v *int64) SearchInsulinDosesParams {
+	m.DateEQ = v
+	return m
+}
+
 // GetDateGT returns the DateGT value.
 func (m SearchInsulinDosesParams) GetDateGT() *int64 {
 	return m.DateGT
@@ -9618,6 +9695,17 @@ func (m SearchNotificationEventsParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchNotificationEventsParams.
 func (m SearchNotificationEventsParams) SetDateLTE(v *int64) SearchNotificationEventsParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchNotificationEventsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchNotificationEventsParams.
+func (m SearchNotificationEventsParams) SetDateEQ(v *int64) SearchNotificationEventsParams {
+	m.DateEQ = v
 	return m
 }
 
@@ -10248,6 +10336,17 @@ func (m SearchProfileSwitchesParams) SetDateLTE(v *int64) SearchProfileSwitchesP
 	return m
 }
 
+// GetDateEQ returns the DateEQ value.
+func (m SearchProfileSwitchesParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchProfileSwitchesParams.
+func (m SearchProfileSwitchesParams) SetDateEQ(v *int64) SearchProfileSwitchesParams {
+	m.DateEQ = v
+	return m
+}
+
 // GetDateGT returns the DateGT value.
 func (m SearchProfileSwitchesParams) GetDateGT() *int64 {
 	return m.DateGT
@@ -10820,6 +10919,17 @@ func (m SearchTempBasalsParams) SetDateLTE(v *int64) SearchTempBasalsParams {
 	return m
 }
 
+// GetDateEQ returns the DateEQ value.
+func (m SearchTempBasalsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchTempBasalsParams.
+func (m SearchTempBasalsParams) SetDateEQ(v *int64) SearchTempBasalsParams {
+	m.DateEQ = v
+	return m
+}
+
 // GetDateGT returns the DateGT value.
 func (m SearchTempBasalsParams) GetDateGT() *int64 {
 	return m.DateGT
@@ -11389,6 +11499,17 @@ func (m SearchTempTargetsParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchTempTargetsParams.
 func (m SearchTempTargetsParams) SetDateLTE(v *int64) SearchTempTargetsParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchTempTargetsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchTempTargetsParams.
+func (m SearchTempTargetsParams) SetDateEQ(v *int64) SearchTempTargetsParams {
+	m.DateEQ = v
 	return m
 }
 
@@ -11994,6 +12115,17 @@ func (m SearchFoodPresetsParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchFoodPresetsParams.
 func (m SearchFoodPresetsParams) SetDateLTE(v *int64) SearchFoodPresetsParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchFoodPresetsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchFoodPresetsParams.
+func (m SearchFoodPresetsParams) SetDateEQ(v *int64) SearchFoodPresetsParams {
+	m.DateEQ = v
 	return m
 }
 
@@ -12797,6 +12929,17 @@ func (m SearchProfileStoresParams) GetDateLTE() *int64 {
 // SetDateLTE sets the DateLTE value and returns the updated SearchProfileStoresParams.
 func (m SearchProfileStoresParams) SetDateLTE(v *int64) SearchProfileStoresParams {
 	m.DateLTE = v
+	return m
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m SearchProfileStoresParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated SearchProfileStoresParams.
+func (m SearchProfileStoresParams) SetDateEQ(v *int64) SearchProfileStoresParams {
+	m.DateEQ = v
 	return m
 }
 

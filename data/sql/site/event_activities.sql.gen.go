@@ -221,46 +221,48 @@ SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, n
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
-    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at > ?3)
-    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at < ?4)
+    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at = ?3)
+    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at > ?4)
+    AND (CAST(?5 AS INTEGER) IS NULL OR occurred_at < ?5)
 
-    AND (CAST(?5 AS INTEGER) IS NULL OR created_at >= ?5)
-    AND (CAST(?6 AS INTEGER) IS NULL OR created_at <= ?6)
-    AND (CAST(?7 AS INTEGER) IS NULL OR created_at > ?7)
-    AND (CAST(?8 AS INTEGER) IS NULL OR created_at < ?8)
+    AND (CAST(?6 AS INTEGER) IS NULL OR created_at >= ?6)
+    AND (CAST(?7 AS INTEGER) IS NULL OR created_at <= ?7)
+    AND (CAST(?8 AS INTEGER) IS NULL OR created_at > ?8)
+    AND (CAST(?9 AS INTEGER) IS NULL OR created_at < ?9)
 
-    AND (CAST(?9 AS INTEGER) IS NULL OR updated_at >= ?9)
-    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at <= ?10)
-    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at > ?11)
-    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at < ?12)
+    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at >= ?10)
+    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at <= ?11)
+    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at > ?12)
+    AND (CAST(?13 AS INTEGER) IS NULL OR updated_at < ?13)
 
-    AND (CAST(?13 AS TEXT) IS NULL OR id = ?13)
-    AND (CAST(?14 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?14)))
+    AND (CAST(?14 AS TEXT) IS NULL OR id = ?14)
+    AND (CAST(?15 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?15)))
 
-    AND (CAST(?15 AS TEXT) IS NULL OR name = ?15)
+    AND (CAST(?16 AS TEXT) IS NULL OR name = ?16)
 
-    AND (CAST(?16 AS TEXT) IS NULL OR created_by_device_name = ?16)
-    AND (CAST(?17 AS TEXT) IS NULL OR created_by_app_name = ?17)
+    AND (CAST(?17 AS TEXT) IS NULL OR created_by_device_name = ?17)
+    AND (CAST(?18 AS TEXT) IS NULL OR created_by_app_name = ?18)
     
-    AND (CAST(?18 AS TEXT) IS NULL OR activity_type = ?18)
-    AND (CAST(?19 AS TEXT) IS NULL OR activity_type != ?19)
-    AND (CAST(?20 AS TEXT) IS NULL OR activity_type IN (SELECT value FROM json_each(?20)))
-    AND (CAST(?21 AS TEXT) IS NULL OR activity_type NOT IN (SELECT value FROM json_each(?21)))
+    AND (CAST(?19 AS TEXT) IS NULL OR activity_type = ?19)
+    AND (CAST(?20 AS TEXT) IS NULL OR activity_type != ?20)
+    AND (CAST(?21 AS TEXT) IS NULL OR activity_type IN (SELECT value FROM json_each(?21)))
+    AND (CAST(?22 AS TEXT) IS NULL OR activity_type NOT IN (SELECT value FROM json_each(?22)))
 
-    AND (CAST(?22 AS INTEGER) IS NULL OR duration_minutes = ?22)
-    AND (CAST(?23 AS INTEGER) IS NULL OR duration_minutes >= ?23)
-    AND (CAST(?24 AS INTEGER) IS NULL OR duration_minutes > ?24)
-    AND (CAST(?25 AS INTEGER) IS NULL OR duration_minutes <= ?25)
-    AND (CAST(?26 AS INTEGER) IS NULL OR duration_minutes < ?26)
+    AND (CAST(?23 AS INTEGER) IS NULL OR duration_minutes = ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR duration_minutes >= ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR duration_minutes > ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR duration_minutes <= ?26)
+    AND (CAST(?27 AS INTEGER) IS NULL OR duration_minutes < ?27)
     
-    AND (CAST(?27 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?28 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?29 OFFSET ?28
+LIMIT ?30 OFFSET ?29
 `
 
 type SearchActivitiesParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
+	DateEQ         *int64
 	DateGT         *int64
 	DateLT         *int64
 	CreatedAtGTE   *int64
@@ -294,6 +296,7 @@ func (q *Queries) SearchActivities(ctx context.Context, arg SearchActivitiesPara
 	rows, err := q.query(ctx, q.searchActivitiesStmt, searchActivities,
 		arg.DateGTE,
 		arg.DateLTE,
+		arg.DateEQ,
 		arg.DateGT,
 		arg.DateLT,
 		arg.CreatedAtGTE,

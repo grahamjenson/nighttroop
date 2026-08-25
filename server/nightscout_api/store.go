@@ -12,7 +12,7 @@ import (
 )
 
 type CollectionStore interface {
-	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError)
+	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
 	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
 	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
@@ -29,24 +29,24 @@ type NightTroopAPIStore struct {
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, raw bool) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, raw bool) (nsutils.Record, bool, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.stores[collection]
 	if !ok {
-		return nsutils.Record{}, nsutils.ErrInvalidCollection
+		return nsutils.Record{}, false, nsutils.ErrInvalidCollection
 	}
 	siteContext := httputils.GetSiteContext(ctx)
 	if siteContext == nil {
-		return nsutils.Record{}, nsutils.ErrMissingCredentials
+		return nsutils.Record{}, false, nsutils.ErrMissingCredentials
 	}
-	record, err := collectionsStore.Create(ctx, siteContext, data, raw)
+	record, duplicated, err := collectionsStore.Create(ctx, siteContext, data, raw)
 
 	if err != nil {
-		return nsutils.Record{}, err
+		return nsutils.Record{}, false, err
 	}
 	if record == nil {
-		return nsutils.Record{}, nsutils.ErrNotFound
+		return nsutils.Record{}, false, nsutils.ErrNotFound
 	}
-	return *record, nil
+	return *record, duplicated, nil
 
 }
 

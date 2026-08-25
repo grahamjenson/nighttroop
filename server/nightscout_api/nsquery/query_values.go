@@ -17,6 +17,8 @@ type QueryValues struct {
 	DateGTE *nightscout.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
 	DateGT  *nightscout.DateInt `mapstructure:"dategt,omitempty" json:"dategt,omitempty"`
 
+	DateEQ *nightscout.DateInt `mapstructure:"dateeq,omitempty" json:"dateeq,omitempty"`
+
 	DateLTE *nightscout.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
 	DateLT  *nightscout.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
 
@@ -102,6 +104,8 @@ type QueryValues struct {
 var forwardLookupName = map[string][]string{
 	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]"},
 	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]"},
+
+	"dateeq": {"date$eq", "find[date][$eq]", "find[dateString][$eq]", "mills$eq", "find[mills][$eq]", "startDate$eq", "find[startDate][$eq]", "start$eq", "find[start][$eq]"},
 
 	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]"},
 	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]"},

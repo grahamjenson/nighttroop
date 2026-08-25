@@ -26,8 +26,8 @@ type Activity struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+	Date             *DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 	RawJsonData      string         `json:"-"`
 }
 

@@ -8,9 +8,18 @@ import (
 	"time"
 )
 
-func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, created bool) {
+type RecordWriteType int
+
+const (
+	Created RecordWriteType = iota
+	Replaced
+	FoundDuplicate
+	Found
+)
+
+func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, createdType RecordWriteType) {
 	status := http.StatusOK
-	if created {
+	if createdType == Created {
 		status = http.StatusCreated
 	}
 	body := map[string]any{"status": status, "result": record.SelectFields(fields, true)}
@@ -18,7 +27,10 @@ func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, create
 		LastModifiedHeader(w, record.SrvModified)
 		body["identifier"] = record.Identifier()
 		body["lastModified"] = record.SrvModified
-
+		if createdType == FoundDuplicate {
+			body["isDeduplication"] = true
+			body["deduplicatedIdentifier"] = record.Identifier()
+		}
 	}
 
 	w.Header().Set("Last-Modified", time.UnixMilli(record.SrvModified).UTC().Format(http.TimeFormat))

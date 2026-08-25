@@ -23,8 +23,8 @@ type ProfileStore struct {
 	Mills     *DateInt    `json:"mills,omitempty"`
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+	Date             *DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 	RawJsonData      string         `json:"-"`
 }
 
@@ -50,7 +50,9 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 	}
 
 	if t.StartDate != nil {
-		t.Date, t.UtcOffsetMinutes = t.StartDate.MillisUTCOffset()
+		if t.Date == nil || t.UtcOffsetMinutes == nil {
+			t.Date, t.UtcOffsetMinutes = t.StartDate.MillisUTCOffset()
+		}
 	}
 
 	return nil

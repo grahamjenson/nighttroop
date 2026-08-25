@@ -30,42 +30,42 @@ func NewSettingsCollection() SettingsCollection {
 // You have to pass an identifier along to match with the settings
 // ///
 
-func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	var nsModel nightscout.Setting
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", "settings")
-		return nil, nsutils.BadDataBodyError
+		return nil, false, nsutils.BadDataBodyError
 	}
 
 	if nsModel.Identifier.String() == "" {
 		slog.Error("setting identifier not available", "data", data, "collection", "settings")
-		return nil, nsutils.ErrNotFound
+		return nil, false, nsutils.ErrNotFound
 	}
 
 	identitySettingsMap := GetIdentitySettingsMap(siteContext.IdentityModel)
 	setting, ok := identitySettingsMap[nsModel.Identifier.String()]
 	if !ok {
 		slog.Error("setting not found", "identifier", nsModel.Identifier.String())
-		return nil, nsutils.ErrNotFound
+		return nil, false, nsutils.ErrNotFound
 	}
 	setting.Value = data["value"]
 	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.Subdomain, identitySettingsMap)
 	if httpErr != nil {
 		slog.Error("failed to convert settings map to params", "error", httpErr, "collection", "settings")
-		return nil, httpErr
+		return nil, false, httpErr
 	}
 	if params == nil {
 		slog.Error("failed to convert settings map to params, got nil", "collection", "settings")
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 	err = siteContext.ControlDB.Queries.UpdateIdentitySettings(ctx, *params)
 	if err != nil {
 		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(setting, raw)), nil
+	return ptr(c.converter(setting, raw)), false, nil
 }
 
 func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {

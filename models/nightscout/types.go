@@ -344,8 +344,11 @@ func (d DateInt) TimeString() string {
 	return time.UnixMilli(int64(d)).UTC().Format(time.RFC3339Nano)
 }
 
-func (d DateInt) Int64() int64 {
-	return int64(d)
+func (d *DateInt) Int64() int64 {
+	if d == nil {
+		return 0
+	}
+	return int64(*d)
 }
 
 func (d *DateInt) Int64p() *int64 {

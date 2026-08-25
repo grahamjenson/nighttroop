@@ -28,7 +28,8 @@ type AuthManager interface {
 // Store abstracts persistence for Nightscout collections.
 type Store interface {
 	// Create is obvious it will create a new record in the collection and return it, or an error if it fails.
-	Create(ctx context.Context, collection Collection, data map[string]any, raw bool) (Record, *HTTPError)
+	// If duplicate it will return the existing record and a boolean indicating it was a duplicate
+	Create(ctx context.Context, collection Collection, data map[string]any, raw bool) (Record, bool, *HTTPError)
 
 	// Get will retrieve a record from the collection by its identifier, or return an error if it fails.
 	Get(ctx context.Context, collection Collection, identifier string, query nsquery.Query) (Record, *HTTPError)

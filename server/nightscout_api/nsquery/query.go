@@ -8,6 +8,7 @@ type Query struct {
 	// lte and gte both
 	DateGTE *int64
 	DateGT  *int64
+	DateEQ  *int64
 	DateLTE *int64
 	DateLT  *int64
 

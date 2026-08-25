@@ -86,8 +86,8 @@ type Treatment struct {
 
 	// Date Fields
 	CreatedAt        *DateString    `json:"created_at,omitempty"` // ISO8601 -> time.Time
-	Date             *DateInt       `json:"-"`
-	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+	Date             *DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
 
 	// Non-JSON values to make mapping easier
 	RawJsonData string `json:"-"`
@@ -125,7 +125,9 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
 	if t.CreatedAt != nil {
-		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+		if t.Date == nil || t.UtcOffsetMinutes == nil {
+			t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+		}
 	}
 
 	return nil
@@ -192,6 +194,14 @@ const (
 
 func (t TreatmentEventType) String() string {
 	return string(t)
+}
+
+func (t *TreatmentEventType) Stringp() *string {
+	if t == nil {
+		return nil
+	}
+	s := string(*t)
+	return &s
 }
 
 func ToSnakeCase(s string) string {

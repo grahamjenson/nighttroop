@@ -59,7 +59,7 @@ POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B {
     "app": "AAPS",
-    "date": 1786184674000,
+    "date": {{ itime 0 }},
     "eventType": "Profile Switch",
     "originalProfileName": "SamDash-2025",
     "percentage": 120,
@@ -160,3 +160,41 @@ GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertLength 0 "@result" }}
+
+
+#######
+# DEDUPELICATION
+#######
+
+NAME create_first_identical_treatments_v3
+POST http://{{ .site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 25.0,
+    "date": 1787624277000,
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": false,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
+NAME create_second_identical_treatments_v3
+POST http://{{ .site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 25.0,
+    "date": 1787624277000,
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": false,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals true "@isDeduplication" }}
+ASSERT {{ assertEquals ".create_first_identical_treatments_v3.identifier" "@deduplicatedIdentifier" }}
+ASSERT {{ assertEquals ".create_second_identical_treatments_v3.identifier" "@identifier" }}

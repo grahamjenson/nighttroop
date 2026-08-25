@@ -83,8 +83,10 @@ func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Requ
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food, nsutils.Settings}
 		lastModifiedMap := make(map[nsutils.Collection]int64)
+
 		for _, collection := range collections {
-			record, err := dep.Store.Search(r.Context(), collection, nsquery.Query{Limit: 1})
+			// TODO this is borked
+			record, err := dep.Store.Search(r.Context(), collection, nsquery.Query{Limit: 1, SortOrder: ptr(nsquery.SortUpdatedAtDesc)})
 			if err != nil || record == nil || len(record) == 0 {
 				lastModifiedMap[collection] = 0
 				continue

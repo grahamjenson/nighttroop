@@ -135,20 +135,39 @@ B {
  }
 ASSERT_STATUS 201
 
+NAME add_temporary_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": 1787624072000,
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "eventType": "Temporary Target",
+    "isReadOnly": false,
+    "isValid": true,
+    "reason": "Custom",
+    "targetBottom": 106.19999999999997,
+    "targetTop": 106.19999999999997,
+    "units": "mg/dl",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+
 NAME add_treatment_profile_switch
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B {
     "app": "AAPS",
-    "date": 1787480957000,
+    "date": 1787623989000,
     "duration": 0,
     "eventType": "Profile Switch",
     "isReadOnly": false,
     "isValid": true,
     "originalDuration": 0,
     "originalProfileName": "FirstProfile",
-    "percentage": 100,
-    "profile": "FirstProfile",
+    "percentage": 120,
+    "profile": "FirstProfile(120%)",
     "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":10}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.6},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.54}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
     "timeshift": 0,
     "utcOffset": 720
@@ -160,18 +179,18 @@ POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B {
     "app": "AAPS",
-    "date": 1787480962627,
+    "date": 1787623999595,
     "eventType": "Note",
     "isReadOnly": false,
     "isValid": true,
-    "notes": "FirstProfile",
-    "originalCustomizedName": "FirstProfile",
+    "notes": "FirstProfile(120%)",
+    "originalCustomizedName": "FirstProfile(120%)",
     "originalDuration": 0,
-    "originalEnd": 1787480957000,
-    "originalPercentage": 100,
+    "originalEnd": 1787623989000,
+    "originalPercentage": 120,
     "originalProfileName": "FirstProfile",
     "originalTimeshift": 0,
-    "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.6},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.54}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
+    "profileJson": "{\"units\":\"mmol\",\"dia\":5,\"timezone\":\"Pacific\\/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":8.333333333333334}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":8.333333333333334}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.72},{\"time\":\"01:00\",\"timeAsSeconds\":3600,\"value\":0.648}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":6}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}]}",
     "utcOffset": 720
  }
 ASSERT_STATUS 201
@@ -194,7 +213,7 @@ B {
 ASSERT_STATUS 201
 
 
-NAME add_device_status
+NAME add_device_status_with_configuration
 POST http://{{ site }}/api/v3/devicestatus
 H Authorization: Bearer {{ jwt }}
 B {
@@ -346,7 +365,7 @@ NAME get_treatments_from_history_old
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 30 }}?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 6 "@result" }}
+ASSERT {{ assertLength 7 "@result" }}
 
 
 /////
@@ -367,3 +386,30 @@ NAME get_profile_since
 GET http://{{ site }}/api/v3/profile?sort$desc=date&limit=1
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
+
+
+////
+// Adding stuff
+////
+
+NAME delete_unknown_treatment
+DELETE http://{{ site }}/api/v3/treatments/NOT_REAL_ID
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME create_carbs_meal_bolus
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "carbs": 25.0,
+    "date": {{ itime 0 }},
+    "eventType": "Meal Bolus",
+    "isReadOnly": false,
+    "isValid": false,
+    "notes": "",
+    "utcOffset": 720
+ }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "Meal Bolus" "@result.eventType" }}
+ASSERT {{ assertEquals 25.0 "@result.carbs" }}

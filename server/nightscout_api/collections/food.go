@@ -60,6 +60,21 @@ func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsMod
 
 }
 
+func (c FoodCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food) (*site.FoodPreset, error) {
+	foodPresets, rerr := q.SearchFoodPresets(ctx, site.SearchFoodPresetsParams{
+		DateEQ:   nsModel.Date.Int64p(),
+		DeviceEq: nsModel.Device.Stringp(),
+		Limit:    1,
+	})
+	if rerr != nil {
+		return nil, rerr
+	}
+	if len(foodPresets) > 0 {
+		return foodPresets[0], nil
+	}
+	return nil, nil
+}
+
 func (c FoodCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.FoodPreset, error) {
 	return q.GetFoodPreset(ctx, site.GetFoodPresetParams{ID: identifier})
 }
@@ -93,7 +108,7 @@ func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsMode
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
 
-func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 

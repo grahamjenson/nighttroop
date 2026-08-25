@@ -62,6 +62,21 @@ func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, ns
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
+func (c EntriesCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry) (*site.GlucoseReading, error) {
+	glucoseReadings, rerr := q.SearchGlucoseReadings(ctx, site.SearchGlucoseReadingsParams{
+		DateEQ:   nsModel.Date.Int64p(),
+		DeviceEq: nsModel.Device.Stringp(),
+		Limit:    1,
+	})
+	if rerr != nil {
+		return nil, rerr
+	}
+	if len(glucoseReadings) > 0 {
+		return glucoseReadings[0], nil
+	}
+	return nil, nil
+}
+
 func (c EntriesCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
 }
@@ -93,7 +108,7 @@ func (c EntriesCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsM
 // END OF FUNCTIONS USED BY META COLLECTIONS
 /////
 
-func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 

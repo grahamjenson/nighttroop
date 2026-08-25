@@ -131,6 +131,7 @@ LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 WHERE
     (CAST(sqlc.narg('DateGTE') AS INTEGER) IS NULL OR eg.occurred_at >= sqlc.narg('DateGTE'))
     AND (CAST(sqlc.narg('DateLTE') AS INTEGER) IS NULL OR eg.occurred_at <= sqlc.narg('DateLTE'))
+    AND (CAST(sqlc.narg('DateEQ') AS INTEGER) IS NULL OR eg.occurred_at = sqlc.narg('DateEQ'))
     AND (CAST(sqlc.narg('DateGT') AS INTEGER) IS NULL OR eg.occurred_at > sqlc.narg('DateGT'))
     AND (CAST(sqlc.narg('DateLT') AS INTEGER) IS NULL OR eg.occurred_at < sqlc.narg('DateLT'))
 

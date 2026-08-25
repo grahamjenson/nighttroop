@@ -55,6 +55,21 @@ func (c DeviceStatusCollection) CreateDBFunc(q *site.Queries, ctx context.Contex
 	return q.CreateDeviceReport(ctx, createParams)
 }
 
+func (c DeviceStatusCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.DeviceStatus) (*site.DeviceReport, error) {
+	deviceStatuses, rerr := q.SearchDeviceReports(ctx, site.SearchDeviceReportsParams{
+		DateEQ:   nsModel.Date.Int64p(),
+		DeviceEq: nsModel.Device.Stringp(),
+		Limit:    1,
+	})
+	if rerr != nil {
+		return nil, rerr
+	}
+	if len(deviceStatuses) > 0 {
+		return deviceStatuses[0], nil
+	}
+	return nil, nil
+}
+
 func (c DeviceStatusCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.DeviceReport, error) {
 	return q.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier})
 }
@@ -77,7 +92,7 @@ func (c DeviceStatusCollection) PatchDBFunc(q *site.Queries, ctx context.Context
 // END OF FUNCTIONS USED BY META COLLECTIONS
 /////
 
-func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 

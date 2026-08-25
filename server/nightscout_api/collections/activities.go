@@ -63,6 +63,10 @@ func (c ActivityCollection) GetDBFunc(q *site.Queries, ctx context.Context, iden
 	return q.GetActivity(ctx, site.GetActivityParams{ID: identifier})
 }
 
+func (c ActivityCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity) (*site.Activity, error) {
+	return nil, nil
+}
+
 func (c ActivityCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.HardDeleteActivity(ctx, site.HardDeleteActivityParams{ID: identifier})
 }
@@ -90,7 +94,7 @@ func (c ActivityCollection) PatchDBFunc(q *site.Queries, ctx context.Context, ns
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
 
-func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 

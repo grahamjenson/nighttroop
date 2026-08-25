@@ -869,76 +869,78 @@ LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR eg.occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR eg.occurred_at <= ?2)
-    AND (CAST(?3 AS INTEGER) IS NULL OR eg.occurred_at > ?3)
-    AND (CAST(?4 AS INTEGER) IS NULL OR eg.occurred_at < ?4)
+    AND (CAST(?3 AS INTEGER) IS NULL OR eg.occurred_at = ?3)
+    AND (CAST(?4 AS INTEGER) IS NULL OR eg.occurred_at > ?4)
+    AND (CAST(?5 AS INTEGER) IS NULL OR eg.occurred_at < ?5)
 
-    AND (CAST(?5 AS INTEGER) IS NULL OR eg.created_at >= ?5)
-    AND (CAST(?6 AS INTEGER) IS NULL OR eg.created_at <= ?6)
-    AND (CAST(?7 AS INTEGER) IS NULL OR eg.created_at > ?7)
-    AND (CAST(?8 AS INTEGER) IS NULL OR eg.created_at < ?8)
+    AND (CAST(?6 AS INTEGER) IS NULL OR eg.created_at >= ?6)
+    AND (CAST(?7 AS INTEGER) IS NULL OR eg.created_at <= ?7)
+    AND (CAST(?8 AS INTEGER) IS NULL OR eg.created_at > ?8)
+    AND (CAST(?9 AS INTEGER) IS NULL OR eg.created_at < ?9)
 
-    AND (CAST(?9 AS INTEGER) IS NULL OR eg.updated_at >= ?9)
-    AND (CAST(?10 AS INTEGER) IS NULL OR eg.updated_at <= ?10)
-    AND (CAST(?11 AS INTEGER) IS NULL OR eg.updated_at > ?11)
-    AND (CAST(?12 AS INTEGER) IS NULL OR eg.updated_at < ?12)
+    AND (CAST(?10 AS INTEGER) IS NULL OR eg.updated_at >= ?10)
+    AND (CAST(?11 AS INTEGER) IS NULL OR eg.updated_at <= ?11)
+    AND (CAST(?12 AS INTEGER) IS NULL OR eg.updated_at > ?12)
+    AND (CAST(?13 AS INTEGER) IS NULL OR eg.updated_at < ?13)
 
-    AND (CAST(?13 AS TEXT) IS NULL OR eg.group_type = ?13)
-    AND (CAST(?14 AS TEXT) IS NULL OR eg.group_type != ?14)
-    AND (CAST(?15 AS TEXT) IS NULL OR eg.group_type IN (SELECT value FROM json_each(?15)))
-    AND (CAST(?16 AS TEXT) IS NULL OR eg.group_type NOT IN (SELECT value FROM json_each(?16)))
+    AND (CAST(?14 AS TEXT) IS NULL OR eg.group_type = ?14)
+    AND (CAST(?15 AS TEXT) IS NULL OR eg.group_type != ?15)
+    AND (CAST(?16 AS TEXT) IS NULL OR eg.group_type IN (SELECT value FROM json_each(?16)))
+    AND (CAST(?17 AS TEXT) IS NULL OR eg.group_type NOT IN (SELECT value FROM json_each(?17)))
 
-    AND (CAST(?17 AS TEXT) IS NULL OR eg.id = ?17)
-    AND (CAST(?18 AS TEXT) IS NULL OR eg.id IN (SELECT value FROM json_each(?18)))
+    AND (CAST(?18 AS TEXT) IS NULL OR eg.id = ?18)
+    AND (CAST(?19 AS TEXT) IS NULL OR eg.id IN (SELECT value FROM json_each(?19)))
     
-    AND (CAST(?19 AS TEXT) IS NULL OR eg.created_by_device_name = ?19)
-    AND (CAST(?20 AS TEXT) IS NULL OR eg.created_by_app_name = ?20)
+    AND (CAST(?20 AS TEXT) IS NULL OR eg.created_by_device_name = ?20)
+    AND (CAST(?21 AS TEXT) IS NULL OR eg.created_by_app_name = ?21)
 
     -- model specific stuff
 
-    AND (CAST(?21 AS TEXT) IS NULL OR fi.name = ?21 OR a.name = ?21 OR ps.name = ?21)
+    AND (CAST(?22 AS TEXT) IS NULL OR fi.name = ?22 OR a.name = ?22 OR ps.name = ?22)
 
 
     -- glucose readings
-    AND (CAST(?22 AS INTEGER) IS NULL OR gr.reading = ?22)
-    AND (CAST(?23 AS INTEGER) IS NULL OR gr.reading >= ?23)
-    AND (CAST(?24 AS INTEGER) IS NULL OR gr.reading > ?24)
-    AND (CAST(?25 AS INTEGER) IS NULL OR gr.reading <= ?25)
-    AND (CAST(?26 AS INTEGER) IS NULL OR gr.reading < ?26)
+    AND (CAST(?23 AS INTEGER) IS NULL OR gr.reading = ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR gr.reading >= ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR gr.reading > ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR gr.reading <= ?26)
+    AND (CAST(?27 AS INTEGER) IS NULL OR gr.reading < ?27)
     
     -- food intake
 
-    AND (CAST(?27 AS INTEGER) IS NULL OR fi.carbs = ?27)
-    AND (CAST(?28 AS INTEGER) IS NULL OR fi.carbs >= ?28)
-    AND (CAST(?29 AS INTEGER) IS NULL OR fi.carbs > ?29)
-    AND (CAST(?30 AS INTEGER) IS NULL OR fi.carbs <= ?30)
-    AND (CAST(?31 AS INTEGER) IS NULL OR fi.carbs < ?31)
+    AND (CAST(?28 AS INTEGER) IS NULL OR fi.carbs = ?28)
+    AND (CAST(?29 AS INTEGER) IS NULL OR fi.carbs >= ?29)
+    AND (CAST(?30 AS INTEGER) IS NULL OR fi.carbs > ?30)
+    AND (CAST(?31 AS INTEGER) IS NULL OR fi.carbs <= ?31)
+    AND (CAST(?32 AS INTEGER) IS NULL OR fi.carbs < ?32)
     
 
     -- insulin doses
-    AND (CAST(?32 AS INTEGER) IS NULL OR idose.dose = ?32)
-    AND (CAST(?33 AS INTEGER) IS NULL OR idose.dose >= ?33)
-    AND (CAST(?34 AS INTEGER) IS NULL OR idose.dose > ?34)
-    AND (CAST(?35 AS INTEGER) IS NULL OR idose.dose <= ?35)
-    AND (CAST(?36 AS INTEGER) IS NULL OR idose.dose < ?36)
+    AND (CAST(?33 AS INTEGER) IS NULL OR idose.dose = ?33)
+    AND (CAST(?34 AS INTEGER) IS NULL OR idose.dose >= ?34)
+    AND (CAST(?35 AS INTEGER) IS NULL OR idose.dose > ?35)
+    AND (CAST(?36 AS INTEGER) IS NULL OR idose.dose <= ?36)
+    AND (CAST(?37 AS INTEGER) IS NULL OR idose.dose < ?37)
 
 
 
     -- range values
-    AND (CAST(?37 AS INTEGER) IS NULL OR a.duration_minutes = ?37) OR tb.duration_minutes = ?37 OR tt.duration_minutes = ?37 OR ps.duration_minutes = ?37
-    AND (CAST(?38 AS INTEGER) IS NULL OR a.duration_minutes >= ?38) OR tb.duration_minutes >= ?38 OR tt.duration_minutes >= ?38 OR ps.duration_minutes >= ?38
-    AND (CAST(?39 AS INTEGER) IS NULL OR a.duration_minutes > ?39) OR tb.duration_minutes > ?39 OR tt.duration_minutes > ?39 OR ps.duration_minutes > ?39
-    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes <= ?40) OR tb.duration_minutes <= ?40 OR tt.duration_minutes <= ?40 OR ps.duration_minutes <= ?40
-    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes < ?41) OR tb.duration_minutes < ?41 OR tt.duration_minutes < ?41 OR ps.duration_minutes < ?41
+    AND (CAST(?38 AS INTEGER) IS NULL OR a.duration_minutes = ?38) OR tb.duration_minutes = ?38 OR tt.duration_minutes = ?38 OR ps.duration_minutes = ?38
+    AND (CAST(?39 AS INTEGER) IS NULL OR a.duration_minutes >= ?39) OR tb.duration_minutes >= ?39 OR tt.duration_minutes >= ?39 OR ps.duration_minutes >= ?39
+    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes > ?40) OR tb.duration_minutes > ?40 OR tt.duration_minutes > ?40 OR ps.duration_minutes > ?40
+    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes <= ?41) OR tb.duration_minutes <= ?41 OR tt.duration_minutes <= ?41 OR ps.duration_minutes <= ?41
+    AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes < ?42) OR tb.duration_minutes < ?42 OR tt.duration_minutes < ?42 OR ps.duration_minutes < ?42
 
 
-    AND (CAST(?42 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
+    AND (CAST(?43 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT ?44 OFFSET ?43
+LIMIT ?45 OFFSET ?44
 `
 
 type SearchEventGroupsParams struct {
 	DateGTE        *int64
 	DateLTE        *int64
+	DateEQ         *int64
 	DateGT         *int64
 	DateLT         *int64
 	CreatedAtGTE   *int64
@@ -1000,6 +1002,7 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 	rows, err := q.query(ctx, q.searchEventGroupsStmt, searchEventGroups,
 		arg.DateGTE,
 		arg.DateLTE,
+		arg.DateEQ,
 		arg.DateGT,
 		arg.DateLT,
 		arg.CreatedAtGTE,

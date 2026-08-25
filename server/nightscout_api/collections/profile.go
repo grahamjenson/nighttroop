@@ -52,6 +52,22 @@ func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, ns
 	return &ret, nil
 }
 
+func (c ProfileCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore) (*site.ProfilePresetBundle, error) {
+	profilePresets, rerr := q.SearchProfileStores(ctx, site.SearchProfileStoresParams{
+		DateEQ:   nsModel.Date.Int64p(),
+		DeviceEq: nsModel.Device.Stringp(),
+		Limit:    1,
+	})
+	if rerr != nil {
+		return nil, rerr
+	}
+	if len(profilePresets) > 0 {
+		identifier := profilePresets[0].ProfileStoreID
+		return c.GetDBFunc(q, ctx, identifier)
+	}
+	return nil, nil
+}
+
 func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.ProfilePresetBundle, error) {
 	ret, err := q.GetProfileStore(ctx, site.GetProfileStoreParams{ProfileStoreID: identifier})
 	if err != nil {
@@ -72,7 +88,7 @@ func (c ProfileCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context
 // ////
 // HTTP METHODS
 // ////
-func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 

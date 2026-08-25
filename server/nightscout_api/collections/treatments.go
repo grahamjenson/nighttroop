@@ -94,6 +94,23 @@ func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, 
 	return &tebg, nil
 }
 
+func (c TreatmentCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment) (*site.EventGroupsBundle, error) {
+	eventGroups, rerr := q.SearchEventGroups(ctx, site.SearchEventGroupsParams{
+		DateEQ:   nsModel.Date.Int64p(),
+		DeviceEq: nsModel.Device.Stringp(),
+		TypeEq:   nsModel.EventType.Stringp(),
+		Limit:    1,
+	})
+	if rerr != nil {
+		return nil, rerr
+	}
+	if len(eventGroups) > 0 {
+		egb := site.GetEventGroupToEventGroupsBundle(site.SearchEventGroupToGetEventGroup(*eventGroups[0]))
+		return &egb, nil
+	}
+	return nil, nil
+}
+
 func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.EventGroupsBundle, error) {
 	dbModel, err := q.GetEventGroup(ctx, site.GetEventGroupParams{ID: identifier})
 	if err != nil {
@@ -184,7 +201,7 @@ func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.C
 // END OF FUNCTIONS USED BY META COLLECTIONS
 // ///
 
-func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 

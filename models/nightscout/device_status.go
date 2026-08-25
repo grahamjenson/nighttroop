@@ -21,6 +21,7 @@ type DeviceStatus struct {
 	Loop    *LoopStatus    `json:"loop,omitempty"`
 
 	// Date Fields
+	Date      *DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
 	CreatedAt *DateString `json:"created_at,omitempty"`
 
 	// Default String Fields
@@ -28,8 +29,7 @@ type DeviceStatus struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt       `json:"-"` // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"-"`
+	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 	RawJsonData      string         `json:"-"`
 }
 
@@ -56,7 +56,9 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
 	if t.CreatedAt != nil {
-		t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+		if t.Date == nil || t.UtcOffsetMinutes == nil {
+			t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+		}
 	}
 
 	return nil

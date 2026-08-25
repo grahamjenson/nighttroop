@@ -96,7 +96,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 				return
 			}
 
-			record, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
+			record, _, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return

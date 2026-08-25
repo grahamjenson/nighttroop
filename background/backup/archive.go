@@ -16,6 +16,7 @@ func (b *BackupJobManager) ArchiveInactiveSites() error {
 	if err != nil {
 		return fmt.Errorf("cant find sites to delete without archiving %w", err)
 	}
+	slog.Info("Delete site without archiving", "subdomains", deleteList)
 
 	// Just delete these sites without an archive, as they have not been used in so many minutes
 	err = b.controlDB.DeleteSites(deleteList)
@@ -27,6 +28,12 @@ func (b *BackupJobManager) ArchiveInactiveSites() error {
 	if err != nil {
 		return fmt.Errorf("cant find sites to archive %w", err)
 	}
+	archiveSubdomains := []string{}
+	for _, site := range archiveList {
+		archiveSubdomains = append(archiveSubdomains, site.Subdomain)
+	}
+
+	slog.Info("Delete site WITH archiving", "subdomains", archiveSubdomains)
 
 	// Backup and upload the archived sites
 	removeList, err := b.archiveSites(archiveList)
@@ -87,6 +94,7 @@ func (b *BackupJobManager) archiveSites(archiveList []*db.SiteDB) ([]string, err
 		if site.Subdomain == "" {
 			continue
 		}
+
 		_, backupPath := utils.SiteDBPaths(site.Subdomain)
 
 		// Last Backup

@@ -16,6 +16,7 @@ type MetaCreateCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
+	GetDuplicateDBFunc(*site.Queries, context.Context, NS) (*DM, error)
 	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
 }
 
@@ -64,29 +65,38 @@ func MetaCreate[NS, DM any](
 	data map[string]any,
 	raw bool,
 
-) (*nsutils.Record, *nsutils.HTTPError) {
+) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	var nsModel NS
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data", "error", err, "collection", m.Name())
-		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
+		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
 	if err := ValidateInputData(data); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if err := m.Validate(nsModel, nil); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 	defer tx.Rollback()
 
 	q := siteContext.SiteDB.Queries.WithTx(tx)
+
+	duplicateDBModel, err := m.GetDuplicateDBFunc(q, ctx, nsModel)
+	if err != nil {
+		slog.Error("failed to check for duplicate in database", "error", err, "collection", m.Name())
+		return nil, false, nsutils.ErrInternal
+	}
+	if duplicateDBModel != nil {
+		return ptr(m.Convert(duplicateDBModel, raw)), true, nil
+	}
 
 	dbModel, err := m.CreateDBFunc(
 		q,
@@ -98,19 +108,19 @@ func MetaCreate[NS, DM any](
 
 	if err != nil {
 		slog.Error("failed to create in database", "error", err, "collection", m.Name())
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 	if dbModel == nil {
 		slog.Error("failed to create in database, dbModel is nil", "collection", m.Name())
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 
 	if err := tx.Commit(); err != nil {
 		slog.Error("failed to commit create in database", "error", err, "dbModel", dbModel, "collection", m.Name())
-		return nil, nsutils.ErrInternal
+		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(m.Convert(dbModel, raw)), nil
+	return ptr(m.Convert(dbModel, raw)), false, nil
 }
 
 func MetaGet[DM any](
@@ -166,6 +176,9 @@ func MetaDelete(
 
 	} else {
 		res, err := m.SoftDeleteDBFunc(q, ctx, identifier)
+		if err == sql.ErrNoRows {
+			return nsutils.ErrNotFound
+		}
 		if err != nil {
 			slog.Error("failed to soft delete by ID", "error", err, "collection", m.Name())
 			return nsutils.ErrInternal
@@ -218,6 +231,9 @@ func MetaDeleteType(
 
 	} else {
 		res, err := m.SoftDeleteTypeDBFunc(q, ctx, typeString)
+		if err == sql.ErrNoRows {
+			return 0, nsutils.ErrNotFound
+		}
 		if err != nil {
 			slog.Error("failed to soft delete  by IDs", "error", err, "collection", m.Name())
 			return 0, nsutils.ErrInternal
