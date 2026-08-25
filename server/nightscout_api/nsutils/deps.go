@@ -34,6 +34,9 @@ type Store interface {
 	// Get will retrieve a record from the collection by its identifier, or return an error if it fails.
 	Get(ctx context.Context, collection Collection, identifier string, query nsquery.Query) (Record, *HTTPError)
 
+	// LastModified returns the last modified record for a collection, or an error if it fails.
+	LastModified(ctx context.Context, collection Collection, raw bool) (*Record, *HTTPError)
+
 	// Search gets a query that will return a list of records that satifsy the query
 	Search(ctx context.Context, collection Collection, query nsquery.Query) ([]Record, *HTTPError)
 

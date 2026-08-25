@@ -98,6 +98,18 @@ func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.S
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
+func (c ActivityCollection) LastModified(ctx context.Context, siteContext *httputils.SiteContext, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.LastModifiedActivity(ctx)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if dbModel == nil {
+		return nil, nil
+	}
+	return ptr(c.Convert(dbModel, raw)), nil
+}
+
 func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }

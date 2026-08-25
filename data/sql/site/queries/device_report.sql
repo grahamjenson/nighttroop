@@ -44,6 +44,12 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetDeviceReport :one
 SELECT * FROM device_reports WHERE id = ?;
 
+-- name: LastModifiedDeviceReport :one
+SELECT * FROM device_reports
+WHERE deleted_at IS NULL
+ORDER BY updated_at DESC
+LIMIT 1;
+
 -- name: SearchDeviceReports :many
 SELECT * FROM device_reports
 WHERE

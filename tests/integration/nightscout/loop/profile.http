@@ -138,7 +138,7 @@ B {
             85
         ]
     },
-    "startDate": "2025-05-12T08:54:57Z",
+    "startDate": "{{ time 0 }}",
     "units": "mg/dL"
  }
 ASSERT_STATUS 201

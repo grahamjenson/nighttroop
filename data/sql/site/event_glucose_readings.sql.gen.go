@@ -270,6 +270,44 @@ func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardD
 	return q.exec(ctx, q.hardDeleteGlucoseReadingsByTypeStmt, hardDeleteGlucoseReadingsByType, arg.ReadingType)
 }
 
+const lastModifiedGlucoseReading = `-- name: LastModifiedGlucoseReading :one
+SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
+WHERE deleted_at IS NULL
+ORDER BY updated_at DESC
+LIMIT 1
+`
+
+func (q *Queries) LastModifiedGlucoseReading(ctx context.Context) (*GlucoseReading, error) {
+	row := q.queryRow(ctx, q.lastModifiedGlucoseReadingStmt, lastModifiedGlucoseReading)
+	var i GlucoseReading
+	err := row.Scan(
+		&i.ID,
+		&i.Reading,
+		&i.ReadingType,
+		&i.Units,
+		&i.MeasurementMethod,
+		&i.Delta,
+		&i.Direction,
+		&i.Noise,
+		&i.Filtered,
+		&i.Unfiltered,
+		&i.Rssi,
+		&i.Notes,
+		&i.Reason,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
+}
+
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
 SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
 WHERE

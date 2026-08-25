@@ -1,3 +1,22 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
 /////
 // CREATE
 //////
@@ -964,7 +983,7 @@ NAME create_full_meal_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Meal Bolus",
-  "created_at": "{{ time 0 }}",
+  "created_at": "{{ time 20 }}",
   "notes": "Meal Bolus",
   "reason": "reason",
 

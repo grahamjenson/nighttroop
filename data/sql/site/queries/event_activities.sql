@@ -37,6 +37,12 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetActivity :one
 SELECT * FROM activities WHERE id = ?;
 
+-- name: LastModifiedActivity :one
+SELECT * FROM activities
+WHERE deleted_at IS NULL
+ORDER BY updated_at DESC
+LIMIT 1;
+
 -- name: SearchActivities :many
 SELECT * FROM activities
 WHERE

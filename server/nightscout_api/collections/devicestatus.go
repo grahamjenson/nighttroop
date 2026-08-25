@@ -96,6 +96,18 @@ func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputi
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
+func (c DeviceStatusCollection) LastModified(ctx context.Context, siteContext *httputils.SiteContext, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.LastModifiedDeviceReport(ctx)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if dbModel == nil {
+		return nil, nil
+	}
+	return ptr(c.Convert(dbModel, raw)), nil
+}
+
 func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }

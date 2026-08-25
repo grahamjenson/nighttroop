@@ -72,6 +72,11 @@ WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+-- name: LastModifiedGlucoseReading :one
+SELECT * FROM glucose_readings
+WHERE deleted_at IS NULL
+ORDER BY updated_at DESC
+LIMIT 1;
 
 -- name: SearchGlucoseReadings :many
 SELECT * FROM glucose_readings

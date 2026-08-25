@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
@@ -86,12 +85,12 @@ func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Requ
 
 		for _, collection := range collections {
 			// TODO this is borked
-			record, err := dep.Store.Search(r.Context(), collection, nsquery.Query{Limit: 1, SortOrder: ptr(nsquery.SortUpdatedAtDesc)})
-			if err != nil || record == nil || len(record) == 0 {
+			record, err := dep.Store.LastModified(r.Context(), collection, false)
+			if err != nil || record == nil {
 				lastModifiedMap[collection] = 0
 				continue
 			}
-			lastModifiedMap[collection] = record[0].SrvModified
+			lastModifiedMap[collection] = record.SrvModified
 		}
 
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{

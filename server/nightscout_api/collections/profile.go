@@ -92,6 +92,19 @@ func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.Si
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
+func (c ProfileCollection) LastModified(ctx context.Context, siteContext *httputils.SiteContext, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	dbModel, err := siteContext.SiteDB.Queries.LastModifiedProfilePreset(ctx)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if dbModel == nil {
+		return nil, nil
+	}
+	wrappers := site.ManyPresetsToMayWrappers([]*site.ProfilePreset{dbModel})
+	return ptr(c.Convert(wrappers[0], raw)), nil
+}
+
 func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }

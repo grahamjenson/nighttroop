@@ -40,6 +40,11 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetFoodPreset :one
 SELECT * FROM food_presets WHERE id = ?;
 
+-- name: LastModifiedFoodPreset :one
+SELECT * FROM food_presets
+ORDER BY updated_at DESC
+LIMIT 1;
+
 -- name: SearchFoodPresets :many
 SELECT * FROM food_presets
 WHERE

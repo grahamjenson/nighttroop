@@ -822,6 +822,20 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	siteUpdateInsulinDoseParams.ID = source.ID
 	return siteUpdateInsulinDoseParams
 }
+func LastModifiedGroupToGetEventGroup(source LastModifiedEventGroupRow) GetEventGroupRow {
+	var siteGetEventGroupRow GetEventGroupRow
+	siteGetEventGroupRow.EventGroup = siteEventGroupToSiteEventGroup(source.EventGroup)
+	siteGetEventGroupRow.GlucoseReadingsVw = siteGlucoseReadingsVwToSiteGlucoseReadingsVw(source.GlucoseReadingsVw)
+	siteGetEventGroupRow.InsulinDosesVw = siteInsulinDosesVwToSiteInsulinDosesVw(source.InsulinDosesVw)
+	siteGetEventGroupRow.FoodIntakesVw = siteFoodIntakesVwToSiteFoodIntakesVw(source.FoodIntakesVw)
+	siteGetEventGroupRow.TempBasalsVw = siteTempBasalsVwToSiteTempBasalsVw(source.TempBasalsVw)
+	siteGetEventGroupRow.TempTargetsVw = siteTempTargetsVwToSiteTempTargetsVw(source.TempTargetsVw)
+	siteGetEventGroupRow.ProfileSwitchesVw = siteProfileSwitchesVwToSiteProfileSwitchesVw(source.ProfileSwitchesVw)
+	siteGetEventGroupRow.ComponentEventsVw = siteComponentEventsVwToSiteComponentEventsVw(source.ComponentEventsVw)
+	siteGetEventGroupRow.ActivitiesVw = siteActivitiesVwToSiteActivitiesVw(source.ActivitiesVw)
+	siteGetEventGroupRow.NotificationEventsVw = siteNotificationEventsVwToSiteNotificationEventsVw(source.NotificationEventsVw)
+	return siteGetEventGroupRow
+}
 func NotificationEventToCreate(source NotificationEvent) CreateNotificationEventParams {
 	var siteCreateNotificationEventParams CreateNotificationEventParams
 	siteCreateNotificationEventParams.ID = source.ID

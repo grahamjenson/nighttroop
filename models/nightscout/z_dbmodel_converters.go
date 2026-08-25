@@ -72,6 +72,8 @@ func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
 			nightscoutShortString := ShortString(*(*source).CreatedByDeviceName)
 			nightscoutDeviceStatus.Device = &nightscoutShortString
 		}
+		pNightscoutDateInt := DateInt((*source).OccurredAt)
+		nightscoutDeviceStatus.Date = &pNightscoutDateInt
 		nightscoutDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByAppName != nil {
 			nightscoutShortString2 := ShortString(*(*source).CreatedByAppName)
@@ -79,8 +81,6 @@ func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
 		}
 		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
 		nightscoutDeviceStatus.Subject = &pNightscoutShortString
-		pNightscoutDateInt := DateInt((*source).OccurredAt)
-		nightscoutDeviceStatus.Date = &pNightscoutDateInt
 		if (*source).UtcOffsetMinutes != nil {
 			nightscoutFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutDeviceStatus.UtcOffsetMinutes = &nightscoutFlexibleInt64
