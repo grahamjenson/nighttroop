@@ -170,75 +170,9 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 		nsModel.UploaderBattery = ptr(nightscout.FlexibleFloat64(*source.DeviceBatteryPercent))
 	}
 
-	///////
-	/// Extracting values
-	var predictionsDefault []*nightscout.FlexibleFloat64
-	if source.LoopPredictionsDefault != nil {
-		err := json.Unmarshal([]byte(*source.LoopPredictionsDefault), &predictionsDefault)
-		if err != nil {
-			slog.Error("failed to unmarshal loop predictions", "error", err)
-		}
-	}
-
-	var predictionsZt []*nightscout.FlexibleFloat64
-	if source.LoopPredictionsZt != nil {
-		err := json.Unmarshal([]byte(*source.LoopPredictionsZt), &predictionsZt)
-		if err != nil {
-			slog.Error("failed to unmarshal loop predictions", "error", err)
-		}
-	}
-
-	var iob *nightscout.FlexibleFloat64
-	if source.LoopIob != nil {
-		iob = ptr(nightscout.FlexibleFloat64(*source.LoopIob))
-	}
-	var basalIob *nightscout.FlexibleFloat64
-	if source.LoopIobBasal != nil {
-		basalIob = ptr(nightscout.FlexibleFloat64(*source.LoopIobBasal))
-	}
-	var cob *nightscout.FlexibleFloat64
-	if source.LoopCob != nil {
-		cob = ptr(nightscout.FlexibleFloat64(*source.LoopCob))
-	}
-
-	//////
-	if source.LoopName != nil {
-		switch *source.LoopName {
-		case "openaps":
-
-			nsModel.OpenAPS = &nightscout.OpenAPSStatus{
-				IOB: &nightscout.OpenAPSIob{
-					IOB:      iob,
-					BasalIOB: basalIob,
-				},
-				Suggested: &nightscout.OpenAPSSuggested{
-					COB: cob,
-
-					PredBGs: &nightscout.OpenAPSPredBGs{
-						IOB: predictionsDefault,
-						ZT:  predictionsZt,
-					},
-				},
-			}
-			if source.LoopPredictionsStartTime != nil {
-				nsModel.OpenAPS.Suggested.Timestamp = ptr(nightscout.DateStringFromInt64AndUTCOffset(*source.LoopPredictionsStartTime, nil))
-			}
-		case "loop":
-			nsModel.Loop = &nightscout.LoopStatus{
-				IOB: &nightscout.LoopIOB{
-					IOB: iob,
-				},
-				COB: &nightscout.LoopCOB{
-					COB: cob,
-				},
-				Predicted: &nightscout.LoopPrediction{
-					Values: predictionsDefault,
-				},
-			}
-		}
-
-	}
-
+	/////
+	// Pump
+	/////
 	if source.PumpBatteryPercent != nil {
 		nsModel.Pump = &nightscout.PumpStatus{
 			Battery: &nightscout.PumpBattery{
@@ -253,6 +187,23 @@ func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStat
 		}
 		nsModel.Pump.Reservoir = ptr(nightscout.FlexibleFloat64(*source.PumpReservoir))
 	}
+
+	///////
+	/// Extracting Loop values
+	///////
+	if source.ConfigurationSettingsJson != nil {
+		nsModel.ConfigurationRaw = ptr(json.RawMessage([]byte(*source.ConfigurationSettingsJson)))
+	}
+
+	if source.LoopName != nil && source.LoopSettingsJson != nil {
+		switch *source.LoopName {
+		case "openaps":
+			nsModel.OpenAPSRaw = ptr(json.RawMessage([]byte(*source.LoopSettingsJson)))
+		case "loop":
+			nsModel.LoopRaw = ptr(json.RawMessage([]byte(*source.LoopSettingsJson)))
+		}
+	}
+
 	return nsModel
 }
 
@@ -269,10 +220,29 @@ func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nights
 		createParams.DeviceBatteryPercent = ptr(float64(*source.UploaderBattery))
 	}
 
+	if source.ConfigurationRaw != nil {
+		createParams.ConfigurationSettingsJson = ptr(string(*source.ConfigurationRaw))
+	}
+
+	/////
+	// Pumps
+	/////
+	if source.Pump != nil {
+		if source.Pump.Battery != nil {
+			if source.Pump.Battery.Percent != nil {
+				createParams.PumpBatteryPercent = ptr(float64(*source.Pump.Battery.Percent))
+			}
+		}
+		if source.Pump.Reservoir != nil {
+			createParams.PumpReservoir = ptr(float64(*source.Pump.Reservoir))
+		}
+	}
+
 	////
 	// OpenAPS
 	////
 	if source.OpenAPS != nil {
+		createParams.LoopSettingsJson = ptr(string(*source.OpenAPSRaw))
 
 		createParams.LoopName = ptr("openaps")
 		if source.OpenAPS.IOB != nil {
@@ -313,6 +283,7 @@ func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nights
 	// Loop
 	/////
 	if source.Loop != nil {
+		createParams.LoopSettingsJson = ptr(string(*source.LoopRaw))
 		createParams.LoopName = ptr("loop")
 		if source.Loop.IOB != nil {
 			createParams.LoopIob = source.Loop.IOB.IOB.Float64p()
@@ -342,18 +313,5 @@ func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nights
 
 	}
 
-	/////
-	// Uploader
-	/////
-	if source.Pump != nil {
-		if source.Pump.Battery != nil {
-			if source.Pump.Battery.Percent != nil {
-				createParams.PumpBatteryPercent = ptr(float64(*source.Pump.Battery.Percent))
-			}
-		}
-		if source.Pump.Reservoir != nil {
-			createParams.PumpReservoir = ptr(float64(*source.Pump.Reservoir))
-		}
-	}
 	return createParams
 }

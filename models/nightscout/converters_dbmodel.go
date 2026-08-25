@@ -56,7 +56,7 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Date
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	//
-	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop
+	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop OpenAPSRaw LoopRaw ConfigurationRaw Configuration
 	DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus
 
 	///////

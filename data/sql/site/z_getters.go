@@ -462,6 +462,26 @@ func (m *DeviceReport) SetLoopName(v *string) {
 	m.LoopName = v
 }
 
+// GetConfigurationSettingsJson returns the ConfigurationSettingsJson value.
+func (m DeviceReport) GetConfigurationSettingsJson() *string {
+	return m.ConfigurationSettingsJson
+}
+
+// SetConfigurationSettingsJson sets the ConfigurationSettingsJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetConfigurationSettingsJson(v *string) {
+	m.ConfigurationSettingsJson = v
+}
+
+// GetLoopSettingsJson returns the LoopSettingsJson value.
+func (m DeviceReport) GetLoopSettingsJson() *string {
+	return m.LoopSettingsJson
+}
+
+// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopSettingsJson(v *string) {
+	m.LoopSettingsJson = v
+}
+
 // GetLoopIob returns the LoopIob value.
 func (m DeviceReport) GetLoopIob() *float64 {
 	return m.LoopIob
@@ -4557,6 +4577,28 @@ func (m CreateDeviceReportParams) GetLoopName() *string {
 // SetLoopName sets the LoopName value and returns the updated CreateDeviceReportParams.
 func (m CreateDeviceReportParams) SetLoopName(v *string) CreateDeviceReportParams {
 	m.LoopName = v
+	return m
+}
+
+// GetConfigurationSettingsJson returns the ConfigurationSettingsJson value.
+func (m CreateDeviceReportParams) GetConfigurationSettingsJson() *string {
+	return m.ConfigurationSettingsJson
+}
+
+// SetConfigurationSettingsJson sets the ConfigurationSettingsJson value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetConfigurationSettingsJson(v *string) CreateDeviceReportParams {
+	m.ConfigurationSettingsJson = v
+	return m
+}
+
+// GetLoopSettingsJson returns the LoopSettingsJson value.
+func (m CreateDeviceReportParams) GetLoopSettingsJson() *string {
+	return m.LoopSettingsJson
+}
+
+// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateDeviceReportParams.
+func (m CreateDeviceReportParams) SetLoopSettingsJson(v *string) CreateDeviceReportParams {
+	m.LoopSettingsJson = v
 	return m
 }
 

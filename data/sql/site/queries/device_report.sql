@@ -11,6 +11,8 @@ INSERT INTO device_reports (
     pump_battery_percent,
     pump_charging_state,
     loop_name,
+    configuration_settings_json,
+    loop_settings_json,
     loop_iob,
     loop_iob_basal,
     loop_iob_treatment,
@@ -27,7 +29,7 @@ INSERT INTO device_reports (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

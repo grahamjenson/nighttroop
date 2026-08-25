@@ -194,6 +194,14 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xstring3 := *source.LoopName
 		siteCreateDeviceReportParams.LoopName = &xstring3
 	}
+	if source.ConfigurationSettingsJson != nil {
+		xstring4 := *source.ConfigurationSettingsJson
+		siteCreateDeviceReportParams.ConfigurationSettingsJson = &xstring4
+	}
+	if source.LoopSettingsJson != nil {
+		xstring5 := *source.LoopSettingsJson
+		siteCreateDeviceReportParams.LoopSettingsJson = &xstring5
+	}
 	if source.LoopIob != nil {
 		xfloat644 := *source.LoopIob
 		siteCreateDeviceReportParams.LoopIob = &xfloat644
@@ -215,12 +223,12 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		siteCreateDeviceReportParams.LoopPredictionsStartTime = &xint64
 	}
 	if source.LoopPredictionsDefault != nil {
-		xstring4 := *source.LoopPredictionsDefault
-		siteCreateDeviceReportParams.LoopPredictionsDefault = &xstring4
+		xstring6 := *source.LoopPredictionsDefault
+		siteCreateDeviceReportParams.LoopPredictionsDefault = &xstring6
 	}
 	if source.LoopPredictionsZt != nil {
-		xstring5 := *source.LoopPredictionsZt
-		siteCreateDeviceReportParams.LoopPredictionsZt = &xstring5
+		xstring7 := *source.LoopPredictionsZt
+		siteCreateDeviceReportParams.LoopPredictionsZt = &xstring7
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint642 := *source.UtcOffsetMinutes
@@ -228,16 +236,16 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 	}
 	siteCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring6 := *source.RawJsonData
-		siteCreateDeviceReportParams.RawJsonData = &xstring6
+		xstring8 := *source.RawJsonData
+		siteCreateDeviceReportParams.RawJsonData = &xstring8
 	}
 	if source.CreatedByAppName != nil {
-		xstring7 := *source.CreatedByAppName
-		siteCreateDeviceReportParams.CreatedByAppName = &xstring7
+		xstring9 := *source.CreatedByAppName
+		siteCreateDeviceReportParams.CreatedByAppName = &xstring9
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring8 := *source.CreatedByDeviceName
-		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring8
+		xstring10 := *source.CreatedByDeviceName
+		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring10
 	}
 	siteCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	return siteCreateDeviceReportParams

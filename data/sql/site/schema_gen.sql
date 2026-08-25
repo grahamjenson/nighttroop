@@ -71,8 +71,12 @@ CREATE TABLE device_reports (
     pump_battery_percent REAL,
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
-    -- LOOP
+    -- Raw Loop Settings
     loop_name TEXT CHECK( loop_name IN ('openaps', 'loop')),
+    configuration_settings_json TEXT CHECK(length(configuration_settings_json) <= 8192 AND json_valid(configuration_settings_json)),
+    loop_settings_json TEXT CHECK(length(loop_settings_json) <= 8192 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
+
+    -- Extracted Loop Settings that will be useful for reporting and analysis
     loop_iob REAL,
     loop_iob_basal REAL,
     loop_iob_treatment REAL,
@@ -303,7 +307,7 @@ CREATE TABLE profile_presets (
     targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
 
     -- loop settings
-    loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)),
+    loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly

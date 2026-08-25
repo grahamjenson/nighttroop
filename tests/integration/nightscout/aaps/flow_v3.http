@@ -557,6 +557,9 @@ B {
     "uploaderBattery": 100
  }
 ASSERT_STATUS 201
+ASSERT {{ assertEquals "SMB" "@result.configuration.aps" }}
+
+
 
 NAME add_device_status_with_openaps
 POST http://{{ site }}/api/v3/devicestatus
@@ -720,7 +723,8 @@ B {
     "uploader": {},
     "uploaderBattery": 100
  }
-ASSERT_STATUS 201
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "SMB" "@result.openaps.suggested.algorithm" }}
 
 ////////
 // PROFILE

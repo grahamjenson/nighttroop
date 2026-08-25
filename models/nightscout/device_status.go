@@ -2,6 +2,7 @@ package nightscout
 
 import (
 	"encoding/json"
+	"log/slog"
 )
 
 type DeviceStatus struct {
@@ -17,8 +18,9 @@ type DeviceStatus struct {
 	Pump *PumpStatus `json:"pump,omitempty"`
 
 	// OpenAPS/Loop specific
-	OpenAPS *OpenAPSStatus `json:"openaps,omitempty"`
-	Loop    *LoopStatus    `json:"loop,omitempty"`
+	OpenAPSRaw       *json.RawMessage `json:"openaps,omitempty"`
+	LoopRaw          *json.RawMessage `json:"loop,omitempty"`
+	ConfigurationRaw *json.RawMessage `json:"configuration,omitempty"`
 
 	// Date Fields
 	Date      *DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
@@ -30,7 +32,11 @@ type DeviceStatus struct {
 
 	// Non-JSON values to make mapping easier
 	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
-	RawJsonData      string         `json:"-"`
+
+	OpenAPS       *OpenAPSStatus  `json:"-"`
+	Loop          *LoopStatus     `json:"-"`
+	Configuration *map[string]any `json:"-"`
+	RawJsonData   string          `json:"-"`
 }
 
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
@@ -58,6 +64,33 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	if t.CreatedAt != nil {
 		if t.Date == nil || t.UtcOffsetMinutes == nil {
 			t.Date, t.UtcOffsetMinutes = t.CreatedAt.MillisUTCOffset()
+		}
+	}
+
+	// Lets do the other bits
+	if t.OpenAPSRaw != nil {
+		t.OpenAPS = &OpenAPSStatus{}
+		err := json.Unmarshal(*t.OpenAPSRaw, t.OpenAPS)
+		if err != nil {
+			t.OpenAPS = nil
+			slog.Warn("failed to unmarshal openaps data", "error", err)
+		}
+	}
+
+	if t.LoopRaw != nil {
+		t.Loop = &LoopStatus{}
+		err := json.Unmarshal(*t.LoopRaw, t.Loop)
+		if err != nil {
+			t.Loop = nil
+			slog.Warn("failed to unmarshal loop data", "error", err)
+		}
+	}
+	if t.ConfigurationRaw != nil {
+		t.Configuration = &map[string]any{}
+		err := json.Unmarshal(*t.ConfigurationRaw, t.Configuration)
+		if err != nil {
+			t.Configuration = nil
+			slog.Warn("failed to unmarshal configuration data", "error", err)
 		}
 	}
 
