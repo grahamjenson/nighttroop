@@ -76,14 +76,32 @@ go tool pprof -http=:8080 cpu.pprof
 brew install mitmproxy
 ```
 
-run the server 
+Run the mitmproxy
+
+```
+mitmweb --listen-port 80 --mode reverse:http://localhost:8080 --set keep_host_header=true
+```
+
+Then run the server 
 
 ```
 air | spretty
 ```
 
-Run the mitm
+Now you can catch and copy all calls to the server
 
-```
-mitmweb --listen-port 80 --mode reverse:http://localhost:8080
-```
+### AAPS
+
+AAPS run in a simulator through Android Studio. Setup local DNS to point to your IP address (this is handwavy will come up with a standard way later)
+
+create a file AAPS/extras/engineering_mode to enable RandomBG (easiest way is create a screen )
+
+Can use `adb push init.tmp /sdcard/init.txt` 
+
+AAPS doenst support `http` NS URLs out of the box so will need to edit code, mainly the okhttp3 client code that taked the baseURL and adds `https://` to it, you should be able to just replace that.
+
+### Carer TODO
+
+### Loop TODO
+
+### Trio TODO

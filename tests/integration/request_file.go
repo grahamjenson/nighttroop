@@ -339,7 +339,7 @@ func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (c
 	return rr.Code, out, rr.Header(), context, nil
 }
 
-func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, ctx map[string]any) {
+func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, headers http.Header, ctx map[string]any) {
 	code := r.AssertStatus.Code
 	outputRaw, _ := json.Marshal(output)
 
@@ -349,7 +349,7 @@ func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, ctx ma
 	}
 
 	for _, assertStruct := range r.Assert {
-		_, err := assertTemplateCheck(assertStruct, ctx, output, t)
+		_, err := assertTemplateCheck(assertStruct, ctx, output, headers, t)
 		if err != nil {
 			t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", r.Name, assertStruct.Raw, string(outputRaw), err)
 		}
@@ -382,8 +382,9 @@ func templateITime(offset int) int64 {
 }
 
 func templateDig(root any, path string) any {
+
 	parts := strings.Split(path, ".")
-	var cur any = root
+	var cur = root
 
 	for _, p := range parts {
 		switch v := cur.(type) {
@@ -481,7 +482,20 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 	return buf.String(), nil
 }
 
-func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResult any, t *testing.T) (string, error) {
+func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResult any, headers map[string][]string, t *testing.T) (string, error) {
+	// Need to forse the headers to be json-esk so types work
+	b, err := json.Marshal(headers)
+	if err != nil {
+		t.Fatalf("Some weird Marshalerror happened in templateDig: %v", err)
+		return "false", err
+	}
+	var headersConverted map[string]any
+	err = json.Unmarshal(b, &headersConverted)
+	if err != nil {
+		t.Fatalf("Some weird Unmarshal error happened in templateDig: %v", err)
+		return "false", err
+	}
+
 	prettyOutput, _ := json.MarshalIndent(localResult, "", "  ")
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
@@ -491,19 +505,28 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 			},
 			// TESTING FUNCTIONS
 			"assertEquals": func(rawExpected, rawActual any) string {
-				expected, actual := normalizeExpectedAndAcutal(rawExpected, rawActual, localResult)
+				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
+				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
 				message := fmt.Sprintf("assertEquals failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
 				AssertEqual(t, expected, actual, message, assertStruct.Path, assertStruct.Line)
 				return "true"
 			},
+
+			"assertContains": func(rawExpected, rawActual any) string {
+				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
+				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
+				message := fmt.Sprintf("assertContains failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
+				AssertContains(t, formatAnyAsString(expected), actual, message, assertStruct.Path, assertStruct.Line)
+				return "true"
+			},
 			"assertExists": func(rawActual any) string {
-				_, actual := normalizeExpectedAndAcutal(rawActual, rawActual, localResult)
+				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
 				message := fmt.Sprintf("assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
 				AssertNotNil(t, actual, message, assertStruct.Path, assertStruct.Line)
 				return "true"
 			},
 			"assertLength": func(expectedLength int, rawActual any) string {
-				_, actual := normalizeExpectedAndAcutal(rawActual, rawActual, localResult)
+				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
 				actualLength := -1
 				if arr, ok := actual.([]any); ok {
 					actualLength = len(arr)
@@ -526,20 +549,27 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 	return buf.String(), nil
 }
 
-func normalizeExpectedAndAcutal(expected, actual, localResult any) (any, any) {
-	if s, ok := actual.(string); ok && strings.HasPrefix(s, "@") {
-		// handle template path/reference case
-		actual = templateDig(localResult, s[1:])
+func normalizeStringSearch(expected, localResult any, headers map[string]any, ctx map[string]any) any {
+
+	// Allow the expected to look through all ctx
+	if s, ok := expected.(string); ok {
+		if strings.HasPrefix(s, ".") {
+			// look up in the context
+			expected = templateDig(ctx, s[1:])
+		} else if strings.HasPrefix(s, "@") {
+			// look up in localResult
+			expected = templateDig(localResult, s[1:])
+		} else if strings.HasPrefix(s, "#") {
+			// look up in headers
+			expected = templateDig(headers, s[1:])
+		}
 	}
 
-	if s, ok := expected.(string); ok && strings.HasPrefix(s, "@") {
-		// handle template path/reference case
-		expected = templateDig(localResult, s[1:])
-	}
 	expected = normalizeValue(expected)
-	actual = normalizeValue(actual)
-	return expected, actual
+
+	return expected
 }
+
 func normalizeValue(v any) any {
 	switch x := v.(type) {
 	case int:
@@ -584,6 +614,65 @@ func normalizeValue(v any) any {
 	}
 }
 
+func formatAnyAsString(v any) string {
+	switch v := v.(type) {
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	default:
+		return fmt.Sprint(v)
+	}
+}
+
+func AssertContains(t *testing.T, expected, actual any, message string, file string, line int) bool {
+	t.Helper()
+
+	contains := false
+
+	switch a := actual.(type) {
+	case string:
+		e, ok := expected.(string)
+		contains = ok && strings.Contains(a, e)
+
+	case []string:
+		e, ok := expected.(string)
+		if ok {
+			for _, v := range a {
+				if v == e {
+					contains = true
+					break
+				}
+			}
+		}
+
+	case map[string][]string:
+		e, ok := expected.(string)
+		contains = ok
+		if contains {
+			_, contains = a[e]
+		}
+
+	default:
+		// Fall back to equality if you don't want unsupported types
+		// to silently pass.
+		contains = reflect.DeepEqual(expected, actual)
+	}
+
+	if contains {
+		return true
+	}
+
+	t.Fatalf(
+		"\n ASSERT FAILED \n %s:%d: %s\nexpected to contain: %#v\nactual:              %#v",
+		file,
+		line,
+		message,
+		expected,
+		actual,
+	)
+
+	return false
+}
+
 func AssertEqual(t *testing.T, expected, actual any, message string, file string, line int) bool {
 	t.Helper()
 
@@ -592,7 +681,7 @@ func AssertEqual(t *testing.T, expected, actual any, message string, file string
 	}
 
 	t.Fatalf(
-		"\n ASSERT FAILED \n %s:%d: %s\nexpected: %#v\nactual:   %#v",
+		"\n ASSERT EQUALS FAILED \n %s:%d: %s\nexpected: %#v\nactual:   %#v",
 		file,
 		line,
 		message,
@@ -611,7 +700,7 @@ func AssertNotNil(t *testing.T, actual any, message string, file string, line in
 	}
 
 	t.Fatalf(
-		"\n ASSERT FAILED \n %s:%d: %s\nactual:   %#v",
+		"\n ASSERT NOT NIL FAILED \n %s:%d: %s\nactual:   %#v",
 		file,
 		line,
 		message,

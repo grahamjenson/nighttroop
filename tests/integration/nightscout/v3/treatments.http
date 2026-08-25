@@ -1,4 +1,21 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
 
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
 
 ////////
 // Create
@@ -117,3 +134,29 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals "Updated by patch_patched_again_note_v3" "@result.notes" }}
 ASSERT {{ assertEquals 0 "@result.carbs" }}
 ASSERT {{ assertEquals 1.2 "@result.insulin" }}
+
+
+/////
+// History
+/////
+
+NAME get_lastmodified
+GET http://{{ site }}/api/v3/lastmodified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertExists "@result.collections" }}
+ASSERT {{ assertExists "@result.collections.treatments" }}
+ASSERT {{ assertEquals  ".get_patched_test_v3_again_again.lastModified" "@result.collections.treatments" }}
+
+NAME get_history
+GET http://{{ site }}/api/v3/treatments/history/{{ dig "get_lastmodified.result.collections.treatments" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertExists "@result.0" }}
+ASSERT {{ assertContains "@result.0.srvModified" "#Etag.0" }}
+
+NAME get_history
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertLength 0 "@result" }}

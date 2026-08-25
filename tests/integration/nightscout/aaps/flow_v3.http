@@ -1,9 +1,28 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
 // We need to check that all return values satisfy the core/nssdk models
 
 // First AAPS will call status to check if logged in and other stats
 
 NAME get_status
-GET http://{{ site }}/api/v3/status
+GET http://{{ site }}/api/v3/status 
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
@@ -12,6 +31,12 @@ NAME get_last_modified
 GET http://{{ site }}/api/v3/lastModified
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
+ASSERT {{ assertExists "@result.collections" }}
+ASSERT {{ assertExists "@result.collections.entries" }}
+ASSERT {{ assertExists "@result.collections.treatments" }}
+ASSERT {{ assertExists "@result.collections.food" }}
+ASSERT {{ assertExists "@result.collections.devicestatus" }}
+ASSERT {{ assertExists "@result.collections.devicestatus" }}
 
 // grabs the food
 NAME get_food
@@ -314,11 +339,31 @@ NAME get_treatments_from_history_new
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 10 "@result" }}
+ASSERT {{ assertLength 0 "@result" }}
 
 
 NAME get_treatments_from_history_old
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 30 }}?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 0 "@result" }}
+ASSERT {{ assertLength 6 "@result" }}
+
+
+/////
+// SYNC
+/////
+
+NAME get_entries_since
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt=1778970005948&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_treatments_since
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt=2026-05-16T22:20:07.238Z&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME get_profile_since
+GET http://{{ site }}/api/v3/profile?sort$desc=date&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200

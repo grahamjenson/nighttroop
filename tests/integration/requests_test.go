@@ -108,7 +108,7 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 				fmt.Println()
 				// default information
 
-				statusCode, output, _, newContext, err := realRequest.ExecuteRequest(router, requestContext)
+				statusCode, output, headers, newContext, err := realRequest.ExecuteRequest(router, requestContext)
 				if err != nil {
 					t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, realRequest.Method, realRequest.URL)
 				}
@@ -120,7 +120,8 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 				prettyOutput, _ := json.MarshalIndent(output, "", "  ")
 				fmt.Printf("RESPONSE: %+v\n", string(prettyOutput))
 				fmt.Println("===============================")
-				realRequest.ExecuteAsserts(t, statusCode, output, requestContext)
+
+				realRequest.ExecuteAsserts(t, statusCode, output, headers, requestContext)
 
 			}
 
