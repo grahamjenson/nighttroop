@@ -762,6 +762,16 @@ func (m *EventGroup) SetReason(v *string) {
 	m.Reason = v
 }
 
+// GetDurationMinutes returns the DurationMinutes value.
+func (m EventGroup) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated EventGroup.
+func (m *EventGroup) SetDurationMinutes(v *int64) {
+	m.DurationMinutes = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m EventGroup) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -8001,6 +8011,17 @@ func (m CreateEventGroupParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated CreateEventGroupParams.
 func (m CreateEventGroupParams) SetReason(v *string) CreateEventGroupParams {
 	m.Reason = v
+	return m
+}
+
+// GetDurationMinutes returns the DurationMinutes value.
+func (m CreateEventGroupParams) GetDurationMinutes() *int64 {
+	return m.DurationMinutes
+}
+
+// SetDurationMinutes sets the DurationMinutes value and returns the updated CreateEventGroupParams.
+func (m CreateEventGroupParams) SetDurationMinutes(v *int64) CreateEventGroupParams {
+	m.DurationMinutes = v
 	return m
 }
 

@@ -680,6 +680,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	case nightscout.Announcement:
 		return site.EventGroupsBundle{
 			EventGroup:        eventGroup,
+			GlucoseReading:    glucoseReading,
 			NotificationEvent: notificationEvent,
 		}
 	case nightscout.BGCheck:

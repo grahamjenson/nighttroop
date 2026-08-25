@@ -134,6 +134,7 @@ type EventGroup struct {
 	NotificationEventID   *string
 	Notes                 *string
 	Reason                *string
+	DurationMinutes       *int64
 	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

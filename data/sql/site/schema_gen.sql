@@ -117,6 +117,7 @@ CREATE TABLE event_groups (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
+    duration_minutes INTEGER, -- this is needed for notes, and is common enough
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,

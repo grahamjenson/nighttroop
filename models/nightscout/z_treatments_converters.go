@@ -207,10 +207,14 @@ func EventGroupCreate(source site.EventGroup, context ConverterContext) site.Cre
 		xstring11 := *source.Reason
 		siteCreateEventGroupParams.Reason = &xstring11
 	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteCreateEventGroupParams.DurationMinutes = &xint64
+	}
 	siteCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		siteCreateEventGroupParams.UtcOffsetMinutes = &xint642
 	}
 	if source.RawJsonData != nil {
 		xstring12 := *source.RawJsonData
@@ -233,6 +237,10 @@ func EventGroupToTreatment(source site.EventGroup) *Treatment {
 	nightscoutTreatment.Identifier = &pNightscoutIdentifierString
 	pNightscoutTreatmentEventType := TreatmentEventType(source.GroupType)
 	nightscoutTreatment.EventType = &pNightscoutTreatmentEventType
+	if source.DurationMinutes != nil {
+		nightscoutFlexibleInt64 := FlexibleInt64(*source.DurationMinutes)
+		nightscoutTreatment.DurationMinutes = &nightscoutFlexibleInt64
+	}
 	if source.Notes != nil {
 		nightscoutSanitizedString := SanitizedString(*source.Notes)
 		nightscoutTreatment.Notes = &nightscoutSanitizedString
@@ -257,8 +265,8 @@ func EventGroupToTreatment(source site.EventGroup) *Treatment {
 	pNightscoutDateInt := DateInt(source.OccurredAt)
 	nightscoutTreatment.Date = &pNightscoutDateInt
 	if source.UtcOffsetMinutes != nil {
-		nightscoutFlexibleInt64 := FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt64
+		nightscoutFlexibleInt642 := FlexibleInt64(*source.UtcOffsetMinutes)
+		nightscoutTreatment.UtcOffsetMinutes = &nightscoutFlexibleInt642
 	}
 	if source.RawJsonData != nil {
 		nightscoutTreatment.RawJsonData = *source.RawJsonData
@@ -1344,11 +1352,15 @@ func TreatmentToEventGroup(source Treatment) site.EventGroup {
 		xstring2 := ShortStringToString(*source.Reason)
 		siteEventGroup.Reason = &xstring2
 	}
+	if source.DurationMinutes != nil {
+		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
+		siteEventGroup.DurationMinutes = &xint64
+	}
 	pString := source.RawJsonData
 	siteEventGroup.RawJsonData = &pString
 	if source.UtcOffsetMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteEventGroup.UtcOffsetMinutes = &xint64
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		siteEventGroup.UtcOffsetMinutes = &xint642
 	}
 	siteEventGroup.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
@@ -1862,17 +1874,21 @@ func UpdateToEventGroup(source site.EventGroup, target *site.EventGroup) {
 		xstring11 := *source.Reason
 		target.Reason = &xstring11
 	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		target.DurationMinutes = &xint64
+	}
 	if source.RawJsonData != nil {
 		xstring12 := *source.RawJsonData
 		target.RawJsonData = &xstring12
 	}
 	if source.DeletedAt != nil {
-		xint64 := *source.DeletedAt
-		target.DeletedAt = &xint64
+		xint642 := *source.DeletedAt
+		target.DeletedAt = &xint642
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		target.UtcOffsetMinutes = &xint642
+		xint643 := *source.UtcOffsetMinutes
+		target.UtcOffsetMinutes = &xint643
 	}
 	target.OccurredAt = source.OccurredAt
 	target.CreatedAt = source.CreatedAt

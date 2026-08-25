@@ -17,6 +17,7 @@ INSERT INTO event_groups (
 
     notes,
     reason,
+    duration_minutes,
 
     occurred_at,
     utc_offset_minutes,
@@ -25,7 +26,7 @@ INSERT INTO event_groups (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

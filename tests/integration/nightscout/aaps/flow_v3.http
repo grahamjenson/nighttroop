@@ -341,6 +341,7 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
+ASSERT {{ assertEquals 20 "@result.duration" }}
 
 NAME add_treatments_exercise
 POST http://{{ site }}/api/v3/treatments
@@ -379,6 +380,8 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
+ASSERT {{ assertEquals 8.033333333333331 "@result.glucose" }}
+
 
 NAME add_treatments_questions_have_glucose_too
 POST http://{{ site }}/api/v3/treatments

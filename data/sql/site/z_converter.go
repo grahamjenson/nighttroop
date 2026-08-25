@@ -303,10 +303,14 @@ func EventGroupToCreate(source EventGroup) CreateEventGroupParams {
 		xstring11 := *source.Reason
 		siteCreateEventGroupParams.Reason = &xstring11
 	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteCreateEventGroupParams.DurationMinutes = &xint64
+	}
 	siteCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		siteCreateEventGroupParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		siteCreateEventGroupParams.UtcOffsetMinutes = &xint642
 	}
 	if source.RawJsonData != nil {
 		xstring12 := *source.RawJsonData
@@ -1437,17 +1441,21 @@ func siteEventGroupToSiteEventGroup(source EventGroup) EventGroup {
 		xstring11 := *source.Reason
 		siteEventGroup.Reason = &xstring11
 	}
+	if source.DurationMinutes != nil {
+		xint64 := *source.DurationMinutes
+		siteEventGroup.DurationMinutes = &xint64
+	}
 	if source.RawJsonData != nil {
 		xstring12 := *source.RawJsonData
 		siteEventGroup.RawJsonData = &xstring12
 	}
 	if source.DeletedAt != nil {
-		xint64 := *source.DeletedAt
-		siteEventGroup.DeletedAt = &xint64
+		xint642 := *source.DeletedAt
+		siteEventGroup.DeletedAt = &xint642
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		siteEventGroup.UtcOffsetMinutes = &xint642
+		xint643 := *source.UtcOffsetMinutes
+		siteEventGroup.UtcOffsetMinutes = &xint643
 	}
 	siteEventGroup.OccurredAt = source.OccurredAt
 	siteEventGroup.CreatedAt = source.CreatedAt
