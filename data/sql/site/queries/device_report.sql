@@ -10,9 +10,11 @@ INSERT INTO device_reports (
     pump_reservoir,
     pump_battery_percent,
     pump_charging_state,
+
     loop_name,
     configuration_settings_json,
     loop_settings_json,
+    
     loop_iob,
     loop_iob_basal,
     loop_iob_treatment,
@@ -46,11 +48,6 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: GetDeviceReport :one
 SELECT * FROM device_reports WHERE id = ?;
 
--- name: LastModifiedDeviceReport :one
-SELECT * FROM device_reports
-WHERE deleted_at IS NULL
-ORDER BY updated_at DESC
-LIMIT 1;
 
 -- name: SearchDeviceReports :many
 SELECT * FROM device_reports

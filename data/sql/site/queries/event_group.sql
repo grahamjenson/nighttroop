@@ -101,36 +101,6 @@ LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 WHERE eg.id = ?;
 
--- name: LastModifiedEventGroup :one
-SELECT
-    -- It would be awesome if sqlc worked with embed null objects
-    -- see here https://github.com/sqlc-dev/sqlc/issues/2348
-    sqlc.embed(eg),
-    
-    sqlc.embed(gr),
-    sqlc.embed(idose),
-    sqlc.embed(fi),
-    sqlc.embed(tb),
-    sqlc.embed(tt),
-    sqlc.embed(ps),
-    sqlc.embed(ce),
-    sqlc.embed(a),
-    sqlc.embed(n)
-
-FROM event_groups eg
-LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
-LEFT JOIN activities_vw a ON eg.activity_id = a.id
-LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
-
-WHERE eg.deleted_at IS NULL
-ORDER BY eg.updated_at DESC
-LIMIT 1;
 
 
 -- name: SearchEventGroups :many

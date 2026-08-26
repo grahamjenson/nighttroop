@@ -24,7 +24,6 @@ func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, create
 	}
 	body := map[string]any{"status": status, "result": record.SelectFields(fields, true)}
 	if record.Identifier() != "" {
-		LastModifiedHeader(w, record.SrvModified)
 		body["identifier"] = record.Identifier()
 		body["lastModified"] = record.SrvModified
 		if createdType == FoundDuplicate {
@@ -33,8 +32,10 @@ func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, create
 		}
 	}
 
-	w.Header().Set("Last-Modified", time.UnixMilli(record.SrvModified).UTC().Format(http.TimeFormat))
-	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.SrvModified))
+	if record.SrvModified > 0 {
+		w.Header().Set("Last-Modified", time.UnixMilli(record.SrvModified).UTC().Format(http.TimeFormat))
+		w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.SrvModified))
+	}
 
 	WriteJSON(w, status, body)
 }
@@ -123,13 +124,4 @@ func ParseIfUnmodifiedSince(r *http.Request) (time.Time, bool) {
 	}
 	parsed, err := time.Parse(http.TimeFormat, value)
 	return parsed, err == nil
-}
-
-// LastModifiedHeader writes a Last-Modified header for a Unix millisecond
-// timestamp when the value is positive.
-func LastModifiedHeader(w http.ResponseWriter, millis int64) {
-	if millis <= 0 {
-		return
-	}
-	w.Header().Set("Last-Modified", time.UnixMilli(millis).UTC().Format(http.TimeFormat))
 }

@@ -723,7 +723,7 @@ B {
     "uploader": {},
     "uploaderBattery": 100
  }
-ASSERT_STATUS 200
+ASSERT_STATUS 201
 ASSERT {{ assertEquals "SMB" "@result.openaps.suggested.algorithm" }}
 
 ////////

@@ -216,40 +216,6 @@ func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivity
 	return q.exec(ctx, q.hardDeleteActivityStmt, hardDeleteActivity, arg.ID)
 }
 
-const lastModifiedActivity = `-- name: LastModifiedActivity :one
-SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
-WHERE deleted_at IS NULL
-ORDER BY updated_at DESC
-LIMIT 1
-`
-
-func (q *Queries) LastModifiedActivity(ctx context.Context) (*Activity, error) {
-	row := q.queryRow(ctx, q.lastModifiedActivityStmt, lastModifiedActivity)
-	var i Activity
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.ActivityType,
-		&i.DurationMinutes,
-		&i.Calories,
-		&i.Steps,
-		&i.HeartRate,
-		&i.Notes,
-		&i.Reason,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
-}
-
 const searchActivities = `-- name: SearchActivities :many
 SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities
 WHERE

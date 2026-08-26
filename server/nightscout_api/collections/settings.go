@@ -161,16 +161,6 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 	return nil
 }
 
-func (c SettingsCollection) LastModified(ctx context.Context, siteContext *httputils.SiteContext, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
-	settingsMap := GetSettingsMap(siteContext.SiteModel, siteContext.IdentityModel)
-	setting, ok := settingsMap[control.ALL_SETTINGS[0]]
-	if !ok {
-		return nil, nsutils.ErrNotFound
-	}
-
-	return ptr(c.converter(setting, raw)), nil
-}
-
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
 	settingsMap := GetSettingsMap(siteContext.SiteModel, siteContext.IdentityModel)
 	setting, ok := settingsMap[identifier]

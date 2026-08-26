@@ -205,20 +205,6 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 	return MetaCreate(c, ctx, siteContext, data, raw)
 }
 
-func (c TreatmentCollection) LastModified(ctx context.Context, siteContext *httputils.SiteContext, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := siteContext.SiteDB.Queries.LastModifiedEventGroup(ctx)
-
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if dbModel == nil {
-		return nil, nil
-	}
-	eventBundle := site.GetEventGroupToEventGroupsBundle(site.LastModifiedGroupToGetEventGroup(*dbModel))
-
-	return ptr(c.Convert(&eventBundle, raw)), nil
-}
-
 func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
 	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
 }

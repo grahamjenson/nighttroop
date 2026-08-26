@@ -365,42 +365,6 @@ func (q *Queries) HardDeleteProfileStore(ctx context.Context, arg HardDeleteProf
 	return q.exec(ctx, q.hardDeleteProfileStoreStmt, hardDeleteProfileStore, arg.ProfileStoreID)
 }
 
-const lastModifiedProfilePreset = `-- name: LastModifiedProfilePreset :one
-SELECT id, name, profile_store_id, is_default, dia, units, timezone, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM profile_presets
-ORDER BY updated_at DESC, is_default DESC
-LIMIT 1
-`
-
-func (q *Queries) LastModifiedProfilePreset(ctx context.Context) (*ProfilePreset, error) {
-	row := q.queryRow(ctx, q.lastModifiedProfilePresetStmt, lastModifiedProfilePreset)
-	var i ProfilePreset
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.ProfileStoreID,
-		&i.IsDefault,
-		&i.Dia,
-		&i.Units,
-		&i.Timezone,
-		&i.CarbRatiosJson,
-		&i.InsulinSensitivitiesJson,
-		&i.BasalRatesJson,
-		&i.TargetsHighJson,
-		&i.TargetsLowJson,
-		&i.LoopSettingsJson,
-		&i.RawJsonData,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
-}
-
 const searchProfileStores = `-- name: SearchProfileStores :many
 WITH distinct_profile_store_ids AS (
     SELECT DISTINCT profile_store_id FROM profile_presets

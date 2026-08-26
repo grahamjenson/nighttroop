@@ -91,10 +91,6 @@ WHERE profile_store_id = (
 -- name: GetProfileStore :many
 SELECT * FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DESC;
 
--- name: LastModifiedProfilePreset :one
-SELECT * FROM profile_presets
-ORDER BY updated_at DESC, is_default DESC
-LIMIT 1;
 
 
 -- name: SearchProfileStores :many

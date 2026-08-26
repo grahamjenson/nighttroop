@@ -87,9 +87,11 @@ INSERT INTO device_reports (
     pump_reservoir,
     pump_battery_percent,
     pump_charging_state,
+
     loop_name,
     configuration_settings_json,
     loop_settings_json,
+    
     loop_iob,
     loop_iob_basal,
     loop_iob_treatment,
@@ -298,48 +300,6 @@ type HardDeleteDeviceReportParams struct {
 
 func (q *Queries) HardDeleteDeviceReport(ctx context.Context, arg HardDeleteDeviceReportParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteDeviceReportStmt, hardDeleteDeviceReport, arg.ID)
-}
-
-const lastModifiedDeviceReport = `-- name: LastModifiedDeviceReport :one
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_reports
-WHERE deleted_at IS NULL
-ORDER BY updated_at DESC
-LIMIT 1
-`
-
-func (q *Queries) LastModifiedDeviceReport(ctx context.Context) (*DeviceReport, error) {
-	row := q.queryRow(ctx, q.lastModifiedDeviceReportStmt, lastModifiedDeviceReport)
-	var i DeviceReport
-	err := row.Scan(
-		&i.ID,
-		&i.DeviceBatteryPercent,
-		&i.IsDeviceCharging,
-		&i.PumpState,
-		&i.PumpReservoir,
-		&i.PumpBatteryPercent,
-		&i.PumpChargingState,
-		&i.LoopName,
-		&i.ConfigurationSettingsJson,
-		&i.LoopSettingsJson,
-		&i.LoopIob,
-		&i.LoopIobBasal,
-		&i.LoopIobTreatment,
-		&i.LoopCob,
-		&i.LoopPredictionsStartTime,
-		&i.LoopPredictionsDefault,
-		&i.LoopPredictionsZt,
-		&i.RawJsonData,
-		&i.DeletedAt,
-		&i.UtcOffsetMinutes,
-		&i.OccurredAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
 }
 
 const searchDeviceReports = `-- name: SearchDeviceReports :many

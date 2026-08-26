@@ -230,40 +230,6 @@ func (q *Queries) HardDeleteFoodPresetsByType(ctx context.Context, arg HardDelet
 	return q.exec(ctx, q.hardDeleteFoodPresetsByTypeStmt, hardDeleteFoodPresetsByType, arg.FoodType)
 }
 
-const lastModifiedFoodPreset = `-- name: LastModifiedFoodPreset :one
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
-ORDER BY updated_at DESC
-LIMIT 1
-`
-
-func (q *Queries) LastModifiedFoodPreset(ctx context.Context) (*FoodPreset, error) {
-	row := q.queryRow(ctx, q.lastModifiedFoodPresetStmt, lastModifiedFoodPreset)
-	var i FoodPreset
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.FoodType,
-		&i.Category,
-		&i.Subcategory,
-		&i.AbsorptionTimeMinutes,
-		&i.PreBolus,
-		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Energy,
-		&i.Portions,
-		&i.RawJsonData,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.CreatedByAppName,
-		&i.CreatedByDeviceName,
-		&i.UpdatedByIdentityName,
-		&i.CreatedByIdentityName,
-	)
-	return &i, err
-}
-
 const searchFoodPresets = `-- name: SearchFoodPresets :many
 SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
 WHERE

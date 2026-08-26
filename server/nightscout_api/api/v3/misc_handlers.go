@@ -1,10 +1,12 @@
 package v3
 
 import (
+	"log/slog"
 	"net/http"
 	"time"
 
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // Version reports the application and API version metadata for API v3.
@@ -80,24 +82,33 @@ func Test(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsut
 // collection.
 func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		collections := []nsutils.Collection{nsutils.Entries, nsutils.Treatments, nsutils.Devicestatus, nsutils.Profile, nsutils.Food, nsutils.Settings}
-		lastModifiedMap := make(map[nsutils.Collection]int64)
 
-		for _, collection := range collections {
-			// TODO this is borked
-			record, err := dep.Store.LastModified(r.Context(), collection, false)
-			if err != nil || record == nil {
-				lastModifiedMap[collection] = 0
-				continue
-			}
-			lastModifiedMap[collection] = record.SrvModified
+		siteContext := httputils.GetSiteContext(r.Context())
+		if siteContext == nil {
+			slog.Error("site context not available")
+			http.Error(w, nsutils.ErrMissingCredentials.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		lasModified, err := siteContext.SiteDB.Queries.LastModifiedCollections(r.Context())
+		if err != nil {
+			slog.Error("failed to query last modified timestamps from database", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
-				"srvDate":     time.Now().UnixMilli(),
-				"collections": lastModifiedMap,
+				"srvDate": time.Now().UnixMilli(),
+				"collections": map[string]int64{
+					"entries":      lasModified.GlucoseReadingUpdatedAt,
+					"treatments":   lasModified.EventGroupUpdatedAt,
+					"devicestatus": lasModified.DeviceReportUpdatedAt,
+					"profile":      lasModified.ProfilePresetUpdatedAt,
+					"food":         lasModified.FoodPresetUpdatedAt,
+					"settings":     0, // TODO: I guess save the last time someone changed the settings
+				},
 			},
 		})
 	}

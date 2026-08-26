@@ -216,23 +216,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteTempTargetStmt, err = db.PrepareContext(ctx, hardDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteTempTarget: %w", err)
 	}
-	if q.lastModifiedActivityStmt, err = db.PrepareContext(ctx, lastModifiedActivity); err != nil {
-		return nil, fmt.Errorf("error preparing query LastModifiedActivity: %w", err)
-	}
-	if q.lastModifiedDeviceReportStmt, err = db.PrepareContext(ctx, lastModifiedDeviceReport); err != nil {
-		return nil, fmt.Errorf("error preparing query LastModifiedDeviceReport: %w", err)
-	}
-	if q.lastModifiedEventGroupStmt, err = db.PrepareContext(ctx, lastModifiedEventGroup); err != nil {
-		return nil, fmt.Errorf("error preparing query LastModifiedEventGroup: %w", err)
-	}
-	if q.lastModifiedFoodPresetStmt, err = db.PrepareContext(ctx, lastModifiedFoodPreset); err != nil {
-		return nil, fmt.Errorf("error preparing query LastModifiedFoodPreset: %w", err)
-	}
-	if q.lastModifiedGlucoseReadingStmt, err = db.PrepareContext(ctx, lastModifiedGlucoseReading); err != nil {
-		return nil, fmt.Errorf("error preparing query LastModifiedGlucoseReading: %w", err)
-	}
-	if q.lastModifiedProfilePresetStmt, err = db.PrepareContext(ctx, lastModifiedProfilePreset); err != nil {
-		return nil, fmt.Errorf("error preparing query LastModifiedProfilePreset: %w", err)
+	if q.lastModifiedCollectionsStmt, err = db.PrepareContext(ctx, lastModifiedCollections); err != nil {
+		return nil, fmt.Errorf("error preparing query LastModifiedCollections: %w", err)
 	}
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
@@ -682,34 +667,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.lastModifiedActivityStmt != nil {
-		if cerr := q.lastModifiedActivityStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing lastModifiedActivityStmt: %w", cerr)
-		}
-	}
-	if q.lastModifiedDeviceReportStmt != nil {
-		if cerr := q.lastModifiedDeviceReportStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing lastModifiedDeviceReportStmt: %w", cerr)
-		}
-	}
-	if q.lastModifiedEventGroupStmt != nil {
-		if cerr := q.lastModifiedEventGroupStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing lastModifiedEventGroupStmt: %w", cerr)
-		}
-	}
-	if q.lastModifiedFoodPresetStmt != nil {
-		if cerr := q.lastModifiedFoodPresetStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing lastModifiedFoodPresetStmt: %w", cerr)
-		}
-	}
-	if q.lastModifiedGlucoseReadingStmt != nil {
-		if cerr := q.lastModifiedGlucoseReadingStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing lastModifiedGlucoseReadingStmt: %w", cerr)
-		}
-	}
-	if q.lastModifiedProfilePresetStmt != nil {
-		if cerr := q.lastModifiedProfilePresetStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing lastModifiedProfilePresetStmt: %w", cerr)
+	if q.lastModifiedCollectionsStmt != nil {
+		if cerr := q.lastModifiedCollectionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing lastModifiedCollectionsStmt: %w", cerr)
 		}
 	}
 	if q.searchActivitiesStmt != nil {
@@ -1020,12 +980,7 @@ type Queries struct {
 	hardDeleteProfileSwitchStmt                 *sql.Stmt
 	hardDeleteTempBasalStmt                     *sql.Stmt
 	hardDeleteTempTargetStmt                    *sql.Stmt
-	lastModifiedActivityStmt                    *sql.Stmt
-	lastModifiedDeviceReportStmt                *sql.Stmt
-	lastModifiedEventGroupStmt                  *sql.Stmt
-	lastModifiedFoodPresetStmt                  *sql.Stmt
-	lastModifiedGlucoseReadingStmt              *sql.Stmt
-	lastModifiedProfilePresetStmt               *sql.Stmt
+	lastModifiedCollectionsStmt                 *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchComponentEventsStmt                   *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
@@ -1137,12 +1092,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteProfileSwitchStmt:                 q.hardDeleteProfileSwitchStmt,
 		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
-		lastModifiedActivityStmt:                    q.lastModifiedActivityStmt,
-		lastModifiedDeviceReportStmt:                q.lastModifiedDeviceReportStmt,
-		lastModifiedEventGroupStmt:                  q.lastModifiedEventGroupStmt,
-		lastModifiedFoodPresetStmt:                  q.lastModifiedFoodPresetStmt,
-		lastModifiedGlucoseReadingStmt:              q.lastModifiedGlucoseReadingStmt,
-		lastModifiedProfilePresetStmt:               q.lastModifiedProfilePresetStmt,
+		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchComponentEventsStmt:                   q.searchComponentEventsStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
