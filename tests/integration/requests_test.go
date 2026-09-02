@@ -1,21 +1,18 @@
 package integration_test
 
 import (
-	"context"
 	"embed"
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -38,7 +35,7 @@ func TestRequests(t *testing.T) {
 
 	router := server.GetMainHandler(controlDB, config)
 
-	DumpOnFailure(t, controlDB, "user_treatments_test_failure_dump.sqlite")
+	testutils.DumpOnFailure(t, controlDB, "user_treatments_test_failure_dump.sqlite")
 
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -64,17 +61,16 @@ func TestRequests(t *testing.T) {
 
 }
 
-func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.Handler, siteInformation *db.SiteCreateResult, defaultJwt string) {
-
-	removeNightscout := strings.TrimPrefix(requestFilePath, "nightscout/")
+func runTheRequestFileAsATest(t *testing.T, path string, router http.Handler, siteInformation *db.SiteCreateResult, defaultJwt string) {
+	removeNightscout := strings.TrimPrefix(path, "nightscout/")
 	t.Run(removeNightscout, func(t *testing.T) {
-		requestFileBytes, err := embeddedFiles.ReadFile(requestFilePath)
+		requestFileBytes, err := embeddedFiles.ReadFile(path)
 		if err != nil {
 			t.Fatalf("failed to read request file: %v", err)
 		}
 		fmt.Println()
 		fmt.Println("===============================================")
-		fmt.Printf("Running request file: %s\n", requestFilePath)
+		fmt.Printf("Running request file: %s\n", path)
 		fmt.Println("===============================================")
 
 		requestContext := map[string]any{
@@ -82,7 +78,7 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 			"default_token": siteInformation.PwdNSToken,
 			"default_jwt":   defaultJwt,
 		}
-		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext, requestFilePath)
+		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext, path)
 		if err != nil {
 			t.Fatalf("failed to parse request file: %v", err)
 		}
@@ -124,49 +120,6 @@ func runTheRequestFileAsATest(t *testing.T, requestFilePath string, router http.
 				realRequest.ExecuteAsserts(t, statusCode, output, headers, requestContext)
 
 			}
-
 		}
-	})
-}
-
-// DumpOnFailure registers a cleanup hook that saves the in-memory DB
-// to disk ONLY if the test fails.
-func DumpOnFailure(t *testing.T, controlDB *db.ControlDB, filePrefix string) {
-	t.Helper()
-
-	dumpFolder := filepath.Join(utils.FindProjectRoot(), ".test/dumps/", filePrefix+"_"+t.Name())
-	// delete folder if it exists
-	_ = os.RemoveAll(dumpFolder)
-
-	t.Cleanup(func() {
-
-		// Only run if the test actually failed
-		if !t.Failed() {
-			return
-		}
-
-		// Ensure output directory exists (e.g., ./debug_dumps)
-
-		utils.MkDirs(dumpFolder)
-		backupPath := filepath.Join(dumpFolder, "control.sqlite")
-		err := utils.SqliteBackup(context.TODO(), controlDB.SQLiteDB, backupPath)
-		if err != nil {
-			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved: %v", err)
-			return
-		}
-
-		for _, site := range controlDB.AllSites() {
-			if site.Subdomain == "" {
-				continue
-			}
-			_, backupPath := utils.SiteDBPaths(site.Subdomain)
-			backupPath = filepath.Join(dumpFolder, site.Subdomain+".sqlite")
-			err := utils.SqliteBackup(context.TODO(), site.SQLiteDB, backupPath)
-			if err != nil {
-				t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for site %s: %v", site.Subdomain, err)
-				return
-			}
-		}
-		t.Logf("🛑 Test failed! In-memory DB snapshot saved to: %s", backupPath)
 	})
 }

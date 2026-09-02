@@ -1,0 +1,16 @@
+NAME create_meal_bolus_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {
+  "eventType": "Meal Bolus",
+  "created_at": "{{ time 0 }}",
+
+  "glucose": 148,
+  "glucoseType": "Sensor",
+  "units": "mg/dL",
+
+  "carbs": 45,
+  "insulin": 4.2,
+
+  "notes": "Here are some notes",
+  "reason": "lunch"
+ }

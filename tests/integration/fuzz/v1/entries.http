@@ -1,0 +1,4 @@
+
+NAME create_entry_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B { "sgv": 101, "type": "sgv"}
