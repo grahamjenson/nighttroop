@@ -98,6 +98,20 @@ func FuzzRequestFiles(f *testing.F) {
 
 		runFuzzTest(t, "CreateTreatmentV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), body)
 		runFuzzTest(t, "CreateTreatmentV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), newBody)
+
+		// Device Status
+		runFuzzTest(t, "CreateDeviceStatusV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateDeviceStatusV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateDeviceStatusV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateDeviceStatusV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), newBody)
+
+		// profile
+		runFuzzTest(t, "CreateProfileV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateProfileV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateProfileV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
 	})
 }
 
