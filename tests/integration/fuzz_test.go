@@ -112,6 +112,21 @@ func FuzzRequestFiles(f *testing.F) {
 
 		runFuzzTest(t, "CreateProfileV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), body)
 		runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
+
+		// food
+		runFuzzTest(t, "CreateFoodV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateFoodV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateFoodV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateFoodV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), newBody)
+
+		// settings
+		runFuzzTest(t, "CreateSettingsV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateSettingsV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), newBody)
+
+		// activities
+		runFuzzTest(t, "CreateActivitiesV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), body)
+		runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
 	})
 }
 
@@ -135,6 +150,8 @@ func runFuzzTest(t *testing.T, name string, router http.Handler, path, body stri
 		if rr.Code == 429 {
 			t.Errorf("rate limited: %d", rr.Code)
 		}
+
+		t.Logf("response code=%v, body=%v", rr.Code, rr.Body.String())
 	})
 }
 func mutateBody(body map[string]any, r *rand.Rand) map[string]any {

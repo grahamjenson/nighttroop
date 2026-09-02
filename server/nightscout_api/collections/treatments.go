@@ -40,8 +40,12 @@ func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle, raw bool) nsuti
 func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
 	// Validate the input
 	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
-		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
-		return nsutils.BadDataBodyError
+		eventTypeError := "eventType: null"
+		if nsModel.EventType != nil {
+			eventTypeError = "eventType: " + nsModel.EventType.String()
+		}
+		slog.Error("treatment EventType is empty or unknown", "error", eventTypeError)
+		return nsutils.BadDataBodyErrorWithHint("EventType is nil or unknown: " + eventTypeError)
 	}
 
 	// Validate the change
