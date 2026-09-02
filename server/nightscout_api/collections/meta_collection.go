@@ -107,6 +107,11 @@ func MetaCreate[NS, DM any](
 	)
 
 	if err != nil {
+		sqlTranslatedError := nsutils.GetSQLTranslatedError(err)
+		if sqlTranslatedError != nil {
+			return nil, false, sqlTranslatedError
+		}
+
 		slog.Error("failed to create in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}

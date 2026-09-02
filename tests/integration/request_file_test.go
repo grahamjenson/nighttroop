@@ -511,7 +511,6 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 				AssertEqual(t, expected, actual, message, assertStruct.Path, assertStruct.Line)
 				return "true"
 			},
-
 			"assertContains": func(rawExpected, rawActual any) string {
 				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
 				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)

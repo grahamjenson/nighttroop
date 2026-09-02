@@ -1,8 +1,12 @@
 package nsutils
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 type HTTPError struct {
@@ -99,3 +103,37 @@ var (
 	ErrCannotChangeModifiedAt = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvModified cannot be modified by the client"}
 	ErrCannotChangeModifiedBy = &HTTPError{Status: http.StatusBadRequest, Message: "Field modifiedBy cannot be modified by the client"}
 )
+
+func GetSQLTranslatedError(err error) *HTTPError {
+	var sqliteErr sqlite3.Error
+
+	if !errors.As(err, &sqliteErr) {
+		return nil
+	}
+
+	if sqliteErr.Code != sqlite3.ErrConstraint {
+		return nil
+	}
+
+	switch sqliteErr.ExtendedCode {
+	case sqlite3.ErrConstraintUnique:
+		fmt.Println("Unique constraint violation", err)
+		return BadDataBodyErrorWithHint(err.Error())
+	case sqlite3.ErrConstraintNotNull:
+
+		return BadDataBodyErrorWithHint(err.Error())
+	case sqlite3.ErrConstraintCheck:
+		concat := strings.TrimPrefix(err.Error(), "CHECK constraint failed: ")
+		return BadDataBodyErrorWithHint(concat)
+
+	case sqlite3.ErrConstraintForeignKey:
+		fmt.Println("Foreign key constraint violation", err)
+		return BadDataBodyErrorWithHint(err.Error())
+
+	case sqlite3.ErrConstraintPrimaryKey:
+		fmt.Println("Primary key constraint violation", err)
+		return BadDataBodyErrorWithHint(err.Error())
+	}
+
+	return nil
+}

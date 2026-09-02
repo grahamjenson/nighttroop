@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"bytes"
 	"embed"
 	_ "embed"
 	"encoding/json"
@@ -113,8 +114,15 @@ func runTheRequestFileAsATest(t *testing.T, path string, router http.Handler, si
 				fmt.Println("- - - - - - - - - - - - - - - - ")
 				fmt.Println()
 				fmt.Printf("STATUS CODE: %d\n", statusCode)
-				prettyOutput, _ := json.MarshalIndent(output, "", "  ")
-				fmt.Printf("RESPONSE: %+v\n", string(prettyOutput))
+				var buf bytes.Buffer
+				encoder := json.NewEncoder(&buf)
+				encoder.SetEscapeHTML(false)
+				encoder.SetIndent("", "  ")
+				if err := encoder.Encode(output); err != nil {
+					fmt.Printf("RESPONSE: %s and failed to format response: %v\n", output, err)
+				} else {
+					fmt.Printf("RESPONSE:\n%s", buf.String())
+				}
 				fmt.Println("===============================")
 
 				realRequest.ExecuteAsserts(t, statusCode, output, headers, requestContext)

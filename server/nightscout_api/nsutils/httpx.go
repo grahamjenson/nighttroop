@@ -78,7 +78,9 @@ func WriteRecordV1(w http.ResponseWriter, record Record, fields []string) {
 func WriteJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	encoder.Encode(body)
 }
 
 func writeHeadersForRecords(w http.ResponseWriter, records []Record) {

@@ -15,8 +15,6 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-const seed = 43
-
 // FuzzRequestFiles parses all request files to build bodies, then we mangle them and send them against all create endpoints to test for panics and 500s
 func FuzzRequestFiles(f *testing.F) {
 	//// SETUP DEFUALT OBJECTS
@@ -26,7 +24,7 @@ func FuzzRequestFiles(f *testing.F) {
 	if err != nil {
 		f.Fatalf("failed to get config and databases: %v", err)
 	}
-
+	bodies := []map[string]any{}
 	//// COLLECT BODIES AND PATHS AND SUCH
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -55,12 +53,14 @@ func FuzzRequestFiles(f *testing.F) {
 				continue
 			}
 			var bodyJSON map[string]any
+
 			err := json.Unmarshal([]byte(requests.Body), &bodyJSON)
 			if err != nil {
 				continue
 			}
-			body, _ := json.Marshal(bodyJSON)
-			f.Add(string(body))
+
+			bodies = append(bodies, bodyJSON)
+
 		}
 		return nil
 	})
@@ -70,63 +70,56 @@ func FuzzRequestFiles(f *testing.F) {
 	}
 
 	router := server.GetMainHandler(controlDB, config)
+	modifications := 0
+	f.Fuzz(func(t *testing.T, seed string) {
+		rrr := rand.New(rand.NewSource(100))
 
-	f.Fuzz(func(t *testing.T, body string) {
-		var mapBody map[string]any
-		err := json.Unmarshal([]byte(body), &mapBody)
-		if err != nil {
-			t.Skipf("failed to unmarshal body: %v", err)
+		for _, body := range bodies {
+			if modifications != 0 {
+				body = mutateBody(body, rrr, modifications)
+			}
+			mutatedBodyBytes, err := json.Marshal(body)
+			if err != nil {
+				t.Skipf("failed to marshal mutated body: %v", err)
+			}
+			newBody := string(mutatedBodyBytes)
+			runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
+
+			runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
+
+			// Entries
+			runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
+
+			runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
+
+			// Treatments
+			runFuzzTest(t, "CreateTreatmentV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/treatments?token=%s", subdomain, token), newBody)
+
+			runFuzzTest(t, "CreateTreatmentV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), newBody)
+
+			// Device Status
+			runFuzzTest(t, "CreateDeviceStatusV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), newBody)
+
+			runFuzzTest(t, "CreateDeviceStatusV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), newBody)
+
+			// profile
+			runFuzzTest(t, "CreateProfileV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), newBody)
+
+			runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
+
+			// food
+			runFuzzTest(t, "CreateFoodV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), newBody)
+
+			runFuzzTest(t, "CreateFoodV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), newBody)
+
+			// settings
+			runFuzzTest(t, "CreateSettingsV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), newBody)
+
+			// activities
+			runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
 		}
-		mapBody = mutateBody(mapBody, rand.New(rand.NewSource(seed)))
-		mutatedBodyBytes, err := json.Marshal(mapBody)
-		if err != nil {
-			t.Skipf("failed to marshal mutated body: %v", err)
-		}
 
-		newBody := string(mutatedBodyBytes)
-
-		// Entries
-		runFuzzTest(t, "CreateEntryV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateEntryV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
-
-		// Treatments
-		runFuzzTest(t, "CreateTreatmentV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/treatments?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateTreatmentV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/treatments?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateTreatmentV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateTreatmentV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), newBody)
-
-		// Device Status
-		runFuzzTest(t, "CreateDeviceStatusV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateDeviceStatusV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateDeviceStatusV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateDeviceStatusV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), newBody)
-
-		// profile
-		runFuzzTest(t, "CreateProfileV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateProfileV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateProfileV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
-
-		// food
-		runFuzzTest(t, "CreateFoodV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateFoodV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateFoodV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateFoodV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), newBody)
-
-		// settings
-		runFuzzTest(t, "CreateSettingsV3", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateSettingsV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), newBody)
-
-		// activities
-		runFuzzTest(t, "CreateActivitiesV1", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), body)
-		runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
+		modifications += 1
 	})
 }
 
@@ -154,140 +147,148 @@ func runFuzzTest(t *testing.T, name string, router http.Handler, path, body stri
 		t.Logf("response code=%v, body=%v", rr.Code, rr.Body.String())
 	})
 }
-func mutateBody(body map[string]any, r *rand.Rand) map[string]any {
-	return mutateObject(cloneObject(body), r, 0)
+
+func mutateBody(body map[string]any, r *rand.Rand, modifications int) map[string]any {
+	body, _ = mutateObject(cloneObject(body), r, modifications)
+	return body
 }
 
-const maxMutationDepth = 6
-
-func mutateObject(body map[string]any, r *rand.Rand, depth int) map[string]any {
-	if depth >= maxMutationDepth {
-		return body
+func mutateObject(body map[string]any, r *rand.Rand, modifications int) (map[string]any, int) {
+	if modifications <= 0 {
+		return body, 0
 	}
 
 	// Mutate existing fields.
 	for key, value := range body {
+		if modifications <= 0 {
+			break
+		}
+
 		// Occasionally delete fields entirely.
 		if r.Intn(20) == 0 {
 			delete(body, key)
+			modifications--
 			continue
 		}
 
 		// Occasionally replace the entire value with a different JSON type.
 		if r.Intn(5) == 0 {
-			body[key] = randomJSONValue(r, depth+1)
+			body[key] = randomJSONValue(r)
+			modifications--
 			continue
 		}
 
-		body[key] = mutateJSONValue(value, r, depth+1)
+		body[key], modifications = mutateJSONValue(value, r, modifications)
 	}
 
 	// Add unexpected fields.
-	for i := 0; i < r.Intn(3); i++ {
-		body[randomKey(r)] = randomJSONValue(r, depth+1)
+	for modifications > 0 && r.Intn(3) == 0 {
+		body[randomKey(r)] = randomJSONValue(r)
+		modifications--
 	}
 
-	// Occasionally duplicate-ish keys aren't possible in a map, so mutate
-	// existing keys instead.
-	if len(body) > 0 && r.Intn(10) == 0 {
+	// Occasionally rename an existing key.
+	if modifications > 0 && len(body) > 0 && r.Intn(10) == 0 {
 		keys := mapKeys(body)
 		oldKey := keys[r.Intn(len(keys))]
 		newKey := randomKey(r)
 
-		body[newKey] = body[oldKey]
 		if newKey != oldKey {
+			body[newKey] = body[oldKey]
 			delete(body, oldKey)
+			modifications--
 		}
 	}
 
-	return body
+	return body, modifications
 }
 
-func mutateJSONValue(value any, r *rand.Rand, depth int) any {
-	if depth >= maxMutationDepth {
-		return value
+func mutateJSONValue(value any, r *rand.Rand, modifications int) (any, int) {
+	if modifications <= 0 {
+		return value, 0
 	}
 
 	// Sometimes completely replace the value with another JSON type.
 	if r.Intn(5) == 0 {
-		return randomJSONValue(r, depth+1)
+		return randomJSONValue(r), modifications - 1
 	}
 
 	switch v := value.(type) {
 	case nil:
-		// Null has nowhere to mutate, so turn it into something useful.
-		return randomJSONValue(r, depth+1)
+		return randomJSONValue(r), modifications - 1
 
 	case bool:
-		// Flip it, or occasionally change its type.
 		if r.Intn(10) == 0 {
-			return randomJSONValue(r, depth+1)
+			return randomJSONValue(r), modifications - 1
 		}
-		return !v
+		return !v, modifications - 1
 
 	case float64:
-		return mutateNumber(v, r)
+		return mutateNumber(v, r), modifications - 1
 
 	case string:
-		return mutateString(v, r)
+		return mutateString(v, r), modifications - 1
 
 	case []any:
-		return mutateArray(v, r, depth+1)
+		return mutateArray(v, r, modifications)
 
 	case map[string]any:
-		return mutateObject(v, r, depth+1)
+		return mutateObject(v, r, modifications)
 
 	default:
-		// Shouldn't normally happen for values produced by encoding/json,
-		// but make the mutator robust anyway.
-		return randomJSONValue(r, depth+1)
+		return randomJSONValue(r), modifications - 1
 	}
 }
 
-func mutateArray(array []any, r *rand.Rand, depth int) []any {
+func mutateArray(array []any, r *rand.Rand, modifications int) ([]any, int) {
+	if modifications <= 0 {
+		return array, 0
+	}
+
 	// Delete random elements.
-	for len(array) > 0 && r.Intn(10) == 0 {
+	for modifications > 0 && len(array) > 0 && r.Intn(10) == 0 {
 		i := r.Intn(len(array))
 		array = append(array[:i], array[i+1:]...)
+		modifications--
 	}
 
 	// Mutate existing elements.
 	for i := range array {
+		if modifications <= 0 {
+			break
+		}
+
 		if r.Intn(5) == 0 {
-			array[i] = randomJSONValue(r, depth+1)
+			array[i] = randomJSONValue(r)
+			modifications--
 		} else {
-			array[i] = mutateJSONValue(array[i], r, depth+1)
+			array[i], modifications = mutateJSONValue(
+				array[i],
+				r,
+				modifications,
+			)
 		}
 	}
 
 	// Add random elements.
-	for i := 0; i < r.Intn(4); i++ {
-		array = append(array, randomJSONValue(r, depth+1))
+	for modifications > 0 && r.Intn(4) == 0 {
+		array = append(array, randomJSONValue(r))
+		modifications--
 	}
 
 	// Occasionally insert a null.
-	if r.Intn(5) == 0 {
+	if modifications > 0 && r.Intn(5) == 0 {
 		i := r.Intn(len(array) + 1)
 		array = append(array, nil)
 		copy(array[i+1:], array[i:])
 		array[i] = nil
+		modifications--
 	}
 
-	return array
+	return array, modifications
 }
 
-func randomJSONValue(r *rand.Rand, depth int) any {
-	if depth >= maxMutationDepth {
-		switch r.Intn(3) {
-		case 0:
-			return nil
-		case 1:
-			return randomString(r)
-		default:
-			return randomNumber(r)
-		}
-	}
-
+func randomJSONValue(r *rand.Rand) any {
 	switch r.Intn(6) {
 	case 0:
 		return r.Intn(2) == 0
@@ -303,7 +304,7 @@ func randomJSONValue(r *rand.Rand, depth int) any {
 		n := r.Intn(5)
 		array := make([]any, 0, n)
 		for i := 0; i < n; i++ {
-			array = append(array, randomJSONValue(r, depth+1))
+			array = append(array, randomJSONValue(r))
 		}
 		return array
 
@@ -312,7 +313,7 @@ func randomJSONValue(r *rand.Rand, depth int) any {
 		object := make(map[string]any)
 		n := r.Intn(5)
 		for i := 0; i < n; i++ {
-			object[randomKey(r)] = randomJSONValue(r, depth+1)
+			object[randomKey(r)] = randomJSONValue(r)
 		}
 		return object
 
