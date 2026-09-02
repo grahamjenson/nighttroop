@@ -70,9 +70,10 @@ func FuzzRequestFiles(f *testing.F) {
 	}
 
 	router := server.GetMainHandler(controlDB, config)
-	modifications := 0
-	f.Fuzz(func(t *testing.T, seed string) {
-		rrr := rand.New(rand.NewSource(100))
+
+	f.Add(int64(100), 0)
+	f.Fuzz(func(t *testing.T, seed int64, modifications int) {
+		rrr := rand.New(rand.NewSource(seed))
 
 		for _, body := range bodies {
 			if modifications != 0 {
@@ -119,7 +120,6 @@ func FuzzRequestFiles(f *testing.F) {
 			runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
 		}
 
-		modifications += 1
 	})
 }
 

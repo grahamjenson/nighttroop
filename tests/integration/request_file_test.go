@@ -341,7 +341,8 @@ func (r Request) ExecuteRequest(handler http.Handler, context map[string]any) (c
 
 func (r Request) ExecuteAsserts(t *testing.T, statusCode int, output any, headers http.Header, ctx map[string]any) {
 	code := r.AssertStatus.Code
-	outputRaw, _ := json.Marshal(output)
+
+	outputRaw, _ := MarshalJsonWithoutEscapeHTML(output)
 
 	if code != 0 {
 		message := fmt.Sprintf("request %s expected status %d but got %d with body %v", r.Name, code, statusCode, string(outputRaw))
@@ -496,7 +497,7 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 		return "false", err
 	}
 
-	prettyOutput, _ := json.MarshalIndent(localResult, "", "  ")
+	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(localResult)
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
@@ -545,6 +546,17 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 		return "", err
 	}
 
+	return buf.String(), nil
+}
+
+func MarshalJsonWithoutEscapeHTML(v any) (string, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(v); err != nil {
+		return "", err
+	}
 	return buf.String(), nil
 }
 

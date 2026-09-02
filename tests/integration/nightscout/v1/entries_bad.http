@@ -1,0 +1,45 @@
+
+/////
+// Create
+//////
+
+NAME create_bad_entry_direction_too_long_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"app":"","date":1787481585647,"direction":"thisstringislongerthanisallowedsoIthinkitshouldcorrectlyerror","sgv":196,"type":"sgv"}
+ASSERT_STATUS 400
+ASSERT {{ assertContains "length(direction) <= 16" "@message"}}
+
+NAME create_bad_entry_no_type_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"app":"","date":1787481585647, "type": "bad"}
+ASSERT_STATUS 400
+ASSERT {{ assertContains "type" "@message"}}
+
+/////
+// Read
+/////
+
+NAME get_entries_404_v1
+GET http://{{ site }}/api/v1/entries/not_a_id?token={{ token }}
+ASSERT_STATUS 404
+ASSERT {{ assertContains "record not found" "@message"}}
+
+
+/////
+// Update
+/////
+NAME create_entry_for_bad_tests_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B { "sgv": 101, "type": "sgv", "device": "my-device", "app": "my-app" }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 101 "@0.sgv" }}
+ASSERT {{ assertEquals "sgv" "@0.type" }}
+ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@0.utcOffset" }}
+
+NAME bad_update_but_change_device_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "not-device", "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT {{ assertEquals "Field device cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}

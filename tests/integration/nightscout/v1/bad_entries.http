@@ -1,6 +1,0 @@
-
-NAME create_bad_entry_v1
-POST http://{{ site }}/api/v1/entries?token={{ token }}
-B {"app":"","date":1787481585647,"direction":"thisstringislongerthanisallowedsoIthinkitshouldcorrectlyerror","filtered":0,"isReadOnly":false,"isValid":true,"sgv":196.41645726265494,"type":"sgv","unfiltered":0,"units":"mg/dl","utcOffset":720}
-ASSERT_STATUS 400
-ASSERT {{ assertContains "direction" "@message"}}
