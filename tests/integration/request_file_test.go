@@ -527,12 +527,35 @@ func assertTemplateCheck(assertStruct AssertType, ctx map[string]any, localResul
 			},
 			"assertLength": func(expectedLength int, rawActual any) string {
 				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
+
 				actualLength := -1
-				if arr, ok := actual.([]any); ok {
-					actualLength = len(arr)
+
+				value := reflect.ValueOf(actual)
+
+				if value.IsValid() {
+					switch value.Kind() {
+					case reflect.Array, reflect.Slice, reflect.Map, reflect.String:
+						actualLength = value.Len()
+					}
 				}
-				message := fmt.Sprintf("assertLength failed: expected length %d, got %d from [%v], output: %s", expectedLength, actualLength, rawActual, prettyOutput)
-				AssertEqual(t, expectedLength, actualLength, message, assertStruct.Path, assertStruct.Line)
+
+				message := fmt.Sprintf(
+					"assertLength failed: expected length %d, got %d from [%v], output: %s",
+					expectedLength,
+					actualLength,
+					rawActual,
+					prettyOutput,
+				)
+
+				AssertEqual(
+					t,
+					expectedLength,
+					actualLength,
+					message,
+					assertStruct.Path,
+					assertStruct.Line,
+				)
+
 				return "true"
 			},
 		}).
@@ -568,6 +591,9 @@ func normalizeStringSearch(expected, localResult any, headers map[string]any, ct
 			// look up in the context
 			expected = templateDig(ctx, s[1:])
 		} else if strings.HasPrefix(s, "@") {
+			if s == "@" {
+				return localResult
+			}
 			// look up in localResult
 			expected = templateDig(localResult, s[1:])
 		} else if strings.HasPrefix(s, "#") {

@@ -51,6 +51,10 @@ func (r Record) ToMap(version3 bool) map[string]any {
 	return out
 }
 
+func (r Record) OccuredAtString() string {
+	return time.UnixMilli(r.OccuredAt).UTC().Format(time.RFC3339Nano)
+}
+
 // SelectFields projects a record to the requested fields.
 func (r Record) SelectFields(fields []string, version3 bool) map[string]any {
 	full := r.ToMap(version3)

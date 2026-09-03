@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -72,6 +73,7 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
+		prefix := chi.URLParam(r, "prefix")
 		q, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -82,7 +84,13 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		nsutils.WriteRecordsV1(w, records, q.Fields)
+		filteredRecords := []nsutils.Record{}
+		for _, record := range records {
+			if strings.HasPrefix(record.OccuredAtString(), prefix) {
+				filteredRecords = append(filteredRecords, record)
+			}
+		}
+		nsutils.WriteRecordsV1(w, filteredRecords, q.Fields)
 	}
 
 }

@@ -76,6 +76,47 @@ ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
 
+//////
+// OTHER
+//////
+
+NAME create_other_entry_v1
+POST http://{{ .site }}/api/v1/entries?token={{ token}}
+B {"sgv": 100, "date": 1767355994, "dateString": "2026-01-02T12:13:14Z", "type": "sgv" }
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 100 "@0.sgv" }}
+
+
+NAME get_entries_current_v1
+GET http://{{ site }}/api/v1/entries/current?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertExists "@0._id" }}
+
+
+NAME get_entries_count_v1
+GET http://{{ site }}/api/v1/count/entries/where?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 3 "@count" }}
+
+NAME get_entries_times_v1
+GET http://{{ site }}/api/v1/times/2026-01-02?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertLength 1 "@" }}
+
+
+NAME get_entries_slice_v1
+GET http://{{ site }}/api/v1/entries/slice?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertExists "@0._id" }}
+
+
+
+NAME get_entries_echo_v1
+GET http://{{ site }}/api/v1/entries/echo?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertExists "@0._id" }}
+
+
 /////
 // UPDATE
 /////

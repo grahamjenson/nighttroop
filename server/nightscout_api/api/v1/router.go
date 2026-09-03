@@ -72,6 +72,5 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	r.Get("/count/{collection}/where", Count(dep))
 
 	//Times
-	r.Get("/times/", Times(dep))
 	r.Get("/times/{prefix}", Times(dep))
 }
