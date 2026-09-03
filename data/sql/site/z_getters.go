@@ -4746,12 +4746,12 @@ func (m CreateDeviceReportParams) SetCreatedByIdentityName(v string) CreateDevic
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllDeviceReportsParams) GetIncludeDeleted() *bool {
+func (m AllDeviceReportsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllDeviceReportsParams.
-func (m AllDeviceReportsParams) SetIncludeDeleted(v *bool) AllDeviceReportsParams {
+func (m AllDeviceReportsParams) SetIncludeDeleted(v bool) AllDeviceReportsParams {
 	m.IncludeDeleted = v
 	return m
 }
@@ -4786,6 +4786,17 @@ func (m GetDeviceReportParams) GetID() string {
 // SetID sets the ID value and returns the updated GetDeviceReportParams.
 func (m GetDeviceReportParams) SetID(v string) GetDeviceReportParams {
 	m.ID = v
+	return m
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetDeviceReportParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetDeviceReportParams.
+func (m GetDeviceReportParams) SetIncludeDeleted(v bool) GetDeviceReportParams {
+	m.IncludeDeleted = v
 	return m
 }
 
@@ -5281,6 +5292,17 @@ func (m GetActivityParams) GetID() string {
 // SetID sets the ID value and returns the updated GetActivityParams.
 func (m GetActivityParams) SetID(v string) GetActivityParams {
 	m.ID = v
+	return m
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetActivityParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetActivityParams.
+func (m GetActivityParams) SetIncludeDeleted(v bool) GetActivityParams {
+	m.IncludeDeleted = v
 	return m
 }
 
@@ -6626,6 +6648,17 @@ func (m GetFoodIntakeParams) SetID(v string) GetFoodIntakeParams {
 	return m
 }
 
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetFoodIntakeParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetFoodIntakeParams.
+func (m GetFoodIntakeParams) SetIncludeDeleted(v bool) GetFoodIntakeParams {
+	m.IncludeDeleted = v
+	return m
+}
+
 // GetDateGTE returns the DateGTE value.
 func (m SearchFoodIntakesParams) GetDateGTE() *int64 {
 	return m.DateGTE
@@ -7418,6 +7451,17 @@ func (m CreateGlucoseReadingParams) SetCreatedByIdentityName(v string) CreateGlu
 	return m
 }
 
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetGlucoseReadingParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetGlucoseReadingParams.
+func (m GetGlucoseReadingParams) SetIncludeDeleted(v bool) GetGlucoseReadingParams {
+	m.IncludeDeleted = v
+	return m
+}
+
 // GetID returns the ID value.
 func (m GetGlucoseReadingParams) GetID() string {
 	return m.ID
@@ -7430,12 +7474,12 @@ func (m GetGlucoseReadingParams) SetID(v string) GetGlucoseReadingParams {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllGlucoseReadingsParams) GetIncludeDeleted() *bool {
+func (m AllGlucoseReadingsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllGlucoseReadingsParams.
-func (m AllGlucoseReadingsParams) SetIncludeDeleted(v *bool) AllGlucoseReadingsParams {
+func (m AllGlucoseReadingsParams) SetIncludeDeleted(v bool) AllGlucoseReadingsParams {
 	m.IncludeDeleted = v
 	return m
 }
@@ -7749,12 +7793,12 @@ func (m SearchGlucoseReadingsParams) SetSgvLT(v *int64) SearchGlucoseReadingsPar
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m SearchGlucoseReadingsParams) GetIncludeDeleted() *bool {
+func (m SearchGlucoseReadingsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetIncludeDeleted(v *bool) SearchGlucoseReadingsParams {
+func (m SearchGlucoseReadingsParams) SetIncludeDeleted(v bool) SearchGlucoseReadingsParams {
 	m.IncludeDeleted = v
 	return m
 }
@@ -8144,6 +8188,17 @@ func (m GetEventGroupWithoutJoinsParams) SetID(v string) GetEventGroupWithoutJoi
 	return m
 }
 
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetEventGroupWithoutJoinsParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetEventGroupWithoutJoinsParams.
+func (m GetEventGroupWithoutJoinsParams) SetIncludeDeleted(v bool) GetEventGroupWithoutJoinsParams {
+	m.IncludeDeleted = v
+	return m
+}
+
 // GetGroupType returns the GroupType value.
 func (m GetEventGroupOfTypeWithoutJoinsParams) GetGroupType() string {
 	return m.GroupType
@@ -8156,12 +8211,23 @@ func (m GetEventGroupOfTypeWithoutJoinsParams) SetGroupType(v string) GetEventGr
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllEventGroupsParams) GetIncludeDeleted() *bool {
+func (m GetEventGroupOfTypeWithoutJoinsParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetEventGroupOfTypeWithoutJoinsParams.
+func (m GetEventGroupOfTypeWithoutJoinsParams) SetIncludeDeleted(v bool) GetEventGroupOfTypeWithoutJoinsParams {
+	m.IncludeDeleted = v
+	return m
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m AllEventGroupsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllEventGroupsParams.
-func (m AllEventGroupsParams) SetIncludeDeleted(v *bool) AllEventGroupsParams {
+func (m AllEventGroupsParams) SetIncludeDeleted(v bool) AllEventGroupsParams {
 	m.IncludeDeleted = v
 	return m
 }
@@ -8196,6 +8262,17 @@ func (m GetEventGroupParams) GetID() string {
 // SetID sets the ID value and returns the updated GetEventGroupParams.
 func (m GetEventGroupParams) SetID(v string) GetEventGroupParams {
 	m.ID = v
+	return m
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetEventGroupParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetEventGroupParams.
+func (m GetEventGroupParams) SetIncludeDeleted(v bool) GetEventGroupParams {
+	m.IncludeDeleted = v
 	return m
 }
 
@@ -8662,12 +8739,12 @@ func (m SearchEventGroupsParams) SetDurationLT(v *int64) SearchEventGroupsParams
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m SearchEventGroupsParams) GetIncludeDeleted() *bool {
+func (m SearchEventGroupsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetIncludeDeleted(v *bool) SearchEventGroupsParams {
+func (m SearchEventGroupsParams) SetIncludeDeleted(v bool) SearchEventGroupsParams {
 	m.IncludeDeleted = v
 	return m
 }
@@ -9098,6 +9175,17 @@ func (m GetInsulinDoseParams) GetID() string {
 // SetID sets the ID value and returns the updated GetInsulinDoseParams.
 func (m GetInsulinDoseParams) SetID(v string) GetInsulinDoseParams {
 	m.ID = v
+	return m
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetInsulinDoseParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetInsulinDoseParams.
+func (m GetInsulinDoseParams) SetIncludeDeleted(v bool) GetInsulinDoseParams {
+	m.IncludeDeleted = v
 	return m
 }
 

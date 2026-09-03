@@ -35,7 +35,7 @@ type Query struct {
 	DeviceEq *string
 	AppEq    *string
 
-	IncludeDeleted *bool
+	IncludeDeleted bool
 
 	Raw bool
 	// Altering Return values or structure

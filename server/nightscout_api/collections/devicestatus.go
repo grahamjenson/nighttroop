@@ -70,8 +70,8 @@ func (c DeviceStatusCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.
 	return nil, nil
 }
 
-func (c DeviceStatusCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.DeviceReport, error) {
-	return q.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier})
+func (c DeviceStatusCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.DeviceReport, error) {
+	return q.GetDeviceReport(ctx, site.GetDeviceReportParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
 func (c DeviceStatusCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
@@ -97,7 +97,7 @@ func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputi
 }
 
 func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
 }
 
 func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

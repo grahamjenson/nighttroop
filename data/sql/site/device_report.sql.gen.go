@@ -13,13 +13,13 @@ import (
 const allDeviceReports = `-- name: AllDeviceReports :many
 
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_reports
-WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(?1 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
 `
 
 type AllDeviceReportsParams struct {
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }
@@ -201,15 +201,16 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 }
 
 const getDeviceReport = `-- name: GetDeviceReport :one
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_reports WHERE id = ?
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM device_reports WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetDeviceReportParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetDeviceReport(ctx context.Context, arg GetDeviceReportParams) (*DeviceReport, error) {
-	row := q.queryRow(ctx, q.getDeviceReportStmt, getDeviceReport, arg.ID)
+	row := q.queryRow(ctx, q.getDeviceReportStmt, getDeviceReport, arg.ID, arg.IncludeDeleted)
 	var i DeviceReport
 	err := row.Scan(
 		&i.ID,

@@ -149,15 +149,16 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 }
 
 const getInsulinDose = `-- name: GetInsulinDose :one
-SELECT id, dose, dose_type, split_now, split_ext, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM insulin_doses WHERE id = ?
+SELECT id, dose, dose_type, split_now, split_ext, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM insulin_doses WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetInsulinDoseParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetInsulinDose(ctx context.Context, arg GetInsulinDoseParams) (*InsulinDose, error) {
-	row := q.queryRow(ctx, q.getInsulinDoseStmt, getInsulinDose, arg.ID)
+	row := q.queryRow(ctx, q.getInsulinDoseStmt, getInsulinDose, arg.ID, arg.IncludeDeleted)
 	var i InsulinDose
 	err := row.Scan(
 		&i.ID,

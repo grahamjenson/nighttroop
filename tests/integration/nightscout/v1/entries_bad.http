@@ -15,6 +15,12 @@ B {"app":"","date":1787481585647, "type": "bad"}
 ASSERT_STATUS 400
 ASSERT {{ assertContains "type" "@message"}}
 
+NAME create_bad_entry_dateString_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"app":"","date":1787481585647, "type": "bad", "dateString": "notARealTime"}
+ASSERT_STATUS 400
+ASSERT {{ assertContains "date string" "@message"}}
+
 /////
 // Read
 /////
@@ -28,9 +34,10 @@ ASSERT {{ assertContains "record not found" "@message"}}
 /////
 // Update
 /////
+
 NAME create_entry_for_bad_tests_v1
 POST http://{{ site }}/api/v1/entries?token={{ token }}
-B { "sgv": 101, "type": "sgv", "device": "my-device", "app": "my-app" }
+B { "sgv": 101, "type": "sgv", "device": "my-device", "app": "my-app", "dateString": "2024-06-05T12:00:00+12:00" }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@0.type" }}
@@ -42,4 +49,39 @@ PUT http://{{ site }}/api/v1/entries?token={{ token }}
 B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "not-device", "sgv": 104, "type": "sgv" }
 ASSERT_STATUS 400
 ASSERT {{ assertEquals "Field device cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}
+
+NAME bad_update_but_change_app_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "app": "not-app", "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT {{ assertEquals "Field app cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}
+
+NAME bad_update_but_change_subject_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "subject": "not-subject", "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT {{ assertEquals "Field subject cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}
+
+NAME bad_update_but_change_date_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "date": 1234567890, "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT {{ assertEquals "Field date cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}
+
+NAME bad_update_but_change_utcOffset_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "utcOffset": 1234567890, "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT {{ assertEquals "Field utcOffset cannot be modified by the client" "@message" }}
+ASSERT {{ assertEquals 400 "@status" }}
+
+NAME bad_update_but_change_identifier_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "identifier": "not-identifier", "sgv": 104, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT {{ assertEquals "Field identifier cannot be modified by the client" "@message" }}
 ASSERT {{ assertEquals 400 "@status" }}

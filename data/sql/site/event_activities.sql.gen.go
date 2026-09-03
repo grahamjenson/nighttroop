@@ -158,15 +158,16 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 }
 
 const getActivity = `-- name: GetActivity :one
-SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities WHERE id = ?
+SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM activities WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetActivityParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Activity, error) {
-	row := q.queryRow(ctx, q.getActivityStmt, getActivity, arg.ID)
+	row := q.queryRow(ctx, q.getActivityStmt, getActivity, arg.ID, arg.IncludeDeleted)
 	var i Activity
 	err := row.Scan(
 		&i.ID,

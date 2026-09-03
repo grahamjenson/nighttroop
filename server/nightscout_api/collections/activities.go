@@ -59,8 +59,8 @@ func (c ActivityCollection) CreateDBFunc(q *site.Queries, ctx context.Context, n
 	return q.CreateActivity(ctx, createParams)
 }
 
-func (c ActivityCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.Activity, error) {
-	return q.GetActivity(ctx, site.GetActivityParams{ID: identifier})
+func (c ActivityCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.Activity, error) {
+	return q.GetActivity(ctx, site.GetActivityParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
 func (c ActivityCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Activity) (*site.Activity, error) {
@@ -99,7 +99,7 @@ func (c ActivityCollection) Create(ctx context.Context, siteContext *httputils.S
 }
 
 func (c ActivityCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
 }
 
 func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

@@ -43,7 +43,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetFoodIntake :one
-SELECT * FROM food_intakes WHERE id = ?;
+SELECT * FROM food_intakes WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 -- name: SearchFoodIntakes :many
 SELECT * FROM food_intakes

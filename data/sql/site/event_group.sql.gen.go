@@ -37,13 +37,13 @@ LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 
-WHERE (CAST(?1 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
+WHERE (CAST(?1 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT ?3 OFFSET ?2
 `
 
 type AllEventGroupsParams struct {
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }
@@ -422,11 +422,12 @@ LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
 LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
-WHERE eg.id = ?
+WHERE eg.id = ? AND (CAST(?2 AS BOOL) = TRUE OR eg.deleted_at IS NULL)
 `
 
 type GetEventGroupParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 type GetEventGroupRow struct {
@@ -443,7 +444,7 @@ type GetEventGroupRow struct {
 }
 
 func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*GetEventGroupRow, error) {
-	row := q.queryRow(ctx, q.getEventGroupStmt, getEventGroup, arg.ID)
+	row := q.queryRow(ctx, q.getEventGroupStmt, getEventGroup, arg.ID, arg.IncludeDeleted)
 	var i GetEventGroupRow
 	err := row.Scan(
 		&i.EventGroup.ID,
@@ -653,15 +654,16 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 }
 
 const getEventGroupOfTypeWithoutJoins = `-- name: GetEventGroupOfTypeWithoutJoins :many
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE group_type = ?
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE group_type = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
 `
 
 type GetEventGroupOfTypeWithoutJoinsParams struct {
-	GroupType string
+	GroupType      string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEventGroupOfTypeWithoutJoinsParams) ([]*EventGroup, error) {
-	rows, err := q.query(ctx, q.getEventGroupOfTypeWithoutJoinsStmt, getEventGroupOfTypeWithoutJoins, arg.GroupType)
+	rows, err := q.query(ctx, q.getEventGroupOfTypeWithoutJoinsStmt, getEventGroupOfTypeWithoutJoins, arg.GroupType, arg.IncludeDeleted)
 	if err != nil {
 		return nil, err
 	}
@@ -710,18 +712,19 @@ func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEv
 
 const getEventGroupWithoutJoins = `-- name: GetEventGroupWithoutJoins :one
 
-SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ?
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name from event_groups WHERE id = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
 `
 
 type GetEventGroupWithoutJoinsParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 // ------
 // READ
 // ------
 func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGroupWithoutJoinsParams) (*EventGroup, error) {
-	row := q.queryRow(ctx, q.getEventGroupWithoutJoinsStmt, getEventGroupWithoutJoins, arg.ID)
+	row := q.queryRow(ctx, q.getEventGroupWithoutJoinsStmt, getEventGroupWithoutJoins, arg.ID, arg.IncludeDeleted)
 	var i EventGroup
 	err := row.Scan(
 		&i.ID,
@@ -942,7 +945,7 @@ WHERE
     AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes < ?42) OR tb.duration_minutes < ?42 OR tt.duration_minutes < ?42 OR ps.duration_minutes < ?42
 
 
-    AND (CAST(?43 AS BOOL) IS NULL OR eg.deleted_at IS NULL)
+    AND (CAST(?43 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT ?45 OFFSET ?44
 `
@@ -990,7 +993,7 @@ type SearchEventGroupsParams struct {
 	DurationGT     *int64
 	DurationLTE    *int64
 	DurationLT     *int64
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }

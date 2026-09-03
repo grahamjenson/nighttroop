@@ -58,7 +58,9 @@ RETURNING *;
 --------
 
 -- name: GetGlucoseReading :one
-SELECT * FROM glucose_readings WHERE id = ?;
+SELECT * FROM glucose_readings WHERE 
+(CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+AND id = sqlc.arg('ID');
 
 --
 -- There are three queries here for performance
@@ -68,7 +70,7 @@ SELECT * FROM glucose_readings WHERE id = ?;
 
 -- name: AllGlucoseReadings :many
 SELECT * FROM glucose_readings 
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
@@ -110,7 +112,7 @@ WHERE
     AND (CAST(sqlc.narg('SgvLTE') AS INTEGER) IS NULL OR reading <= sqlc.narg('SgvLTE'))
     AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR reading < sqlc.narg('SgvLT'))
     
-    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 

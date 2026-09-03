@@ -51,12 +51,14 @@ var (
 // General Errors
 
 var (
-	ErrNotFound     = &HTTPError{Status: http.StatusNotFound, Message: "record not found"}
+	ErrNotFound = &HTTPError{Status: http.StatusNotFound, Message: "record not found"}
+
 	ErrGone         = &HTTPError{Status: http.StatusGone, Message: "record deleted"}
 	ErrInternal     = &HTTPError{Status: http.StatusInternalServerError, Message: "internal server error"}
 	ErrCannotModify = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Field %s cannot be modified by the client", field)}
 	}
+	ErrRecordReadOnly = &HTTPError{Status: http.StatusForbidden, Message: "record is read-only (because soft deleted)"}
 )
 
 // Bad Body Data Errors
@@ -98,7 +100,7 @@ var (
 	ErrCannotChangeDate       = &HTTPError{Status: http.StatusBadRequest, Message: "Field date cannot be modified by the client"}
 	ErrCannotChangeDevice     = &HTTPError{Status: http.StatusBadRequest, Message: "Field device cannot be modified by the client"}
 	ErrCannotChangeIdentifier = &HTTPError{Status: http.StatusBadRequest, Message: "Field identifier cannot be modified by the client"}
-	ErrCannotChangeUTCTOffset = &HTTPError{Status: http.StatusBadRequest, Message: "Field utcOffset cannot be modified by the client"}
+	ErrCannotChangeUTCOffset  = &HTTPError{Status: http.StatusBadRequest, Message: "Field utcOffset cannot be modified by the client"}
 	ErrCannotChangeCreatedAt  = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvCreated cannot be modified by the client"}
 	ErrCannotChangeModifiedAt = &HTTPError{Status: http.StatusBadRequest, Message: "Field srvModified cannot be modified by the client"}
 	ErrCannotChangeModifiedBy = &HTTPError{Status: http.StatusBadRequest, Message: "Field modifiedBy cannot be modified by the client"}

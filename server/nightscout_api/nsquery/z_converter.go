@@ -10,10 +10,8 @@ import (
 
 func ActivityAll(source Query) site.AllActivitiesParams {
 	var siteAllActivitiesParams site.AllActivitiesParams
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteAllActivitiesParams.IncludeDeleted = &xbool
-	}
+	pBool := source.IncludeDeleted
+	siteAllActivitiesParams.IncludeDeleted = &pBool
 	siteAllActivitiesParams.Skip = source.Skip
 	siteAllActivitiesParams.Limit = source.Limit
 	return siteAllActivitiesParams
@@ -128,20 +126,15 @@ func ActivitySearch(source Query) site.SearchActivitiesParams {
 		xint6418 := *source.DurationLT
 		siteSearchActivitiesParams.DurationLT = &xint6418
 	}
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteSearchActivitiesParams.IncludeDeleted = &xbool
-	}
+	pBool := source.IncludeDeleted
+	siteSearchActivitiesParams.IncludeDeleted = &pBool
 	siteSearchActivitiesParams.Skip = source.Skip
 	siteSearchActivitiesParams.Limit = source.Limit
 	return siteSearchActivitiesParams
 }
 func DeviceReportAll(source Query) site.AllDeviceReportsParams {
 	var siteAllDeviceReportsParams site.AllDeviceReportsParams
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteAllDeviceReportsParams.IncludeDeleted = &xbool
-	}
+	siteAllDeviceReportsParams.IncludeDeleted = source.IncludeDeleted
 	siteAllDeviceReportsParams.Skip = source.Skip
 	siteAllDeviceReportsParams.Limit = source.Limit
 	return siteAllDeviceReportsParams
@@ -216,20 +209,15 @@ func DeviceReportSearch(source Query) site.SearchDeviceReportsParams {
 		xstring4 := *source.AppEq
 		siteSearchDeviceReportsParams.AppEq = &xstring4
 	}
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteSearchDeviceReportsParams.IncludeDeleted = &xbool
-	}
+	pBool := source.IncludeDeleted
+	siteSearchDeviceReportsParams.IncludeDeleted = &pBool
 	siteSearchDeviceReportsParams.Skip = source.Skip
 	siteSearchDeviceReportsParams.Limit = source.Limit
 	return siteSearchDeviceReportsParams
 }
 func EventGroupAll(source Query) site.AllEventGroupsParams {
 	var siteAllEventGroupsParams site.AllEventGroupsParams
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteAllEventGroupsParams.IncludeDeleted = &xbool
-	}
+	siteAllEventGroupsParams.IncludeDeleted = source.IncludeDeleted
 	siteAllEventGroupsParams.Skip = source.Skip
 	siteAllEventGroupsParams.Limit = source.Limit
 	return siteAllEventGroupsParams
@@ -404,20 +392,15 @@ func EventGroupSearch(source Query) site.SearchEventGroupsParams {
 		xint6433 := *source.DurationLT
 		siteSearchEventGroupsParams.DurationLT = &xint6433
 	}
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteSearchEventGroupsParams.IncludeDeleted = &xbool
-	}
+	siteSearchEventGroupsParams.IncludeDeleted = source.IncludeDeleted
 	siteSearchEventGroupsParams.Skip = source.Skip
 	siteSearchEventGroupsParams.Limit = source.Limit
 	return siteSearchEventGroupsParams
 }
 func FoodIntakeAll(source Query) site.AllFoodIntakesParams {
 	var siteAllFoodIntakesParams site.AllFoodIntakesParams
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteAllFoodIntakesParams.IncludeDeleted = &xbool
-	}
+	pBool := source.IncludeDeleted
+	siteAllFoodIntakesParams.IncludeDeleted = &pBool
 	siteAllFoodIntakesParams.Skip = source.Skip
 	siteAllFoodIntakesParams.Limit = source.Limit
 	return siteAllFoodIntakesParams
@@ -532,10 +515,8 @@ func FoodIntakeSearch(source Query) site.SearchFoodIntakesParams {
 		xint6418 := *source.CarbsLT
 		siteSearchFoodIntakesParams.CarbsLT = &xint6418
 	}
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteSearchFoodIntakesParams.IncludeDeleted = &xbool
-	}
+	pBool := source.IncludeDeleted
+	siteSearchFoodIntakesParams.IncludeDeleted = &pBool
 	siteSearchFoodIntakesParams.Skip = source.Skip
 	siteSearchFoodIntakesParams.Limit = source.Limit
 	return siteSearchFoodIntakesParams
@@ -662,10 +643,7 @@ func FoodPresetSearch(source Query) site.SearchFoodPresetsParams {
 }
 func GlucoseAll(source Query) site.AllGlucoseReadingsParams {
 	var siteAllGlucoseReadingsParams site.AllGlucoseReadingsParams
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteAllGlucoseReadingsParams.IncludeDeleted = &xbool
-	}
+	siteAllGlucoseReadingsParams.IncludeDeleted = source.IncludeDeleted
 	siteAllGlucoseReadingsParams.Skip = source.Skip
 	siteAllGlucoseReadingsParams.Limit = source.Limit
 	return siteAllGlucoseReadingsParams
@@ -776,10 +754,7 @@ func GlucoseSearch(source Query) site.SearchGlucoseReadingsParams {
 		xint6418 := *source.SgvLT
 		siteSearchGlucoseReadingsParams.SgvLT = &xint6418
 	}
-	if source.IncludeDeleted != nil {
-		xbool := *source.IncludeDeleted
-		siteSearchGlucoseReadingsParams.IncludeDeleted = &xbool
-	}
+	siteSearchGlucoseReadingsParams.IncludeDeleted = source.IncludeDeleted
 	siteSearchGlucoseReadingsParams.Skip = source.Skip
 	siteSearchGlucoseReadingsParams.Limit = source.Limit
 	return siteSearchGlucoseReadingsParams
@@ -946,8 +921,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		nsqueryQuery.AppEq = &xstring5
 	}
 	if source.IncludeDeleted != nil {
-		xbool := nightscoutFlexibleBoolToBool(*source.IncludeDeleted)
-		nsqueryQuery.IncludeDeleted = &xbool
+		nsqueryQuery.IncludeDeleted = nightscoutFlexibleBoolToBool(*source.IncludeDeleted)
 	}
 	if source.Raw != nil {
 		nsqueryQuery.Raw = nightscoutFlexibleBoolToBool(*source.Raw)
@@ -1045,8 +1019,8 @@ func QueryValueToQuery(source QueryValues) Query {
 	}
 	nsqueryQuery.Fields = QueryStringArrayToArray(source.Fields)
 	if source.Envelope != nil {
-		xbool2 := nightscoutFlexibleBoolToBool(*source.Envelope)
-		nsqueryQuery.Envelope = &xbool2
+		xbool := nightscoutFlexibleBoolToBool(*source.Envelope)
+		nsqueryQuery.Envelope = &xbool
 	}
 	return nsqueryQuery
 }

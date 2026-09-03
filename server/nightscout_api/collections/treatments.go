@@ -115,8 +115,8 @@ func (c TreatmentCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Con
 	return nil, nil
 }
 
-func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.EventGroupsBundle, error) {
-	dbModel, err := q.GetEventGroup(ctx, site.GetEventGroupParams{ID: identifier})
+func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.EventGroupsBundle, error) {
+	dbModel, err := q.GetEventGroup(ctx, site.GetEventGroupParams{ID: identifier, IncludeDeleted: includeDeleted})
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,8 @@ func (c TreatmentCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Conte
 }
 
 func (c TreatmentCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, site.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
+
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, site.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: true})
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +211,7 @@ func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.
 }
 
 func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
 }
 
 func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

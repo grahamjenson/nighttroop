@@ -63,12 +63,12 @@ func (c ProfileCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Conte
 	}
 	if len(profilePresets) > 0 {
 		identifier := profilePresets[0].ProfileStoreID
-		return c.GetDBFunc(q, ctx, identifier)
+		return c.GetDBFunc(q, ctx, identifier, true)
 	}
 	return nil, nil
 }
 
-func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.ProfilePresetBundle, error) {
+func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.ProfilePresetBundle, error) {
 	ret, err := q.GetProfileStore(ctx, site.GetProfileStoreParams{ProfileStoreID: identifier})
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
 }
 
 func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {

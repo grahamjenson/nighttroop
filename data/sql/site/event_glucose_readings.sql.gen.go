@@ -13,13 +13,13 @@ import (
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
 SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
-WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
 `
 
 type AllGlucoseReadingsParams struct {
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }
@@ -205,18 +205,21 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE id = ?
+SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE 
+(CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
+AND id = ?2
 `
 
 type GetGlucoseReadingParams struct {
-	ID string
+	IncludeDeleted bool
+	ID             string
 }
 
 // ------
 // READ
 // ------
 func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingParams) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, arg.ID)
+	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, arg.IncludeDeleted, arg.ID)
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
@@ -306,7 +309,7 @@ WHERE
     AND (CAST(?25 AS INTEGER) IS NULL OR reading <= ?25)
     AND (CAST(?26 AS INTEGER) IS NULL OR reading < ?26)
     
-    AND (CAST(?27 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?27 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?29 OFFSET ?28
 `
@@ -338,7 +341,7 @@ type SearchGlucoseReadingsParams struct {
 	SgvGT          *int64
 	SgvLTE         *int64
 	SgvLT          *int64
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }

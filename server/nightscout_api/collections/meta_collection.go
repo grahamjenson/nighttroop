@@ -24,14 +24,14 @@ type MetaPatchCollection[NS, DM any] interface {
 	Name() string
 	ValidatePatch(NS, *DM) *nsutils.HTTPError
 	Convert(*DM, bool) nsutils.Record
-	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
+	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
 	PatchDBFunc(*site.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
 }
 
 type MetaGetCollection[DM any] interface {
 	Name() string
 	Convert(*DM, bool) nsutils.Record
-	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
+	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
 }
 
 type MetaDeleteCollection interface {
@@ -50,7 +50,7 @@ type MetaReplaceCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
-	GetDBFunc(*site.Queries, context.Context, string) (*DM, error)
+	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
 	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
 	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
 }
@@ -134,8 +134,9 @@ func MetaGet[DM any](
 	siteContext *httputils.SiteContext,
 	identifier string,
 	raw bool,
+	includeDeleted bool,
 ) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := m.GetDBFunc(siteContext.SiteDB.Queries, ctx, identifier)
+	dbModel, err := m.GetDBFunc(siteContext.SiteDB.Queries, ctx, identifier, includeDeleted)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -301,7 +302,7 @@ func MetaReplace[NS interface {
 	creatingNewRecord := false
 
 	// GET
-	replacingModel, err := m.GetDBFunc(q, ctx, identifier)
+	replacingModel, err := m.GetDBFunc(q, ctx, identifier, true)
 	if err == sql.ErrNoRows {
 		// Check no Record exists
 		if !canCreate {
@@ -391,7 +392,7 @@ func MetaPatch[NS interface {
 
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	updateingModel, err := m.GetDBFunc(q, ctx, identifier)
+	updateingModel, err := m.GetDBFunc(q, ctx, identifier, true)
 
 	if err == sql.ErrNoRows {
 		// Check no Record exists
@@ -491,7 +492,7 @@ func ValidateNotChangingSharedFields[NS interface {
 	}
 
 	if nsModel.GetUtcOffsetMinutes() != nil && replacingModel.GetUtcOffsetMinutes() != nil && *nsModel.GetUtcOffsetMinutes() != *replacingModel.GetUtcOffsetMinutes() {
-		return nsutils.ErrCannotChangeUTCTOffset
+		return nsutils.ErrCannotChangeUTCOffset
 	}
 
 	if nsModel.GetIdentifier() != nil && *nsModel.GetIdentifier() != identifier {

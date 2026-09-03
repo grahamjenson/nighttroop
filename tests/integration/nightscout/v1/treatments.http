@@ -1559,3 +1559,54 @@ ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
 ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
 ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
 
+
+
+
+///////
+// DELETE
+///////
+
+NAME delete_treatments_v1
+DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 1 "@deletedCount" }}
+
+
+NAME delete_treatments_again_v1
+DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 0 "@deletedCount" }}
+
+
+NAME delete_treatments_permanent_v1
+DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 1 "@deletedCount" }}
+
+NAME delete_treatments_permanent_again_v1
+DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 0 "@deletedCount" }}
+
+
+NAME delete_treatments_by_type_v1
+DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 3 "@deletedCount" }}
+
+
+NAME delete_treatments_by_type_again_v1
+DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 0 "@deletedCount" }}
+
+
+NAME delete_treatments_permanent_by_type_v1
+DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 3 "@deletedCount" }}
+
+NAME delete_treatments_permanent_by_type_again_v1
+DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 0 "@deletedCount" }}

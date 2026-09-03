@@ -34,7 +34,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetInsulinDose :one
-SELECT * FROM insulin_doses WHERE id = ?;
+SELECT * FROM insulin_doses WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 -- name: SearchInsulinDoses :many
 SELECT * FROM insulin_doses

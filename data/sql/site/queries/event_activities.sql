@@ -35,7 +35,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetActivity :one
-SELECT * FROM activities WHERE id = ?;
+SELECT * FROM activities WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 
 -- name: SearchActivities :many

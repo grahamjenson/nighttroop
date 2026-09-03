@@ -107,11 +107,34 @@ DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token=
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 1 "@deletedCount" }}
 
+NAME delete_entries_again_v1
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 0 "@deletedCount" }}
+
+NAME get_soft_deleted_entry_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}
+ASSERT_STATUS 404
+
+NAME get_soft_deleted_entry_with_allow_deleted_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&includeDeleted=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 102 "@0.sgv" }}
+
 
 NAME delete_entries_permanent_v1
 DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&permanent=true
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 1 "@deletedCount" }}
+
+NAME delete_entries_permanent_again_v1
+DELETE http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&permanent=true
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 0 "@deletedCount" }}
+
+NAME get_soft_deleted_entry_with_allow_deleted_v1
+GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ token }}&includeDeleted=true
+ASSERT_STATUS 404
 
 NAME delete_entries_by_type_v1
 DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}

@@ -40,13 +40,13 @@ RETURNING *;
 
 -- name: AllDeviceReports :many
 SELECT * FROM device_reports
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetDeviceReport :one
-SELECT * FROM device_reports WHERE id = ?;
+SELECT * FROM device_reports WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 
 -- name: SearchDeviceReports :many

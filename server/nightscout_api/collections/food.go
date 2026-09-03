@@ -75,7 +75,7 @@ func (c FoodCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context,
 	return nil, nil
 }
 
-func (c FoodCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.FoodPreset, error) {
+func (c FoodCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.FoodPreset, error) {
 	return q.GetFoodPreset(ctx, site.GetFoodPresetParams{ID: identifier})
 }
 
@@ -113,7 +113,7 @@ func (c FoodCollection) Create(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c FoodCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
 }
 
 func (c FoodCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {

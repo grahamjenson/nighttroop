@@ -190,15 +190,16 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 }
 
 const getFoodIntake = `-- name: GetFoodIntake :one
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes WHERE id = ?
+SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_intakes WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetFoodIntakeParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*FoodIntake, error) {
-	row := q.queryRow(ctx, q.getFoodIntakeStmt, getFoodIntake, arg.ID)
+	row := q.queryRow(ctx, q.getFoodIntakeStmt, getFoodIntake, arg.ID, arg.IncludeDeleted)
 	var i FoodIntake
 	err := row.Scan(
 		&i.ID,

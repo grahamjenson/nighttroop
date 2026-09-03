@@ -34,10 +34,10 @@ RETURNING *;
 --------
 
 -- name: GetEventGroupWithoutJoins :one
-SELECT * from event_groups WHERE id = ?;
+SELECT * from event_groups WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL);
 
 -- name: GetEventGroupOfTypeWithoutJoins :many
-SELECT * from event_groups WHERE group_type = ?;
+SELECT * from event_groups WHERE group_type = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL);
 
 -- name: AllEventGroups :many
 SELECT 
@@ -67,7 +67,7 @@ LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR eg.deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
@@ -99,7 +99,7 @@ LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
 LEFT JOIN activities_vw a ON eg.activity_id = a.id
 LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
-WHERE eg.id = ?;
+WHERE eg.id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR eg.deleted_at IS NULL);
 
 
 
@@ -197,7 +197,7 @@ WHERE
     AND (CAST(sqlc.narg('DurationLT') AS INTEGER) IS NULL OR a.duration_minutes < sqlc.narg('DurationLT')) OR tb.duration_minutes < sqlc.narg('DurationLT') OR tt.duration_minutes < sqlc.narg('DurationLT') OR ps.duration_minutes < sqlc.narg('DurationLT')
 
 
-    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR eg.deleted_at IS NULL)
+    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 

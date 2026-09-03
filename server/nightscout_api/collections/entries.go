@@ -77,8 +77,8 @@ func (c EntriesCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Conte
 	return nil, nil
 }
 
-func (c EntriesCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string) (*site.GlucoseReading, error) {
-	return q.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.GlucoseReading, error) {
+	return q.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
 func (c EntriesCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
@@ -113,7 +113,7 @@ func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.Si
 }
 
 func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw)
+	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
 }
 
 func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
