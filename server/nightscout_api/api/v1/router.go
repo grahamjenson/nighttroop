@@ -63,14 +63,15 @@ func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
 	// We are not doing user submitted Regexs (that is pain)
 
 	// Slice
-	r.Get("/slice/{collection}/{field}", Slice(dep))
-	r.Get("/slice/{collection}/{field}/{type}", Slice(dep))
 	r.Get("/slice/{collection}/{field}/{type}/{prefix}", Slice(dep))
-	r.Get("/slice/{collection}/{field}/{type}/{prefix}/{regex}", Slice(dep))
 
 	// Count
 	r.Get("/count/{collection}/where", Count(dep))
 
-	//Times
+	//Times - return entries with {prefix} dateString
 	r.Get("/times/{prefix}", Times(dep))
+
+	// Echo
+	r.Get("/echo/{collection}", Echo(dep))
+	r.Get("/echo/{collection}/{identifier_or_type}", Echo(dep))
 }

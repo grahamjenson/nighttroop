@@ -6,78 +6,78 @@ package nsquery
 type Query struct {
 	// Dates
 	// lte and gte both
-	DateGTE *int64
-	DateGT  *int64
-	DateEQ  *int64
-	DateLTE *int64
-	DateLT  *int64
+	DateGTE *int64 `json:"date_gte,omitempty"`
+	DateGT  *int64 `json:"date_gt,omitempty"`
+	DateEQ  *int64 `json:"date_eq,omitempty"`
+	DateLTE *int64 `json:"date_lte,omitempty"`
+	DateLT  *int64 `json:"date_lt,omitempty"`
 
-	CreatedAtGTE *int64
-	CreatedAtGT  *int64
-	CreatedAtLTE *int64
-	CreatedAtLT  *int64
+	CreatedAtGTE *int64 `json:"created_at_gte,omitempty"`
+	CreatedAtGT  *int64 `json:"created_at_gt,omitempty"`
+	CreatedAtLTE *int64 `json:"created_at_lte,omitempty"`
+	CreatedAtLT  *int64 `json:"created_at_lt,omitempty"`
 
-	UpdatedGTE *int64
-	UpdatedGT  *int64
-	UpdatedLTE *int64
-	UpdatedLT  *int64
+	UpdatedGTE *int64 `json:"updated_gte,omitempty"`
+	UpdatedGT  *int64 `json:"updated_gt,omitempty"`
+	UpdatedLTE *int64 `json:"updated_lte,omitempty"`
+	UpdatedLT  *int64 `json:"updated_lt,omitempty"`
 
 	// Type
-	TypeEq  *string
-	TypeNeq *string
-	TypeIn  *string
-	TypeNin *string
+	TypeEq  *string `json:"type_eq,omitempty"`
+	TypeNeq *string `json:"type_neq,omitempty"`
+	TypeIn  *string `json:"type_in,omitempty"`
+	TypeNin *string `json:"type_nin,omitempty"`
 
 	// Identity
-	IDEq *string
-	IDIn *string
+	IDEq *string `json:"id_eq,omitempty"`
+	IDIn *string `json:"id_in,omitempty"`
 
-	DeviceEq *string
-	AppEq    *string
+	DeviceEq *string `json:"device_eq,omitempty"`
+	AppEq    *string `json:"app_eq,omitempty"`
 
-	IncludeDeleted bool
+	IncludeDeleted bool `json:"includeDeleted,omitempty"`
 
-	Raw bool
+	Raw bool `json:"raw,omitempty"`
 	// Altering Return values or structure
 	// Limits
-	Limit int64
-	Skip  int64
+	Limit int64 `json:"limit,omitempty"`
+	Skip  int64 `json:"skip,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
 	/////
 
 	// Entries
-	SgvEQ  *int64
-	SgvGTE *int64
-	SgvGT  *int64
-	SgvLTE *int64
-	SgvLT  *int64
+	SgvEQ  *int64 `json:"sgv_eq,omitempty"`
+	SgvGTE *int64 `json:"sgv_gte,omitempty"`
+	SgvGT  *int64 `json:"sgv_gt,omitempty"`
+	SgvLTE *int64 `json:"sgv_lte,omitempty"`
+	SgvLT  *int64 `json:"sgv_lt,omitempty"`
 
 	// Treatments
-	CarbsEQ  *int64
-	CarbsGTE *int64
-	CarbsGT  *int64
-	CarbsLTE *int64
-	CarbsLT  *int64
+	CarbsEQ  *int64 `json:"carbs_eq,omitempty"`
+	CarbsGTE *int64 `json:"carbs_gte,omitempty"`
+	CarbsGT  *int64 `json:"carbs_gt,omitempty"`
+	CarbsLTE *int64 `json:"carbs_lte,omitempty"`
+	CarbsLT  *int64 `json:"carbs_lt,omitempty"`
 
-	InsulinEQ  *int64
-	InsulinGTE *int64
-	InsulinGT  *int64
-	InsulinLTE *int64
-	InsulinLT  *int64
+	InsulinEQ  *int64 `json:"insulin_eq,omitempty"`
+	InsulinGTE *int64 `json:"insulin_gte,omitempty"`
+	InsulinGT  *int64 `json:"insulin_gt,omitempty"`
+	InsulinLTE *int64 `json:"insulin_lte,omitempty"`
+	InsulinLT  *int64 `json:"insulin_lt,omitempty"`
 
-	DurationEQ  *int64
-	DurationGTE *int64
-	DurationGT  *int64
-	DurationLTE *int64
-	DurationLT  *int64
+	DurationEQ  *int64 `json:"duration_eq,omitempty"`
+	DurationGTE *int64 `json:"duration_gte,omitempty"`
+	DurationGT  *int64 `json:"duration_gt,omitempty"`
+	DurationLTE *int64 `json:"duration_lte,omitempty"`
+	DurationLT  *int64 `json:"duration_lt,omitempty"`
 
-	NameEq *string
+	NameEq *string `json:"name_eq,omitempty"`
 
 	// Util Options
-	HasFilters bool
-	SortOrder  *QuerySort
-	Fields     []string
-	Envelope   *bool
+	HasFilters bool       `json:"has_filters,omitempty"`
+	SortOrder  *QuerySort `json:"sort_order,omitempty"`
+	Fields     []string   `json:"fields,omitempty"`
+	Envelope   *bool      `json:"envelope,omitempty"`
 }

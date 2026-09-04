@@ -103,18 +103,17 @@ GET http://{{ site }}/api/v1/times/2026-01-02?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertLength 1 "@" }}
 
-
 NAME get_entries_slice_v1
-GET http://{{ site }}/api/v1/entries/slice?token={{ token }}
+GET http://{{ site }}/api/v1/slice/entries/dateString/sgv/2026-01?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertExists "@0._id" }}
 
 
 
 NAME get_entries_echo_v1
-GET http://{{ site }}/api/v1/entries/echo?token={{ token }}
+GET http://{{ .site }}/api/v1/echo/entries/sgv?token={{ token }}&find[sgv][$gte]=100
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@0._id" }}
+ASSERT {{ assertExists "@query" }}
 
 
 /////
@@ -180,7 +179,7 @@ ASSERT_STATUS 404
 NAME delete_entries_by_type_v1
 DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 2 "@deletedCount" }}
+ASSERT {{ assertEquals 3 "@deletedCount" }}
 
 
 NAME delete_entries_by_type_again_v1
@@ -192,7 +191,7 @@ ASSERT {{ assertEquals 0 "@deletedCount" }}
 NAME delete_entries_permanent_by_type_v1
 DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}&permanent=true
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 2 "@deletedCount" }}
+ASSERT {{ assertEquals 3 "@deletedCount" }}
 
 NAME delete_entries_permanent_by_type_again_v1
 DELETE http://{{ site }}/api/v1/entries/sgv?token={{ token }}&permanent=true

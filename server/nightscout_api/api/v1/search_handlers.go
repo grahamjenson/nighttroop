@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -37,6 +36,7 @@ func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 
 func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// collection/field/type/prefix
 		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -49,18 +49,36 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		q.Fields = []string{chi.URLParam(r, "field")}
 		typeEq := chi.URLParam(r, "type")
 		if typeEq != "" {
 			q.TypeEq = ptr(typeEq)
 		}
+
+		prefix := chi.URLParam(r, "prefix")
+		field := chi.URLParam(r, "field")
 
 		records, err := dep.Store.Search(r.Context(), collection, q)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		nsutils.WriteRecordsV1(w, records, q.Fields)
+
+		filteredRecords := []nsutils.Record{}
+		for _, record := range records {
+			switch field {
+			// The only example I have seen is someone using this for dateString
+			// Can add more if there are other usecases
+			case "dateString":
+				if strings.HasPrefix(record.OccuredAtString(), prefix) {
+					filteredRecords = append(filteredRecords, record)
+				}
+			default:
+				filteredRecords = append(filteredRecords, record)
+			}
+
+		}
+
+		nsutils.WriteRecordsV1(w, filteredRecords, q.Fields)
 	}
 }
 
@@ -99,18 +117,14 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
 		if err != nil {
-			collection, _, err = nsutils.GetCollectionFromStringAndEnsurePermission(dep, "entries", r, nsutils.CollectionActionRead)
-			if err != nil {
-				http.NotFound(w, r)
-				return
-			}
+			http.NotFound(w, r)
+			return
 		}
 		q, err := nsutils.ParseQuery(r.URL.Query())
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		qJSON, _ := json.MarshalIndent(q, "", "  ")
 
 		identifierOrType := chi.URLParam(r, "identifierOrType")
 		if identifierOrType != "" {
@@ -123,14 +137,15 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 		}
 
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-			"req": map[string]any{
+			"input": map[string]any{
 				"method": r.Method,
 				"url":    r.URL.String(),
 				"query":  r.URL.Query(),
 				"header": r.Header,
 			},
 			"collection": collection,
-			"query":      string(qJSON),
+			"storage":    collection,
+			"query":      q,
 		})
 	}
 }
