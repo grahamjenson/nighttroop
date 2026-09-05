@@ -2,37 +2,36 @@
 
 Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL to that my wife, our school and me can download and see on devices like phones, watches and smart devices. We also are able to upload information to Nightscout that controls his insulin pump, like carbs he has eaten, or target BGLs for exercise or eating. It is an integral part of how we manage T1D. 
 
-Self-hosting Nightscout is difficult and requires a ton of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout for you. These are useful, but can cost as much as $12 per month. 
+Self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout for you. These are useful, but can cost as much as $12 per month. 
 
-To help people and to save a buck I looked into hosting my own and other people Nightscout instances, but...
+To help people out and let them save a buck or two I tried hosting my own and other people Nightscout instances, but...
 
-Firstly, Nightscout can only host one persons data per server instance, so you have to run multiple instances of this resource hungry server and database!
-Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is so annoying and counterintuitive that it is almost  
-Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a bit more difficult.
+1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of this resource hungry server and database!
+2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is annoying, water is wet; but with nightscout each user has their own config (e.g. timezone) and changing anything requires restarting the server, so the difficulty has layers.
+3. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a bit more difficult.
 
 I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user called "NightTroop" (because a group of scouts is a troop).
-What makes NightTroop different from typical projects/products is that:
+What makes NightTroop (or probably any nightscout rewrite) different from like a typical company or product is that:
 
 1. it would be a wild success if it had 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies.
-1. I don't want to take money for it, so I don't want to spend money on it.
-1. I don't want to collect Personally Identifiable Information (PII) from the users. Since it is hosting health data, I don't want any concern of misuse.
-1. I want it easy to host and self host
-1. I want it easy to use and sign up for
+1. charging money is a shitty thing to do, and can come off as exploitative to a community already that may have little or no choice.
+1. Collecting and hosting Personally Identifiable Information (PII) from users can run you amok of HIPPA laws, especially if you charge for the service.
+1. Users will want it to be open source and self host. The idea of not sharing code that your life may rely on, as well as let them do what they want with it is a good idea.
+1. Putting hurdles in front of it to sign up for and use, like requiring email, or login can eliminate use-cases like temporary users.
 
-For NightTroop to be sustainable it has to be low complexity and low cost, so the goal is for each user cost $0.01 per-year; 10,000 users is a $100 per year. 
-Lets see how close it can get.
+Give these things, for NightTroop to be sustainable it **must be** extremely low complexity and low cost. Lets put an arbitrary number of $0.01 per-user per-year; so 10,000 users is about $100 per year. Complexity is hard to measure, lets say I can understand it (no vibe-coding), and that means it must be simple.
 
 # The Plan
 
 ## SQLite + Split user DBs
 
-NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with few or no external dependencies cant get much more boring or easy.
+NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with as few external dependencies cant get much more boring or easy.
 Using SQLite lets us get rid of the database external dependency, it is also very fast.
 
-Using SQLite does make deployment and disaster recovery harder because there is no built in replication or high availability.
-To make a Nighttroop trustworthy we will need to be external storage of SQLite DBs, S3 like services are best.
+Using SQLite does make deployment and disaster recovery harder and more complex because there is no built in replication or high availability.
+To make a Nighttroop work we will need to be external storage of SQLite DBs, S3 (like) services are best.
 
--- TODO Most of the data is continual, and usually not the master copy. only matters recent data is so much more important than past data, periodic (say every 5 minutes) snapshots should be fine. 
+A users data is usually mastered on a device, like in AAPS or Loop, then synced, so that data needs less redudency, so snapshotting that data every few minutes should be fine. The other data, like authentication tokens, will need a higher rate of syncing as it is not mastered elsewhere and is crucial to disaster recovery.
 Snapshotting then uploading one giant SQLite DB would block IO then network.
 Sharding data over many USER DB's solves blocking and a few other problems, e.g. managing 10k 2MB DBs should be easier than managing 1 giant 20GB database.
 
