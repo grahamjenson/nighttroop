@@ -6,19 +6,6 @@
 --- Control Tables
 ------------------
 
--- LOGGING
-
--- primarily used to show control issues and results, as well as timing functions.
--- Can show when different background jobs run, their results and any errors.
-
-CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT,
-    details TEXT,
-    start INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    end INTEGER
-);
-
 
 -- SITE SYNC TABLES
 

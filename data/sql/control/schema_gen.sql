@@ -16,14 +16,6 @@ CREATE TABLE data_source_block_list(
     reason TEXT CHECK(length(reason) <= 256)
 );
 
-CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT,
-    details TEXT,
-    start INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    end INTEGER
-);
-
 CREATE TABLE identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),

@@ -264,7 +264,7 @@ func (q *Queries) GetInactiveSites(ctx context.Context, arg GetInactiveSitesPara
 	return items, nil
 }
 
-const getNeverSeenSites = `-- name: GetNeverSeenSites :many
+const getNeverUsedSites = `-- name: GetNeverUsedSites :many
 SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE deleted_at IS NULL 
     AND (
             (last_seen_at IS NULL AND created_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes')) 
@@ -274,7 +274,7 @@ SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, 
         )
 `
 
-type GetNeverSeenSitesParams struct {
+type GetNeverUsedSitesParams struct {
 	LastSeenAt  float64
 	LastWriteAt float64
 }
@@ -285,8 +285,8 @@ type GetNeverSeenSitesParams struct {
 //
 //	last_seen_at is null and created_at is more than minutes ago and
 //	OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
-func (q *Queries) GetNeverSeenSites(ctx context.Context, arg GetNeverSeenSitesParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getNeverSeenSitesStmt, getNeverSeenSites, arg.LastSeenAt, arg.LastWriteAt)
+func (q *Queries) GetNeverUsedSites(ctx context.Context, arg GetNeverUsedSitesParams) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getNeverUsedSitesStmt, getNeverUsedSites, arg.LastSeenAt, arg.LastWriteAt)
 	if err != nil {
 		return nil, err
 	}
@@ -444,19 +444,6 @@ func (q *Queries) SubdomainExists(ctx context.Context, arg SubdomainExistsParams
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
-}
-
-const tESTTruncateSites = `-- name: TESTTruncateSites :exec
-
-DELETE FROM sites
-`
-
-// ----------------
-// - TESTING
-// ----------------
-func (q *Queries) TESTTruncateSites(ctx context.Context) error {
-	_, err := q.exec(ctx, q.tESTTruncateSitesStmt, tESTTruncateSites)
-	return err
 }
 
 const updateSiteDateFlags = `-- name: UpdateSiteDateFlags :exec

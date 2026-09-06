@@ -340,70 +340,6 @@ func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
 	return siteDB, nil
 }
 
-func (db *ControlDB) HasSitesInBatch(char string) (bool, error) {
-	res, err := db.Queries.GetBatchSites(context.TODO(), control.GetBatchSitesParams{
-		Batch: char,
-	})
-	if err != nil {
-		return false, fmt.Errorf("cannot query sites: %w", err)
-	}
-	return len(res) > 0, nil
-}
-
-func (db *ControlDB) GetSiteBatch(char string) ([]*SiteDB, error) {
-
-	sites := []*SiteDB{}
-	res, err := db.Queries.GetBatchSites(context.TODO(), control.GetBatchSitesParams{
-		Batch: char,
-	})
-	if err != nil {
-		return sites, fmt.Errorf("cannot query sites: %w", err)
-	}
-
-	return getSiteDBsFromModels(db, res)
-}
-
-func (db *ControlDB) GetNeverSeenSites(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*SiteDB, error) {
-	res, err := db.Queries.GetNeverSeenSites(context.TODO(), control.GetNeverSeenSitesParams{
-		LastSeenAt:  lastSeenMinutes.Minutes(),
-		LastWriteAt: lastWriteMinutes.Minutes(),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("cannot query never seen sites: %w", err)
-	}
-
-	return getSiteDBsFromModels(db, res)
-}
-
-func (db *ControlDB) GetInactiveSites(lastSeenMinutes time.Duration, lastWriteMinutes time.Duration) ([]*SiteDB, error) {
-	res, err := db.Queries.GetInactiveSites(context.TODO(), control.GetInactiveSitesParams{
-		LastSeenAt:  lastSeenMinutes.Minutes(),
-		LastWriteAt: lastWriteMinutes.Minutes(),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("cannot query inactive sites: %w", err)
-	}
-
-	return getSiteDBsFromModels(db, res)
-
-}
-
-func getSiteDBsFromModels(db *ControlDB, models []*control.Site) ([]*SiteDB, error) {
-	sites := []*SiteDB{}
-	db.sitesRWLock.RLock()
-	defer db.sitesRWLock.RUnlock()
-
-	for _, model := range models {
-		site := db.sites[model.Subdomain]
-		if site == nil {
-			return sites, fmt.Errorf("site not found in memory")
-		}
-		sites = append(sites, site)
-	}
-
-	return sites, nil
-}
-
 func (db *ControlDB) GetAllSiteSyncSources(ctx context.Context, subdomain string) (nightscout *control.SiteSyncSource, dexcom *control.SiteSyncSource, err error) {
 	// TODO: This might become a problem we could make faster with a dirty flag or something
 	sync_sources, err := db.Queries.GetAllSiteSyncSourcesForSite(ctx, control.GetAllSiteSyncSourcesForSiteParams{
@@ -560,15 +496,29 @@ func (db *ControlDB) UpdateIdentityDateFlags(identity *control.Identity, updateL
 }
 
 ////
-// Test methods
+// Find Types of Sites (e.g. unused)
 ////
 
-func (db *ControlDB) TestOnlyDeleteAllUsers(sites []*SiteDB) error {
-	if len(sites) == 0 {
-		return nil
-	}
-	db.sites = make(map[string]*SiteDB)
-	err := db.Queries.TESTTruncateSites(context.TODO())
+////
+// Batch Operations
+////
 
-	return err
+////
+// Utils
+////
+
+func (db *ControlDB) GetSiteDBsFromModels(models []*control.Site) ([]*SiteDB, error) {
+	sites := []*SiteDB{}
+	db.sitesRWLock.RLock()
+	defer db.sitesRWLock.RUnlock()
+
+	for _, model := range models {
+		site := db.sites[model.Subdomain]
+		if site == nil {
+			return sites, fmt.Errorf("site not found in memory")
+		}
+		sites = append(sites, site)
+	}
+
+	return sites, nil
 }

@@ -17,14 +17,6 @@ type DataSourceBlockList struct {
 	Reason    *string
 }
 
-type Event struct {
-	ID      int64
-	Type    *string
-	Details *string
-	Start   int64
-	End     *int64
-}
-
 type Identity struct {
 	ID                        int64
 	Subdomain                 string

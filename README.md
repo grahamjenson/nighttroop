@@ -6,7 +6,7 @@
 1. write wrapper for cron to report runtimes and job stats
 1. Display users in control
 1. Display job and cron stats in control
-1. Litestream for just Control (everything needed for rebuild in control DB)
+1. Litestream for just Control (everything needed for rebuild in control DB) (maybe more dbs)
 
 1. Control UI
     1. Table of users with DB sizes, status...

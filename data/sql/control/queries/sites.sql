@@ -31,7 +31,7 @@ SELECT * FROM sites
 SELECT * FROM sites 
 WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || CAST(@last_seen_at AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(@last_write_at AS REAL) || ' minutes'));
 
--- name: GetNeverSeenSites :many
+-- name: GetNeverUsedSites :many
 -- @param last_seen_at INT
 -- @param last_write_at INT
 -- finds deleted_at is null sites where 
@@ -55,10 +55,3 @@ SET
     last_write_at = COALESCE(?, last_write_at)
 WHERE subdomain = ?;
 
-
-------------------
---- TESTING
-------------------
-
--- name: TESTTruncateSites :exec
-DELETE FROM sites;

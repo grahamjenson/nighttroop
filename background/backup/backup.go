@@ -57,7 +57,7 @@ func (b *BackupJobManager) BackupSiteBatch(char string) error {
 	defer utils.TrackTime(time.Now(), "backup site pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
 
-	sites, err := b.controlDB.GetSiteBatch(char)
+	sites, err := GetSiteBatch(b.controlDB, char)
 
 	if err != nil {
 		return fmt.Errorf("cannot get site batch: %w", err)

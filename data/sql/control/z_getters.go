@@ -58,56 +58,6 @@ func (m *DataSourceBlockList) SetReason(v *string) {
 }
 
 // GetID returns the ID value.
-func (m Event) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated Event.
-func (m *Event) SetID(v int64) {
-	m.ID = v
-}
-
-// GetType returns the Type value.
-func (m Event) GetType() *string {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated Event.
-func (m *Event) SetType(v *string) {
-	m.Type = v
-}
-
-// GetDetails returns the Details value.
-func (m Event) GetDetails() *string {
-	return m.Details
-}
-
-// SetDetails sets the Details value and returns the updated Event.
-func (m *Event) SetDetails(v *string) {
-	m.Details = v
-}
-
-// GetStart returns the Start value.
-func (m Event) GetStart() int64 {
-	return m.Start
-}
-
-// SetStart sets the Start value and returns the updated Event.
-func (m *Event) SetStart(v int64) {
-	m.Start = v
-}
-
-// GetEnd returns the End value.
-func (m Event) GetEnd() *int64 {
-	return m.End
-}
-
-// SetEnd sets the End value and returns the updated Event.
-func (m *Event) SetEnd(v *int64) {
-	m.End = v
-}
-
-// GetID returns the ID value.
 func (m Identity) GetID() int64 {
 	return m.ID
 }
@@ -2490,17 +2440,6 @@ func (m UpdateJobStatsDailyParams) SetDayQueueJob(v string) UpdateJobStatsDailyP
 	return m
 }
 
-// GetID returns the ID value.
-func (m TruncateEventsParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated TruncateEventsParams.
-func (m TruncateEventsParams) SetID(v int64) TruncateEventsParams {
-	m.ID = v
-	return m
-}
-
 // GetSubdomain returns the Subdomain value.
 func (m GetAllSiteSyncSourcesForSiteParams) GetSubdomain() string {
 	return m.Subdomain
@@ -2986,23 +2925,23 @@ func (m GetInactiveSitesParams) SetLastWriteAt(v float64) GetInactiveSitesParams
 }
 
 // GetLastSeenAt returns the LastSeenAt value.
-func (m GetNeverSeenSitesParams) GetLastSeenAt() float64 {
+func (m GetNeverUsedSitesParams) GetLastSeenAt() float64 {
 	return m.LastSeenAt
 }
 
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetNeverSeenSitesParams.
-func (m GetNeverSeenSitesParams) SetLastSeenAt(v float64) GetNeverSeenSitesParams {
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetNeverUsedSitesParams.
+func (m GetNeverUsedSitesParams) SetLastSeenAt(v float64) GetNeverUsedSitesParams {
 	m.LastSeenAt = v
 	return m
 }
 
 // GetLastWriteAt returns the LastWriteAt value.
-func (m GetNeverSeenSitesParams) GetLastWriteAt() float64 {
+func (m GetNeverUsedSitesParams) GetLastWriteAt() float64 {
 	return m.LastWriteAt
 }
 
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetNeverSeenSitesParams.
-func (m GetNeverSeenSitesParams) SetLastWriteAt(v float64) GetNeverSeenSitesParams {
+// SetLastWriteAt sets the LastWriteAt value and returns the updated GetNeverUsedSitesParams.
+func (m GetNeverUsedSitesParams) SetLastWriteAt(v float64) GetNeverUsedSitesParams {
 	m.LastWriteAt = v
 	return m
 }

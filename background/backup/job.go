@@ -106,7 +106,7 @@ func (b *BackupJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) func(
 			char := string(utils.SITE_CHAR_SET[index])
 			// Optimization to not queue jobs with no sites
 			// If it errors just ignore the query all together
-			res, err := b.controlDB.HasSitesInBatch(char)
+			res, err := HasSitesInBatch(b.controlDB, char)
 			if err == nil && !res {
 				// Skip spaming the jobs queue
 				continue

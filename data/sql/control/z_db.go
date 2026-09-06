@@ -93,8 +93,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getJobsToBeSummarisedStmt, err = db.PrepareContext(ctx, getJobsToBeSummarised); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobsToBeSummarised: %w", err)
 	}
-	if q.getNeverSeenSitesStmt, err = db.PrepareContext(ctx, getNeverSeenSites); err != nil {
-		return nil, fmt.Errorf("error preparing query GetNeverSeenSites: %w", err)
+	if q.getNeverUsedSitesStmt, err = db.PrepareContext(ctx, getNeverUsedSites); err != nil {
+		return nil, fmt.Errorf("error preparing query GetNeverUsedSites: %w", err)
 	}
 	if q.getNotDeletedSitesStmt, err = db.PrepareContext(ctx, getNotDeletedSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNotDeletedSites: %w", err)
@@ -119,12 +119,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.subdomainExistsStmt, err = db.PrepareContext(ctx, subdomainExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SubdomainExists: %w", err)
-	}
-	if q.tESTTruncateSitesStmt, err = db.PrepareContext(ctx, tESTTruncateSites); err != nil {
-		return nil, fmt.Errorf("error preparing query TESTTruncateSites: %w", err)
-	}
-	if q.truncateEventsStmt, err = db.PrepareContext(ctx, truncateEvents); err != nil {
-		return nil, fmt.Errorf("error preparing query TruncateEvents: %w", err)
 	}
 	if q.updateDexcomSyncSourceStmt, err = db.PrepareContext(ctx, updateDexcomSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSource: %w", err)
@@ -279,9 +273,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getJobsToBeSummarisedStmt: %w", cerr)
 		}
 	}
-	if q.getNeverSeenSitesStmt != nil {
-		if cerr := q.getNeverSeenSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getNeverSeenSitesStmt: %w", cerr)
+	if q.getNeverUsedSitesStmt != nil {
+		if cerr := q.getNeverUsedSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getNeverUsedSitesStmt: %w", cerr)
 		}
 	}
 	if q.getNotDeletedSitesStmt != nil {
@@ -322,16 +316,6 @@ func (q *Queries) Close() error {
 	if q.subdomainExistsStmt != nil {
 		if cerr := q.subdomainExistsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing subdomainExistsStmt: %w", cerr)
-		}
-	}
-	if q.tESTTruncateSitesStmt != nil {
-		if cerr := q.tESTTruncateSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing tESTTruncateSitesStmt: %w", cerr)
-		}
-	}
-	if q.truncateEventsStmt != nil {
-		if cerr := q.truncateEventsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing truncateEventsStmt: %w", cerr)
 		}
 	}
 	if q.updateDexcomSyncSourceStmt != nil {
@@ -451,7 +435,7 @@ type Queries struct {
 	getIdentityStmt                               *sql.Stmt
 	getInactiveSitesStmt                          *sql.Stmt
 	getJobsToBeSummarisedStmt                     *sql.Stmt
-	getNeverSeenSitesStmt                         *sql.Stmt
+	getNeverUsedSitesStmt                         *sql.Stmt
 	getNotDeletedSitesStmt                        *sql.Stmt
 	getSiteStmt                                   *sql.Stmt
 	getSyncReportsToRunStmt                       *sql.Stmt
@@ -460,8 +444,6 @@ type Queries struct {
 	queueJobReplaceDupeStmt                       *sql.Stmt
 	resetJobsStmt                                 *sql.Stmt
 	subdomainExistsStmt                           *sql.Stmt
-	tESTTruncateSitesStmt                         *sql.Stmt
-	truncateEventsStmt                            *sql.Stmt
 	updateDexcomSyncSourceStmt                    *sql.Stmt
 	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
 	updateIdentityDateFlagsStmt                   *sql.Stmt
@@ -502,7 +484,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getIdentityStmt:                               q.getIdentityStmt,
 		getInactiveSitesStmt:                          q.getInactiveSitesStmt,
 		getJobsToBeSummarisedStmt:                     q.getJobsToBeSummarisedStmt,
-		getNeverSeenSitesStmt:                         q.getNeverSeenSitesStmt,
+		getNeverUsedSitesStmt:                         q.getNeverUsedSitesStmt,
 		getNotDeletedSitesStmt:                        q.getNotDeletedSitesStmt,
 		getSiteStmt:                                   q.getSiteStmt,
 		getSyncReportsToRunStmt:                       q.getSyncReportsToRunStmt,
@@ -511,8 +493,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		queueJobReplaceDupeStmt:                       q.queueJobReplaceDupeStmt,
 		resetJobsStmt:                                 q.resetJobsStmt,
 		subdomainExistsStmt:                           q.subdomainExistsStmt,
-		tESTTruncateSitesStmt:                         q.tESTTruncateSitesStmt,
-		truncateEventsStmt:                            q.truncateEventsStmt,
 		updateDexcomSyncSourceStmt:                    q.updateDexcomSyncSourceStmt,
 		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
 		updateIdentityDateFlagsStmt:                   q.updateIdentityDateFlagsStmt,
