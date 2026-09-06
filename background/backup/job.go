@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	ControlBackupJob = "control_backup_job"
-	BatchBackupJob   = "batch_backup_job"
-	ArchiveBackupJob = "archive_backup_job"
+	ControlBackupJob  = "control_backup_job"
+	BatchBackupJob    = "batch_backup_job"
+	DeleteUnusedSites = "delete_unused_sites"
 )
 
 const BACKUP_JOB = "backup_batch_job"
@@ -41,7 +41,7 @@ type BackupJobManager struct {
 
 	BatchBackupIntervalInSeconds   int
 	ControlBackupIntervalInSeconds int
-	ArchiveIntervalInSeconds       int
+	DeleteUnusedUsersInterval      int
 }
 
 // BackupJob
@@ -58,7 +58,7 @@ func SetupBackupJob(ctx context.Context, controlDB *db.ControlDB, config config.
 		MaxSiteNeverWritten:            time.Duration(config.MaxSiteNeverWrittenInMins) * time.Minute,
 		BatchBackupIntervalInSeconds:   config.BatchBackupIntervalInSeconds,
 		ControlBackupIntervalInSeconds: config.ControlBackupIntervalInSeconds,
-		ArchiveIntervalInSeconds:       config.ArchiveIntervalInSeconds,
+		DeleteUnusedUsersInterval:      config.DeleteUnusedUsersInterval,
 		S3Client:                       s3Client,
 	}
 
@@ -82,8 +82,8 @@ func (b *BackupJobManager) workerFunc() liteq.WorkerFunc {
 			return b.BackupControl()
 		case BatchBackupJob:
 			return b.BackupSiteBatch(params.Char)
-		case ArchiveBackupJob:
-			return b.ArchiveInactiveSites()
+		case DeleteUnusedSites:
+			return b.DeleteUnusedSites()
 		default:
 			return fmt.Errorf("unknown backup job function: %s", params.FunctionName)
 		}
@@ -93,11 +93,11 @@ func (b *BackupJobManager) workerFunc() liteq.WorkerFunc {
 func (b *BackupJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
 	backupBatchCron := fmt.Sprintf("@every %ds", b.BatchBackupIntervalInSeconds)
 	backupControlCron := fmt.Sprintf("@every %ds", b.ControlBackupIntervalInSeconds)
-	archiveCron := fmt.Sprintf("@every %ds", b.ArchiveIntervalInSeconds)
+	deleteUnusedSitesCron := fmt.Sprintf("@every %ds", b.DeleteUnusedUsersInterval)
 
 	c.AddFunc(backupBatchCron, b.buildBackupBatchCronFunc(queue))
 	c.AddFunc(backupControlCron, buildBackupControlCronFunc(queue))
-	c.AddFunc(archiveCron, buildArchiveCronFunc(queue))
+	c.AddFunc(deleteUnusedSitesCron, buildDeleteUnusedSitesCronFunc(queue))
 }
 
 func (b *BackupJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) func() {
@@ -155,10 +155,10 @@ func buildBackupControlCronFunc(queue *liteq.JobQueue) func() {
 	}
 }
 
-func buildArchiveCronFunc(queue *liteq.JobQueue) func() {
+func buildDeleteUnusedSitesCronFunc(queue *liteq.JobQueue) func() {
 	return func() {
 		jsonParams, err := json.Marshal(BackupJobParams{
-			FunctionName: string(ArchiveBackupJob),
+			FunctionName: string(DeleteUnusedSites),
 		})
 		if err != nil {
 			slog.Error("Error marshalling job params", "error", err)

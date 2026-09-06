@@ -9,8 +9,8 @@ import (
 	"nighttroop.t1d.nz/utils"
 )
 
-func (b *BackupJobManager) ArchiveInactiveSites() error {
-	defer utils.TrackTime(time.Now(), "ArchiveInactiveSites", nil, nil)
+func (b *BackupJobManager) DeleteUnusedSites() error {
+	defer utils.TrackTime(time.Now(), "DeleteUnusedSites", nil, nil)
 
 	deleteList, err := b.findSitesToDeleteWithoutArchiving()
 	if err != nil {
@@ -22,33 +22,6 @@ func (b *BackupJobManager) ArchiveInactiveSites() error {
 	err = b.controlDB.DeleteSites(deleteList)
 	if err != nil {
 		slog.Error("Failed to delete site without archiving", "error", err, "sites", deleteList)
-	}
-
-	archiveList, err := b.findSitesToArchive()
-	if err != nil {
-		return fmt.Errorf("cant find sites to archive %w", err)
-	}
-	archiveSubdomains := []string{}
-	for _, site := range archiveList {
-		archiveSubdomains = append(archiveSubdomains, site.Subdomain)
-	}
-
-	slog.Info("Delete site WITH archiving", "subdomains", archiveSubdomains)
-
-	// Backup and upload the archived sites
-	removeList, err := b.archiveSites(archiveList)
-	if err != nil {
-		return fmt.Errorf("cant archive sites %w", err)
-	}
-
-	// Delete the sites from the DB, and their site DB files (including WAL and BACKUP)
-	err = b.controlDB.DeleteSites(removeList)
-	if err != nil {
-		slog.Error("Failed to delete site", "subdomain", removeList, "error", err)
-	} else {
-		if len(removeList) > 0 {
-			slog.Info("Deleted site", "subdomain", removeList)
-		}
 	}
 
 	return nil
@@ -74,7 +47,6 @@ func (b *BackupJobManager) findSitesToDeleteWithoutArchiving() ([]string, error)
 	}
 
 	return deleteSites, nil
-
 }
 
 func (b *BackupJobManager) findSitesToArchive() ([]*db.SiteDB, error) {

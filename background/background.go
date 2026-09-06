@@ -30,23 +30,23 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config c
 	queue := liteq.New(controlDB)
 	cron := cron.New(cron.WithSeconds())
 	consumers := []*liteq.ConsumerSupervisor{}
-	backupjob_manager := backup.SetupBackupJob(ctx, controlDB, config, s3c)
-	truncatejob_manager := truncate.SetupTruncateJobManager(config, controlDB)
-	syncjob_manager := ntsync.SetupSyncJobManager(config, controlDB)
+	backupjobManager := backup.SetupBackupJob(ctx, controlDB, config, s3c)
+	truncatejobManager := truncate.SetupTruncateJobManager(config, controlDB)
+	syncjobManager := ntsync.SetupSyncJobManager(config, controlDB)
 
 	// Backup Jobs
-	backupjob_manager.SetupCron(cron, queue)
+	backupjobManager.SetupCron(cron, queue)
 	// Backup Should be done by exactly one worker at a time, to avoid over working the CPU and IO
-	consumers = append(consumers, backupjob_manager.GetConsumer(queue))
+	consumers = append(consumers, backupjobManager.GetConsumer(queue))
 
 	// Truncate Jobs
-	truncatejob_manager.SetupCron(cron, queue)
-	consumers = append(consumers, truncatejob_manager.GetConsumer(queue))
+	truncatejobManager.SetupCron(cron, queue)
+	consumers = append(consumers, truncatejobManager.GetConsumer(queue))
 
 	// Sync Jobs
-	syncjob_manager.SetupCron(cron, queue)
+	syncjobManager.SetupCron(cron, queue)
 	// Sync jobs can be done in parallel by multiple workers
-	consumers = append(consumers, syncjob_manager.GetConsumer(queue))
+	consumers = append(consumers, syncjobManager.GetConsumer(queue))
 
 	return &BackGroundManager{
 		db:                 controlDB,
@@ -54,9 +54,9 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config c
 		cron:               cron,
 		queue:              queue,
 		consumers:          consumers,
-		BackupJobManager:   backupjob_manager,
-		TruncateJobManager: truncatejob_manager,
-		SyncJobManager:     syncjob_manager,
+		BackupJobManager:   backupjobManager,
+		TruncateJobManager: truncatejobManager,
+		SyncJobManager:     syncjobManager,
 	}
 }
 

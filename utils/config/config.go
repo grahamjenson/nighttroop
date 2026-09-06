@@ -77,7 +77,7 @@ type ServerConfig struct {
 	// Backup Config
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
-	ArchiveIntervalInSeconds       int
+	DeleteUnusedUsersInterval      int
 
 	// Sync Config
 	BackgroundSyncWorkers int
@@ -194,7 +194,7 @@ func NewServerConfig() (ServerConfig, error) {
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
-		ArchiveIntervalInSeconds:       configIntSelect(dotenv, "ARCHIVE_INTERVAL_IN_SECONDS", 3600),    // 1 hour
+		DeleteUnusedUsersInterval:      configIntSelect(dotenv, "DELETE_UNUSED_USERS_INTERVAL", 3600),   // 1 hour
 
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),

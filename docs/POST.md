@@ -25,13 +25,15 @@ Give these things, for NightTroop to be sustainable it **must be** extremely low
 
 ## SQLite + Split user DBs
 
-NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with as few external dependencies cant get much more boring or easy.
-Using SQLite lets us get rid of the database external dependency, it is also very fast.
+NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with as few external dependencies cant get much more boring.
+Using SQLite lets us get rid of the complexity of an external database dependency (e.g. MongoDB), it should also be faster thus cheaper.
 
 Using SQLite does make deployment and disaster recovery harder and more complex because there is no built in replication or high availability.
-To make a Nighttroop work we will need to be external storage of SQLite DBs, S3 (like) services are best.
+To make a NightTroop work we will need to be external storage of SQLite DBs, S3 (like) services are best.
 
-A users data is usually mastered on a device, like in AAPS or Loop, then synced, so that data needs less redudency, so snapshotting that data every few minutes should be fine. The other data, like authentication tokens, will need a higher rate of syncing as it is not mastered elsewhere and is crucial to disaster recovery.
+A users data is usually mastered on a device, like in AAPS or Loop, then synced to Nightscout. 
+That data needs less redundancy, so snapshotting that data every few minutes should be fine. 
+Data that is not mastered elsewhere, like user settings and authentication tokens, will need a higher rate of syncing as it is not mastered elsewhere and is crucial to disaster recovery.
 Snapshotting then uploading one giant SQLite DB would block IO then network.
 Sharding data over many USER DB's solves blocking and a few other problems, e.g. managing 10k 2MB DBs should be easier than managing 1 giant 20GB database.
 
@@ -154,10 +156,11 @@ There are a few other network costs, like a Domain will cost $15 per year, a wil
 Given the $100 for compute, $3 for backups, the network costs $130 is $233 per year, or $0.02 cents per user.
 This is not tooo far from my original goal, though this is also a pretty conservative estimate, it will probably be more for compute and bandwidth especially.
 
-I have also ignored lots of other costs, like all observability costs like error tracking probably costing hundreds per year in subscriptions.
+I have also ignored lots of other costs, like external services for observability and error tracking probably costing hundreds per year in subscriptions.
 Also compute requirements will increase as background jobs, rendering frontends and complexity increases.
 
-The goal to make a cheap, easy, uncomplicated service should be the driving force behind this project though, so I will see where that takes me.
+This is all just guesses, and none of it is real. For the last year I have been working on actually building this system,
+and everything is harder and more expensive.
 
 
 
