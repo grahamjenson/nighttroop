@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/robfig/cron/v3"
-	"nighttroop.t1d.nz/background/backup"
+	"nighttroop.t1d.nz/background/backup_control"
+	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/background/liteq"
 	ntsync "nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/background/truncate"
@@ -21,23 +22,30 @@ type BackGroundManager struct {
 
 	consumers []*liteq.ConsumerSupervisor
 
-	BackupJobManager   *backup.BackupJobManager
-	TruncateJobManager *truncate.TruncateJobManager
-	SyncJobManager     *ntsync.SyncJobManager
+	BackupSiteJobManager    *backup_sites.BackupSiteJobManager
+	BackupControlJobManager *backup_control.BackupControlJobManager
+	TruncateJobManager      *truncate.TruncateJobManager
+	SyncJobManager          *ntsync.SyncJobManager
 }
 
 func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
 	queue := liteq.New(controlDB)
 	cron := cron.New(cron.WithSeconds())
 	consumers := []*liteq.ConsumerSupervisor{}
-	backupjobManager := backup.SetupBackupJob(ctx, controlDB, config, s3c)
+	backupControlJobManager := backup_control.SetupBackupControlJob(ctx, controlDB, config, s3c)
+	backupSiteJobManager := backup_sites.SetupBackupSiteJob(ctx, controlDB, config, s3c)
 	truncatejobManager := truncate.SetupTruncateJobManager(config, controlDB)
 	syncjobManager := ntsync.SetupSyncJobManager(config, controlDB)
 
-	// Backup Jobs
-	backupjobManager.SetupCron(cron, queue)
+	// Backup Control Jobs
+	backupControlJobManager.SetupCron(cron, queue)
+	// Backup Site Jobs
+	consumers = append(consumers, backupControlJobManager.GetConsumer(queue))
+
+	// Backup Site Jobs
+	backupSiteJobManager.SetupCron(cron, queue)
 	// Backup Should be done by exactly one worker at a time, to avoid over working the CPU and IO
-	consumers = append(consumers, backupjobManager.GetConsumer(queue))
+	consumers = append(consumers, backupSiteJobManager.GetConsumer(queue))
 
 	// Truncate Jobs
 	truncatejobManager.SetupCron(cron, queue)
@@ -49,14 +57,15 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config c
 	consumers = append(consumers, syncjobManager.GetConsumer(queue))
 
 	return &BackGroundManager{
-		db:                 controlDB,
-		config:             config,
-		cron:               cron,
-		queue:              queue,
-		consumers:          consumers,
-		BackupJobManager:   backupjobManager,
-		TruncateJobManager: truncatejobManager,
-		SyncJobManager:     syncjobManager,
+		db:                      controlDB,
+		config:                  config,
+		cron:                    cron,
+		queue:                   queue,
+		consumers:               consumers,
+		BackupSiteJobManager:    backupSiteJobManager,
+		BackupControlJobManager: backupControlJobManager,
+		TruncateJobManager:      truncatejobManager,
+		SyncJobManager:          syncjobManager,
 	}
 }
 

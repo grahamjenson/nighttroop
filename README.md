@@ -6,8 +6,9 @@
 1. write wrapper for cron to report runtimes and job stats
 1. Display users in control
 1. Display job and cron stats in control
-1. Litestream for just Control (everything needed for rebuild in control DB) (maybe more dbs)
-
+1. Litestream for just Control (everything needed for rebuild in control DB) (maybe more dbs (queue, and logs dbs))
+1. refactor subdomain to site_id
+1. create_identity check limits, max identities
 1. Control UI
     1. Table of users with DB sizes, status...
     1. enable disable, users (show screen on disable), archive, and truncate buttons

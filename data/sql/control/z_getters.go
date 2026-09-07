@@ -1027,6 +1027,36 @@ func (m *Site) SetLastWriteAt(v *int64) {
 	m.LastWriteAt = v
 }
 
+// GetState returns the State value.
+func (m Site) GetState() string {
+	return m.State
+}
+
+// SetState sets the State value and returns the updated Site.
+func (m *Site) SetState(v string) {
+	m.State = v
+}
+
+// GetDisabledAt returns the DisabledAt value.
+func (m Site) GetDisabledAt() *int64 {
+	return m.DisabledAt
+}
+
+// SetDisabledAt sets the DisabledAt value and returns the updated Site.
+func (m *Site) SetDisabledAt(v *int64) {
+	m.DisabledAt = v
+}
+
+// GetArchivedAt returns the ArchivedAt value.
+func (m Site) GetArchivedAt() *int64 {
+	return m.ArchivedAt
+}
+
+// SetArchivedAt sets the ArchivedAt value and returns the updated Site.
+func (m *Site) SetArchivedAt(v *int64) {
+	m.ArchivedAt = v
+}
+
 // GetDeletedAt returns the DeletedAt value.
 func (m Site) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -2837,17 +2867,6 @@ func (m DeleteSyncSourceParams) SetSubdomain(v string) DeleteSyncSourceParams {
 }
 
 // GetSubdomain returns the Subdomain value.
-func (m SubdomainExistsParams) GetSubdomain() string {
-	return m.Subdomain
-}
-
-// SetSubdomain sets the Subdomain value and returns the updated SubdomainExistsParams.
-func (m SubdomainExistsParams) SetSubdomain(v string) SubdomainExistsParams {
-	m.Subdomain = v
-	return m
-}
-
-// GetSubdomain returns the Subdomain value.
 func (m CreateSiteParams) GetSubdomain() string {
 	return m.Subdomain
 }
@@ -2870,6 +2889,17 @@ func (m CreateSiteParams) SetBackupKeyHash(v string) CreateSiteParams {
 }
 
 // GetSubdomain returns the Subdomain value.
+func (m SubdomainExistsParams) GetSubdomain() string {
+	return m.Subdomain
+}
+
+// SetSubdomain sets the Subdomain value and returns the updated SubdomainExistsParams.
+func (m SubdomainExistsParams) SetSubdomain(v string) SubdomainExistsParams {
+	m.Subdomain = v
+	return m
+}
+
+// GetSubdomain returns the Subdomain value.
 func (m GetSiteParams) GetSubdomain() string {
 	return m.Subdomain
 }
@@ -2880,68 +2910,46 @@ func (m GetSiteParams) SetSubdomain(v string) GetSiteParams {
 	return m
 }
 
-// GetJsonEach returns the JsonEach value.
-func (m DeleteSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated DeleteSitesParams.
-func (m DeleteSitesParams) SetJsonEach(v interface{}) DeleteSitesParams {
-	m.JsonEach = v
-	return m
-}
-
-// GetBatch returns the Batch value.
-func (m GetBatchSitesParams) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated GetBatchSitesParams.
-func (m GetBatchSitesParams) SetBatch(v string) GetBatchSitesParams {
-	m.Batch = v
-	return m
-}
-
 // GetLastSeenAt returns the LastSeenAt value.
-func (m GetInactiveSitesParams) GetLastSeenAt() float64 {
+func (m GetSitesToDisableParams) GetLastSeenAt() float64 {
 	return m.LastSeenAt
 }
 
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetInactiveSitesParams.
-func (m GetInactiveSitesParams) SetLastSeenAt(v float64) GetInactiveSitesParams {
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDisableParams.
+func (m GetSitesToDisableParams) SetLastSeenAt(v float64) GetSitesToDisableParams {
 	m.LastSeenAt = v
 	return m
 }
 
 // GetLastWriteAt returns the LastWriteAt value.
-func (m GetInactiveSitesParams) GetLastWriteAt() float64 {
+func (m GetSitesToDisableParams) GetLastWriteAt() float64 {
 	return m.LastWriteAt
 }
 
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetInactiveSitesParams.
-func (m GetInactiveSitesParams) SetLastWriteAt(v float64) GetInactiveSitesParams {
+// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToDisableParams.
+func (m GetSitesToDisableParams) SetLastWriteAt(v float64) GetSitesToDisableParams {
 	m.LastWriteAt = v
 	return m
 }
 
 // GetLastSeenAt returns the LastSeenAt value.
-func (m GetNeverUsedSitesParams) GetLastSeenAt() float64 {
+func (m GetSitesToArchiveParams) GetLastSeenAt() float64 {
 	return m.LastSeenAt
 }
 
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetNeverUsedSitesParams.
-func (m GetNeverUsedSitesParams) SetLastSeenAt(v float64) GetNeverUsedSitesParams {
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToArchiveParams.
+func (m GetSitesToArchiveParams) SetLastSeenAt(v float64) GetSitesToArchiveParams {
 	m.LastSeenAt = v
 	return m
 }
 
 // GetLastWriteAt returns the LastWriteAt value.
-func (m GetNeverUsedSitesParams) GetLastWriteAt() float64 {
+func (m GetSitesToArchiveParams) GetLastWriteAt() float64 {
 	return m.LastWriteAt
 }
 
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetNeverUsedSitesParams.
-func (m GetNeverUsedSitesParams) SetLastWriteAt(v float64) GetNeverUsedSitesParams {
+// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToArchiveParams.
+func (m GetSitesToArchiveParams) SetLastWriteAt(v float64) GetSitesToArchiveParams {
 	m.LastWriteAt = v
 	return m
 }
@@ -2976,6 +2984,72 @@ func (m UpdateSiteDateFlagsParams) GetSubdomain() string {
 // SetSubdomain sets the Subdomain value and returns the updated UpdateSiteDateFlagsParams.
 func (m UpdateSiteDateFlagsParams) SetSubdomain(v string) UpdateSiteDateFlagsParams {
 	m.Subdomain = v
+	return m
+}
+
+// GetJsonEach returns the JsonEach value.
+func (m DisableSitesParams) GetJsonEach() interface{} {
+	return m.JsonEach
+}
+
+// SetJsonEach sets the JsonEach value and returns the updated DisableSitesParams.
+func (m DisableSitesParams) SetJsonEach(v interface{}) DisableSitesParams {
+	m.JsonEach = v
+	return m
+}
+
+// GetJsonEach returns the JsonEach value.
+func (m ArchiveSitesParams) GetJsonEach() interface{} {
+	return m.JsonEach
+}
+
+// SetJsonEach sets the JsonEach value and returns the updated ArchiveSitesParams.
+func (m ArchiveSitesParams) SetJsonEach(v interface{}) ArchiveSitesParams {
+	m.JsonEach = v
+	return m
+}
+
+// GetJsonEach returns the JsonEach value.
+func (m DeleteSitesParams) GetJsonEach() interface{} {
+	return m.JsonEach
+}
+
+// SetJsonEach sets the JsonEach value and returns the updated DeleteSitesParams.
+func (m DeleteSitesParams) SetJsonEach(v interface{}) DeleteSitesParams {
+	m.JsonEach = v
+	return m
+}
+
+// GetBatch returns the Batch value.
+func (m GetBatchSitesToBackUpParams) GetBatch() string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated GetBatchSitesToBackUpParams.
+func (m GetBatchSitesToBackUpParams) SetBatch(v string) GetBatchSitesToBackUpParams {
+	m.Batch = v
+	return m
+}
+
+// GetBatch returns the Batch value.
+func (m GetSitesToDeleteInBatchParams) GetBatch() string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated GetSitesToDeleteInBatchParams.
+func (m GetSitesToDeleteInBatchParams) SetBatch(v string) GetSitesToDeleteInBatchParams {
+	m.Batch = v
+	return m
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m GetSitesToDeleteInBatchParams) GetLastSeenAt() float64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDeleteInBatchParams.
+func (m GetSitesToDeleteInBatchParams) SetLastSeenAt(v float64) GetSitesToDeleteInBatchParams {
+	m.LastSeenAt = v
 	return m
 }
 

@@ -3,7 +3,6 @@ package truncate
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/control"
 )
@@ -21,8 +20,8 @@ import (
 // Control DB, check size is not over some limit, execute truncations queries if it is.
 
 func (t *TruncateJobManager) TruncateUsers() error {
-	slog.Info("TruncateUsers job unimplemented")
-	return fmt.Errorf("Not implemented")
+	// TODO
+	return nil
 }
 
 // TODO: This whole function could be rewritten in SQL and made cleaner, but it will be harder to maintain

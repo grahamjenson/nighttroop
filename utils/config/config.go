@@ -67,17 +67,14 @@ type ServerConfig struct {
 
 	//
 	// Site Limits
-	MaxSites                  int
-	MaxIdentitiesPerSite      int
-	MaxSiteLastSeenInMins     int
-	MaxSiteLastWrittenInMins  int
-	MaxSiteNeverSeenInMins    int
-	MaxSiteNeverWrittenInMins int
+	MaxSites             int
+	MaxIdentitiesPerSite int
+
+	DeleteAfterInactivityMins int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
-	DeleteUnusedUsersInterval      int
 
 	// Sync Config
 	BackgroundSyncWorkers int
@@ -185,16 +182,11 @@ func NewServerConfig() (ServerConfig, error) {
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 
 		// Archiving limits
-		MaxSiteLastSeenInMins:    configIntSelect(dotenv, "MAX_SITE_LAST_SEEN_IN_MINS", 60*24*30),   // 1 month
-		MaxSiteLastWrittenInMins: configIntSelect(dotenv, "MAX_SITE_LAST_WRITTEN_IN_MINS", 60*24*7), // 1 week
-
-		MaxSiteNeverSeenInMins:    configIntSelect(dotenv, "MAX_SITE_NEVER_SEEN_IN_MINS", 30),       // 30 minutes to login first time
-		MaxSiteNeverWrittenInMins: configIntSelect(dotenv, "MAX_SITE_NEVER_WRITTEN_IN_MINS", 60*24), // 1 day to write something
+		DeleteAfterInactivityMins: configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
-		DeleteUnusedUsersInterval:      configIntSelect(dotenv, "DELETE_UNUSED_USERS_INTERVAL", 3600),   // 1 hour
 
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),
@@ -455,8 +447,7 @@ func printServerConfig(config ServerConfig) {
 		"SiteCreateIPPerMinuteBurst", config.SiteCreateIPPerMinuteBurst,
 		"MaxSites", config.MaxSites,
 		"MaxIdentitiesPerSite", config.MaxIdentitiesPerSite,
-		"MaxSiteLastSeenInMins", config.MaxSiteLastSeenInMins,
-		"MaxSiteLastWrittenInMins", config.MaxSiteLastWrittenInMins,
+		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,

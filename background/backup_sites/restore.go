@@ -1,4 +1,4 @@
-package backup
+package backup_sites
 
 import (
 	"context"
@@ -17,12 +17,7 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 	defer utils.TrackTime(time.Now(), "TryRestoreAllFiles", nil, nil)
 	slog.Info("TryRestoreAllFiles")
 
-	err := TryDownloadExtractControlDbs(s3Client)
-	if err != nil {
-		return fmt.Errorf("cannot try download all files: %w", err)
-	}
-
-	err = TryDownloadExrtractUserDbs(s3Client)
+	err := TryDownloadExrtractUserDbs(s3Client)
 	// Create the rest of the folders here
 	for _, char := range utils.SITE_CHAR_SET {
 		dir, _ := utils.SiteBatchPaths(string(char))
@@ -31,35 +26,6 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 
 	if err != nil {
 		return fmt.Errorf("cannot try download all files: %w", err)
-	}
-
-	return nil
-}
-
-func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
-	// If it already exists dont download
-	if utils.FileExists(utils.CONTROL_DB_PATH) {
-		return nil
-	}
-
-	err := utils.MkParentDirs(utils.CONTROL_DB_PATH)
-	if err != nil {
-		return fmt.Errorf("cannot create parent directories: %w", err)
-	}
-
-	err = utils.MkParentDirs(utils.CONTROL_DB_BACKUP_PATH)
-	if err != nil {
-		return fmt.Errorf("cannot create parent directories: %w", err)
-	}
-
-	_, found, err := s3Client.DownloadFilesFromS3(s3Client.ControlS3Path(), utils.DB_FOLDER)
-	if !found && err == nil {
-		slog.Info("No control db backup found")
-		return nil
-	}
-	// TODO: check to see the error is not a 404
-	if err != nil {
-		return fmt.Errorf("cannot download control db: %w", err)
 	}
 
 	return nil

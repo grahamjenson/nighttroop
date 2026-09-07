@@ -87,6 +87,12 @@ CREATE TABLE sites (
     -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
     last_seen_at INTEGER,
     last_write_at INTEGER,
+
+    -- States
+    state TEXT NOT NULL CHECK (state IN ('live', 'disabled', 'archived', 'deleted')) DEFAULT 'live',
+    -- live is all good, disabled no-login DB still accessible, archived means remove copy available, deleted means no rehydration available
+    disabled_at INTEGER,
+    archived_at INTEGER,
     deleted_at INTEGER,
 
     -- SITE SETTINGS

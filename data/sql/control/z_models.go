@@ -114,6 +114,9 @@ type Site struct {
 	MaxDbSizeKbLimit          *int64
 	LastSeenAt                *int64
 	LastWriteAt               *int64
+	State                     string
+	DisabledAt                *int64
+	ArchivedAt                *int64
 	DeletedAt                 *int64
 	Units                     *string
 	Timezone                  *string

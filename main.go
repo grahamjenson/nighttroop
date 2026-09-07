@@ -16,7 +16,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 	"nighttroop.t1d.nz/background"
-	"nighttroop.t1d.nz/background/backup"
+	"nighttroop.t1d.nz/background/backup_control"
+	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/config"
@@ -66,7 +67,13 @@ func run() error {
 	}
 
 	// This will download all files from S3 if they exist
-	err = backup.TryRestoreAllFiles(s3Client)
+	err = backup_control.TryRestoreControlDB(s3Client)
+	if err != nil {
+		return fmt.Errorf("Failed to restore backups: %w", err)
+	}
+
+	// This will download all files from S3 if they exist
+	err = backup_sites.TryRestoreAllFiles(s3Client)
 	if err != nil {
 		return fmt.Errorf("Failed to restore backups: %w", err)
 	}
@@ -115,7 +122,8 @@ func run() error {
 	slog.Info("Stopped background jobs complete")
 
 	slog.Info("Performing final backup to S3...")
-	backgroundManager.BackupJobManager.BackupToS3() // Force a final backup before exiting
+	backgroundManager.BackupControlJobManager.BackupToS3() // Force a final backup before exiting
+	backgroundManager.BackupSiteJobManager.BackupToS3()    // Force a final backup before exiting
 	slog.Info("Final backup complete")
 
 	// Close control and User dbs

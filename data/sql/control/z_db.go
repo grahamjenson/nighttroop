@@ -30,6 +30,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allJobStatsDailyStmt, err = db.PrepareContext(ctx, allJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query AllJobStatsDaily: %w", err)
 	}
+	if q.archiveSitesStmt, err = db.PrepareContext(ctx, archiveSites); err != nil {
+		return nil, fmt.Errorf("error preparing query ArchiveSites: %w", err)
+	}
 	if q.completeJobStmt, err = db.PrepareContext(ctx, completeJob); err != nil {
 		return nil, fmt.Errorf("error preparing query CompleteJob: %w", err)
 	}
@@ -63,6 +66,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.disableNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, disableNightscoutSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DisableNightscoutSyncSource: %w", err)
 	}
+	if q.disableSitesStmt, err = db.PrepareContext(ctx, disableSites); err != nil {
+		return nil, fmt.Errorf("error preparing query DisableSites: %w", err)
+	}
 	if q.ensureJobStatsDailyForGroupStmt, err = db.PrepareContext(ctx, ensureJobStatsDailyForGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query EnsureJobStatsDailyForGroup: %w", err)
 	}
@@ -81,26 +87,29 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAllSitesStmt, err = db.PrepareContext(ctx, getAllSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSites: %w", err)
 	}
-	if q.getBatchSitesStmt, err = db.PrepareContext(ctx, getBatchSites); err != nil {
-		return nil, fmt.Errorf("error preparing query GetBatchSites: %w", err)
+	if q.getBatchSitesToBackUpStmt, err = db.PrepareContext(ctx, getBatchSitesToBackUp); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBatchSitesToBackUp: %w", err)
 	}
 	if q.getIdentityStmt, err = db.PrepareContext(ctx, getIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentity: %w", err)
 	}
-	if q.getInactiveSitesStmt, err = db.PrepareContext(ctx, getInactiveSites); err != nil {
-		return nil, fmt.Errorf("error preparing query GetInactiveSites: %w", err)
-	}
 	if q.getJobsToBeSummarisedStmt, err = db.PrepareContext(ctx, getJobsToBeSummarised); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobsToBeSummarised: %w", err)
 	}
-	if q.getNeverUsedSitesStmt, err = db.PrepareContext(ctx, getNeverUsedSites); err != nil {
-		return nil, fmt.Errorf("error preparing query GetNeverUsedSites: %w", err)
-	}
-	if q.getNotDeletedSitesStmt, err = db.PrepareContext(ctx, getNotDeletedSites); err != nil {
-		return nil, fmt.Errorf("error preparing query GetNotDeletedSites: %w", err)
+	if q.getLiveAndDisabledSitesStmt, err = db.PrepareContext(ctx, getLiveAndDisabledSites); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLiveAndDisabledSites: %w", err)
 	}
 	if q.getSiteStmt, err = db.PrepareContext(ctx, getSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSite: %w", err)
+	}
+	if q.getSitesToArchiveStmt, err = db.PrepareContext(ctx, getSitesToArchive); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesToArchive: %w", err)
+	}
+	if q.getSitesToDeleteInBatchStmt, err = db.PrepareContext(ctx, getSitesToDeleteInBatch); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesToDeleteInBatch: %w", err)
+	}
+	if q.getSitesToDisableStmt, err = db.PrepareContext(ctx, getSitesToDisable); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSitesToDisable: %w", err)
 	}
 	if q.getSyncReportsToRunStmt, err = db.PrepareContext(ctx, getSyncReportsToRun); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSyncReportsToRun: %w", err)
@@ -168,6 +177,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allJobStatsDailyStmt: %w", cerr)
 		}
 	}
+	if q.archiveSitesStmt != nil {
+		if cerr := q.archiveSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing archiveSitesStmt: %w", cerr)
+		}
+	}
 	if q.completeJobStmt != nil {
 		if cerr := q.completeJobStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing completeJobStmt: %w", cerr)
@@ -223,6 +237,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing disableNightscoutSyncSourceStmt: %w", cerr)
 		}
 	}
+	if q.disableSitesStmt != nil {
+		if cerr := q.disableSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing disableSitesStmt: %w", cerr)
+		}
+	}
 	if q.ensureJobStatsDailyForGroupStmt != nil {
 		if cerr := q.ensureJobStatsDailyForGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing ensureJobStatsDailyForGroupStmt: %w", cerr)
@@ -253,9 +272,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAllSitesStmt: %w", cerr)
 		}
 	}
-	if q.getBatchSitesStmt != nil {
-		if cerr := q.getBatchSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getBatchSitesStmt: %w", cerr)
+	if q.getBatchSitesToBackUpStmt != nil {
+		if cerr := q.getBatchSitesToBackUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBatchSitesToBackUpStmt: %w", cerr)
 		}
 	}
 	if q.getIdentityStmt != nil {
@@ -263,29 +282,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getIdentityStmt: %w", cerr)
 		}
 	}
-	if q.getInactiveSitesStmt != nil {
-		if cerr := q.getInactiveSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getInactiveSitesStmt: %w", cerr)
-		}
-	}
 	if q.getJobsToBeSummarisedStmt != nil {
 		if cerr := q.getJobsToBeSummarisedStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getJobsToBeSummarisedStmt: %w", cerr)
 		}
 	}
-	if q.getNeverUsedSitesStmt != nil {
-		if cerr := q.getNeverUsedSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getNeverUsedSitesStmt: %w", cerr)
-		}
-	}
-	if q.getNotDeletedSitesStmt != nil {
-		if cerr := q.getNotDeletedSitesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getNotDeletedSitesStmt: %w", cerr)
+	if q.getLiveAndDisabledSitesStmt != nil {
+		if cerr := q.getLiveAndDisabledSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLiveAndDisabledSitesStmt: %w", cerr)
 		}
 	}
 	if q.getSiteStmt != nil {
 		if cerr := q.getSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteStmt: %w", cerr)
+		}
+	}
+	if q.getSitesToArchiveStmt != nil {
+		if cerr := q.getSitesToArchiveStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesToArchiveStmt: %w", cerr)
+		}
+	}
+	if q.getSitesToDeleteInBatchStmt != nil {
+		if cerr := q.getSitesToDeleteInBatchStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesToDeleteInBatchStmt: %w", cerr)
+		}
+	}
+	if q.getSitesToDisableStmt != nil {
+		if cerr := q.getSitesToDisableStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSitesToDisableStmt: %w", cerr)
 		}
 	}
 	if q.getSyncReportsToRunStmt != nil {
@@ -414,6 +438,7 @@ type Queries struct {
 	tx                                            *sql.Tx
 	allIdentitiesStmt                             *sql.Stmt
 	allJobStatsDailyStmt                          *sql.Stmt
+	archiveSitesStmt                              *sql.Stmt
 	completeJobStmt                               *sql.Stmt
 	createDexcomSyncSourceStmt                    *sql.Stmt
 	createIdentityStmt                            *sql.Stmt
@@ -425,19 +450,21 @@ type Queries struct {
 	deleteSitesStmt                               *sql.Stmt
 	deleteSyncSourceStmt                          *sql.Stmt
 	disableNightscoutSyncSourceStmt               *sql.Stmt
+	disableSitesStmt                              *sql.Stmt
 	ensureJobStatsDailyForGroupStmt               *sql.Stmt
 	failJobStmt                                   *sql.Stmt
 	findJobStmt                                   *sql.Stmt
 	getAllSiteSyncSourcesForSiteStmt              *sql.Stmt
 	getAllSiteSyncSourcesForUniqueHashStmt        *sql.Stmt
 	getAllSitesStmt                               *sql.Stmt
-	getBatchSitesStmt                             *sql.Stmt
+	getBatchSitesToBackUpStmt                     *sql.Stmt
 	getIdentityStmt                               *sql.Stmt
-	getInactiveSitesStmt                          *sql.Stmt
 	getJobsToBeSummarisedStmt                     *sql.Stmt
-	getNeverUsedSitesStmt                         *sql.Stmt
-	getNotDeletedSitesStmt                        *sql.Stmt
+	getLiveAndDisabledSitesStmt                   *sql.Stmt
 	getSiteStmt                                   *sql.Stmt
+	getSitesToArchiveStmt                         *sql.Stmt
+	getSitesToDeleteInBatchStmt                   *sql.Stmt
+	getSitesToDisableStmt                         *sql.Stmt
 	getSyncReportsToRunStmt                       *sql.Stmt
 	markJobsForConsumerStmt                       *sql.Stmt
 	queueJobIgnoreDupeStmt                        *sql.Stmt
@@ -463,6 +490,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                                            tx,
 		allIdentitiesStmt:                             q.allIdentitiesStmt,
 		allJobStatsDailyStmt:                          q.allJobStatsDailyStmt,
+		archiveSitesStmt:                              q.archiveSitesStmt,
 		completeJobStmt:                               q.completeJobStmt,
 		createDexcomSyncSourceStmt:                    q.createDexcomSyncSourceStmt,
 		createIdentityStmt:                            q.createIdentityStmt,
@@ -474,19 +502,21 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteSitesStmt:                               q.deleteSitesStmt,
 		deleteSyncSourceStmt:                          q.deleteSyncSourceStmt,
 		disableNightscoutSyncSourceStmt:               q.disableNightscoutSyncSourceStmt,
+		disableSitesStmt:                              q.disableSitesStmt,
 		ensureJobStatsDailyForGroupStmt:               q.ensureJobStatsDailyForGroupStmt,
 		failJobStmt:                                   q.failJobStmt,
 		findJobStmt:                                   q.findJobStmt,
 		getAllSiteSyncSourcesForSiteStmt:              q.getAllSiteSyncSourcesForSiteStmt,
 		getAllSiteSyncSourcesForUniqueHashStmt:        q.getAllSiteSyncSourcesForUniqueHashStmt,
 		getAllSitesStmt:                               q.getAllSitesStmt,
-		getBatchSitesStmt:                             q.getBatchSitesStmt,
+		getBatchSitesToBackUpStmt:                     q.getBatchSitesToBackUpStmt,
 		getIdentityStmt:                               q.getIdentityStmt,
-		getInactiveSitesStmt:                          q.getInactiveSitesStmt,
 		getJobsToBeSummarisedStmt:                     q.getJobsToBeSummarisedStmt,
-		getNeverUsedSitesStmt:                         q.getNeverUsedSitesStmt,
-		getNotDeletedSitesStmt:                        q.getNotDeletedSitesStmt,
+		getLiveAndDisabledSitesStmt:                   q.getLiveAndDisabledSitesStmt,
 		getSiteStmt:                                   q.getSiteStmt,
+		getSitesToArchiveStmt:                         q.getSitesToArchiveStmt,
+		getSitesToDeleteInBatchStmt:                   q.getSitesToDeleteInBatchStmt,
+		getSitesToDisableStmt:                         q.getSitesToDisableStmt,
 		getSyncReportsToRunStmt:                       q.getSyncReportsToRunStmt,
 		markJobsForConsumerStmt:                       q.markJobsForConsumerStmt,
 		queueJobIgnoreDupeStmt:                        q.queueJobIgnoreDupeStmt,

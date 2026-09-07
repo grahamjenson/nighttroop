@@ -74,7 +74,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 // This will fetch all the sites in
 func (db *ControlDB) fillSites() ([]string, error) {
 	sites := []string{}
-	res, err := db.Queries.GetNotDeletedSites(context.TODO())
+	res, err := db.Queries.GetLiveAndDisabledSites(context.TODO())
 
 	if err != nil {
 		return sites, fmt.Errorf("cannot query sites: %w", err)

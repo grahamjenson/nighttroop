@@ -9,9 +9,46 @@ import (
 	"context"
 )
 
+const archiveSites = `-- name: ArchiveSites :many
+UPDATE sites
+SET 
+    archived_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    state = 'archived'
+WHERE subdomain IN (SELECT value FROM json_each(?))
+RETURNING subdomain
+`
+
+type ArchiveSitesParams struct {
+	JsonEach interface{}
+}
+
+func (q *Queries) ArchiveSites(ctx context.Context, arg ArchiveSitesParams) ([]string, error) {
+	rows, err := q.query(ctx, q.archiveSitesStmt, archiveSites, arg.JsonEach)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var subdomain string
+		if err := rows.Scan(&subdomain); err != nil {
+			return nil, err
+		}
+		items = append(items, subdomain)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createSite = `-- name: CreateSite :one
+
 INSERT INTO sites (subdomain, backup_key_hash)
-VALUES (?, ?) RETURNING id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact
+VALUES (?, ?) RETURNING id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact
 `
 
 type CreateSiteParams struct {
@@ -19,6 +56,9 @@ type CreateSiteParams struct {
 	BackupKeyHash string
 }
 
+// -----
+// CREATE
+// ------
 func (q *Queries) CreateSite(ctx context.Context, arg CreateSiteParams) (*Site, error) {
 	row := q.queryRow(ctx, q.createSiteStmt, createSite, arg.Subdomain, arg.BackupKeyHash)
 	var i Site
@@ -31,6 +71,9 @@ func (q *Queries) CreateSite(ctx context.Context, arg CreateSiteParams) (*Site, 
 		&i.MaxDbSizeKbLimit,
 		&i.LastSeenAt,
 		&i.LastWriteAt,
+		&i.State,
+		&i.DisabledAt,
+		&i.ArchivedAt,
 		&i.DeletedAt,
 		&i.Units,
 		&i.Timezone,
@@ -55,7 +98,9 @@ func (q *Queries) CreateSite(ctx context.Context, arg CreateSiteParams) (*Site, 
 
 const deleteSites = `-- name: DeleteSites :many
 UPDATE sites
-SET deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+SET 
+    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    state = 'deleted'
 WHERE subdomain IN (SELECT value FROM json_each(?))
 RETURNING subdomain
 `
@@ -88,8 +133,48 @@ func (q *Queries) DeleteSites(ctx context.Context, arg DeleteSitesParams) ([]str
 	return items, nil
 }
 
+const disableSites = `-- name: DisableSites :many
+
+UPDATE sites
+SET 
+    disabled_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    state = 'disabled'
+WHERE subdomain IN (SELECT value FROM json_each(?))
+RETURNING subdomain
+`
+
+type DisableSitesParams struct {
+	JsonEach interface{}
+}
+
+// -----
+// DELETE
+// ------
+func (q *Queries) DisableSites(ctx context.Context, arg DisableSitesParams) ([]string, error) {
+	rows, err := q.query(ctx, q.disableSitesStmt, disableSites, arg.JsonEach)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var subdomain string
+		if err := rows.Scan(&subdomain); err != nil {
+			return nil, err
+		}
+		items = append(items, subdomain)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllSites = `-- name: GetAllSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites
 `
 
 func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
@@ -110,6 +195,9 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 			&i.MaxDbSizeKbLimit,
 			&i.LastSeenAt,
 			&i.LastWriteAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
 			&i.Timezone,
@@ -142,17 +230,23 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 	return items, nil
 }
 
-const getBatchSites = `-- name: GetBatchSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites 
-    WHERE batch = ? AND deleted_at IS NULL ORDER BY subdomain DESC
+const getBatchSitesToBackUp = `-- name: GetBatchSitesToBackUp :many
+
+
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY subdomain DESC
 `
 
-type GetBatchSitesParams struct {
+type GetBatchSitesToBackUpParams struct {
 	Batch string
 }
 
-func (q *Queries) GetBatchSites(ctx context.Context, arg GetBatchSitesParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getBatchSitesStmt, getBatchSites, arg.Batch)
+// ------------------------------
+// BATCH (by first letter of subdomain)
+// ------------------------------
+// Get sites that are live  or diabled
+// We must backup even empty sites because a rehydrated control will expect them
+func (q *Queries) GetBatchSitesToBackUp(ctx context.Context, arg GetBatchSitesToBackUpParams) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getBatchSitesToBackUpStmt, getBatchSitesToBackUp, arg.Batch)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +263,9 @@ func (q *Queries) GetBatchSites(ctx context.Context, arg GetBatchSitesParams) ([
 			&i.MaxDbSizeKbLimit,
 			&i.LastSeenAt,
 			&i.LastWriteAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
 			&i.Timezone,
@@ -201,21 +298,12 @@ func (q *Queries) GetBatchSites(ctx context.Context, arg GetBatchSitesParams) ([
 	return items, nil
 }
 
-const getInactiveSites = `-- name: GetInactiveSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites 
-WHERE deleted_at IS NULL AND (last_seen_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
+const getLiveAndDisabledSites = `-- name: GetLiveAndDisabledSites :many
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE state IN ('live', 'disabled')
 `
 
-type GetInactiveSitesParams struct {
-	LastSeenAt  float64
-	LastWriteAt float64
-}
-
-// @param last_seen_at INT
-// @param last_write_at INT
-// Inactive Sites are sites that were once active but have stopped, so the assumption is they have data
-func (q *Queries) GetInactiveSites(ctx context.Context, arg GetInactiveSitesParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getInactiveSitesStmt, getInactiveSites, arg.LastSeenAt, arg.LastWriteAt)
+func (q *Queries) GetLiveAndDisabledSites(ctx context.Context) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getLiveAndDisabledSitesStmt, getLiveAndDisabledSites)
 	if err != nil {
 		return nil, err
 	}
@@ -232,131 +320,9 @@ func (q *Queries) GetInactiveSites(ctx context.Context, arg GetInactiveSitesPara
 			&i.MaxDbSizeKbLimit,
 			&i.LastSeenAt,
 			&i.LastWriteAt,
-			&i.DeletedAt,
-			&i.Units,
-			&i.Timezone,
-			&i.Language,
-			&i.DateFormat,
-			&i.TimeFormat,
-			&i.WeekStartDay,
-			&i.BolusDiaHours,
-			&i.BolusOnsetMinutes,
-			&i.BolusPeakMinutes,
-			&i.BasalDiaHours,
-			&i.BasalOnsetMinutes,
-			&i.BasalPeakMinutes,
-			&i.DefaultInsulinSensitivity,
-			&i.DefaultCarbRatio,
-			&i.DefaultBasalRate,
-			&i.CarbMaxAbsorptionHours,
-			&i.CarbMin5mImpact,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getNeverUsedSites = `-- name: GetNeverUsedSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE deleted_at IS NULL 
-    AND (
-            (last_seen_at IS NULL AND created_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes')) 
-            OR 
-            (last_seen_at IS NOT NULL AND last_write_at IS NULL AND created_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
-        
-        )
-`
-
-type GetNeverUsedSitesParams struct {
-	LastSeenAt  float64
-	LastWriteAt float64
-}
-
-// @param last_seen_at INT
-// @param last_write_at INT
-// finds deleted_at is null sites where
-//
-//	last_seen_at is null and created_at is more than minutes ago and
-//	OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
-func (q *Queries) GetNeverUsedSites(ctx context.Context, arg GetNeverUsedSitesParams) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getNeverUsedSitesStmt, getNeverUsedSites, arg.LastSeenAt, arg.LastWriteAt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*Site
-	for rows.Next() {
-		var i Site
-		if err := rows.Scan(
-			&i.ID,
-			&i.Subdomain,
-			&i.Batch,
-			&i.BackupKeyHash,
-			&i.CreatedAt,
-			&i.MaxDbSizeKbLimit,
-			&i.LastSeenAt,
-			&i.LastWriteAt,
-			&i.DeletedAt,
-			&i.Units,
-			&i.Timezone,
-			&i.Language,
-			&i.DateFormat,
-			&i.TimeFormat,
-			&i.WeekStartDay,
-			&i.BolusDiaHours,
-			&i.BolusOnsetMinutes,
-			&i.BolusPeakMinutes,
-			&i.BasalDiaHours,
-			&i.BasalOnsetMinutes,
-			&i.BasalPeakMinutes,
-			&i.DefaultInsulinSensitivity,
-			&i.DefaultCarbRatio,
-			&i.DefaultBasalRate,
-			&i.CarbMaxAbsorptionHours,
-			&i.CarbMin5mImpact,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getNotDeletedSites = `-- name: GetNotDeletedSites :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE deleted_at IS NULL
-`
-
-func (q *Queries) GetNotDeletedSites(ctx context.Context) ([]*Site, error) {
-	rows, err := q.query(ctx, q.getNotDeletedSitesStmt, getNotDeletedSites)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*Site
-	for rows.Next() {
-		var i Site
-		if err := rows.Scan(
-			&i.ID,
-			&i.Subdomain,
-			&i.Batch,
-			&i.BackupKeyHash,
-			&i.CreatedAt,
-			&i.MaxDbSizeKbLimit,
-			&i.LastSeenAt,
-			&i.LastWriteAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
 			&i.DeletedAt,
 			&i.Units,
 			&i.Timezone,
@@ -390,7 +356,7 @@ func (q *Queries) GetNotDeletedSites(ctx context.Context) ([]*Site, error) {
 }
 
 const getSite = `-- name: GetSite :one
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE subdomain = ? AND deleted_at IS NULL
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE subdomain = ? AND state = 'live'
 `
 
 type GetSiteParams struct {
@@ -409,6 +375,9 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 		&i.MaxDbSizeKbLimit,
 		&i.LastSeenAt,
 		&i.LastWriteAt,
+		&i.State,
+		&i.DisabledAt,
+		&i.ArchivedAt,
 		&i.DeletedAt,
 		&i.Units,
 		&i.Timezone,
@@ -431,7 +400,216 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 	return &i, err
 }
 
+const getSitesToArchive = `-- name: GetSitesToArchive :many
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites 
+WHERE state = 'disabled' AND (last_seen_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
+`
+
+type GetSitesToArchiveParams struct {
+	LastSeenAt  float64
+	LastWriteAt float64
+}
+
+// @param last_seen_at INT
+// @param last_write_at INT
+// Inactive Sites are sites that were once active but have stopped, so the assumption is they have data
+func (q *Queries) GetSitesToArchive(ctx context.Context, arg GetSitesToArchiveParams) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getSitesToArchiveStmt, getSitesToArchive, arg.LastSeenAt, arg.LastWriteAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Site
+	for rows.Next() {
+		var i Site
+		if err := rows.Scan(
+			&i.ID,
+			&i.Subdomain,
+			&i.Batch,
+			&i.BackupKeyHash,
+			&i.CreatedAt,
+			&i.MaxDbSizeKbLimit,
+			&i.LastSeenAt,
+			&i.LastWriteAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSitesToDeleteInBatch = `-- name: GetSitesToDeleteInBatch :many
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE state IN ('live', 'disabled') AND batch = ?1
+    AND (
+            (last_seen_at IS NULL AND created_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes')) 
+            OR 
+            (last_write_at IS NULL AND last_seen_at IS NOT NULL AND last_seen_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
+        
+        )
+`
+
+type GetSitesToDeleteInBatchParams struct {
+	Batch      string
+	LastSeenAt float64
+}
+
+// @param last_seen_at INT
+// @param last_write_at INT
+// finds deleted_at is null sites where
+//
+//	  last_seen_at is null and created_at is more than minutes ago and
+//	  OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
+//	1. Delete if never even logged in was X mins ago
+//	2. Delete if never written and last_seen_at was X mins ago
+func (q *Queries) GetSitesToDeleteInBatch(ctx context.Context, arg GetSitesToDeleteInBatchParams) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getSitesToDeleteInBatchStmt, getSitesToDeleteInBatch, arg.Batch, arg.LastSeenAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Site
+	for rows.Next() {
+		var i Site
+		if err := rows.Scan(
+			&i.ID,
+			&i.Subdomain,
+			&i.Batch,
+			&i.BackupKeyHash,
+			&i.CreatedAt,
+			&i.MaxDbSizeKbLimit,
+			&i.LastSeenAt,
+			&i.LastWriteAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSitesToDisable = `-- name: GetSitesToDisable :many
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites 
+WHERE state = 'live' AND (last_seen_at < datetime('now', '-' || CAST(?1 AS REAL) || ' minutes') OR last_write_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
+`
+
+type GetSitesToDisableParams struct {
+	LastSeenAt  float64
+	LastWriteAt float64
+}
+
+// @param last_seen_at INT
+// @param last_write_at INT
+// Inactive Sites are sites that were once active but have stopped, so the assumption is they have data
+func (q *Queries) GetSitesToDisable(ctx context.Context, arg GetSitesToDisableParams) ([]*Site, error) {
+	rows, err := q.query(ctx, q.getSitesToDisableStmt, getSitesToDisable, arg.LastSeenAt, arg.LastWriteAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Site
+	for rows.Next() {
+		var i Site
+		if err := rows.Scan(
+			&i.ID,
+			&i.Subdomain,
+			&i.Batch,
+			&i.BackupKeyHash,
+			&i.CreatedAt,
+			&i.MaxDbSizeKbLimit,
+			&i.LastSeenAt,
+			&i.LastWriteAt,
+			&i.State,
+			&i.DisabledAt,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.Units,
+			&i.Timezone,
+			&i.Language,
+			&i.DateFormat,
+			&i.TimeFormat,
+			&i.WeekStartDay,
+			&i.BolusDiaHours,
+			&i.BolusOnsetMinutes,
+			&i.BolusPeakMinutes,
+			&i.BasalDiaHours,
+			&i.BasalOnsetMinutes,
+			&i.BasalPeakMinutes,
+			&i.DefaultInsulinSensitivity,
+			&i.DefaultCarbRatio,
+			&i.DefaultBasalRate,
+			&i.CarbMaxAbsorptionHours,
+			&i.CarbMin5mImpact,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const subdomainExists = `-- name: SubdomainExists :one
+
 SELECT CAST(COUNT(*) > 0 AS BOOLEAN) FROM sites WHERE subdomain = ?
 `
 
@@ -439,6 +617,9 @@ type SubdomainExistsParams struct {
 	Subdomain string
 }
 
+// -----
+// READ
+// ------
 func (q *Queries) SubdomainExists(ctx context.Context, arg SubdomainExistsParams) (bool, error) {
 	row := q.queryRow(ctx, q.subdomainExistsStmt, subdomainExists, arg.Subdomain)
 	var column_1 bool
@@ -447,6 +628,7 @@ func (q *Queries) SubdomainExists(ctx context.Context, arg SubdomainExistsParams
 }
 
 const updateSiteDateFlags = `-- name: UpdateSiteDateFlags :exec
+
 UPDATE sites
 SET
     last_seen_at = COALESCE(?, last_seen_at),
@@ -460,6 +642,9 @@ type UpdateSiteDateFlagsParams struct {
 	Subdomain   string
 }
 
+// -----
+// UPDATE
+// ------
 func (q *Queries) UpdateSiteDateFlags(ctx context.Context, arg UpdateSiteDateFlagsParams) error {
 	_, err := q.exec(ctx, q.updateSiteDateFlagsStmt, updateSiteDateFlags, arg.LastSeenAt, arg.LastWriteAt, arg.Subdomain)
 	return err
