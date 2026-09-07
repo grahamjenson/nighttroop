@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -57,9 +57,9 @@ func (t *TruncateJobManager) workerFunc() func(ctx context.Context, j *control.J
 
 }
 
-func (t *TruncateJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
+func (t *TruncateJobManager) SetupCron(c acron.CronScheduler, queue *liteq.JobQueue) {
 	truncateCron := fmt.Sprintf("@every %ds", t.TruncateIntervalInSeconds)
-	c.AddFunc(truncateCron, buildTruncateCronFunc(queue))
+	c.AddFunc("TruncateJobManager", truncateCron, buildTruncateCronFunc(queue))
 }
 
 func buildTruncateCronFunc(queue *liteq.JobQueue) func() {

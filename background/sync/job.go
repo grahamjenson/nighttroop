@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -178,10 +178,10 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSy
 	}, nil
 }
 
-func (b *SyncJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
+func (b *SyncJobManager) SetupCron(c acron.CronScheduler, queue *liteq.JobQueue) {
 	syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
 
-	c.AddFunc(syncCron, b.buildSyncCronFunc(queue))
+	c.AddFunc("SyncJobManager", syncCron, b.buildSyncCronFunc(queue))
 
 }
 

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -50,11 +50,11 @@ func (b *BackupControlJobManager) workerFunc() liteq.WorkerFunc {
 	}
 }
 
-func (b *BackupControlJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
+func (b *BackupControlJobManager) SetupCron(c acron.CronScheduler, queue *liteq.JobQueue) {
 
 	backupControlCron := fmt.Sprintf("@every %ds", b.ControlBackupIntervalInSeconds)
 
-	c.AddFunc(backupControlCron, buildBackupControlCronFunc(queue))
+	c.AddFunc("BackupControlJobManager", backupControlCron, buildBackupControlCronFunc(queue))
 
 }
 

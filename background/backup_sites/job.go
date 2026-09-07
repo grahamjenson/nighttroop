@@ -7,11 +7,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -76,9 +76,9 @@ func (b *BackupSiteJobManager) workerFunc() liteq.WorkerFunc {
 	}
 }
 
-func (b *BackupSiteJobManager) SetupCron(c *cron.Cron, queue *liteq.JobQueue) {
+func (b *BackupSiteJobManager) SetupCron(c acron.CronScheduler, queue *liteq.JobQueue) {
 	backupBatchCron := fmt.Sprintf("@every %ds", b.BatchBackupIntervalInSeconds)
-	c.AddFunc(backupBatchCron, b.buildBackupBatchCronFunc(queue))
+	c.AddFunc("BackupSiteJobManager", backupBatchCron, b.buildBackupBatchCronFunc(queue))
 }
 
 func (b *BackupSiteJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) func() {

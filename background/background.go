@@ -2,6 +2,7 @@ package background
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/background/backup_control"
@@ -10,6 +11,7 @@ import (
 	ntsync "nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/background/truncate"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -17,7 +19,7 @@ import (
 type BackGroundManager struct {
 	db     *db.ControlDB
 	config config.ServerConfig
-	cron   *cron.Cron
+	cron   *acron.CronWrapper
 	queue  *liteq.JobQueue
 
 	consumers []*liteq.ConsumerSupervisor
@@ -30,7 +32,9 @@ type BackGroundManager struct {
 
 func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
 	queue := liteq.New(controlDB)
-	cron := cron.New(cron.WithSeconds())
+	innerCron := cron.New(cron.WithSeconds())
+	cron := &acron.CronWrapper{Cron: innerCron, WrapperFunc: WrapperFunc(controlDB)}
+
 	consumers := []*liteq.ConsumerSupervisor{}
 	backupControlJobManager := backup_control.SetupBackupControlJob(ctx, controlDB, config, s3c)
 	backupSiteJobManager := backup_sites.SetupBackupSiteJob(ctx, controlDB, config, s3c)
@@ -66,6 +70,14 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config c
 		BackupControlJobManager: backupControlJobManager,
 		TruncateJobManager:      truncatejobManager,
 		SyncJobManager:          syncjobManager,
+	}
+}
+
+func WrapperFunc(controlDB *db.ControlDB) func(name string, c func()) {
+	return func(name string, c func()) {
+		fmt.Println("Executing wrapped function for", name)
+		c()
+		fmt.Println("Finished executing wrapped function for", name)
 	}
 }
 

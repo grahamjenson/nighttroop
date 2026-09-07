@@ -1,12 +1,15 @@
-# nighttrooop sql
+# Nighttroop SQL
 
-Look, rolling my own ORM-ish-thing is probably not a good idea. But options like GORM, ent, sqlc all come with losing control and added layers.
-This way:
-1. all code is generated and thus runtime type checking is limited (GORM)
-2. all sql statements are obvious
-3. all calls are explicit, no *
+Nighttroop uses generated code with SQLc, goverter and a few custom scripts to create the data-layer interface.
+All queries in Nighttroop are prepared statements, making it possible to test some aspects of their correctness at compile time.
 
-What I would like is better SQL statement parsing for type checking which can be done at compile time, but that can wait.
+Having all SQL explicit and in sql, rater than ORM-ish, hopefully makes all interactions more obvious and easier to optimize in the future.
 
-At the end of the day I would rather have a lot of explicit SQL in one place, than a bunch of SQL building method calls all over the codebase. 
-It helps with security, it helps with speed, and it helps with sanity.
+# Control DB
+
+This DB has all the 
+
+# Site DB
+
+This has information that is related to the user, typically mastered elsewhere like AAPS or Loop.
+It is the 
