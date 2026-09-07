@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/utils"
+
+	_ "modernc.org/sqlite"
 )
 
 func OpenSqliteDB(path string, cacheSize int, inMemory bool) (*sql.DB, error) {
@@ -15,7 +17,7 @@ func OpenSqliteDB(path string, cacheSize int, inMemory bool) (*sql.DB, error) {
 	}
 
 	if inMemory {
-		sqldb, err := sql.Open("sqlite3", ":memory:")
+		sqldb, err := sql.Open("sqlite", ":memory:")
 		if err != nil {
 			return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 		}
@@ -33,7 +35,7 @@ func OpenSqliteDB(path string, cacheSize int, inMemory bool) (*sql.DB, error) {
 
 	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1", path, -cacheSize)
 
-	sqldb, err := sql.Open("sqlite3", dsn)
+	sqldb, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}

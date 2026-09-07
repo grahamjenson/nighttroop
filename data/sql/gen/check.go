@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"nighttroop.t1d.nz/data/sql/control"
 
 	"nighttroop.t1d.nz/data/sql/site"
@@ -41,7 +41,7 @@ func checkSites() error {
 	}
 
 	// Open SQLite database
-	db, err := sql.Open("sqlite3", usersTmpFileDB)
+	db, err := sql.Open("sqlite", usersTmpFileDB)
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite db: %w", err)
 	}
@@ -81,7 +81,7 @@ func checkControl() error {
 	}
 
 	// Open SQLite database
-	db, err := sql.Open("sqlite3", usersTmpFileDB)
+	db, err := sql.Open("sqlite", usersTmpFileDB)
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite db: %w", err)
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func BuildSchema(outputSchema string, migrationFiles []string) error {
@@ -24,7 +24,7 @@ func BuildSchema(outputSchema string, migrationFiles []string) error {
 	}
 
 	// Open SQLite database
-	db, err := sql.Open("sqlite3", tmpDB)
+	db, err := sql.Open("sqlite", tmpDB)
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite db: %w", err)
 	}

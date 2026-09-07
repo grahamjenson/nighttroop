@@ -1,12 +1,11 @@
 package nsutils
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/mattn/go-sqlite3"
+	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
 
 type HTTPError struct {
@@ -107,32 +106,22 @@ var (
 )
 
 func GetSQLTranslatedError(err error) *HTTPError {
-	var sqliteErr sqlite3.Error
 
-	if !errors.As(err, &sqliteErr) {
-		return nil
-	}
-
-	if sqliteErr.Code != sqlite3.ErrConstraint {
-		return nil
-	}
-
-	switch sqliteErr.ExtendedCode {
-	case sqlite3.ErrConstraintUnique:
-		fmt.Println("Unique constraint violation", err)
+	if utilerrors.IsSQLUniqueViolationError(err) {
 		return BadDataBodyErrorWithHint(err.Error())
-	case sqlite3.ErrConstraintNotNull:
-
+	}
+	if utilerrors.IsSQLConstraintNotNull(err) {
 		return BadDataBodyErrorWithHint(err.Error())
-	case sqlite3.ErrConstraintCheck:
+	}
+	if utilerrors.IsSQLConstraintCheck(err) {
 		concat := strings.TrimPrefix(err.Error(), "CHECK constraint failed: ")
 		return BadDataBodyErrorWithHint(concat)
-
-	case sqlite3.ErrConstraintForeignKey:
+	}
+	if utilerrors.IsSQLConstraintForeignKey(err) {
 		fmt.Println("Foreign key constraint violation", err)
 		return BadDataBodyErrorWithHint(err.Error())
-
-	case sqlite3.ErrConstraintPrimaryKey:
+	}
+	if utilerrors.IsSQLConstraintPrimaryKey(err) {
 		fmt.Println("Primary key constraint violation", err)
 		return BadDataBodyErrorWithHint(err.Error())
 	}

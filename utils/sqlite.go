@@ -7,8 +7,12 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/mattn/go-sqlite3"
+	"modernc.org/sqlite"
 )
+
+type BackupConn interface {
+	NewBackup(string) (*sqlite.Backup, error)
+}
 
 func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 	defer TrackTime(time.Now(), "SqliteBackup "+backupPath, nil, nil)
@@ -18,58 +22,28 @@ func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 		return fmt.Errorf("cannot create parent directories: %w", err)
 	}
 
-	backupDB, err := sql.Open("sqlite3", backupPath)
+	conn, err := db.Conn(ctx)
 	if err != nil {
-		return fmt.Errorf("cannot open backup db: %w", err)
+		slog.Error("SqliteBackup Error on Conn", "backupPath", backupPath, "error", err)
+		return err
 	}
-	defer backupDB.Close()
+	defer conn.Close()
 
-	backupCon, err := backupDB.Conn(ctx)
-	if err != nil {
-		return fmt.Errorf("cannot get backup connection: %w", err)
-	}
-	defer backupCon.Close()
-
-	srcConn, err := db.Conn(ctx)
-	if err != nil {
-		return fmt.Errorf("cannot get source connection: %w", err)
-	}
-	defer srcConn.Close()
-
-	err = backupCon.Raw(func(backupConRaw any) error {
-		backupConSQLite, ok := backupConRaw.(*sqlite3.SQLiteConn)
-		if !ok {
-			slog.Error("Error getting SQLiteConn for backupConSQLite", "backupPath", backupPath, "error", err)
-
-			return fmt.Errorf("failed to get SQLiteConn backupConSQLite")
+	err = conn.Raw(func(driverConn any) error {
+		bck, err := driverConn.(BackupConn).NewBackup(backupPath)
+		if err != nil {
+			return err
 		}
-		srcConn.Raw(func(srcConnRaw any) error {
-
-			srcConnSQLite, ok := srcConnRaw.(*sqlite3.SQLiteConn)
-			if !ok {
-				slog.Error("Error getting SQLiteConn for srcConnSQLite", "backupPath", backupPath, "error", err)
-
-				return fmt.Errorf("failed to get SQLiteConn srcConnSQLite")
-			}
-
-			backup, err := backupConSQLite.Backup("main", srcConnSQLite, "main")
+		for more := true; more; {
+			more, err = bck.Step(-1)
 			if err != nil {
-				slog.Error("Error creating backup", "backupPath", backupPath, "error", err)
-				return fmt.Errorf("cannot create backup no create: %w", err)
+				return err
 			}
+		}
 
-			defer backup.Finish()
-			_, err = backup.Step(-1)
-
-			if err != nil {
-				slog.Error("Error stepping backup", "backupPath", backupPath, "error", err)
-				return fmt.Errorf("cannot create backup no step 1: %w", err)
-			}
-
-			return nil
-		})
-		return nil
+		return bck.Finish()
 	})
+
 	if err != nil {
 		slog.Error("SqliteBackup Error on Raw", "backupPath", backupPath, "error", err)
 		return fmt.Errorf("cannot backup db: %w", err)

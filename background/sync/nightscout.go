@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
-	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/models/nightscout"
+	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
@@ -38,7 +38,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 			createParams := nightscout.EntryToCreate(e, nightscout.ConverterContext{IdentityID: userSyncSource.syncIdentity.ID, IdentityName: userSyncSource.syncIdentity.Name})
 			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
-				if site.IsDuplicateID(err) {
+				if utilerrors.IsSQLDuplicateID(err) {
 					continue
 				}
 				// Probably just non-unique eid

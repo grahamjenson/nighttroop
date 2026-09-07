@@ -1,11 +1,9 @@
 package errors
 
 import (
-	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
-
-	sql "github.com/mattn/go-sqlite3"
 )
 
 func HandleInternalError(w http.ResponseWriter, r *http.Request, statusCode int, message string, err error, args ...any) {
@@ -17,15 +15,28 @@ func HandleInternalError(w http.ResponseWriter, r *http.Request, statusCode int,
 	http.Error(w, "Internal Error", statusCode)
 }
 
-func IsUniqueViolationError(err error) bool {
-	var sqliteErr sql.Error
-	if errors.As(err, &sqliteErr) {
-		switch sqliteErr.ExtendedCode {
-		case sql.ErrConstraintUnique,
-			sql.ErrConstraintPrimaryKey:
-			return true
+func DumpErrorChain(err error) {
+	if err == nil {
+		fmt.Println("error is nil")
+		return
+	}
+
+	fmt.Println("ERROR CHAIN:")
+
+	for i := 0; err != nil; i++ {
+		fmt.Printf("[%d] type=%T\n", i, err)
+		fmt.Printf("    value=%v\n", err)
+
+		// Check whether this error implements Unwrap() error.
+		unwrapper, ok := err.(interface {
+			Unwrap() error
+		})
+
+		if !ok {
+			fmt.Println("    no Unwrap()")
+			break
 		}
 
+		err = unwrapper.Unwrap()
 	}
-	return false
 }

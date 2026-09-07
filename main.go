@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
+	_ "modernc.org/sqlite"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/background/backup_control"
 	"nighttroop.t1d.nz/background/backup_sites"

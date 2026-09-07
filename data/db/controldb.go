@@ -99,7 +99,7 @@ func (db *ControlDB) seedDefaultIdentities() error {
 	db.CreateIdentity("control", consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
 
 	idValues, err := db.CreateIdentity("control", consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
-	if err != nil && errors.IsUniqueViolationError(err) {
+	if err != nil && errors.IsSQLUniqueViolationError(err) {
 		// Admin user already exists so we can ignore this error
 		return nil
 	} else if err != nil {
