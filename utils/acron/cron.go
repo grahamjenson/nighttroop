@@ -6,12 +6,27 @@ type CronScheduler interface {
 	AddFunc(name string, spec string, cmd func()) (cron.EntryID, error)
 }
 
-type CronWrapper struct {
+type ACron struct {
 	*cron.Cron
 	WrapperFunc func(name string, c func())
 }
 
-func (c *CronWrapper) AddFunc(name string, spec string, cmd func()) (cron.EntryID, error) {
+func NewAcron(wrapperFunc func(name string, c func())) *ACron {
+	return &ACron{
+		Cron: cron.New(
+			cron.WithSeconds(),
+			cron.WithChain(
+				cron.SkipIfStillRunning(cron.DefaultLogger),
+			),
+			cron.WithChain(
+				cron.Recover(cron.DefaultLogger),
+			),
+		),
+		WrapperFunc: wrapperFunc,
+	}
+}
+
+func (c *ACron) AddFunc(name string, spec string, cmd func()) (cron.EntryID, error) {
 	wrappedCmd := cmd
 	if c.WrapperFunc != nil {
 		wrappedCmd = func() {
