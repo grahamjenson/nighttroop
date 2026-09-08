@@ -51,10 +51,6 @@ func (db *SiteDB) TryCloseAndDelete() {
 	_ = utils.DeleteFile(path)
 }
 
-func (db *SiteDB) Close() error {
-	return db.SQLiteDB.Close()
-}
-
 func (db *SiteDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.ServerConfig.HostProtocol, db.Subdomain, db.ServerConfig.HostName, db.ServerConfig.HostPort)
 }

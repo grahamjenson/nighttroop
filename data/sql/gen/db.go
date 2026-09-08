@@ -86,6 +86,10 @@ func (db *DB) GetRawDB() *sql.DB {
 	return db.SQLiteDB
 }
 
+func (db *DB) Close() error {
+	return db.SQLiteDB.Close()
+}
+	
 //go:embed migrations/*.sql
 var migrations embed.FS
 

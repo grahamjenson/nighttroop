@@ -373,6 +373,11 @@ func (db *ControlDB) Close() error {
 		}
 	}
 
+	err := db.Jobs.Close()
+	if err != nil {
+		slog.Error("Failed to close jobs db", "error", err)
+	}
+
 	return db.SQLiteDB.Close()
 }
 
