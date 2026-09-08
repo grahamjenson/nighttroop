@@ -77,7 +77,7 @@ func main() {
 	migrationFiles := getMigrationFiles(*folder + "/migrations")
 
 	// This builds the migration file
-	err := gen.BuildMigration(*folder)
+	err := gen.BuildDB(*folder)
 	if err != nil {
 		log.Fatalf("Failed to build migration: %v", err)
 	}

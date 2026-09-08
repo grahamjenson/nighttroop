@@ -3,7 +3,7 @@
 //   sqlc v1.31.1
 // source: liteq.sql
 
-package control
+package jobs
 
 import (
 	"context"

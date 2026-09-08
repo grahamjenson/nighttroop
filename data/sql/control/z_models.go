@@ -78,33 +78,6 @@ type Identity struct {
 	NotificationsEnabled      *bool
 }
 
-type Job struct {
-	ID                int64
-	Queue             string
-	Job               string
-	JobStatus         string
-	ExecuteAfter      int64
-	RemainingAttempts int64
-	ConsumerFetchedAt int64
-	FinishedAt        int64
-	DedupingKey       string
-	Errors            errors.ErrorList
-	CreatedAt         int64
-	UpdatedAt         int64
-}
-
-type JobStatsDaily struct {
-	DayQueueJob        string
-	TotalJobs          int64
-	TotalSuccess       int64
-	TotalFailed        int64
-	DurationSum        float64
-	DurationSquaredSum float64
-	Errors             errors.ErrorList
-	CreatedAt          int64
-	UpdatedAt          int64
-}
-
 type Site struct {
 	ID                        int64
 	Subdomain                 string

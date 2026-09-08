@@ -1,13 +1,3 @@
-CREATE UNIQUE INDEX dedupe ON jobs (deduping_key)
-WHERE
-    deduping_key != ''
-    AND job_status IN ('queued', 'fetched');
-
-CREATE INDEX todo ON jobs (queue, job_status, execute_after)
-WHERE
-    job_status = 'queued'
-    OR job_status = 'fetched';
-
 CREATE TABLE data_source_block_list(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -106,41 +96,6 @@ CREATE TABLE identities (
 
     -- Constraints
     UNIQUE(subdomain, name)
-);
-
-CREATE TABLE job_stats_daily (
-    day_queue_job TEXT NOT NULL, -- YYYY-MM-DD::queue::job
-
-    total_jobs INTEGER NOT NULL DEFAULT 0,
-    total_success INTEGER NOT NULL DEFAULT 0,
-    total_failed INTEGER NOT NULL DEFAULT 0,
-
-    duration_sum REAL NOT NULL DEFAULT 0,
-    duration_squared_sum REAL NOT NULL DEFAULT 0,
-
-    errors TEXT  NOT  NULL  DEFAULT  "[]" CHECK(length(errors) <= 1024),
-
-    -- liteq jobs use epoch in seconds
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
-
-    PRIMARY KEY (day_queue_job)
-);
-
-CREATE TABLE jobs (
-    id INTEGER NOT NULL,
-    queue TEXT NOT NULL CHECK(length(queue) <= 64),
-    job TEXT NOT NULL CHECK(length(job) <= 256),
-    job_status TEXT NOT NULL DEFAULT 'queued' CHECK(length(job_status) <= 32),
-    execute_after INTEGER NOT NULL DEFAULT 0,
-    remaining_attempts INTEGER NOT NULL DEFAULT 1,
-    consumer_fetched_at INTEGER NOT NULL DEFAULT 0,
-    finished_at INTEGER NOT NULL DEFAULT 0,
-    deduping_key TEXT NOT NULL DEFAULT '' CHECK(length(deduping_key) <= 256),
-    errors TEXT NOT NULL DEFAULT "[]" CHECK(length(errors) <= 1024),
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    PRIMARY KEY (id)
 );
 
 CREATE TABLE site_sync_sources (

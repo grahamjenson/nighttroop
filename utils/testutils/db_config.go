@@ -1,10 +1,12 @@
 package testutils
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 var storedServerConfig *config.ServerConfig
@@ -18,6 +20,9 @@ func GetTestServerConfig() config.ServerConfig {
 	if err != nil {
 		panic(err)
 	}
+	// Force Test Mode
+	cfg.Mode = consts.Test
+
 	storedServerConfig = &cfg
 	return *storedServerConfig
 }
@@ -25,7 +30,7 @@ func GetTestServerConfig() config.ServerConfig {
 func GetConfigControlDBForTest() (config.ServerConfig, *db.ControlDB, error) {
 	cfg := GetTestServerConfig()
 
-	controlDB, err := db.NewControlDB(cfg)
+	controlDB, err := db.NewControlDB(context.TODO(), cfg)
 	if err != nil {
 		return cfg, nil, fmt.Errorf("cannot create control db: %w", err)
 	}
@@ -36,7 +41,7 @@ func GetConfigControlDBForTest() (config.ServerConfig, *db.ControlDB, error) {
 func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteCreateResult, error) {
 	cfg := GetTestServerConfig()
 
-	controlDB, err := db.NewControlDB(cfg)
+	controlDB, err := db.NewControlDB(context.TODO(), cfg)
 	if err != nil {
 		return cfg, nil, nil, fmt.Errorf("cannot create control db: %w", err)
 	}

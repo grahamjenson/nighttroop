@@ -81,7 +81,7 @@ func run() error {
 	//
 	// Setup Control DB
 	//
-	controlDB, err := db.NewControlDB(serverConfig)
+	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}

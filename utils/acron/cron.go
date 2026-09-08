@@ -18,6 +18,7 @@ func NewAcron(wrapperFunc func(name string, c func())) *ACron {
 			cron.WithChain(
 				cron.SkipIfStillRunning(cron.DefaultLogger),
 			),
+			// TODO Probably remove Recover and do this myself
 			cron.WithChain(
 				cron.Recover(cron.DefaultLogger),
 			),

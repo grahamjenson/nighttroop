@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -20,41 +19,33 @@ import (
 )
 
 type ControlDB struct {
-	SQLiteDB     *sql.DB
-	serverConfig config.ServerConfig
+	*control.DB
 
 	// previously modified
 	sites map[string]*SiteDB
 
 	sitesRWLock sync.RWMutex
 
-	Queries *control.Queries
+	Jobs *JobsDB
 }
 
-func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
-	var err error
+func NewControlDB(ctx context.Context, serverConfig config.ServerConfig) (*ControlDB, error) {
 
-	sqldb, err := OpenSqliteDB(utils.CONTROL_DB_PATH, 2000, serverConfig.IsTest())
+	rawDB, err := control.NewDB(ctx, utils.CONTROL_DB_PATH, 2000, serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open control db: %w", err)
 	}
+
+	jobs, err := NewJobsDB(context.TODO(), utils.JOBS_DB_PATH, serverConfig)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open jobs db: %w", err)
+	}
+
 	// Create a new control db
 	controlDB := &ControlDB{
-		SQLiteDB:     sqldb,
-		sites:        make(map[string]*SiteDB),
-		serverConfig: serverConfig,
-	}
-
-	// Migrate the DB, run any unrun migrations
-	err = control.MigrateUp("control", sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot migrate control db: %w", err)
-	}
-
-	// Prepare the statements
-	controlDB.Queries, err = control.Prepare(context.TODO(), sqldb)
-	if err != nil {
-		return nil, fmt.Errorf("cannot prepare control statements: %w", err)
+		DB:    rawDB,
+		Jobs:  jobs,
+		sites: make(map[string]*SiteDB),
 	}
 
 	// If no admin user exists create one with a random password and TOTP secret and print the ENCRYPTED credentials to the console
@@ -68,6 +59,7 @@ func NewControlDB(serverConfig config.ServerConfig) (*ControlDB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot fill sites: %w", err)
 	}
+
 	return controlDB, nil
 }
 
@@ -83,7 +75,13 @@ func (db *ControlDB) fillSites() ([]string, error) {
 	for _, model := range res {
 		sites = append(sites, model.Subdomain)
 		// Site DB has to be available
-		siteDB, err := NewSiteDB(context.TODO(), model.Subdomain, true, db.serverConfig)
+		path, _ := utils.SiteDBPaths(model.Subdomain)
+
+		if !utils.FileExists(path) {
+			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.Subdomain)
+		}
+
+		siteDB, err := NewSiteDB(context.TODO(), model.Subdomain, db.ServerConfig)
 		if err != nil {
 			return sites, fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
 		}
@@ -107,7 +105,7 @@ func (db *ControlDB) seedDefaultIdentities() error {
 	}
 
 	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", consts.FIRST_ADMIN_NAME, idValues.Password, *idValues.TotpSecret)
-	encBundle, err := db.serverConfig.Security.Encrypt(bundle)
+	encBundle, err := db.ServerConfig.Security.Encrypt(bundle)
 	if err != nil {
 		return fmt.Errorf("cannot encrypt admin bundle: %w", err)
 	}
@@ -138,7 +136,7 @@ type SiteCreateResult struct {
 }
 
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
-	subdomain := utils.NextSiteSubdomain(db.serverConfig.IsDevOrTest())
+	subdomain := utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
 	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
 		subdomain = utils.NextSiteSubdomain(false)
@@ -147,12 +145,12 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 		}
 	}
 
-	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain+":", db.serverConfig.GetBcryptCost())
+	backupPassword, backupKeyHash, err := security.SecureCredentialsWithPrefix(subdomain+":", db.ServerConfig.GetBcryptCost())
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
 
-	siteDB, err := NewSiteDB(context.TODO(), subdomain, false, db.serverConfig)
+	siteDB, err := NewSiteDB(context.TODO(), subdomain, db.ServerConfig)
 	if err != nil {
 		siteDB.TryCloseAndDelete()
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
@@ -422,8 +420,8 @@ type IdentityValues struct {
 
 func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.IdentityRole) (*IdentityValues, error) {
 
-	security := db.serverConfig.Security
-	hostname := db.serverConfig.HostName
+	security := db.ServerConfig.Security
+	hostname := db.ServerConfig.HostName
 	password, hashedPassword, err := security.GeneratePassword()
 
 	if err != nil {

@@ -7,16 +7,17 @@ import (
 
 	"github.com/alitto/pond/v2"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+
+	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/utils/errors"
 )
 
 func New(controlDB *db.ControlDB) *JobQueue {
-	return &JobQueue{queries: controlDB.Queries}
+	return &JobQueue{queries: controlDB.Jobs.Queries}
 }
 
 type JobQueue struct {
-	queries *control.Queries
+	queries *jobs.Queries
 }
 
 type QueueJobParams struct {
@@ -59,7 +60,7 @@ func (j *JobQueue) QueueJob(ctx context.Context, params QueueJobParams) error {
 		params.DedupingKey = IgnoreDuplicate("")
 	}
 
-	doParams := control.QueueJobIgnoreDupeParams{
+	doParams := jobs.QueueJobIgnoreDupeParams{
 		Queue:             params.Queue,
 		Job:               params.Job,
 		ExecuteAfter:      params.ExecuteAfter,
@@ -72,7 +73,7 @@ func (j *JobQueue) QueueJob(ctx context.Context, params QueueJobParams) error {
 	}
 
 	if params.DedupingKey.ReplaceDuplicate() {
-		return j.queries.QueueJobReplaceDupe(ctx, control.QueueJobReplaceDupeParams(doParams))
+		return j.queries.QueueJobReplaceDupe(ctx, jobs.QueueJobReplaceDupeParams(doParams))
 	}
 
 	return j.queries.QueueJobIgnoreDupe(ctx, doParams)
@@ -84,7 +85,7 @@ type GrabJobsParams struct {
 	Count        int64
 }
 
-func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*control.Job, error) {
+func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*jobs.Job, error) {
 	executeAfter := time.Now().Unix()
 	if params.ExecuteAfter > 0 {
 		executeAfter = params.ExecuteAfter
@@ -94,14 +95,14 @@ func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*cont
 		limit = params.Count
 	}
 
-	return j.queries.MarkJobsForConsumer(ctx, control.MarkJobsForConsumerParams{
+	return j.queries.MarkJobsForConsumer(ctx, jobs.MarkJobsForConsumerParams{
 		Queue:        params.Queue,
 		ExecuteAfter: executeAfter,
 		Limit:        limit,
 	})
 }
 
-type WorkerFunc func(context.Context, *control.Job) error
+type WorkerFunc func(context.Context, *jobs.Job) error
 
 type ConsumeParams struct {
 	Queue             string
@@ -125,7 +126,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		}
 
 		if params.VisibilityTimeout > 0 {
-			_, err := j.queries.ResetJobs(ctx, control.ResetJobsParams{
+			_, err := j.queries.ResetJobs(ctx, jobs.ResetJobsParams{
 				Queue:             params.Queue,
 				ConsumerFetchedAt: time.Now().UnixMilli() - (params.VisibilityTimeout * 1000),
 			})
@@ -135,7 +136,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 			}
 		}
 
-		jobs, err := j.GrabJobs(ctx, GrabJobsParams{
+		grabbedJobs, err := j.GrabJobs(ctx, GrabJobsParams{
 			Queue:        params.Queue,
 			ExecuteAfter: time.Now().Unix(),
 			Count:        int64(params.PoolSize),
@@ -145,24 +146,24 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 			return fmt.Errorf("error grabbing jobs: %w", err)
 		}
 
-		if len(jobs) == 0 {
+		if len(grabbedJobs) == 0 {
 			time.Sleep(sleep)
 			continue
 		}
 
-		for _, job := range jobs {
+		for _, job := range grabbedJobs {
 			job := job
 			workers.Submit(func() {
 				err := params.Worker(ctx, job)
 				if err != nil {
-					j.queries.FailJob(ctx, control.FailJobParams{
+					j.queries.FailJob(ctx, jobs.FailJobParams{
 						Errors: errors.ErrorList(append(job.Errors, err.Error())),
 						ID:     job.ID,
 					})
 					return
 				}
 
-				j.queries.CompleteJob(ctx, control.CompleteJobParams{
+				j.queries.CompleteJob(ctx, jobs.CompleteJobParams{
 					ID: job.ID,
 				})
 			})

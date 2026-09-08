@@ -7,7 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 )
@@ -19,13 +19,13 @@ const TRUNCATE_JOBS_JOB = "truncate_jobs"
 
 type TruncateJobManager struct {
 	TruncateIntervalInSeconds int
-	ControlDB                 *db.ControlDB
+	JobsDB                    *db.JobsDB
 }
 
 func SetupTruncateJobManager(config config.ServerConfig, controlDB *db.ControlDB) *TruncateJobManager {
 	jobs := &TruncateJobManager{
 		TruncateIntervalInSeconds: config.TruncateIntervalInSeconds,
-		ControlDB:                 controlDB,
+		JobsDB:                    controlDB.Jobs,
 	}
 	return jobs
 }
@@ -34,8 +34,8 @@ func (t *TruncateJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerS
 	return liteq.NewConsumerSupervisor(queue, TRUNCATE_JOB, 1, t.workerFunc())
 }
 
-func (t *TruncateJobManager) workerFunc() func(ctx context.Context, j *control.Job) error {
-	return func(ctx context.Context, j *control.Job) error {
+func (t *TruncateJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) error {
+	return func(ctx context.Context, j *jobs.Job) error {
 		switch j.Job {
 		case TRUNCATE_SITE_JOB:
 			err := t.TruncateUsers()

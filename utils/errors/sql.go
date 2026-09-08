@@ -2,7 +2,6 @@ package errors
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"modernc.org/sqlite"
@@ -22,7 +21,6 @@ func IsSQLUniqueViolationError(err error) bool {
 			return true
 		}
 	}
-	fmt.Println("This is fun here")
 	return false
 }
 

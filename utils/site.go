@@ -23,6 +23,8 @@ const CONTROL_DB_BACKUP_PATH = ".dbs/backup/control.sqlite"
 const SITE_DB_FOLDER = ".dbs/db/site"
 const SITE_DB_BACKUP_FOLDER = ".dbs/backup/site"
 
+const JOBS_DB_PATH = ".dbs/db/jobs.sqlite"
+
 func SiteDBPaths(subdomain string) (string, string) {
 	if len(subdomain) == 0 {
 		return "", ""

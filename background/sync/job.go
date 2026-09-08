@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -63,9 +64,9 @@ func (b *SyncJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerSuper
 
 // There is no filtering at this level,
 // Once a job has been scheduled, it will be run.
-func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *control.Job) error {
+func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) error {
 
-	return func(ctx context.Context, j *control.Job) error {
+	return func(ctx context.Context, j *jobs.Job) error {
 		var syncJob SyncJobParams
 		err := json.Unmarshal([]byte(j.Job), &syncJob)
 		if err != nil {

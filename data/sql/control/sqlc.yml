@@ -35,8 +35,6 @@ sql:
 
 overrides:
   go:
-    rename:
-      bolu: Bolus
     overrides:
       - column: "admins.role"
         go_type:
@@ -44,25 +42,10 @@ overrides:
           type: "AdminRole"
 
       
-      - column: jobs.consumer_id
-        go_type: "string"
-
-      # Errors Here
-      - column: jobs.errors
-        go_type:
-          import: "nighttroop.t1d.nz/utils/errors"
-          type: "ErrorList"
-      - column: job_stats_daily.errors
-        go_type:
-          import: "nighttroop.t1d.nz/utils/errors"
-          type: "ErrorList"
       - column: "sync_source_reports.previous_sync_errors"
         go_type:
           import: "nighttroop.t1d.nz/utils/errors"
           type: "ErrorList"
-
-
-
       - column: "site_sync_sources.dexcom_region"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"

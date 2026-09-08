@@ -8,7 +8,10 @@ package sql
 //go:generate go build -o ../../bin/getters ./gen/getters.go
 //go:generate go run ./gen/gensql.go  -folder control
 //go:generate go run ./gen/gensql.go  -folder site
+//go:generate go run ./gen/gensql.go  -folder jobs
 
+//go:generate goverter gen ./control
 //go:generate goverter gen ./site
+//go:generate goverter gen ./jobs
 
 //go:generate go run ./gen/check.go

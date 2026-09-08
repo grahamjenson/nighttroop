@@ -9,7 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
@@ -58,7 +58,7 @@ func (b *BackupSiteJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.Consume
 
 func (b *BackupSiteJobManager) workerFunc() liteq.WorkerFunc {
 
-	return func(ctx context.Context, j *control.Job) error {
+	return func(ctx context.Context, j *jobs.Job) error {
 		var params BackupSiteJobParams
 		err := json.Unmarshal([]byte(j.Job), &params)
 		if err != nil {

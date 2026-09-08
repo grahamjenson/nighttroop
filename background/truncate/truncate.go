@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/jobs"
 )
 
 // TODO this is the background runner that will go over all DBs including control, and truncate to size.
@@ -27,17 +27,17 @@ func (t *TruncateJobManager) TruncateUsers() error {
 // TODO: This whole function could be rewritten in SQL and made cleaner, but it will be harder to maintain
 func (t *TruncateJobManager) TruncateJobs() error {
 	ctx := context.TODO()
-	q := t.ControlDB.Queries
+	q := t.JobsDB.Queries
 
 	// Get the Jobs to be summarised
-	jobs, err := q.GetJobsToBeSummarised(ctx)
+	gotJobs, err := q.GetJobsToBeSummarised(ctx)
 	if err != nil {
 		return fmt.Errorf("Error getting jobs to be summarised: %w", err)
 	}
 
-	ids := make([]int64, len(jobs))
-	dayQueueJobMap := make(map[string]control.JobStatsDaily)
-	for i, j := range jobs {
+	ids := make([]int64, len(gotJobs))
+	dayQueueJobMap := make(map[string]jobs.JobStatsDaily)
+	for i, j := range gotJobs {
 		ids[i] = j.ID
 
 		stats, ok := dayQueueJobMap[j.DayQueueJob()]
@@ -51,7 +51,7 @@ func (t *TruncateJobManager) TruncateJobs() error {
 			stats.Errors = append(stats.Errors, j.Errors...)
 			dayQueueJobMap[j.DayQueueJob()] = stats
 		} else {
-			dayQueueJobMap[j.DayQueueJob()] = control.JobStatsDaily{
+			dayQueueJobMap[j.DayQueueJob()] = jobs.JobStatsDaily{
 				DayQueueJob:        j.DayQueueJob(),
 				TotalJobs:          1,
 				TotalSuccess:       j.TotalSuccess(),
@@ -64,7 +64,7 @@ func (t *TruncateJobManager) TruncateJobs() error {
 	}
 
 	for k, _ := range dayQueueJobMap {
-		_, err := q.EnsureJobStatsDailyForGroup(ctx, control.EnsureJobStatsDailyForGroupParams{
+		_, err := q.EnsureJobStatsDailyForGroup(ctx, jobs.EnsureJobStatsDailyForGroupParams{
 			DayQueueJob: k,
 		})
 		if err != nil {
@@ -73,15 +73,15 @@ func (t *TruncateJobManager) TruncateJobs() error {
 
 	}
 
-	tx, err := t.ControlDB.SQLiteDB.BeginTx(ctx, nil)
+	tx, err := t.JobsDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("Error starting transaction: %w", err)
 	}
 	defer tx.Rollback()
-	qtx := t.ControlDB.Queries.WithTx(tx)
+	qtx := t.JobsDB.Queries.WithTx(tx)
 
 	for _, stats := range dayQueueJobMap {
-		err = qtx.UpdateJobStatsDaily(ctx, control.UpdateJobStatsDailyParams{
+		err = qtx.UpdateJobStatsDaily(ctx, jobs.UpdateJobStatsDailyParams{
 			DayQueueJob:        stats.DayQueueJob,
 			TotalJobs:          stats.TotalJobs,
 			TotalSuccess:       stats.TotalSuccess,
@@ -98,7 +98,7 @@ func (t *TruncateJobManager) TruncateJobs() error {
 		return fmt.Errorf("Error updating job stats daily: %w", err)
 	}
 
-	err = qtx.DeleteJobsByIds(ctx, control.DeleteJobsByIdsParams{
+	err = qtx.DeleteJobsByIds(ctx, jobs.DeleteJobsByIdsParams{
 		Ids: ids,
 	})
 	if err != nil {
