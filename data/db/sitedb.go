@@ -37,19 +37,6 @@ func NewSiteDB(ctx context.Context, subdomain string, cfg config.ServerConfig) (
 }
 
 // WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWOLLOWED
-func (db *SiteDB) TryCloseAndDelete() {
-	if db == nil {
-		return
-	}
-	if db.SQLiteDB != nil {
-		db.SQLiteDB.Close()
-	}
-	if db.Subdomain == "" {
-		return
-	}
-	path, _ := utils.SiteDBPaths(db.Subdomain)
-	_ = utils.DeleteFile(path)
-}
 
 func (db *SiteDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.ServerConfig.HostProtocol, db.Subdomain, db.ServerConfig.HostName, db.ServerConfig.HostPort)

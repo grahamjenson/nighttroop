@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/acron"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -115,7 +116,7 @@ func (b *BackupSiteJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) f
 
 func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
 	log := false
-	defer utils.TrackTime(time.Now(), "DeleteUnusedSites", &log, nil)
+	defer aslog.TrackTime(time.Now(), "DeleteUnusedSites", &log, nil)
 
 	deleteList, err := b.findSitesToDelete(batch)
 	if err != nil {
@@ -180,7 +181,7 @@ func (b *BackupSiteJobManager) BackupToS3() {
 
 func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
 	trackTrim := false
-	defer utils.TrackTime(time.Now(), "backup site pool "+char, &trackTrim, nil)
+	defer aslog.TrackTime(time.Now(), "backup site pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
 
 	sites, err := GetSiteBatch(b.controlDB, char)

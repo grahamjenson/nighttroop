@@ -1,4 +1,4 @@
-package utils
+package aslog
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-// If Log is nil, ignore it
-// If log is false, the dont log
 func TrackTime(start time.Time, name string, log *bool, info *string) {
 
 	elapsed := time.Since(start)

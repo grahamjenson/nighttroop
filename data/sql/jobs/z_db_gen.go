@@ -10,6 +10,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
 
 	_ "modernc.org/sqlite"
@@ -21,13 +22,26 @@ import (
 
 type DB struct {
 	SQLiteDB     *sql.DB
-	ServerConfig config.ServerConfig
+	ServerConfig *config.ServerConfig
 	Queries      *Queries
+	InMemory     bool
+
+	Path          string
+	BackupPath    string
+	S3Path        string
+	S3ArchivePath string
 }
 
-func NewDB(ctx context.Context, path string, cacheSize int, serverConfig config.ServerConfig) (*DB, error) {
+func NewDB(ctx context.Context, subdomain *string, cacheSize int, serverConfig *config.ServerConfig) (*DB, error) {
+	path, backuppath, s3path, s3archivepath := GetPathsForEverything(subdomain, serverConfig)
+
 	db := &DB{
-		ServerConfig: serverConfig,
+		ServerConfig:  serverConfig,
+		InMemory:      serverConfig.IsTest(),
+		Path:          path,
+		BackupPath:    backuppath,
+		S3Path:        s3path,
+		S3ArchivePath: s3archivepath,
 	}
 
 	var err error
@@ -73,7 +87,44 @@ func (db *DB) GetRawDB() *sql.DB {
 }
 
 func (db *DB) Close() error {
+	if db == nil || db.SQLiteDB == nil {
+		return nil
+	}
 	return db.SQLiteDB.Close()
+}
+
+func (db *DB) TryCloseAndDelete() {
+	err := db.Close()
+	if err != nil {
+		slog.Error("TryCloseAndDelete:Error closing DB: " + err.Error())
+		return
+	}
+
+	if db.InMemory {
+		return
+	}
+
+	utils.DeleteFile(db.Path)
+	utils.DeleteFile(db.BackupPath)
+}
+
+func (db *DB) Backup(ctx context.Context) error {
+	return backup.SqliteBackup(ctx, db.SQLiteDB, db.BackupPath)
+}
+
+/////
+// File paths
+/////
+
+func GetPathsForEverything(subdomain *string, serverConfig *config.ServerConfig) (filepath string, backuppath string, s3path string, s3archivepath string) {
+
+	filepath = fmt.Sprintf("%s/%s.sqlite", serverConfig.DBDir(), "jobs")
+	backuppath = fmt.Sprintf("%s/%s.sqlite", serverConfig.BackupDir(), "jobs")
+
+	s3path = fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName, "jobs")
+	s3archivepath = fmt.Sprintf("%s/archive/%s.tar.lz4.enc", serverConfig.HostName, "jobs")
+
+	return
 }
 
 //go:embed migrations/*.sql

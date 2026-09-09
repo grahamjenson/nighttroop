@@ -28,17 +28,19 @@ func main() {
 		Mode: consts.Test, // Get In memory Database
 	}
 
-	siteDB, err := site.NewDB(context.TODO(), "site", 1000, config)
+	subdomain := "site"
+
+	siteDB, err := site.NewDB(context.TODO(), &subdomain, 1000, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create site DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	controlDB, err := control.NewDB(context.TODO(), "control", 1000, config)
+	controlDB, err := control.NewDB(context.TODO(), nil, 1000, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create control DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	jobsDB, err := jobs.NewDB(context.TODO(), "jobs", 1000, config)
+	jobsDB, err := jobs.NewDB(context.TODO(), nil, 1000, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create jobs DB: %v %s", topwrapper, err, bottomwrapper)
 	}

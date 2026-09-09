@@ -1,4 +1,4 @@
-package utils
+package backup
 
 import (
 	"context"
@@ -8,16 +8,19 @@ import (
 	"time"
 
 	"modernc.org/sqlite"
+	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/aslog"
 )
 
 type BackupConn interface {
 	NewBackup(string) (*sqlite.Backup, error)
+	NewRestore(srcUri string) (*sqlite.Backup, error) // TODO look into this and how to use
 }
 
 func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
-	defer TrackTime(time.Now(), "SqliteBackup "+backupPath, nil, nil)
+	defer aslog.TrackTime(time.Now(), "SqliteBackup "+backupPath, nil, nil)
 	slog.Info("Starting SqliteBackup", "backupPath", backupPath)
-	err := MkParentDirs(backupPath)
+	err := utils.MkParentDirs(backupPath)
 	if err != nil {
 		return fmt.Errorf("cannot create parent directories: %w", err)
 	}

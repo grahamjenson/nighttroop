@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/backup"
 )
 
 // DumpOnFailure registers a cleanup hook that saves the in-memory DB
@@ -35,7 +36,7 @@ func DumpOnFailure(t interface {
 
 		utils.MkDirs(dumpFolder)
 		backupPath := filepath.Join(dumpFolder, "control.sqlite")
-		err := utils.SqliteBackup(context.TODO(), controlDB.SQLiteDB, backupPath)
+		err := backup.SqliteBackup(context.TODO(), controlDB.SQLiteDB, backupPath)
 		if err != nil {
 			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved: %v", err)
 			return
@@ -45,9 +46,9 @@ func DumpOnFailure(t interface {
 			if site.Subdomain == "" {
 				continue
 			}
-			_, backupPath := utils.SiteDBPaths(site.Subdomain)
+
 			backupPath = filepath.Join(dumpFolder, site.Subdomain+".sqlite")
-			err := utils.SqliteBackup(context.TODO(), site.SQLiteDB, backupPath)
+			err := backup.SqliteBackup(context.TODO(), site.SQLiteDB, backupPath)
 			if err != nil {
 				t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for site %s: %v", site.Subdomain, err)
 				return

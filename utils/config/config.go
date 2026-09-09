@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
+
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -27,6 +28,9 @@ type ServerConfig struct {
 	HostNameWithPort string
 	HostURL          string
 	HostURLWithPort  string
+
+	// File system
+	DataDir string
 
 	// s3 config
 	S3Bucket          string
@@ -129,6 +133,9 @@ func NewServerConfig() (ServerConfig, error) {
 		HostName:     configStringSelect(dotenv, "HOST_NAME", "nt.local.t1d.nz"),
 		HostPort:     configIntSelect(dotenv, "HOST_PORT", 3000),
 		HostProtocol: configStringSelect(dotenv, "HOST_PROTOCOL", "https"),
+
+		// Filesystem
+		DataDir: configStringSelect(dotenv, "DATA_DIR", "./.dbs"),
 
 		// s3 config
 		S3Bucket:          configStringSelect(dotenv, "S3_BUCKET", "mybucket"),
@@ -240,6 +247,14 @@ func (config *ServerConfig) IsTest() bool {
 
 func (config *ServerConfig) IsDevOrTest() bool {
 	return config.IsDev() || config.IsTest()
+}
+
+func (config *ServerConfig) DBDir() string {
+	return fmt.Sprintf("%s/db", config.DataDir)
+}
+
+func (config *ServerConfig) BackupDir() string {
+	return fmt.Sprintf("%s/backup", config.DataDir)
 }
 
 func (config *ServerConfig) GetBcryptCost() int {

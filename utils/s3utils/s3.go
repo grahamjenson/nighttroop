@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/pierrec/lz4/v4"
@@ -129,18 +130,6 @@ func (c *S3Client) TestS3Client() error {
 // //
 // PATHS
 // //
-func (c *S3Client) ControlS3Path() string {
-	return fmt.Sprintf("%s/backup/control.tar.lz4.enc", c.HostName)
-}
-
-func (c *S3Client) SiteBatchS3Path(char string) string {
-	return fmt.Sprintf("%s/backup/site/%s.tar.lz4.enc", c.HostName, char)
-}
-
-func (c *S3Client) SiteArchiveS3Path(subdomain string) string {
-	char := subdomain[0]
-	return fmt.Sprintf("%s/archive/site/%s/%s.tar.lz4.enc", c.HostName, string(char), subdomain)
-}
 
 func (c *S3Client) TestObjectPath() string {
 	return fmt.Sprintf("%s/test.txt", c.HostName)
@@ -156,7 +145,7 @@ func (c *S3Client) TestObjectPath() string {
 
 func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 	info := ""
-	defer utils.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, &info)
+	defer aslog.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, &info)
 	if len(paths) == 0 {
 		slog.Error("No files to sync for %s", "key", key)
 		return nil
@@ -215,7 +204,7 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 
 func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (int64, bool, error) {
 	info := ""
-	defer utils.TrackTime(time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
+	defer aslog.TrackTime(time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
 
 	ctx := context.TODO()
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{

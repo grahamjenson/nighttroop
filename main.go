@@ -16,11 +16,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 	"nighttroop.t1d.nz/background"
-	"nighttroop.t1d.nz/background/backup_control"
-	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -67,13 +66,13 @@ func run() error {
 	}
 
 	// This will download all files from S3 if they exist
-	err = backup_control.TryRestoreControlDB(s3Client)
+	err = restore.TryRestoreControlDB(s3Client)
 	if err != nil {
 		return fmt.Errorf("Failed to restore backups: %w", err)
 	}
 
 	// This will download all files from S3 if they exist
-	err = backup_sites.TryRestoreAllFiles(s3Client)
+	err = restore.TryRestoreAllFiles(s3Client)
 	if err != nil {
 		return fmt.Errorf("Failed to restore backups: %w", err)
 	}
