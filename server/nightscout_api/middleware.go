@@ -15,7 +15,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
+func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -54,7 +54,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) 
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func tryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.Identity, bool, error) {
+func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.Identity, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -78,7 +78,7 @@ func tryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.
 	return nil, true, fmt.Errorf("No JWT token found")
 }
 
-func tryAuthWithLegacyToken(config config.ServerConfig, r *http.Request) (*control.Identity, error) {
+func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*control.Identity, error) {
 
 	// We first try to get the token, then the secret param, both equal in Nighttroop
 	tokenParam := r.URL.Query().Get("token")

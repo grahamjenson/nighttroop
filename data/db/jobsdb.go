@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/data/sql/jobs"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -13,11 +12,11 @@ type JobsDB struct {
 	*jobs.DB
 }
 
-func NewJobsDB(ctx context.Context, path string, cfg config.ServerConfig) (*JobsDB, error) {
+func NewJobsDB(ctx context.Context, cfg *config.ServerConfig) (*JobsDB, error) {
 
-	rawDB, err := jobs.NewDB(ctx, utils.JOBS_DB_PATH, 100, cfg)
+	rawDB, err := jobs.NewDB(ctx, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open jobs db: %s %w", path, err)
+		return nil, fmt.Errorf("cannot open jobs db: %w", err)
 	}
 
 	// Create a new jobs db

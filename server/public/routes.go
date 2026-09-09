@@ -31,7 +31,7 @@ func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
 	}
 }
 
-func POSTCreateSiteHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		allowed, remainingTime := httputils.CreateSiteAllowed(config, r)
 		if !allowed {

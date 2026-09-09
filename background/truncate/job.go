@@ -22,7 +22,7 @@ type TruncateJobManager struct {
 	JobsDB                    *db.JobsDB
 }
 
-func SetupTruncateJobManager(config config.ServerConfig, controlDB *db.ControlDB) *TruncateJobManager {
+func SetupTruncateJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *TruncateJobManager {
 	jobs := &TruncateJobManager{
 		TruncateIntervalInSeconds: config.TruncateIntervalInSeconds,
 		JobsDB:                    controlDB.Jobs,

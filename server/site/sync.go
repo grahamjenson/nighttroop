@@ -22,7 +22,7 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		acceptType := httputils.GetAcceptType(r)
@@ -105,7 +105,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig)
 	}
 }
 
-func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig, syncSourceType consts.SyncSourceType) http.HandlerFunc {
+func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig, syncSourceType consts.SyncSourceType) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if allowed, seconds := httputils.UserUpdateSyncAllowed(config, r); !allowed {
 			http.Error(w, "Too Many Requests wait "+strconv.Itoa(seconds)+" seconds", http.StatusTooManyRequests)
@@ -165,7 +165,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig
 	}
 }
 
-func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -218,7 +218,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config config.ServerConf
 // UTIL METHODS
 ////////
 
-func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config config.ServerConfig, nightscout *control.SiteSyncSource, nsUrl string, nsPassword string, enabled bool) error {
+func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config *config.ServerConfig, nightscout *control.SiteSyncSource, nsUrl string, nsPassword string, enabled bool) error {
 
 	if nsUrl == "" {
 		return fmt.Errorf("Nightscout URL cannot be empty. ")
@@ -295,7 +295,7 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 	return nil
 }
 
-func nsURLNormalizeValidate(rawUrl string, config config.ServerConfig) (string, error) {
+func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string, error) {
 	errMsg := ""
 	nsURL, err := url.Parse(rawUrl)
 	if err != nil {

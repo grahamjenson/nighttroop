@@ -18,7 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
+func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	ntDeps := nsutils.Dependencies{
 		Store: &NightTroopAPIStore{
 			controlDB: controlDB,
@@ -76,7 +76,7 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config config.ServerConfig) ch
 	return r
 }
 
-func NightscoutAuthRoute(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func NightscoutAuthRoute(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext.IdentityModel == nil {

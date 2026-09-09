@@ -6,7 +6,6 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/site"
 
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -20,9 +19,8 @@ type SiteDB struct {
 	Subdomain string
 }
 
-func NewSiteDB(ctx context.Context, subdomain string, cfg config.ServerConfig) (*SiteDB, error) {
-	path, _ := utils.SiteDBPaths(subdomain)
-	rawDB, err := site.NewDB(ctx, path, 100, cfg)
+func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) (*SiteDB, error) {
+	rawDB, err := site.NewDB(ctx, subdomain, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open site db: %s %w", subdomain, err)
 	}

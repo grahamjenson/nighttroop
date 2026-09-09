@@ -26,22 +26,24 @@ type DB struct {
 	Queries      *Queries
 	InMemory     bool
 
-	Path          string
-	BackupPath    string
-	S3Path        string
-	S3ArchivePath string
+	Path       string
+	BackupPath string
+
+	Subdomain string
 }
 
-func NewDB(ctx context.Context, subdomain *string, cacheSize int, serverConfig *config.ServerConfig) (*DB, error) {
-	path, backuppath, s3path, s3archivepath := GetPathsForEverything(subdomain, serverConfig)
+func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerConfig) (*DB, error) {
+	path := GetPath(subdomain, serverConfig)
+	backuppath := GetBackupPath(subdomain, serverConfig)
+
+	cacheSize := 100
 
 	db := &DB{
-		ServerConfig:  serverConfig,
-		InMemory:      serverConfig.IsTest(),
-		Path:          path,
-		BackupPath:    backuppath,
-		S3Path:        s3path,
-		S3ArchivePath: s3archivepath,
+		ServerConfig: serverConfig,
+		InMemory:     serverConfig.IsTest(),
+		Subdomain:    subdomain,
+		Path:         path,
+		BackupPath:   backuppath,
 	}
 
 	var err error
@@ -116,16 +118,27 @@ func (db *DB) Backup(ctx context.Context) error {
 // File paths
 /////
 
-func GetPathsForEverything(subdomain *string, serverConfig *config.ServerConfig) (filepath string, backuppath string, s3path string, s3archivepath string) {
+func GetBatchFolder(batch string, serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/site/%s", serverConfig.DBDir(), string(batch))
+}
 
-	batch := (*subdomain)[0]
-	filepath = fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.DBDir(), string(batch), *subdomain)
-	backuppath = fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.BackupDir(), string(batch), *subdomain)
+func GetPath(subdomain string, serverConfig *config.ServerConfig) string {
+	batch := subdomain[0:1]
+	return fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.DBDir(), string(batch), subdomain)
+}
 
-	s3path = fmt.Sprintf("%s/backup/%s/%s.tar.lz4.enc", serverConfig.HostName, string(batch), *subdomain)
-	s3archivepath = fmt.Sprintf("%s/archive/site/%s/%s.tar.lz4.enc", serverConfig.HostName, string(batch), *subdomain)
+func GetBackupPath(subdomain string, serverConfig *config.ServerConfig) string {
+	batch := subdomain[0:1]
+	return fmt.Sprintf("%s/site/%s/%s.sqlite", serverConfig.BackupDir(), string(batch), subdomain)
+}
 
-	return
+func GetS3BatchPath(batch string, serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName, batch)
+}
+
+func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) string {
+	batch := subdomain[0:1]
+	return fmt.Sprintf("%s/archive/site/%s/%s.tar.lz4.enc", serverConfig.HostName, batch, subdomain)
 }
 
 //go:embed migrations/*.sql

@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -28,7 +29,10 @@ func TryRestoreControlDB(s3Client *s3utils.S3Client) error {
 }
 
 func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
-	path, backuppath, s3Path, _ := control.GetPathsForEverything(nil, s3Client.ServerConfig)
+	path := control.GetPath(s3Client.ServerConfig)
+	backuppath := control.GetBackupPath(s3Client.ServerConfig)
+	s3Path := control.GetS3Path(s3Client.ServerConfig)
+
 	// If it already exists dont download
 	if utils.FileExists(path) {
 		return nil
@@ -64,7 +68,7 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 	err := TryDownloadExrtractUserDbs(s3Client)
 	// Create the rest of the folders here
 	for _, char := range utils.SITE_CHAR_SET {
-		dir, _ := utils.SiteBatchPaths(string(char))
+		dir := site.GetBatchFolder(string(char), s3Client.ServerConfig)
 		utils.MkDirs(dir)
 	}
 
@@ -105,11 +109,12 @@ func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
 
 func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string) (bool, error) {
 
-	path, _ := utils.SiteBatchPaths(char)
+	path := site.GetBatchFolder(char, s3Client.ServerConfig)
 	if utils.FileExists(path) {
 		return true, nil
 	}
-	s3Path := s3Client.SiteBatchS3Path(char)
+
+	s3Path := site.GetS3BatchPath(char, s3Client.ServerConfig)
 
 	_, found, err := s3Client.DownloadFilesFromS3(s3Path, path)
 

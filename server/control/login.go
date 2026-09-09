@@ -22,7 +22,7 @@ type LoginRequest struct {
 	TOTP     string `json:"totp"`
 }
 
-func POSTLogoutHandler(config config.ServerConfig) http.HandlerFunc {
+func POSTLogoutHandler(config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		config.Security.ClearControlLoginCookie(w)
 
@@ -49,7 +49,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 //   "totp": "123123"
 // }'
 
-func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// is this HTML FORM or JSON?
 		contentType := httputils.GetContentType(r)
@@ -121,7 +121,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config config.ServerConfig, username, password, totpToken string) (*control.Identity, error) {
+func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*control.Identity, error) {
 	admin, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
 		Subdomain: "control",
 		Name:      username,

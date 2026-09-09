@@ -9,19 +9,19 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-func GlobalIPRateLimitAllowed(serverConfig config.ServerConfig, ipAddress string) bool {
+func GlobalIPRateLimitAllowed(serverConfig *config.ServerConfig, ipAddress string) bool {
 	limiter := serverConfig.RateLimiters.GetGlobalIPRateLimiter(ipAddress)
 	return limiter.Allow()
 }
 
-func CreateSiteAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func CreateSiteAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	createLimiter := serverConfig.RateLimiters.SiteCreateLimiter
 	ipLimiter := serverConfig.RateLimiters.GetSiteCreateIPRateLimiter(GetIP(r))
 
 	return AllowAll(createLimiter, ipLimiter)
 }
 
-func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func UserGETAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
 	userSubdomain := siteContext.Subdomain
 	// If no identity then associate with default to ensure blocking
@@ -36,7 +36,7 @@ func UserGETAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, in
 	return AllowAll(readLimiter, identityLimiter)
 }
 
-func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func UserPOSTAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
 	userSubdomain := siteContext.Subdomain
 	// If no identity then associate with default to ensure blocking
@@ -51,7 +51,7 @@ func UserPOSTAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, i
 	return AllowAll(writeLimiter, identityLimiter)
 }
 
-func UserUpdateSyncAllowed(serverConfig config.ServerConfig, r *http.Request) (bool, int) {
+func UserUpdateSyncAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
 	userSubdomain := siteContext.Subdomain
 

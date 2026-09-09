@@ -7,8 +7,8 @@ import (
 
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/jobs"
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -17,9 +17,10 @@ import (
 const BACKUP_CONTROL_JOB = "backup_control_job"
 
 type BackupControlJobManager struct {
-	controlDB *db.ControlDB
-	ctx       context.Context
-	S3Client  *s3utils.S3Client
+	controlDB    *db.ControlDB
+	ctx          context.Context
+	S3Client     *s3utils.S3Client
+	ServerConfig *config.ServerConfig
 
 	ControlBackupIntervalInSeconds int
 }
@@ -27,13 +28,14 @@ type BackupControlJobManager struct {
 // BackupJob
 
 // SetupBackupJob Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
-func SetupBackupControlJob(ctx context.Context, controlDB *db.ControlDB, config config.ServerConfig, s3Client *s3utils.S3Client) *BackupControlJobManager {
+func SetupBackupControlJob(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3Client *s3utils.S3Client) *BackupControlJobManager {
 
 	jobs := &BackupControlJobManager{
 		controlDB:                      controlDB,
 		ctx:                            ctx,
 		ControlBackupIntervalInSeconds: config.ControlBackupIntervalInSeconds,
 		S3Client:                       s3Client,
+		ServerConfig:                   config,
 	}
 
 	return jobs
@@ -46,7 +48,7 @@ func (b *BackupControlJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.Cons
 func (b *BackupControlJobManager) workerFunc() liteq.WorkerFunc {
 
 	return func(ctx context.Context, j *jobs.Job) error {
-		return b.BackupControl()
+		return b.BackupToS3(ctx)
 	}
 }
 
@@ -71,23 +73,16 @@ func buildBackupControlCronFunc(queue *liteq.JobQueue) func() {
 	}
 }
 
-func (b *BackupControlJobManager) BackupToS3() {
-	err := b.BackupControl()
-	if err != nil {
-		slog.Error("Backup error", "error", err)
-	}
-}
-
-func (b *BackupControlJobManager) BackupControl() error {
+func (b *BackupControlJobManager) BackupToS3(ctx context.Context) error {
 
 	// Backup the Database
-	err := utils.SqliteBackup(b.ctx, b.controlDB.SQLiteDB, utils.CONTROL_DB_BACKUP_PATH)
+	err := b.controlDB.Backup(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot backup control db: %w", err)
 	}
 
 	// Copy the control db to S3 path
-	err = b.S3Client.UploadFilesToS3(b.S3Client.ControlS3Path(), []string{utils.CONTROL_DB_BACKUP_PATH})
+	err = b.S3Client.UploadFilesToS3(control.GetS3Path(b.ServerConfig), []string{b.controlDB.BackupPath})
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}

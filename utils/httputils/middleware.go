@@ -10,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-func AddStandardMiddleware(router chi.Router, config config.ServerConfig) {
+func AddStandardMiddleware(router chi.Router, config *config.ServerConfig) {
 	router.Use(middleware.RequestID)
 
 	if config.SentryDSN != "" {

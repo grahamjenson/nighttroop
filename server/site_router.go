@@ -13,7 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 )
 
-func NewSiteRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
+func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 

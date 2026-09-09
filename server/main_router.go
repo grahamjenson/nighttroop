@@ -16,7 +16,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func GetMainHandler(controlDB *db.ControlDB, config config.ServerConfig) http.Handler {
+func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.Handler {
 
 	controlRouter := NewControlRouter(controlDB, config)
 	siteRouter := NewSiteRouter(controlDB, config)

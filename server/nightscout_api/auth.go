@@ -15,7 +15,7 @@ import (
 
 type NightTroopAPIAuth struct {
 	controlDB *db.ControlDB
-	config    config.ServerConfig
+	config    *config.ServerConfig
 }
 
 func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *nsutils.Identity)) http.HandlerFunc {

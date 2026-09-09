@@ -16,7 +16,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func GETIdentitiesHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -79,7 +79,7 @@ func extractAndGetIdentities(siteContext *httputils.SiteContext, context context
 }
 
 // Create Admin
-func POSTIdentityHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
 		siteContext := httputils.GetSiteContext(r.Context())

@@ -46,7 +46,7 @@ type SyncUserInfo struct {
 	syncIdentity *control.Identity
 }
 
-func SetupSyncJobManager(config config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
+func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
 
 	jobs := &SyncJobManager{
 		controlDB:             controlDB,

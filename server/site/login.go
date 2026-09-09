@@ -28,7 +28,7 @@ type LoginRequest struct {
 	TOTP     string `json:"totp"`
 }
 
-func POSTLogoutHandler(config config.ServerConfig) http.HandlerFunc {
+func POSTLogoutHandler(config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		config.Security.ClearUserLoginCookie(w)
 
@@ -57,7 +57,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 //   "totp": "123123"
 // }'
 
-func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// API login is different enough to just immediatly bail on finding common code
@@ -135,7 +135,7 @@ func POSTLogin(controlDB *db.ControlDB, config config.ServerConfig) http.Handler
 }
 
 // Browser only route for validating TOTP tokens
-func POSTLoginTOTP(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if httputils.GetAcceptType(r).API() {
 			errors.GenericIdentityLoginError(w, r, fmt.Errorf("API login not supported for TOTP endpoint"))
@@ -230,7 +230,7 @@ func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.
 	return identity, nil
 }
 
-func validateIdentityTOTP(config config.ServerConfig, identity *control.Identity, totpToken string) error {
+func validateIdentityTOTP(config *config.ServerConfig, identity *control.Identity, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
@@ -251,7 +251,7 @@ func validateIdentityTOTP(config config.ServerConfig, identity *control.Identity
 	return nil
 }
 
-func fetchVerifyPreAuthToken(config config.ServerConfig, r *http.Request) (string, error) {
+func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request) (string, error) {
 	preAuthToken, err := security.GetUserPreAuthTokenFromRequest(r)
 	if err != nil {
 		return "", fmt.Errorf("Pre-auth token is required: %w", err)
@@ -268,7 +268,7 @@ func fetchVerifyPreAuthToken(config config.ServerConfig, r *http.Request) (strin
 // ///
 // API Login functions
 // ///
-func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *http.Request, w http.ResponseWriter) {
+func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request, w http.ResponseWriter) {
 	siteContext := httputils.GetSiteContext(r.Context())
 
 	var creds LoginRequest
@@ -310,7 +310,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config config.ServerConfig, r *ht
 
 }
 
-func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg config.ServerConfig, devicename, password, totpToken string) (*control.Identity, error) {
+func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.ServerConfig, devicename, password, totpToken string) (*control.Identity, error) {
 	device, err := loginTheUserPasswordOnly(controlDB, cfg.Security, subdomain, devicename, password)
 	if err != nil {
 		return nil, err

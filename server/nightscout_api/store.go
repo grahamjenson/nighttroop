@@ -23,7 +23,7 @@ type CollectionStore interface {
 
 type NightTroopAPIStore struct {
 	controlDB *db.ControlDB
-	config    config.ServerConfig
+	config    *config.ServerConfig
 
 	stores map[nsutils.Collection]CollectionStore
 }

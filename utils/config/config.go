@@ -112,14 +112,14 @@ const SITE_POST_LIMIT = 60
 // 2. ENVAR
 // 4. .env
 // 5. Default
-func NewServerConfig() (ServerConfig, error) {
+func NewServerConfig() (*ServerConfig, error) {
 
 	flagsnev := compileFlags()
 
 	mode := findMode(flagsnev)
 	dotenv, err := compileDotEnvFile(mode)
 	if err != nil {
-		return ServerConfig{}, err
+		return nil, err
 	}
 
 	dotenv = MergeMaps(dotenv, flagsnev) // flags override .env
@@ -212,12 +212,12 @@ func NewServerConfig() (ServerConfig, error) {
 			}
 			return keys
 		}())
-		return ServerConfig{}, fmt.Errorf("unknown .env variables")
+		return nil, fmt.Errorf("unknown .env variables")
 	}
 
 	// Validate the config
 	if err := serverConfig.ValidateClean(); err != nil {
-		return ServerConfig{}, err
+		return nil, err
 	}
 
 	// Precompute some Host URLs
@@ -230,7 +230,7 @@ func NewServerConfig() (ServerConfig, error) {
 	serverConfig.Security = security.NewSecurityConfig(serverConfig.RawKeySets, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 
 	printServerConfig(serverConfig)
-	return serverConfig, nil
+	return &serverConfig, nil
 }
 
 func (config *ServerConfig) IsDev() bool {

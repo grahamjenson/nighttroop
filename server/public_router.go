@@ -9,7 +9,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func NewPublicRouter(controlDB *db.ControlDB, config config.ServerConfig) chi.Router {
+func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 

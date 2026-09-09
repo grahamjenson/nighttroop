@@ -8,7 +8,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func GetDashboardHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		//siteContext := httputils.GetSiteContext(r.Context())

@@ -10,7 +10,6 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/utils"
-
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
 
@@ -27,22 +26,22 @@ type DB struct {
 	Queries      *Queries
 	InMemory     bool
 
-	Path          string
-	BackupPath    string
-	S3Path        string
-	S3ArchivePath string
+	Path       string
+	BackupPath string
 }
 
-func NewDB(ctx context.Context, subdomain *string, cacheSize int, serverConfig *config.ServerConfig) (*DB, error) {
-	path, backuppath, s3path, s3archivepath := GetPathsForEverything(subdomain, serverConfig)
+func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) {
+	path := GetPath(serverConfig)
+	backuppath := GetBackupPath(serverConfig)
+
+	cacheSize := 2000
 
 	db := &DB{
-		ServerConfig:  serverConfig,
-		InMemory:      serverConfig.IsTest(),
-		Path:          path,
-		BackupPath:    backuppath,
-		S3Path:        s3path,
-		S3ArchivePath: s3archivepath,
+		ServerConfig: serverConfig,
+		InMemory:     serverConfig.IsTest(),
+
+		Path:       path,
+		BackupPath: backuppath,
 	}
 
 	var err error
@@ -117,15 +116,16 @@ func (db *DB) Backup(ctx context.Context) error {
 // File paths
 /////
 
-func GetPathsForEverything(subdomain *string, serverConfig *config.ServerConfig) (filepath string, backuppath string, s3path string, s3archivepath string) {
+func GetPath(serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/%s.sqlite", serverConfig.DBDir(), "control")
+}
 
-	filepath = fmt.Sprintf("%s/%s.sqlite", serverConfig.DBDir(), "control")
-	backuppath = fmt.Sprintf("%s/%s.sqlite", serverConfig.BackupDir(), "control")
+func GetBackupPath(serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/%s.sqlite", serverConfig.BackupDir(), "control")
+}
 
-	s3path = fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName, "control")
-	s3archivepath = fmt.Sprintf("%s/archive/%s.tar.lz4.enc", serverConfig.HostName, "control")
-
-	return
+func GetS3Path(serverConfig *config.ServerConfig) string {
+	return fmt.Sprintf("%s/backup/%s.tar.lz4.enc", serverConfig.HostName, "control")
 }
 
 //go:embed migrations/*.sql

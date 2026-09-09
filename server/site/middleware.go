@@ -16,7 +16,7 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-func UserRateLimitMiddleware(config config.ServerConfig) func(http.Handler) http.Handler {
+func UserRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +85,7 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 // 1. API: JWT token as Authorization header (for API requests)
 // 2. API: (not good) Raw Token as http param in URL. This is slow and insecure and not recommended.
 // 3. BROWSER: Cookie with JWT token (we are not supporting token in URL that is a bad idea)
-func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(http.Handler) http.Handler {
+func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -114,7 +114,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg config.ServerConfig) func(ht
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func TryAuthWithJWTToken(config config.ServerConfig, r *http.Request) (*control.Identity, error) {
+func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.Identity, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {

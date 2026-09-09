@@ -17,7 +17,7 @@ import (
 
 type BackGroundManager struct {
 	db     *db.ControlDB
-	config config.ServerConfig
+	config *config.ServerConfig
 	cron   *acron.ACron
 	queue  *liteq.JobQueue
 
@@ -29,7 +29,7 @@ type BackGroundManager struct {
 	SyncJobManager          *ntsync.SyncJobManager
 }
 
-func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
+func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
 	queue := liteq.New(controlDB)
 
 	cron := acron.NewAcron(WrapperFunc(controlDB))

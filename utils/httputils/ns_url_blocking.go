@@ -25,7 +25,7 @@ var blockedIPCidrs = []string{
 	"fe80::/10",
 }
 
-func IsNightscoutURLBlocked(host string, cfg config.ServerConfig) error {
+func IsNightscoutURLBlocked(host string, cfg *config.ServerConfig) error {
 	if cfg.IsDev() {
 		return nil
 	}

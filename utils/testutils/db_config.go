@@ -11,9 +11,9 @@ import (
 
 var storedServerConfig *config.ServerConfig
 
-func GetTestServerConfig() config.ServerConfig {
+func GetTestServerConfig() *config.ServerConfig {
 	if storedServerConfig != nil {
-		return *storedServerConfig
+		return storedServerConfig
 	}
 
 	cfg, err := config.NewServerConfig()
@@ -23,11 +23,11 @@ func GetTestServerConfig() config.ServerConfig {
 	// Force Test Mode
 	cfg.Mode = consts.Test
 
-	storedServerConfig = &cfg
-	return *storedServerConfig
+	storedServerConfig = cfg
+	return storedServerConfig
 }
 
-func GetConfigControlDBForTest() (config.ServerConfig, *db.ControlDB, error) {
+func GetConfigControlDBForTest() (*config.ServerConfig, *db.ControlDB, error) {
 	cfg := GetTestServerConfig()
 
 	controlDB, err := db.NewControlDB(context.TODO(), cfg)
@@ -38,7 +38,7 @@ func GetConfigControlDBForTest() (config.ServerConfig, *db.ControlDB, error) {
 	return cfg, controlDB, nil
 }
 
-func GetConfigControlDBAndSiteDBForTest() (config.ServerConfig, *db.ControlDB, *db.SiteCreateResult, error) {
+func GetConfigControlDBAndSiteDBForTest() (*config.ServerConfig, *db.ControlDB, *db.SiteCreateResult, error) {
 	cfg := GetTestServerConfig()
 
 	controlDB, err := db.NewControlDB(context.TODO(), cfg)

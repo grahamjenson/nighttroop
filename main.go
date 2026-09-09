@@ -121,8 +121,8 @@ func run() error {
 	slog.Info("Stopped background jobs complete")
 
 	slog.Info("Performing final backup to S3...")
-	backgroundManager.BackupControlJobManager.BackupToS3() // Force a final backup before exiting
-	backgroundManager.BackupSiteJobManager.BackupToS3()    // Force a final backup before exiting
+	backgroundManager.BackupControlJobManager.BackupToS3(context.Background()) // Force a final backup before exiting
+	backgroundManager.BackupSiteJobManager.BackupToS3()                        // Force a final backup before exiting
 	slog.Info("Final backup complete")
 
 	// Close control and User dbs
@@ -132,7 +132,7 @@ func run() error {
 	return nil
 }
 
-func setupHTTP(controlDB *db.ControlDB, serverConfig config.ServerConfig) *http.Server {
+func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http.Server {
 	// The outer most layer is CORS and CSRF protection
 	// The big caveat is that GET HEAD and OPTIONS requests will not have CSRF protection
 	// SO NO STATE CHANGING IN GET REQUESTS

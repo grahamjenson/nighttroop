@@ -13,7 +13,7 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func(http.Handler) http.Handler {
+func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var err error
@@ -41,7 +41,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config config.ServerConfig) func
 	}
 }
 
-func tryLoginWithJWTToken(config config.ServerConfig, r *http.Request) (string, consts.AdminRole, error) {
+func tryLoginWithJWTToken(config *config.ServerConfig, r *http.Request) (string, consts.AdminRole, error) {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		jwttokenStr := strings.TrimPrefix(authHeader, "Bearer ")

@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/jobs"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/aslog"
@@ -24,9 +25,10 @@ type BackupSiteJobParams struct {
 }
 
 type BackupSiteJobManager struct {
-	controlDB *db.ControlDB
-	ctx       context.Context
-	S3Client  *s3utils.S3Client
+	controlDB    *db.ControlDB
+	ctx          context.Context
+	ServerConfig *config.ServerConfig
+	S3Client     *s3utils.S3Client
 
 	DeleteAfterInactivity time.Duration
 
@@ -38,7 +40,7 @@ type BackupSiteJobManager struct {
 // BackupSiteJob
 
 // SetupBackupSiteJob Takes a ControlDB and backs up the db and all user dbs to a file and syncs to S3
-func SetupBackupSiteJob(ctx context.Context, controlDB *db.ControlDB, config config.ServerConfig, s3Client *s3utils.S3Client) *BackupSiteJobManager {
+func SetupBackupSiteJob(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3Client *s3utils.S3Client) *BackupSiteJobManager {
 
 	jobs := &BackupSiteJobManager{
 		controlDB: controlDB,
@@ -48,6 +50,7 @@ func SetupBackupSiteJob(ctx context.Context, controlDB *db.ControlDB, config con
 
 		BatchBackupIntervalInSeconds: config.BatchBackupIntervalInSeconds,
 		S3Client:                     s3Client,
+		ServerConfig:                 config,
 	}
 
 	return jobs
@@ -197,24 +200,23 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
 
 	paths := []string{}
 
-	for _, site := range sites {
-		if site.Subdomain == "" {
+	for _, backupSite := range sites {
+		if backupSite.Subdomain == "" {
 			continue
 		}
-		_, backupPath := utils.SiteDBPaths(site.Subdomain)
 
 		// Have to add it anyway because we need all paths
-		err := utils.SqliteBackup(ctx, site.SQLiteDB, backupPath)
+		err := backupSite.Backup(ctx)
 		if err != nil {
-			return fmt.Errorf("cannot backup site db %s: %w", site.Subdomain, err)
+			return fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err)
 		}
 
-		paths = append(paths, backupPath)
+		paths = append(paths, backupSite.BackupPath)
 	}
 
 	trackTrim = len(paths) > 0
 
-	err = b.S3Client.UploadFilesToS3(b.S3Client.SiteBatchS3Path(char), paths)
+	err = b.S3Client.UploadFilesToS3(site.GetS3BatchPath(char, b.ServerConfig), paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
@@ -29,14 +30,14 @@ type ControlDB struct {
 	Jobs *JobsDB
 }
 
-func NewControlDB(ctx context.Context, serverConfig config.ServerConfig) (*ControlDB, error) {
+func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
 
-	rawDB, err := control.NewDB(ctx, utils.CONTROL_DB_PATH, 2000, serverConfig)
+	rawDB, err := control.NewDB(ctx, serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open control db: %w", err)
 	}
 
-	jobs, err := NewJobsDB(context.TODO(), utils.JOBS_DB_PATH, serverConfig)
+	jobs, err := NewJobsDB(ctx, serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open jobs db: %w", err)
 	}
@@ -74,8 +75,9 @@ func (db *ControlDB) fillSites() ([]string, error) {
 
 	for _, model := range res {
 		sites = append(sites, model.Subdomain)
+
 		// Site DB has to be available
-		path, _ := utils.SiteDBPaths(model.Subdomain)
+		path := site.GetPath(model.Subdomain, db.ServerConfig)
 
 		if !utils.FileExists(path) {
 			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.Subdomain)
@@ -231,9 +233,7 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 
 		site.Close()
 
-		path, backupPath := utils.SiteDBPaths(subdomain)
-
-		err := utils.DeleteFiles([]string{path, backupPath})
+		err := utils.DeleteFiles([]string{site.Path, site.BackupPath})
 		if err != nil {
 			slog.Error("Failed to delete user db files", "subdomain", subdomain, "error", err)
 		} else {

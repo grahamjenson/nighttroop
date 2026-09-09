@@ -10,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func GetDashboardHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "text/html")
@@ -23,7 +23,7 @@ func GetDashboardHandler(controlDB *db.ControlDB, config config.ServerConfig) ht
 	}
 }
 
-func GetUsersHandler(controlDB *db.ControlDB, config config.ServerConfig) http.HandlerFunc {
+func GetUsersHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		users, err := controlDB.Queries.GetAllSites(context.TODO())
 		if err != nil {
