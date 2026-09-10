@@ -2,30 +2,19 @@
 
 ## Before Alpha Testing
 1. make archiving and truncation a manual job, i.e. show unused users and select all and archive.  I think this will remove a lot of logic that can be shaky later on we can look at automating, if it gets really bad
-1. Remove background truncate and archive
-1. write wrapper for cron to report runtimes and job stats
 1. Display users in control
 1. Display job and cron stats in control
-1. Litestream for just Control (everything needed for rebuild in control DB) (maybe more dbs (queue, and logs dbs))
 1. refactor subdomain to site_id
+1. Sync
+    1. Check Sync Creds before save/enable -- e.g. check nightscout is a real endpoint and auth works
+    1. Sync treatments and entries using v3 API
+    1. Use v3 last_modified nightscout sync, and existing nightscout_api to write the values to the DB
+
 1. create_identity check limits, max identities
 1. Control UI
     1. Table of users with DB sizes, status...
     1. enable disable, users (show screen on disable), archive, and truncate buttons
     1. Some kind of usage metrics to see
-
-1. Deploy to a fly.io dev/staging environment
-
-
-1. Structural
-    1. Check Sync Creds before save/enable -- e.g. check nightscout is a real endpoint and auth works
-    1. Sync treatments and entries using v3 API
-
-1. Carer & AAPS minimal compatability 
-    1. Ensure loop stuff works
-
-
-
 
 1. Connect actual data and do some fun perf testing
 1. Optional error reporting with sentry (if a given key is present)
@@ -33,11 +22,11 @@
 1. Identity IDs mean nothing in user database
 1. check that users dont get error responses traces!
 
-
 1. Site UI
     1. Show real data (dont bother with graph, just tables for now)
     1. Improve identity creation. Make it easier to encourage each device and app to get its own identity
 
+1. Deploy to a fly.io dev/staging environment
 
 ## Before Beta Testing
 

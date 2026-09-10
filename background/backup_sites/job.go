@@ -62,6 +62,9 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 
 	var index atomic.Int64
 
+	// The goal here is to smooth out resource usage, if you looped over all baches at once, we would use a ton of CPU and that will slow down responses
+	// This nice thing about this method of backing up is that because the cron task cannot run concurrently for the same batch,
+	// we avoid using too many resources, instead it will just delay the backup by tick time
 	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func() error {
 		i := int(index.Add(1)-1) % count
 		batch := string(utils.SITE_CHAR_SET[i])

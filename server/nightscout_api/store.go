@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/nightscout_api/collections"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 
@@ -26,6 +27,23 @@ type NightTroopAPIStore struct {
 	config    *config.ServerConfig
 
 	stores map[nsutils.Collection]CollectionStore
+}
+
+func NewNightTroopAPIStore(controlDB *db.ControlDB, config *config.ServerConfig) *NightTroopAPIStore {
+	return &NightTroopAPIStore{
+		controlDB: controlDB,
+		config:    config,
+		stores: map[nsutils.Collection]CollectionStore{
+			nsutils.Entries:      collections.NewEntriesCollection(),
+			nsutils.Treatments:   collections.NewTreatmentCollection(),
+			nsutils.Devicestatus: collections.NewDeviceStatusCollection(),
+			nsutils.Profile:      collections.NewProfileCollection(),
+			nsutils.Food:         collections.NewFoodCollection(),
+			nsutils.Settings:     collections.NewSettingsCollection(),
+			nsutils.Activity:     collections.NewActivityCollection(),
+			// Add more collections as needed
+		},
+	}
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
