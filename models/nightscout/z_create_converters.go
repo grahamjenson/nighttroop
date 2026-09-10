@@ -81,13 +81,13 @@ func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterCont
 func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
 	siteCreateGlucoseReadingParams.ID = AssignID()
-	if source.Reading != nil {
-		siteCreateGlucoseReadingParams.Reading = FlexibleFloat64ToFloat64(*source.Reading)
+	if source.Mgdl != nil {
+		siteCreateGlucoseReadingParams.Mgdl = FlexibleFloat64ToFloat64(*source.Mgdl)
 	}
 	siteCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
 	if source.Units != nil {
 		xstring := string(*source.Units)
-		siteCreateGlucoseReadingParams.Units = &xstring
+		siteCreateGlucoseReadingParams.OriginalUnits = &xstring
 	}
 	if source.Trend != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Trend)

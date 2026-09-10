@@ -475,11 +475,11 @@ func FoodIntakeUpdate(source site.FoodIntake, context ConverterContext) site.Upd
 func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) site.CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
 	siteCreateGlucoseReadingParams.ID = AssignID()
-	siteCreateGlucoseReadingParams.Reading = source.Reading
+	siteCreateGlucoseReadingParams.Mgdl = source.Mgdl
 	siteCreateGlucoseReadingParams.ReadingType = source.ReadingType
-	if source.Units != nil {
-		xstring := *source.Units
-		siteCreateGlucoseReadingParams.Units = &xstring
+	if source.OriginalUnits != nil {
+		xstring := *source.OriginalUnits
+		siteCreateGlucoseReadingParams.OriginalUnits = &xstring
 	}
 	if source.MeasurementMethod != nil {
 		xstring2 := *source.MeasurementMethod
@@ -539,8 +539,8 @@ func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) 
 }
 func GlucoseReadingUpdate(source site.GlucoseReading, context ConverterContext) site.UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
-	pFloat64 := source.Reading
-	siteUpdateGlucoseReadingParams.Reading = &pFloat64
+	pFloat64 := source.Mgdl
+	siteUpdateGlucoseReadingParams.Mgdl = &pFloat64
 	if source.Notes != nil {
 		xstring := *source.Notes
 		siteUpdateGlucoseReadingParams.Notes = &xstring
@@ -877,11 +877,11 @@ func PartialTreatmentToFoodIntake(source Treatment) site.FoodIntake {
 func PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading {
 	var siteGlucoseReading site.GlucoseReading
 	if source.Glucose != nil {
-		siteGlucoseReading.Reading = FlexibleFloat64ToFloat64(*source.Glucose)
+		siteGlucoseReading.Mgdl = FlexibleFloat64ToFloat64(*source.Glucose)
 	}
 	if source.Units != nil {
 		xstring := string(*source.Units)
-		siteGlucoseReading.Units = &xstring
+		siteGlucoseReading.OriginalUnits = &xstring
 	}
 	if source.GlucoseType != nil {
 		xstring2 := string(*source.GlucoseType)
@@ -1525,14 +1525,14 @@ func UpdateFoodIntakeToTreatment(source *site.FoodIntake, target *Treatment) {
 }
 func UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment) {
 	if source != nil {
-		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Reading)
+		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Mgdl)
 		target.Glucose = &pNightscoutFlexibleFloat64
 		if source.MeasurementMethod != nil {
 			nightscoutGlucoseType := GlucoseType(*source.MeasurementMethod)
 			target.GlucoseType = &nightscoutGlucoseType
 		}
-		if source.Units != nil {
-			nightscoutUnits := Units(*source.Units)
+		if source.OriginalUnits != nil {
+			nightscoutUnits := Units(*source.OriginalUnits)
 			target.Units = &nightscoutUnits
 		}
 		if source.Notes != nil {
@@ -1997,11 +1997,11 @@ func UpdateToFoodIntake(source *site.FoodIntake, target *site.FoodIntake) {
 }
 func UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseReading) {
 	if source != nil {
-		target.Reading = source.Reading
+		target.Mgdl = source.Mgdl
 		target.ReadingType = source.ReadingType
-		if source.Units != nil {
-			xstring := *source.Units
-			target.Units = &xstring
+		if source.OriginalUnits != nil {
+			xstring := *source.OriginalUnits
+			target.OriginalUnits = &xstring
 		}
 		if source.MeasurementMethod != nil {
 			xstring2 := *source.MeasurementMethod

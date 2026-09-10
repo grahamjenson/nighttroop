@@ -143,8 +143,8 @@ func DBModelToEntry(source *site.GlucoseReading) Entry {
 		}
 		pNightscoutShortString := ShortString((*source).CreatedByIdentityName)
 		nightscoutEntry.Subject = &pNightscoutShortString
-		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).Reading)
-		nightscoutEntry.Reading = &pNightscoutFlexibleFloat64
+		pNightscoutFlexibleFloat64 := FlexibleFloat64((*source).Mgdl)
+		nightscoutEntry.Mgdl = &pNightscoutFlexibleFloat64
 		if (*source).RawJsonData != nil {
 			nightscoutEntry.RawJsonData = *(*source).RawJsonData
 		}

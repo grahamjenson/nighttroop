@@ -230,9 +230,9 @@ type FoodPreset struct {
 
 type GlucoseReading struct {
 	ID                    string
-	Reading               float64
+	Mgdl                  float64
 	ReadingType           string
-	Units                 *string
+	OriginalUnits         *string
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -256,9 +256,9 @@ type GlucoseReading struct {
 
 type GlucoseReadingsVw struct {
 	ID                    *string
-	Reading               *float64
+	Mgdl                  *float64
 	ReadingType           *string
-	Units                 *string
+	OriginalUnits         *string
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string

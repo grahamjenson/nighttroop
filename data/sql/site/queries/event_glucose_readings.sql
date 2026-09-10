@@ -6,9 +6,9 @@
 -- name: CreateGlucoseReading :one
 INSERT INTO glucose_readings (
     id,
-    reading,
+    mgdl,
     reading_type,
-    units,
+    original_units,
     measurement_method,
 
     delta,
@@ -30,9 +30,9 @@ INSERT INTO glucose_readings (
 )
 VALUES (
     sqlc.arg('ID'),
-    sqlc.arg('Reading'),
+    sqlc.arg('Mgdl'),
     sqlc.arg('ReadingType'),
-    sqlc.arg('Units'),
+    sqlc.arg('OriginalUnits'),
     sqlc.arg('MeasurementMethod'),
 
     sqlc.arg('Delta'),
@@ -106,11 +106,11 @@ WHERE
     AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
     AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
 
-    AND (CAST(sqlc.narg('SgvEQ') AS INTEGER) IS NULL OR reading = sqlc.narg('SgvEQ'))
-    AND (CAST(sqlc.narg('SgvGTE') AS INTEGER) IS NULL OR reading >= sqlc.narg('SgvGTE'))
-    AND (CAST(sqlc.narg('SgvGT') AS INTEGER) IS NULL OR reading > sqlc.narg('SgvGT'))
-    AND (CAST(sqlc.narg('SgvLTE') AS INTEGER) IS NULL OR reading <= sqlc.narg('SgvLTE'))
-    AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR reading < sqlc.narg('SgvLT'))
+    AND (CAST(sqlc.narg('SgvEQ') AS INTEGER) IS NULL OR mgdl = sqlc.narg('SgvEQ'))
+    AND (CAST(sqlc.narg('SgvGTE') AS INTEGER) IS NULL OR mgdl >= sqlc.narg('SgvGTE'))
+    AND (CAST(sqlc.narg('SgvGT') AS INTEGER) IS NULL OR mgdl > sqlc.narg('SgvGT'))
+    AND (CAST(sqlc.narg('SgvLTE') AS INTEGER) IS NULL OR mgdl <= sqlc.narg('SgvLTE'))
+    AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR mgdl < sqlc.narg('SgvLT'))
     
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
@@ -123,7 +123,7 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
-    reading = COALESCE(sqlc.narg('Reading'), reading),
+    mgdl = COALESCE(sqlc.narg('Mgdl'), mgdl),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

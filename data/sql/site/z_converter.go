@@ -670,11 +670,11 @@ func FoodPresetToUpdate(source FoodPreset) UpdateFoodPresetParams {
 func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 	var siteCreateGlucoseReadingParams CreateGlucoseReadingParams
 	siteCreateGlucoseReadingParams.ID = source.ID
-	siteCreateGlucoseReadingParams.Reading = source.Reading
+	siteCreateGlucoseReadingParams.Mgdl = source.Mgdl
 	siteCreateGlucoseReadingParams.ReadingType = source.ReadingType
-	if source.Units != nil {
-		xstring := *source.Units
-		siteCreateGlucoseReadingParams.Units = &xstring
+	if source.OriginalUnits != nil {
+		xstring := *source.OriginalUnits
+		siteCreateGlucoseReadingParams.OriginalUnits = &xstring
 	}
 	if source.MeasurementMethod != nil {
 		xstring2 := *source.MeasurementMethod
@@ -734,8 +734,8 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 }
 func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams UpdateGlucoseReadingParams
-	pFloat64 := source.Reading
-	siteUpdateGlucoseReadingParams.Reading = &pFloat64
+	pFloat64 := source.Mgdl
+	siteUpdateGlucoseReadingParams.Mgdl = &pFloat64
 	if source.Notes != nil {
 		xstring := *source.Notes
 		siteUpdateGlucoseReadingParams.Notes = &xstring
@@ -1579,17 +1579,17 @@ func siteGlucoseReadingsVwToSiteGlucoseReadingsVw(source GlucoseReadingsVw) Gluc
 		xstring := *source.ID
 		siteGlucoseReadingsVw.ID = &xstring
 	}
-	if source.Reading != nil {
-		xfloat64 := *source.Reading
-		siteGlucoseReadingsVw.Reading = &xfloat64
+	if source.Mgdl != nil {
+		xfloat64 := *source.Mgdl
+		siteGlucoseReadingsVw.Mgdl = &xfloat64
 	}
 	if source.ReadingType != nil {
 		xstring2 := *source.ReadingType
 		siteGlucoseReadingsVw.ReadingType = &xstring2
 	}
-	if source.Units != nil {
-		xstring3 := *source.Units
-		siteGlucoseReadingsVw.Units = &xstring3
+	if source.OriginalUnits != nil {
+		xstring3 := *source.OriginalUnits
+		siteGlucoseReadingsVw.OriginalUnits = &xstring3
 	}
 	if source.MeasurementMethod != nil {
 		xstring4 := *source.MeasurementMethod

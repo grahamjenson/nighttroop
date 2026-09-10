@@ -126,7 +126,7 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 
 func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
 	if gr.ReadingType == "sgv" {
-		return ptr(FlexibleFloat64(gr.Reading))
+		return ptr(FlexibleFloat64(gr.Mgdl))
 	}
 	return nil
 
@@ -134,7 +134,7 @@ func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
 
 func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
 	if gr.ReadingType == "mbg" {
-		return ptr(FlexibleFloat64(gr.Reading))
+		return ptr(FlexibleFloat64(gr.Mgdl))
 	}
 	return nil
 

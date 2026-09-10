@@ -198,8 +198,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	//
 	// goverter:ignoreMissing
-	// goverter:map Reading Glucose
+	// goverter:map Mgdl Glucose
 	// goverter:map MeasurementMethod GlucoseType
+	// goverter:map OriginalUnits Units
 	UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment)
 
 	// goverter:update target
@@ -321,8 +322,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	//
 	// goverter:ignore Delta Direction Noise Filtered Unfiltered Rssi ReadingType
-	// goverter:map Glucose Reading
+	// goverter:map Glucose Mgdl
 	// goverter:map GlucoseType MeasurementMethod
+	// goverter:map Units OriginalUnits
 	PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName UpdatedAt UpdatedByIdentityName

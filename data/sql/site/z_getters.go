@@ -1352,14 +1352,14 @@ func (m *GlucoseReading) SetID(v string) {
 	m.ID = v
 }
 
-// GetReading returns the Reading value.
-func (m GlucoseReading) GetReading() float64 {
-	return m.Reading
+// GetMgdl returns the Mgdl value.
+func (m GlucoseReading) GetMgdl() float64 {
+	return m.Mgdl
 }
 
-// SetReading sets the Reading value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetReading(v float64) {
-	m.Reading = v
+// SetMgdl sets the Mgdl value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetMgdl(v float64) {
+	m.Mgdl = v
 }
 
 // GetReadingType returns the ReadingType value.
@@ -1372,14 +1372,14 @@ func (m *GlucoseReading) SetReadingType(v string) {
 	m.ReadingType = v
 }
 
-// GetUnits returns the Units value.
-func (m GlucoseReading) GetUnits() *string {
-	return m.Units
+// GetOriginalUnits returns the OriginalUnits value.
+func (m GlucoseReading) GetOriginalUnits() *string {
+	return m.OriginalUnits
 }
 
-// SetUnits sets the Units value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetUnits(v *string) {
-	m.Units = v
+// SetOriginalUnits sets the OriginalUnits value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetOriginalUnits(v *string) {
+	m.OriginalUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -3352,14 +3352,14 @@ func (m *GlucoseReadingsVw) SetID(v *string) {
 	m.ID = v
 }
 
-// GetReading returns the Reading value.
-func (m GlucoseReadingsVw) GetReading() *float64 {
-	return m.Reading
+// GetMgdl returns the Mgdl value.
+func (m GlucoseReadingsVw) GetMgdl() *float64 {
+	return m.Mgdl
 }
 
-// SetReading sets the Reading value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetReading(v *float64) {
-	m.Reading = v
+// SetMgdl sets the Mgdl value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetMgdl(v *float64) {
+	m.Mgdl = v
 }
 
 // GetReadingType returns the ReadingType value.
@@ -3372,14 +3372,14 @@ func (m *GlucoseReadingsVw) SetReadingType(v *string) {
 	m.ReadingType = v
 }
 
-// GetUnits returns the Units value.
-func (m GlucoseReadingsVw) GetUnits() *string {
-	return m.Units
+// GetOriginalUnits returns the OriginalUnits value.
+func (m GlucoseReadingsVw) GetOriginalUnits() *string {
+	return m.OriginalUnits
 }
 
-// SetUnits sets the Units value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetUnits(v *string) {
-	m.Units = v
+// SetOriginalUnits sets the OriginalUnits value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetOriginalUnits(v *string) {
+	m.OriginalUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -7253,14 +7253,14 @@ func (m CreateGlucoseReadingParams) SetID(v string) CreateGlucoseReadingParams {
 	return m
 }
 
-// GetReading returns the Reading value.
-func (m CreateGlucoseReadingParams) GetReading() float64 {
-	return m.Reading
+// GetMgdl returns the Mgdl value.
+func (m CreateGlucoseReadingParams) GetMgdl() float64 {
+	return m.Mgdl
 }
 
-// SetReading sets the Reading value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetReading(v float64) CreateGlucoseReadingParams {
-	m.Reading = v
+// SetMgdl sets the Mgdl value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetMgdl(v float64) CreateGlucoseReadingParams {
+	m.Mgdl = v
 	return m
 }
 
@@ -7275,14 +7275,14 @@ func (m CreateGlucoseReadingParams) SetReadingType(v string) CreateGlucoseReadin
 	return m
 }
 
-// GetUnits returns the Units value.
-func (m CreateGlucoseReadingParams) GetUnits() *string {
-	return m.Units
+// GetOriginalUnits returns the OriginalUnits value.
+func (m CreateGlucoseReadingParams) GetOriginalUnits() *string {
+	return m.OriginalUnits
 }
 
-// SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetUnits(v *string) CreateGlucoseReadingParams {
-	m.Units = v
+// SetOriginalUnits sets the OriginalUnits value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetOriginalUnits(v *string) CreateGlucoseReadingParams {
+	m.OriginalUnits = v
 	return m
 }
 
@@ -7825,14 +7825,14 @@ func (m SearchGlucoseReadingsParams) SetLimit(v int64) SearchGlucoseReadingsPara
 	return m
 }
 
-// GetReading returns the Reading value.
-func (m UpdateGlucoseReadingParams) GetReading() *float64 {
-	return m.Reading
+// GetMgdl returns the Mgdl value.
+func (m UpdateGlucoseReadingParams) GetMgdl() *float64 {
+	return m.Mgdl
 }
 
-// SetReading sets the Reading value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetReading(v *float64) UpdateGlucoseReadingParams {
-	m.Reading = v
+// SetMgdl sets the Mgdl value and returns the updated UpdateGlucoseReadingParams.
+func (m UpdateGlucoseReadingParams) SetMgdl(v *float64) UpdateGlucoseReadingParams {
+	m.Mgdl = v
 	return m
 }
 

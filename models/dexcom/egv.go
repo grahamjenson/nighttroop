@@ -28,7 +28,7 @@ func EGVToCreate(e EGV, createdByIdentityName string) site.CreateGlucoseReadingP
 	return site.CreateGlucoseReadingParams{
 		ID:                    utils.NextID(),
 		OccurredAt:            e.SystemTime.UnixMilli(),
-		Reading:               float64(e.Value),
+		Mgdl:                  float64(e.Value),
 		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
 		UtcOffsetMinutes:      ptr(int64(e.UTCOffsetInMinutes())),

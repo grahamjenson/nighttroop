@@ -165,11 +165,11 @@ WHERE
 
 
     -- glucose readings
-    AND (CAST(sqlc.narg('SgvEQ') AS INTEGER) IS NULL OR gr.reading = sqlc.narg('SgvEQ'))
-    AND (CAST(sqlc.narg('SgvGTE') AS INTEGER) IS NULL OR gr.reading >= sqlc.narg('SgvGTE'))
-    AND (CAST(sqlc.narg('SgvGT') AS INTEGER) IS NULL OR gr.reading > sqlc.narg('SgvGT'))
-    AND (CAST(sqlc.narg('SgvLTE') AS INTEGER) IS NULL OR gr.reading <= sqlc.narg('SgvLTE'))
-    AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR gr.reading < sqlc.narg('SgvLT'))
+    AND (CAST(sqlc.narg('SgvEQ') AS INTEGER) IS NULL OR gr.mgdl = sqlc.narg('SgvEQ'))
+    AND (CAST(sqlc.narg('SgvGTE') AS INTEGER) IS NULL OR gr.mgdl >= sqlc.narg('SgvGTE'))
+    AND (CAST(sqlc.narg('SgvGT') AS INTEGER) IS NULL OR gr.mgdl > sqlc.narg('SgvGT'))
+    AND (CAST(sqlc.narg('SgvLTE') AS INTEGER) IS NULL OR gr.mgdl <= sqlc.narg('SgvLTE'))
+    AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR gr.mgdl < sqlc.narg('SgvLT'))
     
     -- food intake
 

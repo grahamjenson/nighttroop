@@ -10,9 +10,9 @@ CREATE TABLE glucose_readings (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    reading REAL NOT NULL,
+    mgdl REAL NOT NULL,
     reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
-    units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
+    original_units TEXT CHECK(length(original_units) <= 32), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
     delta REAL,
@@ -21,7 +21,6 @@ CREATE TABLE glucose_readings (
     filtered REAL,
     unfiltered REAL,
     rssi REAL,
-
 
 
     -- Default Stuff

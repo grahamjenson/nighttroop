@@ -50,6 +50,7 @@ type CreateMapConverter interface {
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
 	// goverter:map RSSI Rssi
+	// goverter:map Units OriginalUnits
 	EntryToCreate(source Entry, ctx ConverterContext) site.CreateGlucoseReadingParams
 
 	///////

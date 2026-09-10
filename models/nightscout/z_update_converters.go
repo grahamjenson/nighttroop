@@ -55,9 +55,9 @@ func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterCont
 }
 func EntryToUpdate(source Entry, context ConverterContext) site.UpdateGlucoseReadingParams {
 	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
-	if source.Reading != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Reading)
-		siteUpdateGlucoseReadingParams.Reading = &xfloat64
+	if source.Mgdl != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Mgdl)
+		siteUpdateGlucoseReadingParams.Mgdl = &xfloat64
 	}
 	pString := source.RawJsonData
 	siteUpdateGlucoseReadingParams.RawJsonData = &pString

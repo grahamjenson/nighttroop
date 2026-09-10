@@ -12,7 +12,7 @@ import (
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
-SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
+SELECT id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -39,9 +39,9 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadings
 		var i GlucoseReading
 		if err := rows.Scan(
 			&i.ID,
-			&i.Reading,
+			&i.Mgdl,
 			&i.ReadingType,
-			&i.Units,
+			&i.OriginalUnits,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -79,9 +79,9 @@ const createGlucoseReading = `-- name: CreateGlucoseReading :one
 
 INSERT INTO glucose_readings (
     id,
-    reading,
+    mgdl,
     reading_type,
-    units,
+    original_units,
     measurement_method,
 
     delta,
@@ -124,14 +124,14 @@ VALUES (
     ?18,
     ?19
 )
-RETURNING id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateGlucoseReadingParams struct {
 	ID                    string
-	Reading               float64
+	Mgdl                  float64
 	ReadingType           string
-	Units                 *string
+	OriginalUnits         *string
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -155,9 +155,9 @@ type CreateGlucoseReadingParams struct {
 func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseReadingParams) (*GlucoseReading, error) {
 	row := q.queryRow(ctx, q.createGlucoseReadingStmt, createGlucoseReading,
 		arg.ID,
-		arg.Reading,
+		arg.Mgdl,
 		arg.ReadingType,
-		arg.Units,
+		arg.OriginalUnits,
 		arg.MeasurementMethod,
 		arg.Delta,
 		arg.Direction,
@@ -177,9 +177,9 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
-		&i.Reading,
+		&i.Mgdl,
 		&i.ReadingType,
-		&i.Units,
+		&i.OriginalUnits,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
@@ -205,7 +205,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE 
+SELECT id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE 
 (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = ?2
 `
@@ -223,9 +223,9 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
-		&i.Reading,
+		&i.Mgdl,
 		&i.ReadingType,
-		&i.Units,
+		&i.OriginalUnits,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
@@ -274,7 +274,7 @@ func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardD
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -303,11 +303,11 @@ WHERE
     AND (CAST(?20 AS TEXT) IS NULL OR created_by_device_name = ?20)
     AND (CAST(?21 AS TEXT) IS NULL OR created_by_app_name = ?21)
 
-    AND (CAST(?22 AS INTEGER) IS NULL OR reading = ?22)
-    AND (CAST(?23 AS INTEGER) IS NULL OR reading >= ?23)
-    AND (CAST(?24 AS INTEGER) IS NULL OR reading > ?24)
-    AND (CAST(?25 AS INTEGER) IS NULL OR reading <= ?25)
-    AND (CAST(?26 AS INTEGER) IS NULL OR reading < ?26)
+    AND (CAST(?22 AS INTEGER) IS NULL OR mgdl = ?22)
+    AND (CAST(?23 AS INTEGER) IS NULL OR mgdl >= ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR mgdl > ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR mgdl <= ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR mgdl < ?26)
     
     AND (CAST(?27 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
@@ -387,9 +387,9 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 		var i GlucoseReading
 		if err := rows.Scan(
 			&i.ID,
-			&i.Reading,
+			&i.Mgdl,
 			&i.ReadingType,
-			&i.Units,
+			&i.OriginalUnits,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -462,7 +462,7 @@ func (q *Queries) SoftDeleteGlucoseReadingsByType(ctx context.Context, arg SoftD
 const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
 
 UPDATE glucose_readings SET
-    reading = COALESCE(?1, reading),
+    mgdl = COALESCE(?1, mgdl),
 
     notes = COALESCE(?2, notes),
     reason = COALESCE(?3, reason),
@@ -475,11 +475,11 @@ UPDATE glucose_readings SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?5
 WHERE id = ?6 AND deleted_at IS NULL
-RETURNING id, reading, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
-	Reading               *float64
+	Mgdl                  *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -492,7 +492,7 @@ type UpdateGlucoseReadingParams struct {
 // ------
 func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseReadingParams) (*GlucoseReading, error) {
 	row := q.queryRow(ctx, q.updateGlucoseReadingStmt, updateGlucoseReading,
-		arg.Reading,
+		arg.Mgdl,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,
@@ -502,9 +502,9 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
-		&i.Reading,
+		&i.Mgdl,
 		&i.ReadingType,
-		&i.Units,
+		&i.OriginalUnits,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
