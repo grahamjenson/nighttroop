@@ -467,13 +467,16 @@ func (q *Queries) GetSitesToArchive(ctx context.Context, arg GetSitesToArchivePa
 }
 
 const getSitesToDeleteInBatch = `-- name: GetSitesToDeleteInBatch :many
-SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE state IN ('live', 'disabled') AND batch = ?1
-    AND (
-            (last_seen_at IS NULL AND created_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes')) 
-            OR 
-            (last_write_at IS NULL AND last_seen_at IS NOT NULL AND last_seen_at < datetime('now', '-' || CAST(?2 AS REAL) || ' minutes'))
-        
-        )
+SELECT id, subdomain, batch, backup_key_hash, created_at, max_db_size_kb_limit, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact FROM sites WHERE 
+    state IN ('live', 'disabled') AND -- must be live or disabled
+    batch = ?1 AND -- within this batch
+    last_write_at IS NULL AND -- must not have been written anything (this is important)
+    (
+        (last_seen_at IS NULL     AND created_at < (unixepoch('subsec') * 1000 - CAST(?2 AS REAL) * 60 * 1000) )
+        OR 
+        (last_seen_at IS NOT NULL AND last_seen_at < (unixepoch('subsec') * 1000 - CAST(?2 AS REAL) * 60 * 1000))
+    
+    )
 `
 
 type GetSitesToDeleteInBatchParams struct {
@@ -481,8 +484,6 @@ type GetSitesToDeleteInBatchParams struct {
 	LastSeenAt float64
 }
 
-// @param last_seen_at INT
-// @param last_write_at INT
 // finds deleted_at is null sites where
 //
 //	  last_seen_at is null and created_at is more than minutes ago and

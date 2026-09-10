@@ -45,6 +45,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getJobsToBeSummarisedStmt, err = db.PrepareContext(ctx, getJobsToBeSummarised); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobsToBeSummarised: %w", err)
 	}
+	if q.insertFailedCronJobStmt, err = db.PrepareContext(ctx, insertFailedCronJob); err != nil {
+		return nil, fmt.Errorf("error preparing query InsertFailedCronJob: %w", err)
+	}
+	if q.insertSuccessfulCronJobStmt, err = db.PrepareContext(ctx, insertSuccessfulCronJob); err != nil {
+		return nil, fmt.Errorf("error preparing query InsertSuccessfulCronJob: %w", err)
+	}
 	if q.markJobsForConsumerStmt, err = db.PrepareContext(ctx, markJobsForConsumer); err != nil {
 		return nil, fmt.Errorf("error preparing query MarkJobsForConsumer: %w", err)
 	}
@@ -98,6 +104,16 @@ func (q *Queries) Close() error {
 	if q.getJobsToBeSummarisedStmt != nil {
 		if cerr := q.getJobsToBeSummarisedStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getJobsToBeSummarisedStmt: %w", cerr)
+		}
+	}
+	if q.insertFailedCronJobStmt != nil {
+		if cerr := q.insertFailedCronJobStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insertFailedCronJobStmt: %w", cerr)
+		}
+	}
+	if q.insertSuccessfulCronJobStmt != nil {
+		if cerr := q.insertSuccessfulCronJobStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insertSuccessfulCronJobStmt: %w", cerr)
 		}
 	}
 	if q.markJobsForConsumerStmt != nil {
@@ -171,6 +187,8 @@ type Queries struct {
 	failJobStmt                     *sql.Stmt
 	findJobStmt                     *sql.Stmt
 	getJobsToBeSummarisedStmt       *sql.Stmt
+	insertFailedCronJobStmt         *sql.Stmt
+	insertSuccessfulCronJobStmt     *sql.Stmt
 	markJobsForConsumerStmt         *sql.Stmt
 	queueJobIgnoreDupeStmt          *sql.Stmt
 	queueJobReplaceDupeStmt         *sql.Stmt
@@ -189,6 +207,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		failJobStmt:                     q.failJobStmt,
 		findJobStmt:                     q.findJobStmt,
 		getJobsToBeSummarisedStmt:       q.getJobsToBeSummarisedStmt,
+		insertFailedCronJobStmt:         q.insertFailedCronJobStmt,
+		insertSuccessfulCronJobStmt:     q.insertSuccessfulCronJobStmt,
 		markJobsForConsumerStmt:         q.markJobsForConsumerStmt,
 		queueJobIgnoreDupeStmt:          q.queueJobIgnoreDupeStmt,
 		queueJobReplaceDupeStmt:         q.queueJobReplaceDupeStmt,

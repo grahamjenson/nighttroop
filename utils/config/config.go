@@ -192,8 +192,8 @@ func NewServerConfig() (*ServerConfig, error) {
 		DeleteAfterInactivityMins: configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
 
 		// Backup Config
-		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 60),
-		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 60), // 1 minute
+		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
+		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 300), // 5 minutes
 
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),

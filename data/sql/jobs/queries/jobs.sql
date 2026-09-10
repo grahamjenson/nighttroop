@@ -1,4 +1,7 @@
 
+------
+-- CREATE
+------
 
 -- name: QueueJobIgnoreDupe :exec
 INSERT INTO
@@ -60,6 +63,12 @@ SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     remaining_attempts = EXCLUDED.remaining_attempts;
 
+
+------
+-- UPDATE
+------
+
+
 -- name: CompleteJob :exec
 UPDATE
     jobs
@@ -93,6 +102,8 @@ SET
 WHERE
     id = ?;
 
+
+-- This grabs jobs that are ready 
 -- name: MarkJobsForConsumer :many
 UPDATE
     jobs
@@ -145,53 +156,83 @@ WHERE
     id = ?;
 
 
+------
+-- READ
+------
+
 ------------
 -- Job Stats
 ------------
-
-
--- name: DeleteJobsByIds :exec
-DELETE FROM jobs
-WHERE id IN (sqlc.slice('ids'));
-
 
 -- name: GetJobsToBeSummarised :many
 SELECT * FROM jobs
 WHERE
     job_status IN ('completed', 'failed')
     AND remaining_attempts = 0
-    AND created_at < (CAST(unixepoch('subsec') * 1000 AS INTEGER) - 60); --jobs created at more than 1 minute ago
+    AND created_at <= (CAST(unixepoch('subsec') * 1000 AS INTEGER) - CAST(sqlc.arg('SecondsAgo') AS INTEGER)); --jobs created at more than 1 minute ago
 
 
--- name: EnsureJobStatsDailyForGroup :one
-INSERT INTO job_stats_daily (day_queue_job, errors, updated_at)
-VALUES (?, '[]', CAST(unixepoch('subsec') * 1000 AS INTEGER))
-ON CONFLICT(day_queue_job) DO UPDATE SET
-    day_queue_job = day_queue_job -- Forces NOOP assignment to return conflicting row
-RETURNING *;
 
--- name: UpdateJobStatsDaily :exec
-UPDATE job_stats_daily
-SET
-    total_jobs = total_jobs + sqlc.arg(total_jobs),
-    total_success = total_success + sqlc.arg(total_success),
-    total_failed = total_failed + sqlc.arg(total_failed),
-    duration_sum = duration_sum + sqlc.arg(duration_sum),
-    duration_squared_sum = duration_squared_sum + sqlc.arg(duration_squared_sum),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+------
+-- DELETE
+------
 
-    errors = (
-        SELECT json_group_array(DISTINCT value)
-        FROM (
-            SELECT value FROM json_each(COALESCE(errors, '[]'))
-            UNION ALL
-            SELECT value FROM json_each(sqlc.arg(errors))
-        )
+-- name: DeleteJobsByIds :exec
+DELETE FROM jobs
+WHERE id IN (sqlc.slice('ids'));
+
+
+
+------
+-- CRON
+------
+
+-- name: InsertSuccessfulCronJob :exec
+INSERT INTO
+    jobs (
+        queue,
+        job,
+        consumer_fetched_at, -- started at
+        job_status,
+        finished_at, -- finished at
+        created_at,
+        updated_at,
+        remaining_attempts
     )
-WHERE
-    day_queue_job = sqlc.arg(day_queue_job)
-;
+VALUES
+    (
+        "cron",
+        ?,
+        ?,
+        'completed',
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        0
+    );
 
--- name: AllJobStatsDaily :many
-SELECT * FROM job_stats_daily;
-
+-- name: InsertFailedCronJob :exec
+INSERT INTO
+    jobs (
+        queue,
+        job,
+        consumer_fetched_at, -- started at
+        errors,
+        job_status,
+        finished_at, -- finished at
+        created_at,
+        updated_at,
+        remaining_attempts
+    )
+VALUES
+    (
+        "cron",
+        ?,
+        ?,
+        ?,
+        'failed',
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        CAST(unixepoch('subsec') * 1000 AS INTEGER),
+        0
+    );

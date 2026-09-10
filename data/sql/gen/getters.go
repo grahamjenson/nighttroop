@@ -42,6 +42,9 @@ var TypeLookupMap = map[string]map[string]string{
 	"JobStatsDaily": {
 		"Errors": "errors.ErrorList",
 	},
+	"InsertFailedCronJobParams": {
+		"Errors": "errors.ErrorList",
+	},
 	"Admin": {
 		"Role": "consts.AdminRole",
 	},

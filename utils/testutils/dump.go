@@ -42,6 +42,13 @@ func DumpOnFailure(t interface {
 			return
 		}
 
+		backupPath = filepath.Join(dumpFolder, "jobs.sqlite")
+		err = backup.SqliteBackup(context.TODO(), controlDB.Jobs.SQLiteDB, backupPath)
+		if err != nil {
+			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for jobs DB: %v", err)
+			return
+		}
+
 		for _, site := range controlDB.AllSites() {
 			if site.Subdomain == "" {
 				continue
@@ -53,6 +60,37 @@ func DumpOnFailure(t interface {
 				t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for site %s: %v", site.Subdomain, err)
 				return
 			}
+		}
+		t.Logf("🛑 Test failed! In-memory DB snapshot saved to: %s", backupPath)
+	})
+}
+
+func DumpJobsOnFailure(t interface {
+	Helper()
+	Failed() bool
+	Logf(format string, args ...any)
+	Name() string
+	Cleanup(func())
+}, jobs *db.JobsDB, filePrefix string) {
+	t.Helper()
+
+	dumpFolder := filepath.Join(utils.FindProjectRoot(), ".test/dumps/", filePrefix+"_"+t.Name())
+	// delete folder if it exists
+	_ = os.RemoveAll(dumpFolder)
+
+	t.Cleanup(func() {
+
+		// Only run if the test actually failed
+		if !t.Failed() {
+			return
+		}
+
+		utils.MkDirs(dumpFolder)
+		backupPath := filepath.Join(dumpFolder, "jobs.sqlite")
+		err := backup.SqliteBackup(context.TODO(), jobs.SQLiteDB, backupPath)
+		if err != nil {
+			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for jobs DB: %v", err)
+			return
 		}
 		t.Logf("🛑 Test failed! In-memory DB snapshot saved to: %s", backupPath)
 	})

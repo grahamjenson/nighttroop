@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/jobs"
-	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -52,7 +52,7 @@ func (b *BackupControlJobManager) workerFunc() liteq.WorkerFunc {
 	}
 }
 
-func (b *BackupControlJobManager) SetupCron(c acron.CronScheduler, queue *liteq.JobQueue) {
+func (b *BackupControlJobManager) SetupCron(c cron.CronScheduler, queue *liteq.JobQueue) {
 
 	backupControlCron := fmt.Sprintf("@every %ds", b.ControlBackupIntervalInSeconds)
 
@@ -60,8 +60,8 @@ func (b *BackupControlJobManager) SetupCron(c acron.CronScheduler, queue *liteq.
 
 }
 
-func buildBackupControlCronFunc(queue *liteq.JobQueue) func() {
-	return func() {
+func buildBackupControlCronFunc(queue *liteq.JobQueue) func() error {
+	return func() error {
 		err := queue.QueueJob(context.Background(), liteq.QueueJobParams{
 			Queue:       BACKUP_CONTROL_JOB,
 			Job:         "",
@@ -70,6 +70,7 @@ func buildBackupControlCronFunc(queue *liteq.JobQueue) func() {
 		if err != nil {
 			slog.Error("Error queueing job", "error", err)
 		}
+		return err
 	}
 }
 

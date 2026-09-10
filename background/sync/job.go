@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/data/sql/jobs"
-	"nighttroop.t1d.nz/utils/acron"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -179,22 +179,22 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSy
 	}, nil
 }
 
-func (b *SyncJobManager) SetupCron(c acron.CronScheduler, queue *liteq.JobQueue) {
+func (b *SyncJobManager) SetupCron(c cron.CronScheduler, queue *liteq.JobQueue) {
 	syncCron := fmt.Sprintf("@every %ds", b.SyncIntervalInSeconds)
 
 	c.AddFunc("SyncJobManager", syncCron, b.buildSyncCronFunc(queue))
 
 }
 
-func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
-	return func() {
+func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
+	return func() error {
 		// 1. Create All Sync Reports for Sync Sources that need them
 		// 2. Get All Sync Reports that belong to at lease 1 enabled sync source, and whose next run is after the last attempt
 		// 3. Create a SyncJobParams for each report
 		err := b.controlDB.Queries.CreateSyncReportsForAllSyncSources(context.TODO())
 		if err != nil {
 			slog.Error("error creating sync reports for all sync sources", "error", err)
-			return
+			return err
 		}
 
 		// This gets reports that are:
@@ -205,7 +205,7 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 		syncReports, err := b.controlDB.Queries.GetSyncReportsToRun(context.TODO())
 		if err != nil {
 			slog.Error("error getting sync reports to run", "error", err)
-			return
+			return err
 		}
 
 		for _, report := range syncReports {
@@ -230,5 +230,6 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() {
 			}
 		}
 
+		return nil
 	}
 }

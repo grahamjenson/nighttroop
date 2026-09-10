@@ -216,6 +216,94 @@ func (m *Job) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
+// GetDayQueueJob returns the DayQueueJob value.
+func (m EnsureJobStatsDailyForGroupParams) GetDayQueueJob() string {
+	return m.DayQueueJob
+}
+
+// SetDayQueueJob sets the DayQueueJob value and returns the updated EnsureJobStatsDailyForGroupParams.
+func (m EnsureJobStatsDailyForGroupParams) SetDayQueueJob(v string) EnsureJobStatsDailyForGroupParams {
+	m.DayQueueJob = v
+	return m
+}
+
+// GetTotalJobs returns the TotalJobs value.
+func (m UpdateJobStatsDailyParams) GetTotalJobs() int64 {
+	return m.TotalJobs
+}
+
+// SetTotalJobs sets the TotalJobs value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetTotalJobs(v int64) UpdateJobStatsDailyParams {
+	m.TotalJobs = v
+	return m
+}
+
+// GetTotalSuccess returns the TotalSuccess value.
+func (m UpdateJobStatsDailyParams) GetTotalSuccess() int64 {
+	return m.TotalSuccess
+}
+
+// SetTotalSuccess sets the TotalSuccess value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetTotalSuccess(v int64) UpdateJobStatsDailyParams {
+	m.TotalSuccess = v
+	return m
+}
+
+// GetTotalFailed returns the TotalFailed value.
+func (m UpdateJobStatsDailyParams) GetTotalFailed() int64 {
+	return m.TotalFailed
+}
+
+// SetTotalFailed sets the TotalFailed value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetTotalFailed(v int64) UpdateJobStatsDailyParams {
+	m.TotalFailed = v
+	return m
+}
+
+// GetDurationSum returns the DurationSum value.
+func (m UpdateJobStatsDailyParams) GetDurationSum() float64 {
+	return m.DurationSum
+}
+
+// SetDurationSum sets the DurationSum value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetDurationSum(v float64) UpdateJobStatsDailyParams {
+	m.DurationSum = v
+	return m
+}
+
+// GetDurationSquaredSum returns the DurationSquaredSum value.
+func (m UpdateJobStatsDailyParams) GetDurationSquaredSum() float64 {
+	return m.DurationSquaredSum
+}
+
+// SetDurationSquaredSum sets the DurationSquaredSum value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetDurationSquaredSum(v float64) UpdateJobStatsDailyParams {
+	m.DurationSquaredSum = v
+	return m
+}
+
+// GetErrors returns the Errors value.
+func (m UpdateJobStatsDailyParams) GetErrors() interface{} {
+	return m.Errors
+}
+
+// SetErrors sets the Errors value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetErrors(v interface{}) UpdateJobStatsDailyParams {
+	m.Errors = v
+	return m
+}
+
+// GetDayQueueJob returns the DayQueueJob value.
+func (m UpdateJobStatsDailyParams) GetDayQueueJob() string {
+	return m.DayQueueJob
+}
+
+// SetDayQueueJob sets the DayQueueJob value and returns the updated UpdateJobStatsDailyParams.
+func (m UpdateJobStatsDailyParams) SetDayQueueJob(v string) UpdateJobStatsDailyParams {
+	m.DayQueueJob = v
+	return m
+}
+
 // GetQueue returns the Queue value.
 func (m QueueJobIgnoreDupeParams) GetQueue() string {
 	return m.Queue
@@ -425,6 +513,17 @@ func (m FindJobParams) SetID(v int64) FindJobParams {
 	return m
 }
 
+// GetSecondsAgo returns the SecondsAgo value.
+func (m GetJobsToBeSummarisedParams) GetSecondsAgo() int64 {
+	return m.SecondsAgo
+}
+
+// SetSecondsAgo sets the SecondsAgo value and returns the updated GetJobsToBeSummarisedParams.
+func (m GetJobsToBeSummarisedParams) SetSecondsAgo(v int64) GetJobsToBeSummarisedParams {
+	m.SecondsAgo = v
+	return m
+}
+
 // GetIds returns the Ids value.
 func (m DeleteJobsByIdsParams) GetIds() []int64 {
 	return m.Ids
@@ -436,91 +535,58 @@ func (m DeleteJobsByIdsParams) SetIds(v []int64) DeleteJobsByIdsParams {
 	return m
 }
 
-// GetDayQueueJob returns the DayQueueJob value.
-func (m EnsureJobStatsDailyForGroupParams) GetDayQueueJob() string {
-	return m.DayQueueJob
+// GetJob returns the Job value.
+func (m InsertSuccessfulCronJobParams) GetJob() string {
+	return m.Job
 }
 
-// SetDayQueueJob sets the DayQueueJob value and returns the updated EnsureJobStatsDailyForGroupParams.
-func (m EnsureJobStatsDailyForGroupParams) SetDayQueueJob(v string) EnsureJobStatsDailyForGroupParams {
-	m.DayQueueJob = v
+// SetJob sets the Job value and returns the updated InsertSuccessfulCronJobParams.
+func (m InsertSuccessfulCronJobParams) SetJob(v string) InsertSuccessfulCronJobParams {
+	m.Job = v
 	return m
 }
 
-// GetTotalJobs returns the TotalJobs value.
-func (m UpdateJobStatsDailyParams) GetTotalJobs() int64 {
-	return m.TotalJobs
+// GetConsumerFetchedAt returns the ConsumerFetchedAt value.
+func (m InsertSuccessfulCronJobParams) GetConsumerFetchedAt() int64 {
+	return m.ConsumerFetchedAt
 }
 
-// SetTotalJobs sets the TotalJobs value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetTotalJobs(v int64) UpdateJobStatsDailyParams {
-	m.TotalJobs = v
+// SetConsumerFetchedAt sets the ConsumerFetchedAt value and returns the updated InsertSuccessfulCronJobParams.
+func (m InsertSuccessfulCronJobParams) SetConsumerFetchedAt(v int64) InsertSuccessfulCronJobParams {
+	m.ConsumerFetchedAt = v
 	return m
 }
 
-// GetTotalSuccess returns the TotalSuccess value.
-func (m UpdateJobStatsDailyParams) GetTotalSuccess() int64 {
-	return m.TotalSuccess
+// GetJob returns the Job value.
+func (m InsertFailedCronJobParams) GetJob() string {
+	return m.Job
 }
 
-// SetTotalSuccess sets the TotalSuccess value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetTotalSuccess(v int64) UpdateJobStatsDailyParams {
-	m.TotalSuccess = v
+// SetJob sets the Job value and returns the updated InsertFailedCronJobParams.
+func (m InsertFailedCronJobParams) SetJob(v string) InsertFailedCronJobParams {
+	m.Job = v
 	return m
 }
 
-// GetTotalFailed returns the TotalFailed value.
-func (m UpdateJobStatsDailyParams) GetTotalFailed() int64 {
-	return m.TotalFailed
+// GetConsumerFetchedAt returns the ConsumerFetchedAt value.
+func (m InsertFailedCronJobParams) GetConsumerFetchedAt() int64 {
+	return m.ConsumerFetchedAt
 }
 
-// SetTotalFailed sets the TotalFailed value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetTotalFailed(v int64) UpdateJobStatsDailyParams {
-	m.TotalFailed = v
-	return m
-}
-
-// GetDurationSum returns the DurationSum value.
-func (m UpdateJobStatsDailyParams) GetDurationSum() float64 {
-	return m.DurationSum
-}
-
-// SetDurationSum sets the DurationSum value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetDurationSum(v float64) UpdateJobStatsDailyParams {
-	m.DurationSum = v
-	return m
-}
-
-// GetDurationSquaredSum returns the DurationSquaredSum value.
-func (m UpdateJobStatsDailyParams) GetDurationSquaredSum() float64 {
-	return m.DurationSquaredSum
-}
-
-// SetDurationSquaredSum sets the DurationSquaredSum value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetDurationSquaredSum(v float64) UpdateJobStatsDailyParams {
-	m.DurationSquaredSum = v
+// SetConsumerFetchedAt sets the ConsumerFetchedAt value and returns the updated InsertFailedCronJobParams.
+func (m InsertFailedCronJobParams) SetConsumerFetchedAt(v int64) InsertFailedCronJobParams {
+	m.ConsumerFetchedAt = v
 	return m
 }
 
 // GetErrors returns the Errors value.
-func (m UpdateJobStatsDailyParams) GetErrors() interface{} {
+func (m InsertFailedCronJobParams) GetErrors() errors.ErrorList {
 	return m.Errors
 }
 
-// SetErrors sets the Errors value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetErrors(v interface{}) UpdateJobStatsDailyParams {
+// SetErrors sets the Errors value and returns the updated InsertFailedCronJobParams.
+func (m InsertFailedCronJobParams) SetErrors(v errors.ErrorList) InsertFailedCronJobParams {
 	m.Errors = v
-	return m
-}
-
-// GetDayQueueJob returns the DayQueueJob value.
-func (m UpdateJobStatsDailyParams) GetDayQueueJob() string {
-	return m.DayQueueJob
-}
-
-// SetDayQueueJob sets the DayQueueJob value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetDayQueueJob(v string) UpdateJobStatsDailyParams {
-	m.DayQueueJob = v
 	return m
 }
 

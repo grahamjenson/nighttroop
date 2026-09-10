@@ -72,6 +72,7 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 
 	if serverConfig.IsTest() {
 		sqldb, err = OpenInMemorySqliteDB()
+		path = ":memory:"
 	} else {
 		sqldb, err = OpenSqliteDB(path, cacheSize)
 	}

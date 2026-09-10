@@ -31,7 +31,7 @@ CREATE TABLE jobs (
     id INTEGER NOT NULL,
     queue TEXT NOT NULL CHECK(length(queue) <= 64),
     job TEXT NOT NULL CHECK(length(job) <= 256),
-    job_status TEXT NOT NULL DEFAULT 'queued' CHECK(length(job_status) <= 32),
+    job_status TEXT NOT NULL DEFAULT 'queued' CHECK(job_status IN ('queued', 'fetched', 'completed', 'failed')),
     execute_after INTEGER NOT NULL DEFAULT 0,
     remaining_attempts INTEGER NOT NULL DEFAULT 1,
     consumer_fetched_at INTEGER NOT NULL DEFAULT 0,

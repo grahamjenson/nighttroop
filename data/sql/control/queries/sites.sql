@@ -94,20 +94,21 @@ SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY s
 
 
 -- name: GetSitesToDeleteInBatch :many
--- @param last_seen_at INT
--- @param last_write_at INT
 -- finds deleted_at is null sites where 
 --    last_seen_at is null and created_at is more than minutes ago and 
 --    OR last_seen_at is not null and last_write_at is null and created_at is more than minutes ago
 --  1. Delete if never even logged in was X mins ago
 --  2. Delete if never written and last_seen_at was X mins ago
-SELECT * FROM sites WHERE state IN ('live', 'disabled') AND batch = @batch
-    AND (
-            (last_seen_at IS NULL AND created_at < datetime('now', '-' || CAST(@last_seen_at AS REAL) || ' minutes')) 
-            OR 
-            (last_write_at IS NULL AND last_seen_at IS NOT NULL AND last_seen_at < datetime('now', '-' || CAST(@last_seen_at AS REAL) || ' minutes'))
-        
-        );
+SELECT * FROM sites WHERE 
+    state IN ('live', 'disabled') AND -- must be live or disabled
+    batch = @batch AND -- within this batch
+    last_write_at IS NULL AND -- must not have been written anything (this is important)
+    (
+        (last_seen_at IS NULL     AND created_at < (unixepoch('subsec') * 1000 - CAST(@last_seen_at AS REAL) * 60 * 1000) )
+        OR 
+        (last_seen_at IS NOT NULL AND last_seen_at < (unixepoch('subsec') * 1000 - CAST(@last_seen_at AS REAL) * 60 * 1000))
+    
+    );
 
 
 
