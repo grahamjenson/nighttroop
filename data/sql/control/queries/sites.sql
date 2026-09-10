@@ -4,21 +4,21 @@
 --------
 
 -- name: CreateSite :one
-INSERT INTO sites (subdomain, backup_key_hash)
+INSERT INTO sites (id, backup_key_hash)
 VALUES (?, ?) RETURNING *;
 
 -------
 -- READ 
 --------
 
--- name: SubdomainExists :one
-SELECT CAST(COUNT(*) > 0 AS BOOLEAN) FROM sites WHERE subdomain = ?;
+-- name: SiteExists :one
+SELECT CAST(COUNT(*) > 0 AS BOOLEAN) FROM sites WHERE id = ?;
 
 -- name: GetAllSites :many
 SELECT * FROM sites;
 
 -- name: GetSite :one
-SELECT * FROM sites WHERE subdomain = ? AND state = 'live';
+SELECT * FROM sites WHERE id = ? AND state = 'live';
 
 
 -- name: GetLiveAndDisabledSites :many
@@ -48,7 +48,7 @@ UPDATE sites
 SET
     last_seen_at = COALESCE(?, last_seen_at),
     last_write_at = COALESCE(?, last_write_at)
-WHERE subdomain = ?;
+WHERE id = ?;
 
 
 -------
@@ -60,16 +60,16 @@ UPDATE sites
 SET 
     disabled_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     state = 'disabled'
-WHERE subdomain IN (SELECT value FROM json_each(?))
-RETURNING subdomain;
+WHERE id IN (SELECT value FROM json_each(?))
+RETURNING id;
 
 -- name: ArchiveSites :many
 UPDATE sites
 SET 
     archived_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     state = 'archived'
-WHERE subdomain IN (SELECT value FROM json_each(?))
-RETURNING subdomain;
+WHERE id IN (SELECT value FROM json_each(?))
+RETURNING id;
 
 
 -- Pass a list of sites as a string to delete
@@ -78,19 +78,19 @@ UPDATE sites
 SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     state = 'deleted'
-WHERE subdomain IN (SELECT value FROM json_each(?))
-RETURNING subdomain;
+WHERE id IN (SELECT value FROM json_each(?))
+RETURNING id;
 
 
 --------------------------------
--- BATCH (by first letter of subdomain)
+-- BATCH (by first letter of id)
 --------------------------------
 
 
 -- name: GetBatchSitesToBackUp :many
 -- Get sites that are live  or diabled
 -- We must backup even empty sites because a rehydrated control will expect them
-SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY subdomain DESC;
+SELECT * FROM sites WHERE batch = ? AND state IN ('live', 'disabled') ORDER BY id DESC;
 
 
 -- name: GetSitesToDeleteInBatch :many

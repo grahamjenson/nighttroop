@@ -22,7 +22,7 @@ FROM sync_source_reports ssr
 JOIN site_sync_sources us
     ON us.unique_hash = ssr.unique_hash
 JOIN sites u
-    ON u.subdomain = us.subdomain
+    ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
   AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- seen in the last day

@@ -9,6 +9,22 @@ import (
 	"nighttroop.t1d.nz/utils/errors"
 )
 
+type ControlIdentity struct {
+	ID                    int64
+	Name                  string
+	Password              string
+	TotpSecret            string
+	Role                  consts.IdentityRole
+	CreatedAt             int64
+	LastSeenAt            *int64
+	LastWriteAt           *int64
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	CreatedByIdentityID   int64
+	CreatedByIdentityName string
+	DeletedAt             *int64
+}
+
 type DataSourceBlockList struct {
 	ID        int64
 	CreatedAt int64
@@ -17,9 +33,40 @@ type DataSourceBlockList struct {
 	Reason    *string
 }
 
-type Identity struct {
+type Site struct {
+	ID                        string
+	Batch                     string
+	BackupKeyHash             string
+	CreatedAt                 int64
+	MaxDbSizeKbLimit          *int64
+	LastSeenAt                *int64
+	LastWriteAt               *int64
+	State                     string
+	DisabledAt                *int64
+	ArchivedAt                *int64
+	DeletedAt                 *int64
+	Units                     *string
+	Timezone                  *string
+	Language                  *string
+	DateFormat                *string
+	TimeFormat                *string
+	WeekStartDay              *string
+	BolusDiaHours             *float64
+	BolusOnsetMinutes         *float64
+	BolusPeakMinutes          *float64
+	BasalDiaHours             *float64
+	BasalOnsetMinutes         *float64
+	BasalPeakMinutes          *float64
+	DefaultInsulinSensitivity *float64
+	DefaultCarbRatio          *float64
+	DefaultBasalRate          *float64
+	CarbMaxAbsorptionHours    *float64
+	CarbMin5mImpact           *float64
+}
+
+type SiteIdentity struct {
 	ID                        int64
-	Subdomain                 string
+	SiteID                    string
 	Name                      string
 	Password                  string
 	TotpSecret                string
@@ -78,41 +125,9 @@ type Identity struct {
 	NotificationsEnabled      *bool
 }
 
-type Site struct {
-	ID                        int64
-	Subdomain                 string
-	Batch                     string
-	BackupKeyHash             string
-	CreatedAt                 int64
-	MaxDbSizeKbLimit          *int64
-	LastSeenAt                *int64
-	LastWriteAt               *int64
-	State                     string
-	DisabledAt                *int64
-	ArchivedAt                *int64
-	DeletedAt                 *int64
-	Units                     *string
-	Timezone                  *string
-	Language                  *string
-	DateFormat                *string
-	TimeFormat                *string
-	WeekStartDay              *string
-	BolusDiaHours             *float64
-	BolusOnsetMinutes         *float64
-	BolusPeakMinutes          *float64
-	BasalDiaHours             *float64
-	BasalOnsetMinutes         *float64
-	BasalPeakMinutes          *float64
-	DefaultInsulinSensitivity *float64
-	DefaultCarbRatio          *float64
-	DefaultBasalRate          *float64
-	CarbMaxAbsorptionHours    *float64
-	CarbMin5mImpact           *float64
-}
-
 type SiteSyncSource struct {
 	ID            int64
-	Subdomain     string
+	SiteID        string
 	Type          consts.SyncSourceType
 	UrlOrUsername string
 	Password      string

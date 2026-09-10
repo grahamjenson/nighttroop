@@ -41,10 +41,6 @@ const FIRST_READ_ONLY_NAME = "read_only"
 
 const CONTROL_IDENTITY_SUBDOMAIN = "control"
 
-const DEXCOM_SYNC_IDENTITY_NAME = "dexcom_sync"
-const NIGHTSCOUT_SYNC_IDENTITY_NAME = "nightscout_sync"
-const LIBRE_SYNC_IDENTITY_NAME = "libre_sync"
-
 type AdminRole string
 
 const (
@@ -61,7 +57,6 @@ const (
 	IdentityRoleAdmin           IdentityRole = "admin"            // Login with password + totp
 	IdentityRoleUser            IdentityRole = "user"             // Login with password with TOTP
 	IdentityRoleUserReadOnly    IdentityRole = "user_readonly"    // Login with password with TOTP
-	IdentityRoleSync            IdentityRole = "sync"             // Can Write Data
 	IdentityRoleDevicePWDPhone  IdentityRole = "device_pwd_phone" // PWD (person with diabetes) phone that controls pump/cgm...
 	IdentityRoleDeviceRead      IdentityRole = "device_read"
 	IdentityRoleDeviceReadWrite IdentityRole = "device_read_write"
@@ -82,8 +77,6 @@ func (i IdentityRole) GetType() IdentityType {
 		return IdentityTypeAdmin
 	case IdentityRoleUser, IdentityRoleUserReadOnly:
 		return IdentityTypeUser
-	case IdentityRoleSync:
-		return IdentityTypeSync
 	case IdentityRoleDevicePWDPhone, IdentityRoleDeviceRead, IdentityRoleDeviceReadWrite:
 		return IdentityTypeDevice
 	default:

@@ -24,7 +24,7 @@ func (e EGV) UTCOffsetInMinutes() int {
 	return offset / 60
 }
 
-func EGVToCreate(e EGV, idPrefix string, createdByIdentityID int64, createdByIdentityName string) site.CreateGlucoseReadingParams {
+func EGVToCreate(e EGV, createdByIdentityName string) site.CreateGlucoseReadingParams {
 	return site.CreateGlucoseReadingParams{
 		ID:                    utils.NextID(),
 		OccurredAt:            e.SystemTime.UnixMilli(),

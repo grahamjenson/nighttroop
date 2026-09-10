@@ -138,7 +138,7 @@ var ALL_SETTINGS_TYPES = map[string]string{
 	"notifications_enabled":         "boolean",
 }
 
-func (i *Identity) GetSetting(name string) any {
+func (i *SiteIdentity) GetSetting(name string) any {
 	switch name {
 	case "units":
 		return i.Units

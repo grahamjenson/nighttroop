@@ -5,7 +5,6 @@
 1. make archiving and truncation a manual job, i.e. show unused users and select all and archive.  I think this will remove a lot of logic that can be shaky later on we can look at automating, if it gets really bad
 1. Display users in control
 1. Display job and cron stats in control
-1. refactor subdomain to site_id
 1. Sync
     1. Check Sync Creds before save/enable -- e.g. check nightscout is a real endpoint and auth works
     1. Sync treatments and entries using v3 API

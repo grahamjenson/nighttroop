@@ -12,12 +12,12 @@ import (
 )
 
 const createDexcomSyncSource = `-- name: CreateDexcomSyncSource :exec
-INSERT INTO site_sync_sources (subdomain, type, password, enabled, url_or_username, dexcom_region, unique_hash) 
+INSERT INTO site_sync_sources (site_id, type, password, enabled, url_or_username, dexcom_region, unique_hash) 
 VALUES (?, "DEXCOM", ?, ?, ?, ?, ?)
 `
 
 type CreateDexcomSyncSourceParams struct {
-	Subdomain     string
+	SiteID        string
 	Password      string
 	Enabled       bool
 	UrlOrUsername string
@@ -30,7 +30,7 @@ type CreateDexcomSyncSourceParams struct {
 // ----
 func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createDexcomSyncSourceStmt, createDexcomSyncSource,
-		arg.Subdomain,
+		arg.SiteID,
 		arg.Password,
 		arg.Enabled,
 		arg.UrlOrUsername,
@@ -42,12 +42,12 @@ func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSy
 
 const createNightscoutSyncSource = `-- name: CreateNightscoutSyncSource :exec
 
-INSERT INTO site_sync_sources (subdomain, type, password, enabled, url_or_username, unique_hash) 
+INSERT INTO site_sync_sources (site_id, type, password, enabled, url_or_username, unique_hash) 
 VALUES (?, "NIGHTSCOUT", ?, ?, ?, ?)
 `
 
 type CreateNightscoutSyncSourceParams struct {
-	Subdomain     string
+	SiteID        string
 	Password      string
 	Enabled       bool
 	UrlOrUsername string
@@ -59,7 +59,7 @@ type CreateNightscoutSyncSourceParams struct {
 // ----
 func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, arg CreateNightscoutSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource,
-		arg.Subdomain,
+		arg.SiteID,
 		arg.Password,
 		arg.Enabled,
 		arg.UrlOrUsername,
@@ -69,43 +69,43 @@ func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, arg CreateNigh
 }
 
 const deleteSyncSource = `-- name: DeleteSyncSource :exec
-DELETE FROM site_sync_sources WHERE type = ? and subdomain = ?
+DELETE FROM site_sync_sources WHERE type = ? and site_id = ?
 `
 
 type DeleteSyncSourceParams struct {
-	Type      consts.SyncSourceType
-	Subdomain string
+	Type   consts.SyncSourceType
+	SiteID string
 }
 
 // DELETE is real for security
 func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourceParams) error {
-	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, arg.Type, arg.Subdomain)
+	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, arg.Type, arg.SiteID)
 	return err
 }
 
 const disableNightscoutSyncSource = `-- name: DisableNightscoutSyncSource :exec
-UPDATE site_sync_sources SET enabled = 0, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
+UPDATE site_sync_sources SET enabled = 0, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND site_id = ?
 `
 
 type DisableNightscoutSyncSourceParams struct {
-	Subdomain string
+	SiteID string
 }
 
 func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, arg DisableNightscoutSyncSourceParams) error {
-	_, err := q.exec(ctx, q.disableNightscoutSyncSourceStmt, disableNightscoutSyncSource, arg.Subdomain)
+	_, err := q.exec(ctx, q.disableNightscoutSyncSourceStmt, disableNightscoutSyncSource, arg.SiteID)
 	return err
 }
 
 const getAllSiteSyncSourcesForSite = `-- name: GetAllSiteSyncSourcesForSite :many
-SELECT id, subdomain, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM site_sync_sources where subdomain = ?
+SELECT id, site_id, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSiteSyncSourcesForSiteParams struct {
-	Subdomain string
+	SiteID string
 }
 
 func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSiteSyncSourcesForSiteParams) ([]*SiteSyncSource, error) {
-	rows, err := q.query(ctx, q.getAllSiteSyncSourcesForSiteStmt, getAllSiteSyncSourcesForSite, arg.Subdomain)
+	rows, err := q.query(ctx, q.getAllSiteSyncSourcesForSiteStmt, getAllSiteSyncSourcesForSite, arg.SiteID)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSi
 		var i SiteSyncSource
 		if err := rows.Scan(
 			&i.ID,
-			&i.Subdomain,
+			&i.SiteID,
 			&i.Type,
 			&i.UrlOrUsername,
 			&i.Password,
@@ -139,7 +139,7 @@ func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSi
 }
 
 const getAllSiteSyncSourcesForUniqueHash = `-- name: GetAllSiteSyncSourcesForUniqueHash :many
-SELECT uss.id, uss.subdomain, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM site_sync_sources uss JOIN sites u ON u.subdomain = uss.subdomain WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
+SELECT uss.id, uss.site_id, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM site_sync_sources uss JOIN sites u ON u.id = uss.site_id WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
 `
 
 type GetAllSiteSyncSourcesForUniqueHashParams struct {
@@ -157,7 +157,7 @@ func (q *Queries) GetAllSiteSyncSourcesForUniqueHash(ctx context.Context, arg Ge
 		var i SiteSyncSource
 		if err := rows.Scan(
 			&i.ID,
-			&i.Subdomain,
+			&i.SiteID,
 			&i.Type,
 			&i.UrlOrUsername,
 			&i.Password,
@@ -181,7 +181,7 @@ func (q *Queries) GetAllSiteSyncSourcesForUniqueHash(ctx context.Context, arg Ge
 }
 
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
-UPDATE site_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND subdomain = ?
+UPDATE site_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND site_id = ?
 `
 
 type UpdateDexcomSyncSourceParams struct {
@@ -190,7 +190,7 @@ type UpdateDexcomSyncSourceParams struct {
 	UrlOrUsername string
 	DexcomRegion  consts.DexcomRegion
 	UniqueHash    string
-	Subdomain     string
+	SiteID        string
 }
 
 func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSyncSourceParams) error {
@@ -200,13 +200,13 @@ func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSy
 		arg.UrlOrUsername,
 		arg.DexcomRegion,
 		arg.UniqueHash,
-		arg.Subdomain,
+		arg.SiteID,
 	)
 	return err
 }
 
 const updateDexcomSyncSourceWithoutPassword = `-- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE site_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND subdomain = ?
+UPDATE site_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND site_id = ?
 `
 
 type UpdateDexcomSyncSourceWithoutPasswordParams struct {
@@ -214,7 +214,7 @@ type UpdateDexcomSyncSourceWithoutPasswordParams struct {
 	UrlOrUsername string
 	DexcomRegion  consts.DexcomRegion
 	UniqueHash    string
-	Subdomain     string
+	SiteID        string
 }
 
 func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, arg UpdateDexcomSyncSourceWithoutPasswordParams) error {
@@ -223,13 +223,13 @@ func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, arg
 		arg.UrlOrUsername,
 		arg.DexcomRegion,
 		arg.UniqueHash,
-		arg.Subdomain,
+		arg.SiteID,
 	)
 	return err
 }
 
 const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
-UPDATE site_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
+UPDATE site_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND site_id = ?
 `
 
 type UpdateNightscoutSyncSourceParams struct {
@@ -237,7 +237,7 @@ type UpdateNightscoutSyncSourceParams struct {
 	Enabled       bool
 	UrlOrUsername string
 	UniqueHash    string
-	Subdomain     string
+	SiteID        string
 }
 
 func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNightscoutSyncSourceParams) error {
@@ -246,20 +246,20 @@ func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNigh
 		arg.Enabled,
 		arg.UrlOrUsername,
 		arg.UniqueHash,
-		arg.Subdomain,
+		arg.SiteID,
 	)
 	return err
 }
 
 const updateNightscoutSyncSourceWithoutPassword = `-- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE site_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND subdomain = ?
+UPDATE site_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND site_id = ?
 `
 
 type UpdateNightscoutSyncSourceWithoutPasswordParams struct {
 	Enabled       bool
 	UrlOrUsername string
 	UniqueHash    string
-	Subdomain     string
+	SiteID        string
 }
 
 func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, arg UpdateNightscoutSyncSourceWithoutPasswordParams) error {
@@ -267,7 +267,7 @@ func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context,
 		arg.Enabled,
 		arg.UrlOrUsername,
 		arg.UniqueHash,
-		arg.Subdomain,
+		arg.SiteID,
 	)
 	return err
 }

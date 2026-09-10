@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -84,7 +85,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			return
 		}
 
-		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", "control", username), httputils.GetIP(r))
+		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", consts.CONTROL_IDENTITY_SUBDOMAIN, username), httputils.GetIP(r))
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return
@@ -121,10 +122,9 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*control.Identity, error) {
-	admin, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
-		Subdomain: "control",
-		Name:      username,
+func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*control.ControlIdentity, error) {
+	admin, err := controlDB.Queries.GetControlIdentity(context.TODO(), control.GetControlIdentityParams{
+		Name: username,
 	})
 
 	if err != nil {

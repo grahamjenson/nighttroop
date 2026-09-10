@@ -75,7 +75,7 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 			if sw.status == 200 {
 				wasWrite := siteContext.SiteAction == httputils.SiteActionWrite
 				controlDB.UpdateSiteDateFlags(siteContext.SiteModel, true, wasWrite)
-				siteContext.ControlDB.UpdateIdentityDateFlags(siteContext.IdentityModel, true, wasWrite)
+				siteContext.ControlDB.UpdateSiteIdentityDateFlags(siteContext.IdentityModel, true, wasWrite)
 			}
 		})
 	}
@@ -114,7 +114,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.Identity, error) {
+func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.SiteIdentity, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -123,7 +123,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 		if err != nil {
 			return nil, fmt.Errorf("bad JWT token: %w", err)
 		}
-		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Error("Bad JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("identity not found: %w", err)
@@ -144,7 +144,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 			slog.Error("Bad Cookie JWT token", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		identity, err := GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Error("Bad Cookie JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
@@ -155,15 +155,15 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	return nil, fmt.Errorf("No JWT token found")
 }
 
-func GetIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.Identity, error) {
+func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.SiteIdentity, error) {
 	siteContext := httputils.GetSiteContext(ctx)
 	if subdomain != siteContext.Subdomain {
 		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
 	}
 
-	identity, err := siteContext.ControlDB.Queries.GetIdentity(ctx, control.GetIdentityParams{
-		Subdomain: subdomain,
-		Name:      identityName,
+	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, control.GetSiteIdentityParams{
+		SiteID: subdomain,
+		Name:   identityName,
 	})
 	if err != nil {
 		return nil, err

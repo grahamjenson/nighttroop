@@ -50,7 +50,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, nsutils.ErrNotFound
 	}
 	setting.Value = data["value"]
-	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.Subdomain, identitySettingsMap)
+	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.SiteID, identitySettingsMap)
 	if httpErr != nil {
 		slog.Error("failed to convert settings map to params", "error", httpErr, "collection", "settings")
 		return nil, false, httpErr
@@ -59,7 +59,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 		slog.Error("failed to convert settings map to params, got nil", "collection", "settings")
 		return nil, false, nsutils.ErrInternal
 	}
-	err = siteContext.ControlDB.Queries.UpdateIdentitySettings(ctx, *params)
+	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
 	if err != nil {
 		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
 		return nil, false, nsutils.ErrInternal
@@ -100,7 +100,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, nsutils.ErrNotFound
 	}
 	setting.Value = patch["value"]
-	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.Subdomain, identitySettingsMap)
+	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.SiteID, identitySettingsMap)
 	if httpErr != nil {
 		slog.Error("failed to convert settings map to params", "error", httpErr, "collection", "settings")
 		return nil, false, httpErr
@@ -109,7 +109,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		slog.Error("failed to convert settings map to params, got nil", "collection", "settings")
 		return nil, false, nsutils.ErrInternal
 	}
-	err = siteContext.ControlDB.Queries.UpdateIdentitySettings(ctx, *params)
+	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
 	if err != nil {
 		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
 		return nil, false, nsutils.ErrInternal
@@ -143,7 +143,7 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 		return nsutils.ErrNotFound
 	}
 	setting.Value = nil
-	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.Subdomain, identitySettingsMap)
+	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.SiteID, identitySettingsMap)
 	if httpErr != nil {
 		slog.Error("failed to convert settings map to params", "error", httpErr, "collection", "settings")
 		return httpErr
@@ -152,7 +152,7 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 		slog.Error("failed to convert settings map to params, got nil", "collection", "settings")
 		return nsutils.ErrInternal
 	}
-	err := siteContext.ControlDB.Queries.UpdateIdentitySettings(ctx, *params)
+	err := siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
 	if err != nil {
 		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
 		return nsutils.ErrInternal
@@ -201,9 +201,9 @@ type Setting struct {
 	Value      any    `json:"value"`
 	Type       string `json:"type"`
 
-	isDefault bool              `json:"-"`
-	site      *control.Site     `json:"-"`
-	identity  *control.Identity `json:"-"`
+	isDefault bool                  `json:"-"`
+	site      *control.Site         `json:"-"`
+	identity  *control.SiteIdentity `json:"-"`
 }
 
 func (s Setting) GetID() string {
@@ -270,7 +270,7 @@ func (s Setting) GetRawJsonData() *string {
 	return nil
 }
 
-func GetIdentitySettingsMap(identity *control.Identity) map[string]*Setting {
+func GetIdentitySettingsMap(identity *control.SiteIdentity) map[string]*Setting {
 	settings := make(map[string]*Setting)
 	for _, setting := range control.ALL_SETTINGS {
 		settings[setting] = NewSetting(
@@ -288,7 +288,7 @@ func GetIdentitySettingsMap(identity *control.Identity) map[string]*Setting {
 
 }
 
-func GetSettingsMap(site *control.Site, identity *control.Identity) map[string]*Setting {
+func GetSettingsMap(site *control.Site, identity *control.SiteIdentity) map[string]*Setting {
 	settings := make(map[string]*Setting)
 	for _, setting := range control.ALL_SETTINGS {
 		defaultValue := control.ALL_SETTINGS_DEFAULTS[setting]
@@ -313,7 +313,7 @@ func NewSetting(
 	defaultValue any,
 	typ string,
 	site *control.Site,
-	identity *control.Identity,
+	identity *control.SiteIdentity,
 ) *Setting {
 	return &Setting{
 		Identifier: identifier,
@@ -346,8 +346,8 @@ func first(values ...any) any {
 	return nil
 }
 
-func IdentitySettingsMapToIdentitySettingsParams(identityID int64, subdomain string, settingsMap map[string]*Setting) (*control.UpdateIdentitySettingsParams, *nsutils.HTTPError) {
-	params := &control.UpdateIdentitySettingsParams{ID: identityID, Subdomain: subdomain}
+func IdentitySettingsMapToIdentitySettingsParams(identityID int64, subdomain string, settingsMap map[string]*Setting) (*control.UpdateSiteIdentitySettingsParams, *nsutils.HTTPError) {
+	params := &control.UpdateSiteIdentitySettingsParams{ID: identityID, SiteID: subdomain}
 	var err *nsutils.HTTPError
 
 	params.Units, err = SettingToString(settingsMap, "units")

@@ -2,57 +2,56 @@
 -- CREATE 
 --------
 
--- name: CreateIdentity :exec
-INSERT INTO identities (
-    subdomain,
+-- name: CreateSiteIdentity :exec
+INSERT INTO site_identities (
+    site_id,
     name,
     password,
     totp_secret,
     role,
     created_by_identity_id,
     created_by_identity_name
-) VALUES (?, ?, ?, ?, ?, ?, ?);
+) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+ );
 
 
--- name: CreateIfNotExistsIdentity :exec
-INSERT INTO identities (
-    subdomain,
-    name,
-    password,
-    totp_secret,
-    role,
-    created_by_identity_id,
-    created_by_identity_name
-) VALUES (?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT(subdomain, name) DO NOTHING;
+
 
 --------
 -- READ
 --------
 
 
--- name: AllIdentities :many
-SELECT * FROM identities WHERE subdomain = ? ORDER BY created_at DESC;
+-- name: AllSiteIdentities :many
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') ORDER BY created_at DESC;
 
 
--- name: GetIdentity :one
-SELECT * FROM identities WHERE subdomain = ? AND name = ? LIMIT 1;
+-- name: GetSiteIdentity :one
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') LIMIT 1;
 
 
 --------
 -- UPDATE
 --------
 
--- name: UpdateIdentityDateFlags :exec
-UPDATE identities
+-- name: UpdateSiteIdentityDateFlags :exec
+UPDATE site_identities
 SET
-    last_seen_at = COALESCE(?, last_seen_at),
+    last_seen_at = COALESCE(?,
+     last_seen_at),
     last_write_at = COALESCE(?, last_write_at)
 WHERE id = ?;
 
 
--- name: UpdateIdentitySettings :exec
-UPDATE identities SET
+-- name: UpdateSiteIdentitySettings :exec
+UPDATE site_identities SET
     -- IDENTITY SETTINGS
     units = sqlc.narg('Units'),
 
@@ -117,7 +116,7 @@ UPDATE identities SET
 
     -- NOTIFICATIONS
     notifications_enabled = sqlc.narg('NotificationsEnabled')
-WHERE id = sqlc.arg('ID') AND subdomain = sqlc.arg('Subdomain');
+WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
 
 --------
 -- DELETE

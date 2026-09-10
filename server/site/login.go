@@ -196,13 +196,13 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 	}
 }
 
-func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*control.Identity, error) {
+func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityNameFromToken string) (*control.SiteIdentity, error) {
 	// First try the JWT token (either header or cookie)
 	siteContext := httputils.GetSiteContext(r.Context())
 
-	identity, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
-		Subdomain: siteContext.Subdomain,
-		Name:      identityNameFromToken,
+	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+		SiteID: siteContext.Subdomain,
+		Name:   identityNameFromToken,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
@@ -210,14 +210,14 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	return identity, nil
 }
 
-func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.SecurityConfig, subdomain, formName, formPassword string) (*control.Identity, error) {
+func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.SecurityConfig, subdomain, formName, formPassword string) (*control.SiteIdentity, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	identity, err := controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
-		Subdomain: subdomain,
-		Name:      formName,
+	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), control.GetSiteIdentityParams{
+		SiteID: subdomain,
+		Name:   formName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
@@ -230,7 +230,7 @@ func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.
 	return identity, nil
 }
 
-func validateIdentityTOTP(config *config.ServerConfig, identity *control.Identity, totpToken string) error {
+func validateIdentityTOTP(config *config.ServerConfig, identity *control.SiteIdentity, totpToken string) error {
 	if totpToken == "" {
 		return fmt.Errorf("TOTP token is required")
 	}
@@ -310,7 +310,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 }
 
-func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.ServerConfig, devicename, password, totpToken string) (*control.Identity, error) {
+func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.ServerConfig, devicename, password, totpToken string) (*control.SiteIdentity, error) {
 	device, err := loginTheUserPasswordOnly(controlDB, cfg.Security, subdomain, devicename, password)
 	if err != nil {
 		return nil, err

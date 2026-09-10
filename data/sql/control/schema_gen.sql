@@ -1,3 +1,25 @@
+CREATE TABLE control_identities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
+
+    password TEXT NOT NULL CHECK(length(password) <= 128),
+    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
+    role TEXT NOT NULL CHECK(length(role) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    
+    last_seen_at INTEGER,
+    last_write_at INTEGER,
+    
+    updated_by_identity_id INTEGER, -- id of identity that updated this record
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32), -- denormalized name for easier lookup (also survives delete)
+
+    created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+
+    deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
+);
+
 CREATE TABLE data_source_block_list(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -6,9 +28,10 @@ CREATE TABLE data_source_block_list(
     reason TEXT CHECK(length(reason) <= 256)
 );
 
-CREATE TABLE identities (
+CREATE TABLE site_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32),
+    site_id TEXT NOT NULL REFERENCES sites(id),
+
     name TEXT NOT NULL CHECK(length(name) <= 32),
 
     password TEXT NOT NULL CHECK(length(password) <= 128),
@@ -95,13 +118,13 @@ CREATE TABLE identities (
     notifications_enabled INTEGER,
 
     -- Constraints
-    UNIQUE(subdomain, name)
+    UNIQUE(site_id, name)
 );
 
 CREATE TABLE site_sync_sources (
     -- Nightscout/Dexcom
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT NOT NULL CHECK(length(subdomain) <= 32), -- only for nightscout, dexcom can leave null
+    site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
     type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
 
     url_or_username TEXT NOT NULL CHECK(length(url_or_username) <= 256), -- url for nightscout, username for dexcom
@@ -115,14 +138,13 @@ CREATE TABLE site_sync_sources (
 
     unique_hash TEXT NOT NULL CHECK(length(unique_hash) <= 512), 
 
-    -- Unique contraint of subdomain and type
-    UNIQUE(subdomain, type)
+    -- Unique contraint of site_id and type
+    UNIQUE(site_id, type)
 );
 
 CREATE TABLE sites (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    subdomain TEXT UNIQUE NOT NULL CHECK(length(subdomain) <= 32),
-    batch TEXT GENERATED ALWAYS AS (SUBSTR(subdomain, 1, 1)) VIRTUAL NOT NULL,
+    id TEXT PRIMARY KEY CHECK(length(id) <= 32),
+    batch TEXT GENERATED ALWAYS AS (SUBSTR(id, 1, 1)) VIRTUAL NOT NULL,
     
     backup_key_hash TEXT NOT NULL CHECK(length(backup_key_hash) <= 64), 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

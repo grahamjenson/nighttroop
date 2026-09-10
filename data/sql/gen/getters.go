@@ -32,7 +32,10 @@ var TableNameMap = map[string]string{
 var AttributeNameMap = map[string]string{}
 
 var TypeLookupMap = map[string]map[string]string{
-	"Identity": {
+	"ControlIdentity": {
+		"Role": "consts.IdentityRole",
+	},
+	"SiteIdentity": {
 		"Role":    "consts.IdentityRole",
 		"Enabled": "bool",
 	},
@@ -59,7 +62,10 @@ var TypeLookupMap = map[string]map[string]string{
 	"FailJobParams": {
 		"Errors": "errors.ErrorList",
 	},
-	"CreateIdentityParams": {
+	"CreateSiteIdentityParams": {
+		"Role": "consts.IdentityRole",
+	},
+	"CreateControlIdentityParams": {
 		"Role": "consts.IdentityRole",
 	},
 	"CreateIfNotExistsIdentityParams": {

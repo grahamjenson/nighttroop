@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
+	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -40,12 +41,14 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	totalAddedColumns := 0
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		siteContext := &httputils.SiteContext{
-			Subdomain:     userSyncSource.siteModel.Subdomain,
-			IdentityModel: userSyncSource.syncIdentity,
-			ControlDB:     userSyncSource.controlDB,
-			SiteDB:        userSyncSource.siteDB,
-			SiteModel:     userSyncSource.siteModel,
-			SiteAction:    httputils.SiteActionWrite,
+			Subdomain: userSyncSource.siteModel.ID,
+			IdentityModel: &control.SiteIdentity{
+				Name: "nightscout_sync",
+			},
+			ControlDB:  userSyncSource.controlDB,
+			SiteDB:     userSyncSource.siteDB,
+			SiteModel:  userSyncSource.siteModel,
+			SiteAction: httputils.SiteActionWrite,
 		}
 
 		addedColumns := false
@@ -67,7 +70,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		}
 		// Update that it has been seen and used recently
 		if addedColumns {
-			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.siteModel.Subdomain)
+			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.siteModel.ID)
 
 		}
 	}

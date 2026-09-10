@@ -44,10 +44,9 @@ type SyncJobInfo struct {
 }
 
 type SyncUserInfo struct {
-	siteModel    *control.Site
-	siteDB       *db.SiteDB
-	controlDB    *db.ControlDB
-	syncIdentity *control.Identity
+	siteModel *control.Site
+	siteDB    *db.SiteDB
+	controlDB *db.ControlDB
 }
 
 func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -149,41 +148,19 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncS
 }
 
 func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSyncSource) (*SyncUserInfo, error) {
-	userDb, userModel, err := b.controlDB.GetSite(syncSource.Subdomain)
+	userDb, userModel, err := b.controlDB.GetSite(syncSource.SiteID)
 	if err != nil {
-		fmt.Println("Cant findn the user for subdomain:", syncSource.Subdomain)
+		fmt.Println("Cant findn the user for site ID:", syncSource.SiteID)
 		return nil, err
 	}
 	if userModel == nil || userDb == nil {
 		return nil, nil
 	}
 
-	identityName := ""
-	switch syncSource.Type {
-	case consts.SyncSourceTypeNightscout:
-		identityName = consts.NIGHTSCOUT_SYNC_IDENTITY_NAME
-	case consts.SyncSourceTypeDexcom:
-		identityName = consts.DEXCOM_SYNC_IDENTITY_NAME
-	}
-
-	if identityName == "" {
-		return nil, fmt.Errorf("invalid sync source type: %s", syncSource.Type)
-	}
-
-	identity, err := b.controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
-		Subdomain: consts.CONTROL_IDENTITY_SUBDOMAIN,
-		Name:      identityName,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &SyncUserInfo{
-		siteDB:       userDb,
-		siteModel:    userModel,
-		syncIdentity: identity,
-		controlDB:    b.controlDB,
+		siteDB:    userDb,
+		siteModel: userModel,
+		controlDB: b.controlDB,
 	}, nil
 }
 

@@ -54,7 +54,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.Identity, bool, error) {
+func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.SiteIdentity, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -63,7 +63,7 @@ func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 		if err != nil {
 			return nil, false, fmt.Errorf("bad JWT token: %w", err)
 		}
-		identity, err := site.GetIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		identity, err := site.GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Error("Bad JWT token cant find identity", "error", err)
 			return nil, false, fmt.Errorf("identity not found: %w", err)
@@ -78,7 +78,7 @@ func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	return nil, true, fmt.Errorf("No JWT token found")
 }
 
-func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*control.Identity, error) {
+func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*control.SiteIdentity, error) {
 
 	// We first try to get the token, then the secret param, both equal in Nighttroop
 	tokenParam := r.URL.Query().Get("token")
@@ -108,7 +108,7 @@ func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*cont
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 
-	identity, err := site.GetIdentity(r.Context(), tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
+	identity, err := site.GetSiteIdentity(r.Context(), tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}

@@ -74,31 +74,27 @@ func (db *ControlDB) fillSites() ([]string, error) {
 	}
 
 	for _, model := range res {
-		sites = append(sites, model.Subdomain)
+		sites = append(sites, model.ID)
 
 		// Site DB has to be available
-		path := site.GetPath(model.Subdomain, db.ServerConfig)
+		path := site.GetPath(model.ID, db.ServerConfig)
 
 		if !utils.FileExists(path) {
-			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.Subdomain)
+			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.ID)
 		}
 
-		siteDB, err := NewSiteDB(context.TODO(), model.Subdomain, db.ServerConfig)
+		siteDB, err := NewSiteDB(context.TODO(), model.ID, db.ServerConfig)
 		if err != nil {
 			return sites, fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
 		}
-		db.sites[model.Subdomain] = siteDB
+		db.sites[model.ID] = siteDB
 	}
 
 	return sites, nil
 }
 
 func (db *ControlDB) seedDefaultIdentities() error {
-	db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-
-	idValues, err := db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	idValues, err := db.CreateControlIdentity(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil && errors.IsSQLUniqueViolationError(err) {
 		// Admin user already exists so we can ignore this error
 		return nil
@@ -163,7 +159,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	defer db.sitesRWLock.Unlock()
 
 	_, err = db.Queries.CreateSite(context.TODO(), control.CreateSiteParams{
-		Subdomain:     subdomain,
+		ID:            subdomain,
 		BackupKeyHash: backupKeyHash,
 	})
 
@@ -180,7 +176,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	// Setup the new SiteDB
 	////
 
-	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createDefaultIdentities(subdomain)
+	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteDefaultIdentities(subdomain)
 
 	if err != nil {
 		siteDB.TryCloseAndDelete()
@@ -272,8 +268,8 @@ func (db *ControlDB) AllSites() []*SiteDB {
 }
 
 func (db *ControlDB) SubdomainUsed(subdomain string) bool {
-	exists, err := db.Queries.SubdomainExists(context.TODO(), control.SubdomainExistsParams{
-		Subdomain: subdomain,
+	exists, err := db.Queries.SiteExists(context.TODO(), control.SiteExistsParams{
+		ID: subdomain,
 	})
 	if err != nil {
 		return false
@@ -282,7 +278,7 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 }
 
 func (db *ControlDB) UpdateSiteDateFlags(siteModel *control.Site, updateLastSeen bool, updateLastWrite bool) error {
-	subdomain := siteModel.Subdomain
+	subdomain := siteModel.ID
 
 	// Only update if not seen in 10 minutes
 	lastWriteMoreThan10MinutesAgo := siteModel.LastWriteAt == nil || time.Now().After(siteModel.LastWriteAtDate().Add(10*time.Minute))
@@ -300,7 +296,7 @@ func (db *ControlDB) UpdateSiteDateFlags(siteModel *control.Site, updateLastSeen
 	db.Queries.UpdateSiteDateFlags(context.TODO(), control.UpdateSiteDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
-		Subdomain:   subdomain,
+		ID:          subdomain,
 	})
 
 	return nil
@@ -309,13 +305,13 @@ func (db *ControlDB) UpdateSiteDateFlags(siteModel *control.Site, updateLastSeen
 func (db *ControlDB) GetSite(subdomain string) (*SiteDB, *control.Site, error) {
 	// Check if site exists in the db
 	model, err := db.Queries.GetSite(context.TODO(), control.GetSiteParams{
-		Subdomain: subdomain,
+		ID: subdomain,
 	})
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot get site from db: %w", err)
 	}
-	if model.Subdomain == "" {
+	if model.ID == "" {
 		return nil, nil, fmt.Errorf("site not found")
 	}
 
@@ -341,7 +337,7 @@ func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
 func (db *ControlDB) GetAllSiteSyncSources(ctx context.Context, subdomain string) (nightscout *control.SiteSyncSource, dexcom *control.SiteSyncSource, err error) {
 	// TODO: This might become a problem we could make faster with a dirty flag or something
 	sync_sources, err := db.Queries.GetAllSiteSyncSourcesForSite(ctx, control.GetAllSiteSyncSourcesForSiteParams{
-		Subdomain: subdomain,
+		SiteID: subdomain,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
@@ -385,9 +381,9 @@ func (db *ControlDB) Close() error {
 // Identities
 // ////
 
-func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
+func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
-	adminIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	adminIdentity, err := db.CreateSiteIdentity(subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
@@ -397,7 +393,7 @@ func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues,
 
 	// Create Default PWD User (Able to write data on the ns API)
 
-	pwdIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
+	pwdIdentity, err := db.CreateSiteIdentity(subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
 	}
@@ -406,7 +402,7 @@ func (db *ControlDB) createDefaultIdentities(subdomain string) (*IdentityValues,
 	}
 
 	// Create Default Read-Only User
-	readOnlyIdentity, err := db.CreateIdentity(subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
+	readOnlyIdentity, err := db.CreateSiteIdentity(subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User:	 %w", err)
 	}
@@ -423,7 +419,7 @@ type IdentityValues struct {
 	NSToken    *string
 }
 
-func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.IdentityRole) (*IdentityValues, error) {
+func (db *ControlDB) CreateSiteIdentity(siteID string, name string, role consts.IdentityRole) (*IdentityValues, error) {
 
 	security := db.ServerConfig.Security
 	hostname := db.ServerConfig.HostName
@@ -437,7 +433,7 @@ func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.I
 	encTOTPSecret := ""
 	if can.MustLoginWithTotp(role, false) {
 
-		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, subdomain, hostname))
+		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, siteID, hostname))
 		if err != nil {
 			return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
 		}
@@ -446,8 +442,8 @@ func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.I
 		encTOTPSecret = encTOTPSecretRet
 	}
 
-	err = db.Queries.CreateIdentity(context.TODO(), control.CreateIdentityParams{
-		Subdomain:  subdomain,
+	err = db.Queries.CreateSiteIdentity(context.TODO(), control.CreateSiteIdentityParams{
+		SiteID:     siteID,
 		Name:       name,
 		Password:   hashedPassword,
 		TotpSecret: encTOTPSecret,
@@ -459,7 +455,7 @@ func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.I
 	}
 	var nsToken *string
 	if can.HaveNightscoutToken(role) {
-		token, err := security.CreateNightscoutTokenForIdentity(subdomain, name, string(role), password)
+		token, err := security.CreateNightscoutTokenForIdentity(siteID, name, string(role), password)
 		if err != nil {
 			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
 		}
@@ -473,7 +469,46 @@ func (db *ControlDB) CreateIdentity(subdomain string, name string, role consts.I
 	}, nil
 }
 
-func (db *ControlDB) UpdateIdentityDateFlags(identity *control.Identity, updateLastSeen bool, updateLastWrite bool) error {
+func (db *ControlDB) CreateControlIdentity(name string, role consts.IdentityRole) (*IdentityValues, error) {
+	security := db.ServerConfig.Security
+	hostname := db.ServerConfig.HostName
+	password, hashedPassword, err := security.GeneratePassword()
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate control password: %w", err)
+	}
+
+	var totpSecretPtr *string
+	encTOTPSecret := ""
+	if can.MustLoginWithTotp(role, false) {
+
+		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, hostname))
+		if err != nil {
+			return nil, fmt.Errorf("cannot generate control TOTP: %w", err)
+		}
+
+		totpSecretPtr = &totpSecret
+		encTOTPSecret = encTOTPSecretRet
+	}
+
+	err = db.Queries.CreateControlIdentity(context.TODO(), control.CreateControlIdentityParams{
+		Name:       name,
+		Password:   hashedPassword,
+		TotpSecret: encTOTPSecret,
+		Role:       role,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot create control identity: %w", err)
+	}
+
+	return &IdentityValues{
+		Password:   password,
+		TotpSecret: totpSecretPtr,
+	}, nil
+}
+
+func (db *ControlDB) UpdateSiteIdentityDateFlags(identity *control.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
 
 	// Only update if not seen in 10 minutes
 	lastWriteMoreThan10MinutesAgo := identity.LastWriteAt == nil || time.Now().After(identity.LastWriteAtDate().Add(10*time.Minute))
@@ -489,7 +524,7 @@ func (db *ControlDB) UpdateIdentityDateFlags(identity *control.Identity, updateL
 		lastWriteAt = &now
 	}
 
-	db.Queries.UpdateIdentityDateFlags(context.TODO(), control.UpdateIdentityDateFlagsParams{
+	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), control.UpdateSiteIdentityDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		ID:          identity.ID,
@@ -516,7 +551,7 @@ func (db *ControlDB) GetSiteDBsFromModels(models []*control.Site) ([]*SiteDB, er
 	defer db.sitesRWLock.RUnlock()
 
 	for _, model := range models {
-		site := db.sites[model.Subdomain]
+		site := db.sites[model.ID]
 		if site == nil {
 			return sites, fmt.Errorf("site not found in memory")
 		}

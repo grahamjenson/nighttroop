@@ -184,8 +184,8 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerCon
 		}
 
 		err = controlDB.Queries.DeleteSyncSource(r.Context(), control.DeleteSyncSourceParams{
-			Subdomain: siteContext.Subdomain,
-			Type:      type_,
+			SiteID: siteContext.Subdomain,
+			Type:   type_,
 		})
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -259,7 +259,7 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 
 	if nightscout == nil { // NEW
 		err = controlDB.Queries.CreateNightscoutSyncSource(ctx, control.CreateNightscoutSyncSourceParams{
-			Subdomain:     subdomain,
+			SiteID:        subdomain,
 			Password:      encPassword,
 			Enabled:       enabled,
 			UrlOrUsername: encUrl,
@@ -273,14 +273,14 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 
 	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
 		err = controlDB.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, control.UpdateNightscoutSyncSourceWithoutPasswordParams{
-			Subdomain:     subdomain,
+			SiteID:        subdomain,
 			Enabled:       enabled,
 			UrlOrUsername: encUrl,
 			UniqueHash:    uniqHash,
 		})
 	} else {
 		err = controlDB.Queries.UpdateNightscoutSyncSource(ctx, control.UpdateNightscoutSyncSourceParams{
-			Subdomain:     subdomain,
+			SiteID:        subdomain,
 			Password:      encPassword,
 			Enabled:       enabled,
 			UrlOrUsername: encUrl,
@@ -374,7 +374,7 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 	if dexcom == nil { // NEW
 
 		err = controlDB.Queries.CreateDexcomSyncSource(ctx, control.CreateDexcomSyncSourceParams{
-			Subdomain:     subdomain,
+			SiteID:        subdomain,
 			Password:      encPassword,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
@@ -389,7 +389,7 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 
 	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
 		err = controlDB.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, control.UpdateDexcomSyncSourceWithoutPasswordParams{
-			Subdomain:     subdomain,
+			SiteID:        subdomain,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
 			DexcomRegion:  region,
@@ -397,7 +397,7 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 		})
 	} else {
 		err = controlDB.Queries.UpdateDexcomSyncSource(ctx, control.UpdateDexcomSyncSourceParams{
-			Subdomain:     subdomain,
+			SiteID:        subdomain,
 			Password:      encPassword,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,

@@ -8,6 +8,136 @@ import (
 
 
 // GetID returns the ID value.
+func (m ControlIdentity) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetID(v int64) {
+	m.ID = v
+}
+
+// GetName returns the Name value.
+func (m ControlIdentity) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetName(v string) {
+	m.Name = v
+}
+
+// GetPassword returns the Password value.
+func (m ControlIdentity) GetPassword() string {
+	return m.Password
+}
+
+// SetPassword sets the Password value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetPassword(v string) {
+	m.Password = v
+}
+
+// GetTotpSecret returns the TotpSecret value.
+func (m ControlIdentity) GetTotpSecret() string {
+	return m.TotpSecret
+}
+
+// SetTotpSecret sets the TotpSecret value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetTotpSecret(v string) {
+	m.TotpSecret = v
+}
+
+// GetRole returns the Role value.
+func (m ControlIdentity) GetRole() consts.IdentityRole {
+	return m.Role
+}
+
+// SetRole sets the Role value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetRole(v consts.IdentityRole) {
+	m.Role = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m ControlIdentity) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m ControlIdentity) GetLastSeenAt() *int64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetLastSeenAt(v *int64) {
+	m.LastSeenAt = v
+}
+
+// GetLastWriteAt returns the LastWriteAt value.
+func (m ControlIdentity) GetLastWriteAt() *int64 {
+	return m.LastWriteAt
+}
+
+// SetLastWriteAt sets the LastWriteAt value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetLastWriteAt(v *int64) {
+	m.LastWriteAt = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ControlIdentity) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m ControlIdentity) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ControlIdentity) GetCreatedByIdentityID() int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetCreatedByIdentityID(v int64) {
+	m.CreatedByIdentityID = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m ControlIdentity) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m ControlIdentity) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetID returns the ID value.
 func (m DataSourceBlockList) GetID() int64 {
 	return m.ID
 }
@@ -58,582 +188,582 @@ func (m *DataSourceBlockList) SetReason(v *string) {
 }
 
 // GetID returns the ID value.
-func (m Identity) GetID() int64 {
+func (m SiteIdentity) GetID() int64 {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated Identity.
-func (m *Identity) SetID(v int64) {
+// SetID sets the ID value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m Identity) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m SiteIdentity) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated Identity.
-func (m *Identity) SetSubdomain(v string) {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetName returns the Name value.
-func (m Identity) GetName() string {
+func (m SiteIdentity) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated Identity.
-func (m *Identity) SetName(v string) {
+// SetName sets the Name value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetName(v string) {
 	m.Name = v
 }
 
 // GetPassword returns the Password value.
-func (m Identity) GetPassword() string {
+func (m SiteIdentity) GetPassword() string {
 	return m.Password
 }
 
-// SetPassword sets the Password value and returns the updated Identity.
-func (m *Identity) SetPassword(v string) {
+// SetPassword sets the Password value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetPassword(v string) {
 	m.Password = v
 }
 
 // GetTotpSecret returns the TotpSecret value.
-func (m Identity) GetTotpSecret() string {
+func (m SiteIdentity) GetTotpSecret() string {
 	return m.TotpSecret
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated Identity.
-func (m *Identity) SetTotpSecret(v string) {
+// SetTotpSecret sets the TotpSecret value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetTotpSecret(v string) {
 	m.TotpSecret = v
 }
 
 // GetRole returns the Role value.
-func (m Identity) GetRole() consts.IdentityRole {
+func (m SiteIdentity) GetRole() consts.IdentityRole {
 	return m.Role
 }
 
-// SetRole sets the Role value and returns the updated Identity.
-func (m *Identity) SetRole(v consts.IdentityRole) {
+// SetRole sets the Role value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetRole(v consts.IdentityRole) {
 	m.Role = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
-func (m Identity) GetCreatedAt() int64 {
+func (m SiteIdentity) GetCreatedAt() int64 {
 	return m.CreatedAt
 }
 
-// SetCreatedAt sets the CreatedAt value and returns the updated Identity.
-func (m *Identity) SetCreatedAt(v int64) {
+// SetCreatedAt sets the CreatedAt value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetCreatedAt(v int64) {
 	m.CreatedAt = v
 }
 
 // GetLastSeenAt returns the LastSeenAt value.
-func (m Identity) GetLastSeenAt() *int64 {
+func (m SiteIdentity) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
 }
 
-// SetLastSeenAt sets the LastSeenAt value and returns the updated Identity.
-func (m *Identity) SetLastSeenAt(v *int64) {
+// SetLastSeenAt sets the LastSeenAt value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetLastSeenAt(v *int64) {
 	m.LastSeenAt = v
 }
 
 // GetLastWriteAt returns the LastWriteAt value.
-func (m Identity) GetLastWriteAt() *int64 {
+func (m SiteIdentity) GetLastWriteAt() *int64 {
 	return m.LastWriteAt
 }
 
-// SetLastWriteAt sets the LastWriteAt value and returns the updated Identity.
-func (m *Identity) SetLastWriteAt(v *int64) {
+// SetLastWriteAt sets the LastWriteAt value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetLastWriteAt(v *int64) {
 	m.LastWriteAt = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m Identity) GetUpdatedByIdentityID() *int64 {
+func (m SiteIdentity) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
 }
 
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated Identity.
-func (m *Identity) SetUpdatedByIdentityID(v *int64) {
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetUpdatedByIdentityID(v *int64) {
 	m.UpdatedByIdentityID = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m Identity) GetUpdatedByIdentityName() *string {
+func (m SiteIdentity) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
 }
 
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated Identity.
-func (m *Identity) SetUpdatedByIdentityName(v *string) {
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
 }
 
 // GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m Identity) GetCreatedByIdentityID() int64 {
+func (m SiteIdentity) GetCreatedByIdentityID() int64 {
 	return m.CreatedByIdentityID
 }
 
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated Identity.
-func (m *Identity) SetCreatedByIdentityID(v int64) {
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetCreatedByIdentityID(v int64) {
 	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m Identity) GetCreatedByIdentityName() string {
+func (m SiteIdentity) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated Identity.
-func (m *Identity) SetCreatedByIdentityName(v string) {
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
-func (m Identity) GetDeletedAt() *int64 {
+func (m SiteIdentity) GetDeletedAt() *int64 {
 	return m.DeletedAt
 }
 
-// SetDeletedAt sets the DeletedAt value and returns the updated Identity.
-func (m *Identity) SetDeletedAt(v *int64) {
+// SetDeletedAt sets the DeletedAt value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetDeletedAt(v *int64) {
 	m.DeletedAt = v
 }
 
 // GetEnabled returns the Enabled value.
-func (m Identity) GetEnabled() bool {
+func (m SiteIdentity) GetEnabled() bool {
 	return m.Enabled
 }
 
-// SetEnabled sets the Enabled value and returns the updated Identity.
-func (m *Identity) SetEnabled(v bool) {
+// SetEnabled sets the Enabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
 // GetUnits returns the Units value.
-func (m Identity) GetUnits() *string {
+func (m SiteIdentity) GetUnits() *string {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated Identity.
-func (m *Identity) SetUnits(v *string) {
+// SetUnits sets the Units value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetUnits(v *string) {
 	m.Units = v
 }
 
 // GetTimezone returns the Timezone value.
-func (m Identity) GetTimezone() *string {
+func (m SiteIdentity) GetTimezone() *string {
 	return m.Timezone
 }
 
-// SetTimezone sets the Timezone value and returns the updated Identity.
-func (m *Identity) SetTimezone(v *string) {
+// SetTimezone sets the Timezone value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetTimezone(v *string) {
 	m.Timezone = v
 }
 
 // GetLanguage returns the Language value.
-func (m Identity) GetLanguage() *string {
+func (m SiteIdentity) GetLanguage() *string {
 	return m.Language
 }
 
-// SetLanguage sets the Language value and returns the updated Identity.
-func (m *Identity) SetLanguage(v *string) {
+// SetLanguage sets the Language value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetLanguage(v *string) {
 	m.Language = v
 }
 
 // GetDateFormat returns the DateFormat value.
-func (m Identity) GetDateFormat() *string {
+func (m SiteIdentity) GetDateFormat() *string {
 	return m.DateFormat
 }
 
-// SetDateFormat sets the DateFormat value and returns the updated Identity.
-func (m *Identity) SetDateFormat(v *string) {
+// SetDateFormat sets the DateFormat value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetDateFormat(v *string) {
 	m.DateFormat = v
 }
 
 // GetTimeFormat returns the TimeFormat value.
-func (m Identity) GetTimeFormat() *string {
+func (m SiteIdentity) GetTimeFormat() *string {
 	return m.TimeFormat
 }
 
-// SetTimeFormat sets the TimeFormat value and returns the updated Identity.
-func (m *Identity) SetTimeFormat(v *string) {
+// SetTimeFormat sets the TimeFormat value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetTimeFormat(v *string) {
 	m.TimeFormat = v
 }
 
 // GetWeekStartDay returns the WeekStartDay value.
-func (m Identity) GetWeekStartDay() *string {
+func (m SiteIdentity) GetWeekStartDay() *string {
 	return m.WeekStartDay
 }
 
-// SetWeekStartDay sets the WeekStartDay value and returns the updated Identity.
-func (m *Identity) SetWeekStartDay(v *string) {
+// SetWeekStartDay sets the WeekStartDay value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetWeekStartDay(v *string) {
 	m.WeekStartDay = v
 }
 
 // GetBolusDiaHours returns the BolusDiaHours value.
-func (m Identity) GetBolusDiaHours() *float64 {
+func (m SiteIdentity) GetBolusDiaHours() *float64 {
 	return m.BolusDiaHours
 }
 
-// SetBolusDiaHours sets the BolusDiaHours value and returns the updated Identity.
-func (m *Identity) SetBolusDiaHours(v *float64) {
+// SetBolusDiaHours sets the BolusDiaHours value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetBolusDiaHours(v *float64) {
 	m.BolusDiaHours = v
 }
 
 // GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
-func (m Identity) GetBolusOnsetMinutes() *float64 {
+func (m SiteIdentity) GetBolusOnsetMinutes() *float64 {
 	return m.BolusOnsetMinutes
 }
 
-// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated Identity.
-func (m *Identity) SetBolusOnsetMinutes(v *float64) {
+// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetBolusOnsetMinutes(v *float64) {
 	m.BolusOnsetMinutes = v
 }
 
 // GetBolusPeakMinutes returns the BolusPeakMinutes value.
-func (m Identity) GetBolusPeakMinutes() *float64 {
+func (m SiteIdentity) GetBolusPeakMinutes() *float64 {
 	return m.BolusPeakMinutes
 }
 
-// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated Identity.
-func (m *Identity) SetBolusPeakMinutes(v *float64) {
+// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetBolusPeakMinutes(v *float64) {
 	m.BolusPeakMinutes = v
 }
 
 // GetBasalDiaHours returns the BasalDiaHours value.
-func (m Identity) GetBasalDiaHours() *float64 {
+func (m SiteIdentity) GetBasalDiaHours() *float64 {
 	return m.BasalDiaHours
 }
 
-// SetBasalDiaHours sets the BasalDiaHours value and returns the updated Identity.
-func (m *Identity) SetBasalDiaHours(v *float64) {
+// SetBasalDiaHours sets the BasalDiaHours value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetBasalDiaHours(v *float64) {
 	m.BasalDiaHours = v
 }
 
 // GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
-func (m Identity) GetBasalOnsetMinutes() *float64 {
+func (m SiteIdentity) GetBasalOnsetMinutes() *float64 {
 	return m.BasalOnsetMinutes
 }
 
-// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated Identity.
-func (m *Identity) SetBasalOnsetMinutes(v *float64) {
+// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetBasalOnsetMinutes(v *float64) {
 	m.BasalOnsetMinutes = v
 }
 
 // GetBasalPeakMinutes returns the BasalPeakMinutes value.
-func (m Identity) GetBasalPeakMinutes() *float64 {
+func (m SiteIdentity) GetBasalPeakMinutes() *float64 {
 	return m.BasalPeakMinutes
 }
 
-// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated Identity.
-func (m *Identity) SetBasalPeakMinutes(v *float64) {
+// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetBasalPeakMinutes(v *float64) {
 	m.BasalPeakMinutes = v
 }
 
 // GetDefaultInsulinSensitivity returns the DefaultInsulinSensitivity value.
-func (m Identity) GetDefaultInsulinSensitivity() *float64 {
+func (m SiteIdentity) GetDefaultInsulinSensitivity() *float64 {
 	return m.DefaultInsulinSensitivity
 }
 
-// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated Identity.
-func (m *Identity) SetDefaultInsulinSensitivity(v *float64) {
+// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetDefaultInsulinSensitivity(v *float64) {
 	m.DefaultInsulinSensitivity = v
 }
 
 // GetDefaultCarbRatio returns the DefaultCarbRatio value.
-func (m Identity) GetDefaultCarbRatio() *float64 {
+func (m SiteIdentity) GetDefaultCarbRatio() *float64 {
 	return m.DefaultCarbRatio
 }
 
-// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated Identity.
-func (m *Identity) SetDefaultCarbRatio(v *float64) {
+// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetDefaultCarbRatio(v *float64) {
 	m.DefaultCarbRatio = v
 }
 
 // GetDefaultBasalRate returns the DefaultBasalRate value.
-func (m Identity) GetDefaultBasalRate() *float64 {
+func (m SiteIdentity) GetDefaultBasalRate() *float64 {
 	return m.DefaultBasalRate
 }
 
-// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated Identity.
-func (m *Identity) SetDefaultBasalRate(v *float64) {
+// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetDefaultBasalRate(v *float64) {
 	m.DefaultBasalRate = v
 }
 
 // GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
-func (m Identity) GetCarbMaxAbsorptionHours() *float64 {
+func (m SiteIdentity) GetCarbMaxAbsorptionHours() *float64 {
 	return m.CarbMaxAbsorptionHours
 }
 
-// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated Identity.
-func (m *Identity) SetCarbMaxAbsorptionHours(v *float64) {
+// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetCarbMaxAbsorptionHours(v *float64) {
 	m.CarbMaxAbsorptionHours = v
 }
 
 // GetCarbMin5mImpact returns the CarbMin5mImpact value.
-func (m Identity) GetCarbMin5mImpact() *float64 {
+func (m SiteIdentity) GetCarbMin5mImpact() *float64 {
 	return m.CarbMin5mImpact
 }
 
-// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated Identity.
-func (m *Identity) SetCarbMin5mImpact(v *float64) {
+// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetCarbMin5mImpact(v *float64) {
 	m.CarbMin5mImpact = v
 }
 
 // GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
-func (m Identity) GetAlarmUrgentLowEnabled() *bool {
+func (m SiteIdentity) GetAlarmUrgentLowEnabled() *bool {
 	return m.AlarmUrgentLowEnabled
 }
 
-// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmUrgentLowEnabled(v *bool) {
+// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmUrgentLowEnabled(v *bool) {
 	m.AlarmUrgentLowEnabled = v
 }
 
 // GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m Identity) GetAlarmUrgentLow() *int64 {
+func (m SiteIdentity) GetAlarmUrgentLow() *int64 {
 	return m.AlarmUrgentLow
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated Identity.
-func (m *Identity) SetAlarmUrgentLow(v *int64) {
+// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmUrgentLow(v *int64) {
 	m.AlarmUrgentLow = v
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
-func (m Identity) GetAlarmLowEnabled() *bool {
+func (m SiteIdentity) GetAlarmLowEnabled() *bool {
 	return m.AlarmLowEnabled
 }
 
-// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmLowEnabled(v *bool) {
+// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowEnabled(v *bool) {
 	m.AlarmLowEnabled = v
 }
 
 // GetAlarmLow returns the AlarmLow value.
-func (m Identity) GetAlarmLow() *int64 {
+func (m SiteIdentity) GetAlarmLow() *int64 {
 	return m.AlarmLow
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated Identity.
-func (m *Identity) SetAlarmLow(v *int64) {
+// SetAlarmLow sets the AlarmLow value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLow(v *int64) {
 	m.AlarmLow = v
 }
 
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
-func (m Identity) GetAlarmLowMinutes() *int64 {
+func (m SiteIdentity) GetAlarmLowMinutes() *int64 {
 	return m.AlarmLowMinutes
 }
 
-// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated Identity.
-func (m *Identity) SetAlarmLowMinutes(v *int64) {
+// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowMinutes(v *int64) {
 	m.AlarmLowMinutes = v
 }
 
 // GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
-func (m Identity) GetAlarmLowPredictionEnabled() *bool {
+func (m SiteIdentity) GetAlarmLowPredictionEnabled() *bool {
 	return m.AlarmLowPredictionEnabled
 }
 
-// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmLowPredictionEnabled(v *bool) {
+// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowPredictionEnabled(v *bool) {
 	m.AlarmLowPredictionEnabled = v
 }
 
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
-func (m Identity) GetAlarmHighEnabled() *bool {
+func (m SiteIdentity) GetAlarmHighEnabled() *bool {
 	return m.AlarmHighEnabled
 }
 
-// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmHighEnabled(v *bool) {
+// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmHighEnabled(v *bool) {
 	m.AlarmHighEnabled = v
 }
 
 // GetAlarmHigh returns the AlarmHigh value.
-func (m Identity) GetAlarmHigh() *int64 {
+func (m SiteIdentity) GetAlarmHigh() *int64 {
 	return m.AlarmHigh
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated Identity.
-func (m *Identity) SetAlarmHigh(v *int64) {
+// SetAlarmHigh sets the AlarmHigh value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmHigh(v *int64) {
 	m.AlarmHigh = v
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
-func (m Identity) GetAlarmHighMinutes() *int64 {
+func (m SiteIdentity) GetAlarmHighMinutes() *int64 {
 	return m.AlarmHighMinutes
 }
 
-// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated Identity.
-func (m *Identity) SetAlarmHighMinutes(v *int64) {
+// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmHighMinutes(v *int64) {
 	m.AlarmHighMinutes = v
 }
 
 // GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
-func (m Identity) GetAlarmUrgentHighEnabled() *bool {
+func (m SiteIdentity) GetAlarmUrgentHighEnabled() *bool {
 	return m.AlarmUrgentHighEnabled
 }
 
-// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmUrgentHighEnabled(v *bool) {
+// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmUrgentHighEnabled(v *bool) {
 	m.AlarmUrgentHighEnabled = v
 }
 
 // GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m Identity) GetAlarmUrgentHigh() *int64 {
+func (m SiteIdentity) GetAlarmUrgentHigh() *int64 {
 	return m.AlarmUrgentHigh
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated Identity.
-func (m *Identity) SetAlarmUrgentHigh(v *int64) {
+// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmUrgentHigh(v *int64) {
 	m.AlarmUrgentHigh = v
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
-func (m Identity) GetAlarmFastRiseEnabled() *bool {
+func (m SiteIdentity) GetAlarmFastRiseEnabled() *bool {
 	return m.AlarmFastRiseEnabled
 }
 
-// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmFastRiseEnabled(v *bool) {
+// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastRiseEnabled(v *bool) {
 	m.AlarmFastRiseEnabled = v
 }
 
 // GetAlarmFastRise returns the AlarmFastRise value.
-func (m Identity) GetAlarmFastRise() *int64 {
+func (m SiteIdentity) GetAlarmFastRise() *int64 {
 	return m.AlarmFastRise
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated Identity.
-func (m *Identity) SetAlarmFastRise(v *int64) {
+// SetAlarmFastRise sets the AlarmFastRise value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastRise(v *int64) {
 	m.AlarmFastRise = v
 }
 
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
-func (m Identity) GetAlarmFastRiseMinutes() *int64 {
+func (m SiteIdentity) GetAlarmFastRiseMinutes() *int64 {
 	return m.AlarmFastRiseMinutes
 }
 
-// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated Identity.
-func (m *Identity) SetAlarmFastRiseMinutes(v *int64) {
+// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastRiseMinutes(v *int64) {
 	m.AlarmFastRiseMinutes = v
 }
 
 // GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
-func (m Identity) GetAlarmFastDropEnabled() *bool {
+func (m SiteIdentity) GetAlarmFastDropEnabled() *bool {
 	return m.AlarmFastDropEnabled
 }
 
-// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmFastDropEnabled(v *bool) {
+// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastDropEnabled(v *bool) {
 	m.AlarmFastDropEnabled = v
 }
 
 // GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m Identity) GetAlarmFastDrop() *int64 {
+func (m SiteIdentity) GetAlarmFastDrop() *int64 {
 	return m.AlarmFastDrop
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated Identity.
-func (m *Identity) SetAlarmFastDrop(v *int64) {
+// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastDrop(v *int64) {
 	m.AlarmFastDrop = v
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
-func (m Identity) GetAlarmFastDropMinutes() *int64 {
+func (m SiteIdentity) GetAlarmFastDropMinutes() *int64 {
 	return m.AlarmFastDropMinutes
 }
 
-// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated Identity.
-func (m *Identity) SetAlarmFastDropMinutes(v *int64) {
+// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastDropMinutes(v *int64) {
 	m.AlarmFastDropMinutes = v
 }
 
 // GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
-func (m Identity) GetAlarmNoDataEnabled() *bool {
+func (m SiteIdentity) GetAlarmNoDataEnabled() *bool {
 	return m.AlarmNoDataEnabled
 }
 
-// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmNoDataEnabled(v *bool) {
+// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmNoDataEnabled(v *bool) {
 	m.AlarmNoDataEnabled = v
 }
 
 // GetAlarmNoDataMinutes returns the AlarmNoDataMinutes value.
-func (m Identity) GetAlarmNoDataMinutes() *int64 {
+func (m SiteIdentity) GetAlarmNoDataMinutes() *int64 {
 	return m.AlarmNoDataMinutes
 }
 
-// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated Identity.
-func (m *Identity) SetAlarmNoDataMinutes(v *int64) {
+// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmNoDataMinutes(v *int64) {
 	m.AlarmNoDataMinutes = v
 }
 
 // GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m Identity) GetAlarmBatteryLowEnabled() *bool {
+func (m SiteIdentity) GetAlarmBatteryLowEnabled() *bool {
 	return m.AlarmBatteryLowEnabled
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmBatteryLowEnabled(v *bool) {
+// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmBatteryLowEnabled(v *bool) {
 	m.AlarmBatteryLowEnabled = v
 }
 
 // GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m Identity) GetAlarmBatteryLowPercent() *int64 {
+func (m SiteIdentity) GetAlarmBatteryLowPercent() *int64 {
 	return m.AlarmBatteryLowPercent
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated Identity.
-func (m *Identity) SetAlarmBatteryLowPercent(v *int64) {
+// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmBatteryLowPercent(v *int64) {
 	m.AlarmBatteryLowPercent = v
 }
 
 // GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m Identity) GetAlarmBatteryLowPwdEnabled() *bool {
+func (m SiteIdentity) GetAlarmBatteryLowPwdEnabled() *bool {
 	return m.AlarmBatteryLowPwdEnabled
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmBatteryLowPwdEnabled(v *bool) {
+// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmBatteryLowPwdEnabled(v *bool) {
 	m.AlarmBatteryLowPwdEnabled = v
 }
 
 // GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m Identity) GetAlarmBatteryLowPwdPercent() *int64 {
+func (m SiteIdentity) GetAlarmBatteryLowPwdPercent() *int64 {
 	return m.AlarmBatteryLowPwdPercent
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated Identity.
-func (m *Identity) SetAlarmBatteryLowPwdPercent(v *int64) {
+// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmBatteryLowPwdPercent(v *int64) {
 	m.AlarmBatteryLowPwdPercent = v
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
-func (m Identity) GetAlarmLowReservoirEnabled() *bool {
+func (m SiteIdentity) GetAlarmLowReservoirEnabled() *bool {
 	return m.AlarmLowReservoirEnabled
 }
 
-// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated Identity.
-func (m *Identity) SetAlarmLowReservoirEnabled(v *bool) {
+// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowReservoirEnabled(v *bool) {
 	m.AlarmLowReservoirEnabled = v
 }
 
 // GetAlarmLowReservoirUnits returns the AlarmLowReservoirUnits value.
-func (m Identity) GetAlarmLowReservoirUnits() *int64 {
+func (m SiteIdentity) GetAlarmLowReservoirUnits() *int64 {
 	return m.AlarmLowReservoirUnits
 }
 
-// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated Identity.
-func (m *Identity) SetAlarmLowReservoirUnits(v *int64) {
+// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowReservoirUnits(v *int64) {
 	m.AlarmLowReservoirUnits = v
 }
 
 // GetNotificationsEnabled returns the NotificationsEnabled value.
-func (m Identity) GetNotificationsEnabled() *bool {
+func (m SiteIdentity) GetNotificationsEnabled() *bool {
 	return m.NotificationsEnabled
 }
 
-// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated Identity.
-func (m *Identity) SetNotificationsEnabled(v *bool) {
+// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
@@ -647,14 +777,14 @@ func (m *SiteSyncSource) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m SiteSyncSource) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m SiteSyncSource) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetSubdomain(v string) {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetType returns the Type value.
@@ -738,23 +868,13 @@ func (m *SiteSyncSource) SetUniqueHash(v string) {
 }
 
 // GetID returns the ID value.
-func (m Site) GetID() int64 {
+func (m Site) GetID() string {
 	return m.ID
 }
 
 // SetID sets the ID value and returns the updated Site.
-func (m *Site) SetID(v int64) {
+func (m *Site) SetID(v string) {
 	m.ID = v
-}
-
-// GetSubdomain returns the Subdomain value.
-func (m Site) GetSubdomain() string {
-	return m.Subdomain
-}
-
-// SetSubdomain sets the Subdomain value and returns the updated Site.
-func (m *Site) SetSubdomain(v string) {
-	m.Subdomain = v
 }
 
 // GetBatch returns the Batch value.
@@ -1237,729 +1357,729 @@ func (m *SyncSourceReport) SetLastSyncDuration(v *int64) {
 	m.LastSyncDuration = v
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m CreateIdentityParams) GetSubdomain() string {
-	return m.Subdomain
-}
-
-// SetSubdomain sets the Subdomain value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetSubdomain(v string) CreateIdentityParams {
-	m.Subdomain = v
-	return m
-}
-
 // GetName returns the Name value.
-func (m CreateIdentityParams) GetName() string {
+func (m CreateControlIdentityParams) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetName(v string) CreateIdentityParams {
+// SetName sets the Name value and returns the updated CreateControlIdentityParams.
+func (m CreateControlIdentityParams) SetName(v string) CreateControlIdentityParams {
 	m.Name = v
 	return m
 }
 
 // GetPassword returns the Password value.
-func (m CreateIdentityParams) GetPassword() string {
+func (m CreateControlIdentityParams) GetPassword() string {
 	return m.Password
 }
 
-// SetPassword sets the Password value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetPassword(v string) CreateIdentityParams {
+// SetPassword sets the Password value and returns the updated CreateControlIdentityParams.
+func (m CreateControlIdentityParams) SetPassword(v string) CreateControlIdentityParams {
 	m.Password = v
 	return m
 }
 
 // GetTotpSecret returns the TotpSecret value.
-func (m CreateIdentityParams) GetTotpSecret() string {
+func (m CreateControlIdentityParams) GetTotpSecret() string {
 	return m.TotpSecret
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetTotpSecret(v string) CreateIdentityParams {
+// SetTotpSecret sets the TotpSecret value and returns the updated CreateControlIdentityParams.
+func (m CreateControlIdentityParams) SetTotpSecret(v string) CreateControlIdentityParams {
 	m.TotpSecret = v
 	return m
 }
 
 // GetRole returns the Role value.
-func (m CreateIdentityParams) GetRole() consts.IdentityRole {
+func (m CreateControlIdentityParams) GetRole() consts.IdentityRole {
 	return m.Role
 }
 
-// SetRole sets the Role value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetRole(v consts.IdentityRole) CreateIdentityParams {
+// SetRole sets the Role value and returns the updated CreateControlIdentityParams.
+func (m CreateControlIdentityParams) SetRole(v consts.IdentityRole) CreateControlIdentityParams {
 	m.Role = v
 	return m
 }
 
 // GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m CreateIdentityParams) GetCreatedByIdentityID() int64 {
+func (m CreateControlIdentityParams) GetCreatedByIdentityID() int64 {
 	return m.CreatedByIdentityID
 }
 
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetCreatedByIdentityID(v int64) CreateIdentityParams {
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateControlIdentityParams.
+func (m CreateControlIdentityParams) SetCreatedByIdentityID(v int64) CreateControlIdentityParams {
 	m.CreatedByIdentityID = v
 	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m CreateIdentityParams) GetCreatedByIdentityName() string {
+func (m CreateControlIdentityParams) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateIdentityParams.
-func (m CreateIdentityParams) SetCreatedByIdentityName(v string) CreateIdentityParams {
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateControlIdentityParams.
+func (m CreateControlIdentityParams) SetCreatedByIdentityName(v string) CreateControlIdentityParams {
 	m.CreatedByIdentityName = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m CreateIfNotExistsIdentityParams) GetSubdomain() string {
-	return m.Subdomain
+// GetName returns the Name value.
+func (m GetControlIdentityParams) GetName() string {
+	return m.Name
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetSubdomain(v string) CreateIfNotExistsIdentityParams {
-	m.Subdomain = v
+// SetName sets the Name value and returns the updated GetControlIdentityParams.
+func (m GetControlIdentityParams) SetName(v string) GetControlIdentityParams {
+	m.Name = v
+	return m
+}
+
+// GetSiteID returns the SiteID value.
+func (m CreateSiteIdentityParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetSiteID(v string) CreateSiteIdentityParams {
+	m.SiteID = v
 	return m
 }
 
 // GetName returns the Name value.
-func (m CreateIfNotExistsIdentityParams) GetName() string {
+func (m CreateSiteIdentityParams) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetName(v string) CreateIfNotExistsIdentityParams {
+// SetName sets the Name value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetName(v string) CreateSiteIdentityParams {
 	m.Name = v
 	return m
 }
 
 // GetPassword returns the Password value.
-func (m CreateIfNotExistsIdentityParams) GetPassword() string {
+func (m CreateSiteIdentityParams) GetPassword() string {
 	return m.Password
 }
 
-// SetPassword sets the Password value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetPassword(v string) CreateIfNotExistsIdentityParams {
+// SetPassword sets the Password value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetPassword(v string) CreateSiteIdentityParams {
 	m.Password = v
 	return m
 }
 
 // GetTotpSecret returns the TotpSecret value.
-func (m CreateIfNotExistsIdentityParams) GetTotpSecret() string {
+func (m CreateSiteIdentityParams) GetTotpSecret() string {
 	return m.TotpSecret
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetTotpSecret(v string) CreateIfNotExistsIdentityParams {
+// SetTotpSecret sets the TotpSecret value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetTotpSecret(v string) CreateSiteIdentityParams {
 	m.TotpSecret = v
 	return m
 }
 
 // GetRole returns the Role value.
-func (m CreateIfNotExistsIdentityParams) GetRole() consts.IdentityRole {
+func (m CreateSiteIdentityParams) GetRole() consts.IdentityRole {
 	return m.Role
 }
 
-// SetRole sets the Role value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetRole(v consts.IdentityRole) CreateIfNotExistsIdentityParams {
+// SetRole sets the Role value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetRole(v consts.IdentityRole) CreateSiteIdentityParams {
 	m.Role = v
 	return m
 }
 
 // GetCreatedByIdentityID returns the CreatedByIdentityID value.
-func (m CreateIfNotExistsIdentityParams) GetCreatedByIdentityID() int64 {
+func (m CreateSiteIdentityParams) GetCreatedByIdentityID() int64 {
 	return m.CreatedByIdentityID
 }
 
-// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetCreatedByIdentityID(v int64) CreateIfNotExistsIdentityParams {
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetCreatedByIdentityID(v int64) CreateSiteIdentityParams {
 	m.CreatedByIdentityID = v
 	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
-func (m CreateIfNotExistsIdentityParams) GetCreatedByIdentityName() string {
+func (m CreateSiteIdentityParams) GetCreatedByIdentityName() string {
 	return m.CreatedByIdentityName
 }
 
-// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateIfNotExistsIdentityParams.
-func (m CreateIfNotExistsIdentityParams) SetCreatedByIdentityName(v string) CreateIfNotExistsIdentityParams {
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateSiteIdentityParams.
+func (m CreateSiteIdentityParams) SetCreatedByIdentityName(v string) CreateSiteIdentityParams {
 	m.CreatedByIdentityName = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m AllIdentitiesParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m AllSiteIdentitiesParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated AllIdentitiesParams.
-func (m AllIdentitiesParams) SetSubdomain(v string) AllIdentitiesParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated AllSiteIdentitiesParams.
+func (m AllSiteIdentitiesParams) SetSiteID(v string) AllSiteIdentitiesParams {
+	m.SiteID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m GetIdentityParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m GetSiteIdentityParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated GetIdentityParams.
-func (m GetIdentityParams) SetSubdomain(v string) GetIdentityParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityParams.
+func (m GetSiteIdentityParams) SetSiteID(v string) GetSiteIdentityParams {
+	m.SiteID = v
 	return m
 }
 
 // GetName returns the Name value.
-func (m GetIdentityParams) GetName() string {
+func (m GetSiteIdentityParams) GetName() string {
 	return m.Name
 }
 
-// SetName sets the Name value and returns the updated GetIdentityParams.
-func (m GetIdentityParams) SetName(v string) GetIdentityParams {
+// SetName sets the Name value and returns the updated GetSiteIdentityParams.
+func (m GetSiteIdentityParams) SetName(v string) GetSiteIdentityParams {
 	m.Name = v
 	return m
 }
 
 // GetLastSeenAt returns the LastSeenAt value.
-func (m UpdateIdentityDateFlagsParams) GetLastSeenAt() *int64 {
+func (m UpdateSiteIdentityDateFlagsParams) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
 }
 
-// SetLastSeenAt sets the LastSeenAt value and returns the updated UpdateIdentityDateFlagsParams.
-func (m UpdateIdentityDateFlagsParams) SetLastSeenAt(v *int64) UpdateIdentityDateFlagsParams {
+// SetLastSeenAt sets the LastSeenAt value and returns the updated UpdateSiteIdentityDateFlagsParams.
+func (m UpdateSiteIdentityDateFlagsParams) SetLastSeenAt(v *int64) UpdateSiteIdentityDateFlagsParams {
 	m.LastSeenAt = v
 	return m
 }
 
 // GetLastWriteAt returns the LastWriteAt value.
-func (m UpdateIdentityDateFlagsParams) GetLastWriteAt() *int64 {
+func (m UpdateSiteIdentityDateFlagsParams) GetLastWriteAt() *int64 {
 	return m.LastWriteAt
 }
 
-// SetLastWriteAt sets the LastWriteAt value and returns the updated UpdateIdentityDateFlagsParams.
-func (m UpdateIdentityDateFlagsParams) SetLastWriteAt(v *int64) UpdateIdentityDateFlagsParams {
+// SetLastWriteAt sets the LastWriteAt value and returns the updated UpdateSiteIdentityDateFlagsParams.
+func (m UpdateSiteIdentityDateFlagsParams) SetLastWriteAt(v *int64) UpdateSiteIdentityDateFlagsParams {
 	m.LastWriteAt = v
 	return m
 }
 
 // GetID returns the ID value.
-func (m UpdateIdentityDateFlagsParams) GetID() int64 {
+func (m UpdateSiteIdentityDateFlagsParams) GetID() int64 {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated UpdateIdentityDateFlagsParams.
-func (m UpdateIdentityDateFlagsParams) SetID(v int64) UpdateIdentityDateFlagsParams {
+// SetID sets the ID value and returns the updated UpdateSiteIdentityDateFlagsParams.
+func (m UpdateSiteIdentityDateFlagsParams) SetID(v int64) UpdateSiteIdentityDateFlagsParams {
 	m.ID = v
 	return m
 }
 
 // GetUnits returns the Units value.
-func (m UpdateIdentitySettingsParams) GetUnits() *string {
+func (m UpdateSiteIdentitySettingsParams) GetUnits() *string {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetUnits(v *string) UpdateIdentitySettingsParams {
+// SetUnits sets the Units value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetUnits(v *string) UpdateSiteIdentitySettingsParams {
 	m.Units = v
 	return m
 }
 
 // GetTimezone returns the Timezone value.
-func (m UpdateIdentitySettingsParams) GetTimezone() *string {
+func (m UpdateSiteIdentitySettingsParams) GetTimezone() *string {
 	return m.Timezone
 }
 
-// SetTimezone sets the Timezone value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetTimezone(v *string) UpdateIdentitySettingsParams {
+// SetTimezone sets the Timezone value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetTimezone(v *string) UpdateSiteIdentitySettingsParams {
 	m.Timezone = v
 	return m
 }
 
 // GetLanguage returns the Language value.
-func (m UpdateIdentitySettingsParams) GetLanguage() *string {
+func (m UpdateSiteIdentitySettingsParams) GetLanguage() *string {
 	return m.Language
 }
 
-// SetLanguage sets the Language value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetLanguage(v *string) UpdateIdentitySettingsParams {
+// SetLanguage sets the Language value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetLanguage(v *string) UpdateSiteIdentitySettingsParams {
 	m.Language = v
 	return m
 }
 
 // GetDateFormat returns the DateFormat value.
-func (m UpdateIdentitySettingsParams) GetDateFormat() *string {
+func (m UpdateSiteIdentitySettingsParams) GetDateFormat() *string {
 	return m.DateFormat
 }
 
-// SetDateFormat sets the DateFormat value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetDateFormat(v *string) UpdateIdentitySettingsParams {
+// SetDateFormat sets the DateFormat value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetDateFormat(v *string) UpdateSiteIdentitySettingsParams {
 	m.DateFormat = v
 	return m
 }
 
 // GetTimeFormat returns the TimeFormat value.
-func (m UpdateIdentitySettingsParams) GetTimeFormat() *string {
+func (m UpdateSiteIdentitySettingsParams) GetTimeFormat() *string {
 	return m.TimeFormat
 }
 
-// SetTimeFormat sets the TimeFormat value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetTimeFormat(v *string) UpdateIdentitySettingsParams {
+// SetTimeFormat sets the TimeFormat value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetTimeFormat(v *string) UpdateSiteIdentitySettingsParams {
 	m.TimeFormat = v
 	return m
 }
 
 // GetWeekStartDay returns the WeekStartDay value.
-func (m UpdateIdentitySettingsParams) GetWeekStartDay() *string {
+func (m UpdateSiteIdentitySettingsParams) GetWeekStartDay() *string {
 	return m.WeekStartDay
 }
 
-// SetWeekStartDay sets the WeekStartDay value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetWeekStartDay(v *string) UpdateIdentitySettingsParams {
+// SetWeekStartDay sets the WeekStartDay value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetWeekStartDay(v *string) UpdateSiteIdentitySettingsParams {
 	m.WeekStartDay = v
 	return m
 }
 
 // GetBolusDiaHours returns the BolusDiaHours value.
-func (m UpdateIdentitySettingsParams) GetBolusDiaHours() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetBolusDiaHours() *float64 {
 	return m.BolusDiaHours
 }
 
-// SetBolusDiaHours sets the BolusDiaHours value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetBolusDiaHours(v *float64) UpdateIdentitySettingsParams {
+// SetBolusDiaHours sets the BolusDiaHours value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetBolusDiaHours(v *float64) UpdateSiteIdentitySettingsParams {
 	m.BolusDiaHours = v
 	return m
 }
 
 // GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
-func (m UpdateIdentitySettingsParams) GetBolusOnsetMinutes() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetBolusOnsetMinutes() *float64 {
 	return m.BolusOnsetMinutes
 }
 
-// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetBolusOnsetMinutes(v *float64) UpdateIdentitySettingsParams {
+// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetBolusOnsetMinutes(v *float64) UpdateSiteIdentitySettingsParams {
 	m.BolusOnsetMinutes = v
 	return m
 }
 
 // GetBolusPeakMinutes returns the BolusPeakMinutes value.
-func (m UpdateIdentitySettingsParams) GetBolusPeakMinutes() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetBolusPeakMinutes() *float64 {
 	return m.BolusPeakMinutes
 }
 
-// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetBolusPeakMinutes(v *float64) UpdateIdentitySettingsParams {
+// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetBolusPeakMinutes(v *float64) UpdateSiteIdentitySettingsParams {
 	m.BolusPeakMinutes = v
 	return m
 }
 
 // GetBasalDiaHours returns the BasalDiaHours value.
-func (m UpdateIdentitySettingsParams) GetBasalDiaHours() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetBasalDiaHours() *float64 {
 	return m.BasalDiaHours
 }
 
-// SetBasalDiaHours sets the BasalDiaHours value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetBasalDiaHours(v *float64) UpdateIdentitySettingsParams {
+// SetBasalDiaHours sets the BasalDiaHours value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetBasalDiaHours(v *float64) UpdateSiteIdentitySettingsParams {
 	m.BasalDiaHours = v
 	return m
 }
 
 // GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
-func (m UpdateIdentitySettingsParams) GetBasalOnsetMinutes() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetBasalOnsetMinutes() *float64 {
 	return m.BasalOnsetMinutes
 }
 
-// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetBasalOnsetMinutes(v *float64) UpdateIdentitySettingsParams {
+// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetBasalOnsetMinutes(v *float64) UpdateSiteIdentitySettingsParams {
 	m.BasalOnsetMinutes = v
 	return m
 }
 
 // GetBasalPeakMinutes returns the BasalPeakMinutes value.
-func (m UpdateIdentitySettingsParams) GetBasalPeakMinutes() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetBasalPeakMinutes() *float64 {
 	return m.BasalPeakMinutes
 }
 
-// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetBasalPeakMinutes(v *float64) UpdateIdentitySettingsParams {
+// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetBasalPeakMinutes(v *float64) UpdateSiteIdentitySettingsParams {
 	m.BasalPeakMinutes = v
 	return m
 }
 
 // GetDefaultInsulinSensitivity returns the DefaultInsulinSensitivity value.
-func (m UpdateIdentitySettingsParams) GetDefaultInsulinSensitivity() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetDefaultInsulinSensitivity() *float64 {
 	return m.DefaultInsulinSensitivity
 }
 
-// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetDefaultInsulinSensitivity(v *float64) UpdateIdentitySettingsParams {
+// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetDefaultInsulinSensitivity(v *float64) UpdateSiteIdentitySettingsParams {
 	m.DefaultInsulinSensitivity = v
 	return m
 }
 
 // GetDefaultCarbRatio returns the DefaultCarbRatio value.
-func (m UpdateIdentitySettingsParams) GetDefaultCarbRatio() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetDefaultCarbRatio() *float64 {
 	return m.DefaultCarbRatio
 }
 
-// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetDefaultCarbRatio(v *float64) UpdateIdentitySettingsParams {
+// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetDefaultCarbRatio(v *float64) UpdateSiteIdentitySettingsParams {
 	m.DefaultCarbRatio = v
 	return m
 }
 
 // GetDefaultBasalRate returns the DefaultBasalRate value.
-func (m UpdateIdentitySettingsParams) GetDefaultBasalRate() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetDefaultBasalRate() *float64 {
 	return m.DefaultBasalRate
 }
 
-// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetDefaultBasalRate(v *float64) UpdateIdentitySettingsParams {
+// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetDefaultBasalRate(v *float64) UpdateSiteIdentitySettingsParams {
 	m.DefaultBasalRate = v
 	return m
 }
 
 // GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
-func (m UpdateIdentitySettingsParams) GetCarbMaxAbsorptionHours() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetCarbMaxAbsorptionHours() *float64 {
 	return m.CarbMaxAbsorptionHours
 }
 
-// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetCarbMaxAbsorptionHours(v *float64) UpdateIdentitySettingsParams {
+// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetCarbMaxAbsorptionHours(v *float64) UpdateSiteIdentitySettingsParams {
 	m.CarbMaxAbsorptionHours = v
 	return m
 }
 
 // GetCarbMin5mImpact returns the CarbMin5mImpact value.
-func (m UpdateIdentitySettingsParams) GetCarbMin5mImpact() *float64 {
+func (m UpdateSiteIdentitySettingsParams) GetCarbMin5mImpact() *float64 {
 	return m.CarbMin5mImpact
 }
 
-// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetCarbMin5mImpact(v *float64) UpdateIdentitySettingsParams {
+// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetCarbMin5mImpact(v *float64) UpdateSiteIdentitySettingsParams {
 	m.CarbMin5mImpact = v
 	return m
 }
 
 // GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmUrgentLowEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentLowEnabled() *bool {
 	return m.AlarmUrgentLowEnabled
 }
 
-// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmUrgentLowEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmUrgentLowEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmUrgentLowEnabled = v
 	return m
 }
 
 // GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m UpdateIdentitySettingsParams) GetAlarmUrgentLow() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentLow() *int64 {
 	return m.AlarmUrgentLow
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmUrgentLow(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmUrgentLow(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmUrgentLow = v
 	return m
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmLowEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowEnabled() *bool {
 	return m.AlarmLowEnabled
 }
 
-// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmLowEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmLowEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmLowEnabled = v
 	return m
 }
 
 // GetAlarmLow returns the AlarmLow value.
-func (m UpdateIdentitySettingsParams) GetAlarmLow() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLow() *int64 {
 	return m.AlarmLow
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmLow(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmLow sets the AlarmLow value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmLow(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmLow = v
 	return m
 }
 
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
-func (m UpdateIdentitySettingsParams) GetAlarmLowMinutes() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowMinutes() *int64 {
 	return m.AlarmLowMinutes
 }
 
-// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmLowMinutes(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmLowMinutes(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmLowMinutes = v
 	return m
 }
 
 // GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmLowPredictionEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowPredictionEnabled() *bool {
 	return m.AlarmLowPredictionEnabled
 }
 
-// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmLowPredictionEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmLowPredictionEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmLowPredictionEnabled = v
 	return m
 }
 
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmHighEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmHighEnabled() *bool {
 	return m.AlarmHighEnabled
 }
 
-// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmHighEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmHighEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmHighEnabled = v
 	return m
 }
 
 // GetAlarmHigh returns the AlarmHigh value.
-func (m UpdateIdentitySettingsParams) GetAlarmHigh() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmHigh() *int64 {
 	return m.AlarmHigh
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmHigh(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmHigh sets the AlarmHigh value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmHigh(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmHigh = v
 	return m
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
-func (m UpdateIdentitySettingsParams) GetAlarmHighMinutes() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmHighMinutes() *int64 {
 	return m.AlarmHighMinutes
 }
 
-// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmHighMinutes(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmHighMinutes(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmHighMinutes = v
 	return m
 }
 
 // GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmUrgentHighEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentHighEnabled() *bool {
 	return m.AlarmUrgentHighEnabled
 }
 
-// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmUrgentHighEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmUrgentHighEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmUrgentHighEnabled = v
 	return m
 }
 
 // GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m UpdateIdentitySettingsParams) GetAlarmUrgentHigh() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentHigh() *int64 {
 	return m.AlarmUrgentHigh
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmUrgentHigh(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmUrgentHigh(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmUrgentHigh = v
 	return m
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmFastRiseEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastRiseEnabled() *bool {
 	return m.AlarmFastRiseEnabled
 }
 
-// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmFastRiseEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmFastRiseEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmFastRiseEnabled = v
 	return m
 }
 
 // GetAlarmFastRise returns the AlarmFastRise value.
-func (m UpdateIdentitySettingsParams) GetAlarmFastRise() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastRise() *int64 {
 	return m.AlarmFastRise
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmFastRise(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmFastRise sets the AlarmFastRise value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmFastRise(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmFastRise = v
 	return m
 }
 
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
-func (m UpdateIdentitySettingsParams) GetAlarmFastRiseMinutes() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastRiseMinutes() *int64 {
 	return m.AlarmFastRiseMinutes
 }
 
-// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmFastRiseMinutes(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmFastRiseMinutes(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmFastRiseMinutes = v
 	return m
 }
 
 // GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmFastDropEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastDropEnabled() *bool {
 	return m.AlarmFastDropEnabled
 }
 
-// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmFastDropEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmFastDropEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmFastDropEnabled = v
 	return m
 }
 
 // GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m UpdateIdentitySettingsParams) GetAlarmFastDrop() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastDrop() *int64 {
 	return m.AlarmFastDrop
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmFastDrop(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmFastDrop(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmFastDrop = v
 	return m
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
-func (m UpdateIdentitySettingsParams) GetAlarmFastDropMinutes() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastDropMinutes() *int64 {
 	return m.AlarmFastDropMinutes
 }
 
-// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmFastDropMinutes(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmFastDropMinutes(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmFastDropMinutes = v
 	return m
 }
 
 // GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmNoDataEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmNoDataEnabled() *bool {
 	return m.AlarmNoDataEnabled
 }
 
-// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmNoDataEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmNoDataEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmNoDataEnabled = v
 	return m
 }
 
 // GetAlarmNoDataMinutes returns the AlarmNoDataMinutes value.
-func (m UpdateIdentitySettingsParams) GetAlarmNoDataMinutes() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmNoDataMinutes() *int64 {
 	return m.AlarmNoDataMinutes
 }
 
-// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmNoDataMinutes(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmNoDataMinutes(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmNoDataMinutes = v
 	return m
 }
 
 // GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowEnabled() *bool {
 	return m.AlarmBatteryLowEnabled
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmBatteryLowEnabled = v
 	return m
 }
 
 // GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowPercent() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowPercent() *int64 {
 	return m.AlarmBatteryLowPercent
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowPercent(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowPercent(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmBatteryLowPercent = v
 	return m
 }
 
 // GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowPwdEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowPwdEnabled() *bool {
 	return m.AlarmBatteryLowPwdEnabled
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowPwdEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowPwdEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmBatteryLowPwdEnabled = v
 	return m
 }
 
 // GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m UpdateIdentitySettingsParams) GetAlarmBatteryLowPwdPercent() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowPwdPercent() *int64 {
 	return m.AlarmBatteryLowPwdPercent
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmBatteryLowPwdPercent(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowPwdPercent(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmBatteryLowPwdPercent = v
 	return m
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
-func (m UpdateIdentitySettingsParams) GetAlarmLowReservoirEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowReservoirEnabled() *bool {
 	return m.AlarmLowReservoirEnabled
 }
 
-// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmLowReservoirEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmLowReservoirEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.AlarmLowReservoirEnabled = v
 	return m
 }
 
 // GetAlarmLowReservoirUnits returns the AlarmLowReservoirUnits value.
-func (m UpdateIdentitySettingsParams) GetAlarmLowReservoirUnits() *int64 {
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowReservoirUnits() *int64 {
 	return m.AlarmLowReservoirUnits
 }
 
-// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetAlarmLowReservoirUnits(v *int64) UpdateIdentitySettingsParams {
+// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetAlarmLowReservoirUnits(v *int64) UpdateSiteIdentitySettingsParams {
 	m.AlarmLowReservoirUnits = v
 	return m
 }
 
 // GetNotificationsEnabled returns the NotificationsEnabled value.
-func (m UpdateIdentitySettingsParams) GetNotificationsEnabled() *bool {
+func (m UpdateSiteIdentitySettingsParams) GetNotificationsEnabled() *bool {
 	return m.NotificationsEnabled
 }
 
-// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetNotificationsEnabled(v *bool) UpdateIdentitySettingsParams {
+// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetNotificationsEnabled(v *bool) UpdateSiteIdentitySettingsParams {
 	m.NotificationsEnabled = v
 	return m
 }
 
 // GetID returns the ID value.
-func (m UpdateIdentitySettingsParams) GetID() int64 {
+func (m UpdateSiteIdentitySettingsParams) GetID() int64 {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetID(v int64) UpdateIdentitySettingsParams {
+// SetID sets the ID value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetID(v int64) UpdateSiteIdentitySettingsParams {
 	m.ID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m UpdateIdentitySettingsParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m UpdateSiteIdentitySettingsParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated UpdateIdentitySettingsParams.
-func (m UpdateIdentitySettingsParams) SetSubdomain(v string) UpdateIdentitySettingsParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m UpdateSiteIdentitySettingsParams) SetSiteID(v string) UpdateSiteIdentitySettingsParams {
+	m.SiteID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m GetAllSiteSyncSourcesForSiteParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m GetAllSiteSyncSourcesForSiteParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated GetAllSiteSyncSourcesForSiteParams.
-func (m GetAllSiteSyncSourcesForSiteParams) SetSubdomain(v string) GetAllSiteSyncSourcesForSiteParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated GetAllSiteSyncSourcesForSiteParams.
+func (m GetAllSiteSyncSourcesForSiteParams) SetSiteID(v string) GetAllSiteSyncSourcesForSiteParams {
+	m.SiteID = v
 	return m
 }
 
@@ -1974,14 +2094,14 @@ func (m GetAllSiteSyncSourcesForUniqueHashParams) SetUniqueHash(v string) GetAll
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m CreateNightscoutSyncSourceParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m CreateNightscoutSyncSourceParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated CreateNightscoutSyncSourceParams.
-func (m CreateNightscoutSyncSourceParams) SetSubdomain(v string) CreateNightscoutSyncSourceParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated CreateNightscoutSyncSourceParams.
+func (m CreateNightscoutSyncSourceParams) SetSiteID(v string) CreateNightscoutSyncSourceParams {
+	m.SiteID = v
 	return m
 }
 
@@ -2073,14 +2193,14 @@ func (m UpdateNightscoutSyncSourceParams) SetUniqueHash(v string) UpdateNightsco
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m UpdateNightscoutSyncSourceParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m UpdateNightscoutSyncSourceParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m UpdateNightscoutSyncSourceParams) SetSubdomain(v string) UpdateNightscoutSyncSourceParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated UpdateNightscoutSyncSourceParams.
+func (m UpdateNightscoutSyncSourceParams) SetSiteID(v string) UpdateNightscoutSyncSourceParams {
+	m.SiteID = v
 	return m
 }
 
@@ -2117,36 +2237,36 @@ func (m UpdateNightscoutSyncSourceWithoutPasswordParams) SetUniqueHash(v string)
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m UpdateNightscoutSyncSourceWithoutPasswordParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m UpdateNightscoutSyncSourceWithoutPasswordParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated UpdateNightscoutSyncSourceWithoutPasswordParams.
-func (m UpdateNightscoutSyncSourceWithoutPasswordParams) SetSubdomain(v string) UpdateNightscoutSyncSourceWithoutPasswordParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated UpdateNightscoutSyncSourceWithoutPasswordParams.
+func (m UpdateNightscoutSyncSourceWithoutPasswordParams) SetSiteID(v string) UpdateNightscoutSyncSourceWithoutPasswordParams {
+	m.SiteID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m DisableNightscoutSyncSourceParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m DisableNightscoutSyncSourceParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated DisableNightscoutSyncSourceParams.
-func (m DisableNightscoutSyncSourceParams) SetSubdomain(v string) DisableNightscoutSyncSourceParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated DisableNightscoutSyncSourceParams.
+func (m DisableNightscoutSyncSourceParams) SetSiteID(v string) DisableNightscoutSyncSourceParams {
+	m.SiteID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m CreateDexcomSyncSourceParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m CreateDexcomSyncSourceParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated CreateDexcomSyncSourceParams.
-func (m CreateDexcomSyncSourceParams) SetSubdomain(v string) CreateDexcomSyncSourceParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated CreateDexcomSyncSourceParams.
+func (m CreateDexcomSyncSourceParams) SetSiteID(v string) CreateDexcomSyncSourceParams {
+	m.SiteID = v
 	return m
 }
 
@@ -2260,14 +2380,14 @@ func (m UpdateDexcomSyncSourceParams) SetUniqueHash(v string) UpdateDexcomSyncSo
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m UpdateDexcomSyncSourceParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m UpdateDexcomSyncSourceParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated UpdateDexcomSyncSourceParams.
-func (m UpdateDexcomSyncSourceParams) SetSubdomain(v string) UpdateDexcomSyncSourceParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated UpdateDexcomSyncSourceParams.
+func (m UpdateDexcomSyncSourceParams) SetSiteID(v string) UpdateDexcomSyncSourceParams {
+	m.SiteID = v
 	return m
 }
 
@@ -2315,14 +2435,14 @@ func (m UpdateDexcomSyncSourceWithoutPasswordParams) SetUniqueHash(v string) Upd
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) SetSubdomain(v string) UpdateDexcomSyncSourceWithoutPasswordParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
+func (m UpdateDexcomSyncSourceWithoutPasswordParams) SetSiteID(v string) UpdateDexcomSyncSourceWithoutPasswordParams {
+	m.SiteID = v
 	return m
 }
 
@@ -2337,25 +2457,25 @@ func (m DeleteSyncSourceParams) SetType(v consts.SyncSourceType) DeleteSyncSourc
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m DeleteSyncSourceParams) GetSubdomain() string {
-	return m.Subdomain
+// GetSiteID returns the SiteID value.
+func (m DeleteSyncSourceParams) GetSiteID() string {
+	return m.SiteID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated DeleteSyncSourceParams.
-func (m DeleteSyncSourceParams) SetSubdomain(v string) DeleteSyncSourceParams {
-	m.Subdomain = v
+// SetSiteID sets the SiteID value and returns the updated DeleteSyncSourceParams.
+func (m DeleteSyncSourceParams) SetSiteID(v string) DeleteSyncSourceParams {
+	m.SiteID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m CreateSiteParams) GetSubdomain() string {
-	return m.Subdomain
+// GetID returns the ID value.
+func (m CreateSiteParams) GetID() string {
+	return m.ID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated CreateSiteParams.
-func (m CreateSiteParams) SetSubdomain(v string) CreateSiteParams {
-	m.Subdomain = v
+// SetID sets the ID value and returns the updated CreateSiteParams.
+func (m CreateSiteParams) SetID(v string) CreateSiteParams {
+	m.ID = v
 	return m
 }
 
@@ -2370,25 +2490,25 @@ func (m CreateSiteParams) SetBackupKeyHash(v string) CreateSiteParams {
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m SubdomainExistsParams) GetSubdomain() string {
-	return m.Subdomain
+// GetID returns the ID value.
+func (m SiteExistsParams) GetID() string {
+	return m.ID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated SubdomainExistsParams.
-func (m SubdomainExistsParams) SetSubdomain(v string) SubdomainExistsParams {
-	m.Subdomain = v
+// SetID sets the ID value and returns the updated SiteExistsParams.
+func (m SiteExistsParams) SetID(v string) SiteExistsParams {
+	m.ID = v
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m GetSiteParams) GetSubdomain() string {
-	return m.Subdomain
+// GetID returns the ID value.
+func (m GetSiteParams) GetID() string {
+	return m.ID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated GetSiteParams.
-func (m GetSiteParams) SetSubdomain(v string) GetSiteParams {
-	m.Subdomain = v
+// SetID sets the ID value and returns the updated GetSiteParams.
+func (m GetSiteParams) SetID(v string) GetSiteParams {
+	m.ID = v
 	return m
 }
 
@@ -2458,14 +2578,14 @@ func (m UpdateSiteDateFlagsParams) SetLastWriteAt(v *int64) UpdateSiteDateFlagsP
 	return m
 }
 
-// GetSubdomain returns the Subdomain value.
-func (m UpdateSiteDateFlagsParams) GetSubdomain() string {
-	return m.Subdomain
+// GetID returns the ID value.
+func (m UpdateSiteDateFlagsParams) GetID() string {
+	return m.ID
 }
 
-// SetSubdomain sets the Subdomain value and returns the updated UpdateSiteDateFlagsParams.
-func (m UpdateSiteDateFlagsParams) SetSubdomain(v string) UpdateSiteDateFlagsParams {
-	m.Subdomain = v
+// SetID sets the ID value and returns the updated UpdateSiteDateFlagsParams.
+func (m UpdateSiteDateFlagsParams) SetID(v string) UpdateSiteDateFlagsParams {
+	m.ID = v
 	return m
 }
 

@@ -57,50 +57,56 @@ overrides:
       - column: "site_sync_sources.enabled"
         go_type:
           type: "bool"
-      - column: "identities.enabled"
-        go_type:
-          type: "bool"
-
-
-      - column: "identities.role"
+      # Control Identities
+      - column: "control_identities.role"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "IdentityRole"
       
-      - column: "identities.alarm_urgent_low_enabled"
+      # Site Identities
+      - column: "site_identities.enabled"
+        go_type:
+          type: "bool"
+
+      - column: "site_identities.role"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "IdentityRole"
+      
+      - column: "site_identities.alarm_urgent_low_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_low_enabled"
+      - column: "site_identities.alarm_low_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_high_enabled"
+      - column: "site_identities.alarm_high_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_urgent_high_enabled"
+      - column: "site_identities.alarm_urgent_high_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_fast_rise_enabled"
+      - column: "site_identities.alarm_fast_rise_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_fast_drop_enabled"
+      - column: "site_identities.alarm_fast_drop_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_no_data_enabled"
+      - column: "site_identities.alarm_no_data_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_battery_low_enabled"
+      - column: "site_identities.alarm_battery_low_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_battery_low_pwd_enabled"
+      - column: "site_identities.alarm_battery_low_pwd_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_low_reservoir_enabled"
+      - column: "site_identities.alarm_low_reservoir_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.notifications_enabled"
+      - column: "site_identities.notifications_enabled"
         go_type:
           type: "*bool"
-      - column: "identities.alarm_low_prediction_enabled"
+      - column: "site_identities.alarm_low_prediction_enabled"
         go_type:
           type: "*bool"
           

@@ -32,14 +32,14 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			createParams := dexcom.EGVToCreate(e, "dexcom", userSyncSource.syncIdentity.ID, userSyncSource.syncIdentity.Name)
+			createParams := dexcom.EGVToCreate(e, "dexcom_sync")
 			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if utilerrors.IsSQLDuplicateID(err) {
 					continue
 				}
 				// Probably just non-unique ID
-				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "sync_source_id", userSyncSource.syncIdentity.ID)
+				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "sync_source_hash", syncInfo.UniqueHash)
 				continue
 			}
 
@@ -51,8 +51,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 
 		// Update that it has been seen and used recently
 		if addedColumns {
-			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.siteModel.Subdomain)
-			userSyncSource.controlDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
+			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.siteModel.ID)
 			totalAddedColumns += 1
 		}
 	}

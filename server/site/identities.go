@@ -56,7 +56,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 }
 
 func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site_templ.UserIdentity, []*site_templ.UserIdentity, error) {
-	identities, err := siteContext.ControlDB.Queries.AllIdentities(context, control.AllIdentitiesParams{Subdomain: siteContext.Subdomain})
+	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -99,7 +99,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) h
 			return
 		}
 
-		identityValues, err := siteContext.ControlDB.CreateIdentity(siteContext.Subdomain, name, consts.IdentityRole(role))
+		identityValues, err := siteContext.ControlDB.CreateSiteIdentity(siteContext.Subdomain, name, consts.IdentityRole(role))
 		if err != nil {
 			errors.HandleInternalError(w, r, http.StatusInternalServerError, "Failed to create identity", err)
 			return
