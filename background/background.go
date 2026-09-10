@@ -2,7 +2,6 @@ package background
 
 import (
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/background/backup_control"
 	"nighttroop.t1d.nz/background/backup_sites"
@@ -42,13 +41,9 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Backup Control Jobs
 	backupControlJobManager.SetupCron(cron, queue)
-	// Backup Site Jobs
-	consumers = append(consumers, backupControlJobManager.GetConsumer(queue))
 
 	// Backup Site Jobs
-	backupSiteJobManager.SetupCron(cron, queue)
-	// Backup Should be done by exactly one worker at a time, to avoid over working the CPU and IO
-	consumers = append(consumers, backupSiteJobManager.GetConsumer(queue))
+	backupSiteJobManager.SetupCron(cron)
 
 	// Summarise Jobs
 	summariseManager.SetupCron(cron)
@@ -68,16 +63,6 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 		BackupControlJobManager: backupControlJobManager,
 		SummariseJobManager:     summariseManager,
 		SyncJobManager:          syncjobManager,
-	}
-}
-
-func WrapperFunc(controlDB *db.ControlDB) func(name string, c func()) {
-	return func(name string, c func()) {
-		// TODO allow and catch errors
-		// TODO catch pancis
-		fmt.Println("Executing wrapped function for", name)
-		c()
-		fmt.Println("Finished executing wrapped function for", name)
 	}
 }
 

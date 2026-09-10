@@ -121,8 +121,8 @@ func run() error {
 	slog.Info("Stopped background jobs complete")
 
 	slog.Info("Performing final backup to S3...")
-	backgroundManager.BackupControlJobManager.BackupToS3(context.Background()) // Force a final backup before exiting
-	backgroundManager.BackupSiteJobManager.BackupToS3()                        // Force a final backup before exiting
+	backgroundManager.BackupControlJobManager.BackupToS3() // Force a final backup before exiting
+	backgroundManager.BackupSiteJobManager.BackupToS3()    // Force a final backup before exiting
 	slog.Info("Final backup complete")
 
 	// Close control and User dbs

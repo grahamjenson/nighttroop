@@ -3,18 +3,14 @@ package backup_control
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
-
-const BACKUP_CONTROL_JOB = "backup_control_job"
 
 type BackupControlJobManager struct {
 	controlDB    *db.ControlDB
@@ -41,43 +37,18 @@ func SetupBackupControlJob(ctx context.Context, controlDB *db.ControlDB, config 
 	return jobs
 }
 
-func (b *BackupControlJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerSupervisor {
-	return liteq.NewConsumerSupervisor(queue, BACKUP_CONTROL_JOB, 1, b.workerFunc())
-}
-
-func (b *BackupControlJobManager) workerFunc() liteq.WorkerFunc {
-
-	return func(ctx context.Context, j *jobs.Job) error {
-		return b.BackupToS3(ctx)
-	}
-}
-
 func (b *BackupControlJobManager) SetupCron(c cron.CronScheduler, queue *liteq.JobQueue) {
 
 	backupControlCron := fmt.Sprintf("@every %ds", b.ControlBackupIntervalInSeconds)
 
-	c.AddFunc("BackupControlJobManager", backupControlCron, buildBackupControlCronFunc(queue))
-
+	c.AddFunc("BackupControlJobManager", backupControlCron, func() error {
+		return b.BackupToS3()
+	})
 }
 
-func buildBackupControlCronFunc(queue *liteq.JobQueue) func() error {
-	return func() error {
-		err := queue.QueueJob(context.Background(), liteq.QueueJobParams{
-			Queue:       BACKUP_CONTROL_JOB,
-			Job:         "",
-			DedupingKey: liteq.ReplaceDuplicate("backup_control"),
-		})
-		if err != nil {
-			slog.Error("Error queueing job", "error", err)
-		}
-		return err
-	}
-}
-
-func (b *BackupControlJobManager) BackupToS3(ctx context.Context) error {
-
+func (b *BackupControlJobManager) BackupToS3() error {
 	// Backup the Database
-	err := b.controlDB.Backup(ctx)
+	err := b.controlDB.Backup(context.TODO())
 	if err != nil {
 		return fmt.Errorf("cannot backup control db: %w", err)
 	}
@@ -87,6 +58,5 @@ func (b *BackupControlJobManager) BackupToS3(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}
-
 	return nil
 }

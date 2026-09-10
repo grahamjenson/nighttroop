@@ -14,7 +14,7 @@ import (
 )
 
 type CronScheduler interface {
-	AddFunc(name string, spec string, cmd func() error) (cron.EntryID, error)
+	AddFunc(name string, spec string, cmd func() error)
 }
 
 type ACron struct {
@@ -33,13 +33,21 @@ func NewCron(jobsDB *db.JobsDB) *ACron {
 	}
 }
 
-func (c *ACron) AddFunc(name string, spec string, cmd func() error) (cron.EntryID, error) {
+func (c *ACron) AddFunc(name string, spec string, cmd func() error) {
+	_, err := c.RawAddFunc(name, spec, cmd)
+	if err != nil {
+		panic(fmt.Sprintf("Error adding cron function: %v", err))
+	}
+}
+
+func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.EntryID, error) {
 	// Skip if still running channel
 	var ch = make(chan struct{}, 1)
 	ch <- struct{}{}
-	startedAt := time.Now().UnixMilli()
 
 	wrappedCmd := func() {
+		startedAt := time.Now().UnixMilli()
+
 		defer func() {
 			if r := recover(); r != nil {
 				const size = 64 << 10

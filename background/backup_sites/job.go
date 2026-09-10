@@ -2,16 +2,14 @@ package backup_sites
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync/atomic"
 	"time"
 
 	"nighttroop.t1d.nz/background/cron"
-	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/jobs"
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
@@ -57,66 +55,27 @@ func SetupBackupSiteJob(ctx context.Context, controlDB *db.ControlDB, config *co
 	return jobs
 }
 
-func (b *BackupSiteJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerSupervisor {
-	return liteq.NewConsumerSupervisor(queue, BACKUP_SITE_JOB, 1, b.workerFunc())
-}
+func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
+	count := len(utils.SITE_CHAR_SET)
 
-func (b *BackupSiteJobManager) workerFunc() liteq.WorkerFunc {
+	tick := max(1, b.BatchBackupIntervalInSeconds/count)
 
-	return func(ctx context.Context, j *jobs.Job) error {
-		var params BackupSiteJobParams
-		err := json.Unmarshal([]byte(j.Job), &params)
-		if err != nil {
-			return fmt.Errorf("error unmarshalling job params: %w", err)
-		}
-		batch := params.Char
-		err = b.DeleteUnusedSites(batch)
-		if err != nil {
-			slog.Error("Error deleting unused sites", "error", err)
-			// Continue even if deleting unused sites fails
+	var index atomic.Int64
+
+	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func() error {
+		i := int(index.Add(1)-1) % count
+		batch := string(utils.SITE_CHAR_SET[i])
+		fmt.Println("Processing b atch:", batch)
+		if err := b.DeleteUnusedSites(batch); err != nil {
+			slog.Error(
+				"Error deleting unused sites",
+				"error", err,
+				"batch", batch,
+			)
 		}
 
 		return b.BackupSiteBatch(batch)
-
-	}
-}
-
-func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler, queue *liteq.JobQueue) {
-	backupBatchCron := fmt.Sprintf("@every %ds", b.BatchBackupIntervalInSeconds)
-	c.AddFunc("BackupSiteJobManager", backupBatchCron, b.buildBackupBatchCronFunc(queue))
-}
-
-func (b *BackupSiteJobManager) buildBackupBatchCronFunc(queue *liteq.JobQueue) func() error {
-	return func() error {
-		for index := range utils.SITE_CHAR_SET {
-			char := string(utils.SITE_CHAR_SET[index])
-			// Optimization to not queue jobs with no sites
-			// If it errors just ignore the query all together
-			res, err := HasSitesInBatch(b.controlDB, char)
-			if err == nil && !res {
-				// Skip spaming the jobs queue
-				continue
-			}
-
-			jsonParams, err := json.Marshal(BackupSiteJobParams{
-				Char: char,
-			})
-			if err != nil {
-				slog.Error("Error marshalling job params", "error", err)
-				continue
-			}
-
-			err = queue.QueueJob(context.Background(), liteq.QueueJobParams{
-				Queue:       BACKUP_SITE_JOB,
-				Job:         string(jsonParams),
-				DedupingKey: liteq.ReplaceDuplicate(string(jsonParams)),
-			})
-			if err != nil {
-				slog.Error("Error queueing job", "error", err)
-			}
-		}
-		return nil
-	}
+	})
 }
 
 func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
@@ -131,15 +90,10 @@ func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
 		return nil
 	}
 	log = true
-	slog.Info("Delete site without archiving", "subdomains", deleteList)
+	slog.Info("Deleting site without archiving", "subdomains", deleteList)
 
 	// Just delete these sites without an archive, as they have not been used in so many minutes
-	err = b.controlDB.DeleteSites(deleteList)
-	if err != nil {
-		slog.Error("Failed to delete site without archiving", "error", err, "sites", deleteList)
-	}
-
-	return nil
+	return b.controlDB.DeleteSites(deleteList)
 }
 
 // The sites we delete without archiving are sites that
@@ -230,16 +184,6 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
 // ///
 // DB queries
 // ////
-
-func HasSitesInBatch(controlDB *db.ControlDB, char string) (bool, error) {
-	res, err := controlDB.Queries.GetBatchSitesToBackUp(context.TODO(), control.GetBatchSitesToBackUpParams{
-		Batch: char,
-	})
-	if err != nil {
-		return false, fmt.Errorf("cannot query sites: %w", err)
-	}
-	return len(res) > 0, nil
-}
 
 func GetSiteBatch(controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 

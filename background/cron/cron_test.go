@@ -22,7 +22,7 @@ func TestAddFunc(t *testing.T) {
 
 	cron := cron.NewCron(jobsDB)
 
-	entryid, err := cron.AddFunc("testing", "@every 1s", func() error { return nil })
+	entryid, err := cron.RawAddFunc("testing", "@every 1s", func() error { return nil })
 	require.NoError(t, err)
 	require.NotZero(t, entryid)
 
@@ -59,7 +59,7 @@ func TestAddFuncPanic(t *testing.T) {
 	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
 
 	cron := cron.NewCron(jobsDB)
-	entryid, _ := cron.AddFunc("testing", "@every 1s", func() error { panic("test panic"); return nil })
+	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { panic("test panic"); return nil })
 	entry := cron.Entry(entryid)
 	// Should not panic and be caught by the jobs DB
 	entry.Job.Run()
@@ -88,7 +88,7 @@ func TestAddFuncError(t *testing.T) {
 	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
 
 	cron := cron.NewCron(jobsDB)
-	entryid, _ := cron.AddFunc("testing", "@every 1s", func() error { return fmt.Errorf("test error") })
+	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { return fmt.Errorf("test error") })
 	entry := cron.Entry(entryid)
 	// Simulate an error in the job
 	entry.Job.Run()
