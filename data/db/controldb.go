@@ -94,11 +94,11 @@ func (db *ControlDB) fillSites() ([]string, error) {
 }
 
 func (db *ControlDB) seedDefaultIdentities() error {
-	db.CreateIdentity("control", consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	db.CreateIdentity("control", consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
-	db.CreateIdentity("control", consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.DEXCOM_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.LIBRE_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
+	db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.NIGHTSCOUT_SYNC_IDENTITY_NAME, consts.IdentityRoleSync)
 
-	idValues, err := db.CreateIdentity("control", consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	idValues, err := db.CreateIdentity(consts.CONTROL_IDENTITY_SUBDOMAIN, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil && errors.IsSQLUniqueViolationError(err) {
 		// Admin user already exists so we can ignore this error
 		return nil

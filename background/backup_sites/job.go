@@ -68,7 +68,6 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func() error {
 		i := int(index.Add(1)-1) % count
 		batch := string(utils.SITE_CHAR_SET[i])
-		fmt.Println("Processing b atch:", batch)
 		if err := b.DeleteUnusedSites(batch); err != nil {
 			slog.Error(
 				"Error deleting unused sites",

@@ -27,6 +27,16 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		return fmt.Errorf("Nightscout Error: %w", err)
 	}
 
+	// REMOVE WRITE ONLY COLUMNS
+	for _, egv := range egvs {
+		delete(egv, "srvCreated")
+		delete(egv, "srvModified")
+		delete(egv, "modifiedBy")
+	}
+	////
+	//
+	////
+
 	totalAddedColumns := 0
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		siteContext := &httputils.SiteContext{
@@ -46,19 +56,19 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		}
 
 		for _, egv := range egvs {
-			_, created, err := collectionsStore.Create(ctx, siteContext, egv, false)
+			_, duplicateFound, err := collectionsStore.Create(ctx, siteContext, egv, false)
 			if err != nil {
 				return fmt.Errorf("Nightscout: Failed to create entry: %w", err)
 			}
-			if created {
+			if !duplicateFound {
 				addedColumns = true
+				totalAddedColumns += 1
 			}
 		}
 		// Update that it has been seen and used recently
 		if addedColumns {
 			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.siteModel.Subdomain)
-			userSyncSource.controlDB.UpdateIdentityDateFlags(userSyncSource.syncIdentity, true, true)
-			totalAddedColumns += 1
+
 		}
 	}
 

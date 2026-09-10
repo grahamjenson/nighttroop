@@ -151,11 +151,13 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncS
 func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSyncSource) (*SyncUserInfo, error) {
 	userDb, userModel, err := b.controlDB.GetSite(syncSource.Subdomain)
 	if err != nil {
+		fmt.Println("Cant findn the user for subdomain:", syncSource.Subdomain)
 		return nil, err
 	}
 	if userModel == nil || userDb == nil {
 		return nil, nil
 	}
+
 	identityName := ""
 	switch syncSource.Type {
 	case consts.SyncSourceTypeNightscout:
@@ -167,8 +169,9 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSy
 	if identityName == "" {
 		return nil, fmt.Errorf("invalid sync source type: %s", syncSource.Type)
 	}
+
 	identity, err := b.controlDB.Queries.GetIdentity(context.TODO(), control.GetIdentityParams{
-		Subdomain: syncSource.Subdomain,
+		Subdomain: consts.CONTROL_IDENTITY_SUBDOMAIN,
 		Name:      identityName,
 	})
 

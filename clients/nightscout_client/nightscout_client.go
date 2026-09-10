@@ -65,7 +65,7 @@ func (c *Client) doRequest(
 	if c.jwt == nil || c.jwtExpire == nil || time.Now().After(*c.jwtExpire) {
 		err := c.refreshJWT()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error refreshing JWT: %w", err)
 		}
 	}
 
@@ -76,6 +76,7 @@ func (c *Client) doRequest(
 	// Just in case it is the API secret not a token
 	req.Header.Set("api-secret", c.token)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *c.jwt))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -119,6 +120,7 @@ type JWTAuthResponse struct {
 }
 
 func (c *Client) refreshJWT() error {
+
 	resp, err := c.httpClient.Get(jwtEndpoint(c.baseURL, c.token))
 	if err != nil {
 		return err
@@ -146,16 +148,24 @@ func (c *Client) GetEntries(
 	afterTime time.Time,
 	count int,
 ) ([]map[string]any, error) {
-	resp, err := c.doRequest(ctx, http.MethodGet, entryHistoryEndpoint(c.baseURL, int(afterTime.UnixMilli()), count))
+	reqURL := entryHistoryEndpoint(c.baseURL, int(afterTime.UnixMilli()), count)
+	resp, err := c.doRequest(ctx, http.MethodGet, reqURL)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("NSClient Error: %s: %w", reqURL, err)
 	}
 
-	if result, ok := resp["result"].([]map[string]any); ok {
-		return result, nil
+	if result, ok := resp["result"].([]any); ok {
+		// Convert each item to a map[string]any
+		converted := []map[string]any{}
+		for _, item := range result {
+			if m, ok := item.(map[string]any); ok {
+				converted = append(converted, m)
+			}
+		}
+		return converted, nil
 	}
 
-	return nil, fmt.Errorf("unexpected response format")
+	return nil, fmt.Errorf("unexpected response format for URL: %s %s", reqURL, resp)
 
 }
