@@ -15,55 +15,126 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
-
-	"nighttroop.t1d.nz/models/nightscout"
 )
 
 type Client struct {
 	baseURL    string
-	apiSecret  string
+	token      string
 	httpClient *http.Client
+
+	jwt       *string
+	jwtExpire *time.Time
 }
 
-func NewClient(baseURL, apiSecret string) *Client {
+func lastModifiedEndpoint(nsURL string) string { return fmt.Sprintf("%s/api/v3/lastModified", nsURL) }
+func currentProfileEndpoint(nsURL string) string {
+	return fmt.Sprintf("%s/api/v3/profile?sort$desc=date&limit=1", nsURL)
+}
+func deviceStatusEndpoint(nsURL string) string {
+	return fmt.Sprintf("%s/api/v3/devicestatus?sort$desc=date&limit=1", nsURL)
+}
+func treatmentsHistoryEndpoint(nsURL string, createdAt int, limit int) string {
+	return fmt.Sprintf("%s/api/v3/treatments?sort$desc=created_at&created_at$gte=%d&limit=%d", nsURL, createdAt, limit)
+}
+func entryHistoryEndpoint(nsURL string, gteCreatedAt int, limit int) string {
+	return fmt.Sprintf("%s/api/v3/entries?sort$desc=date&date$gte=%d&limit=%d", nsURL, gteCreatedAt, limit)
+}
+func jwtEndpoint(nsURL, token string) string {
+	return fmt.Sprintf("%s/api/v2/authorization/request/token=%s", nsURL, token)
+}
+
+func NewClient(baseURL, token string) *Client {
 	baseURL = strings.TrimRight(baseURL, "/")
 
 	return &Client{
-		baseURL:   baseURL,
-		apiSecret: apiSecret,
+		baseURL: baseURL,
+		token:   token,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 	}
 }
 
-func (c *Client) newRequest(
+func (c *Client) doRequest(
 	ctx context.Context,
 	method string,
-	path string,
-	query url.Values,
-) (*http.Request, error) {
-	u := c.baseURL + path
-
-	if query != nil {
-		u += "?" + query.Encode()
+	url string,
+) (map[string]any, error) {
+	if c.jwt == nil || c.jwtExpire == nil || time.Now().After(*c.jwtExpire) {
+		err := c.refreshJWT()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, u, nil)
+	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	if c.apiSecret != "" {
-		req.Header.Set("api-secret", c.apiSecret)
-	}
-
+	// Just in case it is the API secret not a token
+	req.Header.Set("api-secret", c.token)
 	req.Header.Set("Accept", "application/json")
 
-	return req, nil
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Reset if unauthorized
+	if resp.StatusCode == http.StatusUnauthorized {
+		c.jwt = nil
+		c.jwtExpire = nil
+		return nil, fmt.Errorf(
+			"nightscout request unauthorized: %s",
+			resp.Status,
+		)
+	}
+
+	// Handle other non-OK status codes
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"nightscout request failed: %s",
+			resp.Status,
+		)
+	}
+
+	// Parse into a map
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+type JWTAuthResponse struct {
+	Token            string     `json:"token"`
+	Sub              string     `json:"sub"`
+	PermissionGroups [][]string `json:"permissionGroups"`
+	IAT              int64      `json:"iat"`
+	Exp              int64      `json:"exp"`
+}
+
+func (c *Client) refreshJWT() error {
+	resp, err := c.httpClient.Get(jwtEndpoint(c.baseURL, c.token))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var jwtResp JWTAuthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&jwtResp); err != nil {
+		return err
+	}
+
+	c.jwt = &jwtResp.Token
+	expire := time.Unix(jwtResp.Exp, 0)
+	c.jwtExpire = &expire
+
+	return nil
 }
 
 //
@@ -72,109 +143,19 @@ func (c *Client) newRequest(
 
 func (c *Client) GetEntries(
 	ctx context.Context,
+	afterTime time.Time,
 	count int,
-) ([]nightscout.Entry, error) {
-	q := url.Values{}
-	q.Set("count", fmt.Sprintf("%d", count))
+) ([]map[string]any, error) {
+	resp, err := c.doRequest(ctx, http.MethodGet, entryHistoryEndpoint(c.baseURL, int(afterTime.UnixMilli()), count))
 
-	req, err := c.newRequest(
-		ctx,
-		http.MethodGet,
-		"/api/v1/entries.json",
-		q,
-	)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(
-			"nightscout entries failed: %s",
-			resp.Status,
-		)
+	if result, ok := resp["result"].([]map[string]any); ok {
+		return result, nil
 	}
 
-	var items []json.RawMessage
+	return nil, fmt.Errorf("unexpected response format")
 
-	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
-		return nil, err
-	}
-
-	var entries []nightscout.Entry
-	for _, raw := range items {
-		var entry nightscout.Entry
-		if err := json.Unmarshal(raw, &entry); err != nil {
-			return nil, err
-		}
-		entries = append(entries, entry)
-	}
-
-	return entries, nil
-}
-
-//
-// TREATMENTS
-//
-
-type Treatment struct {
-	ID        string     `json:"_id"`
-	EventType string     `json:"eventType"`
-	CreatedAt *time.Time `json:"created_at"`
-	EnteredBy string     `json:"enteredBy"`
-
-	Insulin float64 `json:"insulin"`
-	Carbs   float64 `json:"carbs"`
-
-	Absolute float64 `json:"absolute"`
-	Rate     float64 `json:"rate"`
-	Duration float64 `json:"duration"`
-
-	Notes   string  `json:"notes"`
-	Glucose float64 `json:"glucose"`
-	Units   string  `json:"units"`
-}
-
-func (c *Client) GetTreatments(
-	ctx context.Context,
-	count int,
-) ([]Treatment, error) {
-	q := url.Values{}
-	q.Set("count", fmt.Sprintf("%d", count))
-
-	req, err := c.newRequest(
-		ctx,
-		http.MethodGet,
-		"/api/v1/treatments.json",
-		q,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(
-			"nightscout treatments failed: %s",
-			resp.Status,
-		)
-	}
-
-	var treatments []Treatment
-
-	if err := json.NewDecoder(resp.Body).Decode(&treatments); err != nil {
-		return nil, err
-	}
-
-	return treatments, nil
 }

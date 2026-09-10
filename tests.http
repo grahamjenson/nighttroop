@@ -1,8 +1,0 @@
-@base=http://localhost:3000
-
-###
-GET {{base}}/api/v1/hello
-
-
-###
-POST {{base}}/api/v1/echo

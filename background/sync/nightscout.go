@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
-	"nighttroop.t1d.nz/models/nightscout"
-	utilerrors "nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
@@ -21,37 +21,39 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	egvs, err := nsc.GetEntries(ctx, 3)
+	afterTime := time.Now().Add(-time.Duration(20) * time.Minute)
+	egvs, err := nsc.GetEntries(ctx, afterTime, 3)
 	if err != nil {
 		return fmt.Errorf("Nightscout Error: %w", err)
 	}
 
-	// Limit the total egvs to the number requested
-	if len(egvs) > 3 {
-		egvs = egvs[:3]
-	}
-
 	totalAddedColumns := 0
 	for _, userSyncSource := range syncInfo.userSyncSources {
-		addedColumns := false
-		for _, e := range egvs {
-			createParams := nightscout.EntryToCreate(e, nightscout.ConverterContext{IdentityID: userSyncSource.syncIdentity.ID, IdentityName: userSyncSource.syncIdentity.Name})
-			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
-			if err != nil {
-				if utilerrors.IsSQLDuplicateID(err) {
-					continue
-				}
-				// Probably just non-unique eid
-				slog.Error("Error creating entry in database", "error", err, "eid", createParams.ID, "sync_source_id", userSyncSource.syncIdentity.ID)
-				continue
-			}
-
-			if res != nil {
-				addedColumns = true
-			}
-
+		siteContext := &httputils.SiteContext{
+			Subdomain:     userSyncSource.siteModel.Subdomain,
+			IdentityModel: userSyncSource.syncIdentity,
+			ControlDB:     userSyncSource.controlDB,
+			SiteDB:        userSyncSource.siteDB,
+			SiteModel:     userSyncSource.siteModel,
+			SiteAction:    httputils.SiteActionWrite,
 		}
 
+		addedColumns := false
+
+		collectionsStore, ok := b.nightscoutStore.GetStore(nsutils.Entries)
+		if !ok {
+			return fmt.Errorf("Nightscout: Entries collection not found")
+		}
+
+		for _, egv := range egvs {
+			_, created, err := collectionsStore.Create(ctx, siteContext, egv, false)
+			if err != nil {
+				return fmt.Errorf("Nightscout: Failed to create entry: %w", err)
+			}
+			if created {
+				addedColumns = true
+			}
+		}
 		// Update that it has been seen and used recently
 		if addedColumns {
 			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.siteModel.Subdomain)
