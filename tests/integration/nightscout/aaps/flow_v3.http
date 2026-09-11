@@ -82,7 +82,7 @@ ASSERT {{ assertEquals 0.0 "@result.filtered" }}
 ASSERT {{ assertEquals 0.0 "@result.unfiltered" }}
 ASSERT {{ assertEquals true "@result.isValid" }}
 ASSERT {{ assertEquals false "@result.isReadOnly" }}
-
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
 
 NAME add_treatment_cc
 POST http://{{ site }}/api/v3/treatments

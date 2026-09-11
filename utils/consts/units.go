@@ -75,3 +75,10 @@ func (u *Units) ToMGDLMultiplier() float64 {
 		return 0.0
 	}
 }
+
+func GuessUnits(value float64) Units {
+	if value > 30 {
+		return UnitsMGDL
+	}
+	return UnitsMMOLL
+}

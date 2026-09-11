@@ -22,7 +22,7 @@ SET {{ .jwtauth.token }}
 //////
 
 
-NAME create_entry_v1
+NAME create_entry_v3
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "sgv": 101, "type": "sgv" }
@@ -41,21 +41,21 @@ ASSERT {{ assertExists "@result.srvModified" }}
 // READ
 //////
 
-NAME get_entry_v1
-GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+NAME get_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 
-NAME search_gt_sgv_v1
+NAME search_gt_sgv_v3
 GET http://{{ site }}/api/v3/entries?sgv[gt]=100
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 101 "@result.0.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.0.type" }}
 
-NAME get_404_entry_v1
+NAME get_404_entry_v3
 GET http://{{ site }}/api/v3/entries/NonExistentID
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 404
@@ -64,29 +64,29 @@ ASSERT_STATUS 404
 // UPDATE
 //////
 
-NAME put_entry_v1
-PUT http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+NAME put_entry_v3
+PUT http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "sgv": 102, "type": "sgv" }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 102 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 
-NAME check_put_entry_v1
-GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+NAME check_put_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 102 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 
-NAME patch_entry_v1
-PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+NAME patch_entry_v3
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "sgv": 103, "type": "sgv" }
 ASSERT_STATUS 200
 
-NAME check_patch_entry_v1
-GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+NAME check_patch_entry_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 103 "@result.sgv" }}
@@ -101,8 +101,8 @@ ASSERT {{ assertEquals 104 "@result.sgv" }}
 ASSERT {{ assertEquals "AnotherFunID" "@result.identifier" }}
 
 NAME update_put_entries_v3
-PUT http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
-B {"sgv": 104, "app": "test-app", "date": {{ dig "put_entry_v1.result.date" }}}
+PUT http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+B {"sgv": 104, "app": "test-app", "date": {{ dig "put_entry_v3.result.date" }}}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
@@ -110,7 +110,7 @@ ASSERT_STATUS 200
 // DELETE
 //////
 
-NAME delete_soft_entry_v1
-DELETE http://{{ site }}/api/v3/entries/{{ dig "create_entry_v1.result.identifier" }}
+NAME delete_soft_entry_v3
+DELETE http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
