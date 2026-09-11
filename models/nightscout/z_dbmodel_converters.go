@@ -3,7 +3,10 @@
 
 package nightscout
 
-import site "nighttroop.t1d.nz/data/sql/site"
+import (
+	site "nighttroop.t1d.nz/data/sql/site"
+	consts "nighttroop.t1d.nz/utils/consts"
+)
 
 func DBModelToActivity(source *site.Activity) Activity {
 	var nightscoutActivity Activity
@@ -224,8 +227,8 @@ func DBModelToProfile(source *site.ProfilePreset) Profile {
 	var nightscoutProfile Profile
 	if source != nil {
 		if (*source).Units != nil {
-			nightscoutUnits := Units(*(*source).Units)
-			nightscoutProfile.Units = &nightscoutUnits
+			constsUnits := consts.Units(*(*source).Units)
+			nightscoutProfile.Units = &constsUnits
 		}
 		if (*source).Dia != nil {
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Dia)
@@ -251,8 +254,8 @@ func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
 		pNightscoutShortString := ShortString((*source).Name)
 		nightscoutProfileStore.DefaultProfile = &pNightscoutShortString
 		if (*source).Units != nil {
-			nightscoutUnits := Units(*(*source).Units)
-			nightscoutProfileStore.Units = &nightscoutUnits
+			constsUnits := consts.Units(*(*source).Units)
+			nightscoutProfileStore.Units = &constsUnits
 		}
 		nightscoutProfileStore.LoopSettings = JSONToLoopSettings((*source).LoopSettingsJson)
 		if (*source).CreatedByDeviceName != nil {

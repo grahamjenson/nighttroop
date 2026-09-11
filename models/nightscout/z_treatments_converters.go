@@ -3,7 +3,10 @@
 
 package nightscout
 
-import site "nighttroop.t1d.nz/data/sql/site"
+import (
+	site "nighttroop.t1d.nz/data/sql/site"
+	consts "nighttroop.t1d.nz/utils/consts"
+)
 
 func ActivityCreate(source site.Activity, context ConverterContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
@@ -1532,8 +1535,8 @@ func UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatm
 			target.GlucoseType = &nightscoutGlucoseType
 		}
 		if source.OriginalUnits != nil {
-			nightscoutUnits := Units(*source.OriginalUnits)
-			target.Units = &nightscoutUnits
+			constsUnits := consts.Units(*source.OriginalUnits)
+			target.Units = &constsUnits
 		}
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)
@@ -1625,8 +1628,8 @@ func UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatmen
 			target.Timeshift = &nightscoutFlexibleInt64
 		}
 		if source.Units != nil {
-			nightscoutUnits := Units(*source.Units)
-			target.Units = &nightscoutUnits
+			constsUnits := consts.Units(*source.Units)
+			target.Units = &constsUnits
 		}
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)

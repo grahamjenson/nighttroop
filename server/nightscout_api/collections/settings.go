@@ -61,6 +61,9 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 	}
 	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
 	if err != nil {
+		if nsErr := nsutils.GetSQLTranslatedError(err); nsErr != nil {
+			return nil, false, nsErr
+		}
 		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
 		return nil, false, nsutils.ErrInternal
 	}
@@ -96,10 +99,11 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	identitySettingsMap := GetIdentitySettingsMap(siteContext.IdentityModel)
 	setting, ok := identitySettingsMap[nsModel.Identifier.String()]
 	if !ok {
-		slog.Error("setting not found", "identifier", nsModel.Identifier.String())
+		slog.Error("setting not found", "identifier", nsModel.Identifier.String(), "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
 	}
-	setting.Value = patch["value"]
+	setting.Value = nsModel.Value
+
 	params, httpErr := IdentitySettingsMapToIdentitySettingsParams(siteContext.IdentityModel.ID, siteContext.IdentityModel.SiteID, identitySettingsMap)
 	if httpErr != nil {
 		slog.Error("failed to convert settings map to params", "error", httpErr, "collection", "settings")
@@ -111,6 +115,9 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	}
 	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
 	if err != nil {
+		if nsErr := nsutils.GetSQLTranslatedError(err); nsErr != nil {
+			return nil, false, nsErr
+		}
 		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
 		return nil, false, nsutils.ErrInternal
 	}
@@ -139,7 +146,7 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 	identitySettingsMap := GetIdentitySettingsMap(siteContext.IdentityModel)
 	setting, ok := identitySettingsMap[identifier]
 	if !ok {
-		slog.Error("setting not found", "identifier", identifier)
+		slog.Error("setting not found", "identifier", identifier, "collection", "settings")
 		return nsutils.ErrNotFound
 	}
 	setting.Value = nil
@@ -192,14 +199,14 @@ func ConvertFromNSToSetting(s *Setting) nightscout.Setting {
 	return nightscout.Setting{
 		Identifier: ptr(nightscout.IdentifierString(s.Identifier)),
 		Value:      s.Value,
-		Type:       ptr(nightscout.ShortString(s.Type)),
+		Type:       ptr(nightscout.ShortString(s.Type.GetTypeString())),
 	}
 }
 
 type Setting struct {
-	Identifier string `json:"identifier"`
-	Value      any    `json:"value"`
-	Type       string `json:"type"`
+	Identifier string               `json:"identifier"`
+	Value      any                  `json:"value"`
+	Type       control.SettingsType `json:"type"`
 
 	isDefault bool                  `json:"-"`
 	site      *control.Site         `json:"-"`
@@ -311,7 +318,7 @@ func NewSetting(
 	identityValue any,
 	siteValue any,
 	defaultValue any,
-	typ string,
+	typ control.SettingsType,
 	site *control.Site,
 	identity *control.SiteIdentity,
 ) *Setting {

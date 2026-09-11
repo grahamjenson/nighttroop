@@ -207,7 +207,7 @@ CREATE TABLE glucose_readings (
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     mgdl REAL NOT NULL,
     reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
-    original_units TEXT CHECK(length(original_units) <= 32), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
+    original_units TEXT CHECK(original_units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
     delta REAL,
@@ -296,7 +296,7 @@ CREATE TABLE profile_presets (
 
     -- Profile Stuff
     dia REAL, -- in hours
-    units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
+    units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
     timezone TEXT CHECK(length(timezone) <= 32), -- e.g. UTC, America/New_York, etc
 
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048), -- 
@@ -336,7 +336,7 @@ CREATE TABLE profile_switches (
 
     -- Profile Stuff
     dia REAL, -- in hours
-    units TEXT CHECK(length(units) <= 32), -- mg/dL, mmol/L
+    units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L used for targets
     timezone TEXT CHECK(length(timezone) <= 32),
     
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048                     AND json_valid(carb_ratios_json)), -- 

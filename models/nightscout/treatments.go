@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 ////
@@ -66,7 +68,7 @@ type Treatment struct {
 	CorrectionRange         []*FlexibleFloat64 `json:"correctionRange,omitempty"` // [low, high]
 	InsulinNeedsScaleFactor *FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
 
-	Units *Units `json:"units,omitempty"`
+	Units *consts.Units `json:"units,omitempty"`
 
 	SensorCode    *ShortString `json:"sensorCode,omitempty"`
 	TransmitterID *ShortString `json:"transmitterId,omitempty"`

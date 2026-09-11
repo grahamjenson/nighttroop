@@ -6,14 +6,6 @@ import (
 	"strings"
 )
 
-type Units string
-
-const (
-	UNITS_MG_DL  Units = "mg/dL"
-	UNITS_MMOL_L Units = "mmol/L"
-)
-const MMOL_L_TO_MG_DL = 18.018
-
 type ServerMode string
 
 const (

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"golang.org/x/net/html"
-	"nighttroop.t1d.nz/utils/consts"
 )
 
 // //////
@@ -387,57 +386,6 @@ func (t Timezone) MarshalJSON() ([]byte, error) {
 		return []byte(`"UTC"`), nil
 	}
 	return json.Marshal(string(t))
-}
-
-/////
-// Units
-/////
-
-type Units string
-
-const (
-	UnitsMGDL Units = "mg/dL"
-	UnitsMMOL Units = "mmol/L"
-)
-
-func (u *Units) Stringp() *string {
-	if u == nil {
-		return nil
-	}
-	str := string(*u)
-	return &str
-}
-
-func (u *Units) ToMGDLMultiplier() float64 {
-	if u == nil {
-		return 1.0
-	}
-	switch *u {
-	case UnitsMGDL:
-		return 1.0
-	case UnitsMMOL:
-		return consts.MMOL_L_TO_MG_DL
-	default:
-		return 0.0
-	}
-}
-
-func (u *Units) UnmarshalJSON(data []byte) error {
-	var str string
-	if err := json.Unmarshal(data, &str); err != nil {
-		return fmt.Errorf("expected units string, got %s", data)
-	}
-	switch strings.ToLower(str) {
-	case "mg/dl", "mgdl", "mg":
-		*u = UnitsMGDL
-	case "mmol/l", "mmol", "mmoll":
-		*u = UnitsMMOL
-	default:
-		// We Default to MGDL
-		// TODO maybe default to user setting, but that adds a ton of complexity
-		*u = UnitsMGDL
-	}
-	return nil
 }
 
 // ///

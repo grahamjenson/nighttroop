@@ -1,5 +1,15 @@
 package control
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"nighttroop.t1d.nz/utils/consts"
+)
+
 var ALL_SETTINGS = []string{
 	"units",
 	"timezone",
@@ -92,50 +102,188 @@ var ALL_SETTINGS_DEFAULTS = map[string]any{
 	"notifications_enabled":         false,
 }
 
-var ALL_SETTINGS_TYPES = map[string]string{
-	"units":                         "string",
-	"timezone":                      "string",
-	"language":                      "string",
-	"date_format":                   "string",
-	"time_format":                   "string",
-	"week_start_day":                "string",
-	"bolus_dia_hours":               "number",
-	"bolus_onset_minutes":           "number",
-	"bolus_peak_minutes":            "number",
-	"basal_dia_hours":               "number",
-	"basal_onset_minutes":           "number",
-	"basal_peak_minutes":            "number",
-	"default_insulin_sensitivity":   "number",
-	"default_carb_ratio":            "number",
-	"default_basal_rate":            "number",
-	"carb_max_absorption_hours":     "number",
-	"carb_min_5m_impact":            "number",
-	"alarm_urgent_low_enabled":      "boolean",
-	"alarm_urgent_low":              "number",
-	"alarm_low_enabled":             "boolean",
-	"alarm_low":                     "number",
-	"alarm_low_minutes":             "number",
-	"alarm_low_prediction_enabled":  "boolean",
-	"alarm_high_enabled":            "boolean",
-	"alarm_high":                    "number",
-	"alarm_high_minutes":            "number",
-	"alarm_urgent_high_enabled":     "boolean",
-	"alarm_urgent_high":             "number",
-	"alarm_fast_rise_enabled":       "boolean",
-	"alarm_fast_rise":               "number",
-	"alarm_fast_rise_minutes":       "number",
-	"alarm_fast_drop_enabled":       "boolean",
-	"alarm_fast_drop":               "number",
-	"alarm_fast_drop_minutes":       "number",
-	"alarm_no_data_enabled":         "boolean",
-	"alarm_no_data_minutes":         "number",
-	"alarm_battery_low_enabled":     "boolean",
-	"alarm_battery_low_percent":     "number",
-	"alarm_battery_low_pwd_enabled": "boolean",
-	"alarm_battery_low_pwd_percent": "number",
-	"alarm_low_reservoir_enabled":   "boolean",
-	"alarm_low_reservoir_units":     "number",
-	"notifications_enabled":         "boolean",
+type SettingUnitsType struct{}
+
+func (s SettingUnitsType) FromJSONRaw(raw json.RawMessage) (any, error) {
+	var value string
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return "", err
+	}
+	unitsVal, err := consts.ParseUnits(value)
+	if err != nil {
+		return "", err
+	}
+
+	return string(unitsVal), nil
+}
+
+func (u SettingUnitsType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.GetTypeString())
+}
+
+func (s SettingUnitsType) GetTypeString() string {
+	return "string"
+}
+
+type SettingShortStringType struct{}
+
+func (s SettingShortStringType) FromJSONRaw(raw json.RawMessage) (any, error) {
+	var v any
+	if err := json.Unmarshal(raw, &v); err != nil {
+		return nil, fmt.Errorf("expected notes string, got %s", raw)
+	}
+	var out string
+	switch v := v.(type) {
+	case string:
+		out = v
+	case float64:
+		out = strconv.FormatFloat(v, 'f', -1, 64)
+	case bool:
+		out = strconv.FormatBool(v)
+	default:
+		out = fmt.Sprintf("%v", v)
+	}
+
+	if len(out) > 64 {
+		out = out[:64]
+	}
+
+	return out, nil
+}
+
+func (u SettingShortStringType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.GetTypeString())
+}
+
+func (s SettingShortStringType) GetTypeString() string {
+	return "string"
+}
+
+type SettingFlexibleFloat64Type struct{}
+
+func (f SettingFlexibleFloat64Type) FromJSONRaw(raw json.RawMessage) (any, error) {
+	var v any
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	if err := dec.Decode(&v); err != nil {
+		return nil, fmt.Errorf("expected float value, got %s", raw)
+	}
+
+	var out float64
+	switch val := v.(type) {
+	case float64:
+		out = val
+	case json.Number:
+		if asFloat, err := val.Float64(); err == nil {
+			out = asFloat
+			return out, nil
+		}
+		return nil, fmt.Errorf("invalid float value %q", val)
+	case string:
+		var err error
+		newF, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid float value %q", val)
+		}
+		out = newF
+	default:
+		return nil, fmt.Errorf("expected number or string for float, got %v:%T", v, v)
+	}
+	return out, nil
+}
+
+func (u SettingFlexibleFloat64Type) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.GetTypeString())
+}
+
+func (s SettingFlexibleFloat64Type) GetTypeString() string {
+	return "number"
+}
+
+type SettingFlexibleBoolType struct{}
+
+func (b SettingFlexibleBoolType) FromJSONRaw(raw json.RawMessage) (any, error) {
+	var v any
+	if err := json.Unmarshal(raw, &v); err != nil {
+		return nil, fmt.Errorf("expected bool value, got %s", raw)
+	}
+
+	var out bool
+	switch val := v.(type) {
+	case bool:
+		out = val
+	case string:
+		lower := strings.ToLower(strings.TrimSpace(val))
+		if lower == "true" || lower == "1" {
+			out = true
+		} else if lower == "false" || lower == "0" {
+			out = false
+		} else {
+			return nil, fmt.Errorf("invalid bool value %q", val)
+		}
+	default:
+		return nil, fmt.Errorf("expected bool or string for bool, got %T", v)
+	}
+	return out, nil
+}
+
+func (u SettingFlexibleBoolType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.GetTypeString())
+}
+
+func (s SettingFlexibleBoolType) GetTypeString() string {
+	return "boolean"
+}
+
+type SettingsType interface {
+	FromJSONRaw(raw json.RawMessage) (any, error)
+	GetTypeString() string
+}
+
+var ALL_SETTINGS_TYPES = map[string]SettingsType{
+	"units":                         SettingUnitsType{},
+	"timezone":                      SettingShortStringType{},
+	"language":                      SettingShortStringType{},
+	"date_format":                   SettingShortStringType{},
+	"time_format":                   SettingShortStringType{},
+	"week_start_day":                SettingShortStringType{},
+	"bolus_dia_hours":               SettingFlexibleFloat64Type{},
+	"bolus_onset_minutes":           SettingFlexibleFloat64Type{},
+	"bolus_peak_minutes":            SettingFlexibleFloat64Type{},
+	"basal_dia_hours":               SettingFlexibleFloat64Type{},
+	"basal_onset_minutes":           SettingFlexibleFloat64Type{},
+	"basal_peak_minutes":            SettingFlexibleFloat64Type{},
+	"default_insulin_sensitivity":   SettingFlexibleFloat64Type{},
+	"default_carb_ratio":            SettingFlexibleFloat64Type{},
+	"default_basal_rate":            SettingFlexibleFloat64Type{},
+	"carb_max_absorption_hours":     SettingFlexibleFloat64Type{},
+	"carb_min_5m_impact":            SettingFlexibleFloat64Type{},
+	"alarm_urgent_low_enabled":      SettingFlexibleBoolType{},
+	"alarm_urgent_low":              SettingFlexibleFloat64Type{},
+	"alarm_low_enabled":             SettingFlexibleBoolType{},
+	"alarm_low":                     SettingFlexibleFloat64Type{},
+	"alarm_low_minutes":             SettingFlexibleFloat64Type{},
+	"alarm_low_prediction_enabled":  SettingFlexibleBoolType{},
+	"alarm_high_enabled":            SettingFlexibleBoolType{},
+	"alarm_high":                    SettingFlexibleFloat64Type{},
+	"alarm_high_minutes":            SettingFlexibleFloat64Type{},
+	"alarm_urgent_high_enabled":     SettingFlexibleBoolType{},
+	"alarm_urgent_high":             SettingFlexibleFloat64Type{},
+	"alarm_fast_rise_enabled":       SettingFlexibleBoolType{},
+	"alarm_fast_rise":               SettingFlexibleFloat64Type{},
+	"alarm_fast_rise_minutes":       SettingFlexibleFloat64Type{},
+	"alarm_fast_drop_enabled":       SettingFlexibleBoolType{},
+	"alarm_fast_drop":               SettingFlexibleFloat64Type{},
+	"alarm_fast_drop_minutes":       SettingFlexibleFloat64Type{},
+	"alarm_no_data_enabled":         SettingFlexibleBoolType{},
+	"alarm_no_data_minutes":         SettingFlexibleFloat64Type{},
+	"alarm_battery_low_enabled":     SettingFlexibleBoolType{},
+	"alarm_battery_low_percent":     SettingFlexibleFloat64Type{},
+	"alarm_battery_low_pwd_enabled": SettingFlexibleBoolType{},
+	"alarm_battery_low_pwd_percent": SettingFlexibleFloat64Type{},
+	"alarm_low_reservoir_enabled":   SettingFlexibleBoolType{},
+	"alarm_low_reservoir_units":     SettingFlexibleFloat64Type{},
+	"notifications_enabled":         SettingFlexibleBoolType{},
 }
 
 func (i *SiteIdentity) GetSetting(name string) any {

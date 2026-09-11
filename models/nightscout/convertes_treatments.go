@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 // goverter:converter
@@ -422,7 +423,7 @@ func ToProfileJSON(source interface {
 		profile.Timezone = ptr(Timezone(*source.GetTimezone()))
 	}
 	if source.GetUnits() != nil {
-		profile.Units = ptr(Units(*source.GetUnits()))
+		profile.Units = ptr(consts.Units(*source.GetUnits()))
 	}
 	if source.GetCarbRatiosJson() != nil {
 		json.Unmarshal([]byte(*source.GetCarbRatiosJson()), &profile.CarbRatio)

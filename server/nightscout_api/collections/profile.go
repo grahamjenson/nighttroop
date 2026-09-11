@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -155,7 +156,7 @@ func DBToNightscoutProfileStore(source *site.ProfilePresetBundle) nightscout.Pro
 	profileStore.Store = make(map[nightscout.ShortString]nightscout.Profile)
 	profileStore.DefaultProfile = ptr(nightscout.ShortString(defaultProfile.Name))
 	if defaultProfile.Units != nil {
-		profileStore.Units = ptr(nightscout.Units(*defaultProfile.Units))
+		profileStore.Units = ptr(consts.Units(*defaultProfile.Units))
 	}
 	for _, p := range realSource {
 		profile := nightscout.DBModelToProfile(p)

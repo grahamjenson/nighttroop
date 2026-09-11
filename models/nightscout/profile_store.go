@@ -3,13 +3,15 @@ package nightscout
 import (
 	"bytes"
 	"encoding/json"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 type ProfileStore struct {
 	Identifier     *IdentifierString       `json:"identifier,omitempty"`
 	DefaultProfile *ShortString            `json:"defaultProfile,omitempty"`
 	Store          map[ShortString]Profile `json:"store,omitempty"`
-	Units          *Units                  `json:"units,omitempty"`
+	Units          *consts.Units           `json:"units,omitempty"`
 
 	LoopSettings *LoopSettings `json:"loopSettings,omitempty"`
 
@@ -59,7 +61,7 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 }
 
 type Profile struct {
-	Units    *Units           `json:"units,omitempty"`
+	Units    *consts.Units    `json:"units,omitempty"`
 	Dia      *FlexibleFloat64 `json:"dia,omitempty"`
 	Timezone *Timezone        `json:"timezone,omitempty"`
 

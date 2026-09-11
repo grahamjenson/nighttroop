@@ -1,0 +1,83 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+
+#########
+# Settings
+#########
+
+NAME get_unit_settings
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mmol/L" "@result.value" }}
+
+NAME update_unit_to_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mg/dL"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+
+NAME update_unit_to_mmol_wrong_spelling
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mmol"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mmol/L" "@result.value" }}
+
+NAME update_unit_to_mgdl_wrong_spelling
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mgdl"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+
+
+NAME update_unit_to_completely_wrong
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "tons"}
+ASSERT_STATUS 400
+
+#########
+# Glucose Readings
+#########
+
+
+
+#########
+# Profiles
+#########
+
+
+#########
+# Treatments
+#########
+
+
+
+### Profile Switchs
+
+
+### Glucose Settings

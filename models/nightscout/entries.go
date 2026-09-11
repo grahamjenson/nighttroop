@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 ////
@@ -25,7 +27,7 @@ type Entry struct {
 	MBG       *FlexibleFloat64 `json:"mbg,omitempty"`
 	Direction *string          `json:"direction,omitempty"`
 	Trend     *FlexibleFloat64 `json:"trend,omitempty"`
-	Units     *Units           `json:"units,omitempty"`
+	Units     *consts.Units    `json:"units,omitempty"`
 
 	Filtered   *FlexibleFloat64 `json:"filtered,omitempty"`
 	Unfiltered *FlexibleFloat64 `json:"unfiltered,omitempty"`

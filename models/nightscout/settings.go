@@ -37,23 +37,21 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 	typeOfSetting, ok := control.ALL_SETTINGS_TYPES[t.Identifier.String()]
 	if !ok {
 		value = new(ShortString)
+		if err := json.Unmarshal(aux.Value, value); err != nil {
+			if t.Identifier == nil {
+				return fmt.Errorf("invalid value for setting: %w", err)
+			}
+			return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
+		}
 	} else {
-		switch typeOfSetting {
-		case "string":
-			value = new(ShortString)
-		case "number":
-			value = new(FlexibleFloat64)
-		case "boolean":
-			value = new(FlexibleBool)
-		default:
-			value = new(ShortString)
+		var err error
+		value, err = typeOfSetting.FromJSONRaw(aux.Value)
+		if err != nil {
+			if t.Identifier == nil {
+				return fmt.Errorf("invalid value for setting: %w", err)
+			}
+			return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
 		}
-	}
-	if err := json.Unmarshal(aux.Value, value); err != nil {
-		if t.Identifier == nil {
-			return fmt.Errorf("invalid value for setting: %w", err)
-		}
-		return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
 	}
 
 	t.Value = value
