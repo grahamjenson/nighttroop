@@ -15,7 +15,7 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *site.ProfilePresetBundle, raw bool) nsutils.Record
+	converter func(c *site.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewProfileCollection() ProfileCollection {
@@ -26,8 +26,8 @@ func (c ProfileCollection) Name() string {
 	return "profile"
 }
 
-func (c ProfileCollection) Convert(dr *site.ProfilePresetBundle, raw bool) nsutils.Record {
-	return c.converter(dr, raw)
+func (c ProfileCollection) Convert(dr *site.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return c.converter(dr, siteContext, raw)
 }
 
 func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *site.ProfilePresetBundle) *nsutils.HTTPError {
@@ -113,7 +113,7 @@ func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 	wrappers := site.ManyPresetsToMayWrappers(profilePresets)
-	return nsutils.CreateRecordSlice[*site.ProfilePresetBundle](wrappers, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice[*site.ProfilePresetBundle](wrappers, c.converter, siteContext, query.Raw), nil
 }
 
 func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -136,7 +136,7 @@ func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscoutProfileStore(source *site.ProfilePresetBundle) nightscout.ProfileStore {
+func DBToNightscoutProfileStore(source *site.ProfilePresetBundle, siteContext *httputils.SiteContext) nightscout.ProfileStore {
 	if source == nil {
 		return nightscout.ProfileStore{}
 	}
@@ -152,14 +152,14 @@ func DBToNightscoutProfileStore(source *site.ProfilePresetBundle) nightscout.Pro
 		}
 	}
 
-	profileStore := nightscout.DBModelToProfileStore(defaultProfile)
+	profileStore := nightscout.DBModelToProfileStore(defaultProfile, siteContext)
 	profileStore.Store = make(map[nightscout.ShortString]nightscout.Profile)
 	profileStore.DefaultProfile = ptr(nightscout.ShortString(defaultProfile.Name))
 	if defaultProfile.Units != nil {
 		profileStore.Units = ptr(consts.Units(*defaultProfile.Units))
 	}
 	for _, p := range realSource {
-		profile := nightscout.DBModelToProfile(p)
+		profile := nightscout.DBModelToProfile(p, siteContext)
 		profileStore.Store[nightscout.ShortString(p.Name)] = profile
 	}
 
@@ -177,7 +177,7 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 	if source.LoopSettings != nil {
 		loopSettingsJSON = TryValueToJSON(source.LoopSettings)
 	}
-	defaultUnits := source.Units.Stringp()
+	defaultUnits := source.Units
 	for name, profile := range source.Store {
 		createParam := nightscout.PartialProfileStoreToCreate(source, ctx)
 		createParam.ProfileStoreID = profileStoreID
@@ -189,7 +189,7 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 		createParam.Timezone = profile.Timezone.Stringp()
 
 		if profile.Units != nil {
-			createParam.Units = profile.Units.Stringp()
+			createParam.Units = profile.Units
 		} else {
 			createParam.Units = defaultUnits
 		}

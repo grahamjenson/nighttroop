@@ -62,6 +62,14 @@ func (u *Units) Stringp() *string {
 	return &str
 }
 
+// This will do its best to conver to MGDL
+func (u *Units) ToMGDL(value float64) float64 {
+	if u == nil {
+		return ptr(GuessUnits(value)).ToMGDL(value)
+	}
+	return value * u.ToMGDLMultiplier()
+}
+
 func (u *Units) ToMGDLMultiplier() float64 {
 	if u == nil {
 		return 1.0
@@ -72,7 +80,7 @@ func (u *Units) ToMGDLMultiplier() float64 {
 	case UnitsMMOLL:
 		return MMOL_L_TO_MG_DL
 	default:
-		return 0.0
+		return 1.0
 	}
 }
 
@@ -81,4 +89,8 @@ func GuessUnits(value float64) Units {
 		return UnitsMGDL
 	}
 	return UnitsMMOLL
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

@@ -8,6 +8,8 @@ package site
 import (
 	"context"
 	"database/sql"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const allProfilePresets = `-- name: AllProfilePresets :many
@@ -107,7 +109,7 @@ type CreateProfilePresetParams struct {
 	ProfileStoreID           string
 	IsDefault                bool
 	Dia                      *float64
-	Units                    *string
+	Units                    *consts.Units
 	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string

@@ -6,9 +6,10 @@ package nightscout
 import (
 	site "nighttroop.t1d.nz/data/sql/site"
 	consts "nighttroop.t1d.nz/utils/consts"
+	httputils "nighttroop.t1d.nz/utils/httputils"
 )
 
-func DBModelToActivity(source *site.Activity) Activity {
+func DBModelToActivity(source *site.Activity, context *httputils.SiteContext) Activity {
 	var nightscoutActivity Activity
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -66,7 +67,7 @@ func DBModelToActivity(source *site.Activity) Activity {
 	}
 	return nightscoutActivity
 }
-func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
+func DBModelToDeviceStatus(source *site.DeviceReport, context *httputils.SiteContext) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -94,15 +95,15 @@ func DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus {
 	}
 	return nightscoutDeviceStatus
 }
-func DBModelToEntry(source *site.GlucoseReading) Entry {
+func DBModelToEntry(source *site.GlucoseReading, context *httputils.SiteContext) Entry {
 	var nightscoutEntry Entry
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
 		nightscoutEntry.Identifier = &pNightscoutIdentifierString
 		pNightscoutEntryType := EntryType((*source).ReadingType)
 		nightscoutEntry.Type = &pNightscoutEntryType
-		nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue((*source))
-		nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue((*source))
+		nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue((*source), context)
+		nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue((*source), context)
 		if (*source).Direction != nil {
 			xstring := *(*source).Direction
 			nightscoutEntry.Direction = &xstring
@@ -111,6 +112,7 @@ func DBModelToEntry(source *site.GlucoseReading) Entry {
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Delta)
 			nightscoutEntry.Trend = &nightscoutFlexibleFloat64
 		}
+		nightscoutEntry.Units = UnitsToValue((*source), context)
 		if (*source).Filtered != nil {
 			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).Filtered)
 			nightscoutEntry.Filtered = &nightscoutFlexibleFloat642
@@ -154,7 +156,7 @@ func DBModelToEntry(source *site.GlucoseReading) Entry {
 	}
 	return nightscoutEntry
 }
-func DBModelToFood(source *site.FoodPreset) Food {
+func DBModelToFood(source *site.FoodPreset, context *httputils.SiteContext) Food {
 	var nightscoutFood Food
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -223,11 +225,11 @@ func DBModelToFood(source *site.FoodPreset) Food {
 	}
 	return nightscoutFood
 }
-func DBModelToProfile(source *site.ProfilePreset) Profile {
+func DBModelToProfile(source *site.ProfilePreset, context *httputils.SiteContext) Profile {
 	var nightscoutProfile Profile
 	if source != nil {
 		if (*source).Units != nil {
-			constsUnits := consts.Units(*(*source).Units)
+			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
 			nightscoutProfile.Units = &constsUnits
 		}
 		if (*source).Dia != nil {
@@ -246,7 +248,7 @@ func DBModelToProfile(source *site.ProfilePreset) Profile {
 	}
 	return nightscoutProfile
 }
-func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
+func DBModelToProfileStore(source *site.ProfilePreset, context *httputils.SiteContext) ProfileStore {
 	var nightscoutProfileStore ProfileStore
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -254,7 +256,7 @@ func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
 		pNightscoutShortString := ShortString((*source).Name)
 		nightscoutProfileStore.DefaultProfile = &pNightscoutShortString
 		if (*source).Units != nil {
-			constsUnits := consts.Units(*(*source).Units)
+			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
 			nightscoutProfileStore.Units = &constsUnits
 		}
 		nightscoutProfileStore.LoopSettings = JSONToLoopSettings((*source).LoopSettingsJson)
@@ -282,4 +284,15 @@ func DBModelToProfileStore(source *site.ProfilePreset) ProfileStore {
 		}
 	}
 	return nightscoutProfileStore
+}
+func constsUnitsToConstsUnits(source consts.Units) consts.Units {
+	var constsUnits consts.Units
+	switch source {
+	case consts.UnitsMGDL:
+		constsUnits = consts.UnitsMGDL
+	case consts.UnitsMMOLL:
+		constsUnits = consts.UnitsMMOLL
+	default: // ignored
+	}
+	return constsUnits
 }

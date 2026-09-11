@@ -13,7 +13,7 @@ import (
 )
 
 type EntriesCollection struct {
-	converter func(c *site.GlucoseReading, raw bool) nsutils.Record
+	converter func(c *site.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewEntriesCollection() EntriesCollection {
@@ -30,8 +30,8 @@ func (c EntriesCollection) Name() string {
 	return "entries"
 }
 
-func (c EntriesCollection) Convert(dr *site.GlucoseReading, raw bool) nsutils.Record {
-	return c.converter(dr, raw)
+func (c EntriesCollection) Convert(dr *site.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return c.converter(dr, siteContext, raw)
 }
 
 // Cannot change properties
@@ -144,7 +144,7 @@ func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(entries, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice(entries, c.Convert, siteContext, query.Raw), nil
 }
 
 // Replace will delete then create the record again, BUT it will not

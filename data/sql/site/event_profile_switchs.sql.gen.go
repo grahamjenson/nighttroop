@@ -8,6 +8,8 @@ package site
 import (
 	"context"
 	"database/sql"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const allProfileSwitches = `-- name: AllProfileSwitches :many
@@ -113,7 +115,7 @@ type CreateProfileSwitchParams struct {
 	DurationMinutes          int64
 	Percent                  *float64
 	Dia                      *float64
-	Units                    *string
+	Units                    *consts.Units
 	Timezone                 *string
 	Timeshift                *int64
 	CarbRatiosJson           *string

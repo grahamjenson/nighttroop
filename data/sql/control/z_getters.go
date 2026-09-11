@@ -338,12 +338,12 @@ func (m *SiteIdentity) SetEnabled(v bool) {
 }
 
 // GetUnits returns the Units value.
-func (m SiteIdentity) GetUnits() *string {
+func (m SiteIdentity) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetUnits(v *string) {
+func (m *SiteIdentity) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
@@ -978,12 +978,12 @@ func (m *Site) SetDeletedAt(v *int64) {
 }
 
 // GetUnits returns the Units value.
-func (m Site) GetUnits() *string {
+func (m Site) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated Site.
-func (m *Site) SetUnits(v *string) {
+func (m *Site) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
@@ -1578,12 +1578,12 @@ func (m UpdateSiteIdentityDateFlagsParams) SetID(v int64) UpdateSiteIdentityDate
 }
 
 // GetUnits returns the Units value.
-func (m UpdateSiteIdentitySettingsParams) GetUnits() *string {
+func (m UpdateSiteIdentitySettingsParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m UpdateSiteIdentitySettingsParams) SetUnits(v *string) UpdateSiteIdentitySettingsParams {
+func (m UpdateSiteIdentitySettingsParams) SetUnits(v *consts.Units) UpdateSiteIdentitySettingsParams {
 	m.Units = v
 	return m
 }

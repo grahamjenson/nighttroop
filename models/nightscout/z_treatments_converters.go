@@ -3,10 +3,7 @@
 
 package nightscout
 
-import (
-	site "nighttroop.t1d.nz/data/sql/site"
-	consts "nighttroop.t1d.nz/utils/consts"
-)
+import site "nighttroop.t1d.nz/data/sql/site"
 
 func ActivityCreate(source site.Activity, context ConverterContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
@@ -480,21 +477,18 @@ func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) 
 	siteCreateGlucoseReadingParams.ID = AssignID()
 	siteCreateGlucoseReadingParams.Mgdl = source.Mgdl
 	siteCreateGlucoseReadingParams.ReadingType = source.ReadingType
-	if source.OriginalUnits != nil {
-		xstring := *source.OriginalUnits
-		siteCreateGlucoseReadingParams.OriginalUnits = &xstring
-	}
+	siteCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
 	if source.MeasurementMethod != nil {
-		xstring2 := *source.MeasurementMethod
-		siteCreateGlucoseReadingParams.MeasurementMethod = &xstring2
+		xstring := *source.MeasurementMethod
+		siteCreateGlucoseReadingParams.MeasurementMethod = &xstring
 	}
 	if source.Delta != nil {
 		xfloat64 := *source.Delta
 		siteCreateGlucoseReadingParams.Delta = &xfloat64
 	}
 	if source.Direction != nil {
-		xstring3 := *source.Direction
-		siteCreateGlucoseReadingParams.Direction = &xstring3
+		xstring2 := *source.Direction
+		siteCreateGlucoseReadingParams.Direction = &xstring2
 	}
 	if source.Noise != nil {
 		xfloat642 := *source.Noise
@@ -513,12 +507,12 @@ func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) 
 		siteCreateGlucoseReadingParams.Rssi = &xfloat645
 	}
 	if source.Notes != nil {
-		xstring4 := *source.Notes
-		siteCreateGlucoseReadingParams.Notes = &xstring4
+		xstring3 := *source.Notes
+		siteCreateGlucoseReadingParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring5 := *source.Reason
-		siteCreateGlucoseReadingParams.Reason = &xstring5
+		xstring4 := *source.Reason
+		siteCreateGlucoseReadingParams.Reason = &xstring4
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -526,16 +520,16 @@ func GlucoseReadingCreate(source site.GlucoseReading, context ConverterContext) 
 	}
 	siteCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring6 := *source.RawJsonData
-		siteCreateGlucoseReadingParams.RawJsonData = &xstring6
+		xstring5 := *source.RawJsonData
+		siteCreateGlucoseReadingParams.RawJsonData = &xstring5
 	}
 	if source.CreatedByAppName != nil {
-		xstring7 := *source.CreatedByAppName
-		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring7
+		xstring6 := *source.CreatedByAppName
+		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring8 := *source.CreatedByDeviceName
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring8
+		xstring7 := *source.CreatedByDeviceName
+		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring7
 	}
 	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateGlucoseReadingParams
@@ -882,21 +876,18 @@ func PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading {
 	if source.Glucose != nil {
 		siteGlucoseReading.Mgdl = FlexibleFloat64ToFloat64(*source.Glucose)
 	}
-	if source.Units != nil {
-		xstring := string(*source.Units)
-		siteGlucoseReading.OriginalUnits = &xstring
-	}
+	siteGlucoseReading.Units = UnitsToUnits(source.Units)
 	if source.GlucoseType != nil {
-		xstring2 := string(*source.GlucoseType)
-		siteGlucoseReading.MeasurementMethod = &xstring2
+		xstring := string(*source.GlucoseType)
+		siteGlucoseReading.MeasurementMethod = &xstring
 	}
 	if source.Notes != nil {
-		xstring3 := SanitizedStringToString(*source.Notes)
-		siteGlucoseReading.Notes = &xstring3
+		xstring2 := SanitizedStringToString(*source.Notes)
+		siteGlucoseReading.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring4 := ShortStringToString(*source.Reason)
-		siteGlucoseReading.Reason = &xstring4
+		xstring3 := ShortStringToString(*source.Reason)
+		siteGlucoseReading.Reason = &xstring3
 	}
 	pString := source.RawJsonData
 	siteGlucoseReading.RawJsonData = &pString
@@ -906,12 +897,12 @@ func PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading {
 	}
 	siteGlucoseReading.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring5 := ShortStringToString(*source.App)
-		siteGlucoseReading.CreatedByAppName = &xstring5
+		xstring4 := ShortStringToString(*source.App)
+		siteGlucoseReading.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
-		xstring6 := ShortStringToString(*source.Device)
-		siteGlucoseReading.CreatedByDeviceName = &xstring6
+		xstring5 := ShortStringToString(*source.Device)
+		siteGlucoseReading.CreatedByDeviceName = &xstring5
 	}
 	return siteGlucoseReading
 }
@@ -1119,45 +1110,42 @@ func ProfileSwitchCreate(source site.ProfileSwitch, context ConverterContext) si
 		xfloat642 := *source.Dia
 		siteCreateProfileSwitchParams.Dia = &xfloat642
 	}
-	if source.Units != nil {
-		xstring := *source.Units
-		siteCreateProfileSwitchParams.Units = &xstring
-	}
+	siteCreateProfileSwitchParams.Units = UnitsToUnits(source.Units)
 	if source.Timezone != nil {
-		xstring2 := *source.Timezone
-		siteCreateProfileSwitchParams.Timezone = &xstring2
+		xstring := *source.Timezone
+		siteCreateProfileSwitchParams.Timezone = &xstring
 	}
 	if source.Timeshift != nil {
 		xint64 := *source.Timeshift
 		siteCreateProfileSwitchParams.Timeshift = &xint64
 	}
 	if source.CarbRatiosJson != nil {
-		xstring3 := *source.CarbRatiosJson
-		siteCreateProfileSwitchParams.CarbRatiosJson = &xstring3
+		xstring2 := *source.CarbRatiosJson
+		siteCreateProfileSwitchParams.CarbRatiosJson = &xstring2
 	}
 	if source.InsulinSensitivitiesJson != nil {
-		xstring4 := *source.InsulinSensitivitiesJson
-		siteCreateProfileSwitchParams.InsulinSensitivitiesJson = &xstring4
+		xstring3 := *source.InsulinSensitivitiesJson
+		siteCreateProfileSwitchParams.InsulinSensitivitiesJson = &xstring3
 	}
 	if source.BasalRatesJson != nil {
-		xstring5 := *source.BasalRatesJson
-		siteCreateProfileSwitchParams.BasalRatesJson = &xstring5
+		xstring4 := *source.BasalRatesJson
+		siteCreateProfileSwitchParams.BasalRatesJson = &xstring4
 	}
 	if source.TargetsHighJson != nil {
-		xstring6 := *source.TargetsHighJson
-		siteCreateProfileSwitchParams.TargetsHighJson = &xstring6
+		xstring5 := *source.TargetsHighJson
+		siteCreateProfileSwitchParams.TargetsHighJson = &xstring5
 	}
 	if source.TargetsLowJson != nil {
-		xstring7 := *source.TargetsLowJson
-		siteCreateProfileSwitchParams.TargetsLowJson = &xstring7
+		xstring6 := *source.TargetsLowJson
+		siteCreateProfileSwitchParams.TargetsLowJson = &xstring6
 	}
 	if source.Notes != nil {
-		xstring8 := *source.Notes
-		siteCreateProfileSwitchParams.Notes = &xstring8
+		xstring7 := *source.Notes
+		siteCreateProfileSwitchParams.Notes = &xstring7
 	}
 	if source.Reason != nil {
-		xstring9 := *source.Reason
-		siteCreateProfileSwitchParams.Reason = &xstring9
+		xstring8 := *source.Reason
+		siteCreateProfileSwitchParams.Reason = &xstring8
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint642 := *source.UtcOffsetMinutes
@@ -1165,16 +1153,16 @@ func ProfileSwitchCreate(source site.ProfileSwitch, context ConverterContext) si
 	}
 	siteCreateProfileSwitchParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring10 := *source.RawJsonData
-		siteCreateProfileSwitchParams.RawJsonData = &xstring10
+		xstring9 := *source.RawJsonData
+		siteCreateProfileSwitchParams.RawJsonData = &xstring9
 	}
 	if source.CreatedByAppName != nil {
-		xstring11 := *source.CreatedByAppName
-		siteCreateProfileSwitchParams.CreatedByAppName = &xstring11
+		xstring10 := *source.CreatedByAppName
+		siteCreateProfileSwitchParams.CreatedByAppName = &xstring10
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring12 := *source.CreatedByDeviceName
-		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring12
+		xstring11 := *source.CreatedByDeviceName
+		siteCreateProfileSwitchParams.CreatedByDeviceName = &xstring11
 	}
 	siteCreateProfileSwitchParams.CreatedByIdentityName = AssignCreatedByName(context)
 	return siteCreateProfileSwitchParams
@@ -1534,10 +1522,7 @@ func UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatm
 			nightscoutGlucoseType := GlucoseType(*source.MeasurementMethod)
 			target.GlucoseType = &nightscoutGlucoseType
 		}
-		if source.OriginalUnits != nil {
-			constsUnits := consts.Units(*source.OriginalUnits)
-			target.Units = &constsUnits
-		}
+		target.Units = UnitsToUnits(source.Units)
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)
 			target.Notes = &nightscoutSanitizedString
@@ -1627,10 +1612,7 @@ func UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatmen
 			nightscoutFlexibleInt64 := FlexibleInt64(*source.Timeshift)
 			target.Timeshift = &nightscoutFlexibleInt64
 		}
-		if source.Units != nil {
-			constsUnits := consts.Units(*source.Units)
-			target.Units = &constsUnits
-		}
+		target.Units = UnitsToUnits(source.Units)
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)
 			target.Notes = &nightscoutSanitizedString
@@ -2002,21 +1984,18 @@ func UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseRea
 	if source != nil {
 		target.Mgdl = source.Mgdl
 		target.ReadingType = source.ReadingType
-		if source.OriginalUnits != nil {
-			xstring := *source.OriginalUnits
-			target.OriginalUnits = &xstring
-		}
+		target.Units = UnitsToUnits(source.Units)
 		if source.MeasurementMethod != nil {
-			xstring2 := *source.MeasurementMethod
-			target.MeasurementMethod = &xstring2
+			xstring := *source.MeasurementMethod
+			target.MeasurementMethod = &xstring
 		}
 		if source.Delta != nil {
 			xfloat64 := *source.Delta
 			target.Delta = &xfloat64
 		}
 		if source.Direction != nil {
-			xstring3 := *source.Direction
-			target.Direction = &xstring3
+			xstring2 := *source.Direction
+			target.Direction = &xstring2
 		}
 		if source.Noise != nil {
 			xfloat642 := *source.Noise
@@ -2035,16 +2014,16 @@ func UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseRea
 			target.Rssi = &xfloat645
 		}
 		if source.Notes != nil {
-			xstring4 := *source.Notes
-			target.Notes = &xstring4
+			xstring3 := *source.Notes
+			target.Notes = &xstring3
 		}
 		if source.Reason != nil {
-			xstring5 := *source.Reason
-			target.Reason = &xstring5
+			xstring4 := *source.Reason
+			target.Reason = &xstring4
 		}
 		if source.RawJsonData != nil {
-			xstring6 := *source.RawJsonData
-			target.RawJsonData = &xstring6
+			xstring5 := *source.RawJsonData
+			target.RawJsonData = &xstring5
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -2058,16 +2037,16 @@ func UpdateToGlucoseReading(source *site.GlucoseReading, target *site.GlucoseRea
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring7 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring7
+			xstring6 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring6
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring8 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring8
+			xstring7 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring7
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring9 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring9
+			xstring8 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring8
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2188,45 +2167,42 @@ func UpdateToProfileSwitch(source *site.ProfileSwitch, target *site.ProfileSwitc
 			xfloat642 := *source.Dia
 			target.Dia = &xfloat642
 		}
-		if source.Units != nil {
-			xstring := *source.Units
-			target.Units = &xstring
-		}
+		target.Units = UnitsToUnits(source.Units)
 		if source.Timezone != nil {
-			xstring2 := *source.Timezone
-			target.Timezone = &xstring2
+			xstring := *source.Timezone
+			target.Timezone = &xstring
 		}
 		if source.CarbRatiosJson != nil {
-			xstring3 := *source.CarbRatiosJson
-			target.CarbRatiosJson = &xstring3
+			xstring2 := *source.CarbRatiosJson
+			target.CarbRatiosJson = &xstring2
 		}
 		if source.InsulinSensitivitiesJson != nil {
-			xstring4 := *source.InsulinSensitivitiesJson
-			target.InsulinSensitivitiesJson = &xstring4
+			xstring3 := *source.InsulinSensitivitiesJson
+			target.InsulinSensitivitiesJson = &xstring3
 		}
 		if source.BasalRatesJson != nil {
-			xstring5 := *source.BasalRatesJson
-			target.BasalRatesJson = &xstring5
+			xstring4 := *source.BasalRatesJson
+			target.BasalRatesJson = &xstring4
 		}
 		if source.TargetsHighJson != nil {
-			xstring6 := *source.TargetsHighJson
-			target.TargetsHighJson = &xstring6
+			xstring5 := *source.TargetsHighJson
+			target.TargetsHighJson = &xstring5
 		}
 		if source.TargetsLowJson != nil {
-			xstring7 := *source.TargetsLowJson
-			target.TargetsLowJson = &xstring7
+			xstring6 := *source.TargetsLowJson
+			target.TargetsLowJson = &xstring6
 		}
 		if source.Notes != nil {
-			xstring8 := *source.Notes
-			target.Notes = &xstring8
+			xstring7 := *source.Notes
+			target.Notes = &xstring7
 		}
 		if source.Reason != nil {
-			xstring9 := *source.Reason
-			target.Reason = &xstring9
+			xstring8 := *source.Reason
+			target.Reason = &xstring8
 		}
 		if source.RawJsonData != nil {
-			xstring10 := *source.RawJsonData
-			target.RawJsonData = &xstring10
+			xstring9 := *source.RawJsonData
+			target.RawJsonData = &xstring9
 		}
 		if source.DeletedAt != nil {
 			xint642 := *source.DeletedAt
@@ -2240,16 +2216,16 @@ func UpdateToProfileSwitch(source *site.ProfileSwitch, target *site.ProfileSwitc
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring11 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring11
+			xstring10 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring10
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring12 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring12
+			xstring11 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring11
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring13 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring13
+			xstring12 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring12
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}

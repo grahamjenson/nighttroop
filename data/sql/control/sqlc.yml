@@ -35,13 +35,7 @@ sql:
 
 overrides:
   go:
-    overrides:
-      - column: "admins.role"
-        go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
-          type: "AdminRole"
-
-      
+    overrides:      
       - column: "sync_source_reports.previous_sync_errors"
         go_type:
           import: "nighttroop.t1d.nz/utils/errors"
@@ -57,6 +51,14 @@ overrides:
       - column: "site_sync_sources.enabled"
         go_type:
           type: "bool"
+
+      # site
+      - column: "sites.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+
       # Control Identities
       - column: "control_identities.role"
         go_type:
@@ -72,7 +74,13 @@ overrides:
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "IdentityRole"
-      
+
+      - column: "site_identities.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+
       - column: "site_identities.alarm_urgent_low_enabled"
         go_type:
           type: "*bool"

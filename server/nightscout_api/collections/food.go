@@ -13,7 +13,7 @@ import (
 )
 
 type FoodCollection struct {
-	converter func(c *site.FoodPreset, raw bool) nsutils.Record
+	converter func(c *site.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewFoodCollection() FoodCollection {
@@ -30,8 +30,8 @@ func (c FoodCollection) Name() string {
 	return "food"
 }
 
-func (c FoodCollection) Convert(dr *site.FoodPreset, raw bool) nsutils.Record {
-	return c.converter(dr, raw)
+func (c FoodCollection) Convert(dr *site.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return c.converter(dr, siteContext, raw)
 }
 
 func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
@@ -144,7 +144,7 @@ func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteC
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(foodPresets, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice(foodPresets, c.converter, siteContext, query.Raw), nil
 }
 
 func (c FoodCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {

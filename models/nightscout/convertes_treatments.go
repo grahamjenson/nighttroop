@@ -9,12 +9,14 @@ import (
 
 // goverter:converter
 // goverter:output:format function
+// goverter:enum:unknown @ignore
 // goverter:output:file ./z_treatments_converters.go
 // goverter:useZeroValueOnPointerInconsistency
 // goverter:extend FlexibleFloat64ToFloat64
 // goverter:extend FlexibleInt64ToInt64
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
+// goverter:extend UnitsToUnits
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -201,7 +203,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignoreMissing
 	// goverter:map Mgdl Glucose
 	// goverter:map MeasurementMethod GlucoseType
-	// goverter:map OriginalUnits Units
 	UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment)
 
 	// goverter:update target
@@ -325,7 +326,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore Delta Direction Noise Filtered Unfiltered Rssi ReadingType
 	// goverter:map Glucose Mgdl
 	// goverter:map GlucoseType MeasurementMethod
-	// goverter:map Units OriginalUnits
 	PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName UpdatedAt UpdatedByIdentityName
@@ -407,7 +407,7 @@ func MinutesToMilliseconds(durationMinutes any) *FlexibleInt64 {
 func ToProfileJSON(source interface {
 	GetDia() *float64
 	GetTimezone() *string
-	GetUnits() *string
+	GetUnits() *consts.Units
 	GetCarbRatiosJson() *string
 	GetInsulinSensitivitiesJson() *string
 	GetBasalRatesJson() *string

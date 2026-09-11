@@ -45,7 +45,7 @@ type Site struct {
 	DisabledAt                *int64
 	ArchivedAt                *int64
 	DeletedAt                 *int64
-	Units                     *string
+	Units                     *consts.Units
 	Timezone                  *string
 	Language                  *string
 	DateFormat                *string
@@ -80,7 +80,7 @@ type SiteIdentity struct {
 	CreatedByIdentityName     string
 	DeletedAt                 *int64
 	Enabled                   bool
-	Units                     *string
+	Units                     *consts.Units
 	Timezone                  *string
 	Language                  *string
 	DateFormat                *string

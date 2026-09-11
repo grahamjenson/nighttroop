@@ -14,7 +14,7 @@ import (
 
 type MetaCreateCollection[NS, DM any] interface {
 	Name() string
-	Convert(*DM, bool) nsutils.Record
+	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
 	GetDuplicateDBFunc(*site.Queries, context.Context, NS) (*DM, error)
 	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
@@ -23,14 +23,14 @@ type MetaCreateCollection[NS, DM any] interface {
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
 	ValidatePatch(NS, *DM) *nsutils.HTTPError
-	Convert(*DM, bool) nsutils.Record
+	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
 	PatchDBFunc(*site.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
 }
 
 type MetaGetCollection[DM any] interface {
 	Name() string
-	Convert(*DM, bool) nsutils.Record
+	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
 }
 
@@ -48,7 +48,7 @@ type MetaDeleteTypeCollection interface {
 
 type MetaReplaceCollection[NS, DM any] interface {
 	Name() string
-	Convert(*DM, bool) nsutils.Record
+	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
 	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
 	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
@@ -95,7 +95,7 @@ func MetaCreate[NS, DM any](
 		return nil, false, nsutils.ErrInternal
 	}
 	if duplicateDBModel != nil {
-		return ptr(m.Convert(duplicateDBModel, raw)), true, nil
+		return ptr(m.Convert(duplicateDBModel, siteContext, raw)), true, nil
 	}
 
 	dbModel, err := m.CreateDBFunc(
@@ -125,7 +125,7 @@ func MetaCreate[NS, DM any](
 		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(m.Convert(dbModel, raw)), false, nil
+	return ptr(m.Convert(dbModel, siteContext, raw)), false, nil
 }
 
 func MetaGet[DM any](
@@ -147,7 +147,7 @@ func MetaGet[DM any](
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
 	}
-	return ptr(m.Convert(dbModel, raw)), nil
+	return ptr(m.Convert(dbModel, siteContext, raw)), nil
 }
 
 func MetaDelete(
@@ -351,7 +351,7 @@ func MetaReplace[NS interface {
 		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(m.Convert(dbCreateModel, raw)), creatingNewRecord, nil
+	return ptr(m.Convert(dbCreateModel, siteContext, raw)), creatingNewRecord, nil
 
 }
 
@@ -435,7 +435,7 @@ func MetaPatch[NS interface {
 		return nil, nsutils.ErrInternal
 	}
 
-	return ptr(m.Convert(dbModel, raw)), nil
+	return ptr(m.Convert(dbModel, siteContext, raw)), nil
 }
 
 func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {

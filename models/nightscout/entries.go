@@ -80,7 +80,8 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		} else if t.MBG != nil {
 			res = *t.MBG
 		}
-		res = FlexibleFloat64(t.Units.ToMGDLMultiplier() * res.Float64())
+
+		res = FlexibleFloat64(t.Units.ToMGDL(res.Float64()))
 		t.Mgdl = &res
 	}
 

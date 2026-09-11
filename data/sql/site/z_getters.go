@@ -1,6 +1,10 @@
 
 package site
 
+import (
+	"nighttroop.t1d.nz/utils/consts"
+)
+
 
 // GetID returns the ID value.
 func (m Activity) GetID() string {
@@ -1372,14 +1376,14 @@ func (m *GlucoseReading) SetReadingType(v string) {
 	m.ReadingType = v
 }
 
-// GetOriginalUnits returns the OriginalUnits value.
-func (m GlucoseReading) GetOriginalUnits() *string {
-	return m.OriginalUnits
+// GetUnits returns the Units value.
+func (m GlucoseReading) GetUnits() *consts.Units {
+	return m.Units
 }
 
-// SetOriginalUnits sets the OriginalUnits value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetOriginalUnits(v *string) {
-	m.OriginalUnits = v
+// SetUnits sets the Units value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUnits(v *consts.Units) {
+	m.Units = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -1963,12 +1967,12 @@ func (m *ProfilePreset) SetDia(v *float64) {
 }
 
 // GetUnits returns the Units value.
-func (m ProfilePreset) GetUnits() *string {
+func (m ProfilePreset) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetUnits(v *string) {
+func (m *ProfilePreset) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
@@ -2193,12 +2197,12 @@ func (m *ProfileSwitch) SetDia(v *float64) {
 }
 
 // GetUnits returns the Units value.
-func (m ProfileSwitch) GetUnits() *string {
+func (m ProfileSwitch) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetUnits(v *string) {
+func (m *ProfileSwitch) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
@@ -3372,14 +3376,14 @@ func (m *GlucoseReadingsVw) SetReadingType(v *string) {
 	m.ReadingType = v
 }
 
-// GetOriginalUnits returns the OriginalUnits value.
-func (m GlucoseReadingsVw) GetOriginalUnits() *string {
-	return m.OriginalUnits
+// GetUnits returns the Units value.
+func (m GlucoseReadingsVw) GetUnits() *consts.Units {
+	return m.Units
 }
 
-// SetOriginalUnits sets the OriginalUnits value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetOriginalUnits(v *string) {
-	m.OriginalUnits = v
+// SetUnits sets the Units value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUnits(v *consts.Units) {
+	m.Units = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -3973,12 +3977,12 @@ func (m *ProfileSwitchesVw) SetDia(v *float64) {
 }
 
 // GetUnits returns the Units value.
-func (m ProfileSwitchesVw) GetUnits() *string {
+func (m ProfileSwitchesVw) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetUnits(v *string) {
+func (m *ProfileSwitchesVw) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
@@ -7275,14 +7279,14 @@ func (m CreateGlucoseReadingParams) SetReadingType(v string) CreateGlucoseReadin
 	return m
 }
 
-// GetOriginalUnits returns the OriginalUnits value.
-func (m CreateGlucoseReadingParams) GetOriginalUnits() *string {
-	return m.OriginalUnits
+// GetUnits returns the Units value.
+func (m CreateGlucoseReadingParams) GetUnits() *consts.Units {
+	return m.Units
 }
 
-// SetOriginalUnits sets the OriginalUnits value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetOriginalUnits(v *string) CreateGlucoseReadingParams {
-	m.OriginalUnits = v
+// SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
+func (m CreateGlucoseReadingParams) SetUnits(v *consts.Units) CreateGlucoseReadingParams {
+	m.Units = v
 	return m
 }
 
@@ -10246,12 +10250,12 @@ func (m CreateProfileSwitchParams) SetDia(v *float64) CreateProfileSwitchParams 
 }
 
 // GetUnits returns the Units value.
-func (m CreateProfileSwitchParams) GetUnits() *string {
+func (m CreateProfileSwitchParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetUnits(v *string) CreateProfileSwitchParams {
+func (m CreateProfileSwitchParams) SetUnits(v *consts.Units) CreateProfileSwitchParams {
 	m.Units = v
 	return m
 }
@@ -12809,12 +12813,12 @@ func (m CreateProfilePresetParams) SetDia(v *float64) CreateProfilePresetParams 
 }
 
 // GetUnits returns the Units value.
-func (m CreateProfilePresetParams) GetUnits() *string {
+func (m CreateProfilePresetParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetUnits(v *string) CreateProfilePresetParams {
+func (m CreateProfilePresetParams) SetUnits(v *consts.Units) CreateProfilePresetParams {
 	m.Units = v
 	return m
 }

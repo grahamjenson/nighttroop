@@ -12,7 +12,7 @@ sql:
         out: "."
         options:
           package: "site"
-          imports: []
+          imports: ["nighttroop.t1d.nz/utils/consts"]
     gen:
       go:
         package: "site"
@@ -39,3 +39,37 @@ overrides:
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"
+
+      # units
+      - column: "glucose_readings.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "glucose_readings_vw.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+
+      - column: "profile_switches.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "profile_switches_vw.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+
+      - column: "profile_presets.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "profile_presets_vw.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true

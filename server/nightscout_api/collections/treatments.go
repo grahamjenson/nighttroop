@@ -16,7 +16,7 @@ import (
 )
 
 type TreatmentCollection struct {
-	converter func(c *site.EventGroupsBundle, raw bool) nsutils.Record
+	converter func(c *site.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewTreatmentCollection() TreatmentCollection {
@@ -33,8 +33,8 @@ func (c TreatmentCollection) Name() string {
 	return "treatments"
 }
 
-func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle, raw bool) nsutils.Record {
-	return c.converter(dr, raw)
+func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return c.converter(dr, siteContext, raw)
 }
 
 func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
@@ -220,7 +220,7 @@ func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.
 		return nil, rerr
 	}
 
-	return nsutils.CreateRecordSlice(treatments, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice(treatments, c.converter, siteContext, query.Raw), nil
 }
 
 func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -995,7 +995,7 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
 
 			target.Dia = profileJSON.Dia.Float64p()
 			target.Timezone = profileJSON.Timezone.Stringp()
-			target.Units = profileJSON.Units.Stringp()
+			target.Units = profileJSON.Units
 
 			basalBytes, _ := json.Marshal(profileJSON.Basal)
 			carbRatioBytes, _ := json.Marshal(profileJSON.CarbRatio)
@@ -1123,7 +1123,7 @@ func isAssigned(values ...any) bool {
 	return false
 }
 
-func DBModelToTreatment(source *site.EventGroupsBundle) nightscout.Treatment {
+func DBModelToTreatment(source *site.EventGroupsBundle, siteContext *httputils.SiteContext) nightscout.Treatment {
 	treatment := nightscout.EventGroupToTreatment(source.EventGroup)
 
 	nightscout.UpdateGlucoseReadingToTreatment(source.GlucoseReading, treatment)

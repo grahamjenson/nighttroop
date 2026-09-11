@@ -8,11 +8,13 @@ package site
 import (
 	"context"
 	"database/sql"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
-SELECT id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -41,7 +43,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadings
 			&i.ID,
 			&i.Mgdl,
 			&i.ReadingType,
-			&i.OriginalUnits,
+			&i.Units,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -81,7 +83,7 @@ INSERT INTO glucose_readings (
     id,
     mgdl,
     reading_type,
-    original_units,
+    units,
     measurement_method,
 
     delta,
@@ -124,14 +126,14 @@ VALUES (
     ?18,
     ?19
 )
-RETURNING id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type CreateGlucoseReadingParams struct {
 	ID                    string
 	Mgdl                  float64
 	ReadingType           string
-	OriginalUnits         *string
+	Units                 *consts.Units
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -157,7 +159,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.ID,
 		arg.Mgdl,
 		arg.ReadingType,
-		arg.OriginalUnits,
+		arg.Units,
 		arg.MeasurementMethod,
 		arg.Delta,
 		arg.Direction,
@@ -179,7 +181,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		&i.ID,
 		&i.Mgdl,
 		&i.ReadingType,
-		&i.OriginalUnits,
+		&i.Units,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
@@ -205,7 +207,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE 
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings WHERE 
 (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = ?2
 `
@@ -225,7 +227,7 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 		&i.ID,
 		&i.Mgdl,
 		&i.ReadingType,
-		&i.OriginalUnits,
+		&i.Units,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
@@ -274,7 +276,7 @@ func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardD
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM glucose_readings
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -389,7 +391,7 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 			&i.ID,
 			&i.Mgdl,
 			&i.ReadingType,
-			&i.OriginalUnits,
+			&i.Units,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -475,7 +477,7 @@ UPDATE glucose_readings SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_name = ?5
 WHERE id = ?6 AND deleted_at IS NULL
-RETURNING id, mgdl, reading_type, original_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
@@ -504,7 +506,7 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		&i.ID,
 		&i.Mgdl,
 		&i.ReadingType,
-		&i.OriginalUnits,
+		&i.Units,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,

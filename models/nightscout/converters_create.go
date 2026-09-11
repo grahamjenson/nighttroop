@@ -5,6 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 type ConverterContext struct {
@@ -13,6 +14,7 @@ type ConverterContext struct {
 }
 
 // goverter:converter
+// goverter:enum:unknown @ignore
 // goverter:output:format function
 // goverter:output:file ./z_create_converters.go
 // goverter:useZeroValueOnPointerInconsistency
@@ -20,6 +22,7 @@ type ConverterContext struct {
 // goverter:extend FlexibleInt64ToInt64
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
+// goverter:extend UnitsToUnits
 type CreateMapConverter interface {
 
 	///////
@@ -50,7 +53,6 @@ type CreateMapConverter interface {
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
 	// goverter:map RSSI Rssi
-	// goverter:map Units OriginalUnits
 	EntryToCreate(source Entry, ctx ConverterContext) site.CreateGlucoseReadingParams
 
 	///////
@@ -170,4 +172,19 @@ func SetReadingType(source Entry) string {
 		return "mbg"
 	}
 	return "sgv"
+}
+
+func UnitsToUnits(source *consts.Units) *consts.Units {
+	if source == nil {
+		return nil
+	}
+	var constsUnits consts.Units
+	switch *source {
+	case consts.UnitsMGDL:
+		constsUnits = consts.UnitsMGDL
+	case consts.UnitsMMOLL:
+		constsUnits = consts.UnitsMMOLL
+	default: // ignored
+	}
+	return &constsUnits
 }

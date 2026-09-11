@@ -14,7 +14,7 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	converter func(c *site.DeviceReport, raw bool) nsutils.Record
+	converter func(c *site.DeviceReport, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewDeviceStatusCollection() DeviceStatusCollection {
@@ -30,8 +30,8 @@ func (c DeviceStatusCollection) Name() string {
 	return "devicestatus"
 }
 
-func (c DeviceStatusCollection) Convert(dr *site.DeviceReport, raw bool) nsutils.Record {
-	return c.converter(dr, raw)
+func (c DeviceStatusCollection) Convert(dr *site.DeviceReport, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return c.converter(dr, siteContext, raw)
 }
 
 func (c DeviceStatusCollection) Validate(nsModel nightscout.DeviceStatus, dbModel *site.DeviceReport) *nsutils.HTTPError {
@@ -116,7 +116,7 @@ func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputi
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(deviceStatuses, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice(deviceStatuses, c.converter, siteContext, query.Raw), nil
 }
 
 func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -144,12 +144,12 @@ func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httput
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscoutDeviceStatus(source *site.DeviceReport) nightscout.DeviceStatus {
+func DBToNightscoutDeviceStatus(source *site.DeviceReport, siteContext *httputils.SiteContext) nightscout.DeviceStatus {
 	if source == nil {
 		return nightscout.DeviceStatus{}
 	}
 
-	nsModel := nightscout.DBModelToDeviceStatus(source)
+	nsModel := nightscout.DBModelToDeviceStatus(source, siteContext)
 
 	if source.IsDeviceCharging != nil {
 		nsModel.IsCharging = ptr(nightscout.FlexibleBool(*source.IsDeviceCharging))

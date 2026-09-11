@@ -13,7 +13,7 @@ import (
 )
 
 type ActivityCollection struct {
-	converter func(c *site.Activity, raw bool) nsutils.Record
+	converter func(c *site.Activity, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewActivityCollection() ActivityCollection {
@@ -30,8 +30,8 @@ func (c ActivityCollection) Name() string {
 	return "activity"
 }
 
-func (c ActivityCollection) Convert(dr *site.Activity, raw bool) nsutils.Record {
-	return c.converter(dr, raw)
+func (c ActivityCollection) Convert(dr *site.Activity, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return c.converter(dr, siteContext, raw)
 }
 
 func (c ActivityCollection) Validate(nsModel nightscout.Activity, dbModel *site.Activity) *nsutils.HTTPError {
@@ -118,7 +118,7 @@ func (c ActivityCollection) Search(ctx context.Context, siteContext *httputils.S
 		return nil, nsutils.ErrInternal
 	}
 
-	return nsutils.CreateRecordSlice(activities, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice(activities, c.converter, siteContext, query.Raw), nil
 }
 
 func (c ActivityCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {

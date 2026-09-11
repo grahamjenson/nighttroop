@@ -12,11 +12,12 @@ import (
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type SettingsCollection struct {
-	converter func(c *Setting, raw bool) nsutils.Record
+	converter func(c *Setting, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewSettingsCollection() SettingsCollection {
@@ -68,7 +69,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(setting, raw)), false, nil
+	return ptr(c.converter(setting, siteContext, raw)), false, nil
 }
 
 func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
@@ -122,7 +123,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, nsutils.ErrInternal
 	}
 
-	return ptr(c.converter(setting, raw)), false, nil
+	return ptr(c.converter(setting, siteContext, raw)), false, nil
 }
 
 func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
@@ -175,7 +176,7 @@ func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.Site
 		return nil, nsutils.ErrNotFound
 	}
 
-	return ptr(c.converter(setting, query.Raw)), nil
+	return ptr(c.converter(setting, siteContext, query.Raw)), nil
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
@@ -184,7 +185,7 @@ func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.S
 	for _, setting := range settingsMap {
 		settingsList = append(settingsList, setting)
 	}
-	return nsutils.CreateRecordSlice(settingsList, c.converter, query.Raw), nil
+	return nsutils.CreateRecordSlice(settingsList, c.converter, siteContext, query.Raw), nil
 }
 
 func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
@@ -195,7 +196,7 @@ func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputi
 // SETTINGS TYPE
 ///////
 
-func ConvertFromNSToSetting(s *Setting) nightscout.Setting {
+func ConvertFromNSToSetting(s *Setting, siteContext *httputils.SiteContext) nightscout.Setting {
 	return nightscout.Setting{
 		Identifier: ptr(nightscout.IdentifierString(s.Identifier)),
 		Value:      s.Value,
@@ -357,7 +358,7 @@ func IdentitySettingsMapToIdentitySettingsParams(identityID int64, subdomain str
 	params := &control.UpdateSiteIdentitySettingsParams{ID: identityID, SiteID: subdomain}
 	var err *nsutils.HTTPError
 
-	params.Units, err = SettingToString(settingsMap, "units")
+	params.Units, err = SettingToUnits(settingsMap, "units")
 	if err != nil {
 		return nil, err
 	}
@@ -535,6 +536,43 @@ func IdentitySettingsMapToIdentitySettingsParams(identityID int64, subdomain str
 	// If an error occurs during conversion, return it.
 
 	return params, nil
+}
+
+func SettingToUnits(settingsMap map[string]*Setting, identifier string) (*consts.Units, *nsutils.HTTPError) {
+	s, ok := settingsMap[identifier]
+	if !ok || s == nil {
+		return nil, nsutils.BadStringFieldError(identifier)
+	}
+
+	if s.Value == nil {
+		return nil, nil
+	}
+	switch s.Value.(type) {
+	case consts.Units:
+		u := s.Value.(consts.Units)
+		return &u, nil
+	case *consts.Units:
+		uPtr := s.Value.(*consts.Units)
+		return uPtr, nil
+	case string:
+		u, err := consts.ParseUnits(s.Value.(string))
+		if err != nil {
+			return nil, nsutils.BadStringFieldError(fmt.Sprintf("%s not a units: %v type %T", s.Identifier, s.Value, s.Value))
+		}
+		return &u, nil
+	case *string:
+		uStrPtr := s.Value.(*string)
+		if uStrPtr == nil {
+			return nil, nil
+		}
+		u, err := consts.ParseUnits(*uStrPtr)
+		if err != nil {
+			return nil, nsutils.BadStringFieldError(fmt.Sprintf("%s not a units: %v type %T", s.Identifier, s.Value, s.Value))
+		}
+		return &u, nil
+	default:
+		return nil, nsutils.BadStringFieldError(fmt.Sprintf("%s not a units: %v type %T", s.Identifier, s.Value, s.Value))
+	}
 }
 
 func SettingToString(settingsMap map[string]*Setting, identifier string) (*string, *nsutils.HTTPError) {

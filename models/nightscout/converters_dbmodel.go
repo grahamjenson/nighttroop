@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 
 	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // goverter:converter
 // goverter:output:format function
+// goverter:enum:unknown @ignore
 // goverter:output:file ./z_dbmodel_converters.go
 // goverter:useZeroValueOnPointerInconsistency
 type DBModelConverter interface {
@@ -16,6 +19,7 @@ type DBModelConverter interface {
 	// ACTIVITIES
 	///////
 
+	// goverter:context siteContext
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
@@ -23,31 +27,34 @@ type DBModelConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
 	//
-	DBModelToActivity(source *site.Activity) Activity
+	DBModelToActivity(source *site.Activity, siteContext *httputils.SiteContext) Activity
 
 	///////
 	// ENTRIES TO GLUCOSE READINGS
 	///////
 
-	// goverter:ignore SysTime Units
+	// goverter:context siteContext
+	// goverter:ignore SysTime
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
-	// goverter:map . SGV | SGVGlucoseReadingTypeToValue
-	// goverter:map . MBG | MBGGlucoseReadingTypeToValue
+	// goverter:map . SGV   | SGVGlucoseReadingTypeToValue
+	// goverter:map . MBG   | MBGGlucoseReadingTypeToValue
+	// goverter:map . Units | UnitsToValue
 	// goverter:map OccurredAt Date
 	// goverter:map OccurredAt Mills
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
 	// goverter:map Delta Trend
 	// goverter:map Rssi RSSI
-	DBModelToEntry(source *site.GlucoseReading) Entry
+	DBModelToEntry(source *site.GlucoseReading, siteContext *httputils.SiteContext) Entry
 
 	///////
 	// DEVICE REPORT TO DEVICE STATUS
 	///////
 
+	// goverter:context siteContext
 	// goverter:ignore Uploader Loop Pump OpenAPS
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
@@ -57,12 +64,13 @@ type DBModelConverter interface {
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	//
 	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop OpenAPSRaw LoopRaw ConfigurationRaw Configuration
-	DBModelToDeviceStatus(source *site.DeviceReport) DeviceStatus
+	DBModelToDeviceStatus(source *site.DeviceReport, siteContext *httputils.SiteContext) DeviceStatus
 
 	///////
 	// FOOD TO FOOD PRESET
 	///////
 
+	// goverter:context siteContext
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
@@ -70,12 +78,13 @@ type DBModelConverter interface {
 	//
 	// goverter:ignore Unit GI HideAfterUse Hidden Position
 	// goverter:map CreatedAt Date
-	DBModelToFood(source *site.FoodPreset) Food
+	DBModelToFood(source *site.FoodPreset, siteContext *httputils.SiteContext) Food
 
 	///////
 	// Profile To Profile Preset
 	///////
 
+	// goverter:context siteContext
 	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map CreatedByAppName App
@@ -87,14 +96,15 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
 	// goverter:map LoopSettingsJson LoopSettings | JSONToLoopSettings
-	DBModelToProfileStore(source *site.ProfilePreset) ProfileStore
+	DBModelToProfileStore(source *site.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
 
+	// goverter:context siteContext
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
 	// goverter:map InsulinSensitivitiesJson Sens       | JSONToScheduleValueSlice
 	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
 	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSlice
 	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSlice
-	DBModelToProfile(source *site.ProfilePreset) Profile
+	DBModelToProfile(source *site.ProfilePreset, siteContext *httputils.SiteContext) Profile
 }
 
 // //
@@ -124,7 +134,8 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 	return nil
 }
 
-func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
+// goverter:context siteContext
+func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *FlexibleFloat64 {
 	if gr.ReadingType == "sgv" {
 		return ptr(FlexibleFloat64(gr.Mgdl))
 	}
@@ -132,12 +143,23 @@ func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
 
 }
 
-func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading) *FlexibleFloat64 {
+// goverter:context siteContext
+func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *FlexibleFloat64 {
 	if gr.ReadingType == "mbg" {
 		return ptr(FlexibleFloat64(gr.Mgdl))
 	}
 	return nil
 
+}
+
+// goverter:context siteContext
+func UnitsToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *consts.Units {
+	// TODO stuff
+	if gr.Units == nil {
+		return ptr(consts.UnitsMGDL)
+	}
+
+	return gr.Units
 }
 
 func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {

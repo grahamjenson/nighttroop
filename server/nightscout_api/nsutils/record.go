@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // Record is the normalized internal representation used by the storage layer.
@@ -81,7 +82,7 @@ type ConverterToRecordFN[T any, PT interface {
 	GetUpdatedAt() int64
 	GetCreatedByIdentityName() string
 	GetRawJsonData() *string
-}] func(PT, bool) Record
+}] func(PT, *httputils.SiteContext, bool) Record
 
 func DBModelToRecord[T any, PT interface {
 	*T
@@ -93,8 +94,8 @@ func DBModelToRecord[T any, PT interface {
 	GetUtcOffsetMinutes() *int64
 	GetOccurredAt() int64
 	GetRawJsonData() *string
-}, S any](collectionName Collection, convertFunc func(PT) S) ConverterToRecordFN[T, PT] {
-	return func(dbModel PT, raw bool) Record {
+}, S any](collectionName Collection, convertFunc func(PT, *httputils.SiteContext) S) ConverterToRecordFN[T, PT] {
+	return func(dbModel PT, siteContext *httputils.SiteContext, raw bool) Record {
 		if dbModel == nil {
 			return Record{}
 		}
@@ -108,7 +109,7 @@ func DBModelToRecord[T any, PT interface {
 				return Record{}
 			}
 		} else {
-			nsModel := convertFunc(dbModel)
+			nsModel := convertFunc(dbModel, siteContext)
 
 			nsModelData, err := utils.ToMap(&nsModel)
 			if err != nil {
@@ -137,10 +138,10 @@ func DBModelToRecord[T any, PT interface {
 	}
 }
 
-func CreateRecordSlice[T any](in []T, fn func(T, bool) Record, raw bool) []Record {
+func CreateRecordSlice[T any](in []T, fn func(T, *httputils.SiteContext, bool) Record, siteContext *httputils.SiteContext, raw bool) []Record {
 	out := make([]Record, len(in))
 	for i, v := range in {
-		out[i] = fn(v, raw)
+		out[i] = fn(v, siteContext, raw)
 	}
 	return out
 }

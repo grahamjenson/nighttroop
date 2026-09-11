@@ -2,6 +2,7 @@ package site
 
 // goverter:converter
 // goverter:output:format function
+// goverter:enum:unknown @ignore
 // goverter:output:file ./z_converter.go
 type ToCreateParams interface {
 

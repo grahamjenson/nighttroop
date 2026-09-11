@@ -214,11 +214,12 @@ func (b SettingFlexibleBoolType) FromJSONRaw(raw json.RawMessage) (any, error) {
 		out = val
 	case string:
 		lower := strings.ToLower(strings.TrimSpace(val))
-		if lower == "true" || lower == "1" {
+		switch lower {
+		case "true", "1":
 			out = true
-		} else if lower == "false" || lower == "0" {
+		case "false", "0":
 			out = false
-		} else {
+		default:
 			return nil, fmt.Errorf("invalid bool value %q", val)
 		}
 	default:

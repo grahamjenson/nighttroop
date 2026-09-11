@@ -4,6 +4,10 @@
 
 package site
 
+import (
+	"nighttroop.t1d.nz/utils/consts"
+)
+
 type ActivitiesVw struct {
 	ID                    *string
 	Name                  *string
@@ -232,7 +236,7 @@ type GlucoseReading struct {
 	ID                    string
 	Mgdl                  float64
 	ReadingType           string
-	OriginalUnits         *string
+	Units                 *consts.Units
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -258,7 +262,7 @@ type GlucoseReadingsVw struct {
 	ID                    *string
 	Mgdl                  *float64
 	ReadingType           *string
-	OriginalUnits         *string
+	Units                 *consts.Units
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -366,7 +370,7 @@ type ProfilePreset struct {
 	ProfileStoreID           string
 	IsDefault                bool
 	Dia                      *float64
-	Units                    *string
+	Units                    *consts.Units
 	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
@@ -392,7 +396,7 @@ type ProfileSwitch struct {
 	Percent                  *float64
 	Timeshift                *int64
 	Dia                      *float64
-	Units                    *string
+	Units                    *consts.Units
 	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
@@ -420,7 +424,7 @@ type ProfileSwitchesVw struct {
 	Percent                  *float64
 	Timeshift                *int64
 	Dia                      *float64
-	Units                    *string
+	Units                    *consts.Units
 	Timezone                 *string
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string

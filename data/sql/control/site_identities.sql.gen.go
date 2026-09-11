@@ -322,7 +322,7 @@ WHERE id = ?44 AND site_id = ?45
 `
 
 type UpdateSiteIdentitySettingsParams struct {
-	Units                     *string
+	Units                     *consts.Units
 	Timezone                  *string
 	Language                  *string
 	DateFormat                *string
