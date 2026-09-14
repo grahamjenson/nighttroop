@@ -62,6 +62,16 @@ func (u *Units) Stringp() *string {
 	return &str
 }
 
+func (u *Units) FromMGDL(value float64) float64 {
+	if u == nil {
+		return ptr(GuessUnits(value)).FromMGDL(value)
+	}
+	if *u == UnitsMGDL {
+		return value
+	}
+	return value / u.ToMGDLMultiplier()
+}
+
 // This will do its best to conver to MGDL
 func (u *Units) ToMGDL(value float64) float64 {
 	if u == nil {

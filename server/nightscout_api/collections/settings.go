@@ -14,7 +14,7 @@ import (
 )
 
 type SettingsCollection struct {
-	converter func(source settings.SettingAnyType, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	converter func(source *settings.SettingAnyType, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewSettingsCollection() SettingsCollection {
@@ -23,18 +23,18 @@ func NewSettingsCollection() SettingsCollection {
 	}
 }
 
-func ConvertFromAnyTypeToSetting(source settings.SettingAnyType, context *httputils.SiteContext, raw bool) nsutils.Record {
+func ConvertFromAnyTypeToSetting(source *settings.SettingAnyType, context *httputils.SiteContext, raw bool) nsutils.Record {
 	if source == nil {
 		return nsutils.Record{}
 	}
 
 	record := nsutils.Record{
 		Collection: string("settings"),
-		ID:         source.GetIdentifier(),
+		ID:         source.Identifier,
 		Data: map[string]any{
-			"identifier": source.GetIdentifier(),
-			"value":      source.GetValue(),
-			"type":       source.GetTypeString(),
+			"identifier": source.Identifier,
+			"value":      source.Value,
+			"type":       source.TypeString,
 		},
 		SrvCreated:  0,
 		SrvModified: 0,
@@ -218,7 +218,7 @@ func (s *SettingAny) GetRawJsonData() *string {
 	return nil
 }
 
-func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (settings.SettingAnyType, *nsutils.HTTPError) {
+func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {
 	settingsMap, err := siteContext.GetSettings()
 	if err != nil {
 		slog.Error("failed to get settings", "error", err, "collection", "settings")
@@ -230,7 +230,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 	err = identitySettingsMap.SetSettingByName(identifier, value)
 	if err != nil {
 		slog.Error("failed to set setting in identity settings map", "error", err, "collection", "settings")
-		return nil, nsutils.ErrInternal
+		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
 	params := &control.UpdateSiteIdentitySettingsParams{

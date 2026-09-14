@@ -156,19 +156,20 @@ func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils
 
 // goverter:context siteContext
 func UnitsToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *consts.Units {
-	// TODO stuff
-	if gr.Units == nil {
-		units, _ := GetUnitsAndValue(gr, siteContext)
-		return units
-	}
 
-	return gr.Units
+	units, _ := GetUnitsAndValue(gr, siteContext)
+	return units
 }
 
 func GetUnitsAndValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) (*consts.Units, *FlexibleFloat64) {
-	mgdl := gr.Mgdl
-	value := FlexibleFloat64(mgdl)
-	return ptr(consts.UnitsMGDL), &value
+	sm, err := siteContext.GetSettings()
+	if err != nil {
+		return ptr(consts.UnitsMGDL), ptr(FlexibleFloat64(gr.Mgdl))
+	}
+
+	units := sm.GetUnits()
+	value := units.FromMGDL(gr.Mgdl)
+	return units, ptr(FlexibleFloat64(value))
 }
 
 func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {

@@ -1,3 +1,10 @@
+NAME update_unit_to_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mg/dL"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 
 ######
 # CREATE

@@ -138,12 +138,6 @@ func Range[T cmp.Ordered](min, max T) func(T) error {
 // INTERFACES
 ///////
 
-type SettingAnyType interface {
-	GetIdentifier() string
-	GetTypeString() string
-	GetValue() any
-}
-
 type SettingsGetter interface {
 	GetUnits() *consts.Units
 	GetTimezone() *string

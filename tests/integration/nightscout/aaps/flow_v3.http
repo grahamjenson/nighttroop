@@ -17,6 +17,14 @@ ASSERT_STATUS 200
 NAME jwt
 SET {{ .jwtauth.token }}
 
+NAME update_unit_to_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mg/dL"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+
 // We need to check that all return values satisfy the core/nssdk models
 
 // First AAPS will call status to check if logged in and other stats

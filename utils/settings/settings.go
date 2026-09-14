@@ -30,7 +30,7 @@ func (m *CombinedSettingsMap) GetUnits() *consts.Units {
 	)
 }
 
-func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (SettingAnyType, error) {
+func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (*SettingAnyType, error) {
 	setting := m.SiteSettingsMap.GetSettingAnyTypeByName(identifier)
 	if setting != nil {
 		return setting, nil
@@ -49,8 +49,8 @@ func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (Settin
 	return nil, fmt.Errorf("setting with identifier %s not found", identifier)
 }
 
-func (m *CombinedSettingsMap) GetAllSettingAnyTypes() []SettingAnyType {
-	allSettings := make([]SettingAnyType, 0)
+func (m *CombinedSettingsMap) GetAllSettingAnyTypes() []*SettingAnyType {
+	allSettings := make([]*SettingAnyType, 0)
 	allSettingNames := []string{
 		"units",
 		"timezone",

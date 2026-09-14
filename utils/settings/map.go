@@ -6,31 +6,27 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+type SettingAnyType struct {
+	Identifier string
+	TypeString string
+	Value      any
+}
+
 type Setting[T any] struct {
 	definition *SettingDefinition[T]
 	Value      T
 	CreatedAt  int64
 }
 
-func (s *Setting[T]) GetIdentifier() string {
-	if s == nil {
-		return ""
-	}
-	return s.definition.Identifier
-}
-
-func (s *Setting[T]) GetTypeString() string {
-	if s == nil {
-		return ""
-	}
-	return s.definition.TypeString
-}
-
-func (s *Setting[T]) GetValue() any {
+func (s *Setting[T]) ToSettingAnyType() *SettingAnyType {
 	if s == nil {
 		return nil
 	}
-	return s.Value
+	return &SettingAnyType{
+		Identifier: s.definition.Identifier,
+		TypeString: s.definition.TypeString,
+		Value:      s.Value,
+	}
 }
 
 func NewSetting[T any](definition *SettingDefinition[T], value *T) *Setting[T] {
@@ -857,94 +853,94 @@ func (m SettingMap) GetSettingByName(name string) any {
 	return GetSettingByName(name, m)
 }
 
-func (m SettingMap) GetSettingAnyTypeByName(name string) SettingAnyType {
+func (m SettingMap) GetSettingAnyTypeByName(name string) *SettingAnyType {
 	switch name {
 	case "units":
-		return m.Units
+		return m.Units.ToSettingAnyType()
 	case "timezone":
-		return m.Timezone
+		return m.Timezone.ToSettingAnyType()
 	case "language":
-		return m.Language
+		return m.Language.ToSettingAnyType()
 	case "date_format":
-		return m.DateFormat
+		return m.DateFormat.ToSettingAnyType()
 	case "time_format":
-		return m.TimeFormat
+		return m.TimeFormat.ToSettingAnyType()
 	case "week_start_day":
-		return m.WeekStartDay
+		return m.WeekStartDay.ToSettingAnyType()
 	case "bolus_dia_hours":
-		return m.BolusDiaHours
+		return m.BolusDiaHours.ToSettingAnyType()
 	case "bolus_onset_minutes":
-		return m.BolusOnsetMinutes
+		return m.BolusOnsetMinutes.ToSettingAnyType()
 	case "bolus_peak_minutes":
-		return m.BolusPeakMinutes
+		return m.BolusPeakMinutes.ToSettingAnyType()
 	case "basal_dia_hours":
-		return m.BasalDiaHours
+		return m.BasalDiaHours.ToSettingAnyType()
 	case "basal_onset_minutes":
-		return m.BasalOnsetMinutes
+		return m.BasalOnsetMinutes.ToSettingAnyType()
 	case "basal_peak_minutes":
-		return m.BasalPeakMinutes
+		return m.BasalPeakMinutes.ToSettingAnyType()
 	case "default_insulin_sensitivity":
-		return m.DefaultInsulinSensitivity
+		return m.DefaultInsulinSensitivity.ToSettingAnyType()
 	case "default_carb_ratio":
-		return m.DefaultCarbRatio
+		return m.DefaultCarbRatio.ToSettingAnyType()
 	case "default_basal_rate":
-		return m.DefaultBasalRate
+		return m.DefaultBasalRate.ToSettingAnyType()
 	case "carb_max_absorption_hours":
-		return m.CarbMaxAbsorptionHours
+		return m.CarbMaxAbsorptionHours.ToSettingAnyType()
 	case "carb_min_5m_impact":
-		return m.CarbMin5mImpact
+		return m.CarbMin5mImpact.ToSettingAnyType()
 	case "alarm_urgent_low_enabled":
-		return m.AlarmUrgentLowEnabled
+		return m.AlarmUrgentLowEnabled.ToSettingAnyType()
 	case "alarm_urgent_low":
-		return m.AlarmUrgentLow
+		return m.AlarmUrgentLow.ToSettingAnyType()
 	case "alarm_low_enabled":
-		return m.AlarmLowEnabled
+		return m.AlarmLowEnabled.ToSettingAnyType()
 	case "alarm_low":
-		return m.AlarmLow
+		return m.AlarmLow.ToSettingAnyType()
 	case "alarm_low_minutes":
-		return m.AlarmLowMinutes
+		return m.AlarmLowMinutes.ToSettingAnyType()
 	case "alarm_low_prediction_enabled":
-		return m.AlarmLowPredictionEnabled
+		return m.AlarmLowPredictionEnabled.ToSettingAnyType()
 	case "alarm_high_enabled":
-		return m.AlarmHighEnabled
+		return m.AlarmHighEnabled.ToSettingAnyType()
 	case "alarm_high":
-		return m.AlarmHigh
+		return m.AlarmHigh.ToSettingAnyType()
 	case "alarm_high_minutes":
-		return m.AlarmHighMinutes
+		return m.AlarmHighMinutes.ToSettingAnyType()
 	case "alarm_urgent_high_enabled":
-		return m.AlarmUrgentHighEnabled
+		return m.AlarmUrgentHighEnabled.ToSettingAnyType()
 	case "alarm_urgent_high":
-		return m.AlarmUrgentHigh
+		return m.AlarmUrgentHigh.ToSettingAnyType()
 	case "alarm_fast_rise_enabled":
-		return m.AlarmFastRiseEnabled
+		return m.AlarmFastRiseEnabled.ToSettingAnyType()
 	case "alarm_fast_rise":
-		return m.AlarmFastRise
+		return m.AlarmFastRise.ToSettingAnyType()
 	case "alarm_fast_rise_minutes":
-		return m.AlarmFastRiseMinutes
+		return m.AlarmFastRiseMinutes.ToSettingAnyType()
 	case "alarm_fast_drop_enabled":
-		return m.AlarmFastDropEnabled
+		return m.AlarmFastDropEnabled.ToSettingAnyType()
 	case "alarm_fast_drop":
-		return m.AlarmFastDrop
+		return m.AlarmFastDrop.ToSettingAnyType()
 	case "alarm_fast_drop_minutes":
-		return m.AlarmFastDropMinutes
+		return m.AlarmFastDropMinutes.ToSettingAnyType()
 	case "alarm_no_data_enabled":
-		return m.AlarmNoDataEnabled
+		return m.AlarmNoDataEnabled.ToSettingAnyType()
 	case "alarm_no_data_minutes":
-		return m.AlarmNoDataMinutes
+		return m.AlarmNoDataMinutes.ToSettingAnyType()
 	case "alarm_battery_low_enabled":
-		return m.AlarmBatteryLowEnabled
+		return m.AlarmBatteryLowEnabled.ToSettingAnyType()
 	case "alarm_battery_low_percent":
-		return m.AlarmBatteryLowPercent
+		return m.AlarmBatteryLowPercent.ToSettingAnyType()
 	case "alarm_battery_low_pwd_enabled":
-		return m.AlarmBatteryLowPwdEnabled
+		return m.AlarmBatteryLowPwdEnabled.ToSettingAnyType()
 	case "alarm_battery_low_pwd_percent":
-		return m.AlarmBatteryLowPwdPercent
+		return m.AlarmBatteryLowPwdPercent.ToSettingAnyType()
 	case "alarm_low_reservoir_enabled":
-		return m.AlarmLowReservoirEnabled
+		return m.AlarmLowReservoirEnabled.ToSettingAnyType()
 	case "alarm_low_reservoir_units":
-		return m.AlarmLowReservoirUnits
+		return m.AlarmLowReservoirUnits.ToSettingAnyType()
 	case "notifications_enabled":
-		return m.NotificationsEnabled
+		return m.NotificationsEnabled.ToSettingAnyType()
 	default:
 		return nil
 	}
