@@ -4502,9 +4502,8 @@ func (m CreateDeviceReportParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetID(v string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDeviceBatteryPercent returns the DeviceBatteryPercent value.
@@ -4513,9 +4512,8 @@ func (m CreateDeviceReportParams) GetDeviceBatteryPercent() *float64 {
 }
 
 // SetDeviceBatteryPercent sets the DeviceBatteryPercent value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetDeviceBatteryPercent(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetDeviceBatteryPercent(v *float64) {
 	m.DeviceBatteryPercent = v
-	return m
 }
 
 // GetIsDeviceCharging returns the IsDeviceCharging value.
@@ -4524,9 +4522,8 @@ func (m CreateDeviceReportParams) GetIsDeviceCharging() *bool {
 }
 
 // SetIsDeviceCharging sets the IsDeviceCharging value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetIsDeviceCharging(v *bool) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetIsDeviceCharging(v *bool) {
 	m.IsDeviceCharging = v
-	return m
 }
 
 // GetPumpState returns the PumpState value.
@@ -4535,9 +4532,8 @@ func (m CreateDeviceReportParams) GetPumpState() *string {
 }
 
 // SetPumpState sets the PumpState value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetPumpState(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetPumpState(v *string) {
 	m.PumpState = v
-	return m
 }
 
 // GetPumpReservoir returns the PumpReservoir value.
@@ -4546,9 +4542,8 @@ func (m CreateDeviceReportParams) GetPumpReservoir() *float64 {
 }
 
 // SetPumpReservoir sets the PumpReservoir value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetPumpReservoir(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetPumpReservoir(v *float64) {
 	m.PumpReservoir = v
-	return m
 }
 
 // GetPumpBatteryPercent returns the PumpBatteryPercent value.
@@ -4557,9 +4552,8 @@ func (m CreateDeviceReportParams) GetPumpBatteryPercent() *float64 {
 }
 
 // SetPumpBatteryPercent sets the PumpBatteryPercent value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetPumpBatteryPercent(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetPumpBatteryPercent(v *float64) {
 	m.PumpBatteryPercent = v
-	return m
 }
 
 // GetPumpChargingState returns the PumpChargingState value.
@@ -4568,9 +4562,8 @@ func (m CreateDeviceReportParams) GetPumpChargingState() *string {
 }
 
 // SetPumpChargingState sets the PumpChargingState value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetPumpChargingState(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetPumpChargingState(v *string) {
 	m.PumpChargingState = v
-	return m
 }
 
 // GetLoopName returns the LoopName value.
@@ -4579,9 +4572,8 @@ func (m CreateDeviceReportParams) GetLoopName() *string {
 }
 
 // SetLoopName sets the LoopName value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopName(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopName(v *string) {
 	m.LoopName = v
-	return m
 }
 
 // GetConfigurationSettingsJson returns the ConfigurationSettingsJson value.
@@ -4590,9 +4582,8 @@ func (m CreateDeviceReportParams) GetConfigurationSettingsJson() *string {
 }
 
 // SetConfigurationSettingsJson sets the ConfigurationSettingsJson value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetConfigurationSettingsJson(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetConfigurationSettingsJson(v *string) {
 	m.ConfigurationSettingsJson = v
-	return m
 }
 
 // GetLoopSettingsJson returns the LoopSettingsJson value.
@@ -4601,9 +4592,8 @@ func (m CreateDeviceReportParams) GetLoopSettingsJson() *string {
 }
 
 // SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopSettingsJson(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopSettingsJson(v *string) {
 	m.LoopSettingsJson = v
-	return m
 }
 
 // GetLoopIob returns the LoopIob value.
@@ -4612,9 +4602,8 @@ func (m CreateDeviceReportParams) GetLoopIob() *float64 {
 }
 
 // SetLoopIob sets the LoopIob value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopIob(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopIob(v *float64) {
 	m.LoopIob = v
-	return m
 }
 
 // GetLoopIobBasal returns the LoopIobBasal value.
@@ -4623,9 +4612,8 @@ func (m CreateDeviceReportParams) GetLoopIobBasal() *float64 {
 }
 
 // SetLoopIobBasal sets the LoopIobBasal value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopIobBasal(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopIobBasal(v *float64) {
 	m.LoopIobBasal = v
-	return m
 }
 
 // GetLoopIobTreatment returns the LoopIobTreatment value.
@@ -4634,9 +4622,8 @@ func (m CreateDeviceReportParams) GetLoopIobTreatment() *float64 {
 }
 
 // SetLoopIobTreatment sets the LoopIobTreatment value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopIobTreatment(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopIobTreatment(v *float64) {
 	m.LoopIobTreatment = v
-	return m
 }
 
 // GetLoopCob returns the LoopCob value.
@@ -4645,9 +4632,8 @@ func (m CreateDeviceReportParams) GetLoopCob() *float64 {
 }
 
 // SetLoopCob sets the LoopCob value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopCob(v *float64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopCob(v *float64) {
 	m.LoopCob = v
-	return m
 }
 
 // GetLoopPredictionsStartTime returns the LoopPredictionsStartTime value.
@@ -4656,9 +4642,8 @@ func (m CreateDeviceReportParams) GetLoopPredictionsStartTime() *int64 {
 }
 
 // SetLoopPredictionsStartTime sets the LoopPredictionsStartTime value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopPredictionsStartTime(v *int64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopPredictionsStartTime(v *int64) {
 	m.LoopPredictionsStartTime = v
-	return m
 }
 
 // GetLoopPredictionsDefault returns the LoopPredictionsDefault value.
@@ -4667,9 +4652,8 @@ func (m CreateDeviceReportParams) GetLoopPredictionsDefault() *string {
 }
 
 // SetLoopPredictionsDefault sets the LoopPredictionsDefault value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopPredictionsDefault(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopPredictionsDefault(v *string) {
 	m.LoopPredictionsDefault = v
-	return m
 }
 
 // GetLoopPredictionsZt returns the LoopPredictionsZt value.
@@ -4678,9 +4662,8 @@ func (m CreateDeviceReportParams) GetLoopPredictionsZt() *string {
 }
 
 // SetLoopPredictionsZt sets the LoopPredictionsZt value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetLoopPredictionsZt(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetLoopPredictionsZt(v *string) {
 	m.LoopPredictionsZt = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -4689,9 +4672,8 @@ func (m CreateDeviceReportParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetUtcOffsetMinutes(v *int64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -4700,9 +4682,8 @@ func (m CreateDeviceReportParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetOccurredAt(v int64) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -4711,9 +4692,8 @@ func (m CreateDeviceReportParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetRawJsonData(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -4722,9 +4702,8 @@ func (m CreateDeviceReportParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetCreatedByAppName(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -4733,9 +4712,8 @@ func (m CreateDeviceReportParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetCreatedByDeviceName(v *string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -4744,9 +4722,8 @@ func (m CreateDeviceReportParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateDeviceReportParams.
-func (m CreateDeviceReportParams) SetCreatedByIdentityName(v string) CreateDeviceReportParams {
+func (m *CreateDeviceReportParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -4755,9 +4732,8 @@ func (m AllDeviceReportsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllDeviceReportsParams.
-func (m AllDeviceReportsParams) SetIncludeDeleted(v bool) AllDeviceReportsParams {
+func (m *AllDeviceReportsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -4766,9 +4742,8 @@ func (m AllDeviceReportsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllDeviceReportsParams.
-func (m AllDeviceReportsParams) SetSkip(v int64) AllDeviceReportsParams {
+func (m *AllDeviceReportsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -4777,9 +4752,8 @@ func (m AllDeviceReportsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllDeviceReportsParams.
-func (m AllDeviceReportsParams) SetLimit(v int64) AllDeviceReportsParams {
+func (m *AllDeviceReportsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -4788,9 +4762,8 @@ func (m GetDeviceReportParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetDeviceReportParams.
-func (m GetDeviceReportParams) SetID(v string) GetDeviceReportParams {
+func (m *GetDeviceReportParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -4799,9 +4772,8 @@ func (m GetDeviceReportParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetDeviceReportParams.
-func (m GetDeviceReportParams) SetIncludeDeleted(v bool) GetDeviceReportParams {
+func (m *GetDeviceReportParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -4810,9 +4782,8 @@ func (m SearchDeviceReportsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetDateGTE(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -4821,9 +4792,8 @@ func (m SearchDeviceReportsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetDateLTE(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -4832,9 +4802,8 @@ func (m SearchDeviceReportsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetDateEQ(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -4843,9 +4812,8 @@ func (m SearchDeviceReportsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetDateGT(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -4854,9 +4822,8 @@ func (m SearchDeviceReportsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetDateLT(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -4865,9 +4832,8 @@ func (m SearchDeviceReportsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetCreatedAtGTE(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -4876,9 +4842,8 @@ func (m SearchDeviceReportsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetCreatedAtLTE(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -4887,9 +4852,8 @@ func (m SearchDeviceReportsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetCreatedAtGT(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -4898,9 +4862,8 @@ func (m SearchDeviceReportsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetCreatedAtLT(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -4909,9 +4872,8 @@ func (m SearchDeviceReportsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetUpdatedGTE(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -4920,9 +4882,8 @@ func (m SearchDeviceReportsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetUpdatedLTE(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -4931,9 +4892,8 @@ func (m SearchDeviceReportsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetUpdatedGT(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -4942,9 +4902,8 @@ func (m SearchDeviceReportsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetUpdatedLT(v *int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -4953,9 +4912,8 @@ func (m SearchDeviceReportsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetIDEq(v *string) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -4964,9 +4922,8 @@ func (m SearchDeviceReportsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetIDIn(v *string) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -4975,9 +4932,8 @@ func (m SearchDeviceReportsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetDeviceEq(v *string) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -4986,9 +4942,8 @@ func (m SearchDeviceReportsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetAppEq(v *string) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -4997,9 +4952,8 @@ func (m SearchDeviceReportsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetIncludeDeleted(v *bool) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -5008,9 +4962,8 @@ func (m SearchDeviceReportsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetSkip(v int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -5019,9 +4972,8 @@ func (m SearchDeviceReportsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchDeviceReportsParams.
-func (m SearchDeviceReportsParams) SetLimit(v int64) SearchDeviceReportsParams {
+func (m *SearchDeviceReportsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -5030,9 +4982,8 @@ func (m UpdateDeviceReportParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateDeviceReportParams.
-func (m UpdateDeviceReportParams) SetRawJsonData(v *string) UpdateDeviceReportParams {
+func (m *UpdateDeviceReportParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -5041,9 +4992,8 @@ func (m UpdateDeviceReportParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateDeviceReportParams.
-func (m UpdateDeviceReportParams) SetUpdatedByIdentityName(v *string) UpdateDeviceReportParams {
+func (m *UpdateDeviceReportParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5052,9 +5002,8 @@ func (m UpdateDeviceReportParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateDeviceReportParams.
-func (m UpdateDeviceReportParams) SetID(v string) UpdateDeviceReportParams {
+func (m *UpdateDeviceReportParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -5063,9 +5012,8 @@ func (m SoftDeleteDeviceReportParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteDeviceReportParams.
-func (m SoftDeleteDeviceReportParams) SetUpdatedByIdentityName(v *string) SoftDeleteDeviceReportParams {
+func (m *SoftDeleteDeviceReportParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5074,9 +5022,8 @@ func (m SoftDeleteDeviceReportParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteDeviceReportParams.
-func (m SoftDeleteDeviceReportParams) SetID(v string) SoftDeleteDeviceReportParams {
+func (m *SoftDeleteDeviceReportParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5085,9 +5032,8 @@ func (m HardDeleteDeviceReportParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteDeviceReportParams.
-func (m HardDeleteDeviceReportParams) SetID(v string) HardDeleteDeviceReportParams {
+func (m *HardDeleteDeviceReportParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5096,9 +5042,8 @@ func (m CreateActivityParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetID(v string) CreateActivityParams {
+func (m *CreateActivityParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -5107,9 +5052,8 @@ func (m CreateActivityParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetName(v *string) CreateActivityParams {
+func (m *CreateActivityParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetActivityType returns the ActivityType value.
@@ -5118,9 +5062,8 @@ func (m CreateActivityParams) GetActivityType() string {
 }
 
 // SetActivityType sets the ActivityType value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetActivityType(v string) CreateActivityParams {
+func (m *CreateActivityParams) SetActivityType(v string) {
 	m.ActivityType = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -5129,9 +5072,8 @@ func (m CreateActivityParams) GetDurationMinutes() *int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetDurationMinutes(v *int64) CreateActivityParams {
+func (m *CreateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetCalories returns the Calories value.
@@ -5140,9 +5082,8 @@ func (m CreateActivityParams) GetCalories() *int64 {
 }
 
 // SetCalories sets the Calories value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetCalories(v *int64) CreateActivityParams {
+func (m *CreateActivityParams) SetCalories(v *int64) {
 	m.Calories = v
-	return m
 }
 
 // GetSteps returns the Steps value.
@@ -5151,9 +5092,8 @@ func (m CreateActivityParams) GetSteps() *int64 {
 }
 
 // SetSteps sets the Steps value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetSteps(v *int64) CreateActivityParams {
+func (m *CreateActivityParams) SetSteps(v *int64) {
 	m.Steps = v
-	return m
 }
 
 // GetHeartRate returns the HeartRate value.
@@ -5162,9 +5102,8 @@ func (m CreateActivityParams) GetHeartRate() *int64 {
 }
 
 // SetHeartRate sets the HeartRate value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetHeartRate(v *int64) CreateActivityParams {
+func (m *CreateActivityParams) SetHeartRate(v *int64) {
 	m.HeartRate = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -5173,9 +5112,8 @@ func (m CreateActivityParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetNotes(v *string) CreateActivityParams {
+func (m *CreateActivityParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -5184,9 +5122,8 @@ func (m CreateActivityParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetReason(v *string) CreateActivityParams {
+func (m *CreateActivityParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -5195,9 +5132,8 @@ func (m CreateActivityParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetOccurredAt(v int64) CreateActivityParams {
+func (m *CreateActivityParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -5206,9 +5142,8 @@ func (m CreateActivityParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetUtcOffsetMinutes(v *int64) CreateActivityParams {
+func (m *CreateActivityParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -5217,9 +5152,8 @@ func (m CreateActivityParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetRawJsonData(v *string) CreateActivityParams {
+func (m *CreateActivityParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -5228,9 +5162,8 @@ func (m CreateActivityParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetCreatedByAppName(v *string) CreateActivityParams {
+func (m *CreateActivityParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -5239,9 +5172,8 @@ func (m CreateActivityParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetCreatedByDeviceName(v *string) CreateActivityParams {
+func (m *CreateActivityParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -5250,9 +5182,8 @@ func (m CreateActivityParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateActivityParams.
-func (m CreateActivityParams) SetCreatedByIdentityName(v string) CreateActivityParams {
+func (m *CreateActivityParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -5261,9 +5192,8 @@ func (m AllActivitiesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllActivitiesParams.
-func (m AllActivitiesParams) SetIncludeDeleted(v *bool) AllActivitiesParams {
+func (m *AllActivitiesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -5272,9 +5202,8 @@ func (m AllActivitiesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllActivitiesParams.
-func (m AllActivitiesParams) SetSkip(v int64) AllActivitiesParams {
+func (m *AllActivitiesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -5283,9 +5212,8 @@ func (m AllActivitiesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllActivitiesParams.
-func (m AllActivitiesParams) SetLimit(v int64) AllActivitiesParams {
+func (m *AllActivitiesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5294,9 +5222,8 @@ func (m GetActivityParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetActivityParams.
-func (m GetActivityParams) SetID(v string) GetActivityParams {
+func (m *GetActivityParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -5305,9 +5232,8 @@ func (m GetActivityParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetActivityParams.
-func (m GetActivityParams) SetIncludeDeleted(v bool) GetActivityParams {
+func (m *GetActivityParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -5316,9 +5242,8 @@ func (m SearchActivitiesParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDateGTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -5327,9 +5252,8 @@ func (m SearchActivitiesParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDateLTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -5338,9 +5262,8 @@ func (m SearchActivitiesParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDateEQ(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -5349,9 +5272,8 @@ func (m SearchActivitiesParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDateGT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -5360,9 +5282,8 @@ func (m SearchActivitiesParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDateLT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -5371,9 +5292,8 @@ func (m SearchActivitiesParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetCreatedAtGTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -5382,9 +5302,8 @@ func (m SearchActivitiesParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetCreatedAtLTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -5393,9 +5312,8 @@ func (m SearchActivitiesParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetCreatedAtGT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -5404,9 +5322,8 @@ func (m SearchActivitiesParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetCreatedAtLT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -5415,9 +5332,8 @@ func (m SearchActivitiesParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetUpdatedGTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -5426,9 +5342,8 @@ func (m SearchActivitiesParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetUpdatedLTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -5437,9 +5352,8 @@ func (m SearchActivitiesParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetUpdatedGT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -5448,9 +5362,8 @@ func (m SearchActivitiesParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetUpdatedLT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -5459,9 +5372,8 @@ func (m SearchActivitiesParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetIDEq(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -5470,9 +5382,8 @@ func (m SearchActivitiesParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetIDIn(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetNameEq returns the NameEq value.
@@ -5481,9 +5392,8 @@ func (m SearchActivitiesParams) GetNameEq() *string {
 }
 
 // SetNameEq sets the NameEq value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetNameEq(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetNameEq(v *string) {
 	m.NameEq = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -5492,9 +5402,8 @@ func (m SearchActivitiesParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDeviceEq(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -5503,9 +5412,8 @@ func (m SearchActivitiesParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetAppEq(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -5514,9 +5422,8 @@ func (m SearchActivitiesParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetTypeEq(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -5525,9 +5432,8 @@ func (m SearchActivitiesParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetTypeNeq(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -5536,9 +5442,8 @@ func (m SearchActivitiesParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetTypeIn(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -5547,9 +5452,8 @@ func (m SearchActivitiesParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetTypeNin(v *string) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetDurationEQ returns the DurationEQ value.
@@ -5558,9 +5462,8 @@ func (m SearchActivitiesParams) GetDurationEQ() *int64 {
 }
 
 // SetDurationEQ sets the DurationEQ value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDurationEQ(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDurationEQ(v *int64) {
 	m.DurationEQ = v
-	return m
 }
 
 // GetDurationGTE returns the DurationGTE value.
@@ -5569,9 +5472,8 @@ func (m SearchActivitiesParams) GetDurationGTE() *int64 {
 }
 
 // SetDurationGTE sets the DurationGTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDurationGTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDurationGTE(v *int64) {
 	m.DurationGTE = v
-	return m
 }
 
 // GetDurationGT returns the DurationGT value.
@@ -5580,9 +5482,8 @@ func (m SearchActivitiesParams) GetDurationGT() *int64 {
 }
 
 // SetDurationGT sets the DurationGT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDurationGT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDurationGT(v *int64) {
 	m.DurationGT = v
-	return m
 }
 
 // GetDurationLTE returns the DurationLTE value.
@@ -5591,9 +5492,8 @@ func (m SearchActivitiesParams) GetDurationLTE() *int64 {
 }
 
 // SetDurationLTE sets the DurationLTE value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDurationLTE(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDurationLTE(v *int64) {
 	m.DurationLTE = v
-	return m
 }
 
 // GetDurationLT returns the DurationLT value.
@@ -5602,9 +5502,8 @@ func (m SearchActivitiesParams) GetDurationLT() *int64 {
 }
 
 // SetDurationLT sets the DurationLT value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetDurationLT(v *int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetDurationLT(v *int64) {
 	m.DurationLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -5613,9 +5512,8 @@ func (m SearchActivitiesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetIncludeDeleted(v *bool) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -5624,9 +5522,8 @@ func (m SearchActivitiesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetSkip(v int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -5635,9 +5532,8 @@ func (m SearchActivitiesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchActivitiesParams.
-func (m SearchActivitiesParams) SetLimit(v int64) SearchActivitiesParams {
+func (m *SearchActivitiesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -5646,9 +5542,8 @@ func (m UpdateActivityParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetName(v *string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetActivityType returns the ActivityType value.
@@ -5657,9 +5552,8 @@ func (m UpdateActivityParams) GetActivityType() *string {
 }
 
 // SetActivityType sets the ActivityType value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetActivityType(v *string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetActivityType(v *string) {
 	m.ActivityType = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -5668,9 +5562,8 @@ func (m UpdateActivityParams) GetDurationMinutes() *int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetDurationMinutes(v *int64) UpdateActivityParams {
+func (m *UpdateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetCalories returns the Calories value.
@@ -5679,9 +5572,8 @@ func (m UpdateActivityParams) GetCalories() *int64 {
 }
 
 // SetCalories sets the Calories value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetCalories(v *int64) UpdateActivityParams {
+func (m *UpdateActivityParams) SetCalories(v *int64) {
 	m.Calories = v
-	return m
 }
 
 // GetSteps returns the Steps value.
@@ -5690,9 +5582,8 @@ func (m UpdateActivityParams) GetSteps() *int64 {
 }
 
 // SetSteps sets the Steps value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetSteps(v *int64) UpdateActivityParams {
+func (m *UpdateActivityParams) SetSteps(v *int64) {
 	m.Steps = v
-	return m
 }
 
 // GetHeartRate returns the HeartRate value.
@@ -5701,9 +5592,8 @@ func (m UpdateActivityParams) GetHeartRate() *int64 {
 }
 
 // SetHeartRate sets the HeartRate value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetHeartRate(v *int64) UpdateActivityParams {
+func (m *UpdateActivityParams) SetHeartRate(v *int64) {
 	m.HeartRate = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -5712,9 +5602,8 @@ func (m UpdateActivityParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetNotes(v *string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -5723,9 +5612,8 @@ func (m UpdateActivityParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetReason(v *string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -5734,9 +5622,8 @@ func (m UpdateActivityParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetRawJsonData(v *string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -5745,9 +5632,8 @@ func (m UpdateActivityParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetUpdatedByIdentityName(v *string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5756,9 +5642,8 @@ func (m UpdateActivityParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateActivityParams.
-func (m UpdateActivityParams) SetID(v string) UpdateActivityParams {
+func (m *UpdateActivityParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -5767,9 +5652,8 @@ func (m SoftDeleteActivityParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteActivityParams.
-func (m SoftDeleteActivityParams) SetUpdatedByIdentityName(v *string) SoftDeleteActivityParams {
+func (m *SoftDeleteActivityParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5778,9 +5662,8 @@ func (m SoftDeleteActivityParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteActivityParams.
-func (m SoftDeleteActivityParams) SetID(v string) SoftDeleteActivityParams {
+func (m *SoftDeleteActivityParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5789,9 +5672,8 @@ func (m HardDeleteActivityParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteActivityParams.
-func (m HardDeleteActivityParams) SetID(v string) HardDeleteActivityParams {
+func (m *HardDeleteActivityParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -5800,9 +5682,8 @@ func (m SoftDeleteActivitiesByTypeParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteActivitiesByTypeParams.
-func (m SoftDeleteActivitiesByTypeParams) SetUpdatedByIdentityName(v *string) SoftDeleteActivitiesByTypeParams {
+func (m *SoftDeleteActivitiesByTypeParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetActivityType returns the ActivityType value.
@@ -5811,9 +5692,8 @@ func (m SoftDeleteActivitiesByTypeParams) GetActivityType() string {
 }
 
 // SetActivityType sets the ActivityType value and returns the updated SoftDeleteActivitiesByTypeParams.
-func (m SoftDeleteActivitiesByTypeParams) SetActivityType(v string) SoftDeleteActivitiesByTypeParams {
+func (m *SoftDeleteActivitiesByTypeParams) SetActivityType(v string) {
 	m.ActivityType = v
-	return m
 }
 
 // GetActivityType returns the ActivityType value.
@@ -5822,9 +5702,8 @@ func (m HardDeleteActivitiesByTypeParams) GetActivityType() string {
 }
 
 // SetActivityType sets the ActivityType value and returns the updated HardDeleteActivitiesByTypeParams.
-func (m HardDeleteActivitiesByTypeParams) SetActivityType(v string) HardDeleteActivitiesByTypeParams {
+func (m *HardDeleteActivitiesByTypeParams) SetActivityType(v string) {
 	m.ActivityType = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -5833,9 +5712,8 @@ func (m CreateComponentEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetID(v string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetEventType returns the EventType value.
@@ -5844,9 +5722,8 @@ func (m CreateComponentEventParams) GetEventType() string {
 }
 
 // SetEventType sets the EventType value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetEventType(v string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetEventType(v string) {
 	m.EventType = v
-	return m
 }
 
 // GetSensorCode returns the SensorCode value.
@@ -5855,9 +5732,8 @@ func (m CreateComponentEventParams) GetSensorCode() *string {
 }
 
 // SetSensorCode sets the SensorCode value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetSensorCode(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetSensorCode(v *string) {
 	m.SensorCode = v
-	return m
 }
 
 // GetTransmitterID returns the TransmitterID value.
@@ -5866,9 +5742,8 @@ func (m CreateComponentEventParams) GetTransmitterID() *string {
 }
 
 // SetTransmitterID sets the TransmitterID value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetTransmitterID(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
-	return m
 }
 
 // GetPumpID returns the PumpID value.
@@ -5877,9 +5752,8 @@ func (m CreateComponentEventParams) GetPumpID() *string {
 }
 
 // SetPumpID sets the PumpID value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetPumpID(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetPumpID(v *string) {
 	m.PumpID = v
-	return m
 }
 
 // GetPumpSerial returns the PumpSerial value.
@@ -5888,9 +5762,8 @@ func (m CreateComponentEventParams) GetPumpSerial() *string {
 }
 
 // SetPumpSerial sets the PumpSerial value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetPumpSerial(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetPumpSerial(v *string) {
 	m.PumpSerial = v
-	return m
 }
 
 // GetPumpType returns the PumpType value.
@@ -5899,9 +5772,8 @@ func (m CreateComponentEventParams) GetPumpType() *string {
 }
 
 // SetPumpType sets the PumpType value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetPumpType(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetPumpType(v *string) {
 	m.PumpType = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -5910,9 +5782,8 @@ func (m CreateComponentEventParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetUtcOffsetMinutes(v *int64) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -5921,9 +5792,8 @@ func (m CreateComponentEventParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetOccurredAt(v int64) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -5932,9 +5802,8 @@ func (m CreateComponentEventParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetRawJsonData(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -5943,9 +5812,8 @@ func (m CreateComponentEventParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetCreatedByAppName(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -5954,9 +5822,8 @@ func (m CreateComponentEventParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetCreatedByDeviceName(v *string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -5965,9 +5832,8 @@ func (m CreateComponentEventParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateComponentEventParams.
-func (m CreateComponentEventParams) SetCreatedByIdentityName(v string) CreateComponentEventParams {
+func (m *CreateComponentEventParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -5976,9 +5842,8 @@ func (m AllComponentEventsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllComponentEventsParams.
-func (m AllComponentEventsParams) SetIncludeDeleted(v *bool) AllComponentEventsParams {
+func (m *AllComponentEventsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -5987,9 +5852,8 @@ func (m AllComponentEventsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllComponentEventsParams.
-func (m AllComponentEventsParams) SetSkip(v int64) AllComponentEventsParams {
+func (m *AllComponentEventsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -5998,9 +5862,8 @@ func (m AllComponentEventsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllComponentEventsParams.
-func (m AllComponentEventsParams) SetLimit(v int64) AllComponentEventsParams {
+func (m *AllComponentEventsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -6009,9 +5872,8 @@ func (m GetComponentEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetComponentEventParams.
-func (m GetComponentEventParams) SetID(v string) GetComponentEventParams {
+func (m *GetComponentEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -6020,9 +5882,8 @@ func (m SearchComponentEventsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetDateGTE(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -6031,9 +5892,8 @@ func (m SearchComponentEventsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetDateLTE(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -6042,9 +5902,8 @@ func (m SearchComponentEventsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetDateEQ(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -6053,9 +5912,8 @@ func (m SearchComponentEventsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetDateGT(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -6064,9 +5922,8 @@ func (m SearchComponentEventsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetDateLT(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -6075,9 +5932,8 @@ func (m SearchComponentEventsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetCreatedAtGTE(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -6086,9 +5942,8 @@ func (m SearchComponentEventsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetCreatedAtLTE(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -6097,9 +5952,8 @@ func (m SearchComponentEventsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetCreatedAtGT(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -6108,9 +5962,8 @@ func (m SearchComponentEventsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetCreatedAtLT(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -6119,9 +5972,8 @@ func (m SearchComponentEventsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetUpdatedGTE(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -6130,9 +5982,8 @@ func (m SearchComponentEventsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetUpdatedLTE(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -6141,9 +5992,8 @@ func (m SearchComponentEventsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetUpdatedGT(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -6152,9 +6002,8 @@ func (m SearchComponentEventsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetUpdatedLT(v *int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -6163,9 +6012,8 @@ func (m SearchComponentEventsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetIDEq(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -6174,9 +6022,8 @@ func (m SearchComponentEventsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetIDIn(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetComponentEq returns the ComponentEq value.
@@ -6185,9 +6032,8 @@ func (m SearchComponentEventsParams) GetComponentEq() *string {
 }
 
 // SetComponentEq sets the ComponentEq value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetComponentEq(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetComponentEq(v *string) {
 	m.ComponentEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -6196,9 +6042,8 @@ func (m SearchComponentEventsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetAppEq(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -6207,9 +6052,8 @@ func (m SearchComponentEventsParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetTypeEq(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -6218,9 +6062,8 @@ func (m SearchComponentEventsParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetTypeNeq(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -6229,9 +6072,8 @@ func (m SearchComponentEventsParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetTypeIn(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -6240,9 +6082,8 @@ func (m SearchComponentEventsParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetTypeNin(v *string) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -6251,9 +6092,8 @@ func (m SearchComponentEventsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetIncludeDeleted(v *bool) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -6262,9 +6102,8 @@ func (m SearchComponentEventsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetSkip(v int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -6273,9 +6112,8 @@ func (m SearchComponentEventsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchComponentEventsParams.
-func (m SearchComponentEventsParams) SetLimit(v int64) SearchComponentEventsParams {
+func (m *SearchComponentEventsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetEventType returns the EventType value.
@@ -6284,9 +6122,8 @@ func (m GetComponentEventByTypeParams) GetEventType() string {
 }
 
 // SetEventType sets the EventType value and returns the updated GetComponentEventByTypeParams.
-func (m GetComponentEventByTypeParams) SetEventType(v string) GetComponentEventByTypeParams {
+func (m *GetComponentEventByTypeParams) SetEventType(v string) {
 	m.EventType = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -6295,9 +6132,8 @@ func (m UpdateComponentEventParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetNotes(v *string) UpdateComponentEventParams {
+func (m *UpdateComponentEventParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -6306,9 +6142,8 @@ func (m UpdateComponentEventParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetReason(v *string) UpdateComponentEventParams {
+func (m *UpdateComponentEventParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -6317,9 +6152,8 @@ func (m UpdateComponentEventParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetRawJsonData(v *string) UpdateComponentEventParams {
+func (m *UpdateComponentEventParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -6328,9 +6162,8 @@ func (m UpdateComponentEventParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetUpdatedByIdentityName(v *string) UpdateComponentEventParams {
+func (m *UpdateComponentEventParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -6339,9 +6172,8 @@ func (m UpdateComponentEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateComponentEventParams.
-func (m UpdateComponentEventParams) SetID(v string) UpdateComponentEventParams {
+func (m *UpdateComponentEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -6350,9 +6182,8 @@ func (m SoftDeleteComponentEventParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteComponentEventParams.
-func (m SoftDeleteComponentEventParams) SetUpdatedByIdentityName(v *string) SoftDeleteComponentEventParams {
+func (m *SoftDeleteComponentEventParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -6361,9 +6192,8 @@ func (m SoftDeleteComponentEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteComponentEventParams.
-func (m SoftDeleteComponentEventParams) SetID(v string) SoftDeleteComponentEventParams {
+func (m *SoftDeleteComponentEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -6372,9 +6202,8 @@ func (m HardDeleteComponentEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteComponentEventParams.
-func (m HardDeleteComponentEventParams) SetID(v string) HardDeleteComponentEventParams {
+func (m *HardDeleteComponentEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -6383,9 +6212,8 @@ func (m CreateFoodIntakeParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetID(v string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -6394,9 +6222,8 @@ func (m CreateFoodIntakeParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetName(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -6405,9 +6232,8 @@ func (m CreateFoodIntakeParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetFoodType(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetCategory returns the Category value.
@@ -6416,9 +6242,8 @@ func (m CreateFoodIntakeParams) GetCategory() *string {
 }
 
 // SetCategory sets the Category value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetCategory(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetCategory(v *string) {
 	m.Category = v
-	return m
 }
 
 // GetSubcategory returns the Subcategory value.
@@ -6427,9 +6252,8 @@ func (m CreateFoodIntakeParams) GetSubcategory() *string {
 }
 
 // SetSubcategory sets the Subcategory value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetSubcategory(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetSubcategory(v *string) {
 	m.Subcategory = v
-	return m
 }
 
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
@@ -6438,9 +6262,8 @@ func (m CreateFoodIntakeParams) GetAbsorptionTimeMinutes() *int64 {
 }
 
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-	return m
 }
 
 // GetPreBolus returns the PreBolus value.
@@ -6449,9 +6272,8 @@ func (m CreateFoodIntakeParams) GetPreBolus() *float64 {
 }
 
 // SetPreBolus sets the PreBolus value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetPreBolus(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
-	return m
 }
 
 // GetCarbs returns the Carbs value.
@@ -6460,9 +6282,8 @@ func (m CreateFoodIntakeParams) GetCarbs() *float64 {
 }
 
 // SetCarbs sets the Carbs value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetCarbs(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetCarbs(v *float64) {
 	m.Carbs = v
-	return m
 }
 
 // GetFat returns the Fat value.
@@ -6471,9 +6292,8 @@ func (m CreateFoodIntakeParams) GetFat() *float64 {
 }
 
 // SetFat sets the Fat value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetFat(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetFat(v *float64) {
 	m.Fat = v
-	return m
 }
 
 // GetProtein returns the Protein value.
@@ -6482,9 +6302,8 @@ func (m CreateFoodIntakeParams) GetProtein() *float64 {
 }
 
 // SetProtein sets the Protein value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetProtein(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetProtein(v *float64) {
 	m.Protein = v
-	return m
 }
 
 // GetFibre returns the Fibre value.
@@ -6493,9 +6312,8 @@ func (m CreateFoodIntakeParams) GetFibre() *float64 {
 }
 
 // SetFibre sets the Fibre value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetFibre(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetFibre(v *float64) {
 	m.Fibre = v
-	return m
 }
 
 // GetEnergy returns the Energy value.
@@ -6504,9 +6322,8 @@ func (m CreateFoodIntakeParams) GetEnergy() *float64 {
 }
 
 // SetEnergy sets the Energy value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetEnergy(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetEnergy(v *float64) {
 	m.Energy = v
-	return m
 }
 
 // GetPortions returns the Portions value.
@@ -6515,9 +6332,8 @@ func (m CreateFoodIntakeParams) GetPortions() *float64 {
 }
 
 // SetPortions sets the Portions value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetPortions(v *float64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetPortions(v *float64) {
 	m.Portions = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -6526,9 +6342,8 @@ func (m CreateFoodIntakeParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetNotes(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -6537,9 +6352,8 @@ func (m CreateFoodIntakeParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetReason(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -6548,9 +6362,8 @@ func (m CreateFoodIntakeParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetUtcOffsetMinutes(v *int64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -6559,9 +6372,8 @@ func (m CreateFoodIntakeParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetOccurredAt(v int64) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -6570,9 +6382,8 @@ func (m CreateFoodIntakeParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetRawJsonData(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -6581,9 +6392,8 @@ func (m CreateFoodIntakeParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetCreatedByAppName(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -6592,9 +6402,8 @@ func (m CreateFoodIntakeParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetCreatedByDeviceName(v *string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -6603,9 +6412,8 @@ func (m CreateFoodIntakeParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateFoodIntakeParams.
-func (m CreateFoodIntakeParams) SetCreatedByIdentityName(v string) CreateFoodIntakeParams {
+func (m *CreateFoodIntakeParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -6614,9 +6422,8 @@ func (m AllFoodIntakesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllFoodIntakesParams.
-func (m AllFoodIntakesParams) SetIncludeDeleted(v *bool) AllFoodIntakesParams {
+func (m *AllFoodIntakesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -6625,9 +6432,8 @@ func (m AllFoodIntakesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllFoodIntakesParams.
-func (m AllFoodIntakesParams) SetSkip(v int64) AllFoodIntakesParams {
+func (m *AllFoodIntakesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -6636,9 +6442,8 @@ func (m AllFoodIntakesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllFoodIntakesParams.
-func (m AllFoodIntakesParams) SetLimit(v int64) AllFoodIntakesParams {
+func (m *AllFoodIntakesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -6647,9 +6452,8 @@ func (m GetFoodIntakeParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetFoodIntakeParams.
-func (m GetFoodIntakeParams) SetID(v string) GetFoodIntakeParams {
+func (m *GetFoodIntakeParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -6658,9 +6462,8 @@ func (m GetFoodIntakeParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetFoodIntakeParams.
-func (m GetFoodIntakeParams) SetIncludeDeleted(v bool) GetFoodIntakeParams {
+func (m *GetFoodIntakeParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -6669,9 +6472,8 @@ func (m SearchFoodIntakesParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetDateGTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -6680,9 +6482,8 @@ func (m SearchFoodIntakesParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetDateLTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -6691,9 +6492,8 @@ func (m SearchFoodIntakesParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetDateEQ(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -6702,9 +6502,8 @@ func (m SearchFoodIntakesParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetDateGT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -6713,9 +6512,8 @@ func (m SearchFoodIntakesParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetDateLT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -6724,9 +6522,8 @@ func (m SearchFoodIntakesParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCreatedAtGTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -6735,9 +6532,8 @@ func (m SearchFoodIntakesParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCreatedAtLTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -6746,9 +6542,8 @@ func (m SearchFoodIntakesParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCreatedAtGT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -6757,9 +6552,8 @@ func (m SearchFoodIntakesParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCreatedAtLT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -6768,9 +6562,8 @@ func (m SearchFoodIntakesParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetUpdatedGTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -6779,9 +6572,8 @@ func (m SearchFoodIntakesParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetUpdatedLTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -6790,9 +6582,8 @@ func (m SearchFoodIntakesParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetUpdatedGT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -6801,9 +6592,8 @@ func (m SearchFoodIntakesParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetUpdatedLT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -6812,9 +6602,8 @@ func (m SearchFoodIntakesParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetIDEq(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -6823,9 +6612,8 @@ func (m SearchFoodIntakesParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetIDIn(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetNameEq returns the NameEq value.
@@ -6834,9 +6622,8 @@ func (m SearchFoodIntakesParams) GetNameEq() *string {
 }
 
 // SetNameEq sets the NameEq value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetNameEq(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetNameEq(v *string) {
 	m.NameEq = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -6845,9 +6632,8 @@ func (m SearchFoodIntakesParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetDeviceEq(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -6856,9 +6642,8 @@ func (m SearchFoodIntakesParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetAppEq(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -6867,9 +6652,8 @@ func (m SearchFoodIntakesParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetTypeEq(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -6878,9 +6662,8 @@ func (m SearchFoodIntakesParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetTypeNeq(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -6889,9 +6672,8 @@ func (m SearchFoodIntakesParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetTypeIn(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -6900,9 +6682,8 @@ func (m SearchFoodIntakesParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetTypeNin(v *string) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetCarbsEQ returns the CarbsEQ value.
@@ -6911,9 +6692,8 @@ func (m SearchFoodIntakesParams) GetCarbsEQ() *int64 {
 }
 
 // SetCarbsEQ sets the CarbsEQ value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCarbsEQ(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCarbsEQ(v *int64) {
 	m.CarbsEQ = v
-	return m
 }
 
 // GetCarbsGTE returns the CarbsGTE value.
@@ -6922,9 +6702,8 @@ func (m SearchFoodIntakesParams) GetCarbsGTE() *int64 {
 }
 
 // SetCarbsGTE sets the CarbsGTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCarbsGTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCarbsGTE(v *int64) {
 	m.CarbsGTE = v
-	return m
 }
 
 // GetCarbsGT returns the CarbsGT value.
@@ -6933,9 +6712,8 @@ func (m SearchFoodIntakesParams) GetCarbsGT() *int64 {
 }
 
 // SetCarbsGT sets the CarbsGT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCarbsGT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCarbsGT(v *int64) {
 	m.CarbsGT = v
-	return m
 }
 
 // GetCarbsLTE returns the CarbsLTE value.
@@ -6944,9 +6722,8 @@ func (m SearchFoodIntakesParams) GetCarbsLTE() *int64 {
 }
 
 // SetCarbsLTE sets the CarbsLTE value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCarbsLTE(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCarbsLTE(v *int64) {
 	m.CarbsLTE = v
-	return m
 }
 
 // GetCarbsLT returns the CarbsLT value.
@@ -6955,9 +6732,8 @@ func (m SearchFoodIntakesParams) GetCarbsLT() *int64 {
 }
 
 // SetCarbsLT sets the CarbsLT value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetCarbsLT(v *int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetCarbsLT(v *int64) {
 	m.CarbsLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -6966,9 +6742,8 @@ func (m SearchFoodIntakesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetIncludeDeleted(v *bool) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -6977,9 +6752,8 @@ func (m SearchFoodIntakesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetSkip(v int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -6988,9 +6762,8 @@ func (m SearchFoodIntakesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchFoodIntakesParams.
-func (m SearchFoodIntakesParams) SetLimit(v int64) SearchFoodIntakesParams {
+func (m *SearchFoodIntakesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -6999,9 +6772,8 @@ func (m UpdateFoodIntakeParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetName(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -7010,9 +6782,8 @@ func (m UpdateFoodIntakeParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetFoodType(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetCategory returns the Category value.
@@ -7021,9 +6792,8 @@ func (m UpdateFoodIntakeParams) GetCategory() *string {
 }
 
 // SetCategory sets the Category value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetCategory(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetCategory(v *string) {
 	m.Category = v
-	return m
 }
 
 // GetSubcategory returns the Subcategory value.
@@ -7032,9 +6802,8 @@ func (m UpdateFoodIntakeParams) GetSubcategory() *string {
 }
 
 // SetSubcategory sets the Subcategory value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetSubcategory(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetSubcategory(v *string) {
 	m.Subcategory = v
-	return m
 }
 
 // GetCarbs returns the Carbs value.
@@ -7043,9 +6812,8 @@ func (m UpdateFoodIntakeParams) GetCarbs() *float64 {
 }
 
 // SetCarbs sets the Carbs value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetCarbs(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetCarbs(v *float64) {
 	m.Carbs = v
-	return m
 }
 
 // GetFat returns the Fat value.
@@ -7054,9 +6822,8 @@ func (m UpdateFoodIntakeParams) GetFat() *float64 {
 }
 
 // SetFat sets the Fat value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetFat(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetFat(v *float64) {
 	m.Fat = v
-	return m
 }
 
 // GetProtein returns the Protein value.
@@ -7065,9 +6832,8 @@ func (m UpdateFoodIntakeParams) GetProtein() *float64 {
 }
 
 // SetProtein sets the Protein value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetProtein(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetProtein(v *float64) {
 	m.Protein = v
-	return m
 }
 
 // GetFibre returns the Fibre value.
@@ -7076,9 +6842,8 @@ func (m UpdateFoodIntakeParams) GetFibre() *float64 {
 }
 
 // SetFibre sets the Fibre value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetFibre(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetFibre(v *float64) {
 	m.Fibre = v
-	return m
 }
 
 // GetEnergy returns the Energy value.
@@ -7087,9 +6852,8 @@ func (m UpdateFoodIntakeParams) GetEnergy() *float64 {
 }
 
 // SetEnergy sets the Energy value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetEnergy(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetEnergy(v *float64) {
 	m.Energy = v
-	return m
 }
 
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
@@ -7098,9 +6862,8 @@ func (m UpdateFoodIntakeParams) GetAbsorptionTimeMinutes() *int64 {
 }
 
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-	return m
 }
 
 // GetPreBolus returns the PreBolus value.
@@ -7109,9 +6872,8 @@ func (m UpdateFoodIntakeParams) GetPreBolus() *float64 {
 }
 
 // SetPreBolus sets the PreBolus value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetPreBolus(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
-	return m
 }
 
 // GetPortions returns the Portions value.
@@ -7120,9 +6882,8 @@ func (m UpdateFoodIntakeParams) GetPortions() *float64 {
 }
 
 // SetPortions sets the Portions value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetPortions(v *float64) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetPortions(v *float64) {
 	m.Portions = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -7131,9 +6892,8 @@ func (m UpdateFoodIntakeParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetNotes(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -7142,9 +6902,8 @@ func (m UpdateFoodIntakeParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetReason(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -7153,9 +6912,8 @@ func (m UpdateFoodIntakeParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetRawJsonData(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -7164,9 +6922,8 @@ func (m UpdateFoodIntakeParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetUpdatedByIdentityName(v *string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7175,9 +6932,8 @@ func (m UpdateFoodIntakeParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateFoodIntakeParams.
-func (m UpdateFoodIntakeParams) SetID(v string) UpdateFoodIntakeParams {
+func (m *UpdateFoodIntakeParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -7186,9 +6942,8 @@ func (m SoftDeleteFoodIntakeParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteFoodIntakeParams.
-func (m SoftDeleteFoodIntakeParams) SetUpdatedByIdentityName(v *string) SoftDeleteFoodIntakeParams {
+func (m *SoftDeleteFoodIntakeParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7197,9 +6952,8 @@ func (m SoftDeleteFoodIntakeParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteFoodIntakeParams.
-func (m SoftDeleteFoodIntakeParams) SetID(v string) SoftDeleteFoodIntakeParams {
+func (m *SoftDeleteFoodIntakeParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7208,9 +6962,8 @@ func (m HardDeleteFoodIntakeParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteFoodIntakeParams.
-func (m HardDeleteFoodIntakeParams) SetID(v string) HardDeleteFoodIntakeParams {
+func (m *HardDeleteFoodIntakeParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -7219,9 +6972,8 @@ func (m SoftDeleteFoodIntakesByTypeParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteFoodIntakesByTypeParams.
-func (m SoftDeleteFoodIntakesByTypeParams) SetUpdatedByIdentityName(v *string) SoftDeleteFoodIntakesByTypeParams {
+func (m *SoftDeleteFoodIntakesByTypeParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -7230,9 +6982,8 @@ func (m SoftDeleteFoodIntakesByTypeParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated SoftDeleteFoodIntakesByTypeParams.
-func (m SoftDeleteFoodIntakesByTypeParams) SetFoodType(v *string) SoftDeleteFoodIntakesByTypeParams {
+func (m *SoftDeleteFoodIntakesByTypeParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -7241,9 +6992,8 @@ func (m HardDeleteFoodIntakesByTypeParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated HardDeleteFoodIntakesByTypeParams.
-func (m HardDeleteFoodIntakesByTypeParams) SetFoodType(v *string) HardDeleteFoodIntakesByTypeParams {
+func (m *HardDeleteFoodIntakesByTypeParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7252,9 +7002,8 @@ func (m CreateGlucoseReadingParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetID(v string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetMgdl returns the Mgdl value.
@@ -7263,9 +7012,8 @@ func (m CreateGlucoseReadingParams) GetMgdl() float64 {
 }
 
 // SetMgdl sets the Mgdl value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetMgdl(v float64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetMgdl(v float64) {
 	m.Mgdl = v
-	return m
 }
 
 // GetReadingType returns the ReadingType value.
@@ -7274,9 +7022,8 @@ func (m CreateGlucoseReadingParams) GetReadingType() string {
 }
 
 // SetReadingType sets the ReadingType value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetReadingType(v string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetReadingType(v string) {
 	m.ReadingType = v
-	return m
 }
 
 // GetUnits returns the Units value.
@@ -7285,9 +7032,8 @@ func (m CreateGlucoseReadingParams) GetUnits() *consts.Units {
 }
 
 // SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetUnits(v *consts.Units) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetUnits(v *consts.Units) {
 	m.Units = v
-	return m
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -7296,9 +7042,8 @@ func (m CreateGlucoseReadingParams) GetMeasurementMethod() *string {
 }
 
 // SetMeasurementMethod sets the MeasurementMethod value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetMeasurementMethod(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetMeasurementMethod(v *string) {
 	m.MeasurementMethod = v
-	return m
 }
 
 // GetDelta returns the Delta value.
@@ -7307,9 +7052,8 @@ func (m CreateGlucoseReadingParams) GetDelta() *float64 {
 }
 
 // SetDelta sets the Delta value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetDelta(v *float64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetDelta(v *float64) {
 	m.Delta = v
-	return m
 }
 
 // GetDirection returns the Direction value.
@@ -7318,9 +7062,8 @@ func (m CreateGlucoseReadingParams) GetDirection() *string {
 }
 
 // SetDirection sets the Direction value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetDirection(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
-	return m
 }
 
 // GetNoise returns the Noise value.
@@ -7329,9 +7072,8 @@ func (m CreateGlucoseReadingParams) GetNoise() *float64 {
 }
 
 // SetNoise sets the Noise value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetNoise(v *float64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetNoise(v *float64) {
 	m.Noise = v
-	return m
 }
 
 // GetFiltered returns the Filtered value.
@@ -7340,9 +7082,8 @@ func (m CreateGlucoseReadingParams) GetFiltered() *float64 {
 }
 
 // SetFiltered sets the Filtered value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetFiltered(v *float64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetFiltered(v *float64) {
 	m.Filtered = v
-	return m
 }
 
 // GetUnfiltered returns the Unfiltered value.
@@ -7351,9 +7092,8 @@ func (m CreateGlucoseReadingParams) GetUnfiltered() *float64 {
 }
 
 // SetUnfiltered sets the Unfiltered value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetUnfiltered(v *float64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetUnfiltered(v *float64) {
 	m.Unfiltered = v
-	return m
 }
 
 // GetRssi returns the Rssi value.
@@ -7362,9 +7102,8 @@ func (m CreateGlucoseReadingParams) GetRssi() *float64 {
 }
 
 // SetRssi sets the Rssi value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetRssi(v *float64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetRssi(v *float64) {
 	m.Rssi = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -7373,9 +7112,8 @@ func (m CreateGlucoseReadingParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetNotes(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -7384,9 +7122,8 @@ func (m CreateGlucoseReadingParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetReason(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -7395,9 +7132,8 @@ func (m CreateGlucoseReadingParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetUtcOffsetMinutes(v *int64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -7406,9 +7142,8 @@ func (m CreateGlucoseReadingParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetOccurredAt(v int64) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -7417,9 +7152,8 @@ func (m CreateGlucoseReadingParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetRawJsonData(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -7428,9 +7162,8 @@ func (m CreateGlucoseReadingParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetCreatedByAppName(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -7439,9 +7172,8 @@ func (m CreateGlucoseReadingParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetCreatedByDeviceName(v *string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -7450,9 +7182,8 @@ func (m CreateGlucoseReadingParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateGlucoseReadingParams.
-func (m CreateGlucoseReadingParams) SetCreatedByIdentityName(v string) CreateGlucoseReadingParams {
+func (m *CreateGlucoseReadingParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -7461,9 +7192,8 @@ func (m GetGlucoseReadingParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetGlucoseReadingParams.
-func (m GetGlucoseReadingParams) SetIncludeDeleted(v bool) GetGlucoseReadingParams {
+func (m *GetGlucoseReadingParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7472,9 +7202,8 @@ func (m GetGlucoseReadingParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetGlucoseReadingParams.
-func (m GetGlucoseReadingParams) SetID(v string) GetGlucoseReadingParams {
+func (m *GetGlucoseReadingParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -7483,9 +7212,8 @@ func (m AllGlucoseReadingsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllGlucoseReadingsParams.
-func (m AllGlucoseReadingsParams) SetIncludeDeleted(v bool) AllGlucoseReadingsParams {
+func (m *AllGlucoseReadingsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -7494,9 +7222,8 @@ func (m AllGlucoseReadingsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllGlucoseReadingsParams.
-func (m AllGlucoseReadingsParams) SetSkip(v int64) AllGlucoseReadingsParams {
+func (m *AllGlucoseReadingsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -7505,9 +7232,8 @@ func (m AllGlucoseReadingsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllGlucoseReadingsParams.
-func (m AllGlucoseReadingsParams) SetLimit(v int64) AllGlucoseReadingsParams {
+func (m *AllGlucoseReadingsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -7516,9 +7242,8 @@ func (m SearchGlucoseReadingsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetDateGTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -7527,9 +7252,8 @@ func (m SearchGlucoseReadingsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetDateLTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -7538,9 +7262,8 @@ func (m SearchGlucoseReadingsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetDateEQ(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -7549,9 +7272,8 @@ func (m SearchGlucoseReadingsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetDateGT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -7560,9 +7282,8 @@ func (m SearchGlucoseReadingsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetDateLT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -7571,9 +7292,8 @@ func (m SearchGlucoseReadingsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetCreatedAtGTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -7582,9 +7302,8 @@ func (m SearchGlucoseReadingsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetCreatedAtLTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -7593,9 +7312,8 @@ func (m SearchGlucoseReadingsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetCreatedAtGT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -7604,9 +7322,8 @@ func (m SearchGlucoseReadingsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetCreatedAtLT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -7615,9 +7332,8 @@ func (m SearchGlucoseReadingsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetUpdatedGTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -7626,9 +7342,8 @@ func (m SearchGlucoseReadingsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetUpdatedLTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -7637,9 +7352,8 @@ func (m SearchGlucoseReadingsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetUpdatedGT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -7648,9 +7362,8 @@ func (m SearchGlucoseReadingsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetUpdatedLT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -7659,9 +7372,8 @@ func (m SearchGlucoseReadingsParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetTypeEq(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -7670,9 +7382,8 @@ func (m SearchGlucoseReadingsParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetTypeNeq(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -7681,9 +7392,8 @@ func (m SearchGlucoseReadingsParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetTypeIn(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -7692,9 +7402,8 @@ func (m SearchGlucoseReadingsParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetTypeNin(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -7703,9 +7412,8 @@ func (m SearchGlucoseReadingsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetIDEq(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -7714,9 +7422,8 @@ func (m SearchGlucoseReadingsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetIDIn(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -7725,9 +7432,8 @@ func (m SearchGlucoseReadingsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetDeviceEq(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -7736,9 +7442,8 @@ func (m SearchGlucoseReadingsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetAppEq(v *string) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetSgvEQ returns the SgvEQ value.
@@ -7747,9 +7452,8 @@ func (m SearchGlucoseReadingsParams) GetSgvEQ() *int64 {
 }
 
 // SetSgvEQ sets the SgvEQ value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetSgvEQ(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetSgvEQ(v *int64) {
 	m.SgvEQ = v
-	return m
 }
 
 // GetSgvGTE returns the SgvGTE value.
@@ -7758,9 +7462,8 @@ func (m SearchGlucoseReadingsParams) GetSgvGTE() *int64 {
 }
 
 // SetSgvGTE sets the SgvGTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetSgvGTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetSgvGTE(v *int64) {
 	m.SgvGTE = v
-	return m
 }
 
 // GetSgvGT returns the SgvGT value.
@@ -7769,9 +7472,8 @@ func (m SearchGlucoseReadingsParams) GetSgvGT() *int64 {
 }
 
 // SetSgvGT sets the SgvGT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetSgvGT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetSgvGT(v *int64) {
 	m.SgvGT = v
-	return m
 }
 
 // GetSgvLTE returns the SgvLTE value.
@@ -7780,9 +7482,8 @@ func (m SearchGlucoseReadingsParams) GetSgvLTE() *int64 {
 }
 
 // SetSgvLTE sets the SgvLTE value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetSgvLTE(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetSgvLTE(v *int64) {
 	m.SgvLTE = v
-	return m
 }
 
 // GetSgvLT returns the SgvLT value.
@@ -7791,9 +7492,8 @@ func (m SearchGlucoseReadingsParams) GetSgvLT() *int64 {
 }
 
 // SetSgvLT sets the SgvLT value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetSgvLT(v *int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetSgvLT(v *int64) {
 	m.SgvLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -7802,9 +7502,8 @@ func (m SearchGlucoseReadingsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetIncludeDeleted(v bool) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -7813,9 +7512,8 @@ func (m SearchGlucoseReadingsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetSkip(v int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -7824,9 +7522,8 @@ func (m SearchGlucoseReadingsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchGlucoseReadingsParams.
-func (m SearchGlucoseReadingsParams) SetLimit(v int64) SearchGlucoseReadingsParams {
+func (m *SearchGlucoseReadingsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetMgdl returns the Mgdl value.
@@ -7835,9 +7532,8 @@ func (m UpdateGlucoseReadingParams) GetMgdl() *float64 {
 }
 
 // SetMgdl sets the Mgdl value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetMgdl(v *float64) UpdateGlucoseReadingParams {
+func (m *UpdateGlucoseReadingParams) SetMgdl(v *float64) {
 	m.Mgdl = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -7846,9 +7542,8 @@ func (m UpdateGlucoseReadingParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetNotes(v *string) UpdateGlucoseReadingParams {
+func (m *UpdateGlucoseReadingParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -7857,9 +7552,8 @@ func (m UpdateGlucoseReadingParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetReason(v *string) UpdateGlucoseReadingParams {
+func (m *UpdateGlucoseReadingParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -7868,9 +7562,8 @@ func (m UpdateGlucoseReadingParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetRawJsonData(v *string) UpdateGlucoseReadingParams {
+func (m *UpdateGlucoseReadingParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -7879,9 +7572,8 @@ func (m UpdateGlucoseReadingParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetUpdatedByIdentityName(v *string) UpdateGlucoseReadingParams {
+func (m *UpdateGlucoseReadingParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7890,9 +7582,8 @@ func (m UpdateGlucoseReadingParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateGlucoseReadingParams.
-func (m UpdateGlucoseReadingParams) SetID(v string) UpdateGlucoseReadingParams {
+func (m *UpdateGlucoseReadingParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -7901,9 +7592,8 @@ func (m SoftDeleteGlucoseReadingParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteGlucoseReadingParams.
-func (m SoftDeleteGlucoseReadingParams) SetUpdatedByIdentityName(v *string) SoftDeleteGlucoseReadingParams {
+func (m *SoftDeleteGlucoseReadingParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7912,9 +7602,8 @@ func (m SoftDeleteGlucoseReadingParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteGlucoseReadingParams.
-func (m SoftDeleteGlucoseReadingParams) SetID(v string) SoftDeleteGlucoseReadingParams {
+func (m *SoftDeleteGlucoseReadingParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7923,9 +7612,8 @@ func (m HardDeleteGlucoseReadingParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteGlucoseReadingParams.
-func (m HardDeleteGlucoseReadingParams) SetID(v string) HardDeleteGlucoseReadingParams {
+func (m *HardDeleteGlucoseReadingParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -7934,9 +7622,8 @@ func (m SoftDeleteGlucoseReadingsByTypeParams) GetUpdatedByIdentityName() *strin
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteGlucoseReadingsByTypeParams.
-func (m SoftDeleteGlucoseReadingsByTypeParams) SetUpdatedByIdentityName(v *string) SoftDeleteGlucoseReadingsByTypeParams {
+func (m *SoftDeleteGlucoseReadingsByTypeParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetReadingType returns the ReadingType value.
@@ -7945,9 +7632,8 @@ func (m SoftDeleteGlucoseReadingsByTypeParams) GetReadingType() string {
 }
 
 // SetReadingType sets the ReadingType value and returns the updated SoftDeleteGlucoseReadingsByTypeParams.
-func (m SoftDeleteGlucoseReadingsByTypeParams) SetReadingType(v string) SoftDeleteGlucoseReadingsByTypeParams {
+func (m *SoftDeleteGlucoseReadingsByTypeParams) SetReadingType(v string) {
 	m.ReadingType = v
-	return m
 }
 
 // GetReadingType returns the ReadingType value.
@@ -7956,9 +7642,8 @@ func (m HardDeleteGlucoseReadingsByTypeParams) GetReadingType() string {
 }
 
 // SetReadingType sets the ReadingType value and returns the updated HardDeleteGlucoseReadingsByTypeParams.
-func (m HardDeleteGlucoseReadingsByTypeParams) SetReadingType(v string) HardDeleteGlucoseReadingsByTypeParams {
+func (m *HardDeleteGlucoseReadingsByTypeParams) SetReadingType(v string) {
 	m.ReadingType = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -7967,9 +7652,8 @@ func (m CreateEventGroupParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetID(v string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetGroupType returns the GroupType value.
@@ -7978,9 +7662,8 @@ func (m CreateEventGroupParams) GetGroupType() string {
 }
 
 // SetGroupType sets the GroupType value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetGroupType(v string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetGroupType(v string) {
 	m.GroupType = v
-	return m
 }
 
 // GetGlucoseReadingID returns the GlucoseReadingID value.
@@ -7989,9 +7672,8 @@ func (m CreateEventGroupParams) GetGlucoseReadingID() *string {
 }
 
 // SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetGlucoseReadingID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetGlucoseReadingID(v *string) {
 	m.GlucoseReadingID = v
-	return m
 }
 
 // GetInsulinDoseID returns the InsulinDoseID value.
@@ -8000,9 +7682,8 @@ func (m CreateEventGroupParams) GetInsulinDoseID() *string {
 }
 
 // SetInsulinDoseID sets the InsulinDoseID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetInsulinDoseID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetInsulinDoseID(v *string) {
 	m.InsulinDoseID = v
-	return m
 }
 
 // GetFoodIntakeID returns the FoodIntakeID value.
@@ -8011,9 +7692,8 @@ func (m CreateEventGroupParams) GetFoodIntakeID() *string {
 }
 
 // SetFoodIntakeID sets the FoodIntakeID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetFoodIntakeID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetFoodIntakeID(v *string) {
 	m.FoodIntakeID = v
-	return m
 }
 
 // GetTempBasalID returns the TempBasalID value.
@@ -8022,9 +7702,8 @@ func (m CreateEventGroupParams) GetTempBasalID() *string {
 }
 
 // SetTempBasalID sets the TempBasalID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetTempBasalID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetTempBasalID(v *string) {
 	m.TempBasalID = v
-	return m
 }
 
 // GetTempTargetID returns the TempTargetID value.
@@ -8033,9 +7712,8 @@ func (m CreateEventGroupParams) GetTempTargetID() *string {
 }
 
 // SetTempTargetID sets the TempTargetID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetTempTargetID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetTempTargetID(v *string) {
 	m.TempTargetID = v
-	return m
 }
 
 // GetProfileSwitchID returns the ProfileSwitchID value.
@@ -8044,9 +7722,8 @@ func (m CreateEventGroupParams) GetProfileSwitchID() *string {
 }
 
 // SetProfileSwitchID sets the ProfileSwitchID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetProfileSwitchID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetProfileSwitchID(v *string) {
 	m.ProfileSwitchID = v
-	return m
 }
 
 // GetComponentEventID returns the ComponentEventID value.
@@ -8055,9 +7732,8 @@ func (m CreateEventGroupParams) GetComponentEventID() *string {
 }
 
 // SetComponentEventID sets the ComponentEventID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetComponentEventID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetComponentEventID(v *string) {
 	m.ComponentEventID = v
-	return m
 }
 
 // GetActivityID returns the ActivityID value.
@@ -8066,9 +7742,8 @@ func (m CreateEventGroupParams) GetActivityID() *string {
 }
 
 // SetActivityID sets the ActivityID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetActivityID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetActivityID(v *string) {
 	m.ActivityID = v
-	return m
 }
 
 // GetNotificationEventID returns the NotificationEventID value.
@@ -8077,9 +7752,8 @@ func (m CreateEventGroupParams) GetNotificationEventID() *string {
 }
 
 // SetNotificationEventID sets the NotificationEventID value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetNotificationEventID(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetNotificationEventID(v *string) {
 	m.NotificationEventID = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -8088,9 +7762,8 @@ func (m CreateEventGroupParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetNotes(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -8099,9 +7772,8 @@ func (m CreateEventGroupParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetReason(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -8110,9 +7782,8 @@ func (m CreateEventGroupParams) GetDurationMinutes() *int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetDurationMinutes(v *int64) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -8121,9 +7792,8 @@ func (m CreateEventGroupParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetOccurredAt(v int64) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -8132,9 +7802,8 @@ func (m CreateEventGroupParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetUtcOffsetMinutes(v *int64) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -8143,9 +7812,8 @@ func (m CreateEventGroupParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetRawJsonData(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -8154,9 +7822,8 @@ func (m CreateEventGroupParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetCreatedByAppName(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -8165,9 +7832,8 @@ func (m CreateEventGroupParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetCreatedByDeviceName(v *string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -8176,9 +7842,8 @@ func (m CreateEventGroupParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateEventGroupParams.
-func (m CreateEventGroupParams) SetCreatedByIdentityName(v string) CreateEventGroupParams {
+func (m *CreateEventGroupParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -8187,9 +7852,8 @@ func (m GetEventGroupWithoutJoinsParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetEventGroupWithoutJoinsParams.
-func (m GetEventGroupWithoutJoinsParams) SetID(v string) GetEventGroupWithoutJoinsParams {
+func (m *GetEventGroupWithoutJoinsParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -8198,9 +7862,8 @@ func (m GetEventGroupWithoutJoinsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetEventGroupWithoutJoinsParams.
-func (m GetEventGroupWithoutJoinsParams) SetIncludeDeleted(v bool) GetEventGroupWithoutJoinsParams {
+func (m *GetEventGroupWithoutJoinsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetGroupType returns the GroupType value.
@@ -8209,9 +7872,8 @@ func (m GetEventGroupOfTypeWithoutJoinsParams) GetGroupType() string {
 }
 
 // SetGroupType sets the GroupType value and returns the updated GetEventGroupOfTypeWithoutJoinsParams.
-func (m GetEventGroupOfTypeWithoutJoinsParams) SetGroupType(v string) GetEventGroupOfTypeWithoutJoinsParams {
+func (m *GetEventGroupOfTypeWithoutJoinsParams) SetGroupType(v string) {
 	m.GroupType = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -8220,9 +7882,8 @@ func (m GetEventGroupOfTypeWithoutJoinsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetEventGroupOfTypeWithoutJoinsParams.
-func (m GetEventGroupOfTypeWithoutJoinsParams) SetIncludeDeleted(v bool) GetEventGroupOfTypeWithoutJoinsParams {
+func (m *GetEventGroupOfTypeWithoutJoinsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -8231,9 +7892,8 @@ func (m AllEventGroupsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllEventGroupsParams.
-func (m AllEventGroupsParams) SetIncludeDeleted(v bool) AllEventGroupsParams {
+func (m *AllEventGroupsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -8242,9 +7902,8 @@ func (m AllEventGroupsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllEventGroupsParams.
-func (m AllEventGroupsParams) SetSkip(v int64) AllEventGroupsParams {
+func (m *AllEventGroupsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -8253,9 +7912,8 @@ func (m AllEventGroupsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllEventGroupsParams.
-func (m AllEventGroupsParams) SetLimit(v int64) AllEventGroupsParams {
+func (m *AllEventGroupsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -8264,9 +7922,8 @@ func (m GetEventGroupParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetEventGroupParams.
-func (m GetEventGroupParams) SetID(v string) GetEventGroupParams {
+func (m *GetEventGroupParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -8275,9 +7932,8 @@ func (m GetEventGroupParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetEventGroupParams.
-func (m GetEventGroupParams) SetIncludeDeleted(v bool) GetEventGroupParams {
+func (m *GetEventGroupParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -8286,9 +7942,8 @@ func (m SearchEventGroupsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDateGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -8297,9 +7952,8 @@ func (m SearchEventGroupsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDateLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -8308,9 +7962,8 @@ func (m SearchEventGroupsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDateEQ(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -8319,9 +7972,8 @@ func (m SearchEventGroupsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDateGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -8330,9 +7982,8 @@ func (m SearchEventGroupsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDateLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -8341,9 +7992,8 @@ func (m SearchEventGroupsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCreatedAtGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -8352,9 +8002,8 @@ func (m SearchEventGroupsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCreatedAtLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -8363,9 +8012,8 @@ func (m SearchEventGroupsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCreatedAtGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -8374,9 +8022,8 @@ func (m SearchEventGroupsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCreatedAtLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -8385,9 +8032,8 @@ func (m SearchEventGroupsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetUpdatedGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -8396,9 +8042,8 @@ func (m SearchEventGroupsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetUpdatedLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -8407,9 +8052,8 @@ func (m SearchEventGroupsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetUpdatedGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -8418,9 +8062,8 @@ func (m SearchEventGroupsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetUpdatedLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -8429,9 +8072,8 @@ func (m SearchEventGroupsParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetTypeEq(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -8440,9 +8082,8 @@ func (m SearchEventGroupsParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetTypeNeq(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -8451,9 +8092,8 @@ func (m SearchEventGroupsParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetTypeIn(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -8462,9 +8102,8 @@ func (m SearchEventGroupsParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetTypeNin(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -8473,9 +8112,8 @@ func (m SearchEventGroupsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetIDEq(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -8484,9 +8122,8 @@ func (m SearchEventGroupsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetIDIn(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -8495,9 +8132,8 @@ func (m SearchEventGroupsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDeviceEq(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -8506,9 +8142,8 @@ func (m SearchEventGroupsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetAppEq(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetNameEq returns the NameEq value.
@@ -8517,9 +8152,8 @@ func (m SearchEventGroupsParams) GetNameEq() *string {
 }
 
 // SetNameEq sets the NameEq value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetNameEq(v *string) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetNameEq(v *string) {
 	m.NameEq = v
-	return m
 }
 
 // GetSgvEQ returns the SgvEQ value.
@@ -8528,9 +8162,8 @@ func (m SearchEventGroupsParams) GetSgvEQ() *int64 {
 }
 
 // SetSgvEQ sets the SgvEQ value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetSgvEQ(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetSgvEQ(v *int64) {
 	m.SgvEQ = v
-	return m
 }
 
 // GetSgvGTE returns the SgvGTE value.
@@ -8539,9 +8172,8 @@ func (m SearchEventGroupsParams) GetSgvGTE() *int64 {
 }
 
 // SetSgvGTE sets the SgvGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetSgvGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetSgvGTE(v *int64) {
 	m.SgvGTE = v
-	return m
 }
 
 // GetSgvGT returns the SgvGT value.
@@ -8550,9 +8182,8 @@ func (m SearchEventGroupsParams) GetSgvGT() *int64 {
 }
 
 // SetSgvGT sets the SgvGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetSgvGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetSgvGT(v *int64) {
 	m.SgvGT = v
-	return m
 }
 
 // GetSgvLTE returns the SgvLTE value.
@@ -8561,9 +8192,8 @@ func (m SearchEventGroupsParams) GetSgvLTE() *int64 {
 }
 
 // SetSgvLTE sets the SgvLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetSgvLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetSgvLTE(v *int64) {
 	m.SgvLTE = v
-	return m
 }
 
 // GetSgvLT returns the SgvLT value.
@@ -8572,9 +8202,8 @@ func (m SearchEventGroupsParams) GetSgvLT() *int64 {
 }
 
 // SetSgvLT sets the SgvLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetSgvLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetSgvLT(v *int64) {
 	m.SgvLT = v
-	return m
 }
 
 // GetCarbsEQ returns the CarbsEQ value.
@@ -8583,9 +8212,8 @@ func (m SearchEventGroupsParams) GetCarbsEQ() *int64 {
 }
 
 // SetCarbsEQ sets the CarbsEQ value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCarbsEQ(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCarbsEQ(v *int64) {
 	m.CarbsEQ = v
-	return m
 }
 
 // GetCarbsGTE returns the CarbsGTE value.
@@ -8594,9 +8222,8 @@ func (m SearchEventGroupsParams) GetCarbsGTE() *int64 {
 }
 
 // SetCarbsGTE sets the CarbsGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCarbsGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCarbsGTE(v *int64) {
 	m.CarbsGTE = v
-	return m
 }
 
 // GetCarbsGT returns the CarbsGT value.
@@ -8605,9 +8232,8 @@ func (m SearchEventGroupsParams) GetCarbsGT() *int64 {
 }
 
 // SetCarbsGT sets the CarbsGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCarbsGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCarbsGT(v *int64) {
 	m.CarbsGT = v
-	return m
 }
 
 // GetCarbsLTE returns the CarbsLTE value.
@@ -8616,9 +8242,8 @@ func (m SearchEventGroupsParams) GetCarbsLTE() *int64 {
 }
 
 // SetCarbsLTE sets the CarbsLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCarbsLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCarbsLTE(v *int64) {
 	m.CarbsLTE = v
-	return m
 }
 
 // GetCarbsLT returns the CarbsLT value.
@@ -8627,9 +8252,8 @@ func (m SearchEventGroupsParams) GetCarbsLT() *int64 {
 }
 
 // SetCarbsLT sets the CarbsLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetCarbsLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetCarbsLT(v *int64) {
 	m.CarbsLT = v
-	return m
 }
 
 // GetInsulinEQ returns the InsulinEQ value.
@@ -8638,9 +8262,8 @@ func (m SearchEventGroupsParams) GetInsulinEQ() *int64 {
 }
 
 // SetInsulinEQ sets the InsulinEQ value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetInsulinEQ(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetInsulinEQ(v *int64) {
 	m.InsulinEQ = v
-	return m
 }
 
 // GetInsulinGTE returns the InsulinGTE value.
@@ -8649,9 +8272,8 @@ func (m SearchEventGroupsParams) GetInsulinGTE() *int64 {
 }
 
 // SetInsulinGTE sets the InsulinGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetInsulinGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetInsulinGTE(v *int64) {
 	m.InsulinGTE = v
-	return m
 }
 
 // GetInsulinGT returns the InsulinGT value.
@@ -8660,9 +8282,8 @@ func (m SearchEventGroupsParams) GetInsulinGT() *int64 {
 }
 
 // SetInsulinGT sets the InsulinGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetInsulinGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetInsulinGT(v *int64) {
 	m.InsulinGT = v
-	return m
 }
 
 // GetInsulinLTE returns the InsulinLTE value.
@@ -8671,9 +8292,8 @@ func (m SearchEventGroupsParams) GetInsulinLTE() *int64 {
 }
 
 // SetInsulinLTE sets the InsulinLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetInsulinLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetInsulinLTE(v *int64) {
 	m.InsulinLTE = v
-	return m
 }
 
 // GetInsulinLT returns the InsulinLT value.
@@ -8682,9 +8302,8 @@ func (m SearchEventGroupsParams) GetInsulinLT() *int64 {
 }
 
 // SetInsulinLT sets the InsulinLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetInsulinLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetInsulinLT(v *int64) {
 	m.InsulinLT = v
-	return m
 }
 
 // GetDurationEQ returns the DurationEQ value.
@@ -8693,9 +8312,8 @@ func (m SearchEventGroupsParams) GetDurationEQ() *int64 {
 }
 
 // SetDurationEQ sets the DurationEQ value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDurationEQ(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDurationEQ(v *int64) {
 	m.DurationEQ = v
-	return m
 }
 
 // GetDurationGTE returns the DurationGTE value.
@@ -8704,9 +8322,8 @@ func (m SearchEventGroupsParams) GetDurationGTE() *int64 {
 }
 
 // SetDurationGTE sets the DurationGTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDurationGTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDurationGTE(v *int64) {
 	m.DurationGTE = v
-	return m
 }
 
 // GetDurationGT returns the DurationGT value.
@@ -8715,9 +8332,8 @@ func (m SearchEventGroupsParams) GetDurationGT() *int64 {
 }
 
 // SetDurationGT sets the DurationGT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDurationGT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDurationGT(v *int64) {
 	m.DurationGT = v
-	return m
 }
 
 // GetDurationLTE returns the DurationLTE value.
@@ -8726,9 +8342,8 @@ func (m SearchEventGroupsParams) GetDurationLTE() *int64 {
 }
 
 // SetDurationLTE sets the DurationLTE value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDurationLTE(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDurationLTE(v *int64) {
 	m.DurationLTE = v
-	return m
 }
 
 // GetDurationLT returns the DurationLT value.
@@ -8737,9 +8352,8 @@ func (m SearchEventGroupsParams) GetDurationLT() *int64 {
 }
 
 // SetDurationLT sets the DurationLT value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetDurationLT(v *int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetDurationLT(v *int64) {
 	m.DurationLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -8748,9 +8362,8 @@ func (m SearchEventGroupsParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetIncludeDeleted(v bool) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -8759,9 +8372,8 @@ func (m SearchEventGroupsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetSkip(v int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -8770,9 +8382,8 @@ func (m SearchEventGroupsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchEventGroupsParams.
-func (m SearchEventGroupsParams) SetLimit(v int64) SearchEventGroupsParams {
+func (m *SearchEventGroupsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetGlucoseReadingID returns the GlucoseReadingID value.
@@ -8781,9 +8392,8 @@ func (m UpdateEventGroupParams) GetGlucoseReadingID() *string {
 }
 
 // SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetGlucoseReadingID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetGlucoseReadingID(v *string) {
 	m.GlucoseReadingID = v
-	return m
 }
 
 // GetInsulinDoseID returns the InsulinDoseID value.
@@ -8792,9 +8402,8 @@ func (m UpdateEventGroupParams) GetInsulinDoseID() *string {
 }
 
 // SetInsulinDoseID sets the InsulinDoseID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetInsulinDoseID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetInsulinDoseID(v *string) {
 	m.InsulinDoseID = v
-	return m
 }
 
 // GetFoodIntakeID returns the FoodIntakeID value.
@@ -8803,9 +8412,8 @@ func (m UpdateEventGroupParams) GetFoodIntakeID() *string {
 }
 
 // SetFoodIntakeID sets the FoodIntakeID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetFoodIntakeID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetFoodIntakeID(v *string) {
 	m.FoodIntakeID = v
-	return m
 }
 
 // GetTempBasalID returns the TempBasalID value.
@@ -8814,9 +8422,8 @@ func (m UpdateEventGroupParams) GetTempBasalID() *string {
 }
 
 // SetTempBasalID sets the TempBasalID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetTempBasalID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetTempBasalID(v *string) {
 	m.TempBasalID = v
-	return m
 }
 
 // GetTempTargetID returns the TempTargetID value.
@@ -8825,9 +8432,8 @@ func (m UpdateEventGroupParams) GetTempTargetID() *string {
 }
 
 // SetTempTargetID sets the TempTargetID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetTempTargetID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetTempTargetID(v *string) {
 	m.TempTargetID = v
-	return m
 }
 
 // GetProfileSwitchID returns the ProfileSwitchID value.
@@ -8836,9 +8442,8 @@ func (m UpdateEventGroupParams) GetProfileSwitchID() *string {
 }
 
 // SetProfileSwitchID sets the ProfileSwitchID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetProfileSwitchID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetProfileSwitchID(v *string) {
 	m.ProfileSwitchID = v
-	return m
 }
 
 // GetComponentEventID returns the ComponentEventID value.
@@ -8847,9 +8452,8 @@ func (m UpdateEventGroupParams) GetComponentEventID() *string {
 }
 
 // SetComponentEventID sets the ComponentEventID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetComponentEventID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetComponentEventID(v *string) {
 	m.ComponentEventID = v
-	return m
 }
 
 // GetActivityID returns the ActivityID value.
@@ -8858,9 +8462,8 @@ func (m UpdateEventGroupParams) GetActivityID() *string {
 }
 
 // SetActivityID sets the ActivityID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetActivityID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetActivityID(v *string) {
 	m.ActivityID = v
-	return m
 }
 
 // GetNotificationEventID returns the NotificationEventID value.
@@ -8869,9 +8472,8 @@ func (m UpdateEventGroupParams) GetNotificationEventID() *string {
 }
 
 // SetNotificationEventID sets the NotificationEventID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetNotificationEventID(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetNotificationEventID(v *string) {
 	m.NotificationEventID = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -8880,9 +8482,8 @@ func (m UpdateEventGroupParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetNotes(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -8891,9 +8492,8 @@ func (m UpdateEventGroupParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetReason(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -8902,9 +8502,8 @@ func (m UpdateEventGroupParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetRawJsonData(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -8913,9 +8512,8 @@ func (m UpdateEventGroupParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetUpdatedByIdentityName(v *string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -8924,9 +8522,8 @@ func (m UpdateEventGroupParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateEventGroupParams.
-func (m UpdateEventGroupParams) SetID(v string) UpdateEventGroupParams {
+func (m *UpdateEventGroupParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -8935,9 +8532,8 @@ func (m SoftDeleteEventGroupParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteEventGroupParams.
-func (m SoftDeleteEventGroupParams) SetUpdatedByIdentityName(v *string) SoftDeleteEventGroupParams {
+func (m *SoftDeleteEventGroupParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -8946,9 +8542,8 @@ func (m SoftDeleteEventGroupParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteEventGroupParams.
-func (m SoftDeleteEventGroupParams) SetID(v string) SoftDeleteEventGroupParams {
+func (m *SoftDeleteEventGroupParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -8957,9 +8552,8 @@ func (m HardDeleteEventGroupParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteEventGroupParams.
-func (m HardDeleteEventGroupParams) SetID(v string) HardDeleteEventGroupParams {
+func (m *HardDeleteEventGroupParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -8968,9 +8562,8 @@ func (m SoftDeleteEventGroupsByTypeParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteEventGroupsByTypeParams.
-func (m SoftDeleteEventGroupsByTypeParams) SetUpdatedByIdentityName(v *string) SoftDeleteEventGroupsByTypeParams {
+func (m *SoftDeleteEventGroupsByTypeParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetGroupType returns the GroupType value.
@@ -8979,9 +8572,8 @@ func (m SoftDeleteEventGroupsByTypeParams) GetGroupType() string {
 }
 
 // SetGroupType sets the GroupType value and returns the updated SoftDeleteEventGroupsByTypeParams.
-func (m SoftDeleteEventGroupsByTypeParams) SetGroupType(v string) SoftDeleteEventGroupsByTypeParams {
+func (m *SoftDeleteEventGroupsByTypeParams) SetGroupType(v string) {
 	m.GroupType = v
-	return m
 }
 
 // GetGroupType returns the GroupType value.
@@ -8990,9 +8582,8 @@ func (m HardDeleteEventGroupsByTypeParams) GetGroupType() string {
 }
 
 // SetGroupType sets the GroupType value and returns the updated HardDeleteEventGroupsByTypeParams.
-func (m HardDeleteEventGroupsByTypeParams) SetGroupType(v string) HardDeleteEventGroupsByTypeParams {
+func (m *HardDeleteEventGroupsByTypeParams) SetGroupType(v string) {
 	m.GroupType = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9001,9 +8592,8 @@ func (m CreateInsulinDoseParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetID(v string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDose returns the Dose value.
@@ -9012,9 +8602,8 @@ func (m CreateInsulinDoseParams) GetDose() float64 {
 }
 
 // SetDose sets the Dose value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetDose(v float64) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetDose(v float64) {
 	m.Dose = v
-	return m
 }
 
 // GetDoseType returns the DoseType value.
@@ -9023,9 +8612,8 @@ func (m CreateInsulinDoseParams) GetDoseType() *string {
 }
 
 // SetDoseType sets the DoseType value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetDoseType(v *string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
-	return m
 }
 
 // GetSplitNow returns the SplitNow value.
@@ -9034,9 +8622,8 @@ func (m CreateInsulinDoseParams) GetSplitNow() *float64 {
 }
 
 // SetSplitNow sets the SplitNow value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetSplitNow(v *float64) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetSplitNow(v *float64) {
 	m.SplitNow = v
-	return m
 }
 
 // GetSplitExt returns the SplitExt value.
@@ -9045,9 +8632,8 @@ func (m CreateInsulinDoseParams) GetSplitExt() *float64 {
 }
 
 // SetSplitExt sets the SplitExt value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetSplitExt(v *float64) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
 	m.SplitExt = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -9056,9 +8642,8 @@ func (m CreateInsulinDoseParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetNotes(v *string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -9067,9 +8652,8 @@ func (m CreateInsulinDoseParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetReason(v *string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -9078,9 +8662,8 @@ func (m CreateInsulinDoseParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetUtcOffsetMinutes(v *int64) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9089,9 +8672,8 @@ func (m CreateInsulinDoseParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetOccurredAt(v int64) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -9100,9 +8682,8 @@ func (m CreateInsulinDoseParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetRawJsonData(v *string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -9111,9 +8692,8 @@ func (m CreateInsulinDoseParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetCreatedByAppName(v *string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -9122,9 +8702,8 @@ func (m CreateInsulinDoseParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetCreatedByDeviceName(v *string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -9133,9 +8712,8 @@ func (m CreateInsulinDoseParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateInsulinDoseParams.
-func (m CreateInsulinDoseParams) SetCreatedByIdentityName(v string) CreateInsulinDoseParams {
+func (m *CreateInsulinDoseParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -9144,9 +8722,8 @@ func (m AllInsulinDosesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllInsulinDosesParams.
-func (m AllInsulinDosesParams) SetIncludeDeleted(v *bool) AllInsulinDosesParams {
+func (m *AllInsulinDosesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -9155,9 +8732,8 @@ func (m AllInsulinDosesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllInsulinDosesParams.
-func (m AllInsulinDosesParams) SetSkip(v int64) AllInsulinDosesParams {
+func (m *AllInsulinDosesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -9166,9 +8742,8 @@ func (m AllInsulinDosesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllInsulinDosesParams.
-func (m AllInsulinDosesParams) SetLimit(v int64) AllInsulinDosesParams {
+func (m *AllInsulinDosesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9177,9 +8752,8 @@ func (m GetInsulinDoseParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetInsulinDoseParams.
-func (m GetInsulinDoseParams) SetID(v string) GetInsulinDoseParams {
+func (m *GetInsulinDoseParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -9188,9 +8762,8 @@ func (m GetInsulinDoseParams) GetIncludeDeleted() bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetInsulinDoseParams.
-func (m GetInsulinDoseParams) SetIncludeDeleted(v bool) GetInsulinDoseParams {
+func (m *GetInsulinDoseParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -9199,9 +8772,8 @@ func (m SearchInsulinDosesParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetDateGTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -9210,9 +8782,8 @@ func (m SearchInsulinDosesParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetDateLTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -9221,9 +8792,8 @@ func (m SearchInsulinDosesParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetDateEQ(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -9232,9 +8802,8 @@ func (m SearchInsulinDosesParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetDateGT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -9243,9 +8812,8 @@ func (m SearchInsulinDosesParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetDateLT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -9254,9 +8822,8 @@ func (m SearchInsulinDosesParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetCreatedAtGTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -9265,9 +8832,8 @@ func (m SearchInsulinDosesParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetCreatedAtLTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -9276,9 +8842,8 @@ func (m SearchInsulinDosesParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetCreatedAtGT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -9287,9 +8852,8 @@ func (m SearchInsulinDosesParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetCreatedAtLT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -9298,9 +8862,8 @@ func (m SearchInsulinDosesParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetUpdatedGTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -9309,9 +8872,8 @@ func (m SearchInsulinDosesParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetUpdatedLTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -9320,9 +8882,8 @@ func (m SearchInsulinDosesParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetUpdatedGT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -9331,9 +8892,8 @@ func (m SearchInsulinDosesParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetUpdatedLT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -9342,9 +8902,8 @@ func (m SearchInsulinDosesParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetIDEq(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -9353,9 +8912,8 @@ func (m SearchInsulinDosesParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetIDIn(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -9364,9 +8922,8 @@ func (m SearchInsulinDosesParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetDeviceEq(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -9375,9 +8932,8 @@ func (m SearchInsulinDosesParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetAppEq(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -9386,9 +8942,8 @@ func (m SearchInsulinDosesParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetTypeEq(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -9397,9 +8952,8 @@ func (m SearchInsulinDosesParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetTypeNeq(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -9408,9 +8962,8 @@ func (m SearchInsulinDosesParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetTypeIn(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -9419,9 +8972,8 @@ func (m SearchInsulinDosesParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetTypeNin(v *string) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetInsulinEQ returns the InsulinEQ value.
@@ -9430,9 +8982,8 @@ func (m SearchInsulinDosesParams) GetInsulinEQ() *int64 {
 }
 
 // SetInsulinEQ sets the InsulinEQ value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetInsulinEQ(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetInsulinEQ(v *int64) {
 	m.InsulinEQ = v
-	return m
 }
 
 // GetInsulinGTE returns the InsulinGTE value.
@@ -9441,9 +8992,8 @@ func (m SearchInsulinDosesParams) GetInsulinGTE() *int64 {
 }
 
 // SetInsulinGTE sets the InsulinGTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetInsulinGTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetInsulinGTE(v *int64) {
 	m.InsulinGTE = v
-	return m
 }
 
 // GetInsulinGT returns the InsulinGT value.
@@ -9452,9 +9002,8 @@ func (m SearchInsulinDosesParams) GetInsulinGT() *int64 {
 }
 
 // SetInsulinGT sets the InsulinGT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetInsulinGT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetInsulinGT(v *int64) {
 	m.InsulinGT = v
-	return m
 }
 
 // GetInsulinLTE returns the InsulinLTE value.
@@ -9463,9 +9012,8 @@ func (m SearchInsulinDosesParams) GetInsulinLTE() *int64 {
 }
 
 // SetInsulinLTE sets the InsulinLTE value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetInsulinLTE(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetInsulinLTE(v *int64) {
 	m.InsulinLTE = v
-	return m
 }
 
 // GetInsulinLT returns the InsulinLT value.
@@ -9474,9 +9022,8 @@ func (m SearchInsulinDosesParams) GetInsulinLT() *int64 {
 }
 
 // SetInsulinLT sets the InsulinLT value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetInsulinLT(v *int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetInsulinLT(v *int64) {
 	m.InsulinLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -9485,9 +9032,8 @@ func (m SearchInsulinDosesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetIncludeDeleted(v *bool) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -9496,9 +9042,8 @@ func (m SearchInsulinDosesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetSkip(v int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -9507,9 +9052,8 @@ func (m SearchInsulinDosesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchInsulinDosesParams.
-func (m SearchInsulinDosesParams) SetLimit(v int64) SearchInsulinDosesParams {
+func (m *SearchInsulinDosesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetDoseType returns the DoseType value.
@@ -9518,9 +9062,8 @@ func (m UpdateInsulinDoseParams) GetDoseType() *string {
 }
 
 // SetDoseType sets the DoseType value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetDoseType(v *string) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
-	return m
 }
 
 // GetDose returns the Dose value.
@@ -9529,9 +9072,8 @@ func (m UpdateInsulinDoseParams) GetDose() *float64 {
 }
 
 // SetDose sets the Dose value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetDose(v *float64) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetDose(v *float64) {
 	m.Dose = v
-	return m
 }
 
 // GetSplitNow returns the SplitNow value.
@@ -9540,9 +9082,8 @@ func (m UpdateInsulinDoseParams) GetSplitNow() *float64 {
 }
 
 // SetSplitNow sets the SplitNow value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetSplitNow(v *float64) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetSplitNow(v *float64) {
 	m.SplitNow = v
-	return m
 }
 
 // GetSplitExt returns the SplitExt value.
@@ -9551,9 +9092,8 @@ func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
 }
 
 // SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetSplitExt(v *float64) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
 	m.SplitExt = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -9562,9 +9102,8 @@ func (m UpdateInsulinDoseParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetNotes(v *string) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -9573,9 +9112,8 @@ func (m UpdateInsulinDoseParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetReason(v *string) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -9584,9 +9122,8 @@ func (m UpdateInsulinDoseParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetRawJsonData(v *string) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -9595,9 +9132,8 @@ func (m UpdateInsulinDoseParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetUpdatedByIdentityName(v *string) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9606,9 +9142,8 @@ func (m UpdateInsulinDoseParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateInsulinDoseParams.
-func (m UpdateInsulinDoseParams) SetID(v string) UpdateInsulinDoseParams {
+func (m *UpdateInsulinDoseParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -9617,9 +9152,8 @@ func (m SoftDeleteInsulinDoseParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteInsulinDoseParams.
-func (m SoftDeleteInsulinDoseParams) SetUpdatedByIdentityName(v *string) SoftDeleteInsulinDoseParams {
+func (m *SoftDeleteInsulinDoseParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9628,9 +9162,8 @@ func (m SoftDeleteInsulinDoseParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteInsulinDoseParams.
-func (m SoftDeleteInsulinDoseParams) SetID(v string) SoftDeleteInsulinDoseParams {
+func (m *SoftDeleteInsulinDoseParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9639,9 +9172,8 @@ func (m HardDeleteInsulinDoseParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteInsulinDoseParams.
-func (m HardDeleteInsulinDoseParams) SetID(v string) HardDeleteInsulinDoseParams {
+func (m *HardDeleteInsulinDoseParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9650,9 +9182,8 @@ func (m CreateNotificationEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetID(v string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetTitle returns the Title value.
@@ -9661,9 +9192,8 @@ func (m CreateNotificationEventParams) GetTitle() string {
 }
 
 // SetTitle sets the Title value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetTitle(v string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetTitle(v string) {
 	m.Title = v
-	return m
 }
 
 // GetSeverity returns the Severity value.
@@ -9672,9 +9202,8 @@ func (m CreateNotificationEventParams) GetSeverity() int64 {
 }
 
 // SetSeverity sets the Severity value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetSeverity(v int64) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetSeverity(v int64) {
 	m.Severity = v
-	return m
 }
 
 // GetContent returns the Content value.
@@ -9683,9 +9212,8 @@ func (m CreateNotificationEventParams) GetContent() *string {
 }
 
 // SetContent sets the Content value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetContent(v *string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetContent(v *string) {
 	m.Content = v
-	return m
 }
 
 // GetNotificationType returns the NotificationType value.
@@ -9694,9 +9222,8 @@ func (m CreateNotificationEventParams) GetNotificationType() string {
 }
 
 // SetNotificationType sets the NotificationType value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetNotificationType(v string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetNotificationType(v string) {
 	m.NotificationType = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -9705,9 +9232,8 @@ func (m CreateNotificationEventParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetNotes(v *string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -9716,9 +9242,8 @@ func (m CreateNotificationEventParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetReason(v *string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -9727,9 +9252,8 @@ func (m CreateNotificationEventParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetUtcOffsetMinutes(v *int64) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9738,9 +9262,8 @@ func (m CreateNotificationEventParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetOccurredAt(v int64) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -9749,9 +9272,8 @@ func (m CreateNotificationEventParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetRawJsonData(v *string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -9760,9 +9282,8 @@ func (m CreateNotificationEventParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetCreatedByAppName(v *string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -9771,9 +9292,8 @@ func (m CreateNotificationEventParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetCreatedByDeviceName(v *string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -9782,9 +9302,8 @@ func (m CreateNotificationEventParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateNotificationEventParams.
-func (m CreateNotificationEventParams) SetCreatedByIdentityName(v string) CreateNotificationEventParams {
+func (m *CreateNotificationEventParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -9793,9 +9312,8 @@ func (m AllNotificationEventsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllNotificationEventsParams.
-func (m AllNotificationEventsParams) SetIncludeDeleted(v *bool) AllNotificationEventsParams {
+func (m *AllNotificationEventsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -9804,9 +9322,8 @@ func (m AllNotificationEventsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllNotificationEventsParams.
-func (m AllNotificationEventsParams) SetSkip(v int64) AllNotificationEventsParams {
+func (m *AllNotificationEventsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -9815,9 +9332,8 @@ func (m AllNotificationEventsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllNotificationEventsParams.
-func (m AllNotificationEventsParams) SetLimit(v int64) AllNotificationEventsParams {
+func (m *AllNotificationEventsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -9826,9 +9342,8 @@ func (m GetNotificationEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetNotificationEventParams.
-func (m GetNotificationEventParams) SetID(v string) GetNotificationEventParams {
+func (m *GetNotificationEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -9837,9 +9352,8 @@ func (m SearchNotificationEventsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetDateGTE(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -9848,9 +9362,8 @@ func (m SearchNotificationEventsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetDateLTE(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -9859,9 +9372,8 @@ func (m SearchNotificationEventsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetDateEQ(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -9870,9 +9382,8 @@ func (m SearchNotificationEventsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetDateGT(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -9881,9 +9392,8 @@ func (m SearchNotificationEventsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetDateLT(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -9892,9 +9402,8 @@ func (m SearchNotificationEventsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetCreatedAtGTE(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -9903,9 +9412,8 @@ func (m SearchNotificationEventsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetCreatedAtLTE(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -9914,9 +9422,8 @@ func (m SearchNotificationEventsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetCreatedAtGT(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -9925,9 +9432,8 @@ func (m SearchNotificationEventsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetCreatedAtLT(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -9936,9 +9442,8 @@ func (m SearchNotificationEventsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetUpdatedGTE(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -9947,9 +9452,8 @@ func (m SearchNotificationEventsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetUpdatedLTE(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -9958,9 +9462,8 @@ func (m SearchNotificationEventsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetUpdatedGT(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -9969,9 +9472,8 @@ func (m SearchNotificationEventsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetUpdatedLT(v *int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -9980,9 +9482,8 @@ func (m SearchNotificationEventsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetIDEq(v *string) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -9991,9 +9492,8 @@ func (m SearchNotificationEventsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetIDIn(v *string) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetTitleEq returns the TitleEq value.
@@ -10002,9 +9502,8 @@ func (m SearchNotificationEventsParams) GetTitleEq() *string {
 }
 
 // SetTitleEq sets the TitleEq value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetTitleEq(v *string) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetTitleEq(v *string) {
 	m.TitleEq = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -10013,9 +9512,8 @@ func (m SearchNotificationEventsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetDeviceEq(v *string) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -10024,9 +9522,8 @@ func (m SearchNotificationEventsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetAppEq(v *string) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -10035,9 +9532,8 @@ func (m SearchNotificationEventsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetIncludeDeleted(v *bool) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -10046,9 +9542,8 @@ func (m SearchNotificationEventsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetSkip(v int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -10057,9 +9552,8 @@ func (m SearchNotificationEventsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchNotificationEventsParams.
-func (m SearchNotificationEventsParams) SetLimit(v int64) SearchNotificationEventsParams {
+func (m *SearchNotificationEventsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetTitle returns the Title value.
@@ -10068,9 +9562,8 @@ func (m UpdateNotificationEventParams) GetTitle() *string {
 }
 
 // SetTitle sets the Title value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetTitle(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetTitle(v *string) {
 	m.Title = v
-	return m
 }
 
 // GetSeverity returns the Severity value.
@@ -10079,9 +9572,8 @@ func (m UpdateNotificationEventParams) GetSeverity() *int64 {
 }
 
 // SetSeverity sets the Severity value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetSeverity(v *int64) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetSeverity(v *int64) {
 	m.Severity = v
-	return m
 }
 
 // GetNotificationType returns the NotificationType value.
@@ -10090,9 +9582,8 @@ func (m UpdateNotificationEventParams) GetNotificationType() *string {
 }
 
 // SetNotificationType sets the NotificationType value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetNotificationType(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetNotificationType(v *string) {
 	m.NotificationType = v
-	return m
 }
 
 // GetContent returns the Content value.
@@ -10101,9 +9592,8 @@ func (m UpdateNotificationEventParams) GetContent() *string {
 }
 
 // SetContent sets the Content value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetContent(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetContent(v *string) {
 	m.Content = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -10112,9 +9602,8 @@ func (m UpdateNotificationEventParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetNotes(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -10123,9 +9612,8 @@ func (m UpdateNotificationEventParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetReason(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -10134,9 +9622,8 @@ func (m UpdateNotificationEventParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetRawJsonData(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -10145,9 +9632,8 @@ func (m UpdateNotificationEventParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetUpdatedByIdentityName(v *string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10156,9 +9642,8 @@ func (m UpdateNotificationEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateNotificationEventParams.
-func (m UpdateNotificationEventParams) SetID(v string) UpdateNotificationEventParams {
+func (m *UpdateNotificationEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -10167,9 +9652,8 @@ func (m SoftDeleteNotificationEventParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteNotificationEventParams.
-func (m SoftDeleteNotificationEventParams) SetUpdatedByIdentityName(v *string) SoftDeleteNotificationEventParams {
+func (m *SoftDeleteNotificationEventParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10178,9 +9662,8 @@ func (m SoftDeleteNotificationEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteNotificationEventParams.
-func (m SoftDeleteNotificationEventParams) SetID(v string) SoftDeleteNotificationEventParams {
+func (m *SoftDeleteNotificationEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10189,9 +9672,8 @@ func (m HardDeleteNotificationEventParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteNotificationEventParams.
-func (m HardDeleteNotificationEventParams) SetID(v string) HardDeleteNotificationEventParams {
+func (m *HardDeleteNotificationEventParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10200,9 +9682,8 @@ func (m CreateProfileSwitchParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetID(v string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -10211,9 +9692,8 @@ func (m CreateProfileSwitchParams) GetName() string {
 }
 
 // SetName sets the Name value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetName(v string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetName(v string) {
 	m.Name = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -10222,9 +9702,8 @@ func (m CreateProfileSwitchParams) GetDurationMinutes() int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetDurationMinutes(v int64) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetPercent returns the Percent value.
@@ -10233,9 +9712,8 @@ func (m CreateProfileSwitchParams) GetPercent() *float64 {
 }
 
 // SetPercent sets the Percent value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetPercent(v *float64) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetPercent(v *float64) {
 	m.Percent = v
-	return m
 }
 
 // GetDia returns the Dia value.
@@ -10244,9 +9722,8 @@ func (m CreateProfileSwitchParams) GetDia() *float64 {
 }
 
 // SetDia sets the Dia value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetDia(v *float64) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetDia(v *float64) {
 	m.Dia = v
-	return m
 }
 
 // GetUnits returns the Units value.
@@ -10255,9 +9732,8 @@ func (m CreateProfileSwitchParams) GetUnits() *consts.Units {
 }
 
 // SetUnits sets the Units value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetUnits(v *consts.Units) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetUnits(v *consts.Units) {
 	m.Units = v
-	return m
 }
 
 // GetTimezone returns the Timezone value.
@@ -10266,9 +9742,8 @@ func (m CreateProfileSwitchParams) GetTimezone() *string {
 }
 
 // SetTimezone sets the Timezone value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetTimezone(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetTimezone(v *string) {
 	m.Timezone = v
-	return m
 }
 
 // GetTimeshift returns the Timeshift value.
@@ -10277,9 +9752,8 @@ func (m CreateProfileSwitchParams) GetTimeshift() *int64 {
 }
 
 // SetTimeshift sets the Timeshift value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetTimeshift(v *int64) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetTimeshift(v *int64) {
 	m.Timeshift = v
-	return m
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -10288,9 +9762,8 @@ func (m CreateProfileSwitchParams) GetCarbRatiosJson() *string {
 }
 
 // SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetCarbRatiosJson(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetCarbRatiosJson(v *string) {
 	m.CarbRatiosJson = v
-	return m
 }
 
 // GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
@@ -10299,9 +9772,8 @@ func (m CreateProfileSwitchParams) GetInsulinSensitivitiesJson() *string {
 }
 
 // SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetInsulinSensitivitiesJson(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetInsulinSensitivitiesJson(v *string) {
 	m.InsulinSensitivitiesJson = v
-	return m
 }
 
 // GetBasalRatesJson returns the BasalRatesJson value.
@@ -10310,9 +9782,8 @@ func (m CreateProfileSwitchParams) GetBasalRatesJson() *string {
 }
 
 // SetBasalRatesJson sets the BasalRatesJson value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetBasalRatesJson(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetBasalRatesJson(v *string) {
 	m.BasalRatesJson = v
-	return m
 }
 
 // GetTargetsHighJson returns the TargetsHighJson value.
@@ -10321,9 +9792,8 @@ func (m CreateProfileSwitchParams) GetTargetsHighJson() *string {
 }
 
 // SetTargetsHighJson sets the TargetsHighJson value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetTargetsHighJson(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetTargetsHighJson(v *string) {
 	m.TargetsHighJson = v
-	return m
 }
 
 // GetTargetsLowJson returns the TargetsLowJson value.
@@ -10332,9 +9802,8 @@ func (m CreateProfileSwitchParams) GetTargetsLowJson() *string {
 }
 
 // SetTargetsLowJson sets the TargetsLowJson value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetTargetsLowJson(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetTargetsLowJson(v *string) {
 	m.TargetsLowJson = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -10343,9 +9812,8 @@ func (m CreateProfileSwitchParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetNotes(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -10354,9 +9822,8 @@ func (m CreateProfileSwitchParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetReason(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -10365,9 +9832,8 @@ func (m CreateProfileSwitchParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetUtcOffsetMinutes(v *int64) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -10376,9 +9842,8 @@ func (m CreateProfileSwitchParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetOccurredAt(v int64) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -10387,9 +9852,8 @@ func (m CreateProfileSwitchParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetRawJsonData(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -10398,9 +9862,8 @@ func (m CreateProfileSwitchParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetCreatedByAppName(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -10409,9 +9872,8 @@ func (m CreateProfileSwitchParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetCreatedByDeviceName(v *string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -10420,9 +9882,8 @@ func (m CreateProfileSwitchParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateProfileSwitchParams.
-func (m CreateProfileSwitchParams) SetCreatedByIdentityName(v string) CreateProfileSwitchParams {
+func (m *CreateProfileSwitchParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -10431,9 +9892,8 @@ func (m AllProfileSwitchesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllProfileSwitchesParams.
-func (m AllProfileSwitchesParams) SetIncludeDeleted(v *bool) AllProfileSwitchesParams {
+func (m *AllProfileSwitchesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -10442,9 +9902,8 @@ func (m AllProfileSwitchesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllProfileSwitchesParams.
-func (m AllProfileSwitchesParams) SetSkip(v int64) AllProfileSwitchesParams {
+func (m *AllProfileSwitchesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -10453,9 +9912,8 @@ func (m AllProfileSwitchesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllProfileSwitchesParams.
-func (m AllProfileSwitchesParams) SetLimit(v int64) AllProfileSwitchesParams {
+func (m *AllProfileSwitchesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10464,9 +9922,8 @@ func (m GetProfileSwitchParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetProfileSwitchParams.
-func (m GetProfileSwitchParams) SetID(v string) GetProfileSwitchParams {
+func (m *GetProfileSwitchParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -10475,9 +9932,8 @@ func (m SearchProfileSwitchesParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDateGTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -10486,9 +9942,8 @@ func (m SearchProfileSwitchesParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDateLTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -10497,9 +9952,8 @@ func (m SearchProfileSwitchesParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDateEQ(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -10508,9 +9962,8 @@ func (m SearchProfileSwitchesParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDateGT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -10519,9 +9972,8 @@ func (m SearchProfileSwitchesParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDateLT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -10530,9 +9982,8 @@ func (m SearchProfileSwitchesParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetCreatedAtGTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -10541,9 +9992,8 @@ func (m SearchProfileSwitchesParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetCreatedAtLTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -10552,9 +10002,8 @@ func (m SearchProfileSwitchesParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetCreatedAtGT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -10563,9 +10012,8 @@ func (m SearchProfileSwitchesParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetCreatedAtLT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -10574,9 +10022,8 @@ func (m SearchProfileSwitchesParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetUpdatedGTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -10585,9 +10032,8 @@ func (m SearchProfileSwitchesParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetUpdatedLTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -10596,9 +10042,8 @@ func (m SearchProfileSwitchesParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetUpdatedGT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -10607,9 +10052,8 @@ func (m SearchProfileSwitchesParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetUpdatedLT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -10618,9 +10062,8 @@ func (m SearchProfileSwitchesParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetIDEq(v *string) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -10629,9 +10072,8 @@ func (m SearchProfileSwitchesParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetIDIn(v *string) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetNameEq returns the NameEq value.
@@ -10640,9 +10082,8 @@ func (m SearchProfileSwitchesParams) GetNameEq() *string {
 }
 
 // SetNameEq sets the NameEq value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetNameEq(v *string) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetNameEq(v *string) {
 	m.NameEq = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -10651,9 +10092,8 @@ func (m SearchProfileSwitchesParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDeviceEq(v *string) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -10662,9 +10102,8 @@ func (m SearchProfileSwitchesParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetAppEq(v *string) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetDurationEQ returns the DurationEQ value.
@@ -10673,9 +10112,8 @@ func (m SearchProfileSwitchesParams) GetDurationEQ() *int64 {
 }
 
 // SetDurationEQ sets the DurationEQ value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDurationEQ(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDurationEQ(v *int64) {
 	m.DurationEQ = v
-	return m
 }
 
 // GetDurationGTE returns the DurationGTE value.
@@ -10684,9 +10122,8 @@ func (m SearchProfileSwitchesParams) GetDurationGTE() *int64 {
 }
 
 // SetDurationGTE sets the DurationGTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDurationGTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDurationGTE(v *int64) {
 	m.DurationGTE = v
-	return m
 }
 
 // GetDurationGT returns the DurationGT value.
@@ -10695,9 +10132,8 @@ func (m SearchProfileSwitchesParams) GetDurationGT() *int64 {
 }
 
 // SetDurationGT sets the DurationGT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDurationGT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDurationGT(v *int64) {
 	m.DurationGT = v
-	return m
 }
 
 // GetDurationLTE returns the DurationLTE value.
@@ -10706,9 +10142,8 @@ func (m SearchProfileSwitchesParams) GetDurationLTE() *int64 {
 }
 
 // SetDurationLTE sets the DurationLTE value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDurationLTE(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDurationLTE(v *int64) {
 	m.DurationLTE = v
-	return m
 }
 
 // GetDurationLT returns the DurationLT value.
@@ -10717,9 +10152,8 @@ func (m SearchProfileSwitchesParams) GetDurationLT() *int64 {
 }
 
 // SetDurationLT sets the DurationLT value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetDurationLT(v *int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetDurationLT(v *int64) {
 	m.DurationLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -10728,9 +10162,8 @@ func (m SearchProfileSwitchesParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetIncludeDeleted(v *bool) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -10739,9 +10172,8 @@ func (m SearchProfileSwitchesParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetSkip(v int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -10750,9 +10182,8 @@ func (m SearchProfileSwitchesParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchProfileSwitchesParams.
-func (m SearchProfileSwitchesParams) SetLimit(v int64) SearchProfileSwitchesParams {
+func (m *SearchProfileSwitchesParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -10761,9 +10192,8 @@ func (m UpdateProfileSwitchParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetName(v *string) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -10772,9 +10202,8 @@ func (m UpdateProfileSwitchParams) GetDurationMinutes() *int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetDurationMinutes(v *int64) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetPercent returns the Percent value.
@@ -10783,9 +10212,8 @@ func (m UpdateProfileSwitchParams) GetPercent() *float64 {
 }
 
 // SetPercent sets the Percent value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetPercent(v *float64) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetPercent(v *float64) {
 	m.Percent = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -10794,9 +10222,8 @@ func (m UpdateProfileSwitchParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetNotes(v *string) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -10805,9 +10232,8 @@ func (m UpdateProfileSwitchParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetReason(v *string) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -10816,9 +10242,8 @@ func (m UpdateProfileSwitchParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetRawJsonData(v *string) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -10827,9 +10252,8 @@ func (m UpdateProfileSwitchParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetUpdatedByIdentityName(v *string) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10838,9 +10262,8 @@ func (m UpdateProfileSwitchParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateProfileSwitchParams.
-func (m UpdateProfileSwitchParams) SetID(v string) UpdateProfileSwitchParams {
+func (m *UpdateProfileSwitchParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -10849,9 +10272,8 @@ func (m SoftDeleteProfileSwitchParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteProfileSwitchParams.
-func (m SoftDeleteProfileSwitchParams) SetUpdatedByIdentityName(v *string) SoftDeleteProfileSwitchParams {
+func (m *SoftDeleteProfileSwitchParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10860,9 +10282,8 @@ func (m SoftDeleteProfileSwitchParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteProfileSwitchParams.
-func (m SoftDeleteProfileSwitchParams) SetID(v string) SoftDeleteProfileSwitchParams {
+func (m *SoftDeleteProfileSwitchParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10871,9 +10292,8 @@ func (m HardDeleteProfileSwitchParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteProfileSwitchParams.
-func (m HardDeleteProfileSwitchParams) SetID(v string) HardDeleteProfileSwitchParams {
+func (m *HardDeleteProfileSwitchParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -10882,9 +10302,8 @@ func (m CreateTempBasalParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetID(v string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -10893,9 +10312,8 @@ func (m CreateTempBasalParams) GetDurationMinutes() int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetDurationMinutes(v int64) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetAbsolute returns the Absolute value.
@@ -10904,9 +10322,8 @@ func (m CreateTempBasalParams) GetAbsolute() float64 {
 }
 
 // SetAbsolute sets the Absolute value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetAbsolute(v float64) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetAbsolute(v float64) {
 	m.Absolute = v
-	return m
 }
 
 // GetPercent returns the Percent value.
@@ -10915,9 +10332,8 @@ func (m CreateTempBasalParams) GetPercent() *float64 {
 }
 
 // SetPercent sets the Percent value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetPercent(v *float64) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetPercent(v *float64) {
 	m.Percent = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -10926,9 +10342,8 @@ func (m CreateTempBasalParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetNotes(v *string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -10937,9 +10352,8 @@ func (m CreateTempBasalParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetReason(v *string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -10948,9 +10362,8 @@ func (m CreateTempBasalParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetUtcOffsetMinutes(v *int64) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -10959,9 +10372,8 @@ func (m CreateTempBasalParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetOccurredAt(v int64) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -10970,9 +10382,8 @@ func (m CreateTempBasalParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetRawJsonData(v *string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -10981,9 +10392,8 @@ func (m CreateTempBasalParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetCreatedByAppName(v *string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -10992,9 +10402,8 @@ func (m CreateTempBasalParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetCreatedByDeviceName(v *string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -11003,9 +10412,8 @@ func (m CreateTempBasalParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateTempBasalParams.
-func (m CreateTempBasalParams) SetCreatedByIdentityName(v string) CreateTempBasalParams {
+func (m *CreateTempBasalParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -11014,9 +10422,8 @@ func (m AllTempBasalsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllTempBasalsParams.
-func (m AllTempBasalsParams) SetIncludeDeleted(v *bool) AllTempBasalsParams {
+func (m *AllTempBasalsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -11025,9 +10432,8 @@ func (m AllTempBasalsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllTempBasalsParams.
-func (m AllTempBasalsParams) SetSkip(v int64) AllTempBasalsParams {
+func (m *AllTempBasalsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -11036,9 +10442,8 @@ func (m AllTempBasalsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllTempBasalsParams.
-func (m AllTempBasalsParams) SetLimit(v int64) AllTempBasalsParams {
+func (m *AllTempBasalsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11047,9 +10452,8 @@ func (m GetTempBasalParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetTempBasalParams.
-func (m GetTempBasalParams) SetID(v string) GetTempBasalParams {
+func (m *GetTempBasalParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -11058,9 +10462,8 @@ func (m SearchTempBasalsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDateGTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -11069,9 +10472,8 @@ func (m SearchTempBasalsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDateLTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -11080,9 +10482,8 @@ func (m SearchTempBasalsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDateEQ(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -11091,9 +10492,8 @@ func (m SearchTempBasalsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDateGT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -11102,9 +10502,8 @@ func (m SearchTempBasalsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDateLT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -11113,9 +10512,8 @@ func (m SearchTempBasalsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetCreatedAtGTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -11124,9 +10522,8 @@ func (m SearchTempBasalsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetCreatedAtLTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -11135,9 +10532,8 @@ func (m SearchTempBasalsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetCreatedAtGT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -11146,9 +10542,8 @@ func (m SearchTempBasalsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetCreatedAtLT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -11157,9 +10552,8 @@ func (m SearchTempBasalsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetUpdatedGTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -11168,9 +10562,8 @@ func (m SearchTempBasalsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetUpdatedLTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -11179,9 +10572,8 @@ func (m SearchTempBasalsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetUpdatedGT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -11190,9 +10582,8 @@ func (m SearchTempBasalsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetUpdatedLT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -11201,9 +10592,8 @@ func (m SearchTempBasalsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetIDEq(v *string) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -11212,9 +10602,8 @@ func (m SearchTempBasalsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetIDIn(v *string) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -11223,9 +10612,8 @@ func (m SearchTempBasalsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDeviceEq(v *string) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -11234,9 +10622,8 @@ func (m SearchTempBasalsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetAppEq(v *string) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetDurationEQ returns the DurationEQ value.
@@ -11245,9 +10632,8 @@ func (m SearchTempBasalsParams) GetDurationEQ() *int64 {
 }
 
 // SetDurationEQ sets the DurationEQ value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDurationEQ(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDurationEQ(v *int64) {
 	m.DurationEQ = v
-	return m
 }
 
 // GetDurationGTE returns the DurationGTE value.
@@ -11256,9 +10642,8 @@ func (m SearchTempBasalsParams) GetDurationGTE() *int64 {
 }
 
 // SetDurationGTE sets the DurationGTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDurationGTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDurationGTE(v *int64) {
 	m.DurationGTE = v
-	return m
 }
 
 // GetDurationGT returns the DurationGT value.
@@ -11267,9 +10652,8 @@ func (m SearchTempBasalsParams) GetDurationGT() *int64 {
 }
 
 // SetDurationGT sets the DurationGT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDurationGT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDurationGT(v *int64) {
 	m.DurationGT = v
-	return m
 }
 
 // GetDurationLTE returns the DurationLTE value.
@@ -11278,9 +10662,8 @@ func (m SearchTempBasalsParams) GetDurationLTE() *int64 {
 }
 
 // SetDurationLTE sets the DurationLTE value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDurationLTE(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDurationLTE(v *int64) {
 	m.DurationLTE = v
-	return m
 }
 
 // GetDurationLT returns the DurationLT value.
@@ -11289,9 +10672,8 @@ func (m SearchTempBasalsParams) GetDurationLT() *int64 {
 }
 
 // SetDurationLT sets the DurationLT value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetDurationLT(v *int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetDurationLT(v *int64) {
 	m.DurationLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -11300,9 +10682,8 @@ func (m SearchTempBasalsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetIncludeDeleted(v *bool) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -11311,9 +10692,8 @@ func (m SearchTempBasalsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetSkip(v int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -11322,9 +10702,8 @@ func (m SearchTempBasalsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchTempBasalsParams.
-func (m SearchTempBasalsParams) SetLimit(v int64) SearchTempBasalsParams {
+func (m *SearchTempBasalsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -11333,9 +10712,8 @@ func (m UpdateTempBasalParams) GetDurationMinutes() *int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetDurationMinutes(v *int64) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetAbsolute returns the Absolute value.
@@ -11344,9 +10722,8 @@ func (m UpdateTempBasalParams) GetAbsolute() *float64 {
 }
 
 // SetAbsolute sets the Absolute value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetAbsolute(v *float64) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetAbsolute(v *float64) {
 	m.Absolute = v
-	return m
 }
 
 // GetPercent returns the Percent value.
@@ -11355,9 +10732,8 @@ func (m UpdateTempBasalParams) GetPercent() *float64 {
 }
 
 // SetPercent sets the Percent value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetPercent(v *float64) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetPercent(v *float64) {
 	m.Percent = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -11366,9 +10742,8 @@ func (m UpdateTempBasalParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetNotes(v *string) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -11377,9 +10752,8 @@ func (m UpdateTempBasalParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetReason(v *string) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -11388,9 +10762,8 @@ func (m UpdateTempBasalParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetRawJsonData(v *string) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -11399,9 +10772,8 @@ func (m UpdateTempBasalParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetUpdatedByIdentityName(v *string) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11410,9 +10782,8 @@ func (m UpdateTempBasalParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateTempBasalParams.
-func (m UpdateTempBasalParams) SetID(v string) UpdateTempBasalParams {
+func (m *UpdateTempBasalParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -11421,9 +10792,8 @@ func (m SoftDeleteTempBasalParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteTempBasalParams.
-func (m SoftDeleteTempBasalParams) SetUpdatedByIdentityName(v *string) SoftDeleteTempBasalParams {
+func (m *SoftDeleteTempBasalParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11432,9 +10802,8 @@ func (m SoftDeleteTempBasalParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteTempBasalParams.
-func (m SoftDeleteTempBasalParams) SetID(v string) SoftDeleteTempBasalParams {
+func (m *SoftDeleteTempBasalParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11443,9 +10812,8 @@ func (m HardDeleteTempBasalParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteTempBasalParams.
-func (m HardDeleteTempBasalParams) SetID(v string) HardDeleteTempBasalParams {
+func (m *HardDeleteTempBasalParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11454,9 +10822,8 @@ func (m CreateTempTargetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetID(v string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -11465,9 +10832,8 @@ func (m CreateTempTargetParams) GetDurationMinutes() int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetDurationMinutes(v int64) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetHighTarget returns the HighTarget value.
@@ -11476,9 +10842,8 @@ func (m CreateTempTargetParams) GetHighTarget() float64 {
 }
 
 // SetHighTarget sets the HighTarget value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetHighTarget(v float64) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetHighTarget(v float64) {
 	m.HighTarget = v
-	return m
 }
 
 // GetLowTarget returns the LowTarget value.
@@ -11487,9 +10852,8 @@ func (m CreateTempTargetParams) GetLowTarget() float64 {
 }
 
 // SetLowTarget sets the LowTarget value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetLowTarget(v float64) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetLowTarget(v float64) {
 	m.LowTarget = v
-	return m
 }
 
 // GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
@@ -11498,9 +10862,8 @@ func (m CreateTempTargetParams) GetInsulinNeedsScaleFactor() *float64 {
 }
 
 // SetInsulinNeedsScaleFactor sets the InsulinNeedsScaleFactor value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetInsulinNeedsScaleFactor(v *float64) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetInsulinNeedsScaleFactor(v *float64) {
 	m.InsulinNeedsScaleFactor = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -11509,9 +10872,8 @@ func (m CreateTempTargetParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetNotes(v *string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -11520,9 +10882,8 @@ func (m CreateTempTargetParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetReason(v *string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -11531,9 +10892,8 @@ func (m CreateTempTargetParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetUtcOffsetMinutes(v *int64) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -11542,9 +10902,8 @@ func (m CreateTempTargetParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetOccurredAt(v int64) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -11553,9 +10912,8 @@ func (m CreateTempTargetParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetRawJsonData(v *string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -11564,9 +10922,8 @@ func (m CreateTempTargetParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetCreatedByAppName(v *string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -11575,9 +10932,8 @@ func (m CreateTempTargetParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetCreatedByDeviceName(v *string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -11586,9 +10942,8 @@ func (m CreateTempTargetParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateTempTargetParams.
-func (m CreateTempTargetParams) SetCreatedByIdentityName(v string) CreateTempTargetParams {
+func (m *CreateTempTargetParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -11597,9 +10952,8 @@ func (m AllTempTargetsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllTempTargetsParams.
-func (m AllTempTargetsParams) SetIncludeDeleted(v *bool) AllTempTargetsParams {
+func (m *AllTempTargetsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -11608,9 +10962,8 @@ func (m AllTempTargetsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllTempTargetsParams.
-func (m AllTempTargetsParams) SetSkip(v int64) AllTempTargetsParams {
+func (m *AllTempTargetsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -11619,9 +10972,8 @@ func (m AllTempTargetsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllTempTargetsParams.
-func (m AllTempTargetsParams) SetLimit(v int64) AllTempTargetsParams {
+func (m *AllTempTargetsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11630,9 +10982,8 @@ func (m GetTempTargetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetTempTargetParams.
-func (m GetTempTargetParams) SetID(v string) GetTempTargetParams {
+func (m *GetTempTargetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -11641,9 +10992,8 @@ func (m SearchTempTargetsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDateGTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -11652,9 +11002,8 @@ func (m SearchTempTargetsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDateLTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -11663,9 +11012,8 @@ func (m SearchTempTargetsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDateEQ(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -11674,9 +11022,8 @@ func (m SearchTempTargetsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDateGT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -11685,9 +11032,8 @@ func (m SearchTempTargetsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDateLT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -11696,9 +11042,8 @@ func (m SearchTempTargetsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetCreatedAtGTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -11707,9 +11052,8 @@ func (m SearchTempTargetsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetCreatedAtLTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -11718,9 +11062,8 @@ func (m SearchTempTargetsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetCreatedAtGT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -11729,9 +11072,8 @@ func (m SearchTempTargetsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetCreatedAtLT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -11740,9 +11082,8 @@ func (m SearchTempTargetsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetUpdatedGTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -11751,9 +11092,8 @@ func (m SearchTempTargetsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetUpdatedLTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -11762,9 +11102,8 @@ func (m SearchTempTargetsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetUpdatedGT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -11773,9 +11112,8 @@ func (m SearchTempTargetsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetUpdatedLT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -11784,9 +11122,8 @@ func (m SearchTempTargetsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetIDEq(v *string) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -11795,9 +11132,8 @@ func (m SearchTempTargetsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetIDIn(v *string) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -11806,9 +11142,8 @@ func (m SearchTempTargetsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDeviceEq(v *string) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -11817,9 +11152,8 @@ func (m SearchTempTargetsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetAppEq(v *string) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetDurationEQ returns the DurationEQ value.
@@ -11828,9 +11162,8 @@ func (m SearchTempTargetsParams) GetDurationEQ() *int64 {
 }
 
 // SetDurationEQ sets the DurationEQ value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDurationEQ(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDurationEQ(v *int64) {
 	m.DurationEQ = v
-	return m
 }
 
 // GetDurationGTE returns the DurationGTE value.
@@ -11839,9 +11172,8 @@ func (m SearchTempTargetsParams) GetDurationGTE() *int64 {
 }
 
 // SetDurationGTE sets the DurationGTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDurationGTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDurationGTE(v *int64) {
 	m.DurationGTE = v
-	return m
 }
 
 // GetDurationGT returns the DurationGT value.
@@ -11850,9 +11182,8 @@ func (m SearchTempTargetsParams) GetDurationGT() *int64 {
 }
 
 // SetDurationGT sets the DurationGT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDurationGT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDurationGT(v *int64) {
 	m.DurationGT = v
-	return m
 }
 
 // GetDurationLTE returns the DurationLTE value.
@@ -11861,9 +11192,8 @@ func (m SearchTempTargetsParams) GetDurationLTE() *int64 {
 }
 
 // SetDurationLTE sets the DurationLTE value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDurationLTE(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDurationLTE(v *int64) {
 	m.DurationLTE = v
-	return m
 }
 
 // GetDurationLT returns the DurationLT value.
@@ -11872,9 +11202,8 @@ func (m SearchTempTargetsParams) GetDurationLT() *int64 {
 }
 
 // SetDurationLT sets the DurationLT value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetDurationLT(v *int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetDurationLT(v *int64) {
 	m.DurationLT = v
-	return m
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -11883,9 +11212,8 @@ func (m SearchTempTargetsParams) GetIncludeDeleted() *bool {
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetIncludeDeleted(v *bool) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetIncludeDeleted(v *bool) {
 	m.IncludeDeleted = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -11894,9 +11222,8 @@ func (m SearchTempTargetsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetSkip(v int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -11905,9 +11232,8 @@ func (m SearchTempTargetsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchTempTargetsParams.
-func (m SearchTempTargetsParams) SetLimit(v int64) SearchTempTargetsParams {
+func (m *SearchTempTargetsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetDurationMinutes returns the DurationMinutes value.
@@ -11916,9 +11242,8 @@ func (m UpdateTempTargetParams) GetDurationMinutes() *int64 {
 }
 
 // SetDurationMinutes sets the DurationMinutes value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetDurationMinutes(v *int64) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
-	return m
 }
 
 // GetHighTarget returns the HighTarget value.
@@ -11927,9 +11252,8 @@ func (m UpdateTempTargetParams) GetHighTarget() *float64 {
 }
 
 // SetHighTarget sets the HighTarget value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetHighTarget(v *float64) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetHighTarget(v *float64) {
 	m.HighTarget = v
-	return m
 }
 
 // GetLowTarget returns the LowTarget value.
@@ -11938,9 +11262,8 @@ func (m UpdateTempTargetParams) GetLowTarget() *float64 {
 }
 
 // SetLowTarget sets the LowTarget value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetLowTarget(v *float64) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetLowTarget(v *float64) {
 	m.LowTarget = v
-	return m
 }
 
 // GetNotes returns the Notes value.
@@ -11949,9 +11272,8 @@ func (m UpdateTempTargetParams) GetNotes() *string {
 }
 
 // SetNotes sets the Notes value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetNotes(v *string) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetNotes(v *string) {
 	m.Notes = v
-	return m
 }
 
 // GetReason returns the Reason value.
@@ -11960,9 +11282,8 @@ func (m UpdateTempTargetParams) GetReason() *string {
 }
 
 // SetReason sets the Reason value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetReason(v *string) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetReason(v *string) {
 	m.Reason = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -11971,9 +11292,8 @@ func (m UpdateTempTargetParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetRawJsonData(v *string) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -11982,9 +11302,8 @@ func (m UpdateTempTargetParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetUpdatedByIdentityName(v *string) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -11993,9 +11312,8 @@ func (m UpdateTempTargetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateTempTargetParams.
-func (m UpdateTempTargetParams) SetID(v string) UpdateTempTargetParams {
+func (m *UpdateTempTargetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -12004,9 +11322,8 @@ func (m SoftDeleteTempTargetParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated SoftDeleteTempTargetParams.
-func (m SoftDeleteTempTargetParams) SetUpdatedByIdentityName(v *string) SoftDeleteTempTargetParams {
+func (m *SoftDeleteTempTargetParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12015,9 +11332,8 @@ func (m SoftDeleteTempTargetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated SoftDeleteTempTargetParams.
-func (m SoftDeleteTempTargetParams) SetID(v string) SoftDeleteTempTargetParams {
+func (m *SoftDeleteTempTargetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12026,9 +11342,8 @@ func (m HardDeleteTempTargetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteTempTargetParams.
-func (m HardDeleteTempTargetParams) SetID(v string) HardDeleteTempTargetParams {
+func (m *HardDeleteTempTargetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12037,9 +11352,8 @@ func (m CreateFoodPresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetID(v string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -12048,9 +11362,8 @@ func (m CreateFoodPresetParams) GetName() string {
 }
 
 // SetName sets the Name value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetName(v string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetName(v string) {
 	m.Name = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -12059,9 +11372,8 @@ func (m CreateFoodPresetParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetFoodType(v *string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetCategory returns the Category value.
@@ -12070,9 +11382,8 @@ func (m CreateFoodPresetParams) GetCategory() *string {
 }
 
 // SetCategory sets the Category value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetCategory(v *string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetCategory(v *string) {
 	m.Category = v
-	return m
 }
 
 // GetSubcategory returns the Subcategory value.
@@ -12081,9 +11392,8 @@ func (m CreateFoodPresetParams) GetSubcategory() *string {
 }
 
 // SetSubcategory sets the Subcategory value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetSubcategory(v *string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetSubcategory(v *string) {
 	m.Subcategory = v
-	return m
 }
 
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
@@ -12092,9 +11402,8 @@ func (m CreateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
 }
 
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-	return m
 }
 
 // GetPreBolus returns the PreBolus value.
@@ -12103,9 +11412,8 @@ func (m CreateFoodPresetParams) GetPreBolus() *float64 {
 }
 
 // SetPreBolus sets the PreBolus value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetPreBolus(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
-	return m
 }
 
 // GetPortions returns the Portions value.
@@ -12114,9 +11422,8 @@ func (m CreateFoodPresetParams) GetPortions() *float64 {
 }
 
 // SetPortions sets the Portions value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetPortions(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetPortions(v *float64) {
 	m.Portions = v
-	return m
 }
 
 // GetCarbs returns the Carbs value.
@@ -12125,9 +11432,8 @@ func (m CreateFoodPresetParams) GetCarbs() *float64 {
 }
 
 // SetCarbs sets the Carbs value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetCarbs(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetCarbs(v *float64) {
 	m.Carbs = v
-	return m
 }
 
 // GetFat returns the Fat value.
@@ -12136,9 +11442,8 @@ func (m CreateFoodPresetParams) GetFat() *float64 {
 }
 
 // SetFat sets the Fat value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetFat(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetFat(v *float64) {
 	m.Fat = v
-	return m
 }
 
 // GetProtein returns the Protein value.
@@ -12147,9 +11452,8 @@ func (m CreateFoodPresetParams) GetProtein() *float64 {
 }
 
 // SetProtein sets the Protein value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetProtein(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetProtein(v *float64) {
 	m.Protein = v
-	return m
 }
 
 // GetFibre returns the Fibre value.
@@ -12158,9 +11462,8 @@ func (m CreateFoodPresetParams) GetFibre() *float64 {
 }
 
 // SetFibre sets the Fibre value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetFibre(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetFibre(v *float64) {
 	m.Fibre = v
-	return m
 }
 
 // GetEnergy returns the Energy value.
@@ -12169,9 +11472,8 @@ func (m CreateFoodPresetParams) GetEnergy() *float64 {
 }
 
 // SetEnergy sets the Energy value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetEnergy(v *float64) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetEnergy(v *float64) {
 	m.Energy = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -12180,9 +11482,8 @@ func (m CreateFoodPresetParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetRawJsonData(v *string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -12191,9 +11492,8 @@ func (m CreateFoodPresetParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetCreatedByAppName(v *string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -12202,9 +11502,8 @@ func (m CreateFoodPresetParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetCreatedByDeviceName(v *string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -12213,9 +11512,8 @@ func (m CreateFoodPresetParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateFoodPresetParams.
-func (m CreateFoodPresetParams) SetCreatedByIdentityName(v string) CreateFoodPresetParams {
+func (m *CreateFoodPresetParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -12224,9 +11522,8 @@ func (m AllFoodPresetsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllFoodPresetsParams.
-func (m AllFoodPresetsParams) SetSkip(v int64) AllFoodPresetsParams {
+func (m *AllFoodPresetsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -12235,9 +11532,8 @@ func (m AllFoodPresetsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllFoodPresetsParams.
-func (m AllFoodPresetsParams) SetLimit(v int64) AllFoodPresetsParams {
+func (m *AllFoodPresetsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12246,9 +11542,8 @@ func (m GetFoodPresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetFoodPresetParams.
-func (m GetFoodPresetParams) SetID(v string) GetFoodPresetParams {
+func (m *GetFoodPresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -12257,9 +11552,8 @@ func (m SearchFoodPresetsParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetDateGTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -12268,9 +11562,8 @@ func (m SearchFoodPresetsParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetDateLTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -12279,9 +11572,8 @@ func (m SearchFoodPresetsParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetDateEQ(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -12290,9 +11582,8 @@ func (m SearchFoodPresetsParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetDateGT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -12301,9 +11592,8 @@ func (m SearchFoodPresetsParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetDateLT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -12312,9 +11602,8 @@ func (m SearchFoodPresetsParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCreatedAtGTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -12323,9 +11612,8 @@ func (m SearchFoodPresetsParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCreatedAtLTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -12334,9 +11622,8 @@ func (m SearchFoodPresetsParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCreatedAtGT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -12345,9 +11632,8 @@ func (m SearchFoodPresetsParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCreatedAtLT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -12356,9 +11642,8 @@ func (m SearchFoodPresetsParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetUpdatedGTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -12367,9 +11652,8 @@ func (m SearchFoodPresetsParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetUpdatedLTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -12378,9 +11662,8 @@ func (m SearchFoodPresetsParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetUpdatedGT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -12389,9 +11672,8 @@ func (m SearchFoodPresetsParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetUpdatedLT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -12400,9 +11682,8 @@ func (m SearchFoodPresetsParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetIDEq(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -12411,9 +11692,8 @@ func (m SearchFoodPresetsParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetIDIn(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetNameEq returns the NameEq value.
@@ -12422,9 +11702,8 @@ func (m SearchFoodPresetsParams) GetNameEq() *string {
 }
 
 // SetNameEq sets the NameEq value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetNameEq(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetNameEq(v *string) {
 	m.NameEq = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -12433,9 +11712,8 @@ func (m SearchFoodPresetsParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetDeviceEq(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -12444,9 +11722,8 @@ func (m SearchFoodPresetsParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetAppEq(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetTypeEq returns the TypeEq value.
@@ -12455,9 +11732,8 @@ func (m SearchFoodPresetsParams) GetTypeEq() *string {
 }
 
 // SetTypeEq sets the TypeEq value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetTypeEq(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetTypeEq(v *string) {
 	m.TypeEq = v
-	return m
 }
 
 // GetTypeNeq returns the TypeNeq value.
@@ -12466,9 +11742,8 @@ func (m SearchFoodPresetsParams) GetTypeNeq() *string {
 }
 
 // SetTypeNeq sets the TypeNeq value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetTypeNeq(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetTypeNeq(v *string) {
 	m.TypeNeq = v
-	return m
 }
 
 // GetTypeIn returns the TypeIn value.
@@ -12477,9 +11752,8 @@ func (m SearchFoodPresetsParams) GetTypeIn() *string {
 }
 
 // SetTypeIn sets the TypeIn value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetTypeIn(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetTypeIn(v *string) {
 	m.TypeIn = v
-	return m
 }
 
 // GetTypeNin returns the TypeNin value.
@@ -12488,9 +11762,8 @@ func (m SearchFoodPresetsParams) GetTypeNin() *string {
 }
 
 // SetTypeNin sets the TypeNin value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetTypeNin(v *string) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetTypeNin(v *string) {
 	m.TypeNin = v
-	return m
 }
 
 // GetCarbsEQ returns the CarbsEQ value.
@@ -12499,9 +11772,8 @@ func (m SearchFoodPresetsParams) GetCarbsEQ() *int64 {
 }
 
 // SetCarbsEQ sets the CarbsEQ value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCarbsEQ(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCarbsEQ(v *int64) {
 	m.CarbsEQ = v
-	return m
 }
 
 // GetCarbsGTE returns the CarbsGTE value.
@@ -12510,9 +11782,8 @@ func (m SearchFoodPresetsParams) GetCarbsGTE() *int64 {
 }
 
 // SetCarbsGTE sets the CarbsGTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCarbsGTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCarbsGTE(v *int64) {
 	m.CarbsGTE = v
-	return m
 }
 
 // GetCarbsGT returns the CarbsGT value.
@@ -12521,9 +11792,8 @@ func (m SearchFoodPresetsParams) GetCarbsGT() *int64 {
 }
 
 // SetCarbsGT sets the CarbsGT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCarbsGT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCarbsGT(v *int64) {
 	m.CarbsGT = v
-	return m
 }
 
 // GetCarbsLTE returns the CarbsLTE value.
@@ -12532,9 +11802,8 @@ func (m SearchFoodPresetsParams) GetCarbsLTE() *int64 {
 }
 
 // SetCarbsLTE sets the CarbsLTE value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCarbsLTE(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCarbsLTE(v *int64) {
 	m.CarbsLTE = v
-	return m
 }
 
 // GetCarbsLT returns the CarbsLT value.
@@ -12543,9 +11812,8 @@ func (m SearchFoodPresetsParams) GetCarbsLT() *int64 {
 }
 
 // SetCarbsLT sets the CarbsLT value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetCarbsLT(v *int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetCarbsLT(v *int64) {
 	m.CarbsLT = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -12554,9 +11822,8 @@ func (m SearchFoodPresetsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetSkip(v int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -12565,9 +11832,8 @@ func (m SearchFoodPresetsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchFoodPresetsParams.
-func (m SearchFoodPresetsParams) SetLimit(v int64) SearchFoodPresetsParams {
+func (m *SearchFoodPresetsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -12576,9 +11842,8 @@ func (m UpdateFoodPresetParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetName(v *string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -12587,9 +11852,8 @@ func (m UpdateFoodPresetParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetFoodType(v *string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetCategory returns the Category value.
@@ -12598,9 +11862,8 @@ func (m UpdateFoodPresetParams) GetCategory() *string {
 }
 
 // SetCategory sets the Category value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetCategory(v *string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetCategory(v *string) {
 	m.Category = v
-	return m
 }
 
 // GetSubcategory returns the Subcategory value.
@@ -12609,9 +11872,8 @@ func (m UpdateFoodPresetParams) GetSubcategory() *string {
 }
 
 // SetSubcategory sets the Subcategory value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetSubcategory(v *string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetSubcategory(v *string) {
 	m.Subcategory = v
-	return m
 }
 
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
@@ -12620,9 +11882,8 @@ func (m UpdateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
 }
 
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-	return m
 }
 
 // GetPreBolus returns the PreBolus value.
@@ -12631,9 +11892,8 @@ func (m UpdateFoodPresetParams) GetPreBolus() *float64 {
 }
 
 // SetPreBolus sets the PreBolus value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetPreBolus(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetPreBolus(v *float64) {
 	m.PreBolus = v
-	return m
 }
 
 // GetPortions returns the Portions value.
@@ -12642,9 +11902,8 @@ func (m UpdateFoodPresetParams) GetPortions() *float64 {
 }
 
 // SetPortions sets the Portions value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetPortions(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetPortions(v *float64) {
 	m.Portions = v
-	return m
 }
 
 // GetCarbs returns the Carbs value.
@@ -12653,9 +11912,8 @@ func (m UpdateFoodPresetParams) GetCarbs() *float64 {
 }
 
 // SetCarbs sets the Carbs value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetCarbs(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetCarbs(v *float64) {
 	m.Carbs = v
-	return m
 }
 
 // GetFat returns the Fat value.
@@ -12664,9 +11922,8 @@ func (m UpdateFoodPresetParams) GetFat() *float64 {
 }
 
 // SetFat sets the Fat value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetFat(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetFat(v *float64) {
 	m.Fat = v
-	return m
 }
 
 // GetProtein returns the Protein value.
@@ -12675,9 +11932,8 @@ func (m UpdateFoodPresetParams) GetProtein() *float64 {
 }
 
 // SetProtein sets the Protein value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetProtein(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetProtein(v *float64) {
 	m.Protein = v
-	return m
 }
 
 // GetFibre returns the Fibre value.
@@ -12686,9 +11942,8 @@ func (m UpdateFoodPresetParams) GetFibre() *float64 {
 }
 
 // SetFibre sets the Fibre value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetFibre(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetFibre(v *float64) {
 	m.Fibre = v
-	return m
 }
 
 // GetEnergy returns the Energy value.
@@ -12697,9 +11952,8 @@ func (m UpdateFoodPresetParams) GetEnergy() *float64 {
 }
 
 // SetEnergy sets the Energy value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetEnergy(v *float64) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetEnergy(v *float64) {
 	m.Energy = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -12708,9 +11962,8 @@ func (m UpdateFoodPresetParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetRawJsonData(v *string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -12719,9 +11972,8 @@ func (m UpdateFoodPresetParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetUpdatedByIdentityName(v *string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12730,9 +11982,8 @@ func (m UpdateFoodPresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateFoodPresetParams.
-func (m UpdateFoodPresetParams) SetID(v string) UpdateFoodPresetParams {
+func (m *UpdateFoodPresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12741,9 +11992,8 @@ func (m HardDeleteFoodPresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteFoodPresetParams.
-func (m HardDeleteFoodPresetParams) SetID(v string) HardDeleteFoodPresetParams {
+func (m *HardDeleteFoodPresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetFoodType returns the FoodType value.
@@ -12752,9 +12002,8 @@ func (m HardDeleteFoodPresetsByTypeParams) GetFoodType() *string {
 }
 
 // SetFoodType sets the FoodType value and returns the updated HardDeleteFoodPresetsByTypeParams.
-func (m HardDeleteFoodPresetsByTypeParams) SetFoodType(v *string) HardDeleteFoodPresetsByTypeParams {
+func (m *HardDeleteFoodPresetsByTypeParams) SetFoodType(v *string) {
 	m.FoodType = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12763,9 +12012,8 @@ func (m CreateProfilePresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetID(v string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -12774,9 +12022,8 @@ func (m CreateProfilePresetParams) GetName() string {
 }
 
 // SetName sets the Name value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetName(v string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetName(v string) {
 	m.Name = v
-	return m
 }
 
 // GetProfileStoreID returns the ProfileStoreID value.
@@ -12785,9 +12032,8 @@ func (m CreateProfilePresetParams) GetProfileStoreID() string {
 }
 
 // SetProfileStoreID sets the ProfileStoreID value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetProfileStoreID(v string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
-	return m
 }
 
 // GetIsDefault returns the IsDefault value.
@@ -12796,9 +12042,8 @@ func (m CreateProfilePresetParams) GetIsDefault() bool {
 }
 
 // SetIsDefault sets the IsDefault value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetIsDefault(v bool) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetIsDefault(v bool) {
 	m.IsDefault = v
-	return m
 }
 
 // GetDia returns the Dia value.
@@ -12807,9 +12052,8 @@ func (m CreateProfilePresetParams) GetDia() *float64 {
 }
 
 // SetDia sets the Dia value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetDia(v *float64) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetDia(v *float64) {
 	m.Dia = v
-	return m
 }
 
 // GetUnits returns the Units value.
@@ -12818,9 +12062,8 @@ func (m CreateProfilePresetParams) GetUnits() *consts.Units {
 }
 
 // SetUnits sets the Units value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetUnits(v *consts.Units) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetUnits(v *consts.Units) {
 	m.Units = v
-	return m
 }
 
 // GetTimezone returns the Timezone value.
@@ -12829,9 +12072,8 @@ func (m CreateProfilePresetParams) GetTimezone() *string {
 }
 
 // SetTimezone sets the Timezone value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetTimezone(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetTimezone(v *string) {
 	m.Timezone = v
-	return m
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -12840,9 +12082,8 @@ func (m CreateProfilePresetParams) GetCarbRatiosJson() *string {
 }
 
 // SetCarbRatiosJson sets the CarbRatiosJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetCarbRatiosJson(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetCarbRatiosJson(v *string) {
 	m.CarbRatiosJson = v
-	return m
 }
 
 // GetInsulinSensitivitiesJson returns the InsulinSensitivitiesJson value.
@@ -12851,9 +12092,8 @@ func (m CreateProfilePresetParams) GetInsulinSensitivitiesJson() *string {
 }
 
 // SetInsulinSensitivitiesJson sets the InsulinSensitivitiesJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetInsulinSensitivitiesJson(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetInsulinSensitivitiesJson(v *string) {
 	m.InsulinSensitivitiesJson = v
-	return m
 }
 
 // GetBasalRatesJson returns the BasalRatesJson value.
@@ -12862,9 +12102,8 @@ func (m CreateProfilePresetParams) GetBasalRatesJson() *string {
 }
 
 // SetBasalRatesJson sets the BasalRatesJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetBasalRatesJson(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetBasalRatesJson(v *string) {
 	m.BasalRatesJson = v
-	return m
 }
 
 // GetTargetsHighJson returns the TargetsHighJson value.
@@ -12873,9 +12112,8 @@ func (m CreateProfilePresetParams) GetTargetsHighJson() *string {
 }
 
 // SetTargetsHighJson sets the TargetsHighJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetTargetsHighJson(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetTargetsHighJson(v *string) {
 	m.TargetsHighJson = v
-	return m
 }
 
 // GetTargetsLowJson returns the TargetsLowJson value.
@@ -12884,9 +12122,8 @@ func (m CreateProfilePresetParams) GetTargetsLowJson() *string {
 }
 
 // SetTargetsLowJson sets the TargetsLowJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetTargetsLowJson(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetTargetsLowJson(v *string) {
 	m.TargetsLowJson = v
-	return m
 }
 
 // GetLoopSettingsJson returns the LoopSettingsJson value.
@@ -12895,9 +12132,8 @@ func (m CreateProfilePresetParams) GetLoopSettingsJson() *string {
 }
 
 // SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetLoopSettingsJson(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetLoopSettingsJson(v *string) {
 	m.LoopSettingsJson = v
-	return m
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -12906,9 +12142,8 @@ func (m CreateProfilePresetParams) GetOccurredAt() int64 {
 }
 
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetOccurredAt(v int64) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-	return m
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -12917,9 +12152,8 @@ func (m CreateProfilePresetParams) GetUtcOffsetMinutes() *int64 {
 }
 
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetUtcOffsetMinutes(v *int64) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -12928,9 +12162,8 @@ func (m CreateProfilePresetParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetRawJsonData(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -12939,9 +12172,8 @@ func (m CreateProfilePresetParams) GetCreatedByAppName() *string {
 }
 
 // SetCreatedByAppName sets the CreatedByAppName value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetCreatedByAppName(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetCreatedByAppName(v *string) {
 	m.CreatedByAppName = v
-	return m
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -12950,9 +12182,8 @@ func (m CreateProfilePresetParams) GetCreatedByDeviceName() *string {
 }
 
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetCreatedByDeviceName(v *string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-	return m
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -12961,9 +12192,8 @@ func (m CreateProfilePresetParams) GetCreatedByIdentityName() string {
 }
 
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateProfilePresetParams.
-func (m CreateProfilePresetParams) SetCreatedByIdentityName(v string) CreateProfilePresetParams {
+func (m *CreateProfilePresetParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -12972,9 +12202,8 @@ func (m AllProfilePresetsParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated AllProfilePresetsParams.
-func (m AllProfilePresetsParams) SetSkip(v int64) AllProfilePresetsParams {
+func (m *AllProfilePresetsParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -12983,9 +12212,8 @@ func (m AllProfilePresetsParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated AllProfilePresetsParams.
-func (m AllProfilePresetsParams) SetLimit(v int64) AllProfilePresetsParams {
+func (m *AllProfilePresetsParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -12994,9 +12222,8 @@ func (m GetProfilePresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated GetProfilePresetParams.
-func (m GetProfilePresetParams) SetID(v string) GetProfilePresetParams {
+func (m *GetProfilePresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetName returns the Name value.
@@ -13005,9 +12232,8 @@ func (m UpdateProfilePresetParams) GetName() *string {
 }
 
 // SetName sets the Name value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetName(v *string) UpdateProfilePresetParams {
+func (m *UpdateProfilePresetParams) SetName(v *string) {
 	m.Name = v
-	return m
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -13016,9 +12242,8 @@ func (m UpdateProfilePresetParams) GetRawJsonData() *string {
 }
 
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetRawJsonData(v *string) UpdateProfilePresetParams {
+func (m *UpdateProfilePresetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
-	return m
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
@@ -13027,9 +12252,8 @@ func (m UpdateProfilePresetParams) GetUpdatedByIdentityName() *string {
 }
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetUpdatedByIdentityName(v *string) UpdateProfilePresetParams {
+func (m *UpdateProfilePresetParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -13038,9 +12262,8 @@ func (m UpdateProfilePresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated UpdateProfilePresetParams.
-func (m UpdateProfilePresetParams) SetID(v string) UpdateProfilePresetParams {
+func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -13049,9 +12272,8 @@ func (m HardDeleteProfilePresetParams) GetID() string {
 }
 
 // SetID sets the ID value and returns the updated HardDeleteProfilePresetParams.
-func (m HardDeleteProfilePresetParams) SetID(v string) HardDeleteProfilePresetParams {
+func (m *HardDeleteProfilePresetParams) SetID(v string) {
 	m.ID = v
-	return m
 }
 
 // GetProfileStoreID returns the ProfileStoreID value.
@@ -13060,9 +12282,8 @@ func (m GetProfileStoreParams) GetProfileStoreID() string {
 }
 
 // SetProfileStoreID sets the ProfileStoreID value and returns the updated GetProfileStoreParams.
-func (m GetProfileStoreParams) SetProfileStoreID(v string) GetProfileStoreParams {
+func (m *GetProfileStoreParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
-	return m
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -13071,9 +12292,8 @@ func (m SearchProfileStoresParams) GetDateGTE() *int64 {
 }
 
 // SetDateGTE sets the DateGTE value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetDateGTE(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetDateGTE(v *int64) {
 	m.DateGTE = v
-	return m
 }
 
 // GetDateLTE returns the DateLTE value.
@@ -13082,9 +12302,8 @@ func (m SearchProfileStoresParams) GetDateLTE() *int64 {
 }
 
 // SetDateLTE sets the DateLTE value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetDateLTE(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetDateLTE(v *int64) {
 	m.DateLTE = v
-	return m
 }
 
 // GetDateEQ returns the DateEQ value.
@@ -13093,9 +12312,8 @@ func (m SearchProfileStoresParams) GetDateEQ() *int64 {
 }
 
 // SetDateEQ sets the DateEQ value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetDateEQ(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetDateEQ(v *int64) {
 	m.DateEQ = v
-	return m
 }
 
 // GetDateGT returns the DateGT value.
@@ -13104,9 +12322,8 @@ func (m SearchProfileStoresParams) GetDateGT() *int64 {
 }
 
 // SetDateGT sets the DateGT value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetDateGT(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetDateGT(v *int64) {
 	m.DateGT = v
-	return m
 }
 
 // GetDateLT returns the DateLT value.
@@ -13115,9 +12332,8 @@ func (m SearchProfileStoresParams) GetDateLT() *int64 {
 }
 
 // SetDateLT sets the DateLT value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetDateLT(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetDateLT(v *int64) {
 	m.DateLT = v
-	return m
 }
 
 // GetCreatedAtGTE returns the CreatedAtGTE value.
@@ -13126,9 +12342,8 @@ func (m SearchProfileStoresParams) GetCreatedAtGTE() *int64 {
 }
 
 // SetCreatedAtGTE sets the CreatedAtGTE value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetCreatedAtGTE(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetCreatedAtGTE(v *int64) {
 	m.CreatedAtGTE = v
-	return m
 }
 
 // GetCreatedAtLTE returns the CreatedAtLTE value.
@@ -13137,9 +12352,8 @@ func (m SearchProfileStoresParams) GetCreatedAtLTE() *int64 {
 }
 
 // SetCreatedAtLTE sets the CreatedAtLTE value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetCreatedAtLTE(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetCreatedAtLTE(v *int64) {
 	m.CreatedAtLTE = v
-	return m
 }
 
 // GetCreatedAtGT returns the CreatedAtGT value.
@@ -13148,9 +12362,8 @@ func (m SearchProfileStoresParams) GetCreatedAtGT() *int64 {
 }
 
 // SetCreatedAtGT sets the CreatedAtGT value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetCreatedAtGT(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetCreatedAtGT(v *int64) {
 	m.CreatedAtGT = v
-	return m
 }
 
 // GetCreatedAtLT returns the CreatedAtLT value.
@@ -13159,9 +12372,8 @@ func (m SearchProfileStoresParams) GetCreatedAtLT() *int64 {
 }
 
 // SetCreatedAtLT sets the CreatedAtLT value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetCreatedAtLT(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetCreatedAtLT(v *int64) {
 	m.CreatedAtLT = v
-	return m
 }
 
 // GetUpdatedGTE returns the UpdatedGTE value.
@@ -13170,9 +12382,8 @@ func (m SearchProfileStoresParams) GetUpdatedGTE() *int64 {
 }
 
 // SetUpdatedGTE sets the UpdatedGTE value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetUpdatedGTE(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetUpdatedGTE(v *int64) {
 	m.UpdatedGTE = v
-	return m
 }
 
 // GetUpdatedLTE returns the UpdatedLTE value.
@@ -13181,9 +12392,8 @@ func (m SearchProfileStoresParams) GetUpdatedLTE() *int64 {
 }
 
 // SetUpdatedLTE sets the UpdatedLTE value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetUpdatedLTE(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetUpdatedLTE(v *int64) {
 	m.UpdatedLTE = v
-	return m
 }
 
 // GetUpdatedGT returns the UpdatedGT value.
@@ -13192,9 +12402,8 @@ func (m SearchProfileStoresParams) GetUpdatedGT() *int64 {
 }
 
 // SetUpdatedGT sets the UpdatedGT value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetUpdatedGT(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetUpdatedGT(v *int64) {
 	m.UpdatedGT = v
-	return m
 }
 
 // GetUpdatedLT returns the UpdatedLT value.
@@ -13203,9 +12412,8 @@ func (m SearchProfileStoresParams) GetUpdatedLT() *int64 {
 }
 
 // SetUpdatedLT sets the UpdatedLT value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetUpdatedLT(v *int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetUpdatedLT(v *int64) {
 	m.UpdatedLT = v
-	return m
 }
 
 // GetIDEq returns the IDEq value.
@@ -13214,9 +12422,8 @@ func (m SearchProfileStoresParams) GetIDEq() *string {
 }
 
 // SetIDEq sets the IDEq value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetIDEq(v *string) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetIDEq(v *string) {
 	m.IDEq = v
-	return m
 }
 
 // GetIDIn returns the IDIn value.
@@ -13225,9 +12432,8 @@ func (m SearchProfileStoresParams) GetIDIn() *string {
 }
 
 // SetIDIn sets the IDIn value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetIDIn(v *string) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetIDIn(v *string) {
 	m.IDIn = v
-	return m
 }
 
 // GetNameEq returns the NameEq value.
@@ -13236,9 +12442,8 @@ func (m SearchProfileStoresParams) GetNameEq() *string {
 }
 
 // SetNameEq sets the NameEq value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetNameEq(v *string) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetNameEq(v *string) {
 	m.NameEq = v
-	return m
 }
 
 // GetDeviceEq returns the DeviceEq value.
@@ -13247,9 +12452,8 @@ func (m SearchProfileStoresParams) GetDeviceEq() *string {
 }
 
 // SetDeviceEq sets the DeviceEq value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetDeviceEq(v *string) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetDeviceEq(v *string) {
 	m.DeviceEq = v
-	return m
 }
 
 // GetAppEq returns the AppEq value.
@@ -13258,9 +12462,8 @@ func (m SearchProfileStoresParams) GetAppEq() *string {
 }
 
 // SetAppEq sets the AppEq value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetAppEq(v *string) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetAppEq(v *string) {
 	m.AppEq = v
-	return m
 }
 
 // GetSkip returns the Skip value.
@@ -13269,9 +12472,8 @@ func (m SearchProfileStoresParams) GetSkip() int64 {
 }
 
 // SetSkip sets the Skip value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetSkip(v int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetSkip(v int64) {
 	m.Skip = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -13280,9 +12482,8 @@ func (m SearchProfileStoresParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated SearchProfileStoresParams.
-func (m SearchProfileStoresParams) SetLimit(v int64) SearchProfileStoresParams {
+func (m *SearchProfileStoresParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetProfileStoreID returns the ProfileStoreID value.
@@ -13291,8 +12492,7 @@ func (m HardDeleteProfileStoreParams) GetProfileStoreID() string {
 }
 
 // SetProfileStoreID sets the ProfileStoreID value and returns the updated HardDeleteProfileStoreParams.
-func (m HardDeleteProfileStoreParams) SetProfileStoreID(v string) HardDeleteProfileStoreParams {
+func (m *HardDeleteProfileStoreParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
-	return m
 }
 

@@ -137,7 +137,8 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 // goverter:context siteContext
 func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *FlexibleFloat64 {
 	if gr.ReadingType == "sgv" {
-		return ptr(FlexibleFloat64(gr.Mgdl))
+		_, value := GetUnitsAndValue(gr, siteContext)
+		return value
 	}
 	return nil
 
@@ -146,7 +147,8 @@ func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils
 // goverter:context siteContext
 func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *FlexibleFloat64 {
 	if gr.ReadingType == "mbg" {
-		return ptr(FlexibleFloat64(gr.Mgdl))
+		_, value := GetUnitsAndValue(gr, siteContext)
+		return value
 	}
 	return nil
 
@@ -156,10 +158,17 @@ func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils
 func UnitsToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *consts.Units {
 	// TODO stuff
 	if gr.Units == nil {
-		return ptr(consts.UnitsMGDL)
+		units, _ := GetUnitsAndValue(gr, siteContext)
+		return units
 	}
 
 	return gr.Units
+}
+
+func GetUnitsAndValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) (*consts.Units, *FlexibleFloat64) {
+	mgdl := gr.Mgdl
+	value := FlexibleFloat64(mgdl)
+	return ptr(consts.UnitsMGDL), &value
 }
 
 func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {

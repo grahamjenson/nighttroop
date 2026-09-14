@@ -51,7 +51,9 @@ CREATE TABLE site_identities (
     deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
     enabled INTEGER NOT NULL DEFAULT 1,
 
+    ---------------
     -- IDENTITY SETTINGS
+    ---------------
     units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
 
     -- DATE
@@ -164,8 +166,10 @@ CREATE TABLE sites (
     archived_at INTEGER,
     deleted_at INTEGER,
 
+    ---------------
     -- SITE SETTINGS
-    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')),
+    ---------------
+    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
 
     -- DATE
     timezone TEXT CHECK(length(timezone) <= 64),
@@ -189,7 +193,47 @@ CREATE TABLE sites (
 
     -- CARBS
     carb_max_absorption_hours REAL,
-    carb_min_5m_impact REAL
+    carb_min_5m_impact REAL,
+
+
+    -- ALERTS
+    alarm_urgent_low_enabled INTEGER,
+    alarm_urgent_low INTEGER,
+
+    alarm_low_enabled INTEGER,
+    alarm_low INTEGER,
+    alarm_low_minutes INTEGER,
+    alarm_low_prediction_enabled INTEGER,
+
+    alarm_high_enabled INTEGER,
+    alarm_high INTEGER,
+    alarm_high_minutes INTEGER,
+    
+    alarm_urgent_high_enabled INTEGER,
+    alarm_urgent_high INTEGER,
+
+    alarm_fast_rise_enabled INTEGER,
+    alarm_fast_rise INTEGER,
+    alarm_fast_rise_minutes INTEGER,
+
+    alarm_fast_drop_enabled INTEGER,
+    alarm_fast_drop INTEGER,
+    alarm_fast_drop_minutes INTEGER,
+
+    alarm_no_data_enabled INTEGER,
+    alarm_no_data_minutes INTEGER,
+
+    alarm_battery_low_enabled INTEGER,
+    alarm_battery_low_percent INTEGER,
+    alarm_battery_low_pwd_enabled INTEGER,
+    alarm_battery_low_pwd_percent INTEGER,
+
+    alarm_low_reservoir_enabled INTEGER,
+    alarm_low_reservoir_units  INTEGER,
+
+    -- NOTIFICATIONS
+    notifications_enabled INTEGER
+    
 );
 
 CREATE TABLE sqlite_sequence(name,seq);

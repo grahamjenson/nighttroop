@@ -3,8 +3,6 @@ package nightscout
 import (
 	"encoding/json"
 	"fmt"
-
-	"nighttroop.t1d.nz/data/sql/control"
 )
 
 type Setting struct {
@@ -19,7 +17,7 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 	aux := struct {
 		*Alias
 		ID    *IdentifierString `json:"_id"`
-		Value json.RawMessage   `json:"value,omitempty"`
+		Value any               `json:"value,omitempty"`
 	}{
 		Alias: (*Alias)(t),
 	}
@@ -32,30 +30,21 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 		t.Identifier = aux.ID
 	}
 
-	// We are going to look up the type of the setting, and then process the Value into the correct safe/converting type.
-	var value any
-	typeOfSetting, ok := control.ALL_SETTINGS_TYPES[t.Identifier.String()]
-	if !ok {
-		value = new(ShortString)
-		if err := json.Unmarshal(aux.Value, value); err != nil {
-			if t.Identifier == nil {
-				return fmt.Errorf("invalid value for setting: %w", err)
-			}
-			return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
+	// Just making sure it is one of the correct types
+	value := aux.Value
+	switch v := aux.Value.(type) {
+	case string:
+		if len(v) > 255 {
+			return fmt.Errorf("string value exceeds 255 characters")
 		}
-	} else {
-		var err error
-		value, err = typeOfSetting.FromJSONRaw(aux.Value)
-		if err != nil {
-			if t.Identifier == nil {
-				return fmt.Errorf("invalid value for setting: %w", err)
-			}
-			return fmt.Errorf("invalid value for setting %q: %w", *t.Identifier, err)
-		}
+
+	case int64, float64, bool:
+	default:
+		return fmt.Errorf("unsupported value type")
+
 	}
 
 	t.Value = value
-
 	return nil
 }
 

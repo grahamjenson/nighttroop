@@ -60,24 +60,8 @@ H Authorization: Bearer {{ jwt }}
 B {"value":  "tons"}
 ASSERT_STATUS 400
 
-#########
-# Glucose Readings
-#########
 
 
 
-#########
-# Profiles
-#########
 
 
-#########
-# Treatments
-#########
-
-
-
-### Profile Switchs
-
-
-### Glucose Settings

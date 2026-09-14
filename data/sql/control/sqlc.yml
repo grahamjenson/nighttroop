@@ -53,11 +53,6 @@ overrides:
           type: "bool"
 
       # site
-      - column: "sites.units"
-        go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
-          type: "Units"
-          pointer: true
 
       # Control Identities
       - column: "control_identities.role"
@@ -75,12 +70,56 @@ overrides:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "IdentityRole"
 
+
+      # Settings
+
+      - column: "sites.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "sites.alarm_urgent_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_urgent_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_fast_rise_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_fast_drop_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_no_data_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_battery_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_battery_low_pwd_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_reservoir_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.notifications_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_prediction_enabled"
+        go_type:
+          type: "*bool"
+
       - column: "site_identities.units"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "Units"
           pointer: true
-
       - column: "site_identities.alarm_urgent_low_enabled"
         go_type:
           type: "*bool"

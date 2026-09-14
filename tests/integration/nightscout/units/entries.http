@@ -17,10 +17,19 @@ ASSERT_STATUS 200
 NAME jwt
 SET {{ .jwtauth.token }}
 
+# ensure settings is correct
+
+NAME check_default_is_mmol
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mmol/L" "@result.value" }}
+ASSERT {{ assertEquals "string" "@result.type" }}
+
 #########
 # Glucose Readings
 #########
-
 
 # Rules of Units
 # Writing glucose readings will not be effected by the users settings
@@ -66,7 +75,16 @@ ASSERT {{ assertEquals "units" "@result.identifier" }}
 ASSERT {{ assertEquals "mg/dL" "@result.value" }}
 
 
-NAME get_unlabeled_entry
+NAME get_unlabeled_mmol_entry
+GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mmol_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 75.6756 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+
+
+NAME get_unlabeled_mgdl_entry
 GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
@@ -74,4 +92,30 @@ ASSERT {{ assertEquals 108 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mg/dL" "@result.units" }}
 
+NAME get_labeled_mmol_entry
+GET http://{{ site }}/api/v3/entries/{{ dig "create_mmoll_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 272.0718 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
 
+
+NAME get_labeled_mgdl_entry
+GET http://{{ site }}/api/v3/entries/{{ dig "create_mgdl_entry.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals 108 "@result.sgv" }}
+ASSERT {{ assertEquals "sgv" "@result.type" }}
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+
+
+# SET TO MMMOL/L
+
+NAME update_unit_to_mmol
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mmol/L"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mmol/L" "@result.value" }}

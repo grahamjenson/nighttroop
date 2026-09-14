@@ -120,6 +120,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteIdentitySettingsStmt, err = db.PrepareContext(ctx, updateSiteIdentitySettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentitySettings: %w", err)
 	}
+	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
+	}
 	if q.updateSyncReportAttemptStmt, err = db.PrepareContext(ctx, updateSyncReportAttempt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncReportAttempt: %w", err)
 	}
@@ -294,6 +297,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteIdentitySettingsStmt: %w", cerr)
 		}
 	}
+	if q.updateSitesSettingsStmt != nil {
+		if cerr := q.updateSitesSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSitesSettingsStmt: %w", cerr)
+		}
+	}
 	if q.updateSyncReportAttemptStmt != nil {
 		if cerr := q.updateSyncReportAttemptStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSyncReportAttemptStmt: %w", cerr)
@@ -380,6 +388,7 @@ type Queries struct {
 	updateSiteDateFlagsStmt                       *sql.Stmt
 	updateSiteIdentityDateFlagsStmt               *sql.Stmt
 	updateSiteIdentitySettingsStmt                *sql.Stmt
+	updateSitesSettingsStmt                       *sql.Stmt
 	updateSyncReportAttemptStmt                   *sql.Stmt
 	updateSyncSourceReportsFailureStmt            *sql.Stmt
 	updateSyncSourceReportsSuccessStmt            *sql.Stmt
@@ -421,6 +430,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteDateFlagsStmt:                       q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:               q.updateSiteIdentityDateFlagsStmt,
 		updateSiteIdentitySettingsStmt:                q.updateSiteIdentitySettingsStmt,
+		updateSitesSettingsStmt:                       q.updateSitesSettingsStmt,
 		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
 		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
 		updateSyncSourceReportsSuccessStmt:            q.updateSyncSourceReportsSuccessStmt,

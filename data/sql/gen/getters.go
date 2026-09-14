@@ -314,9 +314,8 @@ func generateParamGetters(paramName string, columns []*plugin.Column) string {
 		sb.WriteString("}\n\n")
 
 		sb.WriteString(fmt.Sprintf("// Set%s sets the %s value and returns the updated %s.\n", fieldName, fieldName, paramName))
-		sb.WriteString(fmt.Sprintf("func (m %s) Set%s(v %s) %s {\n", paramName, fieldName, fieldType, paramName))
+		sb.WriteString(fmt.Sprintf("func (m *%s) Set%s(v %s) {\n", paramName, fieldName, fieldType))
 		sb.WriteString(fmt.Sprintf("	m.%s = v\n", fieldName))
-		sb.WriteString(fmt.Sprintf("	return m\n"))
 		sb.WriteString("}\n\n")
 
 	}

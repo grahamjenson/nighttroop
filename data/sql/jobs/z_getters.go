@@ -222,9 +222,8 @@ func (m EnsureJobStatsDailyForGroupParams) GetDayQueueJob() string {
 }
 
 // SetDayQueueJob sets the DayQueueJob value and returns the updated EnsureJobStatsDailyForGroupParams.
-func (m EnsureJobStatsDailyForGroupParams) SetDayQueueJob(v string) EnsureJobStatsDailyForGroupParams {
+func (m *EnsureJobStatsDailyForGroupParams) SetDayQueueJob(v string) {
 	m.DayQueueJob = v
-	return m
 }
 
 // GetTotalJobs returns the TotalJobs value.
@@ -233,9 +232,8 @@ func (m UpdateJobStatsDailyParams) GetTotalJobs() int64 {
 }
 
 // SetTotalJobs sets the TotalJobs value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetTotalJobs(v int64) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetTotalJobs(v int64) {
 	m.TotalJobs = v
-	return m
 }
 
 // GetTotalSuccess returns the TotalSuccess value.
@@ -244,9 +242,8 @@ func (m UpdateJobStatsDailyParams) GetTotalSuccess() int64 {
 }
 
 // SetTotalSuccess sets the TotalSuccess value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetTotalSuccess(v int64) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetTotalSuccess(v int64) {
 	m.TotalSuccess = v
-	return m
 }
 
 // GetTotalFailed returns the TotalFailed value.
@@ -255,9 +252,8 @@ func (m UpdateJobStatsDailyParams) GetTotalFailed() int64 {
 }
 
 // SetTotalFailed sets the TotalFailed value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetTotalFailed(v int64) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetTotalFailed(v int64) {
 	m.TotalFailed = v
-	return m
 }
 
 // GetDurationSum returns the DurationSum value.
@@ -266,9 +262,8 @@ func (m UpdateJobStatsDailyParams) GetDurationSum() float64 {
 }
 
 // SetDurationSum sets the DurationSum value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetDurationSum(v float64) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetDurationSum(v float64) {
 	m.DurationSum = v
-	return m
 }
 
 // GetDurationSquaredSum returns the DurationSquaredSum value.
@@ -277,9 +272,8 @@ func (m UpdateJobStatsDailyParams) GetDurationSquaredSum() float64 {
 }
 
 // SetDurationSquaredSum sets the DurationSquaredSum value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetDurationSquaredSum(v float64) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetDurationSquaredSum(v float64) {
 	m.DurationSquaredSum = v
-	return m
 }
 
 // GetErrors returns the Errors value.
@@ -288,9 +282,8 @@ func (m UpdateJobStatsDailyParams) GetErrors() interface{} {
 }
 
 // SetErrors sets the Errors value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetErrors(v interface{}) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetErrors(v interface{}) {
 	m.Errors = v
-	return m
 }
 
 // GetDayQueueJob returns the DayQueueJob value.
@@ -299,9 +292,8 @@ func (m UpdateJobStatsDailyParams) GetDayQueueJob() string {
 }
 
 // SetDayQueueJob sets the DayQueueJob value and returns the updated UpdateJobStatsDailyParams.
-func (m UpdateJobStatsDailyParams) SetDayQueueJob(v string) UpdateJobStatsDailyParams {
+func (m *UpdateJobStatsDailyParams) SetDayQueueJob(v string) {
 	m.DayQueueJob = v
-	return m
 }
 
 // GetQueue returns the Queue value.
@@ -310,9 +302,8 @@ func (m QueueJobIgnoreDupeParams) GetQueue() string {
 }
 
 // SetQueue sets the Queue value and returns the updated QueueJobIgnoreDupeParams.
-func (m QueueJobIgnoreDupeParams) SetQueue(v string) QueueJobIgnoreDupeParams {
+func (m *QueueJobIgnoreDupeParams) SetQueue(v string) {
 	m.Queue = v
-	return m
 }
 
 // GetJob returns the Job value.
@@ -321,9 +312,8 @@ func (m QueueJobIgnoreDupeParams) GetJob() string {
 }
 
 // SetJob sets the Job value and returns the updated QueueJobIgnoreDupeParams.
-func (m QueueJobIgnoreDupeParams) SetJob(v string) QueueJobIgnoreDupeParams {
+func (m *QueueJobIgnoreDupeParams) SetJob(v string) {
 	m.Job = v
-	return m
 }
 
 // GetExecuteAfter returns the ExecuteAfter value.
@@ -332,9 +322,8 @@ func (m QueueJobIgnoreDupeParams) GetExecuteAfter() int64 {
 }
 
 // SetExecuteAfter sets the ExecuteAfter value and returns the updated QueueJobIgnoreDupeParams.
-func (m QueueJobIgnoreDupeParams) SetExecuteAfter(v int64) QueueJobIgnoreDupeParams {
+func (m *QueueJobIgnoreDupeParams) SetExecuteAfter(v int64) {
 	m.ExecuteAfter = v
-	return m
 }
 
 // GetRemainingAttempts returns the RemainingAttempts value.
@@ -343,9 +332,8 @@ func (m QueueJobIgnoreDupeParams) GetRemainingAttempts() int64 {
 }
 
 // SetRemainingAttempts sets the RemainingAttempts value and returns the updated QueueJobIgnoreDupeParams.
-func (m QueueJobIgnoreDupeParams) SetRemainingAttempts(v int64) QueueJobIgnoreDupeParams {
+func (m *QueueJobIgnoreDupeParams) SetRemainingAttempts(v int64) {
 	m.RemainingAttempts = v
-	return m
 }
 
 // GetDedupingKey returns the DedupingKey value.
@@ -354,9 +342,8 @@ func (m QueueJobIgnoreDupeParams) GetDedupingKey() string {
 }
 
 // SetDedupingKey sets the DedupingKey value and returns the updated QueueJobIgnoreDupeParams.
-func (m QueueJobIgnoreDupeParams) SetDedupingKey(v string) QueueJobIgnoreDupeParams {
+func (m *QueueJobIgnoreDupeParams) SetDedupingKey(v string) {
 	m.DedupingKey = v
-	return m
 }
 
 // GetQueue returns the Queue value.
@@ -365,9 +352,8 @@ func (m QueueJobReplaceDupeParams) GetQueue() string {
 }
 
 // SetQueue sets the Queue value and returns the updated QueueJobReplaceDupeParams.
-func (m QueueJobReplaceDupeParams) SetQueue(v string) QueueJobReplaceDupeParams {
+func (m *QueueJobReplaceDupeParams) SetQueue(v string) {
 	m.Queue = v
-	return m
 }
 
 // GetJob returns the Job value.
@@ -376,9 +362,8 @@ func (m QueueJobReplaceDupeParams) GetJob() string {
 }
 
 // SetJob sets the Job value and returns the updated QueueJobReplaceDupeParams.
-func (m QueueJobReplaceDupeParams) SetJob(v string) QueueJobReplaceDupeParams {
+func (m *QueueJobReplaceDupeParams) SetJob(v string) {
 	m.Job = v
-	return m
 }
 
 // GetExecuteAfter returns the ExecuteAfter value.
@@ -387,9 +372,8 @@ func (m QueueJobReplaceDupeParams) GetExecuteAfter() int64 {
 }
 
 // SetExecuteAfter sets the ExecuteAfter value and returns the updated QueueJobReplaceDupeParams.
-func (m QueueJobReplaceDupeParams) SetExecuteAfter(v int64) QueueJobReplaceDupeParams {
+func (m *QueueJobReplaceDupeParams) SetExecuteAfter(v int64) {
 	m.ExecuteAfter = v
-	return m
 }
 
 // GetRemainingAttempts returns the RemainingAttempts value.
@@ -398,9 +382,8 @@ func (m QueueJobReplaceDupeParams) GetRemainingAttempts() int64 {
 }
 
 // SetRemainingAttempts sets the RemainingAttempts value and returns the updated QueueJobReplaceDupeParams.
-func (m QueueJobReplaceDupeParams) SetRemainingAttempts(v int64) QueueJobReplaceDupeParams {
+func (m *QueueJobReplaceDupeParams) SetRemainingAttempts(v int64) {
 	m.RemainingAttempts = v
-	return m
 }
 
 // GetDedupingKey returns the DedupingKey value.
@@ -409,9 +392,8 @@ func (m QueueJobReplaceDupeParams) GetDedupingKey() string {
 }
 
 // SetDedupingKey sets the DedupingKey value and returns the updated QueueJobReplaceDupeParams.
-func (m QueueJobReplaceDupeParams) SetDedupingKey(v string) QueueJobReplaceDupeParams {
+func (m *QueueJobReplaceDupeParams) SetDedupingKey(v string) {
 	m.DedupingKey = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -420,9 +402,8 @@ func (m CompleteJobParams) GetID() int64 {
 }
 
 // SetID sets the ID value and returns the updated CompleteJobParams.
-func (m CompleteJobParams) SetID(v int64) CompleteJobParams {
+func (m *CompleteJobParams) SetID(v int64) {
 	m.ID = v
-	return m
 }
 
 // GetErrors returns the Errors value.
@@ -431,9 +412,8 @@ func (m FailJobParams) GetErrors() errors.ErrorList {
 }
 
 // SetErrors sets the Errors value and returns the updated FailJobParams.
-func (m FailJobParams) SetErrors(v errors.ErrorList) FailJobParams {
+func (m *FailJobParams) SetErrors(v errors.ErrorList) {
 	m.Errors = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -442,9 +422,8 @@ func (m FailJobParams) GetID() int64 {
 }
 
 // SetID sets the ID value and returns the updated FailJobParams.
-func (m FailJobParams) SetID(v int64) FailJobParams {
+func (m *FailJobParams) SetID(v int64) {
 	m.ID = v
-	return m
 }
 
 // GetQueue returns the Queue value.
@@ -453,9 +432,8 @@ func (m MarkJobsForConsumerParams) GetQueue() string {
 }
 
 // SetQueue sets the Queue value and returns the updated MarkJobsForConsumerParams.
-func (m MarkJobsForConsumerParams) SetQueue(v string) MarkJobsForConsumerParams {
+func (m *MarkJobsForConsumerParams) SetQueue(v string) {
 	m.Queue = v
-	return m
 }
 
 // GetExecuteAfter returns the ExecuteAfter value.
@@ -464,9 +442,8 @@ func (m MarkJobsForConsumerParams) GetExecuteAfter() int64 {
 }
 
 // SetExecuteAfter sets the ExecuteAfter value and returns the updated MarkJobsForConsumerParams.
-func (m MarkJobsForConsumerParams) SetExecuteAfter(v int64) MarkJobsForConsumerParams {
+func (m *MarkJobsForConsumerParams) SetExecuteAfter(v int64) {
 	m.ExecuteAfter = v
-	return m
 }
 
 // GetLimit returns the Limit value.
@@ -475,9 +452,8 @@ func (m MarkJobsForConsumerParams) GetLimit() int64 {
 }
 
 // SetLimit sets the Limit value and returns the updated MarkJobsForConsumerParams.
-func (m MarkJobsForConsumerParams) SetLimit(v int64) MarkJobsForConsumerParams {
+func (m *MarkJobsForConsumerParams) SetLimit(v int64) {
 	m.Limit = v
-	return m
 }
 
 // GetQueue returns the Queue value.
@@ -486,9 +462,8 @@ func (m ResetJobsParams) GetQueue() string {
 }
 
 // SetQueue sets the Queue value and returns the updated ResetJobsParams.
-func (m ResetJobsParams) SetQueue(v string) ResetJobsParams {
+func (m *ResetJobsParams) SetQueue(v string) {
 	m.Queue = v
-	return m
 }
 
 // GetConsumerFetchedAt returns the ConsumerFetchedAt value.
@@ -497,9 +472,8 @@ func (m ResetJobsParams) GetConsumerFetchedAt() int64 {
 }
 
 // SetConsumerFetchedAt sets the ConsumerFetchedAt value and returns the updated ResetJobsParams.
-func (m ResetJobsParams) SetConsumerFetchedAt(v int64) ResetJobsParams {
+func (m *ResetJobsParams) SetConsumerFetchedAt(v int64) {
 	m.ConsumerFetchedAt = v
-	return m
 }
 
 // GetID returns the ID value.
@@ -508,9 +482,8 @@ func (m FindJobParams) GetID() int64 {
 }
 
 // SetID sets the ID value and returns the updated FindJobParams.
-func (m FindJobParams) SetID(v int64) FindJobParams {
+func (m *FindJobParams) SetID(v int64) {
 	m.ID = v
-	return m
 }
 
 // GetSecondsAgo returns the SecondsAgo value.
@@ -519,9 +492,8 @@ func (m GetJobsToBeSummarisedParams) GetSecondsAgo() int64 {
 }
 
 // SetSecondsAgo sets the SecondsAgo value and returns the updated GetJobsToBeSummarisedParams.
-func (m GetJobsToBeSummarisedParams) SetSecondsAgo(v int64) GetJobsToBeSummarisedParams {
+func (m *GetJobsToBeSummarisedParams) SetSecondsAgo(v int64) {
 	m.SecondsAgo = v
-	return m
 }
 
 // GetIds returns the Ids value.
@@ -530,9 +502,8 @@ func (m DeleteJobsByIdsParams) GetIds() []int64 {
 }
 
 // SetIds sets the Ids value and returns the updated DeleteJobsByIdsParams.
-func (m DeleteJobsByIdsParams) SetIds(v []int64) DeleteJobsByIdsParams {
+func (m *DeleteJobsByIdsParams) SetIds(v []int64) {
 	m.Ids = v
-	return m
 }
 
 // GetJob returns the Job value.
@@ -541,9 +512,8 @@ func (m InsertSuccessfulCronJobParams) GetJob() string {
 }
 
 // SetJob sets the Job value and returns the updated InsertSuccessfulCronJobParams.
-func (m InsertSuccessfulCronJobParams) SetJob(v string) InsertSuccessfulCronJobParams {
+func (m *InsertSuccessfulCronJobParams) SetJob(v string) {
 	m.Job = v
-	return m
 }
 
 // GetConsumerFetchedAt returns the ConsumerFetchedAt value.
@@ -552,9 +522,8 @@ func (m InsertSuccessfulCronJobParams) GetConsumerFetchedAt() int64 {
 }
 
 // SetConsumerFetchedAt sets the ConsumerFetchedAt value and returns the updated InsertSuccessfulCronJobParams.
-func (m InsertSuccessfulCronJobParams) SetConsumerFetchedAt(v int64) InsertSuccessfulCronJobParams {
+func (m *InsertSuccessfulCronJobParams) SetConsumerFetchedAt(v int64) {
 	m.ConsumerFetchedAt = v
-	return m
 }
 
 // GetJob returns the Job value.
@@ -563,9 +532,8 @@ func (m InsertFailedCronJobParams) GetJob() string {
 }
 
 // SetJob sets the Job value and returns the updated InsertFailedCronJobParams.
-func (m InsertFailedCronJobParams) SetJob(v string) InsertFailedCronJobParams {
+func (m *InsertFailedCronJobParams) SetJob(v string) {
 	m.Job = v
-	return m
 }
 
 // GetConsumerFetchedAt returns the ConsumerFetchedAt value.
@@ -574,9 +542,8 @@ func (m InsertFailedCronJobParams) GetConsumerFetchedAt() int64 {
 }
 
 // SetConsumerFetchedAt sets the ConsumerFetchedAt value and returns the updated InsertFailedCronJobParams.
-func (m InsertFailedCronJobParams) SetConsumerFetchedAt(v int64) InsertFailedCronJobParams {
+func (m *InsertFailedCronJobParams) SetConsumerFetchedAt(v int64) {
 	m.ConsumerFetchedAt = v
-	return m
 }
 
 // GetErrors returns the Errors value.
@@ -585,8 +552,7 @@ func (m InsertFailedCronJobParams) GetErrors() errors.ErrorList {
 }
 
 // SetErrors sets the Errors value and returns the updated InsertFailedCronJobParams.
-func (m InsertFailedCronJobParams) SetErrors(v errors.ErrorList) InsertFailedCronJobParams {
+func (m *InsertFailedCronJobParams) SetErrors(v errors.ErrorList) {
 	m.Errors = v
-	return m
 }
 

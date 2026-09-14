@@ -62,6 +62,32 @@ type Site struct {
 	DefaultBasalRate          *float64
 	CarbMaxAbsorptionHours    *float64
 	CarbMin5mImpact           *float64
+	AlarmUrgentLowEnabled     *bool
+	AlarmUrgentLow            *int64
+	AlarmLowEnabled           *bool
+	AlarmLow                  *int64
+	AlarmLowMinutes           *int64
+	AlarmLowPredictionEnabled *bool
+	AlarmHighEnabled          *bool
+	AlarmHigh                 *int64
+	AlarmHighMinutes          *int64
+	AlarmUrgentHighEnabled    *bool
+	AlarmUrgentHigh           *int64
+	AlarmFastRiseEnabled      *bool
+	AlarmFastRise             *int64
+	AlarmFastRiseMinutes      *int64
+	AlarmFastDropEnabled      *bool
+	AlarmFastDrop             *int64
+	AlarmFastDropMinutes      *int64
+	AlarmNoDataEnabled        *bool
+	AlarmNoDataMinutes        *int64
+	AlarmBatteryLowEnabled    *bool
+	AlarmBatteryLowPercent    *int64
+	AlarmBatteryLowPwdEnabled *bool
+	AlarmBatteryLowPwdPercent *int64
+	AlarmLowReservoirEnabled  *bool
+	AlarmLowReservoirUnits    *int64
+	NotificationsEnabled      *bool
 }
 
 type SiteIdentity struct {

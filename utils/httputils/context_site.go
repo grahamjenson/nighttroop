@@ -2,9 +2,11 @@ package httputils
 
 import (
 	"context"
+	"fmt"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 type SiteAction string
@@ -26,6 +28,8 @@ type SiteContext struct {
 	Subdomain string
 
 	SiteAction SiteAction
+
+	settings *settings.CombinedSettingsMap
 }
 
 func GetSiteContext(ctx context.Context) *SiteContext {
@@ -68,4 +72,20 @@ func SetIdentityModelInSiteContext(ctx context.Context, identityModel *control.S
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
 	return context.WithValue(ctx, SiteContextKey, siteContext)
+}
+
+// /////
+// SETTINGS
+// /////
+
+func (sc *SiteContext) GetSettings() (*settings.CombinedSettingsMap, error) {
+	if sc.SiteModel == nil || sc.IdentityModel == nil {
+		return nil, fmt.Errorf("settings unavailable site or identity model is nil")
+	}
+
+	if sc.settings == nil {
+		sc.settings = settings.NewCombinedSettingsMap(sc.SiteModel, sc.IdentityModel)
+	}
+
+	return sc.settings, nil
 }
