@@ -1,6 +1,13 @@
 package settings
 
-import "nighttroop.t1d.nz/utils/consts"
+import (
+	"fmt"
+	"slices"
+	"time"
+
+	"golang.org/x/text/language"
+	"nighttroop.t1d.nz/utils/consts"
+)
 
 type SettingDefinition[T any] struct {
 	Identifier   string
@@ -35,6 +42,12 @@ var Units = &SettingDefinition[consts.Units]{
 	TypeString: "string",
 	Default:    consts.UnitsMMOLL,
 	ParseFunc:  ParseUnits,
+	ValidateFunc: func(value consts.Units) error {
+		if value != consts.UnitsMMOLL && value != consts.UnitsMGDL {
+			return fmt.Errorf("invalid units: %v - must be either 'mmol/L' or 'mg/dL'", value)
+		}
+		return nil
+	},
 }
 
 var Timezone = &SettingDefinition[string]{
@@ -42,6 +55,16 @@ var Timezone = &SettingDefinition[string]{
 	TypeString: "string",
 	Default:    "UTC",
 	ParseFunc:  ParseString,
+	ValidateFunc: func(value string) error {
+		if value == "" {
+			return fmt.Errorf("timezone cannot be empty")
+		}
+		_, err := time.LoadLocation(value)
+		if err != nil {
+			return fmt.Errorf("invalid timezone: %v - must be a valid IANA timezone", value)
+		}
+		return nil
+	},
 }
 
 var Language = &SettingDefinition[string]{
@@ -49,6 +72,16 @@ var Language = &SettingDefinition[string]{
 	TypeString: "string",
 	Default:    "en-NZ",
 	ParseFunc:  ParseString,
+	ValidateFunc: func(value string) error {
+		if value == "" {
+			return fmt.Errorf("language cannot be empty")
+		}
+		_, err := language.Parse(value)
+		if err != nil {
+			return fmt.Errorf("invalid language: %v - must be a valid BCP 47 language tag", value)
+		}
+		return nil
+	},
 }
 
 var DateFormat = &SettingDefinition[string]{
@@ -56,6 +89,17 @@ var DateFormat = &SettingDefinition[string]{
 	TypeString: "string",
 	Default:    "YYYY-MM-DD",
 	ParseFunc:  ParseString,
+	ValidateFunc: func(value string) error {
+		if value == "" {
+			return fmt.Errorf("date format cannot be empty")
+		}
+
+		allowed := []string{"YYYY/MM/DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"}
+		if !slices.Contains(allowed, value) {
+			return fmt.Errorf("invalid date format: %v -must be in %v", value, quoted(allowed))
+		}
+		return nil
+	},
 }
 
 var TimeFormat = &SettingDefinition[string]{
@@ -63,13 +107,34 @@ var TimeFormat = &SettingDefinition[string]{
 	TypeString: "string",
 	Default:    "HH:mm:ss",
 	ParseFunc:  ParseString,
+	ValidateFunc: func(value string) error {
+		if value == "" {
+			return fmt.Errorf("time format cannot be empty")
+		}
+		allowed := []string{"HH:mm:ss", "hh:mm:ss a", "HH:mm", "hh:mm a"}
+		if !slices.Contains(allowed, value) {
+			return fmt.Errorf("invalid time format: %v - must be in %v", value, quoted(allowed))
+		}
+		return nil
+	},
 }
 
 var WeekStartDay = &SettingDefinition[string]{
 	Identifier: "week_start_day",
 	TypeString: "string",
 	Default:    "monday",
-	ParseFunc:  ParseString,
+	ParseFunc:  ParseLowerString,
+	ValidateFunc: func(value string) error {
+		if value == "" {
+			return fmt.Errorf("week start day cannot be empty")
+		}
+
+		allowed := []string{"monday", "sunday"}
+		if !slices.Contains(allowed, value) {
+			return fmt.Errorf("invalid week start day: %v - must be one of %v", value, quoted(allowed))
+		}
+		return nil
+	},
 }
 
 var BolusDIAHours = &SettingDefinition[float64]{
@@ -84,7 +149,7 @@ var BolusOnsetMinutes = &SettingDefinition[float64]{
 	Identifier:   "bolus_onset_minutes",
 	TypeString:   "number",
 	Default:      20.0,
-	ValidateFunc: Range(1.0, 60.0),
+	ValidateFunc: Range(1.0, 120.0),
 	ParseFunc:    ParseFloat,
 }
 
@@ -92,7 +157,7 @@ var BolusPeakMinutes = &SettingDefinition[float64]{
 	Identifier:   "bolus_peak_minutes",
 	TypeString:   "number",
 	Default:      60.0,
-	ValidateFunc: Range(1.0, 120.0),
+	ValidateFunc: Range(1.0, 240.0),
 	ParseFunc:    ParseFloat,
 }
 
@@ -100,7 +165,7 @@ var BasalDIAHours = &SettingDefinition[float64]{
 	Identifier:   "basal_dia_hours",
 	TypeString:   "number",
 	Default:      24.0,
-	ValidateFunc: Range(1.0, 48.0),
+	ValidateFunc: Range(1.0, 170.0),
 	ParseFunc:    ParseFloat,
 }
 
@@ -108,7 +173,7 @@ var BasalOnsetMinutes = &SettingDefinition[float64]{
 	Identifier:   "basal_onset_minutes",
 	TypeString:   "number",
 	Default:      60.0,
-	ValidateFunc: Range(1.0, 120.0),
+	ValidateFunc: Range(1.0, 360.0),
 	ParseFunc:    ParseFloat,
 }
 
@@ -161,34 +226,32 @@ var CarbMin5mImpact = &SettingDefinition[float64]{
 }
 
 var AlarmUrgentLowEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_urgent_low_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_urgent_low_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmUrgentLow = &SettingDefinition[int64]{
 	Identifier:   "alarm_urgent_low",
 	TypeString:   "number",
 	Default:      56,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(20), 100),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmLowEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_low_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_low_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmLow = &SettingDefinition[int64]{
 	Identifier:   "alarm_low",
 	TypeString:   "number",
 	Default:      72,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(20), 150),
 	ParseFunc:    ParseInt,
 }
 
@@ -196,31 +259,29 @@ var AlarmLowMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_low_minutes",
 	TypeString:   "number",
 	Default:      5,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(0), 120),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmLowPredictionEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_low_prediction_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_low_prediction_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmHighEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_high_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_high_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmHigh = &SettingDefinition[int64]{
 	Identifier:   "alarm_high",
 	TypeString:   "number",
 	Default:      180,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(70), 600),
 	ParseFunc:    ParseInt,
 }
 
@@ -228,39 +289,37 @@ var AlarmHighMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_high_minutes",
 	TypeString:   "number",
 	Default:      30,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(0), 120),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmUrgentHighEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_urgent_high_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_urgent_high_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmUrgentHigh = &SettingDefinition[int64]{
 	Identifier:   "alarm_urgent_high",
 	TypeString:   "number",
 	Default:      270,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(100), 600),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmFastRiseEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_fast_rise_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_fast_rise_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmFastRise = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_rise",
 	TypeString:   "number",
 	Default:      18,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(5), 50),
 	ParseFunc:    ParseInt,
 }
 
@@ -268,23 +327,22 @@ var AlarmFastRiseMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_rise_minutes",
 	TypeString:   "number",
 	Default:      15,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(0), 120),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmFastDropEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_fast_drop_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_fast_drop_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmFastDrop = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_drop",
 	TypeString:   "number",
 	Default:      18,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(5), 50),
 	ParseFunc:    ParseInt,
 }
 
@@ -292,78 +350,73 @@ var AlarmFastDropMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_drop_minutes",
 	TypeString:   "number",
 	Default:      15,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(0), 120),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmNoDataEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_no_data_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_no_data_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmNoDataMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_no_data_minutes",
 	TypeString:   "number",
 	Default:      20,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(0), 120),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmBatteryLowEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_battery_low_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_battery_low_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmBatteryLowPercent = &SettingDefinition[int64]{
 	Identifier:   "alarm_battery_low_percent",
 	TypeString:   "number",
 	Default:      20,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(5), 80),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmBatteryLowPwdEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_battery_low_pwd_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_battery_low_pwd_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmBatteryLowPwdPercent = &SettingDefinition[int64]{
 	Identifier:   "alarm_battery_low_pwd_percent",
 	TypeString:   "number",
 	Default:      20,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(5), 80),
 	ParseFunc:    ParseInt,
 }
 
 var AlarmLowReservoirEnabled = &SettingDefinition[bool]{
-	Identifier:   "alarm_low_reservoir_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "alarm_low_reservoir_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }
 
 var AlarmLowReservoirUnits = &SettingDefinition[int64]{
 	Identifier:   "alarm_low_reservoir_units",
 	TypeString:   "number",
 	Default:      25,
-	ValidateFunc: nil,
+	ValidateFunc: Range(int64(0), 200),
 	ParseFunc:    ParseInt,
 }
 
 var NotificationsEnabled = &SettingDefinition[bool]{
-	Identifier:   "notifications_enabled",
-	TypeString:   "boolean",
-	Default:      false,
-	ValidateFunc: nil,
-	ParseFunc:    ParseBool,
+	Identifier: "notifications_enabled",
+	TypeString: "boolean",
+	Default:    false,
+	ParseFunc:  ParseBool,
 }

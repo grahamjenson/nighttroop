@@ -36,11 +36,11 @@ func ConvertFromAnyTypeToSetting(source *settings.SettingAnyType, context *httpu
 			"value":      source.Value,
 			"type":       source.TypeString,
 		},
-		SrvCreated:  0,
-		SrvModified: 0,
-		Subject:     "",
+		SrvCreated:  source.CreatedAt,
+		SrvModified: source.CreatedAt,
+		Subject:     source.Subject,
 		UTCOffset:   0,
-		OccuredAt:   0,
+		OccuredAt:   source.CreatedAt,
 	}
 	return record
 }
@@ -227,7 +227,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 
 	identitySettingsMap := settingsMap.IdentitySettingsMap
 
-	err = identitySettingsMap.SetSettingByName(identifier, value)
+	err = identitySettingsMap.SetSettingByName(identifier, value, &siteContext.IdentityModel.CreatedAt, ptr("identity"))
 	if err != nil {
 		slog.Error("failed to set setting in identity settings map", "error", err, "collection", "settings")
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())

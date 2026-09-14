@@ -4,9 +4,86 @@ import (
 	"cmp"
 	"fmt"
 	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
+
+type SettingAnyType struct {
+	Identifier string
+	TypeString string
+	Value      any
+	CreatedAt  int64
+	Subject    string
+}
+
+type Setting[T any] struct {
+	definition *SettingDefinition[T]
+	Value      T
+	CreatedAt  int64
+	Subject    string
+}
+
+func (s *Setting[T]) ToSettingAnyType() *SettingAnyType {
+	if s == nil {
+		return nil
+	}
+	return &SettingAnyType{
+		Identifier: s.definition.Identifier,
+		TypeString: s.definition.TypeString,
+		Value:      s.Value,
+		CreatedAt:  s.CreatedAt,
+		Subject:    s.Subject,
+	}
+}
+
+func NewSetting[T any](definition *SettingDefinition[T], value *T, createdAt *int64, subject *string) *Setting[T] {
+	// Setting value to nil is just deleting the setting
+	if value == nil {
+		return nil
+	}
+
+	if createdAt == nil {
+		now := time.Now().Unix()
+		createdAt = &now
+	}
+
+	if subject == nil {
+		subject = ptr("default")
+	}
+
+	setting := &Setting[T]{
+		definition: definition,
+		Value:      *value,
+		CreatedAt:  *createdAt,
+		Subject:    *subject,
+	}
+
+	return setting
+}
+
+func NewDefaultSetting[T any](definition *SettingDefinition[T]) *Setting[T] {
+
+	setting := &Setting[T]{
+		definition: definition,
+		Value:      definition.Default,
+		CreatedAt:  time.Now().Unix(),
+		Subject:    "default",
+	}
+
+	return setting
+}
+
+func NewSettingAndParseValidate[T any](definition *SettingDefinition[T], value any, createdAt *int64, subject *string) (*Setting[T], error) {
+	if value == nil {
+		return nil, nil
+	}
+	parsedValue, err := definition.ParseValidate(value)
+	if err != nil {
+		return nil, err
+	}
+	return NewSetting(definition, parsedValue, createdAt, subject), nil
+}
 
 // //
 // Parsers
@@ -103,6 +180,15 @@ func ParseString(value any) (string, error) {
 	}
 }
 
+func ParseLowerString(value any) (string, error) {
+	switch v := value.(type) {
+	case string:
+		return strings.ToLower(v), nil
+	default:
+		return "", fmt.Errorf("unsupported type for ParseLowerString: %T", value)
+	}
+}
+
 /////
 // Validators
 /////
@@ -132,6 +218,60 @@ func Range[T cmp.Ordered](min, max T) func(T) error {
 		}
 		return nil
 	}
+}
+
+func quoted(values []string) string {
+	result := make([]string, len(values))
+	for i, value := range values {
+		result[i] = fmt.Sprintf("'%v'", value)
+	}
+	return strings.Join(result, ", ")
+}
+
+var allSettingNames = []string{
+	"units",
+	"timezone",
+	"language",
+	"date_format",
+	"time_format",
+	"week_start_day",
+	"bolus_dia_hours",
+	"bolus_onset_minutes",
+	"bolus_peak_minutes",
+	"basal_dia_hours",
+	"basal_onset_minutes",
+	"basal_peak_minutes",
+	"default_insulin_sensitivity",
+	"default_carb_ratio",
+	"default_basal_rate",
+	"carb_max_absorption_hours",
+	"carb_min_5m_impact",
+	"alarm_urgent_low_enabled",
+	"alarm_urgent_low",
+	"alarm_low_enabled",
+	"alarm_low",
+	"alarm_low_minutes",
+	"alarm_low_prediction_enabled",
+	"alarm_high_enabled",
+	"alarm_high",
+	"alarm_high_minutes",
+	"alarm_urgent_high_enabled",
+	"alarm_urgent_high",
+	"alarm_fast_rise_enabled",
+	"alarm_fast_rise",
+	"alarm_fast_rise_minutes",
+	"alarm_fast_drop_enabled",
+	"alarm_fast_drop",
+	"alarm_fast_drop_minutes",
+	"alarm_no_data_enabled",
+	"alarm_no_data_minutes",
+	"alarm_battery_low_enabled",
+	"alarm_battery_low_percent",
+	"alarm_battery_low_pwd_enabled",
+	"alarm_battery_low_pwd_percent",
+	"alarm_low_reservoir_enabled",
+	"alarm_low_reservoir_units",
+	"notifications_enabled",
 }
 
 //////

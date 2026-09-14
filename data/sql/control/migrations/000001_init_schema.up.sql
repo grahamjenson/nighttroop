@@ -102,9 +102,9 @@ CREATE TABLE sites (
     -- DATE
     timezone TEXT CHECK(length(timezone) <= 64),
     language TEXT CHECK(length(language) <= 12),
-    date_format TEXT CHECK(date_format IN ('YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY')),
-    time_format TEXT CHECK(time_format IN ('HH:mm:ss', 'hh:mm:ss a')),
-    week_start_day TEXT CHECK (week_start_day IN ('monday', 'sunday')),
+    date_format TEXT CHECK(length(date_format) <= 24),
+    time_format TEXT CHECK(length(time_format) <= 24),
+    week_start_day TEXT CHECK (length(week_start_day) <= 16),
 
     -- INSULIN
     bolus_dia_hours REAL,
@@ -161,7 +161,7 @@ CREATE TABLE sites (
 
     -- NOTIFICATIONS
     notifications_enabled INTEGER
-    
+
 );
 
 
@@ -220,9 +220,9 @@ CREATE TABLE site_identities (
     -- DATE
     timezone TEXT CHECK(length(timezone) <= 64),
     language TEXT CHECK(length(language) <= 12),
-    date_format TEXT CHECK(date_format IN ('YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY')),
-    time_format TEXT CHECK(time_format IN ('HH:mm:ss', 'hh:mm:ss a')),
-    week_start_day TEXT CHECK (week_start_day IN ('monday', 'sunday')),
+    date_format TEXT CHECK(length(date_format) <= 24),
+    time_format TEXT CHECK(length(time_format) <= 24),
+    week_start_day TEXT CHECK (length(week_start_day) <= 16),
 
     -- INSULIN
     bolus_dia_hours REAL,
