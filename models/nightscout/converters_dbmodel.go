@@ -39,9 +39,9 @@ type DBModelConverter interface {
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
-	// goverter:map . SGV   | SGVGlucoseReadingTypeToValue
-	// goverter:map . MBG   | MBGGlucoseReadingTypeToValue
-	// goverter:map . Units | UnitsToValue
+	// goverter:map Mgdl SGV   | SGVGlucoseReadingTypeToValue
+	// goverter:map Mgdl MBG   | MBGGlucoseReadingTypeToValue
+	// goverter:map Mgdl Units | UnitsToValue
 	// goverter:map OccurredAt Date
 	// goverter:map OccurredAt Mills
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
@@ -102,8 +102,8 @@ type DBModelConverter interface {
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
 	// goverter:map InsulinSensitivitiesJson Sens       | JSONToScheduleValueSlice
 	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
-	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSliceWithUnitConversionToMGDL
-	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSliceWithUnitConversionToMGDL
+	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSliceWithUnitConversionFromMGDL
+	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSliceWithUnitConversionFromMGDL
 	DBModelToProfile(source *site.ProfilePreset, siteContext *httputils.SiteContext) Profile
 }
 
@@ -135,9 +135,9 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 }
 
 // goverter:context siteContext
-func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *FlexibleFloat64 {
-	if gr.ReadingType == "sgv" {
-		_, value := GetUnitsAndValue(gr, siteContext)
+func SGVGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *FlexibleFloat64 {
+	if true { // SGV is assumed for this function
+		_, value := GetUnitsAndValue(mgdl, siteContext)
 		return value
 	}
 	return nil
@@ -145,9 +145,9 @@ func SGVGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils
 }
 
 // goverter:context siteContext
-func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *FlexibleFloat64 {
-	if gr.ReadingType == "mbg" {
-		_, value := GetUnitsAndValue(gr, siteContext)
+func MBGGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *FlexibleFloat64 {
+	if true { // MBG is assumed for this function
+		_, value := GetUnitsAndValue(mgdl, siteContext)
 		return value
 	}
 	return nil
@@ -155,16 +155,21 @@ func MBGGlucoseReadingTypeToValue(gr site.GlucoseReading, siteContext *httputils
 }
 
 // goverter:context siteContext
-func UnitsToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *consts.Units {
+func GlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *FlexibleFloat64 {
+	_, value := GetUnitsAndValue(mgdl, siteContext)
+	return value
+}
 
-	units, _ := GetUnitsAndValue(gr, siteContext)
+// goverter:context siteContext
+func UnitsToValue(mgdl float64, siteContext *httputils.SiteContext) *consts.Units {
+	units, _ := GetUnitsAndValue(mgdl, siteContext)
 	return units
 }
 
-func GetUnitsAndValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) (*consts.Units, *FlexibleFloat64) {
+func GetUnitsAndValue(mgdl float64, siteContext *httputils.SiteContext) (*consts.Units, *FlexibleFloat64) {
 
 	units := siteContext.GetSettings().GetUnits()
-	value := units.FromMGDL(gr.Mgdl)
+	value := units.FromMGDL(mgdl)
 	return units, ptr(FlexibleFloat64(value))
 }
 
@@ -189,7 +194,7 @@ func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
 }
 
 // goverter:context siteContext
-func JSONToScheduleValueSliceWithUnitConversionToMGDL(jsonStr *string, siteContext *httputils.SiteContext) []*ScheduleValue {
+func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteContext *httputils.SiteContext) []*ScheduleValue {
 	if jsonStr == nil {
 		return nil
 	}

@@ -5,6 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/site"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // goverter:converter
@@ -197,13 +198,15 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	EventGroupToTreatment(source site.EventGroup) *Treatment
 
+	// goverter:context siteContext
 	// goverter:update target
 	// goverter:ignore CreatedAt
 	//
 	// goverter:ignoreMissing
-	// goverter:map Mgdl Glucose
+	// goverter:map Mgdl Glucose    | GlucoseReadingTypeToValue
+	// goverter:map Mgdl Units      | UnitsToValue
 	// goverter:map MeasurementMethod GlucoseType
-	UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment)
+	UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
 	// goverter:ignore CreatedAt
@@ -242,6 +245,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Title Name
 	UpdateNotificationEventToTreatment(source *site.NotificationEvent, target *Treatment)
 
+	// goverter:context siteContext
 	// goverter:update target
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
@@ -249,7 +253,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Name Profile
 	// goverter:map . ProfileJSON | ToProfileJSON
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
-	UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatment)
+	UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
 	// goverter:ignore CreatedAt
@@ -323,8 +327,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	//
-	// goverter:ignore Delta Direction Noise Filtered Unfiltered Rssi ReadingType
-	// goverter:map Glucose Mgdl
+	// goverter:ignore Mgdl Delta Direction Noise Filtered Unfiltered Rssi ReadingType
 	// goverter:map GlucoseType MeasurementMethod
 	PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading
 
@@ -404,6 +407,7 @@ func MinutesToMilliseconds(durationMinutes any) *FlexibleInt64 {
 	return nil
 }
 
+// goverter:context siteContext
 func ToProfileJSON(source interface {
 	GetDia() *float64
 	GetTimezone() *string
@@ -413,7 +417,7 @@ func ToProfileJSON(source interface {
 	GetBasalRatesJson() *string
 	GetTargetsLowJson() *string
 	GetTargetsHighJson() *string
-}) *LongJSONString {
+}, siteContext *httputils.SiteContext) *LongJSONString {
 	profile := Profile{}
 
 	if source.GetDia() != nil {
@@ -422,23 +426,23 @@ func ToProfileJSON(source interface {
 	if source.GetTimezone() != nil {
 		profile.Timezone = ptr(Timezone(*source.GetTimezone()))
 	}
-	if source.GetUnits() != nil {
-		profile.Units = ptr(consts.Units(*source.GetUnits()))
-	}
+
+	profile.Units = siteContext.GetSettings().GetUnits()
+
 	if source.GetCarbRatiosJson() != nil {
-		json.Unmarshal([]byte(*source.GetCarbRatiosJson()), &profile.CarbRatio)
+		profile.CarbRatio = JSONToScheduleValueSlice(source.GetCarbRatiosJson())
 	}
 	if source.GetInsulinSensitivitiesJson() != nil {
-		json.Unmarshal([]byte(*source.GetInsulinSensitivitiesJson()), &profile.Sens)
+		profile.Sens = JSONToScheduleValueSlice(source.GetInsulinSensitivitiesJson())
 	}
 	if source.GetBasalRatesJson() != nil {
-		json.Unmarshal([]byte(*source.GetBasalRatesJson()), &profile.Basal)
+		profile.Basal = JSONToScheduleValueSlice(source.GetBasalRatesJson())
 	}
 	if source.GetTargetsLowJson() != nil {
-		json.Unmarshal([]byte(*source.GetTargetsLowJson()), &profile.TargetLow)
+		profile.TargetLow = JSONToScheduleValueSliceWithUnitConversionFromMGDL(source.GetTargetsLowJson(), siteContext)
 	}
 	if source.GetTargetsHighJson() != nil {
-		json.Unmarshal([]byte(*source.GetTargetsHighJson()), &profile.TargetHigh)
+		profile.TargetHigh = JSONToScheduleValueSliceWithUnitConversionFromMGDL(source.GetTargetsHighJson(), siteContext)
 	}
 
 	profileBytes, err := json.Marshal(profile)

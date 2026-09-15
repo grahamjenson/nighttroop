@@ -26,9 +26,9 @@ B {
   "eventType": "Meal Bolus",
   "created_at": "{{ time 0 }}",
 
-  "glucose": 148,
+  "glucose": 10,
   "glucoseType": "Sensor",
-  "units": "mg/dL",
+  "units": "mmol/L",
 
   "carbs": 45,
   "insulin": 4.2,
@@ -39,9 +39,9 @@ B {
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 148 "@0.glucose" }}
+ASSERT {{ assertEquals 10 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mg/dL" "@0.units" }}
+ASSERT {{ assertEquals "mmol/L" "@0.units" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
 ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
@@ -432,7 +432,7 @@ GET http://{{ site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?t
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 148 "@0.glucose" }}
+ASSERT {{ assertEquals 10 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 ASSERT {{ assertEquals 45 "@0.carbs" }}
 ASSERT {{ assertEquals 4.2 "@0.insulin" }}
@@ -445,7 +445,7 @@ NAME get_treatments_type_v1
 GET http://{{ site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
-ASSERT {{ assertEquals 148 "@0.glucose" }}
+ASSERT {{ assertEquals 10 "@0.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
 
 NAME put_update_treatments_v1
@@ -660,9 +660,9 @@ B {
   "eventType": "BG Check",
   "created_at": "{{ time 0 }}",
 
-  "glucose": 145,
+  "glucose": 12,
   "glucoseType": "Meter",
-  "units": "mg/dL",
+  "units": "mmol/L",
 
 
   "notes": "Pizza is nice",
@@ -671,9 +671,9 @@ B {
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "BG Check" "@0.eventType" }}
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 145 "@0.glucose" }}
+ASSERT {{ assertEquals 12 "@0.glucose" }}
 ASSERT {{ assertEquals "Meter" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mg/dL" "@0.units" }}
+ASSERT {{ assertEquals "mmol/L" "@0.units" }}
 ASSERT {{ assertEquals "Pizza is nice" "@0.notes" }}
 ASSERT {{ assertEquals "lunch" "@0.reason" }}
 
@@ -1173,7 +1173,7 @@ B {
   "reason": "reason",
 
   "profile": "Weekend",
-  "profileJson": "{\"units\":\"mg/dL\",\"dia\":5,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}",
+  "profileJson": "{\"units\":\"mmol/L\",\"dia\":5,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}",
   "duration": 60,
   "percentage": 110,
   "timeshift": -3
@@ -1184,7 +1184,7 @@ ASSERT {{ assertExists "@0.created_at" }}
 ASSERT {{ assertEquals "Profile Switch" "@0.notes" }}
 ASSERT {{ assertEquals "reason" "@0.reason" }}
 ASSERT {{ assertEquals "Weekend" "@0.profile" }}
-ASSERT {{ assertEquals "{\"units\":\"mg/dL\",\"dia\":5,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}" "@0.profileJson" }}
+ASSERT {{ assertEquals "{\"units\":\"mmol/L\",\"dia\":5,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}" "@0.profileJson" }}
 ASSERT {{ assertEquals 60 "@0.duration" }}
 ASSERT {{ assertEquals 110 "@0.percentage" }}
 ASSERT {{ assertEquals -3 "@0.timeshift" }}

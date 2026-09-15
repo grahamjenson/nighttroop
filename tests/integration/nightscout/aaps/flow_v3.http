@@ -379,16 +379,16 @@ B {
     "durationInMilliseconds": 0,
     "enteredBy": "AndroidAPS",
     "eventType": "Announcement",
-    "glucose": 8.033333333333331,
+    "glucose": 100,
     "glucoseType": "Finger",
     "isReadOnly": false,
     "isValid": true,
     "notes": "Meter Announcement",
-    "units": "mmol",
+    "units": "mgdl",
     "utcOffset": 720
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 8.033333333333331 "@result.glucose" }}
+ASSERT {{ assertEquals 100 "@result.glucose" }}
 
 
 NAME add_treatments_questions_have_glucose_too

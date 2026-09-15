@@ -10,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -195,11 +194,13 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 		createParam.CarbsHr = profile.CarbsHr.Float64p()
 		createParam.Delay = profile.Delay.Float64p()
 
-		if profile.Units != nil {
-			createParam.Units = profile.Units
-		} else {
-			createParam.Units = defaultUnits
+		if profile.Units == nil {
+			profile.Units = defaultUnits
 		}
+
+		createParam.Units = profile.Units
+
+		profile.ConvertToMGDL() // Converts the target values to
 
 		if len(profile.CarbRatio) > 0 {
 			createParam.CarbRatiosJson = TryValueToJSON(profile.CarbRatio)
@@ -211,10 +212,10 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 			createParam.BasalRatesJson = TryValueToJSON(profile.Basal)
 		}
 		if len(profile.TargetLow) > 0 {
-			createParam.TargetsLowJson = TryValueToJSON(ScheduleValuesToJSONWithUnitConversionToMGDL(profile.TargetLow, createParam.Units))
+			createParam.TargetsLowJson = TryValueToJSON(profile.TargetLow)
 		}
 		if len(profile.TargetHigh) > 0 {
-			createParam.TargetsHighJson = TryValueToJSON(ScheduleValuesToJSONWithUnitConversionToMGDL(profile.TargetHigh, createParam.Units))
+			createParam.TargetsHighJson = TryValueToJSON(profile.TargetHigh)
 		}
 
 		createParams = append(createParams, createParam)
@@ -232,17 +233,4 @@ func TryValueToJSON(svs any) *string {
 	}
 	jsonStr := string(jsonBytes)
 	return &jsonStr
-}
-
-func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*nightscout.ScheduleValue, units *consts.Units) []*nightscout.ScheduleValue {
-	if len(svs) == 0 {
-		return svs
-	}
-
-	for _, sv := range svs {
-		if sv.Value != nil {
-			sv.Value = ptr(nightscout.FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
-		}
-	}
-	return svs
 }

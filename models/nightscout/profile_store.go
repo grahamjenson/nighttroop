@@ -327,3 +327,21 @@ func (t ProfileStore) GetUtcOffsetMinutes() *int64 {
 func (t ProfileStore) GetIdentifier() *string {
 	return t.Identifier.Stringp()
 }
+
+func (p *Profile) ConvertToMGDL() {
+	p.TargetLow = ScheduleValuesToJSONWithUnitConversionToMGDL(p.TargetLow, p.Units)
+	p.TargetHigh = ScheduleValuesToJSONWithUnitConversionToMGDL(p.TargetHigh, p.Units)
+}
+
+func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*ScheduleValue, units *consts.Units) []*ScheduleValue {
+	if len(svs) == 0 {
+		return svs
+	}
+
+	for _, sv := range svs {
+		if sv.Value != nil {
+			sv.Value = ptr(FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
+		}
+	}
+	return svs
+}

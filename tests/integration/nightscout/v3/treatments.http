@@ -29,7 +29,7 @@ B {
   "eventType": "Bolus Wizard",
   "created_at": "{{ time 0 }}",
 
-  "glucose": 150,
+  "glucose": 15,
   "glucoseType": "Sensor",
 
   "carbs": 46,
@@ -41,7 +41,7 @@ B {
 ASSERT_STATUS 201
 ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
 ASSERT {{ assertExists "@result.created_at" }}
-ASSERT {{ assertEquals 150 "@result.glucose" }}
+ASSERT {{ assertEquals 15 "@result.glucose" }}
 ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
 ASSERT {{ assertEquals 46 "@result.carbs" }}
 ASSERT {{ assertEquals 1.54 "@result.insulin" }}

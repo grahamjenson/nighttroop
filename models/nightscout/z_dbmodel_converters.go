@@ -102,8 +102,8 @@ func DBModelToEntry(source *site.GlucoseReading, context *httputils.SiteContext)
 		nightscoutEntry.Identifier = &pNightscoutIdentifierString
 		pNightscoutEntryType := EntryType((*source).ReadingType)
 		nightscoutEntry.Type = &pNightscoutEntryType
-		nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue((*source), context)
-		nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue((*source), context)
+		nightscoutEntry.SGV = SGVGlucoseReadingTypeToValue((*source).Mgdl, context)
+		nightscoutEntry.MBG = MBGGlucoseReadingTypeToValue((*source).Mgdl, context)
 		if (*source).Direction != nil {
 			xstring := *(*source).Direction
 			nightscoutEntry.Direction = &xstring
@@ -112,7 +112,7 @@ func DBModelToEntry(source *site.GlucoseReading, context *httputils.SiteContext)
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Delta)
 			nightscoutEntry.Trend = &nightscoutFlexibleFloat64
 		}
-		nightscoutEntry.Units = UnitsToValue((*source), context)
+		nightscoutEntry.Units = UnitsToValue((*source).Mgdl, context)
 		if (*source).Filtered != nil {
 			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).Filtered)
 			nightscoutEntry.Filtered = &nightscoutFlexibleFloat642
@@ -251,8 +251,8 @@ func DBModelToProfile(source *site.ProfilePreset, context *httputils.SiteContext
 		nightscoutProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
 		nightscoutProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
 		nightscoutProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
-		nightscoutProfile.TargetLow = JSONToScheduleValueSliceWithUnitConversionToMGDL((*source).TargetsLowJson, context)
-		nightscoutProfile.TargetHigh = JSONToScheduleValueSliceWithUnitConversionToMGDL((*source).TargetsHighJson, context)
+		nightscoutProfile.TargetLow = JSONToScheduleValueSliceWithUnitConversionFromMGDL((*source).TargetsLowJson, context)
+		nightscoutProfile.TargetHigh = JSONToScheduleValueSliceWithUnitConversionFromMGDL((*source).TargetsHighJson, context)
 	}
 	return nightscoutProfile
 }

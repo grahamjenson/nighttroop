@@ -105,3 +105,88 @@ ASSERT_STATUS 201
 ASSERT {{ assertEquals "mmol/L" "@result.units" }}
 ASSERT {{ assertEquals 3.885 "@result.store.Default.target_low.0.value" }}
 ASSERT {{ assertEquals 4.44 "@result.store.Default.target_high.0.value" }}
+
+#####
+# Now Fetch as MMOL
+#####
+
+NAME get_labeled_mmol
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mmol.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 4.0 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 5.0 "@result.store.Default.target_high.0.value" }}
+
+NAME get_labeled_mg_dl
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mg_dl.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 3.885 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 4.44 "@result.store.Default.target_high.0.value" }}
+
+
+NAME get_unlabeled_mmol
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_unlabeled_mmol.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 4.0 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 5.0 "@result.store.Default.target_high.0.value" }}
+
+
+NAME get_unlabeled_mg_dl
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_unlabeled_mg_dl.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 3.885 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 4.44 "@result.store.Default.target_high.0.value" }}
+
+#####
+# Now Fetch as MGDL
+#####
+
+NAME update_unit_to_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mg/dL"}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+
+
+NAME get_labeled_mmol
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mmol.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+ASSERT {{ assertEquals 72.072 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 90.09 "@result.store.Default.target_high.0.value" }}
+
+NAME get_labeled_mg_dl
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_labeled_mg_dl.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+ASSERT {{ assertEquals 70 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 80 "@result.store.Default.target_high.0.value" }}
+
+
+NAME get_unlabeled_mmol
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_unlabeled_mmol.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+ASSERT {{ assertEquals 72.072 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 90.09 "@result.store.Default.target_high.0.value" }}
+
+
+NAME get_unlabeled_mg_dl
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_unlabeled_mg_dl.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+ASSERT {{ assertEquals 70 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 80 "@result.store.Default.target_high.0.value" }}

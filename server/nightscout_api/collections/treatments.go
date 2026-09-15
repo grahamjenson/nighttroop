@@ -919,6 +919,11 @@ func TreatmentToFoodIntake(source nightscout.Treatment) *site.FoodIntake {
 func TreatmentToGlucoseReading(source nightscout.Treatment) *site.GlucoseReading {
 	target := nightscout.PartialTreatmentToGlucoseReading(source)
 	target.ReadingType = "sgv"
+	target.Units = source.Units
+
+	if source.Glucose != nil {
+		target.Mgdl = target.Units.ToMGDL(float64(*source.Glucose))
+	}
 
 	if source.GlucoseType != nil {
 		switch *source.GlucoseType {
@@ -989,21 +994,25 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
 	}
 
 	if source.ProfileJSON != nil {
-		var profileJSON nightscout.Profile
-		err := json.Unmarshal([]byte(*source.ProfileJSON), &profileJSON)
+		var profile nightscout.Profile
+		err := json.Unmarshal([]byte(*source.ProfileJSON), &profile)
 		if err == nil {
 
-			target.Dia = profileJSON.Dia.Float64p()
-			target.Timezone = profileJSON.Timezone.Stringp()
-			target.Units = profileJSON.Units
-			target.CarbsHr = profileJSON.CarbsHr.Float64p()
-			target.Delay = profileJSON.Delay.Float64p()
+			profile.ConvertToMGDL()
 
-			basalBytes, _ := json.Marshal(profileJSON.Basal)
-			carbRatioBytes, _ := json.Marshal(profileJSON.CarbRatio)
-			sensBytes, _ := json.Marshal(profileJSON.Sens)
-			targetLowBytes, _ := json.Marshal(profileJSON.TargetLow)
-			targetHighBytes, _ := json.Marshal(profileJSON.TargetHigh)
+			target.Dia = profile.Dia.Float64p()
+			target.Timezone = profile.Timezone.Stringp()
+
+			// Set units
+			target.Units = profile.Units
+			target.CarbsHr = profile.CarbsHr.Float64p()
+			target.Delay = profile.Delay.Float64p()
+
+			basalBytes, _ := json.Marshal(profile.Basal)
+			carbRatioBytes, _ := json.Marshal(profile.CarbRatio)
+			sensBytes, _ := json.Marshal(profile.Sens)
+			targetLowBytes, _ := json.Marshal(profile.TargetLow)
+			targetHighBytes, _ := json.Marshal(profile.TargetHigh)
 
 			if basalBytes != nil {
 				target.BasalRatesJson = ptr(string(basalBytes))
@@ -1128,12 +1137,12 @@ func isAssigned(values ...any) bool {
 func DBModelToTreatment(source *site.EventGroupsBundle, siteContext *httputils.SiteContext) nightscout.Treatment {
 	treatment := nightscout.EventGroupToTreatment(source.EventGroup)
 
-	nightscout.UpdateGlucoseReadingToTreatment(source.GlucoseReading, treatment)
+	nightscout.UpdateGlucoseReadingToTreatment(source.GlucoseReading, siteContext, treatment)
 	nightscout.UpdateInsulinDoseToTreatment(source.InsulinDose, treatment)
 	nightscout.UpdateFoodIntakeToTreatment(source.FoodIntake, treatment)
 	nightscout.UpdateTempBasalToTreatment(source.TempBasal, treatment)
 	nightscout.UpdateTempTargetToTreatment(source.TempTarget, treatment)
-	nightscout.UpdateProfileSwitchToTreatment(source.ProfileSwitch, treatment)
+	nightscout.UpdateProfileSwitchToTreatment(source.ProfileSwitch, siteContext, treatment)
 	nightscout.UpdateComponentEventToTreatment(source.ComponentEvent, treatment)
 	nightscout.UpdateActivityToTreatment(source.Activity, treatment)
 	nightscout.UpdateNotificationEventToTreatment(source.NotificationEvent, treatment)

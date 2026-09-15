@@ -3,7 +3,10 @@
 
 package nightscout
 
-import site "nighttroop.t1d.nz/data/sql/site"
+import (
+	site "nighttroop.t1d.nz/data/sql/site"
+	httputils "nighttroop.t1d.nz/utils/httputils"
+)
 
 func ActivityCreate(source site.Activity, context ConverterContext) site.CreateActivityParams {
 	var siteCreateActivityParams site.CreateActivityParams
@@ -1522,15 +1525,14 @@ func UpdateFoodIntakeToTreatment(source *site.FoodIntake, target *Treatment) {
 		}
 	}
 }
-func UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, target *Treatment) {
+func UpdateGlucoseReadingToTreatment(source *site.GlucoseReading, context *httputils.SiteContext, target *Treatment) {
 	if source != nil {
-		pNightscoutFlexibleFloat64 := FlexibleFloat64(source.Mgdl)
-		target.Glucose = &pNightscoutFlexibleFloat64
+		target.Glucose = GlucoseReadingTypeToValue(source.Mgdl, context)
 		if source.MeasurementMethod != nil {
 			nightscoutGlucoseType := GlucoseType(*source.MeasurementMethod)
 			target.GlucoseType = &nightscoutGlucoseType
 		}
-		target.Units = UnitsToUnits(source.Units)
+		target.Units = UnitsToValue(source.Mgdl, context)
 		if source.Notes != nil {
 			nightscoutSanitizedString := SanitizedString(*source.Notes)
 			target.Notes = &nightscoutSanitizedString
@@ -1602,7 +1604,7 @@ func UpdateNotificationEventToTreatment(source *site.NotificationEvent, target *
 		}
 	}
 }
-func UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatment) {
+func UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, context *httputils.SiteContext, target *Treatment) {
 	if source != nil {
 		pNightscoutShortString := ShortString(source.Name)
 		target.Name = &pNightscoutShortString
@@ -1611,7 +1613,7 @@ func UpdateProfileSwitchToTreatment(source *site.ProfileSwitch, target *Treatmen
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
 		pNightscoutShortString2 := ShortString(source.Name)
 		target.Profile = &pNightscoutShortString2
-		target.ProfileJSON = ToProfileJSON(source)
+		target.ProfileJSON = ToProfileJSON(source, context)
 		if source.Percent != nil {
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*source.Percent)
 			target.Percent = &nightscoutFlexibleFloat64
