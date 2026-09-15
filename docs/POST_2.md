@@ -34,3 +34,15 @@ drwxr-xr-x  3 grahamjenson  staff    96B Sep  4 14:42 .
 drwxr-xr-x  3 grahamjenson  staff    96B Sep  4 14:41 ..
 ➜  nighttroop git:(main) 
 
+
+
+# Stopping bad users
+
+Part of the fun of this project was thinking through the ways in which users could be noisy and stopping them.
+
+Here are a few of the ways I thought about:
+
+1. Creating lots of users --> rate limiting IPs, + global user creation rate limit
+1. Creating users, then abandoning --> maintaining when users last read and wrote so we can archive if needed
+1. Sending through massive amounts of data, limiting every DB column to a size
+1. Creating lots of tokens

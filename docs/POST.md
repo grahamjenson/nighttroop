@@ -1,46 +1,50 @@
 # $0.01 Per-User Per-Year: NightTroop
 
-Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL to that my wife, our school and me can download and see on devices like phones, watches and smart devices. We also are able to upload information to Nightscout that controls his insulin pump, like carbs he has eaten, or target BGLs for exercise or eating. It is an integral part of how we manage T1D. 
+Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL and treatment data to. Then our family and his caregivers can download and see on his current state on our phones, watches and other devices. We also upload information to Nightscout that syncs down to his phone to control his insulin delivery, via setting target BGLs or adding carbs. **Nightscout is an integral part of my sons T1D management.**
 
-Self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout for you. These are useful, but can cost as much as $12 per month. 
+Self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout, but they can cost as much as $12 per month. 
 
 To help people out and let them save a buck or two I tried hosting my own and other people Nightscout instances, but...
 
-1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of this resource hungry server and database!
-2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is annoying, water is wet; but with nightscout each user has their own config (e.g. timezone) and changing anything requires restarting the server, so the difficulty has layers.
-3. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a bit more difficult.
+1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of the server and database!
+2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is annoying, water is also wet; but with nightscout each user has their own config (e.g. timezone) and changing anything requires restarting the server, so the difficulty has layers.
+3. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a more difficult.
 
-I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user called "NightTroop" (because a group of scouts is a troop).
-What makes NightTroop (or probably any nightscout rewrite) different from like a typical company or product is that:
+I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user, I am calling it "NightTroop" (because a group of scouts is a troop).
+What makes NightTroop (or probably any nightscout rewrite) different from a typical company or product is that:
 
 1. it would be a wild success if it had 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies.
 1. charging money is a shitty thing to do, and can come off as exploitative to a community already that may have little or no choice.
-1. Collecting and hosting Personally Identifiable Information (PII) from users can run you amok of HIPPA laws, especially if you charge for the service.
-1. Users will want it to be open source and self host. The idea of not sharing code that your life may rely on, as well as let them do what they want with it is a good idea.
-1. Putting hurdles in front of it to sign up for and use, like requiring email, or login can eliminate use-cases like temporary users.
+1. collecting and hosting Personally Identifiable Information (PII) from users can run you amok of HIPPA laws, especially if you charge for the service.
+1. users will want it to be open source and self host. The idea of not sharing code that your life may rely on, as well as let them do what they want with it is a good idea.
+1. putting hurdles in front of it to sign up for and use, like requiring email, or login can stop some people using it.
 
-Give these things, for NightTroop to be sustainable it **must be** extremely low complexity and low cost. Lets put an arbitrary number of $0.01 per-user per-year; so 10,000 users is about $100 per year. Complexity is hard to measure, lets say I can understand it (no vibe-coding), and that means it must be simple.
+For NightTroop to be sustainable it **must be** extremely low complexity and low cost. To make this interesting, lets put an arbitrary number of $0.01 per-user per-year; so to support 10,000 users costs $100 per year.
 
 # The Plan
+
+NightTroop is a multi-tennant Nighscout system. Each "tennent" is called a site, as each site can have multiple users.
 
 ## SQLite + Split user DBs
 
 NightTroop needs to be boring, maintainable, easy to setup, low complexity, cheap to run -- a single binary executable with as few external dependencies cant get much more boring.
-Using SQLite lets us get rid of the complexity of an external database dependency (e.g. MongoDB), it should also be faster thus cheaper.
+Using SQLite lets us get rid of using an external database dependency (e.g. MongoDB), but add complexity around deployment and disaster recovery.
+A common way to use SQLite is externally backing up snapshots to somewhere like S3, e.g. Litestream.
+So if we are moving servers during deployment, or have a disaster and need to reset data, we have it available.
 
-Using SQLite does make deployment and disaster recovery harder and more complex because there is no built in replication or high availability.
-To make a NightTroop work we will need to be external storage of SQLite DBs, S3 (like) services are best.
+There are two types of data NightTroop is concerned with:
 
-A users data is usually mastered on a device, like in AAPS or Loop, then synced to Nightscout. 
-That data needs less redundancy, so snapshotting that data every few minutes should be fine. 
-Data that is not mastered elsewhere, like user settings and authentication tokens, will need a higher rate of syncing as it is not mastered elsewhere and is crucial to disaster recovery.
-Snapshotting then uploading one giant SQLite DB would block IO then network.
-Sharding data over many USER DB's solves blocking and a few other problems, e.g. managing 10k 2MB DBs should be easier than managing 1 giant 20GB database.
+1. Data mastered on the Person With Diabetes (PWD) phone, in an app like AAPS or Loop, e.g. BGL readings and treatments
+1. Data that is unique to Nighttroop, e.g. control plane users, authentication tokens, sync information...
+
+The externally mastered information can be backed up at a lower frequency to the NightTroop information, as it can be recovered (at least in the short term)
+So separating this information into different SQLite DBs, makes sense, and further separating each sites data makes backing up easier to do incrementally, so not to block network IO or CPU periodically.
 
 ## Onboarding + Rate Limiting
 
 Not storing PII of a user makes onboarding super simple, it should be "click a button -> get a site".
 Anonominity adds extra work to make sure users are behaving and not over consuming resources.
+One [noisy neighbor](https://en.wikipedia.org/wiki/Cloud_computing_issues#Performance_interference_and_noisy_neighbors) could take down performance for everyone.
 The solution is to:
 
 1. Limiting user creation and limit total users, e.g. one user per minute created and stop creating users at 10k.
@@ -48,8 +52,6 @@ The solution is to:
 1. Limiting returned data length, e.g. returning a months worth of data every query.
 1. Limiting the size of user databases by truncating or compressing old information.
 1. Archiving and deleting inactive users.
-
-All of these are the extra work because one noisy neighbor is now a problem for many.
 
 # Back of the envelope pricing for 10K users
 
@@ -69,7 +71,7 @@ I am going to use fly.io as an estimate for cloud costs, because I am familiar w
 
 ## Compute + RAM + Storage
 
-To test the amount of storage I will need I created a SQLite DB with 100,000 data points, one for every minute(ish) for 2 months and it was 3MB. So for 10k users would be a total of 30GB DBs on disk.
+I created a SQLite DB with 100,000 data points, one for every minute(ish) for 2 months and it was 3MB. So for 10k users would be a total of 30GB DBs on disk.
 
 The main RAM usage of the server will be the SQLite in-memory cache, set with `cache_size` parameter. 
 The most recent data is the most important, about 6 hours worth, which is about 10KB (on disk).
@@ -103,7 +105,7 @@ That is pretty linear.
 I also wanted to quickly do a comparison against a lower level language, Zig, implementation just to make sure i am not leaving a lot on the table,
 
 With a single core and 256MB of memory:
-wrk -d10s -c 1000 https://zig-hidden-wave-136.fly.dev/read
+wrk -d10s -c 1000 https://{{site}}/read
   2 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
     Latency   137.41ms   94.22ms   1.42s    89.06%
@@ -113,7 +115,7 @@ wrk -d10s -c 1000 https://zig-hidden-wave-136.fly.dev/read
 Requests/sec:   6832.73
 Transfer/sec:     18.01MB
 
-Just to sanity check those numbers I compared the results to Raspberry Pi 5 with an NVME HDD running on the local network.
+Just to sanity check those numbers against some cheap hardware, I compared the results to Raspberry Pi 5 with an NVME HDD running on the local network.
 
  wrk  -d10s -c 1000 http://{site}/read
   2 threads and 1000 connections
@@ -124,8 +126,7 @@ Just to sanity check those numbers I compared the results to Raspberry Pi 5 with
 Requests/sec:   1528.45
 Transfer/sec:      7.75MB
 
-Given that hardware costs about $200, I think it would be much more efficient to run on fly.io and deal with the hassel of my own hardware.
-
+Given that Pi cost about $200, I think it would be much more efficient to run on fly.io and deal with the hassle of my own hardware.
 
 ## Backup Pricing for S3-ish services
 
@@ -136,31 +137,42 @@ Tigris    $0.02                 $5                       $0.5            FREE   
 R2        $0.015                $4.50                    $0.36           FREE      FREE
 S3        $0.023                $5                       $0.4            0.09/GB   FREE      
 
-The cost per GB is nothing. If we kept 10 versions of each user's DB it would still be at most $2.3 per month.
+As you can see, the cost per GB is nothing. If we kept 10 full snapshots of each user's DB it would still be at most $2.3 per month.
 The cost of reads will only happen on deploys to new machines, which will be low.
 
-The writes are the most expensive part. If we backup every users DB individually every 5 minutes, that would be $450 per month. 
-Since we are bundling user DBs together for backup, we can bring the cost down to about $1 per month.
-
+The writes are where they get-ya. If we backup every users DB individually every 5 minutes, that would be $450 per month. 
+This is why projects like Litestream wont work for us, it is cheap for a single DB but gets very expensive the more DBs you have.
+The solution I came up with is to segment sites into batches (based on letter they start with), then backup and zip them all together.
+10k users, batched into 26 groups, backed-up every 5 minutes is about $1 per month.
 
 ## Network Costs
 
-bandwidth is $0.02-$0.12 per GB on fly.io. with 10K users polling like me (excessive estimate) and being returned 1kb (conservative estimate) of data per call, that is 144GB of data per day! So a monthly cost of $86 to $518 per month! This is by far the greatest cost. Of course this would be less if instead of polling, we *encouraged* users to use the socket.io endpoint (even if it was long polling), this would drop the cost down to `users * amount of data written * devices connected`, so something like `10k * 3Mb oer year * 10` $6 to $36 PER YEAR. So all up bandwidth costs are somewhere in the $6 to $6000 per year range!
+On fly.io in New Zealand, bandwidth is $0.04 per GB. So with 10K users polling like me (very agressivly), and returning 1kb of data per call on average, with `users * amount of data * devices connected` that is: 
 
-I think with good user rate limits, this would hopefully encourage people to use the socket.io endpoint and get closer to the $100 per year mark.
+1. 1,667 requests per second 
+2. 144GB of data per day 
+3. that is $172 per month, $2,000 per year
 
-There are a few other network costs, like a Domain will cost $15 per year, a wildcard cert is $1 per month on fly.io. So $30 per year.
+This cost estimate surprised me. If everyone used *socket.io* instead of polling, this might drop the cost some but not that much. 
+Other network costs, like the Domain ($15 per year) and wildcard cert ($12 per year) are rounding errors compared to bandwidth egress costs.
 
 # Conclusion
 
-Given the $100 for compute, $3 for backups, the network costs $130 is $233 per year, or $0.02 cents per user.
-This is not tooo far from my original goal, though this is also a pretty conservative estimate, it will probably be more for compute and bandwidth especially.
+The tally for a years worth of running is:
 
-I have also ignored lots of other costs, like external services for observability and error tracking probably costing hundreds per year in subscriptions.
-Also compute requirements will increase as background jobs, rendering frontends and complexity increases.
+1. $100 for compute
+1. $3 for backups
+1. $2000 per year bandwidth egress
 
-This is all just guesses, and none of it is real. For the last year I have been working on actually building this system,
-and everything is harder and more expensive.
+OR **$0.20 cents per user per year** 20x what I originally was hoping for. This is a conservative estimate though:
+
+1. The site databases will store more data per minute for longer, increasing HDD and RAM costs
+1. The users will spam much more aggressiely, increasing CPU and bandwidth costs
+1. External costs like observability and error tracking usually increase linearly with number of users.
+1. Jevons Paradox, where no matter what box I put this on, the features will increase to use all its resources until I upgrade.
+
+Anyway, these are all just guesses I started this project with. However, for the last year I have been actually building this system,
+and everything is harder and more expensive than even I assumed. Post coming soon.
 
 
 
