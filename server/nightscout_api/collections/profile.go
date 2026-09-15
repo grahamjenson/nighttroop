@@ -75,6 +75,9 @@ func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, ident
 		return nil, err
 	}
 	wrapper := site.ProfilePresetBundle(ret)
+	if len(wrapper) == 0 {
+		return nil, sql.ErrNoRows
+	}
 	return &wrapper, nil
 }
 
@@ -151,15 +154,17 @@ func DBToNightscoutProfileStore(source *site.ProfilePresetBundle, siteContext *h
 			break
 		}
 	}
+	settingsUnits := siteContext.GetSettings().GetUnits()
 
 	profileStore := nightscout.DBModelToProfileStore(defaultProfile, siteContext)
 	profileStore.Store = make(map[nightscout.ShortString]nightscout.Profile)
 	profileStore.DefaultProfile = ptr(nightscout.ShortString(defaultProfile.Name))
-	if defaultProfile.Units != nil {
-		profileStore.Units = ptr(consts.Units(*defaultProfile.Units))
-	}
+	profileStore.Units = settingsUnits
+
 	for _, p := range realSource {
 		profile := nightscout.DBModelToProfile(p, siteContext)
+		profile.Units = settingsUnits
+
 		profileStore.Store[nightscout.ShortString(p.Name)] = profile
 	}
 
@@ -187,6 +192,8 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 
 		createParam.Dia = profile.Dia.Float64p()
 		createParam.Timezone = profile.Timezone.Stringp()
+		createParam.CarbsHr = profile.CarbsHr.Float64p()
+		createParam.Delay = profile.Delay.Float64p()
 
 		if profile.Units != nil {
 			createParam.Units = profile.Units
@@ -204,10 +211,10 @@ func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx night
 			createParam.BasalRatesJson = TryValueToJSON(profile.Basal)
 		}
 		if len(profile.TargetLow) > 0 {
-			createParam.TargetsLowJson = TryValueToJSON(profile.TargetLow)
+			createParam.TargetsLowJson = TryValueToJSON(ScheduleValuesToJSONWithUnitConversionToMGDL(profile.TargetLow, createParam.Units))
 		}
 		if len(profile.TargetHigh) > 0 {
-			createParam.TargetsHighJson = TryValueToJSON(profile.TargetHigh)
+			createParam.TargetsHighJson = TryValueToJSON(ScheduleValuesToJSONWithUnitConversionToMGDL(profile.TargetHigh, createParam.Units))
 		}
 
 		createParams = append(createParams, createParam)
@@ -225,4 +232,17 @@ func TryValueToJSON(svs any) *string {
 	}
 	jsonStr := string(jsonBytes)
 	return &jsonStr
+}
+
+func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*nightscout.ScheduleValue, units *consts.Units) []*nightscout.ScheduleValue {
+	if len(svs) == 0 {
+		return svs
+	}
+
+	for _, sv := range svs {
+		if sv.Value != nil {
+			sv.Value = ptr(nightscout.FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
+		}
+	}
+	return svs
 }

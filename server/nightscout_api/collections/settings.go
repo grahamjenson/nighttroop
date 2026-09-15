@@ -134,13 +134,8 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 }
 
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	settingsMap, err := siteContext.GetSettings()
-	if err != nil {
-		slog.Error("failed to get settings", "error", err, "collection", "settings")
-		return nil, nsutils.ErrInternal
-	}
 
-	setting, err := settingsMap.GetSettingAnyTypeByName(identifier)
+	setting, err := siteContext.GetSettings().GetSettingAnyTypeByName(identifier)
 	if err != nil {
 		return nil, nsutils.ErrNotFound
 	}
@@ -149,13 +144,8 @@ func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	settingsMap, err := siteContext.GetSettings()
-	if err != nil {
-		slog.Error("failed to get settings", "error", err, "collection", "settings")
-		return nil, nsutils.ErrInternal
-	}
 
-	return nsutils.CreateRecordSlice(settingsMap.GetAllSettingAnyTypes(), c.converter, siteContext, false), nil
+	return nsutils.CreateRecordSlice(siteContext.GetSettings().GetAllSettingAnyTypes(), c.converter, siteContext, false), nil
 }
 
 func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
@@ -219,15 +209,10 @@ func (s *SettingAny) GetRawJsonData() *string {
 }
 
 func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {
-	settingsMap, err := siteContext.GetSettings()
-	if err != nil {
-		slog.Error("failed to get settings", "error", err, "collection", "settings")
-		return nil, nsutils.ErrInternal
-	}
-
+	settingsMap := siteContext.GetSettings()
 	identitySettingsMap := settingsMap.IdentitySettingsMap
 
-	err = identitySettingsMap.SetSettingByName(identifier, value, &siteContext.IdentityModel.CreatedAt, ptr("identity"))
+	err := identitySettingsMap.SetSettingByName(identifier, value, &siteContext.IdentityModel.CreatedAt, ptr("identity"))
 	if err != nil {
 		slog.Error("failed to set setting in identity settings map", "error", err, "collection", "settings")
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())

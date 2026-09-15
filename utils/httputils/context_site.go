@@ -2,7 +2,7 @@ package httputils
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
@@ -78,14 +78,15 @@ func SetIdentityModelInSiteContext(ctx context.Context, identityModel *control.S
 // SETTINGS
 // /////
 
-func (sc *SiteContext) GetSettings() (*settings.CombinedSettingsMap, error) {
+func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
 	if sc.SiteModel == nil || sc.IdentityModel == nil {
-		return nil, fmt.Errorf("settings unavailable site or identity model is nil")
+		slog.Error("settings unavailable site or identity model is nil", "subdomain", sc.Subdomain, "siteModel", sc.SiteModel, "identityModel", sc.IdentityModel)
+		return settings.DefaultCombinedSettingsMap()
 	}
 
 	if sc.settings == nil {
 		sc.settings = settings.NewCombinedSettingsMap(sc.SiteModel, sc.IdentityModel)
 	}
 
-	return sc.settings, nil
+	return sc.settings
 }

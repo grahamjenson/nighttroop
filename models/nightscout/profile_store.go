@@ -63,6 +63,8 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 type Profile struct {
 	Units    *consts.Units    `json:"units,omitempty"`
 	Dia      *FlexibleFloat64 `json:"dia,omitempty"`
+	CarbsHr  *FlexibleFloat64 `json:"carbs_hr,omitempty"`
+	Delay    *FlexibleFloat64 `json:"delay,omitempty"`
 	Timezone *Timezone        `json:"timezone,omitempty"`
 
 	Sens       []*ScheduleValue `json:"sens,omitempty"`

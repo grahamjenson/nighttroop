@@ -17,9 +17,91 @@ ASSERT_STATUS 200
 NAME jwt
 SET {{ .jwtauth.token }}
 
-
+NAME check_default_is_mmol
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT {{ assertEquals "units" "@result.identifier" }}
+ASSERT {{ assertEquals "mmol/L" "@result.value" }}
+ASSERT {{ assertEquals "string" "@result.type" }}
 
 #########
 # Profiles
 #########
 
+
+
+NAME create_profile_labeled_mmol
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "units": "mmol/L",
+    "startDate": "{{ time 1 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "target_low": [{"value": "4.0", "time": "00:00"}],
+            "target_high": [{"value": "5.0", "time": "00:00"}]
+        }
+    }
+ }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 4.0 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 5.0 "@result.store.Default.target_high.0.value" }}
+
+NAME create_profile_labeled_mg_dl
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "units": "mg/dL",
+    "startDate": "{{ time 0 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "target_low": [{"value": "70", "time": "00:00"}],
+            "target_high": [{"value": "80", "time": "00:00"}]
+        }
+    }
+  }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 3.885 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 4.44 "@result.store.Default.target_high.0.value" }}
+
+
+NAME create_profile_unlabeled_mmol
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "startDate": "{{ time 2 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "target_low": [{"value": "4.0", "time": "00:00"}],
+            "target_high": [{"value": "5.0", "time": "00:00"}]
+        }
+    }
+ }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 4.0 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 5.0 "@result.store.Default.target_high.0.value" }}
+
+NAME create_profile_unlabeled_mg_dl
+POST http://{{ site }}/api/v3/profiles
+H Authorization: Bearer {{ jwt }}
+B {
+    "startDate": "{{ time 3 }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "target_low": [{"value": "70", "time": "00:00"}],
+            "target_high": [{"value": "80", "time": "00:00"}]
+        }
+    }
+  }
+ASSERT_STATUS 201
+ASSERT {{ assertEquals "mmol/L" "@result.units" }}
+ASSERT {{ assertEquals 3.885 "@result.store.Default.target_low.0.value" }}
+ASSERT {{ assertEquals 4.44 "@result.store.Default.target_high.0.value" }}

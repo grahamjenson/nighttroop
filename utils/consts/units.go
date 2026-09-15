@@ -3,6 +3,7 @@ package consts
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -62,22 +63,29 @@ func (u *Units) Stringp() *string {
 	return &str
 }
 
-func (u *Units) FromMGDL(value float64) float64 {
+func (u *Units) FromMGDL(mgdl float64) float64 {
 	if u == nil {
-		return ptr(GuessUnits(value)).FromMGDL(value)
+		u = ptr(UnitsMGDL)
 	}
+
 	if *u == UnitsMGDL {
-		return value
+		return Round(mgdl, 3)
 	}
-	return value / u.ToMGDLMultiplier()
+
+	return Round(mgdl/MMOL_L_TO_MG_DL, 4)
 }
 
 // This will do its best to conver to MGDL
-func (u *Units) ToMGDL(value float64) float64 {
+func (u *Units) ToMGDL(unitValue float64) float64 {
 	if u == nil {
-		return ptr(GuessUnits(value)).ToMGDL(value)
+		// Dont know the unit, better guess
+		u = ptr(GuessUnits(unitValue))
 	}
-	return value * u.ToMGDLMultiplier()
+	if *u == UnitsMGDL {
+		return Round(unitValue, 3)
+	}
+
+	return Round(unitValue*MMOL_L_TO_MG_DL, 3)
 }
 
 func (u *Units) ToMGDLMultiplier() float64 {
@@ -92,6 +100,11 @@ func (u *Units) ToMGDLMultiplier() float64 {
 	default:
 		return 1.0
 	}
+}
+
+func Round(value float64, dp int) float64 {
+	m := math.Pow10(dp)
+	return math.Round(value*m) / m
 }
 
 func GuessUnits(value float64) Units {

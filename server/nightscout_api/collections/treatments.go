@@ -996,6 +996,8 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
 			target.Dia = profileJSON.Dia.Float64p()
 			target.Timezone = profileJSON.Timezone.Stringp()
 			target.Units = profileJSON.Units
+			target.CarbsHr = profileJSON.CarbsHr.Float64p()
+			target.Delay = profileJSON.Delay.Float64p()
 
 			basalBytes, _ := json.Marshal(profileJSON.Basal)
 			carbRatioBytes, _ := json.Marshal(profileJSON.CarbRatio)

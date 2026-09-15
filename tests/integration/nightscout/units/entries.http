@@ -55,7 +55,7 @@ POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "sgv": 108, "type": "sgv", "date": {{ itime 1 }}}
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 5.9940059940059935 "@result.sgv" }}
+ASSERT {{ assertEquals 5.994 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mmol/L" "@result.units" }}
 
@@ -64,7 +64,7 @@ POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "sgv": 180, "type": "sgv", "units": "mg/dL", "date": {{ itime 2 }}}
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 9.99000999000999 "@result.sgv" }}
+ASSERT {{ assertEquals 9.99 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mmol/L" "@result.units" }}
 
@@ -96,7 +96,7 @@ NAME get_unlabeled_mmol_entry
 GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mmol_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 75.6756 "@result.sgv" }}
+ASSERT {{ assertEquals 75.676 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mg/dL" "@result.units" }}
 
@@ -122,7 +122,7 @@ NAME get_labeled_mmol_entry
 GET http://{{ site }}/api/v3/entries/{{ dig "create_mmoll_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 272.0718 "@result.sgv" }}
+ASSERT {{ assertEquals 272.072 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mg/dL" "@result.units" }}
 
@@ -153,7 +153,7 @@ NAME get_unlabeled_mgdl_entry
 GET http://{{ site }}/api/v3/entries/{{ dig "create_unlabeled_mgdl_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 5.9940059940059935 "@result.sgv" }}
+ASSERT {{ assertEquals 5.994 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mmol/L" "@result.units" }}
 
@@ -161,7 +161,7 @@ NAME get_labeled_mgdl_entry
 GET http://{{ site }}/api/v3/entries/{{ dig "create_mgdl_entry.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 9.99000999000999 "@result.sgv" }}
+ASSERT {{ assertEquals 9.99 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals "mmol/L" "@result.units" }}
 

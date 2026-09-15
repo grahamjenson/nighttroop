@@ -923,6 +923,14 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring := *source.Timezone
 		siteCreateProfilePresetParams.Timezone = &xstring
 	}
+	if source.CarbsHr != nil {
+		xfloat642 := *source.CarbsHr
+		siteCreateProfilePresetParams.CarbsHr = &xfloat642
+	}
+	if source.Delay != nil {
+		xfloat643 := *source.Delay
+		siteCreateProfilePresetParams.Delay = &xfloat643
+	}
 	if source.CarbRatiosJson != nil {
 		xstring2 := *source.CarbRatiosJson
 		siteCreateProfilePresetParams.CarbRatiosJson = &xstring2
@@ -1002,6 +1010,14 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 	if source.Timezone != nil {
 		xstring := *source.Timezone
 		siteCreateProfileSwitchParams.Timezone = &xstring
+	}
+	if source.CarbsHr != nil {
+		xfloat643 := *source.CarbsHr
+		siteCreateProfileSwitchParams.CarbsHr = &xfloat643
+	}
+	if source.Delay != nil {
+		xfloat644 := *source.Delay
+		siteCreateProfileSwitchParams.Delay = &xfloat644
 	}
 	if source.Timeshift != nil {
 		xint64 := *source.Timeshift
@@ -1859,6 +1875,14 @@ func siteProfileSwitchesVwToSiteProfileSwitchesVw(source ProfileSwitchesVw) Prof
 	if source.Timezone != nil {
 		xstring3 := *source.Timezone
 		siteProfileSwitchesVw.Timezone = &xstring3
+	}
+	if source.CarbsHr != nil {
+		xfloat643 := *source.CarbsHr
+		siteProfileSwitchesVw.CarbsHr = &xfloat643
+	}
+	if source.Delay != nil {
+		xfloat644 := *source.Delay
+		siteProfileSwitchesVw.Delay = &xfloat644
 	}
 	if source.CarbRatiosJson != nil {
 		xstring4 := *source.CarbRatiosJson

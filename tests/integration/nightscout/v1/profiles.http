@@ -1,3 +1,23 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+# Assign the token to a variable
+NAME token
+SET {{ .create_new_site.pwd_nstoken }}
+
+NAME site
+SET {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+# Auth with JWT
+NAME jwt
+SET {{ .jwtauth.token }}
+
+
 //////
 // CREATE
 //////
@@ -52,9 +72,10 @@ B {
   }
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mg/dL" "@0.units" }}
+ASSERT {{ assertEquals "mmol/L" "@0.units" }}
 ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
 ASSERT {{ assertEquals 0.35 "@0.store.Default.basal.0.value" }}
+ASSERT {{ assertEquals 5.55 "@0.store.Default.target_low.0.value" }}
 ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 
 
@@ -375,9 +396,10 @@ NAME get_profiles_type_v1
 GET http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mg/dL" "@0.units" }}
+ASSERT {{ assertEquals "mmol/L" "@0.units" }}
 ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
 ASSERT {{ assertEquals 0.35 "@0.store.Default.basal.0.value" }}
+ASSERT {{ assertEquals 5.55 "@0.store.Default.target_low.0.value" }}
 ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 
 /////
@@ -389,7 +411,7 @@ ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 // DELETE
 ///////
 
-NAME delete_entries_v1
+NAME delete_profile_v1
 DELETE http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals 1 "@deletedCount" }}

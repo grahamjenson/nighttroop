@@ -236,6 +236,14 @@ func DBModelToProfile(source *site.ProfilePreset, context *httputils.SiteContext
 			nightscoutFlexibleFloat64 := FlexibleFloat64(*(*source).Dia)
 			nightscoutProfile.Dia = &nightscoutFlexibleFloat64
 		}
+		if (*source).CarbsHr != nil {
+			nightscoutFlexibleFloat642 := FlexibleFloat64(*(*source).CarbsHr)
+			nightscoutProfile.CarbsHr = &nightscoutFlexibleFloat642
+		}
+		if (*source).Delay != nil {
+			nightscoutFlexibleFloat643 := FlexibleFloat64(*(*source).Delay)
+			nightscoutProfile.Delay = &nightscoutFlexibleFloat643
+		}
 		if (*source).Timezone != nil {
 			nightscoutTimezone := Timezone(*(*source).Timezone)
 			nightscoutProfile.Timezone = &nightscoutTimezone
@@ -243,8 +251,8 @@ func DBModelToProfile(source *site.ProfilePreset, context *httputils.SiteContext
 		nightscoutProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
 		nightscoutProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)
 		nightscoutProfile.Basal = JSONToScheduleValueSlice((*source).BasalRatesJson)
-		nightscoutProfile.TargetLow = JSONToScheduleValueSlice((*source).TargetsLowJson)
-		nightscoutProfile.TargetHigh = JSONToScheduleValueSlice((*source).TargetsHighJson)
+		nightscoutProfile.TargetLow = JSONToScheduleValueSliceWithUnitConversionToMGDL((*source).TargetsLowJson, context)
+		nightscoutProfile.TargetHigh = JSONToScheduleValueSliceWithUnitConversionToMGDL((*source).TargetsHighJson, context)
 	}
 	return nightscoutProfile
 }

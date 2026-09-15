@@ -372,6 +372,8 @@ type ProfilePreset struct {
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
+	CarbsHr                  *float64
+	Delay                    *float64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -398,6 +400,8 @@ type ProfileSwitch struct {
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
+	CarbsHr                  *float64
+	Delay                    *float64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -426,6 +430,8 @@ type ProfileSwitchesVw struct {
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
+	CarbsHr                  *float64
+	Delay                    *float64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string

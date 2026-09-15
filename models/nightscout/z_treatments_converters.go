@@ -1115,6 +1115,14 @@ func ProfileSwitchCreate(source site.ProfileSwitch, context ConverterContext) si
 		xstring := *source.Timezone
 		siteCreateProfileSwitchParams.Timezone = &xstring
 	}
+	if source.CarbsHr != nil {
+		xfloat643 := *source.CarbsHr
+		siteCreateProfileSwitchParams.CarbsHr = &xfloat643
+	}
+	if source.Delay != nil {
+		xfloat644 := *source.Delay
+		siteCreateProfileSwitchParams.Delay = &xfloat644
+	}
 	if source.Timeshift != nil {
 		xint64 := *source.Timeshift
 		siteCreateProfileSwitchParams.Timeshift = &xint64
@@ -2171,6 +2179,14 @@ func UpdateToProfileSwitch(source *site.ProfileSwitch, target *site.ProfileSwitc
 		if source.Timezone != nil {
 			xstring := *source.Timezone
 			target.Timezone = &xstring
+		}
+		if source.CarbsHr != nil {
+			xfloat643 := *source.CarbsHr
+			target.CarbsHr = &xfloat643
+		}
+		if source.Delay != nil {
+			xfloat644 := *source.Delay
+			target.Delay = &xfloat644
 		}
 		if source.CarbRatiosJson != nil {
 			xstring2 := *source.CarbRatiosJson

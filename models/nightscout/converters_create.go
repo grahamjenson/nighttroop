@@ -77,7 +77,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	// goverter:ignore Name CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone Units IsDefault ProfileStoreID LoopSettingsJson
+	// goverter:ignore Name CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone CarbsHr Delay Units IsDefault ProfileStoreID LoopSettingsJson
 	// goverter:map Date OccurredAt | OrNow
 	PartialProfileStoreToCreate(source ProfileStore, ctx ConverterContext) site.CreateProfilePresetParams
 

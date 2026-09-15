@@ -102,8 +102,8 @@ type DBModelConverter interface {
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
 	// goverter:map InsulinSensitivitiesJson Sens       | JSONToScheduleValueSlice
 	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
-	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSlice
-	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSlice
+	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSliceWithUnitConversionToMGDL
+	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSliceWithUnitConversionToMGDL
 	DBModelToProfile(source *site.ProfilePreset, siteContext *httputils.SiteContext) Profile
 }
 
@@ -162,12 +162,8 @@ func UnitsToValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) *c
 }
 
 func GetUnitsAndValue(gr site.GlucoseReading, siteContext *httputils.SiteContext) (*consts.Units, *FlexibleFloat64) {
-	sm, err := siteContext.GetSettings()
-	if err != nil {
-		return ptr(consts.UnitsMGDL), ptr(FlexibleFloat64(gr.Mgdl))
-	}
 
-	units := sm.GetUnits()
+	units := siteContext.GetSettings().GetUnits()
 	value := units.FromMGDL(gr.Mgdl)
 	return units, ptr(FlexibleFloat64(value))
 }
@@ -185,6 +181,34 @@ func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
 		if sv == nil {
 			continue
 		}
+		if sv.TimeAsSeconds == nil && sv.Time != nil {
+			sv.TimeAsSeconds = sv.Time.ToSeconds()
+		}
+	}
+	return result
+}
+
+// goverter:context siteContext
+func JSONToScheduleValueSliceWithUnitConversionToMGDL(jsonStr *string, siteContext *httputils.SiteContext) []*ScheduleValue {
+	if jsonStr == nil {
+		return nil
+	}
+	units := siteContext.GetSettings().GetUnits()
+
+	var result []*ScheduleValue
+	err := json.Unmarshal([]byte(*jsonStr), &result)
+	if err != nil {
+		return nil
+	}
+	for _, sv := range result {
+		if sv == nil {
+			continue
+		}
+
+		if sv.Value != nil {
+			sv.Value = ptr(FlexibleFloat64(units.FromMGDL(sv.Value.Float64())))
+		}
+
 		if sv.TimeAsSeconds == nil && sv.Time != nil {
 			sv.TimeAsSeconds = sv.Time.ToSeconds()
 		}

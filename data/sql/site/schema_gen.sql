@@ -298,6 +298,8 @@ CREATE TABLE profile_presets (
     dia REAL, -- in hours
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
     timezone TEXT CHECK(length(timezone) <= 32), -- e.g. UTC, America/New_York, etc
+    carbs_hr REAL,
+    delay REAL,
 
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048), -- 
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048), -- { [1,2] },
@@ -338,7 +340,9 @@ CREATE TABLE profile_switches (
     dia REAL, -- in hours
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L used for targets
     timezone TEXT CHECK(length(timezone) <= 32),
-    
+    carbs_hr REAL,
+    delay REAL,
+
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048                     AND json_valid(carb_ratios_json)), -- 
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
     basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048                     AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},

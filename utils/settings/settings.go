@@ -13,6 +13,14 @@ type CombinedSettingsMap struct {
 	DefaultSettingsMap  *SettingMap
 }
 
+func DefaultCombinedSettingsMap() *CombinedSettingsMap {
+	return &CombinedSettingsMap{
+		SiteSettingsMap:     DefaultSettingsMap,
+		IdentitySettingsMap: DefaultSettingsMap,
+		DefaultSettingsMap:  DefaultSettingsMap,
+	}
+}
+
 func NewCombinedSettingsMap(site *control.Site, identity *control.SiteIdentity) *CombinedSettingsMap {
 	return &CombinedSettingsMap{
 		SiteSettingsMap:     NewSettingsMap(site, &site.CreatedAt, ptr("site")),

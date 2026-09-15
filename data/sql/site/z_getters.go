@@ -1986,6 +1986,26 @@ func (m *ProfilePreset) SetTimezone(v *string) {
 	m.Timezone = v
 }
 
+// GetCarbsHr returns the CarbsHr value.
+func (m ProfilePreset) GetCarbsHr() *float64 {
+	return m.CarbsHr
+}
+
+// SetCarbsHr sets the CarbsHr value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCarbsHr(v *float64) {
+	m.CarbsHr = v
+}
+
+// GetDelay returns the Delay value.
+func (m ProfilePreset) GetDelay() *float64 {
+	return m.Delay
+}
+
+// SetDelay sets the Delay value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetDelay(v *float64) {
+	m.Delay = v
+}
+
 // GetCarbRatiosJson returns the CarbRatiosJson value.
 func (m ProfilePreset) GetCarbRatiosJson() *string {
 	return m.CarbRatiosJson
@@ -2214,6 +2234,26 @@ func (m ProfileSwitch) GetTimezone() *string {
 // SetTimezone sets the Timezone value and returns the updated ProfileSwitch.
 func (m *ProfileSwitch) SetTimezone(v *string) {
 	m.Timezone = v
+}
+
+// GetCarbsHr returns the CarbsHr value.
+func (m ProfileSwitch) GetCarbsHr() *float64 {
+	return m.CarbsHr
+}
+
+// SetCarbsHr sets the CarbsHr value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCarbsHr(v *float64) {
+	m.CarbsHr = v
+}
+
+// GetDelay returns the Delay value.
+func (m ProfileSwitch) GetDelay() *float64 {
+	return m.Delay
+}
+
+// SetDelay sets the Delay value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetDelay(v *float64) {
+	m.Delay = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -3994,6 +4034,26 @@ func (m ProfileSwitchesVw) GetTimezone() *string {
 // SetTimezone sets the Timezone value and returns the updated ProfileSwitchesVw.
 func (m *ProfileSwitchesVw) SetTimezone(v *string) {
 	m.Timezone = v
+}
+
+// GetCarbsHr returns the CarbsHr value.
+func (m ProfileSwitchesVw) GetCarbsHr() *float64 {
+	return m.CarbsHr
+}
+
+// SetCarbsHr sets the CarbsHr value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCarbsHr(v *float64) {
+	m.CarbsHr = v
+}
+
+// GetDelay returns the Delay value.
+func (m ProfileSwitchesVw) GetDelay() *float64 {
+	return m.Delay
+}
+
+// SetDelay sets the Delay value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetDelay(v *float64) {
+	m.Delay = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -9746,6 +9806,26 @@ func (m *CreateProfileSwitchParams) SetTimezone(v *string) {
 	m.Timezone = v
 }
 
+// GetCarbsHr returns the CarbsHr value.
+func (m CreateProfileSwitchParams) GetCarbsHr() *float64 {
+	return m.CarbsHr
+}
+
+// SetCarbsHr sets the CarbsHr value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetCarbsHr(v *float64) {
+	m.CarbsHr = v
+}
+
+// GetDelay returns the Delay value.
+func (m CreateProfileSwitchParams) GetDelay() *float64 {
+	return m.Delay
+}
+
+// SetDelay sets the Delay value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetDelay(v *float64) {
+	m.Delay = v
+}
+
 // GetTimeshift returns the Timeshift value.
 func (m CreateProfileSwitchParams) GetTimeshift() *int64 {
 	return m.Timeshift
@@ -12074,6 +12154,26 @@ func (m CreateProfilePresetParams) GetTimezone() *string {
 // SetTimezone sets the Timezone value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetTimezone(v *string) {
 	m.Timezone = v
+}
+
+// GetCarbsHr returns the CarbsHr value.
+func (m CreateProfilePresetParams) GetCarbsHr() *float64 {
+	return m.CarbsHr
+}
+
+// SetCarbsHr sets the CarbsHr value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetCarbsHr(v *float64) {
+	m.CarbsHr = v
+}
+
+// GetDelay returns the Delay value.
+func (m CreateProfilePresetParams) GetDelay() *float64 {
+	return m.Delay
+}
+
+// SetDelay sets the Delay value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetDelay(v *float64) {
+	m.Delay = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.

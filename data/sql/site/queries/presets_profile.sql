@@ -11,6 +11,8 @@ INSERT INTO profile_presets (
     dia,
     units,
     timezone,
+    carbs_hr,
+    delay,
 
     carb_ratios_json,
     insulin_sensitivities_json,
@@ -27,7 +29,7 @@ INSERT INTO profile_presets (
     created_by_device_name,
     created_by_identity_name
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

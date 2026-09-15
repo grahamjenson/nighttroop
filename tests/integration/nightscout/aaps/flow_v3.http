@@ -78,7 +78,7 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 196.41645726265494 "@result.sgv" }}
+ASSERT {{ assertEquals 196.416 "@result.sgv" }}
 ASSERT {{ assertEquals "sgv" "@result.type" }}
 ASSERT {{ assertEquals 720 "@result.utcOffset" }}
 ASSERT {{ assertExists "@result.identifier" }}
