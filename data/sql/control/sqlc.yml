@@ -58,7 +58,7 @@ overrides:
       - column: "control_identities.role"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
-          type: "IdentityRole"
+          type: "ControlRole"
       
       # Site Identities
       - column: "site_identities.enabled"

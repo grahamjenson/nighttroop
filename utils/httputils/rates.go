@@ -1,6 +1,7 @@
 package httputils
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,6 +10,10 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+// /////
+// Public Routes So All We have is IP Address
+// ////
+
 func GlobalIPRateLimitAllowed(serverConfig *config.ServerConfig, ipAddress string) bool {
 	limiter := serverConfig.RateLimiters.GetGlobalIPRateLimiter(ipAddress)
 	return limiter.Allow()
@@ -16,11 +21,22 @@ func GlobalIPRateLimitAllowed(serverConfig *config.ServerConfig, ipAddress strin
 
 func CreateSiteAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	createLimiter := serverConfig.RateLimiters.SiteCreateLimiter
-	ipLimiter := serverConfig.RateLimiters.GetSiteCreateIPRateLimiter(GetIP(r))
+	ipLimiter := serverConfig.RateLimiters.GetSiteCreateIPRateLimiter(GetIPFromHTTPContext(r.Context()))
 
 	return AllowAll(createLimiter, ipLimiter)
 }
 
+func ControlLoginAttemptsAllowed(serverConfig *config.ServerConfig, r *http.Request, username string) (bool, int) {
+	return serverConfig.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", consts.CONTROL_IDENTITY_SUBDOMAIN, username), GetIPFromHTTPContext(r.Context()))
+}
+
+func SiteLoginAttemptsAllowed(serverConfig *config.ServerConfig, r *http.Request, subdomain string, username string) (bool, int) {
+	return serverConfig.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", subdomain, username), GetIPFromHTTPContext(r.Context()))
+}
+
+// //////
+// Once We know Who the user is then we can apply user-specific rate limiting
+// //////
 func UserGETAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
 	userSubdomain := siteContext.Subdomain

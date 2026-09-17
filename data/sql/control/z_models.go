@@ -14,7 +14,7 @@ type ControlIdentity struct {
 	Name                  string
 	Password              string
 	TotpSecret            string
-	Role                  consts.IdentityRole
+	Role                  consts.ControlRole
 	CreatedAt             int64
 	LastSeenAt            *int64
 	LastWriteAt           *int64

@@ -33,7 +33,7 @@ var AttributeNameMap = map[string]string{}
 
 var TypeLookupMap = map[string]map[string]string{
 	"ControlIdentity": {
-		"Role": "consts.IdentityRole",
+		"Role": "consts.ControlRole",
 	},
 	"SiteIdentity": {
 		"Role":    "consts.IdentityRole",
@@ -47,9 +47,6 @@ var TypeLookupMap = map[string]map[string]string{
 	},
 	"InsertFailedCronJobParams": {
 		"Errors": "errors.ErrorList",
-	},
-	"Admin": {
-		"Role": "consts.AdminRole",
 	},
 	"SiteSyncSource": {
 		"Type":         "consts.SyncSourceType",
@@ -66,7 +63,7 @@ var TypeLookupMap = map[string]map[string]string{
 		"Role": "consts.IdentityRole",
 	},
 	"CreateControlIdentityParams": {
-		"Role": "consts.IdentityRole",
+		"Role": "consts.ControlRole",
 	},
 	"CreateIfNotExistsIdentityParams": {
 		"Role": "consts.IdentityRole",

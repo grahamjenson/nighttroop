@@ -12,8 +12,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/server/components/shared_templ"
+
 	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -81,7 +82,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
-			err = site_templ.SyncSettings(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
+			err = site_settings_templ.SyncSettings(siteContext, ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", siteContext.Subdomain)
 				return
@@ -90,7 +91,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = site_templ.SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
+			err = site_settings_templ.SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
@@ -139,7 +140,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfi
 
 		if err != nil {
 			slog.Error("Validation error for sync settings inputs", "error", err)
-			shared_templ.Fail().Render(r.Context(), w)
+			site_templ.Fail().Render(r.Context(), w)
 			return
 		}
 
@@ -150,7 +151,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfi
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			shared_templ.Success().Render(r.Context(), w)
+			site_templ.Success().Render(r.Context(), w)
 			return
 		}
 

@@ -1,15 +1,17 @@
-package site_templ
+package site_settings_templ
 
 import (
 	"github.com/templui/templui/components/checkbox"
+	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
-templ SyncSettings(ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64,
+templ SyncSettings(siteContext *httputils.SiteContext, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64,
 	dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) {
-	@UserBase(UserContext{Subdomain: "example.com"}) {
+	@site_templ.UserBase(siteContext) {
 		@SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id)
 	}
 }

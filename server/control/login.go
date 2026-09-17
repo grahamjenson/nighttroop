@@ -10,9 +10,8 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/control_templ/control_login_templ"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -35,7 +34,7 @@ func POSTLogoutHandler(config *config.ServerConfig) http.HandlerFunc {
 func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		err := control_templ.Login().Render(r.Context(), w)
+		err := control_login_templ.Login().Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -85,7 +84,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			return
 		}
 
-		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", consts.CONTROL_IDENTITY_SUBDOMAIN, username), httputils.GetIP(r))
+		allowedToAttempt, _ := httputils.ControlLoginAttemptsAllowed(config, r, username)
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return

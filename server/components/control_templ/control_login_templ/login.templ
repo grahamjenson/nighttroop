@@ -1,7 +1,7 @@
-package control_templ
+package control_login_templ
 
 import (
-	"nighttroop.t1d.nz/server/components/shared_templ"
+	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -9,7 +9,7 @@ import (
 )
 
 templ Login() {
-	@shared_templ.Base("NightTroop Login") {
+	@control_templ.Base("NightTroop Login") {
 		<div class="flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50">
 			<div class="p-8 login-form-target rounded-lg shadow-2xl w-96">
 				<!-- Form updated with POST method -->

@@ -3,40 +3,43 @@ package httputils
 import (
 	"context"
 
-	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/control"
 )
 
-const ControlContextKey = "control_context"
+const controlContextKey = "control_context"
 
 type ControlContext struct {
-	AdminName string
-	AdminRole consts.AdminRole
+	IdentityModel *control.ControlIdentity
+
+	ControlDB *db.ControlDB
+
+	Subdomain string
+	IPAddress string
+
+	SiteAction SiteAction
 }
 
-func GetControlContext(ctx context.Context) ControlContext {
+func GetControlContext(ctx context.Context) *ControlContext {
 	if ctx == nil {
-		return ControlContext{}
+		return nil
 	}
-	if controlCtx, ok := ctx.Value(ControlContextKey).(*ControlContext); ok {
-		return *controlCtx
+	if controlCtx, ok := ctx.Value(controlContextKey).(*ControlContext); ok {
+		return controlCtx
 	}
-	return ControlContext{}
+	return nil
 }
 
-// //
-// IdentityName
-// //
-func SetAdminNameInControlContext(ctx context.Context, adminName string) context.Context {
-	controlContext := GetControlContext(ctx)
-	controlContext.AdminName = adminName
-	return context.WithValue(ctx, ControlContextKey, &controlContext)
+func CreateControlContext(ctx context.Context, controlDB *db.ControlDB, ipAddress string) context.Context {
+	controlContext := &ControlContext{
+		ControlDB: controlDB,
+		IPAddress: ipAddress,
+	}
+	return context.WithValue(ctx, controlContextKey, controlContext)
 }
 
-// //
-// Roles
-// //
-func SetAdminRoleInControlContext(ctx context.Context, role consts.AdminRole) context.Context {
+func SetAdminControlContext(ctx context.Context, identity *control.ControlIdentity) context.Context {
 	controlContext := GetControlContext(ctx)
-	controlContext.AdminRole = role
-	return context.WithValue(ctx, ControlContextKey, &controlContext)
+	controlContext.IdentityModel = identity
+	return context.WithValue(ctx, controlContextKey, controlContext)
 }

@@ -16,7 +16,7 @@ const (
 	SiteActionWrite SiteAction = "write"
 )
 
-const SiteContextKey = "user_context"
+const siteContextKey = "user_context"
 
 type SiteContext struct {
 	ControlDB *db.ControlDB
@@ -26,6 +26,7 @@ type SiteContext struct {
 	IdentityModel *control.SiteIdentity
 
 	Subdomain string
+	IPAddress string
 
 	SiteAction SiteAction
 
@@ -36,10 +37,25 @@ func GetSiteContext(ctx context.Context) *SiteContext {
 	if ctx == nil {
 		return nil
 	}
-	if userCtx, ok := ctx.Value(SiteContextKey).(*SiteContext); ok {
+	if userCtx, ok := ctx.Value(siteContextKey).(*SiteContext); ok {
 		return userCtx
 	}
 	return nil
+}
+
+////
+// SiteDB
+////
+
+func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string, ipAddress string) context.Context {
+	siteContext := &SiteContext{}
+	siteContext.ControlDB = controlDB
+	siteContext.SiteDB = siteDB
+	siteContext.SiteModel = siteModel
+	siteContext.Subdomain = subdomain
+	siteContext.IPAddress = ipAddress
+
+	return context.WithValue(ctx, siteContextKey, siteContext)
 }
 
 // //
@@ -48,21 +64,7 @@ func GetSiteContext(ctx context.Context) *SiteContext {
 func SetSiteActionInSiteContext(ctx context.Context, action SiteAction) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.SiteAction = action
-	return context.WithValue(ctx, SiteContextKey, siteContext)
-}
-
-////
-// SiteDB
-////
-
-func SetSiteDBAndModelAndCreateSiteContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string) context.Context {
-	siteContext := &SiteContext{}
-	siteContext.ControlDB = controlDB
-	siteContext.SiteDB = siteDB
-	siteContext.SiteModel = siteModel
-	siteContext.Subdomain = subdomain
-
-	return context.WithValue(ctx, SiteContextKey, siteContext)
+	return context.WithValue(ctx, siteContextKey, siteContext)
 }
 
 // //
@@ -71,7 +73,7 @@ func SetSiteDBAndModelAndCreateSiteContext(ctx context.Context, controlDB *db.Co
 func SetIdentityModelInSiteContext(ctx context.Context, identityModel *control.SiteIdentity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
-	return context.WithValue(ctx, SiteContextKey, siteContext)
+	return context.WithValue(ctx, siteContextKey, siteContext)
 }
 
 // /////

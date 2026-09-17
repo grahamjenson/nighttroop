@@ -48,12 +48,12 @@ func (m *ControlIdentity) SetTotpSecret(v string) {
 }
 
 // GetRole returns the Role value.
-func (m ControlIdentity) GetRole() consts.IdentityRole {
+func (m ControlIdentity) GetRole() consts.ControlRole {
 	return m.Role
 }
 
 // SetRole sets the Role value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetRole(v consts.IdentityRole) {
+func (m *ControlIdentity) SetRole(v consts.ControlRole) {
 	m.Role = v
 }
 
@@ -1648,12 +1648,12 @@ func (m *CreateControlIdentityParams) SetTotpSecret(v string) {
 }
 
 // GetRole returns the Role value.
-func (m CreateControlIdentityParams) GetRole() consts.IdentityRole {
+func (m CreateControlIdentityParams) GetRole() consts.ControlRole {
 	return m.Role
 }
 
 // SetRole sets the Role value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetRole(v consts.IdentityRole) {
+func (m *CreateControlIdentityParams) SetRole(v consts.ControlRole) {
 	m.Role = v
 }
 

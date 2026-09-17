@@ -35,8 +35,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 
 		// Global IP Address Rate Limit
-		ipAddress := httputils.GetIP(r)
-		ctx = httputils.SetIPInHTTPContext(ctx, ipAddress)
+		ctx, ipAddress := httputils.SetIPInHTTPContext(ctx, r)
 		allowed = httputils.GlobalIPRateLimitAllowed(config, ipAddress)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
@@ -61,7 +60,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case RouteTargetNightscout:
 			// so <siteid>.ns.domain routes to the nightscout compatible API
-			if exists, ctx := SiteExistsAndWriteToContext(controlDB, siteSubdomain, r); exists {
+			if exists, ctx := CreateSiteContext(ctx, controlDB, siteSubdomain, ipAddress); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for nightscout subdomain", "subdomain", siteSubdomain)
@@ -69,7 +68,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			}
 		case RouteTargetSite:
 			// Attach userdb and model to the context
-			if exists, ctx := SiteExistsAndWriteToContext(controlDB, siteSubdomain, r); exists {
+			if exists, ctx := CreateSiteContext(ctx, controlDB, siteSubdomain, ipAddress); exists {
 				siteRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for subdomain", "subdomain", siteSubdomain)
@@ -83,14 +82,19 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 
 }
 
-func SiteExistsAndWriteToContext(controlDB *db.ControlDB, subdomain string, r *http.Request) (bool, context.Context) {
+func CreateControlContext(controlDB *db.ControlDB, r *http.Request, ipAddress string) context.Context {
+	ctx := httputils.CreateControlContext(r.Context(), controlDB, ipAddress)
+	return ctx
+}
+
+func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, subdomain string, ipAddress string) (bool, context.Context) {
 	siteDB, siteModel, err := controlDB.GetSite(subdomain)
 	if err != nil {
 		slog.Error("Error getting site for subdomain", "subdomain", subdomain, "error", err)
 		return false, nil
 	}
 
-	ctx := httputils.SetSiteDBAndModelAndCreateSiteContext(r.Context(), controlDB, siteDB, siteModel, subdomain)
+	ctx = httputils.CreateSiteContext(ctx, controlDB, siteDB, siteModel, subdomain, ipAddress)
 
 	return true, ctx
 }

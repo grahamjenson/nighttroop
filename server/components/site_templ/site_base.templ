@@ -1,17 +1,48 @@
 package site_templ
 
 import (
-	"nighttroop.t1d.nz/server/components/shared_templ"
+	"nighttroop.t1d.nz/server/components/ui/checkbox"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/label"
+	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type UserContext struct {
-	Subdomain string
+templ Base(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } </title>
+			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+			<link rel="apple-touch-icon" href="/logo.png"/>
+			<!-- Tailwind CSS -->
+			<link href="/style_gen.css" rel="stylesheet"/>
+			<script src="/d3.js"></script>
+			<script src="/htmx.js"></script>
+			<script src="/htmx_response_targets.js"></script>
+			@copybutton.Script()
+			@input.Script()
+			@label.Script()
+			@dropdown.Script()
+			@inputotp.Script()
+			@checkbox.Script()
+			@selectbox.Script()
+			<script src="/qrcode.js"></script>
+		</head>
+		<body hx-ext="response-targets">
+			{ children... }
+		</body>
+	</html>
 }
 
-templ UserBase(siteContext UserContext) {
-	@shared_templ.Base("Nighttroop for " + siteContext.Subdomain) {
+templ UserBase(siteContext *httputils.SiteContext) {
+	@Base("Nighttroop for " + siteContext.Subdomain) {
 		@Header()
 		<div
 			id="main-content"

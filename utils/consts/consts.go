@@ -33,11 +33,11 @@ const FIRST_READ_ONLY_NAME = "read_only"
 
 const CONTROL_IDENTITY_SUBDOMAIN = "control"
 
-type AdminRole string
+type ControlRole string
 
 const (
-	AdminRoleAdmin AdminRole = "admin"
-	AdminRoleRead  AdminRole = "read"
+	ControlRoleAdmin ControlRole = "admin"
+	ControlRoleRead  ControlRole = "read"
 )
 
 // User Roles

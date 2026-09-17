@@ -1,3 +1,4 @@
+// Package components contains the http html components
 package components
 
 //go:generate templ generate -include-version=false

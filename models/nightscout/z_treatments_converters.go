@@ -876,9 +876,6 @@ func PartialTreatmentToFoodIntake(source Treatment) site.FoodIntake {
 }
 func PartialTreatmentToGlucoseReading(source Treatment) site.GlucoseReading {
 	var siteGlucoseReading site.GlucoseReading
-	if source.Glucose != nil {
-		siteGlucoseReading.Mgdl = FlexibleFloat64ToFloat64(*source.Glucose)
-	}
 	siteGlucoseReading.Units = UnitsToUnits(source.Units)
 	if source.GlucoseType != nil {
 		xstring := string(*source.GlucoseType)

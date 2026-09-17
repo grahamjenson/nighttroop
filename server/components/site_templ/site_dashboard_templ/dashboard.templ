@@ -1,7 +1,12 @@
-package site_templ
+package site_dashboard_templ
 
-templ Dashboard() {
-	@UserBase(UserContext{Subdomain: "example.com"}) {
+import (
+	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+templ Dashboard(siteContext *httputils.SiteContext) {
+	@site_templ.UserBase(siteContext) {
 		<div class="container-fluid p-4">
 			<!-- TOP METRICS -->
 			<div class="row g-3 mb-4">

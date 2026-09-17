@@ -12,7 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 
-	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/errors"
@@ -41,7 +41,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := site_templ.Login().Render(r.Context(), w)
+		err := site_login_templ.Login().Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, "Template Error", http.StatusInternalServerError)
 			return
@@ -83,7 +83,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		// Rate Limit login attempts by user and IP
 
-		allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", subdomain, formName), httputils.GetIP(r))
+		allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, subdomain, formName)
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return
@@ -110,7 +110,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			err = site_templ.LoginTOTP().Render(r.Context(), w)
+			err = site_login_templ.LoginTOTP().Render(r.Context(), w)
 			if err != nil {
 				errors.GenericIdentityLoginError(w, r, err)
 				return
@@ -278,7 +278,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := config.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", siteContext.Subdomain, creds.Name), httputils.GetIP(r))
+	allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, siteContext.Subdomain, creds.Name)
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return

@@ -8,7 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -29,7 +29,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 
 		if acceptType == httputils.AcceptTypeHTML {
 
-			err = site_templ.Identities(userIdentities, deviceIdentities).Render(r.Context(), w)
+			err = site_settings_templ.Identities(siteContext, userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
 				fmt.Println("Error rendering identities template:", err)
 				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", siteContext.Subdomain)
@@ -39,7 +39,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = site_templ.IdentitesTable(userIdentities, deviceIdentities).Render(r.Context(), w)
+			err = site_settings_templ.IdentitesTable(userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
@@ -55,22 +55,22 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 	}
 }
 
-func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site_templ.UserIdentity, []*site_templ.UserIdentity, error) {
+func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site_settings_templ.UserIdentity, []*site_settings_templ.UserIdentity, error) {
 	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
-	userIdentities := []*site_templ.UserIdentity{}
-	deviceIdentities := []*site_templ.UserIdentity{}
+	userIdentities := []*site_settings_templ.UserIdentity{}
+	deviceIdentities := []*site_settings_templ.UserIdentity{}
 
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			userIdentities = append([]*site_templ.UserIdentity{site_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
+			userIdentities = append([]*site_settings_templ.UserIdentity{site_settings_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, site_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			userIdentities = append(userIdentities, site_settings_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, site_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			deviceIdentities = append(deviceIdentities, site_settings_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		default:
 			continue
 		}
@@ -105,7 +105,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) h
 			return
 		}
 
-		identity := &site_templ.UserIdentity{
+		identity := &site_settings_templ.UserIdentity{
 			ID:      "",
 			Name:    name,
 			Role:    role,
@@ -113,7 +113,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) h
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = site_templ.CreateIdentityResponse(siteContext.SiteDB.URL(), identity, identityValues.Password, identityValues.TotpSecret, identityValues.NSToken).Render(r.Context(), w)
+			err = site_settings_templ.CreateIdentityResponse(siteContext.SiteDB.URL(), identity, identityValues.Password, identityValues.TotpSecret, identityValues.NSToken).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render identities settings HTMX template", "subdomain", siteContext.Subdomain)
 				return

@@ -33,7 +33,7 @@ type CreateControlIdentityParams struct {
 	Name                  string
 	Password              string
 	TotpSecret            string
-	Role                  consts.IdentityRole
+	Role                  consts.ControlRole
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
 }

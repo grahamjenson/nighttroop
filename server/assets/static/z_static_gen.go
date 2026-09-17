@@ -60,10 +60,6 @@ var StaticFloatingUiDomJsETag = generateETag([]byte(StaticFloatingUiDomJs))
 var StaticHtmxJs []byte
 var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
 
-//go:embed htmx_response_targets.js
-var StaticHtmxResponseTargetsJs []byte
-var StaticHtmxResponseTargetsJsETag = generateETag([]byte(StaticHtmxResponseTargetsJs))
-
 //go:embed input.js
 var StaticInputJs []byte
 var StaticInputJsETag = generateETag([]byte(StaticInputJs))
@@ -251,17 +247,6 @@ func AddSatticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticHtmxJs))
 		if err != nil {
 			slog.Error("Failed to write response for htmx.js", "error", err)
-		}
-	})
-	r.Get("/htmx_response_targets.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		w.Header().Set("ETag", StaticHtmxResponseTargetsJsETag)
-
-		_, err := w.Write([]byte(StaticHtmxResponseTargetsJs))
-		if err != nil {
-			slog.Error("Failed to write response for htmx_response_targets.js", "error", err)
 		}
 	})
 	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {

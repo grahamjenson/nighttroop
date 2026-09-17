@@ -94,7 +94,7 @@ func (db *ControlDB) fillSites() ([]string, error) {
 }
 
 func (db *ControlDB) seedDefaultIdentities() error {
-	idValues, err := db.CreateControlIdentity(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	idValues, err := db.CreateControlIdentity(consts.FIRST_ADMIN_NAME, consts.ControlRoleAdmin)
 	if err != nil && errors.IsSQLUniqueViolationError(err) {
 		// Admin user already exists so we can ignore this error
 		return nil
@@ -469,7 +469,7 @@ func (db *ControlDB) CreateSiteIdentity(siteID string, name string, role consts.
 	}, nil
 }
 
-func (db *ControlDB) CreateControlIdentity(name string, role consts.IdentityRole) (*IdentityValues, error) {
+func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole) (*IdentityValues, error) {
 	security := db.ServerConfig.Security
 	hostname := db.ServerConfig.HostName
 	password, hashedPassword, err := security.GeneratePassword()
@@ -480,16 +480,14 @@ func (db *ControlDB) CreateControlIdentity(name string, role consts.IdentityRole
 
 	var totpSecretPtr *string
 	encTOTPSecret := ""
-	if can.MustLoginWithTotp(role, false) {
 
-		totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, hostname))
-		if err != nil {
-			return nil, fmt.Errorf("cannot generate control TOTP: %w", err)
-		}
-
-		totpSecretPtr = &totpSecret
-		encTOTPSecret = encTOTPSecretRet
+	totpSecret, encTOTPSecretRet, err := security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", name, consts.CONTROL_IDENTITY_SUBDOMAIN, hostname))
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate control TOTP: %w", err)
 	}
+
+	totpSecretPtr = &totpSecret
+	encTOTPSecret = encTOTPSecretRet
 
 	err = db.Queries.CreateControlIdentity(context.TODO(), control.CreateControlIdentityParams{
 		Name:       name,
