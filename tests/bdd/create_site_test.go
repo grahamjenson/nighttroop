@@ -36,7 +36,7 @@ func TestCreateSite(t *testing.T) {
 	context, err := browser.NewContext()
 	require.NoError(t, err)
 
-	context.SetDefaultTimeout(100) // 1 second
+	context.SetDefaultTimeout(2000) // 1 second
 
 	page, err := context.NewPage()
 	require.NoError(t, err)
@@ -53,8 +53,27 @@ func TestCreateSite(t *testing.T) {
 
 	fmt.Println(html)
 	// Assertions
-	innerText, err := page.Locator("#create-site-button").InnerText()
+	createSiteButton := page.Locator("#create-site-button")
+	innerText, err := createSiteButton.InnerText()
 	require.NoError(t, err)
 
 	require.Equal(t, "Get Started", innerText)
+
+	err = createSiteButton.Click()
+	page.Locator("#copy-button")
+
+	html, err = page.Content()
+	require.NoError(t, err)
+
+	fmt.Println(bdd.PrettifyHTML(html))
+
+	require.NoError(t, err)
+
+	require.NoError(t, err)
+
+	html, err = page.Content()
+	require.NoError(t, err)
+
+	fmt.Println(bdd.PrettifyHTML(html))
+
 }
