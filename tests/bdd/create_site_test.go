@@ -7,13 +7,12 @@ import (
 
 	"github.com/mxschmitt/playwright-go"
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/tests/bdd"
 )
 
 func TestCreateSite(t *testing.T) {
 
 	// Create the router directly
-	router := bdd.NewRouter(t)
+	router := NewRouter(t)
 
 	// Start an HTTP server around the router
 	server := httptest.NewServer(router)
@@ -34,6 +33,7 @@ func TestCreateSite(t *testing.T) {
 	})
 
 	context, err := browser.NewContext()
+	defer context.Close()
 	require.NoError(t, err)
 
 	context.SetDefaultTimeout(2000) // 1 second
@@ -65,7 +65,7 @@ func TestCreateSite(t *testing.T) {
 	html, err = page.Content()
 	require.NoError(t, err)
 
-	fmt.Println(bdd.PrettifyHTML(html))
+	fmt.Println(PrettifyHTML(html))
 
 	require.NoError(t, err)
 
@@ -74,6 +74,6 @@ func TestCreateSite(t *testing.T) {
 	html, err = page.Content()
 	require.NoError(t, err)
 
-	fmt.Println(bdd.PrettifyHTML(html))
+	fmt.Println(PrettifyHTML(html))
 
 }

@@ -1,4 +1,4 @@
-package bdd
+package bdd_test
 
 import (
 	"bytes"

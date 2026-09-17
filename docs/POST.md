@@ -154,22 +154,24 @@ On fly.io in New Zealand, bandwidth is $0.04 per GB. So with 10K users polling l
 3. that is $172 per month, $2,000 per year
 
 This cost estimate surprised me. If everyone used *socket.io* instead of polling, this might drop the cost some but not that much. 
+Looking at other hosting options, like Hetzner, has significantly lower price per/GB, basically free for this scale but has an increase in cost to compute at least $480 per year. As well as time and effort managing secrets, deployment...
+
 Other network costs, like the Domain ($15 per year) and wildcard cert ($12 per year) are rounding errors compared to bandwidth egress costs.
 
 # Conclusion
 
-The tally for a years worth of running is:
+Fly.io costs per year is a minimum of $100 per year, with a massive $0.2 per user because of bandwidth. A hosting company like Hetzner base cost is $480 with a per year,
+and basically free for additional users.
 
-1. $100 for compute
-1. $3 for backups
-1. $2000 per year bandwidth egress
+The cross over point is then about 2000 users, when fly.io gets more expensive, but each user at that point costs $0.25 per user.
+On Hetzner the cost for 10k users is then **$0.05 cents per user per year** 5x what I originally was hoping for. 
 
-OR **$0.20 cents per user per year** 20x what I originally was hoping for. This is a conservative estimate though:
+In both instances this is a conservative estimate though:
 
-1. The site databases will store more data per minute for longer, increasing HDD and RAM costs
-1. The users will spam much more aggressiely, increasing CPU and bandwidth costs
-1. External costs like observability and error tracking usually increase linearly with number of users.
-1. Jevons Paradox, where no matter what box I put this on, the features will increase to use all its resources until I upgrade.
+1. The site databases will store more data per minute for longer, increasing HDD and RAM costs.
+1. The users will spam much more aggressively, increasing CPU and bandwidth costs.
+1. External costs like observability and error tracking each cost around $30 per month.
+1. [Jevons Paradox](https://en.wikipedia.org/wiki/Jevons_paradox), where no matter what efficiencies I make, the demand and use will increase. Make it faster, users will just poll more frequently.
 
 Anyway, these are all just guesses I started this project with. However, for the last year I have been actually building this system,
 and everything is harder and more expensive than even I assumed. Post coming soon.
