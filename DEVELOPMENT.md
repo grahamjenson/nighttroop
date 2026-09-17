@@ -51,6 +51,16 @@ In Development all initial passwords are `password` and all TOTP is `123123`
 
 # Testing
 
+# BDD
+
+We are using playwright to run integration tests
+
+have to install the driver with
+
+```
+go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.0 install chromium
+```
+
 # Coverage
 
 

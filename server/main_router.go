@@ -46,7 +46,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		if err != nil {
 			host = r.Host
 		}
-		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, []string{config.HostName, "localhost", "t1d.nz"})
+		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, []string{config.HostName, "localhost", "t1d.nz", "127.0.0.1"})
 		if err != nil {
 			slog.Error("Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)

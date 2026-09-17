@@ -51,7 +51,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico\"><link rel=\"apple-touch-icon\" href=\"/logo.png\"><!-- Tailwind CSS --><link href=\"/style_gen.css\" rel=\"stylesheet\"><script src=\"/d3.js\"></script><script src=\"/htmx.js\"></script><script src=\"/htmx_response_targets.js\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico\"><link rel=\"apple-touch-icon\" href=\"/logo.png\"><!-- Tailwind CSS --><link href=\"/style_gen.css\" rel=\"stylesheet\"><script src=\"/d3.js\"></script><script src=\"/htmx.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
