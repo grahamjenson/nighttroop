@@ -1,4 +1,4 @@
-GOTO "http://localhost/"
+GOTO {{ server_url}}/
 ASSERT_STATUS 200
 
 CLICK "Create Site"
@@ -23,7 +23,6 @@ INPUT #totp 123456
 
 CLICK "Submit" 
 ASSERT_STATUS 200
-ASSERT_VISIBLE #profile
 
 ASSERT {{ assertContains "#profile" }}
 ASSERT {{ assertContains "#settings" }}

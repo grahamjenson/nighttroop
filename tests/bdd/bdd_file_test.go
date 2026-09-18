@@ -15,11 +15,12 @@ import (
 	"time"
 
 	"github.com/mxschmitt/playwright-go"
+	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 )
 
 type Action interface {
-	ToPathLine() string
+	ToErrorLine(msg string) string
 	ToFlatString() string
 	PrintAction()
 	Execute(t *testing.T, page playwright.Page, ctx map[string]any) error
@@ -52,8 +53,8 @@ func (r *Goto) ToFlatString() string {
 	return fmt.Sprintf("GOTO %s", r.URL)
 }
 
-func (r *Goto) ToPathLine() string {
-	return fmt.Sprintf("%s:%d", r.Path, r.Line)
+func (r *Goto) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
 func (r *Goto) PrintAction() {
@@ -61,6 +62,18 @@ func (r *Goto) PrintAction() {
 }
 
 func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
+	resp, err := page.Goto(r.URL)
+	if err != nil {
+		t.Fatalf(
+			"\n GOTO FAILED \n %s: %v",
+			r.ToErrorLine("Error with GOTO"),
+			err,
+		)
+	}
+
+	require.NoError(t, err, r.ToErrorLine("Error with GOTO"))
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.Status(), r.ToErrorLine("unexpected status code"))
 	// Implement the execution logic for the Goto action here
 	return nil
 }
@@ -93,8 +106,8 @@ func (r *Click) ToFlatString() string {
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
 
-func (r *Click) ToPathLine() string {
-	return fmt.Sprintf("%s:%d", r.Path, r.Line)
+func (r *Click) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
 func (r *Click) PrintAction() {
@@ -127,8 +140,8 @@ func (r *Input) ToFlatString() string {
 	return fmt.Sprintf("INPUT %s %s", r.Locator, r.Value)
 }
 
-func (r *Input) ToPathLine() string {
-	return fmt.Sprintf("%s:%d", r.Path, r.Line)
+func (r *Input) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
 func (r *Input) PrintAction() {
@@ -160,8 +173,8 @@ func (r *Set) ToFlatString() string {
 	return fmt.Sprintf("SET %s %s", r.Key, r.Value)
 }
 
-func (r *Set) ToPathLine() string {
-	return fmt.Sprintf("%s:%d", r.Path, r.Line)
+func (r *Set) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
 func (r *Set) PrintAction() {
@@ -249,52 +262,62 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			continue
 		}
 
-		split := strings.Split(line, " ")
+		split := strings.SplitN(line, " ", 2)
 		if len(split) == 0 {
 			continue
+		}
+		if len(split) != 2 {
+			return nil, fmt.Errorf("invalid action line: %q", line)
 		}
 
 		switch split[0] {
 		case "GOTO":
 			flush()
-			if len(split) != 2 {
-				return nil, fmt.Errorf("invalid goto action line: %q", line)
-			}
-			url := split[1]
-			if url == "" {
-				return nil, fmt.Errorf("empty goto url")
-			}
 
 			current = &Goto{
 				Path:    path,
 				Line:    lineNumber,
-				URL:     url,
+				URL:     split[1],
 				Asserts: []*Assert{},
 			}
 		case "CLICK":
 			flush()
-			if len(split) != 2 {
-				return nil, fmt.Errorf("invalid click action line: %q", line)
-			}
-			locator := split[1]
-			if locator == "" {
-				return nil, fmt.Errorf("empty click locator")
-			}
 
 			current = &Click{
 				Path:    path,
 				Line:    lineNumber,
-				Locator: locator,
+				Locator: split[1],
 				Asserts: []*Assert{},
 			}
+		case "INPUT":
+			flush()
 
+			parts := strings.SplitN(split[1], " ", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("expected exactly two values for input")
+			}
+
+			selector, value := parts[0], parts[1]
+
+			if value == "" {
+				return nil, fmt.Errorf("empty input value")
+			}
+
+			current = &Input{
+				Path:    path,
+				Line:    lineNumber,
+				Locator: selector,
+				Value:   value,
+			}
 		case "SET":
 			flush()
-			if len(split) != 3 {
-				return nil, fmt.Errorf("invalid set action line: %q", line)
+
+			parts := strings.SplitN(split[1], " ", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("expected exactly two values")
 			}
-			key := split[1]
-			value := split[2]
+
+			key, value := parts[0], parts[1]
 
 			if value == "" {
 				return nil, fmt.Errorf("empty set value")
@@ -310,10 +333,6 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 		case "ASSERT_STATUS":
 			if current == nil {
 				return nil, fmt.Errorf("assert_status before action")
-			}
-
-			if len(split) != 2 {
-				return nil, fmt.Errorf("invalid assert_status action line: %q", line)
 			}
 
 			statusCode, err := strconv.Atoi(split[1])
@@ -338,10 +357,6 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 		case "ASSERT":
 			if current == nil {
 				return nil, fmt.Errorf("assert before action")
-			}
-
-			if len(split) != 2 {
-				return nil, fmt.Errorf("invalid assert action line: %q", line)
 			}
 
 			assertStatus := &Assert{
@@ -437,6 +452,9 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 				default:
 					return dug
 				}
+			},
+			"server_url": func() string {
+				return ctx["server_url"].(string)
 			},
 			"site": func() string {
 				if v, ok := ctx["site"]; ok && v != nil {
@@ -751,7 +769,7 @@ func AssertNotNil(t *testing.T, actual any, message string, file string, line in
 	return false
 }
 
-func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, siteInformation *db.SiteCreateResult, defaultJwt string) {
+func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, siteInformation *db.SiteCreateResult, defaultJwt string) {
 	page, err := context.NewPage()
 	if err != nil {
 		t.Fatalf("failed to create new page: %v", err)
@@ -769,6 +787,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 		fmt.Println("===============================================")
 
 		actionContext := map[string]any{
+			"server_url":    serverURL,
 			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
 			"default_token": siteInformation.PwdNSToken,
 			"default_jwt":   defaultJwt,
@@ -780,7 +799,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 		for _, action := range actionFile.Actions {
 			err := action.BuildAndValidate(t, actionContext)
 			if err != nil {
-				t.Fatalf("failed to build real action: %v", err)
+				t.Fatalf("failed to build real error: %v, action: %s", err, action.ToFlatString())
 			}
 
 			fmt.Println()

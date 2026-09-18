@@ -73,7 +73,7 @@ func TestSite(t *testing.T) {
 
 		context.SetDefaultTimeout(1000) // 1 second
 
-		RunTheActionFileAsATest(t, "site", path, context, siteInformation, defaultJwt)
+		RunTheActionFileAsATest(t, "site", path, context, server.URL, siteInformation, defaultJwt)
 		context.Close()
 		return nil
 	})
@@ -81,5 +81,4 @@ func TestSite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed walking embedded files: %v", err)
 	}
-
 }
