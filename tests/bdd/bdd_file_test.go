@@ -3,19 +3,15 @@ package bdd_test
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 	"text/template"
-	"time"
 
 	"github.com/mxschmitt/playwright-go"
-	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 )
 
@@ -24,7 +20,6 @@ type Action interface {
 	ToFlatString() string
 	PrintAction()
 	Execute(t *testing.T, page playwright.Page, ctx map[string]any) error
-	BuildAndValidate(t *testing.T, ctx map[string]any) error
 }
 
 type ActionFile struct {
@@ -42,8 +37,7 @@ type ActionFile struct {
 type Goto struct {
 	URL string
 
-	AssertStatus *AssertStatus
-	Asserts      []*Assert
+	Asserts []Assert
 
 	Path string
 	Line int
@@ -54,6 +48,9 @@ func (r *Goto) ToFlatString() string {
 }
 
 func (r *Goto) ToErrorLine(msg string) string {
+	if msg == "" {
+		return fmt.Sprintf("%s:%d: %s", r.Path, r.Line, r.ToFlatString())
+	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
@@ -62,29 +59,37 @@ func (r *Goto) PrintAction() {
 }
 
 func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
-	resp, err := page.Goto(r.URL)
+	url, err := renderTemplate(r.URL, ctx)
 	if err != nil {
 		t.Fatalf(
-			"\n GOTO FAILED \n %s: %v",
-			r.ToErrorLine("Error with GOTO"),
+			"\n\n GOTO FAILED \n %s: %v \n\n",
+			r.ToErrorLine("Error Rendering URL"),
 			err,
 		)
 	}
 
-	require.NoError(t, err, r.ToErrorLine("Error with GOTO"))
-	require.NotNil(t, resp)
-	require.Equal(t, 200, resp.Status(), r.ToErrorLine("unexpected status code"))
-	// Implement the execution logic for the Goto action here
-	return nil
-}
-
-func (r *Goto) BuildAndValidate(t *testing.T, ctx map[string]any) error {
-	url, err := renderTemplate(r.URL, ctx)
+	resp, err := page.Goto(url)
 	if err != nil {
-		return err
+		t.Fatalf(
+			"\n\n GOTO FAILED \n %s: %v \n URL: %v \n\n",
+			r.ToErrorLine("Error with GOTO"),
+			err,
+			url,
+		)
 	}
-	r.URL = url
 
+	if resp == nil {
+		t.Fatalf(
+			"\n\n GOTO FAILED \n %s: response is nil\n\n",
+			r.ToErrorLine("Error with GOTO"),
+		)
+	}
+
+	for _, assert := range r.Asserts {
+		assert.Execute(t, ctx, page, resp)
+	}
+
+	// Implement the execution logic for the Goto action here
 	return nil
 }
 
@@ -95,8 +100,7 @@ func (r *Goto) BuildAndValidate(t *testing.T, ctx map[string]any) error {
 type Click struct {
 	Locator string
 
-	AssertStatus *AssertStatus
-	Asserts      []*Assert
+	Asserts []Assert
 
 	Path string
 	Line int
@@ -107,6 +111,9 @@ func (r *Click) ToFlatString() string {
 }
 
 func (r *Click) ToErrorLine(msg string) string {
+	if msg == "" {
+		return fmt.Sprintf("%s:%d: %s", r.Path, r.Line, r.ToFlatString())
+	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
@@ -115,12 +122,48 @@ func (r *Click) PrintAction() {
 }
 
 func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
-	// Implement the execution logic for the Click action here
-	return nil
-}
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("Failed to get locator for %s", r.Locator)
+	}
 
-func (r *Click) BuildAndValidate(t *testing.T, ctx map[string]any) error {
-	// Implement the logic to build the real action based on the context here
+	if len(r.Asserts) > 0 {
+		response, err := page.ExpectResponse(
+			func(resp playwright.Response) bool {
+				// TODO make the click assume a response at least the method
+				return true
+			},
+			func() error {
+				return locator.Click()
+			},
+		)
+		if err != nil {
+			t.Fatalf(
+				"\n\n CLICK FAILED \n %s: %v \n\n",
+				r.ToErrorLine("Error with CLICK"),
+				err,
+			)
+		}
+		if response == nil {
+			t.Fatalf(
+				"\n\n CLICK FAILED \n %s: response is nil\n\n",
+				r.ToErrorLine("Error with CLICK"),
+			)
+		}
+
+		for _, assert := range r.Asserts {
+			assert.Execute(t, ctx, page, response)
+		}
+	} else {
+		err := locator.Click()
+		if err != nil {
+			t.Fatalf(
+				"\n\n CLICK FAILED \n %s: %v \n\n",
+				r.ToErrorLine("Error with CLICK"),
+				err,
+			)
+		}
+	}
 	return nil
 }
 
@@ -141,6 +184,9 @@ func (r *Input) ToFlatString() string {
 }
 
 func (r *Input) ToErrorLine(msg string) string {
+	if msg == "" {
+		return fmt.Sprintf("%s:%d: %s", r.Path, r.Line, r.ToFlatString())
+	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
@@ -174,6 +220,9 @@ func (r *Set) ToFlatString() string {
 }
 
 func (r *Set) ToErrorLine(msg string) string {
+	if msg == "" {
+		return fmt.Sprintf("%s:%d: %s", r.Path, r.Line, r.ToFlatString())
+	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.Path, r.Line, msg, r.ToFlatString())
 }
 
@@ -191,21 +240,92 @@ func (r *Set) BuildAndValidate(t *testing.T, ctx map[string]any) error {
 	return nil
 }
 
-// ///
-// Non Actions
-// ///
+// /////////////////////
+// ASSERTS
+// //////////////////////
 
-type Assert struct {
-	Expression string
+type Assert interface {
+	Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error
+}
+
+// //
+// ASSERT VISIBLE
+// //
+type AssertVisible struct {
+	Locator string
 
 	Path string
 	Line int
 }
 
-func (r *Assert) Execute(t *testing.T, ctx map[string]any) error {
+func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error {
+	html, err := page.Content()
+	if err != nil {
+		return err
+	}
 
+	prettyOutput := PrettifyHTML(html)
+
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+	}
+	visible, err := locator.IsVisible()
+	if err != nil {
+		t.Fatalf("%s\n failed to check visibility for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+	}
+	if !visible {
+		t.Fatalf("%s\n assertVisible failed: expected value to be visible for locator: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+	}
 	return nil
 }
+
+func (r *AssertVisible) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected element to be visible for locator %s", r.Path, r.Line, r.Locator)
+}
+
+// ///
+// ASSERT TEXT EQUALS
+// ///
+
+type AssertTextEquals struct {
+	Locator string
+	Text    string
+
+	Path string
+	Line int
+}
+
+func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error {
+	html, err := page.Content()
+	if err != nil {
+		return err
+	}
+
+	prettyOutput := PrettifyHTML(html)
+
+	expected := normalizeValue(r.Text)
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+	}
+	innerText, err := locator.InnerText()
+	if err != nil {
+		t.Fatalf("%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+	}
+	if innerText != expected {
+		t.Fatalf("%s\n pageContains failed: expected %v at %v found %v: \n\n%s\n\n", r.ToErrorLine(), expected, r.Locator, innerText, prettyOutput)
+	}
+	return nil
+}
+
+func (r *AssertTextEquals) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected text for locator %s", r.Path, r.Line, r.Locator)
+}
+
+// ////
+// ASSERT STATUS
+// ////
 
 type AssertStatus struct {
 	Code int
@@ -214,8 +334,16 @@ type AssertStatus struct {
 	Line int
 }
 
-func ExecuteAsserts(t *testing.T, assertStructs []*Assert, assertStatus *AssertStatus, realStatusCode int, output string, ctx map[string]any) {
-	// Test the asserts against the real value returns like page.Visible, and response.Headers...
+func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error {
+	if resp.Status() != r.Code {
+		t.Fatalf("%s\n assertStatus failed: expected status code %d, got %d\n\n", r.ToErrorLine(), r.Code, resp.Status())
+	}
+
+	return nil
+}
+
+func (r *AssertStatus) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected status code %d", r.Path, r.Line, r.Code)
 }
 
 // //////
@@ -267,18 +395,21 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			continue
 		}
 		if len(split) != 2 {
-			return nil, fmt.Errorf("invalid action line: %q", line)
+			return nil, fmt.Errorf("invalid action line: %q at %s:%d", line, path, lineNumber)
 		}
 
-		switch split[0] {
+		first := strings.TrimSpace(split[0])
+		second := strings.TrimSpace(split[1])
+
+		switch first {
 		case "GOTO":
 			flush()
 
 			current = &Goto{
 				Path:    path,
 				Line:    lineNumber,
-				URL:     split[1],
-				Asserts: []*Assert{},
+				URL:     second,
+				Asserts: []Assert{},
 			}
 		case "CLICK":
 			flush()
@@ -286,13 +417,13 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			current = &Click{
 				Path:    path,
 				Line:    lineNumber,
-				Locator: split[1],
-				Asserts: []*Assert{},
+				Locator: second,
+				Asserts: []Assert{},
 			}
 		case "INPUT":
 			flush()
 
-			parts := strings.SplitN(split[1], " ", 2)
+			parts := strings.SplitN(second, " ", 2)
 			if len(parts) != 2 {
 				return nil, fmt.Errorf("expected exactly two values for input")
 			}
@@ -312,7 +443,7 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 		case "SET":
 			flush()
 
-			parts := strings.SplitN(split[1], " ", 2)
+			parts := strings.SplitN(second, " ", 2)
 			if len(parts) != 2 {
 				return nil, fmt.Errorf("expected exactly two values")
 			}
@@ -335,9 +466,9 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				return nil, fmt.Errorf("assert_status before action")
 			}
 
-			statusCode, err := strconv.Atoi(split[1])
+			statusCode, err := strconv.Atoi(second)
 			if err != nil {
-				return nil, fmt.Errorf("invalid assert_status: %q", split[1])
+				return nil, fmt.Errorf("invalid assert_status: %q", second)
 			}
 			assertStatus := &AssertStatus{
 				Path: path,
@@ -347,34 +478,59 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			switch v := current.(type) {
 			case *Goto:
 				// valid types for assert_status
-				v.AssertStatus = assertStatus
+				v.Asserts = append(v.Asserts, assertStatus)
 			case *Click:
 				// valid types for assert_status
-				v.AssertStatus = assertStatus
+				v.Asserts = append(v.Asserts, assertStatus)
 			default:
 				return nil, fmt.Errorf("assert_status not applicable for this action")
 			}
-		case "ASSERT":
+		case "ASSERT_VISIBLE":
 			if current == nil {
-				return nil, fmt.Errorf("assert before action")
+				return nil, fmt.Errorf("assert_visible before action")
 			}
 
-			assertStatus := &Assert{
-				Expression: split[1],
-				Path:       path,
-				Line:       lineNumber,
+			assertVisible := &AssertVisible{
+				Locator: second,
+				Path:    path,
+				Line:    lineNumber,
 			}
 			switch v := current.(type) {
 			case *Goto:
-				// valid types for assert
-				v.Asserts = append(v.Asserts, assertStatus)
+				// valid types for assert_visible
+				v.Asserts = append(v.Asserts, assertVisible)
 			case *Click:
-				// valid types for assert
-				v.Asserts = append(v.Asserts, assertStatus)
+				// valid types for assert_visible
+				v.Asserts = append(v.Asserts, assertVisible)
 			default:
-				return nil, fmt.Errorf("assert not applicable for this action")
+				return nil, fmt.Errorf("assert_visible not applicable for this action")
+			}
+		case "ASSERT_TEXT_EQUALS":
+			if current == nil {
+				return nil, fmt.Errorf("assert_text_equals before action")
 			}
 
+			parts := strings.SplitN(second, " ", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("expected exactly two values")
+			}
+
+			assertTextEquals := &AssertTextEquals{
+				Locator: parts[0],
+				Text:    parts[1],
+				Path:    path,
+				Line:    lineNumber,
+			}
+			switch v := current.(type) {
+			case *Goto:
+				// valid types for assert_text_equals
+				v.Asserts = append(v.Asserts, assertTextEquals)
+			case *Click:
+				// valid types for assert_text_equals
+				v.Asserts = append(v.Asserts, assertTextEquals)
+			default:
+				return nil, fmt.Errorf("assert_text_equals not applicable for this action")
+			}
 		default:
 			return nil, fmt.Errorf("unknown line: %q", line)
 		}
@@ -389,70 +545,10 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 	return actions, nil
 }
 
-func templateTime(offset int) string {
-	// top of the minute
-	t := time.Now().Add(-time.Duration(offset) * time.Minute)
-	return t.Format(time.RFC3339)
-}
-
-func templateITime(offset int) int64 {
-	// top of the minute
-	t := time.Now().Add(-time.Duration(offset) * time.Minute)
-	return t.UnixMilli()
-}
-
-func templateDig(root any, path string) any {
-
-	parts := strings.Split(path, ".")
-	var cur = root
-
-	for _, p := range parts {
-		switch v := cur.(type) {
-
-		case map[string]any:
-			next, ok := v[p]
-			if !ok {
-				return nil
-			}
-			cur = next
-
-		case []any:
-			// allow numeric indexing into slices
-			i, err := strconv.Atoi(p)
-			if err != nil || i < 0 || i >= len(v) {
-				return nil
-			}
-			cur = v[i]
-
-		default:
-			return nil
-		}
-	}
-
-	return cur
-}
-
 func renderTemplate(input string, ctx map[string]any) (string, error) {
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
-			"dig": func(path string) any {
-				dug := templateDig(ctx, path)
-				switch dug.(type) {
-				case nil:
-					return "no_value"
-				case string:
-					return dug.(string)
-				case float64:
-					return fmt.Sprintf("%.0f", dug.(float64))
-				case int:
-					return dug.(int)
-				case bool:
-					return dug.(bool)
-				default:
-					return dug
-				}
-			},
 			"server_url": func() string {
 				return ctx["server_url"].(string)
 			},
@@ -462,34 +558,11 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 				}
 				return ctx["default_site"].(string)
 			},
-			"token": func() string {
-				if v, ok := ctx["token"]; ok && v != nil {
-					return ctx["token"].(string)
-				}
-				return ctx["default_token"].(string)
-			},
-			"read_token": func() string {
-				return ctx["read_token"].(string)
-			},
 			"jwt": func() string {
 				if v, ok := ctx["jwt"]; ok && v != nil {
 					return ctx["jwt"].(string)
 				}
 				return ctx["default_jwt"].(string)
-			},
-			"read_jwt": func() string {
-				return ctx["read_jwt"].(string)
-			},
-			"time":  templateTime,
-			"itime": templateITime,
-			"tokenByName": func(list []any, name string) string {
-				for _, item := range list {
-					m := item.(map[string]any)
-					if m["name"] == name {
-						return m["accessToken"].(string)
-					}
-				}
-				return ""
 			},
 		}).
 		Parse(input)
@@ -505,128 +578,36 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 	return buf.String(), nil
 }
 
-func assertTemplateCheck(assertStruct Assert, ctx map[string]any, localResult any, headers map[string][]string, t *testing.T) (string, error) {
-	// Need to forse the headers to be json-esk so types work
-	b, err := json.Marshal(headers)
-	if err != nil {
-		t.Fatalf("Some weird Marshalerror happened in templateDig: %v", err)
-		return "false", err
-	}
-	var headersConverted map[string]any
-	err = json.Unmarshal(b, &headersConverted)
-	if err != nil {
-		t.Fatalf("Some weird Unmarshal error happened in templateDig: %v", err)
-		return "false", err
+func getLocator(expected any, page playwright.Page) playwright.Locator {
+	s, ok := expected.(string)
+	if !ok {
+		return nil
 	}
 
-	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(localResult)
-	tmpl, err := template.New("req").
-		Option("missingkey=error").
-		Funcs(template.FuncMap{
-			"dig": func(path string) any {
-				return templateDig(ctx, path)
-			},
-			// TESTING FUNCTIONS
-			"assertEquals": func(rawExpected, rawActual any) string {
-				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
-				message := fmt.Sprintf("assertEquals failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
-				AssertEqual(t, expected, actual, message, assertStruct.Path, assertStruct.Line)
-				return "true"
-			},
-			"assertContains": func(rawExpected, rawActual any) string {
-				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
-				message := fmt.Sprintf("assertContains failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
-				AssertContains(t, formatAnyAsString(expected), actual, message, assertStruct.Path, assertStruct.Line)
-				return "true"
-			},
-			"assertExists": func(rawActual any) string {
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
-				message := fmt.Sprintf("assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
-				AssertNotNil(t, actual, message, assertStruct.Path, assertStruct.Line)
-				return "true"
-			},
-			"assertLength": func(expectedLength int, rawActual any) string {
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
+	s = strings.TrimSpace(s)
 
-				actualLength := -1
+	fmt.Println("===========")
+	fmt.Println("Locator string:", s, strings.HasPrefix(s, `"`), strings.HasSuffix(s, `"`))
+	fmt.Println("===========")
+	switch {
+	case strings.HasPrefix(s, "#"):
+		// CSS ID: #submit-button
+		return page.Locator(s)
 
-				value := reflect.ValueOf(actual)
+	case strings.HasPrefix(s, "."):
+		// CSS class: .main-content
+		return page.Locator(s)
 
-				if value.IsValid() {
-					switch value.Kind() {
-					case reflect.Array, reflect.Slice, reflect.Map, reflect.String:
-						actualLength = value.Len()
-					}
-				}
+	case len(s) >= 2 && strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`):
+		// Text content: "Submit"
+		text := strings.Trim(s, `"`)
+		return page.GetByText(text)
 
-				message := fmt.Sprintf(
-					"assertLength failed: expected length %d, got %d from [%v], output: %s",
-					expectedLength,
-					actualLength,
-					rawActual,
-					prettyOutput,
-				)
-
-				AssertEqual(
-					t,
-					expectedLength,
-					actualLength,
-					message,
-					assertStruct.Path,
-					assertStruct.Line,
-				)
-
-				return "true"
-			},
-		}).
-		Parse(assertStruct.Expression)
-	if err != nil {
-		return "", err
+	default:
+		// Normal string value
+		return nil
 	}
 
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, ctx); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
-
-func MarshalJsonWithoutEscapeHTML(v any) (string, error) {
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(v); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func normalizeStringSearch(expected, localResult any, headers map[string]any, ctx map[string]any) any {
-
-	// Allow the expected to look through all ctx
-	if s, ok := expected.(string); ok {
-		if strings.HasPrefix(s, ".") {
-			// look up in the context
-			expected = templateDig(ctx, s[1:])
-		} else if strings.HasPrefix(s, "@") {
-			if s == "@" {
-				return localResult
-			}
-			// look up in localResult
-			expected = templateDig(localResult, s[1:])
-		} else if strings.HasPrefix(s, "#") {
-			// look up in headers
-			expected = templateDig(headers, s[1:])
-		}
-	}
-
-	expected = normalizeValue(expected)
-
-	return expected
 }
 
 func normalizeValue(v any) any {
@@ -673,102 +654,6 @@ func normalizeValue(v any) any {
 	}
 }
 
-func formatAnyAsString(v any) string {
-	switch v := v.(type) {
-	case float64:
-		return strconv.FormatFloat(v, 'f', -1, 64)
-	default:
-		return fmt.Sprint(v)
-	}
-}
-
-func AssertContains(t *testing.T, expected, actual any, message string, file string, line int) bool {
-	t.Helper()
-
-	contains := false
-
-	switch a := actual.(type) {
-	case string:
-		e, ok := expected.(string)
-		contains = ok && strings.Contains(a, e)
-
-	case []string:
-		e, ok := expected.(string)
-		if ok {
-			for _, v := range a {
-				if v == e {
-					contains = true
-					break
-				}
-			}
-		}
-
-	case map[string][]string:
-		e, ok := expected.(string)
-		contains = ok
-		if contains {
-			_, contains = a[e]
-		}
-
-	default:
-		// Fall back to equality if you don't want unsupported types
-		// to silently pass.
-		contains = reflect.DeepEqual(expected, actual)
-	}
-
-	if contains {
-		return true
-	}
-
-	t.Fatalf(
-		"\n ASSERT FAILED \n %s:%d: %s\nexpected to contain: %#v\nactual:              %#v",
-		file,
-		line,
-		message,
-		expected,
-		actual,
-	)
-
-	return false
-}
-
-func AssertEqual(t *testing.T, expected, actual any, message string, file string, line int) bool {
-	t.Helper()
-
-	if reflect.DeepEqual(expected, actual) {
-		return true
-	}
-
-	t.Fatalf(
-		"\n ASSERT EQUALS FAILED \n %s:%d: %s\nexpected: %#v\nactual:   %#v",
-		file,
-		line,
-		message,
-		expected,
-		actual,
-	)
-
-	return false
-}
-
-func AssertNotNil(t *testing.T, actual any, message string, file string, line int) bool {
-	t.Helper()
-
-	if actual != nil {
-		return true
-	}
-
-	t.Fatalf(
-		"\n ASSERT NOT NIL FAILED \n %s:%d: %s\nactual:   %#v",
-		file,
-		line,
-		message,
-		actual,
-	)
-
-	return false
-}
-
 func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, siteInformation *db.SiteCreateResult, defaultJwt string) {
 	page, err := context.NewPage()
 	if err != nil {
@@ -797,11 +682,6 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			t.Fatalf("failed to parse action file: %v", err)
 		}
 		for _, action := range actionFile.Actions {
-			err := action.BuildAndValidate(t, actionContext)
-			if err != nil {
-				t.Fatalf("failed to build real error: %v, action: %s", err, action.ToFlatString())
-			}
-
 			fmt.Println()
 			fmt.Println("=============== " + action.ToFlatString() + "  ================")
 			fmt.Println()

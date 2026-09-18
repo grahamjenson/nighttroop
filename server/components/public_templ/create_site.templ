@@ -34,7 +34,7 @@ templ CreateSite() {
 					}) {
 						<div class="h-2 w-5"></div>
 						<span class="text-2xl font-extrabold tracking-wide text-white">
-							Get Started
+							Create Site
 						</span>
 						<div class="h-2 w-5"></div>
 					}
@@ -156,6 +156,7 @@ templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, p
 				<div class="justify-center flex w-full">
 					<!-- Action Button: Visit Generated Site -->
 					@button.Button(button.Props{
+						ID:        "login-button",
 						Size:      button.SizeLg,
 						Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 						FullWidth: true,

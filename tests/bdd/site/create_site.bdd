@@ -1,13 +1,14 @@
 GOTO {{ server_url}}/
-ASSERT_STATUS 200
+ASSERT_STATUS           200
+ASSERT_VISIBLE          "Create Site"
+ASSERT_TEXT_EQUALS      #create-site-button Create Site
 
 CLICK "Create Site"
 ASSERT_STATUS 200
-ASSERT {{ assertVisible #copy-button }}
-SET token "{{ dig "#token" }}"
-SET site "{{ dig "#subdomain" }}"
+SET token #token
+SET site #subdomain
 
-CLICK "Login"
+CLICK #login-button
 ASSERT_STATUS 200
 
 
@@ -24,6 +25,6 @@ INPUT #totp 123456
 CLICK "Submit" 
 ASSERT_STATUS 200
 
-ASSERT {{ assertContains "#profile" }}
-ASSERT {{ assertContains "#settings" }}
-ASSERT {{ assertEquals #subdomain site }}
+ASSERT_VISIBLE #profile
+ASSERT_VISIBLE #settings
+ASSERT_TEXT_EQUALS #subdomain site

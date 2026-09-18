@@ -61,7 +61,7 @@ func CreateSite() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"h-2 w-5\"></div><span class=\"text-2xl font-extrabold tracking-wide text-white\">Get Started</span><div class=\"h-2 w-5\"></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"h-2 w-5\"></div><span class=\"text-2xl font-extrabold tracking-wide text-white\">Create Site</span><div class=\"h-2 w-5\"></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -285,6 +285,7 @@ func CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, pw
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
+			ID:        "login-button",
 			Size:      button.SizeLg,
 			Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 			FullWidth: true,
