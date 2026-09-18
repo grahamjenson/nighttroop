@@ -4,7 +4,9 @@ import (
 	"embed"
 	"io/fs"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
@@ -37,6 +39,18 @@ func TestSite(t *testing.T) {
 
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
+
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	port, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.HostName = "localhost"
+	config.HostPort = port
 
 	// Start Playwright
 	pw, err := playwright.Run()

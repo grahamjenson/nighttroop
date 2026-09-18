@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+	"time"
 
 	"github.com/mxschmitt/playwright-go"
 	"nighttroop.t1d.nz/data/db"
@@ -19,7 +20,7 @@ type Action interface {
 	ToErrorLine(msg string) string
 	ToFlatString() string
 	PrintAction()
-	Execute(t *testing.T, page playwright.Page, ctx map[string]any) error
+	Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error)
 }
 
 type ActionFile struct {
@@ -58,7 +59,12 @@ func (r *Goto) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
-func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
+func (r *Goto) AddAssert(assert Assert) {
+	r.Asserts = append(r.Asserts, assert)
+}
+
+func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+
 	url, err := renderTemplate(r.URL, ctx)
 	if err != nil {
 		t.Fatalf(
@@ -86,11 +92,11 @@ func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) e
 	}
 
 	for _, assert := range r.Asserts {
-		assert.Execute(t, ctx, page, resp)
+		assert.Execute(t, ctx, page, []playwright.Response{resp})
 	}
 
 	// Implement the execution logic for the Goto action here
-	return nil
+	return page, nil
 }
 
 //////
@@ -121,50 +127,130 @@ func (r *Click) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
-func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
+func (r *Click) AddAssert(assert Assert) {
+	r.Asserts = append(r.Asserts, assert)
+}
+
+func (r *Click) NeedsResponseOrPage() (bool, bool) {
+	// check for new page first
+	if r.Asserts != nil || len(r.Asserts) == 0 {
+		return false, false
+	}
+
+	for _, a := range r.Asserts {
+		// if there is a AssertNewPage assert, we need a new page
+		_, ok := a.(*AssertNewPage)
+		if ok {
+			return false, true
+		}
+	}
+
+	for _, a := range r.Asserts {
+		// if there is a AssertResponse assert, we need a response
+		_, ok := a.(*AssertStatus)
+		if ok {
+			return true, false
+		}
+	}
+
+	return false, false
+}
+
+func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	context := page.Context()
+
+	html, err := page.Content()
+	if err != nil {
+		return nil, err
+	}
+	prettyOutput := PrettifyHTML(html)
+
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
 		t.Fatalf("Failed to get locator for %s", r.Locator)
 	}
 
-	if len(r.Asserts) > 0 {
-		response, err := page.ExpectResponse(
-			func(resp playwright.Response) bool {
-				// TODO make the click assume a response at least the method
-				return true
-			},
-			func() error {
-				return locator.Click()
+	var responses []playwright.Response
+	var requests []playwright.Request
+	var newPages []playwright.Page
+
+	context.On("page", func(p playwright.Page) {
+		newPages = append(newPages, p)
+	})
+
+	context.On("request", func(req playwright.Request) {
+		requests = append(requests, req)
+	})
+
+	context.On("response", func(resp playwright.Response) {
+		responses = append(responses, resp)
+	})
+
+	err = locator.Click()
+	if err != nil {
+		t.Fatalf(
+			"\n\n CLICK FAILED \n %s: %v \n\n %s \n\n",
+			r.ToErrorLine("Error with CLICK"),
+			prettyOutput,
+			err,
+		)
+	}
+
+	// We have to wait for the reponses to be captured
+	time.Sleep(50 * time.Millisecond)
+
+	if len(newPages) > 1 {
+		t.Fatalf(
+			"\n\n CLICK FAILED \n %s: multiple new pages captured\n\n %s \n\n",
+			r.ToErrorLine("Multiple new pages with CLICK"),
+			prettyOutput,
+		)
+	}
+
+	newPage := first(newPages)
+	if newPage != nil {
+		page = newPage
+
+		if strings.Contains(page.URL(), "chrome-error") || page.URL() == "about:blank#blocked" {
+			t.Fatalf("%s\n new page failed to load properly\nURL returnes as %s, might be bad URL\n\n", r.ToErrorLine("Error with NEW PAGE"), page.URL())
+		}
+		err := page.WaitForLoadState(
+			playwright.PageWaitForLoadStateOptions{
+				State: playwright.LoadStateDomcontentloaded,
 			},
 		)
 		if err != nil {
-			t.Fatalf(
-				"\n\n CLICK FAILED \n %s: %v \n\n",
-				r.ToErrorLine("Error with CLICK"),
-				err,
-			)
+			return nil, err
 		}
-		if response == nil {
-			t.Fatalf(
-				"\n\n CLICK FAILED \n %s: response is nil\n\n",
-				r.ToErrorLine("Error with CLICK"),
-			)
-		}
+	}
 
-		for _, assert := range r.Asserts {
-			assert.Execute(t, ctx, page, response)
+	for _, assert := range r.Asserts {
+		if _, ok := assert.(*AssertNewPage); ok {
+			if newPage == nil {
+				t.Fatalf("%s\n assertNewPage failed: no new page was opened\n\n", r.ToErrorLine("Error with ASSERT"))
+			}
+			continue
 		}
-	} else {
-		err := locator.Click()
+		err := assert.Execute(t, ctx, page, responses)
 		if err != nil {
 			t.Fatalf(
-				"\n\n CLICK FAILED \n %s: %v \n\n",
-				r.ToErrorLine("Error with CLICK"),
+				"\n\n ASSERT FAILED \n %s: %v \n\n %s \n\n",
+				r.ToErrorLine("Error with ASSERT"),
 				err,
+				prettyOutput,
 			)
 		}
 	}
-	return nil
+
+	return page, nil
+}
+
+func first[T any](slice []T) T {
+	var zero T
+	if len(slice) == 0 {
+		return zero
+	}
+	return slice[0]
 }
 
 /////
@@ -194,14 +280,9 @@ func (r *Input) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
-func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
+func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	// Implement the execution logic for the Input action here
-	return nil
-}
-
-func (r *Input) BuildAndValidate(t *testing.T, ctx map[string]any) error {
-	// Implement the logic to build the real action based on the context here
-	return nil
+	return page, nil
 }
 
 // ///
@@ -230,14 +311,9 @@ func (r *Set) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
-func (r *Set) Execute(t *testing.T, page playwright.Page, ctx map[string]any) error {
+func (r *Set) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	// Implement the execution logic for the Set action here
-	return nil
-}
-
-func (r *Set) BuildAndValidate(t *testing.T, ctx map[string]any) error {
-	// Implement the logic to build the real action based on the context here
-	return nil
+	return page, nil
 }
 
 // /////////////////////
@@ -245,7 +321,7 @@ func (r *Set) BuildAndValidate(t *testing.T, ctx map[string]any) error {
 // //////////////////////
 
 type Assert interface {
-	Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error
+	Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error
 }
 
 // //
@@ -258,7 +334,7 @@ type AssertVisible struct {
 	Line int
 }
 
-func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error {
+func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	html, err := page.Content()
 	if err != nil {
 		return err
@@ -296,7 +372,7 @@ type AssertTextEquals struct {
 	Line int
 }
 
-func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error {
+func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	html, err := page.Content()
 	if err != nil {
 		return err
@@ -334,9 +410,15 @@ type AssertStatus struct {
 	Line int
 }
 
-func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resp playwright.Response) error {
-	if resp.Status() != r.Code {
-		t.Fatalf("%s\n assertStatus failed: expected status code %d, got %d\n\n", r.ToErrorLine(), r.Code, resp.Status())
+func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+
+	if len(resps) == 0 {
+		t.Fatalf("%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
+	}
+	for _, resp := range resps {
+		if resp.Status() != r.Code {
+			t.Fatalf("%s\n assertStatus failed: expected status code %d, got %d for URL %s\n\n", r.ToErrorLine(), r.Code, resp.Status(), resp.URL())
+		}
 	}
 
 	return nil
@@ -344,6 +426,22 @@ func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright
 
 func (r *AssertStatus) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected status code %d", r.Path, r.Line, r.Code)
+}
+
+// ////
+// Just checks the new page is there
+// ////
+type AssertNewPage struct {
+	Path string
+	Line int
+}
+
+func (r *AssertNewPage) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	return nil
+}
+
+func (r *AssertNewPage) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected a new page to be opened", r.Path, r.Line)
 }
 
 // //////
@@ -394,12 +492,11 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 		if len(split) == 0 {
 			continue
 		}
-		if len(split) != 2 {
-			return nil, fmt.Errorf("invalid action line: %q at %s:%d", line, path, lineNumber)
+		second := ""
+		if len(split) > 1 {
+			second = strings.TrimSpace(split[1])
 		}
-
 		first := strings.TrimSpace(split[0])
-		second := strings.TrimSpace(split[1])
 
 		switch first {
 		case "GOTO":
@@ -465,46 +562,33 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("assert_status before action")
 			}
-
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
 			statusCode, err := strconv.Atoi(second)
 			if err != nil {
 				return nil, fmt.Errorf("invalid assert_status: %q", second)
 			}
-			assertStatus := &AssertStatus{
+			assertable.AddAssert(&AssertStatus{
 				Path: path,
 				Line: lineNumber,
 				Code: statusCode,
-			}
-			switch v := current.(type) {
-			case *Goto:
-				// valid types for assert_status
-				v.Asserts = append(v.Asserts, assertStatus)
-			case *Click:
-				// valid types for assert_status
-				v.Asserts = append(v.Asserts, assertStatus)
-			default:
-				return nil, fmt.Errorf("assert_status not applicable for this action")
-			}
+			})
+
 		case "ASSERT_VISIBLE":
 			if current == nil {
 				return nil, fmt.Errorf("assert_visible before action")
 			}
-
-			assertVisible := &AssertVisible{
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+			assertable.AddAssert(&AssertVisible{
 				Locator: second,
 				Path:    path,
 				Line:    lineNumber,
-			}
-			switch v := current.(type) {
-			case *Goto:
-				// valid types for assert_visible
-				v.Asserts = append(v.Asserts, assertVisible)
-			case *Click:
-				// valid types for assert_visible
-				v.Asserts = append(v.Asserts, assertVisible)
-			default:
-				return nil, fmt.Errorf("assert_visible not applicable for this action")
-			}
+			})
 		case "ASSERT_TEXT_EQUALS":
 			if current == nil {
 				return nil, fmt.Errorf("assert_text_equals before action")
@@ -515,25 +599,35 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				return nil, fmt.Errorf("expected exactly two values")
 			}
 
-			assertTextEquals := &AssertTextEquals{
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+
+			assertable.AddAssert(&AssertTextEquals{
 				Locator: parts[0],
 				Text:    parts[1],
 				Path:    path,
 				Line:    lineNumber,
+			})
+		case "ASSERT_NEW_PAGE":
+			if current == nil {
+				return nil, fmt.Errorf("assert_new_page before action")
 			}
-			switch v := current.(type) {
-			case *Goto:
-				// valid types for assert_text_equals
-				v.Asserts = append(v.Asserts, assertTextEquals)
-			case *Click:
-				// valid types for assert_text_equals
-				v.Asserts = append(v.Asserts, assertTextEquals)
-			default:
-				return nil, fmt.Errorf("assert_text_equals not applicable for this action")
+
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
 			}
+
+			assertable.AddAssert(&AssertNewPage{
+				Path: path,
+				Line: lineNumber,
+			})
 		default:
 			return nil, fmt.Errorf("unknown line: %q", line)
 		}
+
 	}
 
 	flush()
@@ -586,9 +680,6 @@ func getLocator(expected any, page playwright.Page) playwright.Locator {
 
 	s = strings.TrimSpace(s)
 
-	fmt.Println("===========")
-	fmt.Println("Locator string:", s, strings.HasPrefix(s, `"`), strings.HasSuffix(s, `"`))
-	fmt.Println("===========")
 	switch {
 	case strings.HasPrefix(s, "#"):
 		// CSS ID: #submit-button
@@ -691,11 +782,13 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			fmt.Println()
 			// default information
 
-			err = action.Execute(t, page, actionContext)
+			page, err = action.Execute(t, page, actionContext)
 			if err != nil {
 				t.Fatalf("failed to execute action: %v, action: %s", err, action.ToFlatString())
 			}
-
+			if page == nil {
+				t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
+			}
 			fmt.Println("===============================")
 		}
 

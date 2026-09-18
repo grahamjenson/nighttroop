@@ -9,20 +9,20 @@ SET token #token
 SET site #subdomain
 
 CLICK #login-button
-ASSERT_STATUS 200
+ASSERT_NEW_PAGE
+ASSERT_VISIBLE #name
 
 
-INPUT #username admin
+
+INPUT #name admin
 INPUT #password password
 
-CLICK #submit
+CLICK #login-button
 ASSERT_STATUS 200
-
-
 
 INPUT #totp 123456
 
-CLICK "Submit" 
+CLICK #login-button
 ASSERT_STATUS 200
 
 ASSERT_VISIBLE #profile
