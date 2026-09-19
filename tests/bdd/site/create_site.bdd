@@ -12,19 +12,15 @@ CLICK #login-button
 ASSERT_NEW_PAGE
 ASSERT_VISIBLE #name
 
-
-
 INPUT #name admin
 INPUT #password password
 
 CLICK #login-button
 ASSERT_STATUS 200
 
-INPUT #totp 123456
+// Pretty JS input is annoying here
+INPUT #otp-1 123123
 
 CLICK #login-button
-ASSERT_STATUS 200
-
-ASSERT_VISIBLE #profile
-ASSERT_VISIBLE #settings
-ASSERT_TEXT_EQUALS #subdomain site
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"

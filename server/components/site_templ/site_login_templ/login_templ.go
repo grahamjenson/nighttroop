@@ -307,8 +307,9 @@ func LoginTOTP() templ.Component {
 					}
 					ctx = templ.InitializeContext(ctx)
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						Index: 0,
-						Focus: true,
+						InputID: "otp-1",
+						Index:   0,
+						Focus:   true,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -318,7 +319,8 @@ func LoginTOTP() templ.Component {
 						return templ_7745c5c3_Err
 					}
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						Index: 1,
+						InputID: "otp-2",
+						Index:   1,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -328,7 +330,8 @@ func LoginTOTP() templ.Component {
 						return templ_7745c5c3_Err
 					}
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						Index: 2,
+						InputID: "otp-3",
+						Index:   2,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -346,7 +349,8 @@ func LoginTOTP() templ.Component {
 						return templ_7745c5c3_Err
 					}
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						Index: 3,
+						InputID: "otp-4",
+						Index:   3,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -356,7 +360,8 @@ func LoginTOTP() templ.Component {
 						return templ_7745c5c3_Err
 					}
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						Index: 4,
+						InputID: "otp-5",
+						Index:   4,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -366,7 +371,8 @@ func LoginTOTP() templ.Component {
 						return templ_7745c5c3_Err
 					}
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						Index: 5,
+						InputID: "otp-6",
+						Index:   5,
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err

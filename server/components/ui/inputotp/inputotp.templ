@@ -30,6 +30,7 @@ type SlotProps struct {
 	Attributes  templ.Attributes
 	Index       int
 	Type        string
+	InputID     string
 	Placeholder string
 	Disabled    bool
 	Focus       bool
@@ -120,6 +121,9 @@ templ Slot(props ...SlotProps) {
 		{ p.Attributes... }
 	>
 		<input
+			if p.InputID != "" {
+				id={ p.InputID }
+			}
 			type={ p.Type }
 			inputmode="numeric"
 			if p.Placeholder != "" {

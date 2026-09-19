@@ -167,7 +167,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
-		t.Fatalf("Failed to get locator for %s", r.Locator)
+		t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 	}
 
 	var responses []playwright.Response
@@ -186,6 +186,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		responses = append(responses, resp)
 	})
 
+	oldURL := page.URL()
 	err = locator.Click()
 	if err != nil {
 		t.Fatalf(
@@ -195,7 +196,10 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 			err,
 		)
 	}
-
+	newURL := false
+	if page.URL() != oldURL {
+		newURL = true
+	}
 	// We have to wait for the reponses to be captured
 	time.Sleep(50 * time.Millisecond)
 
@@ -228,6 +232,13 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		if _, ok := assert.(*AssertNewPage); ok {
 			if newPage == nil {
 				t.Fatalf("%s\n assertNewPage failed: no new page was opened\n\n", r.ToErrorLine("Error with ASSERT"))
+			}
+			continue
+		}
+
+		if _, ok := assert.(*AssertNewURL); ok {
+			if !newURL {
+				t.Fatalf("%s\n assertNewURL failed: no new URL was opened\n\n", r.ToErrorLine("Error with ASSERT"))
 			}
 			continue
 		}
@@ -281,6 +292,23 @@ func (r *Input) PrintAction() {
 }
 
 func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	html, err := page.Content()
+	if err != nil {
+		return nil, err
+	}
+	prettyOutput := PrettifyHTML(html)
+
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
+	}
+
+	// Use this instead of Fill to simulate typing each key sequentially
+	err = locator.PressSequentially(r.Value)
+	if err != nil {
+		return nil, err
+	}
+
 	// Implement the execution logic for the Input action here
 	return page, nil
 }
@@ -442,6 +470,19 @@ func (r *AssertNewPage) Execute(t *testing.T, ctx map[string]any, page playwrigh
 
 func (r *AssertNewPage) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected a new page to be opened", r.Path, r.Line)
+}
+
+type AssertNewURL struct {
+	Path string
+	Line int
+}
+
+func (r *AssertNewURL) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	return nil
+}
+
+func (r *AssertNewURL) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected a new URL to be opened", r.Path, r.Line)
 }
 
 // //////
@@ -621,6 +662,20 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			}
 
 			assertable.AddAssert(&AssertNewPage{
+				Path: path,
+				Line: lineNumber,
+			})
+		case "ASSERT_NEW_URL":
+			if current == nil {
+				return nil, fmt.Errorf("assert_new_url before action")
+			}
+
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+
+			assertable.AddAssert(&AssertNewURL{
 				Path: path,
 				Line: lineNumber,
 			})

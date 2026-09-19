@@ -245,7 +245,7 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *control.SiteIde
 	}
 
 	if !config.Security.TOTPValidate(totpToken, totpSecret) {
-		return fmt.Errorf("invalid TOTP token")
+		return fmt.Errorf("invalid TOTP token %s", totpToken)
 	}
 
 	return nil
