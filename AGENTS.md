@@ -8,7 +8,7 @@ A file for [guiding coding agents](https://agents.md/).
 - **Generate** `go generate ./...`
 - **Build:** `go build main.go`
 - **Test:** `go test ./...`
-- **Run** `docker-compose up && air` will run and rebuild as files change
+- **Run** `docker-compose up -d && air` will run and rebuild as files change
 - **Clean** `docker-compose 
 
 ## Directory Structure
