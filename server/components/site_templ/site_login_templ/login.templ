@@ -151,3 +151,9 @@ templ LoginTOTP() {
 		</div>
 	</div>
 }
+
+templ LoginError(errorMessage string) {
+	<div id="error-container" class="mt-3 text-red-600 font-bold">
+		{ errorMessage }
+	</div>
+}

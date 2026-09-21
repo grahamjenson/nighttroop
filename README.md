@@ -2,6 +2,8 @@
 
 ## Before Alpha Testing
 
+1. Come up with an actual logging and error framework that makes sense (SQLite DB for search?)
+
 1. make archiving and truncation a manual job, i.e. show unused users and select all and archive.  I think this will remove a lot of logic that can be shaky later on we can look at automating, if it gets really bad
 1. Display users in control
 1. Display job and cron stats in control

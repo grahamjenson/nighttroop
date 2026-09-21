@@ -12,24 +12,14 @@ import (
 func GenericAdminLoginError(w http.ResponseWriter, r *http.Request, err error, args ...any) {
 	allArgs := append([]any{
 		"error", err,
-		"stack", localStack(),
+		"stack", LocalStack(),
 	}, args...)
 	slog.Info("Control User Login Failed", allArgs...)
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 
 }
 
-// We have a very generic error to not give any hints about how far through it was rejected
-func GenericIdentityLoginError(w http.ResponseWriter, r *http.Request, err error, args ...any) {
-	allArgs := append([]any{
-		"error", err,
-		"stack", localStack(),
-	}, args...)
-	slog.Info("Identity Login Failed", allArgs...)
-	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-}
-
-func localStack() string {
+func LocalStack() string {
 	const depth = 32
 	pcs := make([]uintptr, depth)
 	n := runtime.Callers(3, pcs)

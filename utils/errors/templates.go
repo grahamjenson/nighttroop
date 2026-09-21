@@ -8,7 +8,7 @@ import (
 func TemplateFailureError(w http.ResponseWriter, r *http.Request, err error, args ...any) {
 	allArgs := append([]any{
 		"error", err,
-		"stack", localStack(),
+		"stack", LocalStack(),
 	}, args...)
 	slog.Error("Template Rendering Failed", allArgs...)
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)

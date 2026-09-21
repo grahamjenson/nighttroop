@@ -75,7 +75,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		subdomain := siteContext.Subdomain
 
 		if err := r.ParseForm(); err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
+			identityLoginErrorHTMX(w, r, "Failed to parse", fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
 
@@ -83,22 +83,21 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		formPassword := r.FormValue("password")
 
 		// Rate Limit login attempts by user and IP
-
 		allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, subdomain, formName)
 		if !allowedToAttempt {
-			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
+			rateLimitErrorHTMX(w, r)
 			return
 		}
 
 		// First thing validate the password
 		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, config.Security, siteContext.Subdomain, formName, formPassword)
 		if err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
+			identityLoginErrorHTMX(w, r, "Invalid username or password.", fmt.Errorf("failed to login with password: %w", err))
 			return
 		}
 
 		if !can.LoginToWebsite(identity.Role) {
-			errors.GenericIdentityLoginError(w, r, fmt.Errorf("identity does not have permission to login to website"))
+			identityLoginErrorHTMX(w, r, "Identity does not have permission to login to website", fmt.Errorf("identity with role %s cannot login to website", identity.Role))
 			return
 		}
 
@@ -106,21 +105,21 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
 			err = config.Security.SetUserPreAuthCookie(w, identity.Name)
 			if err != nil {
-				errors.GenericIdentityLoginError(w, r, err)
+				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to set pre-auth cookie: %w", err))
 				return
 			}
 
 			w.Header().Set("Content-Type", "text/html")
 			err = site_login_templ.LoginTOTP().Render(r.Context(), w)
 			if err != nil {
-				errors.GenericIdentityLoginError(w, r, err)
+				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to render TOTP login page: %w", err))
 				return
 			}
 			return
 		} else {
 			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
 			if err != nil {
-				errors.GenericIdentityLoginError(w, r, err)
+				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
 				return
 			}
 
@@ -139,7 +138,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if httputils.GetAcceptType(r).API() {
-			errors.GenericIdentityLoginError(w, r, fmt.Errorf("API login not supported for TOTP endpoint"))
+			http.Error(w, "API login not supported for TOTP endpoint", http.StatusBadRequest)
 			return
 		}
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -147,7 +146,13 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		// 1. Fetch And Validate Pre-Auth Token
 		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r)
 		if err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
+			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
+			return
+		}
+
+		allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, siteContext.Subdomain, identityNameFromToken)
+		if !allowedToAttempt {
+			rateLimitErrorHTMX(w, r)
 			return
 		}
 
@@ -155,13 +160,13 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 
 		identity, err := getTheIdentityeModel(controlDB, r, identityNameFromToken)
 		if err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
+			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to get identity model: %w", err))
 			return
 		}
 
 		// THIS IS A HTTP ONLY ROUTE
 		if err := r.ParseForm(); err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
+			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
 
@@ -172,16 +177,14 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 
 		err = validateIdentityTOTP(config, identity, totpToken)
 		if err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			identityLoginErrorHTMX(w, r, "Invalid TOTP token", fmt.Errorf("invalid TOTP token: %w", err))
 			return
 		}
 
 		// TOTP is valid, generate the real JWT token
 		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
 		if err != nil {
-			errors.GenericIdentityLoginError(w, r, err)
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
 			return
 		}
 
@@ -261,12 +264,12 @@ func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request) (stri
 		return "", fmt.Errorf("Pre-auth token is required: %w", err)
 	}
 
-	deviceName, err := config.Security.VerifyPreAuthJWTToken(preAuthToken)
+	identityName, err := config.Security.VerifyPreAuthJWTToken(preAuthToken)
 	if err != nil {
 		return "", fmt.Errorf("Invalid pre-auth token: %w", err)
 	}
 
-	return deviceName, nil
+	return identityName, nil
 }
 
 // ///
@@ -277,7 +280,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		errors.GenericIdentityLoginError(w, r, err)
+		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
@@ -290,13 +293,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 	identity, err := loginTheUserAPI(siteContext.ControlDB, siteContext.Subdomain, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
-		errors.GenericIdentityLoginError(w, r, err)
+		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
 	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
 	if err != nil {
-		errors.GenericIdentityLoginError(w, r, err)
+		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
@@ -306,7 +309,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 		"expires_at": expiresAt.Format(time.RFC3339),
 	})
 	if err != nil {
-		errors.GenericIdentityLoginError(w, r, err)
+		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
@@ -335,4 +338,48 @@ func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.Serv
 	}
 
 	return device, nil
+}
+
+func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Identity Login Failed", "stack", errors.LocalStack())
+
+	w.WriteHeader(http.StatusTooManyRequests)
+
+	err := site_login_templ.LoginError("Too many attempts").Render(r.Context(), w)
+	if err != nil {
+		slog.Error("Failed to render login error template", "error", err)
+	}
+
+}
+
+// We have a very generic error to not give any hints about how far through it was rejected
+func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
+	allArgs := []any{
+		"error", err,
+		"stack", errors.LocalStack(),
+	}
+	slog.Info("Identity Login Failed", allArgs...)
+
+	if usrMsg == "" {
+		usrMsg = "Invalid login attempt"
+	}
+	w.WriteHeader(http.StatusUnauthorized)
+	err = site_login_templ.LoginError(usrMsg).Render(r.Context(), w)
+	if err != nil {
+		slog.Error("Failed to render login error template", "error", err)
+	}
+}
+
+// We have a very generic error to not give any hints about how far through it was rejected
+func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
+	allArgs := []any{
+		"error", err,
+		"stack", errors.LocalStack(),
+	}
+	slog.Info("Identity Login Failed", allArgs...)
+
+	if usrMsg == "" {
+		usrMsg = "Invalid login attempt"
+	}
+	http.Error(w, usrMsg, http.StatusUnauthorized)
 }
