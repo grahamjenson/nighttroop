@@ -48,7 +48,7 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-target-error=\"#error-container\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -238,7 +238,7 @@ func LoginTOTP() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form id=\"otp\" action=\"/login_totp\" method=\"POST\" class=\"needs-validation\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- TOTP -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login_totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container \" hx-status:5xx=\"target:#error-container \" class=\"needs-validation\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- TOTP -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

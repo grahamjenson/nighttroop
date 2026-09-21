@@ -32,7 +32,6 @@ func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEnc
 }
 
 func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, err error) {
-
 	if cfg.IsDevOrTest() {
 		// We are going to override this stuff in dev, just to make it easier
 		password = *cfg.DevelopmentDangerousHardcodedAdminPassword

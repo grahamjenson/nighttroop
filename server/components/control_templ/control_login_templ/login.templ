@@ -17,7 +17,8 @@ templ Login() {
 					hx-post="/login"
 					hx-target="closest .login-form-target"
 					hx-swap="outerHTML"
-					hx-target-error="#error-container"
+					hx-status:4xx="target:#error-container"
+					hx-status:5xx="target:#error-container"
 				>
 					<div class="text-center mb-6">
 						<h2 class="font-bold text-2xl">NightTroop Login</h2>

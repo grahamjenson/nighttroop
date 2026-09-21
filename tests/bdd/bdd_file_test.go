@@ -196,12 +196,14 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 			err,
 		)
 	}
+
+	// We have to wait for the reponses to be captured
+	time.Sleep(50 * time.Millisecond)
+
 	newURL := false
 	if page.URL() != oldURL {
 		newURL = true
 	}
-	// We have to wait for the reponses to be captured
-	time.Sleep(50 * time.Millisecond)
 
 	if len(newPages) > 1 {
 		t.Fatalf(
@@ -216,7 +218,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		page = newPage
 
 		if strings.Contains(page.URL(), "chrome-error") || page.URL() == "about:blank#blocked" {
-			t.Fatalf("%s\n new page failed to load properly\nURL returnes as %s, might be bad URL\n\n", r.ToErrorLine("Error with NEW PAGE"), page.URL())
+			t.Fatalf("\n\n%s\n new page failed to load properly\nURL returnes as %s, might be bad URL\n\n", r.ToErrorLine("Error with NEW PAGE"), page.URL())
 		}
 		err := page.WaitForLoadState(
 			playwright.PageWaitForLoadStateOptions{
@@ -231,14 +233,14 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	for _, assert := range r.Asserts {
 		if _, ok := assert.(*AssertNewPage); ok {
 			if newPage == nil {
-				t.Fatalf("%s\n assertNewPage failed: no new page was opened\n\n", r.ToErrorLine("Error with ASSERT"))
+				t.Fatalf("\n\n%s\n assertNewPage failed: no new page was opened\n\n", r.ToErrorLine("Error with ASSERT"))
 			}
 			continue
 		}
 
 		if _, ok := assert.(*AssertNewURL); ok {
 			if !newURL {
-				t.Fatalf("%s\n assertNewURL failed: no new URL was opened\n\n", r.ToErrorLine("Error with ASSERT"))
+				t.Fatalf("\n\n%s\n assertNewURL failed: no new URL was opened\n old URL: %s\n new URL: %s\n\n", r.ToErrorLine("Error with ASSERT"), oldURL, page.URL())
 			}
 			continue
 		}
@@ -303,6 +305,10 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 	}
 
+	err = locator.Clear()
+	if err != nil {
+		return nil, err
+	}
 	// Use this instead of Fill to simulate typing each key sequentially
 	err = locator.PressSequentially(r.Value)
 	if err != nil {
@@ -372,14 +378,14 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
-		t.Fatalf("%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
 	visible, err := locator.IsVisible()
 	if err != nil {
-		t.Fatalf("%s\n failed to check visibility for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+		t.Fatalf("\n\n%s\n failed to check visibility for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
 	}
 	if !visible {
-		t.Fatalf("%s\n assertVisible failed: expected value to be visible for locator: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+		t.Fatalf("\n\n%s\n assertVisible failed: expected value to be visible for locator: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
 	return nil
 }
@@ -411,14 +417,14 @@ func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwr
 	expected := normalizeValue(r.Text)
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
-		t.Fatalf("%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
 	innerText, err := locator.InnerText()
 	if err != nil {
-		t.Fatalf("%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+		t.Fatalf("\n\n%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
 	}
 	if innerText != expected {
-		t.Fatalf("%s\n pageContains failed: expected %v at %v found %v: \n\n%s\n\n", r.ToErrorLine(), expected, r.Locator, innerText, prettyOutput)
+		t.Fatalf("\n\n%s\n pageContains failed: expected %v at %v found %v: \n\n%s\n\n", r.ToErrorLine(), expected, r.Locator, innerText, prettyOutput)
 	}
 	return nil
 }
@@ -441,11 +447,11 @@ type AssertStatus struct {
 func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 
 	if len(resps) == 0 {
-		t.Fatalf("%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
+		t.Fatalf("\n\n%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
 	}
 	for _, resp := range resps {
 		if resp.Status() != r.Code {
-			t.Fatalf("%s\n assertStatus failed: expected status code %d, got %d for URL %s\n\n", r.ToErrorLine(), r.Code, resp.Status(), resp.URL())
+			t.Fatalf("\n\n%s\n assertStatus failed: expected status code %d, got %d for URL %s\n\n", r.ToErrorLine(), r.Code, resp.Status(), resp.URL())
 		}
 	}
 

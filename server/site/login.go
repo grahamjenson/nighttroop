@@ -33,7 +33,8 @@ func POSTLogoutHandler(config *config.ServerConfig) http.HandlerFunc {
 		config.Security.ClearUserLoginCookie(w)
 
 		// 3. Redirect the user to the login page
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -192,7 +193,10 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 
 		slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		// Just render the dashboard HTMX here
+
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -245,7 +249,7 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *control.SiteIde
 	}
 
 	if !config.Security.TOTPValidate(totpToken, totpSecret) {
-		return fmt.Errorf("invalid TOTP token %s", totpToken)
+		return fmt.Errorf("invalid TOTP token")
 	}
 
 	return nil

@@ -10,17 +10,35 @@ SET site #subdomain
 
 CLICK #login-button
 ASSERT_NEW_PAGE
-ASSERT_VISIBLE #name
 
+// PUT IN THE WRONG password
+ASSERT_VISIBLE #name
+ASSERT_VISIBLE #password
+INPUT #name admin
+INPUT #password wrongpassword
+
+CLICK #login-button
+ASSERT_STATUS 401
+
+// PUT IN THE WRONG TOTP 
+ASSERT_VISIBLE #name
+ASSERT_VISIBLE #password
 INPUT #name admin
 INPUT #password password
 
 CLICK #login-button
 ASSERT_STATUS 200
+ASSERT_VISIBLE #otp-1
 
-// Pretty JS input is annoying here
+CLICK #login-button
+ASSERT_STATUS 401
+
+// PUT IN THE CORRECT LOGIN
+ASSERT_VISIBLE #otp-1
 INPUT #otp-1 123123
 
 CLICK #login-button
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
+
+

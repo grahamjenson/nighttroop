@@ -26,10 +26,11 @@ templ CreateSite() {
 						Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 						FullWidth: true,
 						Attributes: templ.Attributes{
-							"hx-post":         "/site",
-							"hx-target":       "#panel-content",
-							"hx-swap":         "innerHTML",
-							"hx-target-error": "#error-container",
+							"hx-post":       "/site",
+							"hx-target":     "#panel-content",
+							"hx-swap":       "innerHTML",
+							"hx-status:4xx": "target:#error-container",
+							"hx-status:5xx": "target:#error-container",
 						},
 					}) {
 						<div class="h-2 w-5"></div>
