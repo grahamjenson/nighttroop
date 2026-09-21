@@ -1,4 +1,4 @@
-package api_test
+package jsonapi
 
 import (
 	"bufio"
@@ -16,8 +16,6 @@ import (
 	"testing"
 	"text/template"
 	"time"
-
-	"nighttroop.t1d.nz/data/db"
 )
 
 type AssertType struct {
@@ -747,74 +745,4 @@ func AssertNotNil(t *testing.T, actual any, message string, file string, line in
 	)
 
 	return false
-}
-
-func RunTheRequestFileAsATest(t *testing.T, root string, path string, router http.Handler, siteInformation *db.SiteCreateResult, defaultJwt string) {
-	removeNightscout := strings.TrimPrefix(path, root+"/")
-	t.Run(removeNightscout, func(t *testing.T) {
-		requestFileBytes, err := embeddedFiles.ReadFile(path)
-		if err != nil {
-			t.Fatalf("failed to read request file: %v", err)
-		}
-		fmt.Println()
-		fmt.Println("===============================================")
-		fmt.Printf("Running request file: %s\n", path)
-		fmt.Println("===============================================")
-
-		requestContext := map[string]any{
-			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
-			"default_token": siteInformation.PwdNSToken,
-			"default_jwt":   defaultJwt,
-		}
-		requestFile, err := ParseRequestFile(string(requestFileBytes), requestContext, path)
-		if err != nil {
-			t.Fatalf("failed to parse request file: %v", err)
-		}
-		for _, request := range requestFile.Requests {
-			realRequest, err := request.BuildRealRequest(requestContext)
-			if err != nil {
-				t.Fatalf("failed to build real request: %v", err)
-			}
-
-			if request.IsFunction {
-				requestContext, err = realRequest.ExecuteFunction(requestContext)
-				if err != nil {
-					t.Fatalf("failed to execute function: %v", err)
-				}
-
-			} else {
-				fmt.Println()
-				fmt.Println("=============== " + request.Name + "  ================")
-				fmt.Println()
-				realRequest.PrintRequest()
-				fmt.Println()
-				fmt.Println("- - - - - - - - - - - - - - - - ")
-				fmt.Println()
-				// default information
-
-				statusCode, output, headers, newContext, err := realRequest.ExecuteRequest(router, requestContext)
-				if err != nil {
-					t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, realRequest.Method, realRequest.URL)
-				}
-				requestContext = newContext
-				fmt.Println()
-				fmt.Println("- - - - - - - - - - - - - - - - ")
-				fmt.Println()
-				fmt.Printf("STATUS CODE: %d\n", statusCode)
-				var buf bytes.Buffer
-				encoder := json.NewEncoder(&buf)
-				encoder.SetEscapeHTML(false)
-				encoder.SetIndent("", "  ")
-				if err := encoder.Encode(output); err != nil {
-					fmt.Printf("RESPONSE: %s and failed to format response: %v\n", output, err)
-				} else {
-					fmt.Printf("RESPONSE:\n%s", buf.String())
-				}
-				fmt.Println("===============================")
-
-				realRequest.ExecuteAsserts(t, statusCode, output, headers, requestContext)
-
-			}
-		}
-	})
 }

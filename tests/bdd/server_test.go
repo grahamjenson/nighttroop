@@ -1,14 +1,15 @@
 package bdd_test
 
 import (
-	"bytes"
-	"io"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
-	"golang.org/x/net/html"
+	"github.com/mxschmitt/playwright-go"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/tests/dsl/browser"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -23,85 +24,52 @@ func NewRouter(t *testing.T) http.Handler {
 	return router
 }
 
-func PrettifyHTML(input string) string {
-	tokenizer := html.NewTokenizer(strings.NewReader(input))
-	var buf bytes.Buffer
-	indent := 0
-
-	// Helper to write tabs
-	writeIndent := func(level int) {
-		for i := 0; i < level; i++ {
-			buf.WriteString("\t")
-		}
+func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, siteInformation *db.SiteCreateResult, defaultJwt string) {
+	page, err := context.NewPage()
+	if err != nil {
+		t.Fatalf("failed to create new page: %v", err)
 	}
 
-	// Self-closing tags that shouldn't increase nesting/indentation
-	selfClosingTags := map[string]bool{
-		"area": true, "base": true, "br": true, "col": true, "embed": true,
-		"hr": true, "img": true, "input": true, "link": true, "meta": true,
-		"param": true, "source": true, "track": true, "wbr": true,
-	}
+	removeNightscout := strings.TrimPrefix(path, root+"/")
+	t.Run(removeNightscout, func(t *testing.T) {
+		actionFileBytes, err := embeddedFiles.ReadFile(path)
+		if err != nil {
+			t.Fatalf("failed to read action file: %v", err)
+		}
+		fmt.Println()
+		fmt.Println("===============================================")
+		fmt.Printf("Running action file: %s\n", path)
+		fmt.Println("===============================================")
 
-	for {
-		tokenType := tokenizer.Next()
-		if tokenType == html.ErrorToken {
-			err := tokenizer.Err()
-			if err == io.EOF {
-				break
+		actionContext := map[string]any{
+			"server_url":    serverURL,
+			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
+			"default_token": siteInformation.PwdNSToken,
+			"default_jwt":   defaultJwt,
+		}
+		actionFile, err := browser.ParseActionFile(string(actionFileBytes), actionContext, path)
+		if err != nil {
+			t.Fatalf("failed to parse action file: %v", err)
+		}
+		for _, action := range actionFile.Actions {
+			fmt.Println()
+			fmt.Println("=============== " + action.ToFlatString() + "  ================")
+			fmt.Println()
+			action.PrintAction()
+			fmt.Println()
+			fmt.Println("- - - - - - - - - - - - - - - - ")
+			fmt.Println()
+			// default information
+
+			page, err = action.Execute(t, page, actionContext)
+			if err != nil {
+				t.Fatalf("failed to execute action: %v, action: %s", err, action.ToFlatString())
 			}
-			return input
+			if page == nil {
+				t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
+			}
+			fmt.Println("===============================")
 		}
 
-		token := tokenizer.Token()
-
-		switch tokenType {
-		case html.StartTagToken:
-			// Print current line break and indent before writing the tag
-			if buf.Len() > 0 {
-				buf.WriteString("\n")
-			}
-			writeIndent(indent)
-			buf.WriteString(token.String())
-
-			// Only indent next line if it's not a self-closing tag
-			if !selfClosingTags[token.Data] {
-				indent++
-			}
-
-		case html.EndTagToken:
-			indent--
-			if buf.Len() > 0 {
-				buf.WriteString("\n")
-			}
-			writeIndent(indent)
-			buf.WriteString(token.String())
-
-		case html.SelfClosingTagToken:
-			if buf.Len() > 0 {
-				buf.WriteString("\n")
-			}
-			writeIndent(indent)
-			buf.WriteString(token.String())
-
-		case html.TextToken:
-			// Clean up extra whitespace/newlines in text nodes
-			text := strings.TrimSpace(token.Data)
-			if text != "" {
-				if buf.Len() > 0 {
-					buf.WriteString("\n")
-				}
-				writeIndent(indent)
-				buf.WriteString(text)
-			}
-
-		case html.CommentToken, html.DoctypeToken:
-			if buf.Len() > 0 {
-				buf.WriteString("\n")
-			}
-			writeIndent(indent)
-			buf.WriteString(token.String())
-		}
-	}
-
-	return buf.String()
+	})
 }
