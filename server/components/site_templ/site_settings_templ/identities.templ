@@ -13,7 +13,7 @@ import (
 )
 
 templ Identities(siteContext *httputils.SiteContext, users []*UserIdentity, devices []*UserIdentity) {
-	@site_templ.UserBase(siteContext) {
+	@site_templ.SiteBase() {
 		@IdentitesTable(users, devices)
 	}
 }

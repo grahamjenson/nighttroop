@@ -6,7 +6,7 @@ import (
 )
 
 templ Dashboard(siteContext *httputils.SiteContext) {
-	@site_templ.UserBase(siteContext) {
+	@site_templ.SiteBase() {
 		<div class="container-fluid p-4">
 			<!-- TOP METRICS -->
 			<div class="row g-3 mb-4">

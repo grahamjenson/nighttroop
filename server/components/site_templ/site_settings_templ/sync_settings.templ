@@ -11,7 +11,7 @@ import (
 
 templ SyncSettings(siteContext *httputils.SiteContext, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64,
 	dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) {
-	@site_templ.UserBase(siteContext) {
+	@site_templ.SiteBase() {
 		@SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id)
 	}
 }
