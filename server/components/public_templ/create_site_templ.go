@@ -4,13 +4,12 @@ package public_templ
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
-import "github.com/a-h/templ"
-import templruntime "github.com/a-h/templ/runtime"
-
 import (
+	"github.com/a-h/templ"
+	templruntime "github.com/a-h/templ/runtime"
+	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
-	"nighttroop.t1d.nz/server/components/viewmodels"
 )
 
 func CreateSite() templ.Component {
@@ -141,7 +140,7 @@ func CreateSiteRateLimited(seconds int) templ.Component {
 	})
 }
 
-func CreateSiteInfo(newsite viewmodels.NewSiteInfo) templ.Component {
+func CreateSiteInfo(newsite nighttroop.NewSiteInfo) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

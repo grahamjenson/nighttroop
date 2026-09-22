@@ -1,4 +1,4 @@
-package viewmodels
+package nighttroop
 
 type SiteSyncSettings struct {
 	NSURL              string

@@ -1,4 +1,4 @@
-package viewmodels
+package nighttroop
 
 import "nighttroop.t1d.nz/utils/consts"
 

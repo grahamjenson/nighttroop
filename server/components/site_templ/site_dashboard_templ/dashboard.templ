@@ -1,11 +1,11 @@
 package site_dashboard_templ
 
 import (
+	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/components/site_templ"
-	"nighttroop.t1d.nz/server/components/viewmodels"
 )
 
-templ Dashboard(dashboard viewmodels.Dashboard) {
+templ Dashboard(dashboard nighttroop.Dashboard) {
 	@site_templ.SiteBase() {
 		<div class="container-fluid p-4">
 			<!-- TOP METRICS -->

@@ -1,4 +1,4 @@
-package viewmodels
+package nighttroop
 
 type NewSiteInfo struct {
 	URL             string

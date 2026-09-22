@@ -1,4 +1,4 @@
-package viewmodels
+package nighttroop
 
 import (
 	"strconv"

@@ -12,10 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/models/nighttroop"
 
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/components/viewmodels"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -47,7 +47,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		syncSettings := viewmodels.SiteSyncSettings{
+		syncSettings := nighttroop.SiteSyncSettings{
 			NSEnabled:    true,
 			DexEnabled:   true,
 			DexUSARegion: false,

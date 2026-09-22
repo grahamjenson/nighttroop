@@ -8,8 +8,8 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/components/viewmodels"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -56,22 +56,22 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 	}
 }
 
-func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*viewmodels.UserIdentity, []*viewmodels.UserIdentity, error) {
+func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*nighttroop.UserIdentity, []*nighttroop.UserIdentity, error) {
 	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
-	userIdentities := []*viewmodels.UserIdentity{}
-	deviceIdentities := []*viewmodels.UserIdentity{}
+	userIdentities := []*nighttroop.UserIdentity{}
+	deviceIdentities := []*nighttroop.UserIdentity{}
 
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			userIdentities = append([]*viewmodels.UserIdentity{viewmodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
+			userIdentities = append([]*nighttroop.UserIdentity{nighttroop.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, viewmodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			userIdentities = append(userIdentities, nighttroop.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, viewmodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			deviceIdentities = append(deviceIdentities, nighttroop.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		default:
 			continue
 		}
@@ -106,7 +106,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) h
 			return
 		}
 
-		identity := &viewmodels.UserIdentity{
+		identity := &nighttroop.UserIdentity{
 			ID:      "",
 			Name:    name,
 			Role:    role,

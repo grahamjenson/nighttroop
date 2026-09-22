@@ -2,20 +2,20 @@ package site_settings_templ
 
 import (
 	"github.com/templui/templui/components/checkbox"
+	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
-	"nighttroop.t1d.nz/server/components/viewmodels"
 )
 
-templ SyncSettingsFull(syncSettings viewmodels.SiteSyncSettings) {
+templ SyncSettingsFull(syncSettings nighttroop.SiteSyncSettings) {
 	@site_templ.SiteBase() {
 		@SyncSettingsPartial(syncSettings)
 	}
 }
 
-templ SyncSettingsPartial(syncSettings viewmodels.SiteSyncSettings) {
+templ SyncSettingsPartial(syncSettings nighttroop.SiteSyncSettings) {
 	<div id="mainForm" class="border-0">
 		<div class="mb-3 border-bottom pb-2">
 			<h3 class="mb-1 font-bold">Sync Settings</h3>
