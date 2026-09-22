@@ -13,7 +13,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 
-	static.AddSatticRoutes(r)
+	static.AddStaticRoutes(r)
 
 	r.Get("/", public.GETMainPageHandler(controlDB))
 

@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/public_templ"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -82,7 +83,14 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = public_templ.CreateSiteInfo(siteCreateResult.SiteDB.URL(), siteCreateResult.AdminPassword, siteCreateResult.TotpSecret, siteCreateResult.PwdNSToken, siteCreateResult.SiteDB.NSURL(), siteCreateResult.BackupPassword).Render(r.Context(), w)
+		err = public_templ.CreateSiteInfo(viewmodels.NewSiteInfo{
+			URL:             siteCreateResult.SiteDB.URL(),
+			AdminPassword:   siteCreateResult.AdminPassword,
+			AdminTotpSecret: siteCreateResult.TotpSecret,
+			PwdNSToken:      siteCreateResult.PwdNSToken,
+			PwdNSURL:        siteCreateResult.SiteDB.NSURL(),
+			BackupKey:       siteCreateResult.BackupPassword,
+		}).Render(r.Context(), w)
 		if err != nil {
 			slog.Error("Unable to create site", "error", err)
 			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)

@@ -37,7 +37,7 @@ var {{.VarName}}ETag = generateETag([]byte({{.VarName}}))
 {{- end}}
 
 
-func AddSatticRoutes(r chi.Router) error {
+func AddStaticRoutes(r chi.Router) error {
 	{{- range .GetFileVars }}
 	r.Get("/{{.FileName}}", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "{{.ContentType}}")

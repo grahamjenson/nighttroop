@@ -3,6 +3,7 @@ package public_templ
 import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 )
 
 templ CreateSite() {
@@ -75,7 +76,7 @@ templ CreateSiteRateLimited(seconds int) {
 </script>
 }
 
-templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, pwdNSToken string, pwdNSURL string, backupKey string) {
+templ CreateSiteInfo(newsite viewmodels.NewSiteInfo) {
 	<div class="text-left w-full">
 		<div id="Step1" class="max-w-2xl mx-auto space-y-6">
 			<!-- Credentials Display Box -->
@@ -88,7 +89,7 @@ templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, p
 					<!-- Header bar with Action Button -->
 					<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
 						<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
-						<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: admin\nPassword: " + adminPassword + "\nTOTP Secret: " + adminTotpSecret + "\nPWD NS Token: " + pwdNSToken + "\nPWD NS URL: " + pwdNSURL + "\nBackup Key: " + backupKey }</textarea>
+						<textarea id="textToCopy" hidden>{  newsite.AllInfo() }</textarea>
 						<!-- Clear, High-Visibility Copy Button -->
 						<div class="inline-flex shadow-sm rounded-lg">
 							@copybutton.CopyButton(copybutton.Props{
@@ -103,14 +104,14 @@ templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, p
 						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
 							Site Information
 						</h3>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span class="break-all">{ url }</span></div>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Backup Key:</span><span class="break-all">{ backupKey }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span class="break-all">{ newsite.URL }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Backup Key:</span><span class="break-all">{ newsite.BackupKey }</span></div>
 						<hr class="my-4"/>
 						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
 							Admin User
 						</h3>
 						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>admin</span></div>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ adminPassword }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ newsite.AdminPassword }</span></div>
 						<div class="flex">
 							<div class="flex items-start gap-6">
 								<!-- Left: label + secret -->
@@ -127,7 +128,7 @@ templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, p
 							</div>
 							<script type="text/javascript">
 							var qrcode = new QRCode(document.getElementById("qrcode"), {
-								text: "{{ adminTotpSecret }}",
+								text: "{{ newsite.AdminTotpSecret }}",
 								width: 128,
 								height: 128,
 								colorDark : "#000000",
@@ -140,8 +141,8 @@ templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, p
 						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
 							Person With Diabetes (PWD) Phone Setup
 						</h3>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">NSToken:</span><span class="break-all">{ pwdNSToken }</span></div>
-						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">NSURL:</span><span class="break-all">{ pwdNSURL }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">NSToken:</span><span class="break-all">{ newsite.PwdNSToken }</span></div>
+						<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">NSURL:</span><span class="break-all">{ newsite.PwdNSURL }</span></div>
 					</div>
 				</div>
 			</div>
@@ -160,7 +161,7 @@ templ CreateSiteInfo(url string, adminPassword string, adminTotpSecret string, p
 						Size:      button.SizeLg,
 						Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 						FullWidth: true,
-						Href:      url,
+						Href:      newsite.URL,
 						Target:    "_blank",
 					}) {
 						<div class="h-5 w-5"></div>

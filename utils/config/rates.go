@@ -2,6 +2,7 @@ package config
 
 import (
 	"math"
+	"strconv"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
@@ -85,13 +86,13 @@ func (r *RateLimiters) GetSiteCreateIPRateLimiter(ipAddress string) *rate.Limite
 // Site Rate Limiters
 // //
 
-func (r *RateLimiters) IdentityGETLimiter(identityID string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.identityGETRateLimiters, identityID, float64(r.serverConfig.SiteGETPerMinuteLimit), r.serverConfig.SiteGETPerMinuteBurst)
+func (r *RateLimiters) IdentityGETLimiter(identityID int64) *rate.Limiter {
+	return r.getOrCreateLimiter(r.identityGETRateLimiters, strconv.FormatInt(identityID, 10), float64(r.serverConfig.SiteGETPerMinuteLimit), r.serverConfig.SiteGETPerMinuteBurst)
 }
 
-func (r *RateLimiters) IdentityPOSTLimiter(identityID string) *rate.Limiter {
+func (r *RateLimiters) IdentityPOSTLimiter(identityID int64) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, identityID, float64(r.serverConfig.SitePOSTPerMinuteLimit), r.serverConfig.SitePOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, strconv.FormatInt(identityID, 10), float64(r.serverConfig.SitePOSTPerMinuteLimit), r.serverConfig.SitePOSTPerMinuteBurst)
 }
 
 func (r *RateLimiters) SiteGETLimiter(subdomain string) *rate.Limiter {

@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// ////
+// Accept Type
+// ////
+
 type AcceptType int
 
 const (
@@ -43,6 +47,10 @@ func (at AcceptType) API() bool {
 	return at == AcceptTypeJSON
 }
 
+// ////
+// Content Type
+// ////
+
 type ContentType string
 
 const (
@@ -60,5 +68,25 @@ func GetContentType(r *http.Request) ContentType {
 		return ContentTypeJSON
 	default:
 		return ContentTypeJSON
+	}
+}
+
+// ////
+// HTTPAction
+// ////
+
+type HTTPAction int
+
+const (
+	HTTPActionRead HTTPAction = iota
+	HTTPActionWrite
+)
+
+func GetHTTPAction(r *http.Request) HTTPAction {
+	switch strings.ToUpper(r.Method) {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		return HTTPActionRead
+	default:
+		return HTTPActionWrite
 	}
 }

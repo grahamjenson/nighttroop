@@ -1,4 +1,4 @@
-package site_settings_templ
+package viewmodels
 
 import (
 	"strconv"

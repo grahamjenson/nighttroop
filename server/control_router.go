@@ -13,7 +13,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 
-	static.AddSatticRoutes(r)
+	static.AddStaticRoutes(r)
 
 	r.Get("/login", control.GETLoginPageHandler())
 

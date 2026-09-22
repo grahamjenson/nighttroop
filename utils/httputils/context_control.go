@@ -17,7 +17,7 @@ type ControlContext struct {
 	Subdomain string
 	IPAddress string
 
-	SiteAction SiteAction
+	HTTPAction HTTPAction
 }
 
 func GetControlContext(ctx context.Context) *ControlContext {
@@ -30,10 +30,11 @@ func GetControlContext(ctx context.Context) *ControlContext {
 	return nil
 }
 
-func CreateControlContext(ctx context.Context, controlDB *db.ControlDB, ipAddress string) context.Context {
+func CreateControlContext(ctx context.Context, controlDB *db.ControlDB, ipAddress string, httpAction HTTPAction) context.Context {
 	controlContext := &ControlContext{
-		ControlDB: controlDB,
-		IPAddress: ipAddress,
+		ControlDB:  controlDB,
+		IPAddress:  ipAddress,
+		HTTPAction: httpAction,
 	}
 	return context.WithValue(ctx, controlContextKey, controlContext)
 }

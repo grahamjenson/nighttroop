@@ -11,13 +11,13 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 )
 
-templ SiteBase() {
+templ Base() {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Nighttroop </title>
+			<title>NightTroop </title>
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
@@ -33,17 +33,23 @@ templ SiteBase() {
 			@selectbox.Script()
 			<script src="/qrcode.js"></script>
 		</head>
-		<body>
-			@Header()
-			<div
-				id="main-content"
-				class="container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
-			>
-				{ children... }
-			</div>
-			@Footer()
+		<body hx-ext="response-targets">
+			{ children... }
 		</body>
 	</html>
+}
+
+templ SiteBase() {
+	@Base() {
+		@Header()
+		<div
+			id="main-content"
+			class="container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+		>
+			{ children... }
+		</div>
+		@Footer()
+	}
 }
 
 templ Header() {

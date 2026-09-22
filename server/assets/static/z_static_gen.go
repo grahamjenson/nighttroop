@@ -116,7 +116,7 @@ var StaticStyleGenCssETag = generateETag([]byte(StaticStyleGenCss))
 var StaticZStaticGenGo []byte
 var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
 
-func AddSatticRoutes(r chi.Router) error {
+func AddStaticRoutes(r chi.Router) error {
 	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 

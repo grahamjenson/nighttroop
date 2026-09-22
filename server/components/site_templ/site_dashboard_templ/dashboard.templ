@@ -2,43 +2,17 @@ package site_dashboard_templ
 
 import (
 	"nighttroop.t1d.nz/server/components/site_templ"
-	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 )
 
-templ Dashboard(siteContext *httputils.SiteContext) {
+templ Dashboard(dashboard viewmodels.Dashboard) {
 	@site_templ.SiteBase() {
 		<div class="container-fluid p-4">
 			<!-- TOP METRICS -->
-			<div class="row g-3 mb-4">
-				<div class="col-md-3">
-					<div class="card metric-card p-3" hx-get="/bg" hx-trigger="load, every 30s">
-						<h2>114 <small>mg/dL</small></h2>
-						<div>Slowly Falling</div>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="card metric-card p-3" hx-get="/iob" hx-trigger="load, every 60s">
-						<h5>Insulin on Board</h5>
-						<h3>1.25 U</h3>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="card metric-card p-3" hx-get="/cob" hx-trigger="load, every 60s">
-						<h5>Active COB</h5>
-						<h3>18 g</h3>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="card metric-card p-3" hx-get="/pump" hx-trigger="load, every 60s">
-						<h5>Pump Status</h5>
-						<h3>Normal</h3>
-					</div>
-				</div>
-			</div>
 			<!-- GRAPH -->
 			<div class="card p-3 mb-4">
 				<h5>Glucose Graph</h5>
-				<div id="glucoseGraph" class="graph-container" hx-get="/graph" hx-trigger="load" hx-swap="none"></div>
+				<div id="glucoseGraph" class="graph-container"></div>
 			</div>
 			<!-- LOWER METRICS -->
 			<div class="row g-3">

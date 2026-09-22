@@ -16,33 +16,34 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-func UserRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
+func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userAction := httputils.SiteActionRead
-			method := strings.ToUpper(r.Method)
-			if method == http.MethodGet || method == http.MethodHead {
-				// For GET and HEAD requests, we can use a more permissive rate limit
-				allowed, remainingTime := httputils.UserGETAllowed(config, r)
-				// TODO handle both html and json response types
-				if !allowed {
-					w.WriteHeader(http.StatusTooManyRequests)
-					slog.Info("User GET rate limit exceeded", "remainingTime", remainingTime)
-					return
-				}
-			} else {
-				// For POST, PUT, DELETE, etc., we should enforce a stricter rate limit
-				allowed, remainingTime := httputils.UserPOSTAllowed(config, r)
-				userAction = httputils.SiteActionWrite
-				if !allowed {
-					w.WriteHeader(http.StatusTooManyRequests)
-					slog.Info("User POST rate limit exceeded", "remainingTime", remainingTime)
-					return
-				}
+			allowed, remainingTime := httputils.SiteHTTPActionAllowed(config, r)
+			if !allowed {
+				w.WriteHeader(http.StatusTooManyRequests)
+				slog.Info("Site rate limit exceeded", "remainingTime", remainingTime)
+				return
 			}
-			ctx := httputils.SetSiteActionInSiteContext(r.Context(), userAction)
-			next.ServeHTTP(w, r.WithContext(ctx))
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func SiteIdentityRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			allowed, remainingTime := httputils.IdentityHTTPAllowed(config, r)
+			if !allowed {
+				w.WriteHeader(http.StatusTooManyRequests)
+				slog.Info("Identity rate limit exceeded", "remainingTime", remainingTime)
+				return
+			}
+
+			next.ServeHTTP(w, r)
 		})
 	}
 }
@@ -58,7 +59,7 @@ func (w *statusResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
+func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +74,7 @@ func UserIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 			next.ServeHTTP(sw, r)
 
 			if sw.status == 200 {
-				wasWrite := siteContext.SiteAction == httputils.SiteActionWrite
+				wasWrite := siteContext.HTTPAction == httputils.HTTPActionWrite
 				controlDB.UpdateSiteDateFlags(siteContext.SiteModel, true, wasWrite)
 				siteContext.ControlDB.UpdateSiteIdentityDateFlags(siteContext.IdentityModel, true, wasWrite)
 			}

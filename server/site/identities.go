@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -55,22 +56,22 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 	}
 }
 
-func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site_settings_templ.UserIdentity, []*site_settings_templ.UserIdentity, error) {
+func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*viewmodels.UserIdentity, []*viewmodels.UserIdentity, error) {
 	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
-	userIdentities := []*site_settings_templ.UserIdentity{}
-	deviceIdentities := []*site_settings_templ.UserIdentity{}
+	userIdentities := []*viewmodels.UserIdentity{}
+	deviceIdentities := []*viewmodels.UserIdentity{}
 
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			userIdentities = append([]*site_settings_templ.UserIdentity{site_settings_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
+			userIdentities = append([]*viewmodels.UserIdentity{viewmodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, site_settings_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			userIdentities = append(userIdentities, viewmodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, site_settings_templ.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			deviceIdentities = append(deviceIdentities, viewmodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		default:
 			continue
 		}
@@ -105,7 +106,7 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) h
 			return
 		}
 
-		identity := &site_settings_templ.UserIdentity{
+		identity := &viewmodels.UserIdentity{
 			ID:      "",
 			Name:    name,
 			Role:    role,

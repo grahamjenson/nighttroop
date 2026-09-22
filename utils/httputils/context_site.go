@@ -9,13 +9,6 @@ import (
 	"nighttroop.t1d.nz/utils/settings"
 )
 
-type SiteAction string
-
-const (
-	SiteActionRead  SiteAction = "read"
-	SiteActionWrite SiteAction = "write"
-)
-
 const siteContextKey = "user_context"
 
 type SiteContext struct {
@@ -28,7 +21,7 @@ type SiteContext struct {
 	Subdomain string
 	IPAddress string
 
-	SiteAction SiteAction
+	HTTPAction HTTPAction
 
 	settings *settings.CombinedSettingsMap
 }
@@ -47,13 +40,14 @@ func GetSiteContext(ctx context.Context) *SiteContext {
 // SiteDB
 ////
 
-func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string, ipAddress string) context.Context {
+func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string, ipAddress string, httpAction HTTPAction) context.Context {
 	siteContext := &SiteContext{}
 	siteContext.ControlDB = controlDB
 	siteContext.SiteDB = siteDB
 	siteContext.SiteModel = siteModel
 	siteContext.Subdomain = subdomain
 	siteContext.IPAddress = ipAddress
+	siteContext.HTTPAction = httpAction
 
 	return context.WithValue(ctx, siteContextKey, siteContext)
 }
@@ -61,11 +55,6 @@ func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.
 // //
 // Action
 // //
-func SetSiteActionInSiteContext(ctx context.Context, action SiteAction) context.Context {
-	siteContext := GetSiteContext(ctx)
-	siteContext.SiteAction = action
-	return context.WithValue(ctx, siteContextKey, siteContext)
-}
 
 // //
 // IdentityModel

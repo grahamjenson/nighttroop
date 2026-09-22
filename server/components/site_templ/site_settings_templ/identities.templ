@@ -8,17 +8,18 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-templ Identities(siteContext *httputils.SiteContext, users []*UserIdentity, devices []*UserIdentity) {
+templ Identities(siteContext *httputils.SiteContext, users []*viewmodels.UserIdentity, devices []*viewmodels.UserIdentity) {
 	@site_templ.SiteBase() {
 		@IdentitesTable(users, devices)
 	}
 }
 
-templ IdentitesTable(users []*UserIdentity, devices []*UserIdentity) {
+templ IdentitesTable(users []*viewmodels.UserIdentity, devices []*viewmodels.UserIdentity) {
 	<div id="identities_table">
 		<div class="mb-4 border-b border-white/10 pb-3">
 			<div class="max-w-4xl mx-auto p-6 space-y-6">
@@ -69,13 +70,13 @@ templ IdentitesTable(users []*UserIdentity, devices []*UserIdentity) {
 			<div>Admins & Users</div>
 			@buildIdentityTable("usersTable", users)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("usersTable", "User", []RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
+			@formCreateIdentity("usersTable", "User", []viewmodels.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
 		</div>
 		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Devices</div>
 			@buildIdentityTable("devicesTable", devices)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("devicesTable", "Device", []RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
+			@formCreateIdentity("devicesTable", "Device", []viewmodels.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
 		</div>
 		<!-- Error -->
 		<div id="error-container" class="mt-4"></div>
@@ -83,7 +84,7 @@ templ IdentitesTable(users []*UserIdentity, devices []*UserIdentity) {
 	</div>
 }
 
-templ buildIdentityTable(id string, identities []*UserIdentity) {
+templ buildIdentityTable(id string, identities []*viewmodels.UserIdentity) {
 	@table.Table(table.Props{
 		ID:    id,
 		Class: "border border-gray-300 rounded-lg mb-6",
@@ -118,7 +119,7 @@ templ buildIdentityTable(id string, identities []*UserIdentity) {
 	}
 }
 
-templ createTableRowForIdentity(identity *UserIdentity) {
+templ createTableRowForIdentity(identity *viewmodels.UserIdentity) {
 	@table.Row() {
 		@table.Cell() {
 			{ identity.Name }
@@ -141,7 +142,7 @@ templ createTableRowForIdentity(identity *UserIdentity) {
 	}
 }
 
-templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
+templ formCreateIdentity(tableid string, name string, roles []viewmodels.RoleOption) {
 	{{ formID := "createIdentityForm" + tableid }}
 	<div class="flex justify-end items-end mt-4">
 		<form
@@ -209,14 +210,14 @@ templ formCreateIdentity(tableid string, name string, roles []RoleOption) {
 	</div>
 }
 
-templ CreateIdentityResponse(url string, identity *UserIdentity, password string, totpSecret *string, nsToken *string) {
+templ CreateIdentityResponse(url string, identity *viewmodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	@createTableRowForIdentity(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
 		@newIdentityModal(url, identity, password, totpSecret, nsToken)
 	</div>
 }
 
-templ newIdentityModal(url string, identity *UserIdentity, password string, totpSecret *string, nsToken *string) {
+templ newIdentityModal(url string, identity *viewmodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
 		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md flex flex-col items-center justify-center">
 			@createdUserInfo(url, identity.Name, password, totpSecret, nsToken)

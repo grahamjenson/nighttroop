@@ -209,7 +209,7 @@ func Login() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = site_templ.SiteBase().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = site_templ.Base().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -238,7 +238,7 @@ func LoginTOTP() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login_totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container \" hx-status:5xx=\"target:#error-container \" class=\"needs-validation\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- TOTP -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login/totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container \" hx-status:5xx=\"target:#error-container \" class=\"needs-validation\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- TOTP -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

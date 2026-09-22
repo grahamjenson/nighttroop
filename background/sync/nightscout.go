@@ -48,7 +48,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 			ControlDB:  userSyncSource.controlDB,
 			SiteDB:     userSyncSource.siteDB,
 			SiteModel:  userSyncSource.siteModel,
-			SiteAction: httputils.SiteActionWrite,
+			HTTPAction: httputils.HTTPActionWrite,
 		}
 
 		addedColumns := false

@@ -30,12 +30,12 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 	// make sure to continue rate limiting
-	r.Use(site.UserRateLimitMiddleware(config))
+	r.Use(site.SiteRateLimitMiddleware(config))
 	// make sure to check auth for JWT/token param/token URL param
 
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
-		r.Use(site.UserIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
+		r.Use(site.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
 		r.Get("/api/v2/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
 		r.Get("/api/v2/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))

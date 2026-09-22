@@ -23,6 +23,15 @@ A file for [guiding coding agents](https://agents.md/).
 - `tests`: integration tests across the site
 - `utils`: all the useful stateless functions
 
+## Generated Code
+
+Do not change generated code. All generated files either:
+
+1. has a `z_` prefix
+1. has a `_temp.go` suffix
+1. has a `.gen.go` suffix
+1. has a `_gen.sql` suffix
+
 ## Issue and PR Guidelines
 
 - Never create an issue.

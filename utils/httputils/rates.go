@@ -37,34 +37,42 @@ func SiteLoginAttemptsAllowed(serverConfig *config.ServerConfig, r *http.Request
 // //////
 // Once We know Who the user is then we can apply user-specific rate limiting
 // //////
-func UserGETAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
+func SiteHTTPActionAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
 	userSubdomain := siteContext.Subdomain
-	// If no identity then associate with default to ensure blocking
-	identityName := consts.DEFAULT_RATE_LIMITING_IDENTITY_NAME
-	if siteContext.IdentityModel != nil {
-		identityName = siteContext.IdentityModel.Name
+
+	var limiter *rate.Limiter
+	switch siteContext.HTTPAction {
+	case HTTPActionRead:
+		limiter = serverConfig.RateLimiters.SiteGETLimiter(userSubdomain)
+	case HTTPActionWrite:
+		limiter = serverConfig.RateLimiters.SitePOSTLimiter(userSubdomain)
+	default:
+		return false, 0
 	}
 
-	readLimiter := serverConfig.RateLimiters.SiteGETLimiter(userSubdomain)
-	identityLimiter := serverConfig.RateLimiters.IdentityGETLimiter(identityName)
-
-	return AllowAll(readLimiter, identityLimiter)
+	return AllowAll(limiter)
 }
 
-func UserPOSTAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
+func IdentityHTTPAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
-	userSubdomain := siteContext.Subdomain
-	// If no identity then associate with default to ensure blocking
-	identityName := consts.DEFAULT_RATE_LIMITING_IDENTITY_NAME
-	if siteContext.IdentityModel != nil {
-		identityName = siteContext.IdentityModel.Name
+	identity := siteContext.IdentityModel
+
+	if identity == nil {
+		return false, 0
 	}
 
-	writeLimiter := serverConfig.RateLimiters.SitePOSTLimiter(userSubdomain)
-	identityLimiter := serverConfig.RateLimiters.IdentityPOSTLimiter(identityName)
+	var limiter *rate.Limiter
+	switch siteContext.HTTPAction {
+	case HTTPActionRead:
+		limiter = serverConfig.RateLimiters.IdentityGETLimiter(identity.ID)
+	case HTTPActionWrite:
+		limiter = serverConfig.RateLimiters.IdentityPOSTLimiter(identity.ID)
+	default:
+		return false, 0
+	}
 
-	return AllowAll(writeLimiter, identityLimiter)
+	return AllowAll(limiter)
 }
 
 func UserUpdateSyncAllowed(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
