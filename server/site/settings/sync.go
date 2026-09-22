@@ -39,7 +39,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllSiteSyncSources(ctx, siteContext.Subdomain)
+		nightscout, dexcom, err := GetAllSiteSyncSources(ctx, controlDB, siteContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -47,36 +47,35 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		syncSettings := nighttroop.SiteSyncSettings{
-			NSEnabled:    true,
-			DexEnabled:   true,
-			DexUSARegion: false,
-		}
+		syncSettings := nighttroop.SiteSyncSettings{}
 
 		if nightscout != nil {
-			syncSettings.NSURL, err = config.Security.Decrypt(nightscout.UrlOrUsername)
+			syncSettings.NightscoutSyncSettings = &nighttroop.NightscoutSyncSettings{}
+
+			syncSettings.NightscoutSyncSettings.URL, err = config.Security.Decrypt(nightscout.UrlOrUsername)
 			if err != nil {
 				slog.Error("Failed to decrypt Nightscout URL from DB", "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
-			syncSettings.NSEnabled = nightscout.Enabled
-			syncSettings.NSID = &nightscout.ID
-			syncSettings.NSPasswordGarbage = consts.PASSWORD_GARBAGE_VALUE
+			syncSettings.NightscoutSyncSettings.Enabled = nightscout.Enabled
+			syncSettings.NightscoutSyncSettings.ID = nightscout.ID
+
 		}
 
 		if dexcom != nil {
-			syncSettings.DexUsername, err = config.Security.Decrypt(dexcom.UrlOrUsername)
+			syncSettings.DexcomSyncSettings = &nighttroop.DexcomSyncSettings{}
+			syncSettings.DexcomSyncSettings.Username, err = config.Security.Decrypt(dexcom.UrlOrUsername)
 			if err != nil {
 				slog.Error("Failed to decrypt Dexcom username from DB", "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
 
-			syncSettings.DexUSARegion = dexcom.DexcomRegion == consts.DexcomRegionUS
-			syncSettings.DexEnabled = dexcom.Enabled
-			syncSettings.DexID = &dexcom.ID
-			syncSettings.DexPasswordGarbage = consts.PASSWORD_GARBAGE_VALUE
+			syncSettings.DexcomSyncSettings.USARegion = dexcom.DexcomRegion == consts.DexcomRegionUS
+			syncSettings.DexcomSyncSettings.Enabled = dexcom.Enabled
+			syncSettings.DexcomSyncSettings.ID = dexcom.ID
+
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
@@ -104,10 +103,44 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 	}
 }
 
-func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig, syncSourceType consts.SyncSourceType) http.HandlerFunc {
+func GetAllSiteSyncSources(ctx context.Context, db *db.ControlDB, subdomain string) (nightscout *control.SiteSyncSource, dexcom *control.SiteSyncSource, err error) {
+	// TODO: This might become a problem we could make faster with a dirty flag or something
+	sync_sources, err := db.Queries.GetAllSiteSyncSourcesForSite(ctx, control.GetAllSiteSyncSourcesForSiteParams{
+		SiteID: subdomain,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
+	}
+
+	for _, ss := range sync_sources {
+		if ss.Type == consts.SyncSourceTypeNightscout {
+			nightscout = ss
+		}
+		if ss.Type == consts.SyncSourceTypeDexcom {
+			dexcom = ss
+		}
+	}
+
+	return nightscout, dexcom, nil
+
+}
+
+func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(config, r); !allowed {
 			http.Error(w, "Too Many Requests wait "+strconv.Itoa(seconds)+" seconds", http.StatusTooManyRequests)
+			return
+		}
+
+		syncSourceTypeStr := chi.URLParam(r, "type")
+		if syncSourceTypeStr == "" {
+			http.Error(w, "Bad Request: Missing type", http.StatusBadRequest)
+			return
+		}
+
+		syncSourceType, err := consts.NewSyncSourceTypeFromString(strings.ToUpper(syncSourceTypeStr))
+		if err != nil {
+			http.Error(w, "Bad Request: Invalid type", http.StatusBadRequest)
 			return
 		}
 
@@ -122,7 +155,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfi
 			return
 		}
 
-		nightscout, dexcom, err := controlDB.GetAllSiteSyncSources(ctx, siteContext.Subdomain)
+		nightscout, dexcom, err := GetAllSiteSyncSources(ctx, controlDB, siteContext.Subdomain)
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -210,6 +243,12 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerCon
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "success"}`))
+	}
+}
+
+func GetSyncSettingsReportsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

@@ -80,7 +80,7 @@ func extractAndGetIdentities(siteContext *httputils.SiteContext, context context
 }
 
 // Create Admin
-func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
+func POSTCreateIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptType := httputils.GetAcceptType(r)
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -121,5 +121,17 @@ func POSTIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) h
 			}
 			return
 		}
+	}
+}
+
+func POSTUpdateIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func DELETEIdentityHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 	}
 }

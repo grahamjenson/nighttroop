@@ -334,28 +334,6 @@ func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
 	return siteDB, nil
 }
 
-func (db *ControlDB) GetAllSiteSyncSources(ctx context.Context, subdomain string) (nightscout *control.SiteSyncSource, dexcom *control.SiteSyncSource, err error) {
-	// TODO: This might become a problem we could make faster with a dirty flag or something
-	sync_sources, err := db.Queries.GetAllSiteSyncSourcesForSite(ctx, control.GetAllSiteSyncSourcesForSiteParams{
-		SiteID: subdomain,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
-	}
-
-	for _, ss := range sync_sources {
-		if ss.Type == consts.SyncSourceTypeNightscout {
-			nightscout = ss
-		}
-		if ss.Type == consts.SyncSourceTypeDexcom {
-			dexcom = ss
-		}
-	}
-
-	return nightscout, dexcom, nil
-
-}
-
 ////
 // End of Get SITE Methods
 ////

@@ -4,9 +4,10 @@ package site_settings_templ
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
+
 import (
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
 	"github.com/templui/templui/components/checkbox"
 	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/components/site_templ"
@@ -87,7 +88,7 @@ func SyncSettingsPartial(syncSettings nighttroop.SiteSyncSettings) templ.Compone
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = NightscoutSyncForm(syncSettings.NSURL, syncSettings.NSPasswordGarbage, syncSettings.NSEnabled, syncSettings.NSID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = NightscoutSyncForm(syncSettings.NightscoutSyncSettings).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -95,7 +96,7 @@ func SyncSettingsPartial(syncSettings nighttroop.SiteSyncSettings) templ.Compone
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = DexcomSyncForm(syncSettings.DexUsername, syncSettings.DexPasswordGarbage, syncSettings.DexUSARegion, syncSettings.DexEnabled, syncSettings.DexID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = DexcomSyncForm(syncSettings.DexcomSyncSettings).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -107,7 +108,7 @@ func SyncSettingsPartial(syncSettings nighttroop.SiteSyncSettings) templ.Compone
 	})
 }
 
-func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) templ.Component {
+func DexcomSyncForm(dexcomSyncSettings *nighttroop.DexcomSyncSettings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -147,7 +148,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
 				ID:      "dexcomSync",
 				Name:    "dex_enabled",
-				Checked: dex_enabled,
+				Checked: dexcomSyncSettings.IsEnabled(),
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -237,7 +238,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 			templ_7745c5c3_Err = input.Input(input.Props{
 				Type:  "text",
 				Name:  "dex_username",
-				Value: dex_username,
+				Value: dexcomSyncSettings.GetUsername(),
 				Attributes: templ.Attributes{
 					"autocomplete":   "new-password",
 					"autocapitalize": "none",
@@ -300,7 +301,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 			templ_7745c5c3_Err = input.Input(input.Props{
 				Type:  "password",
 				Name:  "dex_password",
-				Value: dex_password_garbage,
+				Value: dexcomSyncSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
 					"onmousedown":               "event.preventDefault(); this.select();",
 					"data-placeholder-password": "true",
@@ -363,7 +364,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
 				ID:      "dex_region",
 				Name:    "dex_region",
-				Checked: dex_usa_region,
+				Checked: dexcomSyncSettings.IsUSARegion(),
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -471,7 +472,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 	})
 }
 
-func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64) templ.Component {
+func NightscoutSyncForm(nightscoutSyncSettings *nighttroop.NightscoutSyncSettings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -511,7 +512,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
 				ID:      "site--settings--nightscout-sync--enable",
 				Name:    "ns_enabled",
-				Checked: ns_enabled,
+				Checked: nightscoutSyncSettings.IsEnabled(),
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -605,7 +606,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 				Placeholder: "https://your-nightscout.herokuapp.com",
 
 				Required: true,
-				Value:    ns_url,
+				Value:    nightscoutSyncSettings.GetURL(),
 				Attributes: templ.Attributes{
 					"autocomplete":   "new-password",
 					"autocapitalize": "none",
@@ -697,7 +698,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 				Type:     "password",
 				Name:     "ns_password",
 				Required: true,
-				Value:    ns_password_garbage,
+				Value:    nightscoutSyncSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
 					"onmousedown":               "event.preventDefault(); this.select();",
 					"data-placeholder-password": "true",

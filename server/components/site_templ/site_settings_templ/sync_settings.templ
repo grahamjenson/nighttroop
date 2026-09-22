@@ -24,14 +24,14 @@ templ SyncSettingsPartial(syncSettings nighttroop.SiteSyncSettings) {
 			</div>
 		</div>
 		<!-- NIGHTSCOUT -->
-		@NightscoutSyncForm(syncSettings.NSURL, syncSettings.NSPasswordGarbage, syncSettings.NSEnabled, syncSettings.NSID)
+		@NightscoutSyncForm(syncSettings.NightscoutSyncSettings)
 		<!-- DEXCOM -->
-		@DexcomSyncForm(syncSettings.DexUsername, syncSettings.DexPasswordGarbage, syncSettings.DexUSARegion, syncSettings.DexEnabled, syncSettings.DexID)
+		@DexcomSyncForm(syncSettings.DexcomSyncSettings)
 		<div id="feedback" class="mb-3"></div>
 	</div>
 }
 
-templ DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) {
+templ DexcomSyncForm(dexcomSyncSettings *nighttroop.DexcomSyncSettings) {
 	<form hx-post="/settings/sync/dexcom" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
@@ -51,7 +51,7 @@ templ DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_r
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "dexcomSync",
 							Name:    "dex_enabled",
-							Checked: dex_enabled,
+							Checked: dexcomSyncSettings.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
 						@form.Label(form.LabelProps{
@@ -75,7 +75,7 @@ templ DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_r
 							@input.Input(input.Props{
 								Type:  "text",
 								Name:  "dex_username",
-								Value: dex_username,
+								Value: dexcomSyncSettings.GetUsername(),
 								Attributes: templ.Attributes{
 									"autocomplete":   "new-password",
 									"autocapitalize": "none",
@@ -95,7 +95,7 @@ templ DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_r
 							@input.Input(input.Props{
 								Type:  "password",
 								Name:  "dex_password",
-								Value: dex_password_garbage,
+								Value: dexcomSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               "event.preventDefault(); this.select();",
 									"data-placeholder-password": "true",
@@ -116,7 +116,7 @@ templ DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_r
 								@checkbox.Checkbox(checkbox.Props{
 									ID:      "dex_region",
 									Name:    "dex_region",
-									Checked: dex_usa_region,
+									Checked: dexcomSyncSettings.IsUSARegion(),
 									Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 								})
 								@form.Label(form.LabelProps{
@@ -154,7 +154,7 @@ templ DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_r
 	</form>
 }
 
-templ NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64) {
+templ NightscoutSyncForm(nightscoutSyncSettings *nighttroop.NightscoutSyncSettings) {
 	<form hx-post="/settings/sync/nightscout" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
@@ -174,7 +174,7 @@ templ NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled b
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--nightscout-sync--enable",
 							Name:    "ns_enabled",
-							Checked: ns_enabled,
+							Checked: nightscoutSyncSettings.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
 						@form.Label(form.LabelProps{
@@ -202,7 +202,7 @@ templ NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled b
 								Placeholder: "https://your-nightscout.herokuapp.com",
 
 								Required: true,
-								Value:    ns_url,
+								Value:    nightscoutSyncSettings.GetURL(),
 								Attributes: templ.Attributes{
 									"autocomplete":   "new-password",
 									"autocapitalize": "none",
@@ -228,7 +228,7 @@ templ NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled b
 								Type:     "password",
 								Name:     "ns_password",
 								Required: true,
-								Value:    ns_password_garbage,
+								Value:    nightscoutSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               "event.preventDefault(); this.select();",
 									"data-placeholder-password": "true",

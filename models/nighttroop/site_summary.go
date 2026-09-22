@@ -49,7 +49,7 @@ type TimeInfo struct {
 	LowTarget  *int64
 }
 
-type Dashboard struct {
+type Summary struct {
 	Units   *consts.Units
 	Glucose *GlucoseReading
 	Alarm   *Alarm

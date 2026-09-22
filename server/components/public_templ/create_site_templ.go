@@ -4,9 +4,10 @@ package public_templ
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
+
 import (
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
 	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
