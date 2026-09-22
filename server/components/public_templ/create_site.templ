@@ -20,7 +20,7 @@ templ CreateSite() {
 				<div class="w-full flex flex-col items-center justify-center">
 					<!-- Centered & Larger Templ Button -->
 					@button.Button(button.Props{
-						ID:        "create-site-button",
+						ID:        "public--create-site-button",
 						Size:      button.SizeLg,
 						Variant:   button.VariantSecondary,
 						Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
@@ -89,12 +89,12 @@ templ CreateSiteInfo(newsite viewmodels.NewSiteInfo) {
 					<!-- Header bar with Action Button -->
 					<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
 						<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
-						<textarea id="textToCopy" hidden>{  newsite.AllInfo() }</textarea>
+						<textarea id="public--site-info" hidden>{  newsite.AllInfo() }</textarea>
 						<!-- Clear, High-Visibility Copy Button -->
 						<div class="inline-flex shadow-sm rounded-lg">
 							@copybutton.CopyButton(copybutton.Props{
-								ID:       "copy-button",
-								TargetID: "textToCopy",
+								ID:       "public--copy-button",
+								TargetID: "public--site-info",
 								Class:    "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
 							})
 						</div>
@@ -157,7 +157,7 @@ templ CreateSiteInfo(newsite viewmodels.NewSiteInfo) {
 				<div class="justify-center flex w-full">
 					<!-- Action Button: Visit Generated Site -->
 					@button.Button(button.Props{
-						ID:        "login-button",
+						ID:        "public--login-button",
 						Size:      button.SizeLg,
 						Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 						FullWidth: true,

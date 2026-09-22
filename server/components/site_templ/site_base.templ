@@ -62,7 +62,9 @@ templ Header() {
 				</a>
 				<!-- Right side -->
 				<div class="flex items-center gap-4">
-					@dropdown.Dropdown() {
+					@dropdown.Dropdown(dropdown.Props{
+						ID: "site--settings-menu",
+					}) {
 						@dropdown.Trigger() {
 							<button class="flex items-center justify-center size-9 rounded-full bg-gray-800 hover:bg-gray-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
 								<span class="sr-only">Open user menu</span>
@@ -105,9 +107,10 @@ templ Header() {
 							}
 							@dropdown.Group() {
 								@dropdown.Item(dropdown.ItemProps{
+									ID:   "site--settings--sync-button",
 									Href: "#",
 									Attributes: templ.Attributes{
-										"hx-get":      "/sync_settings",
+										"hx-get":      "/settings/sync",
 										"hx-target":   "#main-content",
 										"hx-push-url": "true",
 										"hx-swap":     "innerHTML",

@@ -4,21 +4,39 @@ ASSERT_STATUS           200
 CLICK "Create Site"
 ASSERT_STATUS 200
 
-CLICK #login-button
+CLICK #public--login-button
 ASSERT_NEW_PAGE
 
-INPUT #name admin
-INPUT #password password
+INPUT #site--login--name admin
+INPUT #site--login--password password
 
-CLICK #login-button
+CLICK #site--login-button
 ASSERT_STATUS 200
 
-ASSERT_VISIBLE #otp-1
-INPUT #otp-1 123123
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
 
-CLICK #login-button
+CLICK #site--login-totp-button
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--sync-button
 
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/sync
 
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable
+ASSERT_VISIBLE #site--settings--nightscout-sync--url
+ASSERT_VISIBLE #site--settings--nightscout-sync--password
+ASSERT_VISIBLE #site--settings--nightscout-sync--delete
+ASSERT_VISIBLE #site--settings--nightscout-sync--submit
+
+INPUT #site--settings--nightscout-sync--url         http://will_not_pass_the_test.test
+INPUT #site--settings--nightscout-sync--password    not_a_token
+
+CLICK #site--settings--nightscout-sync--submit
+ASSERT_STATUS 200
+ASSERT_VISIBLE Success!

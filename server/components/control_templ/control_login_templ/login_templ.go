@@ -372,7 +372,7 @@ func Login() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = button.Button(button.Props{
-				ID:    "login-button",
+				ID:    "control--login-button",
 				Type:  button.TypeSubmit,
 				Class: "w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)

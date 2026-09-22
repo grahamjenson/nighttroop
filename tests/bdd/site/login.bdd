@@ -1,47 +1,45 @@
 GOTO {{ server_url}}/
 ASSERT_STATUS           200
 ASSERT_VISIBLE          "Create Site"
-ASSERT_TEXT_EQUALS      #create-site-button Create Site
+ASSERT_TEXT_EQUALS      #public--create-site-button Create Site
 
 CLICK "Create Site"
 ASSERT_STATUS 200
-SET token #token
-SET site #subdomain
 
-CLICK #login-button
+CLICK #public--login-button
 ASSERT_NEW_PAGE
 ASSERT_PATH /login
 
 // PUT IN THE WRONG password
-ASSERT_VISIBLE #name
-ASSERT_VISIBLE #password
-INPUT #name admin
-INPUT #password wrongpassword
+ASSERT_VISIBLE #site--login--name
+ASSERT_VISIBLE #site--login--password
+INPUT #site--login--name admin
+INPUT #site--login--password wrongpassword
 
-CLICK #login-button
+CLICK #site--login-button
 ASSERT_STATUS 401
 
 // PUT IN THE WRONG TOTP 
-ASSERT_VISIBLE #name
-ASSERT_VISIBLE #password
-INPUT #name admin
-INPUT #password password
+ASSERT_VISIBLE #site--login--name
+ASSERT_VISIBLE #site--login--password
+INPUT #site--login--name admin
+INPUT #site--login--password password
 
 
-CLICK #login-button
+CLICK #site--login-button
 ASSERT_STATUS 200
-ASSERT_VISIBLE #otp-1
+ASSERT_VISIBLE #site--login--otp-1
 ASSERT_PATH /login
 
-CLICK #login-button
+CLICK #site--login-totp-button
 ASSERT_STATUS 401
 ASSERT_PATH /login
 
 // PUT IN THE CORRECT LOGIN
-ASSERT_VISIBLE #otp-1
-INPUT #otp-1 123123
+ASSERT_VISIBLE #site--login-totp-button
+INPUT #site--login--otp-1 123123
 
-CLICK #login-button
+CLICK #site--login-totp-button
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 ASSERT_PATH /

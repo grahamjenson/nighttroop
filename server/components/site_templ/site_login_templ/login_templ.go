@@ -83,7 +83,7 @@ func Login() templ.Component {
 					return nil
 				})
 				templ_7745c5c3_Err = form.Label(form.LabelProps{
-					For: "name",
+					For: "site--login--name",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -93,7 +93,7 @@ func Login() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = input.Input(input.Props{
-					ID:          "name",
+					ID:          "site--login--name",
 					Type:        "text",
 					Name:        "name",
 					Placeholder: "admin",
@@ -148,7 +148,7 @@ func Login() templ.Component {
 					return nil
 				})
 				templ_7745c5c3_Err = form.Label(form.LabelProps{
-					For: "password",
+					For: "site--login--password",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -158,7 +158,7 @@ func Login() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = input.Input(input.Props{
-					ID:          "password",
+					ID:          "site--login--password",
 					Type:        "password",
 					Name:        "password",
 					Placeholder: "••••••••",
@@ -196,7 +196,7 @@ func Login() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = button.Button(button.Props{
-				ID:    "login-button",
+				ID:    "site--login-button",
 				Type:  button.TypeSubmit,
 				Class: "w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
@@ -307,7 +307,7 @@ func LoginTOTP() templ.Component {
 					}
 					ctx = templ.InitializeContext(ctx)
 					templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-						InputID: "otp-1",
+						InputID: "site--login--otp-1",
 						Index:   0,
 						Focus:   true,
 					}).Render(ctx, templ_7745c5c3_Buffer)
@@ -449,7 +449,7 @@ func LoginTOTP() templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			ID:    "login-button",
+			ID:    "site--login-totp-button",
 			Type:  button.TypeSubmit,
 			Class: "w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)

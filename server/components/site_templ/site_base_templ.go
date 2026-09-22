@@ -428,9 +428,10 @@ func Header() templ.Component {
 						return nil
 					})
 					templ_7745c5c3_Err = dropdown.Item(dropdown.ItemProps{
+						ID:   "site--settings--sync-button",
 						Href: "#",
 						Attributes: templ.Attributes{
-							"hx-get":      "/sync_settings",
+							"hx-get":      "/settings/sync",
 							"hx-target":   "#main-content",
 							"hx-push-url": "true",
 							"hx-swap":     "innerHTML",
@@ -505,7 +506,9 @@ func Header() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = dropdown.Dropdown().Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dropdown.Dropdown(dropdown.Props{
+			ID: "site--settings-menu",
+		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -146,7 +146,7 @@ func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfi
 
 		if acceptType == httputils.AcceptTypeHTML {
 			// After saving, redirect back to the sync settings page
-			http.Redirect(w, r, "/sync_settings", http.StatusSeeOther)
+			http.Redirect(w, r, "/settings/sync", http.StatusSeeOther)
 			return
 		}
 
@@ -195,7 +195,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerCon
 
 		if acceptType == httputils.AcceptTypeHTML {
 			// After deletion, redirect back to the sync settings page
-			http.Redirect(w, r, "/sync_settings", http.StatusSeeOther)
+			http.Redirect(w, r, "/settings/sync", http.StatusSeeOther)
 			return
 		}
 
@@ -203,12 +203,12 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerCon
 			// Return a success message that HTMX can use to trigger a toast notification
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-			w.Header().Set("HX-Redirect", "/sync_settings")
+			w.Header().Set("HX-Redirect", "/settings/sync")
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		// Defaule to JSON response for unsupported types
+		// Default to JSON response for unsupported types
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "success"}`))

@@ -37,10 +37,10 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 		r.Get("/", site.GetDashboardHandler(controlDB, config))
 
-		r.Get("/sync_settings", site.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/sync_settings/nightscout", site.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeNightscout))
-		r.Post("/sync_settings/dexcom", site.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeDexcom))
-		r.Delete("/sync_settings/{type}", site.DELETESyncSettingsHandler(controlDB, config))
+		r.Get("/settings/sync", site.GetSyncSettingsHandler(controlDB, config))
+		r.Post("/settings/sync/nightscout", site.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeNightscout))
+		r.Post("/settings/sync/dexcom", site.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeDexcom))
+		r.Delete("/settings/sync/{type}", site.DELETESyncSettingsHandler(controlDB, config))
 
 		// Identities
 		r.Get("/identities", site.GETIdentitiesHandler(controlDB, config))

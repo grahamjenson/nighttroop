@@ -131,7 +131,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form hx-post=\"/sync_settings/dexcom\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Dexcom Share Sync</h5><div class=\"text-sm text-gray-400\">Connect your Dexcom Account</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form hx-post=\"/settings/sync/dexcom\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Dexcom Share Sync</h5><div class=\"text-sm text-gray-400\">Connect your Dexcom Account</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -433,7 +433,7 @@ func DexcomSyncForm(dex_username string, dex_password_garbage string, dex_usa_re
 			Variant: button.VariantDestructive,
 			Attributes: templ.Attributes{
 				"hx-include": "none",
-				"hx-delete":  "/sync_settings/DEXCOM",
+				"hx-delete":  "/settings/sync/DEXCOM",
 				"hx-confirm": "Are you sure you want to delete this Dexcom sync source?",
 				"hx-target":  "#mainForm",
 				"hx-swap":    "innerHTML",
@@ -495,7 +495,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<form hx-post=\"/sync_settings/nightscout\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Nightscout Sync</h5><div class=\"text-sm text-gray-400\">Connect your Nightscout instance</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<form hx-post=\"/settings/sync/nightscout\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Nightscout Sync</h5><div class=\"text-sm text-gray-400\">Connect your Nightscout instance</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -512,7 +512,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 			}
 			ctx = templ.InitializeContext(ctx)
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
-				ID:      "nightscoutSync",
+				ID:      "site--settings--nightscout-sync--enable",
 				Name:    "ns_enabled",
 				Checked: ns_enabled,
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
@@ -543,7 +543,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 				return nil
 			})
 			templ_7745c5c3_Err = form.Label(form.LabelProps{
-				For:   "nightscoutSync",
+				For:   "site--settings--nightscout-sync--enable",
 				Class: "item-center flex cursor-pointer gap-2",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -602,6 +602,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = input.Input(input.Props{
+				ID:          "site--settings--nightscout-sync--url",
 				Type:        "url",
 				Name:        "ns_url",
 				Placeholder: "https://your-nightscout.herokuapp.com",
@@ -695,6 +696,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = input.Input(input.Props{
+				ID:       "site--settings--nightscout-sync--password",
 				Type:     "password",
 				Name:     "ns_password",
 				Required: true,
@@ -737,11 +739,12 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
+			ID:      "site--settings--nightscout-sync--delete",
 			Type:    "button",
 			Variant: button.VariantDestructive,
 			Attributes: templ.Attributes{
 				"hx-include": "none",
-				"hx-delete":  "/sync_settings/NIGHTSCOUT",
+				"hx-delete":  "/settings/sync/NIGHTSCOUT",
 				"hx-confirm": "Are you sure you want to delete this Nightscout sync source?",
 				"hx-target":  "#mainForm",
 				"hx-swap":    "innerHTML",
@@ -769,6 +772,7 @@ func NightscoutSyncForm(ns_url string, ns_password_garbage string, ns_enabled bo
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
+			ID:   "site--settings--nightscout-sync--submit",
 			Type: button.TypeSubmit,
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

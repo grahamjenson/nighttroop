@@ -69,7 +69,7 @@ func CreateSite() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = button.Button(button.Props{
-				ID:        "create-site-button",
+				ID:        "public--create-site-button",
 				Size:      button.SizeLg,
 				Variant:   button.VariantSecondary,
 				Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
@@ -162,14 +162,14 @@ func CreateSiteInfo(newsite viewmodels.NewSiteInfo) templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"text-left w-full\"><div id=\"Step1\" class=\"max-w-2xl mx-auto space-y-6\"><!-- Credentials Display Box --><div class=\"rounded-xl bg-green-500/10 p-4 text-sm leading-relaxed text-green-600 border border-green-500/20 shadow-sm\"><div class=\"flex items-start gap-2 mb-4\"><span class=\"font-semibold text-green-900\">1.</span><p class=\"text-green-800\">Save this information in a secure location.</p></div><div class=\"relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden\"><!-- Header bar with Action Button --><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your Credentials</span> <textarea id=\"textToCopy\" hidden>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"text-left w-full\"><div id=\"Step1\" class=\"max-w-2xl mx-auto space-y-6\"><!-- Credentials Display Box --><div class=\"rounded-xl bg-green-500/10 p-4 text-sm leading-relaxed text-green-600 border border-green-500/20 shadow-sm\"><div class=\"flex items-start gap-2 mb-4\"><span class=\"font-semibold text-green-900\">1.</span><p class=\"text-green-800\">Save this information in a secure location.</p></div><div class=\"relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden\"><!-- Header bar with Action Button --><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your Credentials</span> <textarea id=\"public--site-info\" hidden>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(newsite.AllInfo())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 92, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 92, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -180,8 +180,8 @@ func CreateSiteInfo(newsite viewmodels.NewSiteInfo) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = copybutton.CopyButton(copybutton.Props{
-			ID:       "copy-button",
-			TargetID: "textToCopy",
+			ID:       "public--copy-button",
+			TargetID: "public--site-info",
 			Class:    "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/20",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -287,7 +287,7 @@ func CreateSiteInfo(newsite viewmodels.NewSiteInfo) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			ID:        "login-button",
+			ID:        "public--login-button",
 			Size:      button.SizeLg,
 			Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
 			FullWidth: true,
