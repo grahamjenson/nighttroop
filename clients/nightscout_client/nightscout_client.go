@@ -13,7 +13,9 @@ package nightscout_client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -119,17 +121,38 @@ type JWTAuthResponse struct {
 	Exp              int64      `json:"exp"`
 }
 
-func (c *Client) refreshJWT() error {
+var (
+	ErrJWTRequest         = errors.New("JWT request failed")
+	ErrJWTNoHost          = errors.New("JWT host unavailable")
+	ErrJWTTimeout         = errors.New("JWT request timed out")
+	ErrJWTServer          = errors.New("JWT server returned an error")
+	ErrJWTInvalidResponse = errors.New("invalid JWT response")
+)
 
+func (c *Client) refreshJWT() error {
 	resp, err := c.httpClient.Get(jwtEndpoint(c.baseURL, c.token))
 	if err != nil {
-		return err
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			return ErrJWTTimeout
+		}
+
+		var dnsErr *net.DNSError
+		if errors.As(err, &dnsErr) {
+			return ErrJWTNoHost
+		}
+
+		return ErrJWTRequest
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("%w: HTTP %d", ErrJWTServer, resp.StatusCode)
+	}
+
 	var jwtResp JWTAuthResponse
 	if err := json.NewDecoder(resp.Body).Decode(&jwtResp); err != nil {
-		return err
+		return ErrJWTInvalidResponse
 	}
 
 	c.jwt = &jwtResp.Token
@@ -152,7 +175,7 @@ func (c *Client) GetEntries(
 	resp, err := c.doRequest(ctx, http.MethodGet, reqURL)
 
 	if err != nil {
-		return nil, fmt.Errorf("NSClient Error: %s: %w", reqURL, err)
+		return nil, fmt.Errorf("NSClient Get Entries Error %s: %w", c.baseURL, err)
 	}
 
 	if result, ok := resp["result"].([]any); ok {
@@ -166,6 +189,6 @@ func (c *Client) GetEntries(
 		return converted, nil
 	}
 
-	return nil, fmt.Errorf("unexpected response format for URL: %s %s", reqURL, resp)
+	return nil, fmt.Errorf("NSClient Get Entries Error: %s %s", c.baseURL, resp)
 
 }

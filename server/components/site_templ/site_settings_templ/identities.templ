@@ -147,7 +147,7 @@ templ formCreateIdentity(tableid string, name string, roles []viewmodels.RoleOpt
 	<div class="flex justify-end items-end mt-4">
 		<form
 			id={ formID }
-			hx-post="/identities"
+			hx-post="/settings/identities"
 			hx-target={ "#" + tableid + " tbody" }
 			hx-swap="beforeend"
 			hx-status:4xx="target:#error-container"

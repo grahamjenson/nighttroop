@@ -39,4 +39,4 @@ INPUT #site--settings--nightscout-sync--password    not_a_token
 
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200
-ASSERT_VISIBLE Success!
+ASSERT_VISIBLE Success

@@ -25,7 +25,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	afterTime := time.Now().Add(-time.Duration(20) * time.Minute)
 	egvs, err := nsc.GetEntries(ctx, afterTime, 3)
 	if err != nil {
-		return fmt.Errorf("Nightscout Error: %w", err)
+		return fmt.Errorf("NightscoutSync Error: %w", err)
 	}
 
 	// REMOVE WRITE ONLY COLUMNS

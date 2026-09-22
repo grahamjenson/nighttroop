@@ -9,7 +9,7 @@ CREATE TABLE jobs (
     consumer_fetched_at INTEGER NOT NULL DEFAULT 0,
     finished_at INTEGER NOT NULL DEFAULT 0,
     deduping_key TEXT NOT NULL DEFAULT '' CHECK(length(deduping_key) <= 256),
-    errors TEXT NOT NULL DEFAULT "[]" CHECK(length(errors) <= 1024),
+    errors TEXT NOT NULL DEFAULT "[]" CHECK(length(errors) <= 51200),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (id)
@@ -38,7 +38,7 @@ CREATE TABLE job_stats_daily (
     duration_sum REAL NOT NULL DEFAULT 0,
     duration_squared_sum REAL NOT NULL DEFAULT 0,
 
-    errors TEXT  NOT  NULL  DEFAULT  "[]" CHECK(length(errors) <= 1024),
+    errors TEXT  NOT  NULL  DEFAULT  "[]" CHECK(length(errors) <= 51200),
 
     -- liteq jobs use epoch in seconds
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),

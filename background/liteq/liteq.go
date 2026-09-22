@@ -9,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/data/db"
 
 	"nighttroop.t1d.nz/data/sql/jobs"
-	"nighttroop.t1d.nz/utils/errors"
 )
 
 func New(controlDB *db.ControlDB) *JobQueue {
@@ -157,7 +156,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 				err := params.Worker(ctx, job)
 				if err != nil {
 					j.queries.FailJob(ctx, jobs.FailJobParams{
-						Errors: errors.ErrorList(append(job.Errors, err.Error())),
+						Errors: job.Errors.Add(err.Error()),
 						ID:     job.ID,
 					})
 					return

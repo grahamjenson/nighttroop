@@ -336,7 +336,7 @@ func Header() templ.Component {
 					templ_7745c5c3_Err = dropdown.Item(dropdown.ItemProps{
 						Href: "#",
 						Attributes: templ.Attributes{
-							"hx-get":      "/identities",
+							"hx-get":      "/settings/identities",
 							"hx-target":   "#main-content",
 							"hx-push-url": "true",
 							"hx-swap":     "innerHTML",

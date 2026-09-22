@@ -84,7 +84,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			return
 		}
 
-		allowedToAttempt, _ := httputils.ControlLoginAttemptsAllowed(config, r, username)
+		allowedToAttempt, _ := httputils.ControlLoginAttemptsWithinRateLimit(config, r, username)
 		if !allowedToAttempt {
 			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 			return

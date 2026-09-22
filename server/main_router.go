@@ -36,7 +36,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 
 		// Global IP Address Rate Limit
 		ctx, ipAddress := httputils.SetIPInHTTPContext(ctx, r)
-		allowed = httputils.GlobalIPRateLimitAllowed(config, ipAddress)
+		allowed = httputils.GlobalIPWithinRateLimit(config, ipAddress)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
 			slog.Info("Global IP rate limit exceeded", "ip", ipAddress)

@@ -84,7 +84,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		formPassword := r.FormValue("password")
 
 		// Rate Limit login attempts by user and IP
-		allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, subdomain, formName)
+		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, subdomain, formName)
 		if !allowedToAttempt {
 			rateLimitErrorHTMX(w, r)
 			return
@@ -151,7 +151,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 			return
 		}
 
-		allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, siteContext.Subdomain, identityNameFromToken)
+		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.Subdomain, identityNameFromToken)
 		if !allowedToAttempt {
 			rateLimitErrorHTMX(w, r)
 			return
@@ -286,7 +286,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := httputils.SiteLoginAttemptsAllowed(config, r, siteContext.Subdomain, creds.Name)
+	allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.Subdomain, creds.Name)
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return

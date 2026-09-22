@@ -20,7 +20,7 @@ func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) htt
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			allowed, remainingTime := httputils.SiteHTTPActionAllowed(config, r)
+			allowed, remainingTime := httputils.SiteHTTPActionWithinRateLimit(config, r)
 			if !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
 				slog.Info("Site rate limit exceeded", "remainingTime", remainingTime)
@@ -36,7 +36,7 @@ func SiteIdentityRateLimitMiddleware(config *config.ServerConfig) func(http.Hand
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			allowed, remainingTime := httputils.IdentityHTTPAllowed(config, r)
+			allowed, remainingTime := httputils.IdentityHTTPWithinRateLimit(config, r)
 			if !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
 				slog.Info("Identity rate limit exceeded", "remainingTime", remainingTime)

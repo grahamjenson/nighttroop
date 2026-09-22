@@ -1,4 +1,4 @@
-package site
+package settings
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -31,7 +32,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 
 		ctx := r.Context()
 
-		if acceptType == httputils.AcceptTypeJSON {
+		if acceptType.API() {
 			// TODO return JSON of current settings, devices, tokens, last seen, etc
 			w.Header().Set("Content-Type", "application/json")
 			w.Write([]byte(`{"message": "This will return the current sync settings in JSON format."}`))
@@ -46,43 +47,40 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		var ns_id *int64 = nil
-		ns_url := ""
-		ns_password_garbage := ""
-		ns_enabled := true
+		syncSettings := viewmodels.SiteSyncSettings{
+			NSEnabled:    true,
+			DexEnabled:   true,
+			DexUSARegion: false,
+		}
+
 		if nightscout != nil {
-			ns_url, err = config.Security.Decrypt(nightscout.UrlOrUsername)
+			syncSettings.NSURL, err = config.Security.Decrypt(nightscout.UrlOrUsername)
 			if err != nil {
 				slog.Error("Failed to decrypt Nightscout URL from DB", "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
-			ns_enabled = nightscout.Enabled
-			ns_id = &nightscout.ID
-			ns_password_garbage = consts.PASSWORD_GARBAGE_VALUE
+			syncSettings.NSEnabled = nightscout.Enabled
+			syncSettings.NSID = &nightscout.ID
+			syncSettings.NSPasswordGarbage = consts.PASSWORD_GARBAGE_VALUE
 		}
 
-		dex_username := ""
-		dex_password_garbage := ""
-		dex_usa_region := false
-		dex_enabled := true
-		var dex_id *int64 = nil
 		if dexcom != nil {
-			dex_username, err = config.Security.Decrypt(dexcom.UrlOrUsername)
+			syncSettings.DexUsername, err = config.Security.Decrypt(dexcom.UrlOrUsername)
 			if err != nil {
 				slog.Error("Failed to decrypt Dexcom username from DB", "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
 
-			dex_usa_region = dexcom.DexcomRegion == consts.DexcomRegionUS
-			dex_enabled = dexcom.Enabled
-			dex_id = &dexcom.ID
-			dex_password_garbage = consts.PASSWORD_GARBAGE_VALUE
+			syncSettings.DexUSARegion = dexcom.DexcomRegion == consts.DexcomRegionUS
+			syncSettings.DexEnabled = dexcom.Enabled
+			syncSettings.DexID = &dexcom.ID
+			syncSettings.DexPasswordGarbage = consts.PASSWORD_GARBAGE_VALUE
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
-			err = site_settings_templ.SyncSettings(siteContext, ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
+			err = site_settings_templ.SyncSettingsFull(syncSettings).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", siteContext.Subdomain)
 				return
@@ -91,7 +89,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = site_settings_templ.SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(r.Context(), w)
+			err = site_settings_templ.SyncSettingsPartial(syncSettings).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
@@ -108,7 +106,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 
 func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig, syncSourceType consts.SyncSourceType) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if allowed, seconds := httputils.UserUpdateSyncAllowed(config, r); !allowed {
+		if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(config, r); !allowed {
 			http.Error(w, "Too Many Requests wait "+strconv.Itoa(seconds)+" seconds", http.StatusTooManyRequests)
 			return
 		}
@@ -220,7 +218,7 @@ func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerCon
 ////////
 
 func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config *config.ServerConfig, nightscout *control.SiteSyncSource, nsUrl string, nsPassword string, enabled bool) error {
-
+	nsUrl = strings.TrimSpace(nsUrl)
 	if nsUrl == "" {
 		return fmt.Errorf("Nightscout URL cannot be empty. ")
 	}
@@ -231,7 +229,8 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 
 	nsUrl, err = nsURLNormalizeValidate(nsUrl, config)
 	if err != nil {
-		errMsg += "Nightscout URL is not a valid URL. "
+		slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", nsUrl)
+		errMsg += fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", nsUrl, err)
 	}
 
 	if nsPassword == "" {
@@ -300,7 +299,7 @@ func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string,
 	errMsg := ""
 	nsURL, err := url.Parse(rawUrl)
 	if err != nil {
-		return "", fmt.Errorf("Invalid URL: %w", err)
+		return rawUrl, fmt.Errorf("Invalid URL: %w", err)
 	}
 
 	scheme := strings.ToLower(nsURL.Scheme)
@@ -313,7 +312,7 @@ func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string,
 		port = "" // Remove default ports
 	}
 
-	if scheme != "https" && !(config.IsDev() && scheme == "http") {
+	if scheme != "https" && !(config.IsDevOrTest() && scheme == "http") {
 		errMsg += "Nightscout URL must use HTTPS."
 	}
 	if path != "" && path != "/" {
@@ -329,7 +328,7 @@ func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string,
 	}
 
 	if errMsg != "" {
-		return "", fmt.Errorf("%s", errMsg)
+		return rawUrl, fmt.Errorf("%s", errMsg)
 	}
 
 	// Normalize the URL by removing default Ports

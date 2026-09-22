@@ -5,6 +5,7 @@ package server
 import (
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/site"
+	"nighttroop.t1d.nz/server/site/settings"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -37,14 +38,14 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 		r.Get("/", site.GetDashboardHandler(controlDB, config))
 
-		r.Get("/settings/sync", site.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/settings/sync/nightscout", site.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeNightscout))
-		r.Post("/settings/sync/dexcom", site.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeDexcom))
-		r.Delete("/settings/sync/{type}", site.DELETESyncSettingsHandler(controlDB, config))
+		r.Get("/settings/sync", settings.GetSyncSettingsHandler(controlDB, config))
+		r.Post("/settings/sync/nightscout", settings.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeNightscout))
+		r.Post("/settings/sync/dexcom", settings.POSTSyncSettingsHandler(controlDB, config, consts.SyncSourceTypeDexcom))
+		r.Delete("/settings/sync/{type}", settings.DELETESyncSettingsHandler(controlDB, config))
 
 		// Identities
-		r.Get("/identities", site.GETIdentitiesHandler(controlDB, config))
-		r.Post("/identities", site.POSTIdentityHandler(controlDB, config))
+		r.Get("/settings/identities", settings.GETIdentitiesHandler(controlDB, config))
+		r.Post("/settings/identities", settings.POSTIdentityHandler(controlDB, config))
 
 		// Actions
 		r.Post("/logout", site.POSTLogoutHandler(config))

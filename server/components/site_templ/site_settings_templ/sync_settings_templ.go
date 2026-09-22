@@ -13,11 +13,10 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
-	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/server/components/viewmodels"
 )
 
-func SyncSettings(siteContext *httputils.SiteContext, ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64,
-	dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) templ.Component {
+func SyncSettingsFull(syncSettings viewmodels.SiteSyncSettings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -50,7 +49,7 @@ func SyncSettings(siteContext *httputils.SiteContext, ns_url string, ns_password
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = SyncSettingsForm(ns_url, ns_password_garbage, ns_enabled, ns_id, dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = SyncSettingsPartial(syncSettings).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -64,8 +63,7 @@ func SyncSettings(siteContext *httputils.SiteContext, ns_url string, ns_password
 	})
 }
 
-func SyncSettingsForm(ns_url string, ns_password_garbage string, ns_enabled bool, ns_id *int64,
-	dex_username string, dex_password_garbage string, dex_usa_region bool, dex_enabled bool, dex_id *int64) templ.Component {
+func SyncSettingsPartial(syncSettings viewmodels.SiteSyncSettings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -90,7 +88,7 @@ func SyncSettingsForm(ns_url string, ns_password_garbage string, ns_enabled bool
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = NightscoutSyncForm(ns_url, ns_password_garbage, ns_enabled, ns_id).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = NightscoutSyncForm(syncSettings.NSURL, syncSettings.NSPasswordGarbage, syncSettings.NSEnabled, syncSettings.NSID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -98,7 +96,7 @@ func SyncSettingsForm(ns_url string, ns_password_garbage string, ns_enabled bool
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = DexcomSyncForm(dex_username, dex_password_garbage, dex_usa_region, dex_enabled, dex_id).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = DexcomSyncForm(syncSettings.DexUsername, syncSettings.DexPasswordGarbage, syncSettings.DexUSARegion, syncSettings.DexEnabled, syncSettings.DexID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
