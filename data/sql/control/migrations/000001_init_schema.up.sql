@@ -19,46 +19,6 @@ CREATE TABLE data_source_block_list(
     reason TEXT CHECK(length(reason) <= 256)
 );
 
-
--- This is the reporting table where each username/url password token region combo has a single report for
-CREATE TABLE sync_source_reports (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-    -- We do not store the actual sync data here, that is on the user, but we need to store the results
-    unique_hash TEXT UNIQUE NOT NULL CHECK(length(unique_hash) <= 512), -- <type>_<username>_<password>_<dexcom_region> for dexcom, <type>_<url>_<token> for nightscout
-
-    -- Frequency of syncs used to punish bad servers or behaviour
-    sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default' CHECK(length(sync_interval_seconds_reason) <= 256), -- reason for the current sync interval, can be default, user_request, error_response, etc. Used to determine if we should change the sync interval after a sync attempt
-    sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
-
-    -- Timing of syncs
-    last_attempted_sync INTEGER,
-    last_successful_sync INTEGER,
-    last_failed_sync INTEGER,
-
-
-    -- Counters
-    total_syncs INTEGER DEFAULT 0,
-    total_successful_syncs INTEGER DEFAULT 0,
-    total_failed_syncs INTEGER DEFAULT 0,
-
-    consecutive_successful_syncs INTEGER DEFAULT 0,
-    consecutive_failed_syncs INTEGER DEFAULT 0,
-
-    -- Previous Error Text
-    previous_sync_errors TEXT CHECK(length(previous_sync_errors) <= 1024), -- stored to show to user as feedback
-
-    -- Timing EMAs to then determine frequency on
-    total_ema REAL,
-    success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
-    failure_ema REAL,
-    
-    -- Duration of last sync in ms
-    last_sync_duration INTEGER -- 1 for success, 0 for failure, null for never tried, used for quick checks without having to look at timestamps 
-);
-
 --------------------------
 --- SITE TABLES
 --------------------------
@@ -289,20 +249,47 @@ CREATE TABLE site_identities (
 -- This is the table that the site can update and delete from
 CREATE TABLE site_sync_sources (
     -- Nightscout/Dexcom
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
-    type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM')),
+    type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM', 'VIRTUAL')),
 
-    url_or_username TEXT NOT NULL CHECK(length(url_or_username) <= 256), -- url for nightscout, username for dexcom
+    properties TEXT NOT NULL DEFAULT '{}' CHECK(length(properties) <= 2046), -- JSON blob for properties, e.g. url, username dex region
+
     password TEXT NOT NULL CHECK(length(password) <= 256), -- or ns token
-    dexcom_region TEXT NOT NULL CHECK(dexcom_region IN ('USA', 'OTHER')) DEFAULT 'OTHER', -- USA or OTHER
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
 
-    unique_hash TEXT NOT NULL CHECK(length(unique_hash) <= 512), 
+    -- REPORTING
+
+    -- Frequency of syncs used to punish bad servers or behaviour
+    sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default' CHECK(length(sync_interval_seconds_reason) <= 256), -- reason for the current sync interval, can be default, user_request, error_response, etc. Used to determine if we should change the sync interval after a sync attempt
+    sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
+
+    -- Timing of syncs
+    last_attempted_sync INTEGER,
+    last_successful_sync INTEGER,
+    last_failed_sync INTEGER,
+
+    -- Counters
+    total_syncs INTEGER DEFAULT 0,
+    total_successful_syncs INTEGER DEFAULT 0,
+    total_failed_syncs INTEGER DEFAULT 0,
+
+    consecutive_successful_syncs INTEGER DEFAULT 0,
+    consecutive_failed_syncs INTEGER DEFAULT 0,
+
+    -- Previous Error Text
+    previous_sync_errors TEXT CHECK(length(previous_sync_errors) <= 5012), -- stored to show to user as feedback
+
+    -- Timing EMAs to then determine frequency on
+    total_ema REAL,
+    success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
+    failure_ema REAL,
+    
+    -- Duration of last sync in ms
+    last_sync_duration INTEGER,
 
     -- Unique contraint of site_id and type
     UNIQUE(site_id, type)

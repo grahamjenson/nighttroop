@@ -73,10 +73,9 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 
 			next.ServeHTTP(sw, r)
 
-			if sw.status == 200 {
+			if sw.status == 200 || sw.status == 201 {
 				wasWrite := siteContext.HTTPAction == httputils.HTTPActionWrite
-				controlDB.UpdateSiteDateFlags(siteContext.SiteModel, true, wasWrite)
-				siteContext.ControlDB.UpdateSiteIdentityDateFlags(siteContext.IdentityModel, true, wasWrite)
+				controlDB.UpdateSiteAndIdentityDateFlags(siteContext.SiteModel, siteContext.IdentityModel, true, wasWrite)
 			}
 		})
 	}

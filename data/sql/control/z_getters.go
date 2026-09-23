@@ -4,6 +4,7 @@ package control
 import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/data/types"
 )
 
 
@@ -767,16 +768,6 @@ func (m *SiteIdentity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
-// GetID returns the ID value.
-func (m SiteSyncSource) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetID(v int64) {
-	m.ID = v
-}
-
 // GetSiteID returns the SiteID value.
 func (m SiteSyncSource) GetSiteID() string {
 	return m.SiteID
@@ -797,14 +788,14 @@ func (m *SiteSyncSource) SetType(v consts.SyncSourceType) {
 	m.Type = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m SiteSyncSource) GetUrlOrUsername() string {
-	return m.UrlOrUsername
+// GetProperties returns the Properties value.
+func (m SiteSyncSource) GetProperties() types.SyncSourceProperties {
+	return m.Properties
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
+// SetProperties sets the Properties value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetProperties(v types.SyncSourceProperties) {
+	m.Properties = v
 }
 
 // GetPassword returns the Password value.
@@ -815,16 +806,6 @@ func (m SiteSyncSource) GetPassword() string {
 // SetPassword sets the Password value and returns the updated SiteSyncSource.
 func (m *SiteSyncSource) SetPassword(v string) {
 	m.Password = v
-}
-
-// GetDexcomRegion returns the DexcomRegion value.
-func (m SiteSyncSource) GetDexcomRegion() consts.DexcomRegion {
-	return m.DexcomRegion
-}
-
-// SetDexcomRegion sets the DexcomRegion value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetDexcomRegion(v consts.DexcomRegion) {
-	m.DexcomRegion = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -857,14 +838,154 @@ func (m *SiteSyncSource) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUniqueHash returns the UniqueHash value.
-func (m SiteSyncSource) GetUniqueHash() string {
-	return m.UniqueHash
+// GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
+func (m SiteSyncSource) GetSyncIntervalSecondsReason() string {
+	return m.SyncIntervalSecondsReason
 }
 
-// SetUniqueHash sets the UniqueHash value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetUniqueHash(v string) {
-	m.UniqueHash = v
+// SetSyncIntervalSecondsReason sets the SyncIntervalSecondsReason value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetSyncIntervalSecondsReason(v string) {
+	m.SyncIntervalSecondsReason = v
+}
+
+// GetSyncIntervalSeconds returns the SyncIntervalSeconds value.
+func (m SiteSyncSource) GetSyncIntervalSeconds() int64 {
+	return m.SyncIntervalSeconds
+}
+
+// SetSyncIntervalSeconds sets the SyncIntervalSeconds value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetSyncIntervalSeconds(v int64) {
+	m.SyncIntervalSeconds = v
+}
+
+// GetLastAttemptedSync returns the LastAttemptedSync value.
+func (m SiteSyncSource) GetLastAttemptedSync() *int64 {
+	return m.LastAttemptedSync
+}
+
+// SetLastAttemptedSync sets the LastAttemptedSync value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastAttemptedSync(v *int64) {
+	m.LastAttemptedSync = v
+}
+
+// GetLastSuccessfulSync returns the LastSuccessfulSync value.
+func (m SiteSyncSource) GetLastSuccessfulSync() *int64 {
+	return m.LastSuccessfulSync
+}
+
+// SetLastSuccessfulSync sets the LastSuccessfulSync value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastSuccessfulSync(v *int64) {
+	m.LastSuccessfulSync = v
+}
+
+// GetLastFailedSync returns the LastFailedSync value.
+func (m SiteSyncSource) GetLastFailedSync() *int64 {
+	return m.LastFailedSync
+}
+
+// SetLastFailedSync sets the LastFailedSync value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastFailedSync(v *int64) {
+	m.LastFailedSync = v
+}
+
+// GetTotalSyncs returns the TotalSyncs value.
+func (m SiteSyncSource) GetTotalSyncs() *int64 {
+	return m.TotalSyncs
+}
+
+// SetTotalSyncs sets the TotalSyncs value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalSyncs(v *int64) {
+	m.TotalSyncs = v
+}
+
+// GetTotalSuccessfulSyncs returns the TotalSuccessfulSyncs value.
+func (m SiteSyncSource) GetTotalSuccessfulSyncs() *int64 {
+	return m.TotalSuccessfulSyncs
+}
+
+// SetTotalSuccessfulSyncs sets the TotalSuccessfulSyncs value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalSuccessfulSyncs(v *int64) {
+	m.TotalSuccessfulSyncs = v
+}
+
+// GetTotalFailedSyncs returns the TotalFailedSyncs value.
+func (m SiteSyncSource) GetTotalFailedSyncs() *int64 {
+	return m.TotalFailedSyncs
+}
+
+// SetTotalFailedSyncs sets the TotalFailedSyncs value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalFailedSyncs(v *int64) {
+	m.TotalFailedSyncs = v
+}
+
+// GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
+func (m SiteSyncSource) GetConsecutiveSuccessfulSyncs() *int64 {
+	return m.ConsecutiveSuccessfulSyncs
+}
+
+// SetConsecutiveSuccessfulSyncs sets the ConsecutiveSuccessfulSyncs value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetConsecutiveSuccessfulSyncs(v *int64) {
+	m.ConsecutiveSuccessfulSyncs = v
+}
+
+// GetConsecutiveFailedSyncs returns the ConsecutiveFailedSyncs value.
+func (m SiteSyncSource) GetConsecutiveFailedSyncs() *int64 {
+	return m.ConsecutiveFailedSyncs
+}
+
+// SetConsecutiveFailedSyncs sets the ConsecutiveFailedSyncs value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetConsecutiveFailedSyncs(v *int64) {
+	m.ConsecutiveFailedSyncs = v
+}
+
+// GetPreviousSyncErrors returns the PreviousSyncErrors value.
+func (m SiteSyncSource) GetPreviousSyncErrors() errors.ErrorList {
+	return m.PreviousSyncErrors
+}
+
+// SetPreviousSyncErrors sets the PreviousSyncErrors value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetPreviousSyncErrors(v errors.ErrorList) {
+	m.PreviousSyncErrors = v
+}
+
+// GetTotalEma returns the TotalEma value.
+func (m SiteSyncSource) GetTotalEma() *float64 {
+	return m.TotalEma
+}
+
+// SetTotalEma sets the TotalEma value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalEma(v *float64) {
+	m.TotalEma = v
+}
+
+// GetSuccessEma returns the SuccessEma value.
+func (m SiteSyncSource) GetSuccessEma() *float64 {
+	return m.SuccessEma
+}
+
+// SetSuccessEma sets the SuccessEma value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetSuccessEma(v *float64) {
+	m.SuccessEma = v
+}
+
+// GetFailureEma returns the FailureEma value.
+func (m SiteSyncSource) GetFailureEma() *float64 {
+	return m.FailureEma
+}
+
+// SetFailureEma sets the FailureEma value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetFailureEma(v *float64) {
+	m.FailureEma = v
+}
+
+// GetLastSyncDuration returns the LastSyncDuration value.
+func (m SiteSyncSource) GetLastSyncDuration() *int64 {
+	return m.LastSyncDuration
+}
+
+// SetLastSyncDuration sets the LastSyncDuration value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastSyncDuration(v *int64) {
+	m.LastSyncDuration = v
 }
 
 // GetID returns the ID value.
@@ -1425,196 +1546,6 @@ func (m SqliteSequence) GetSeq() interface{} {
 // SetSeq sets the Seq value and returns the updated SqliteSequence.
 func (m *SqliteSequence) SetSeq(v interface{}) {
 	m.Seq = v
-}
-
-// GetID returns the ID value.
-func (m SyncSourceReport) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetID(v int64) {
-	m.ID = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m SyncSourceReport) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m SyncSourceReport) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// SetUpdatedAt sets the UpdatedAt value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetUpdatedAt(v int64) {
-	m.UpdatedAt = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m SyncSourceReport) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
-func (m SyncSourceReport) GetSyncIntervalSecondsReason() string {
-	return m.SyncIntervalSecondsReason
-}
-
-// SetSyncIntervalSecondsReason sets the SyncIntervalSecondsReason value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetSyncIntervalSecondsReason(v string) {
-	m.SyncIntervalSecondsReason = v
-}
-
-// GetSyncIntervalSeconds returns the SyncIntervalSeconds value.
-func (m SyncSourceReport) GetSyncIntervalSeconds() int64 {
-	return m.SyncIntervalSeconds
-}
-
-// SetSyncIntervalSeconds sets the SyncIntervalSeconds value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetSyncIntervalSeconds(v int64) {
-	m.SyncIntervalSeconds = v
-}
-
-// GetLastAttemptedSync returns the LastAttemptedSync value.
-func (m SyncSourceReport) GetLastAttemptedSync() *int64 {
-	return m.LastAttemptedSync
-}
-
-// SetLastAttemptedSync sets the LastAttemptedSync value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetLastAttemptedSync(v *int64) {
-	m.LastAttemptedSync = v
-}
-
-// GetLastSuccessfulSync returns the LastSuccessfulSync value.
-func (m SyncSourceReport) GetLastSuccessfulSync() *int64 {
-	return m.LastSuccessfulSync
-}
-
-// SetLastSuccessfulSync sets the LastSuccessfulSync value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetLastSuccessfulSync(v *int64) {
-	m.LastSuccessfulSync = v
-}
-
-// GetLastFailedSync returns the LastFailedSync value.
-func (m SyncSourceReport) GetLastFailedSync() *int64 {
-	return m.LastFailedSync
-}
-
-// SetLastFailedSync sets the LastFailedSync value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetLastFailedSync(v *int64) {
-	m.LastFailedSync = v
-}
-
-// GetTotalSyncs returns the TotalSyncs value.
-func (m SyncSourceReport) GetTotalSyncs() *int64 {
-	return m.TotalSyncs
-}
-
-// SetTotalSyncs sets the TotalSyncs value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetTotalSyncs(v *int64) {
-	m.TotalSyncs = v
-}
-
-// GetTotalSuccessfulSyncs returns the TotalSuccessfulSyncs value.
-func (m SyncSourceReport) GetTotalSuccessfulSyncs() *int64 {
-	return m.TotalSuccessfulSyncs
-}
-
-// SetTotalSuccessfulSyncs sets the TotalSuccessfulSyncs value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetTotalSuccessfulSyncs(v *int64) {
-	m.TotalSuccessfulSyncs = v
-}
-
-// GetTotalFailedSyncs returns the TotalFailedSyncs value.
-func (m SyncSourceReport) GetTotalFailedSyncs() *int64 {
-	return m.TotalFailedSyncs
-}
-
-// SetTotalFailedSyncs sets the TotalFailedSyncs value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetTotalFailedSyncs(v *int64) {
-	m.TotalFailedSyncs = v
-}
-
-// GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
-func (m SyncSourceReport) GetConsecutiveSuccessfulSyncs() *int64 {
-	return m.ConsecutiveSuccessfulSyncs
-}
-
-// SetConsecutiveSuccessfulSyncs sets the ConsecutiveSuccessfulSyncs value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetConsecutiveSuccessfulSyncs(v *int64) {
-	m.ConsecutiveSuccessfulSyncs = v
-}
-
-// GetConsecutiveFailedSyncs returns the ConsecutiveFailedSyncs value.
-func (m SyncSourceReport) GetConsecutiveFailedSyncs() *int64 {
-	return m.ConsecutiveFailedSyncs
-}
-
-// SetConsecutiveFailedSyncs sets the ConsecutiveFailedSyncs value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetConsecutiveFailedSyncs(v *int64) {
-	m.ConsecutiveFailedSyncs = v
-}
-
-// GetPreviousSyncErrors returns the PreviousSyncErrors value.
-func (m SyncSourceReport) GetPreviousSyncErrors() errors.ErrorList {
-	return m.PreviousSyncErrors
-}
-
-// SetPreviousSyncErrors sets the PreviousSyncErrors value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetPreviousSyncErrors(v errors.ErrorList) {
-	m.PreviousSyncErrors = v
-}
-
-// GetTotalEma returns the TotalEma value.
-func (m SyncSourceReport) GetTotalEma() *float64 {
-	return m.TotalEma
-}
-
-// SetTotalEma sets the TotalEma value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetTotalEma(v *float64) {
-	m.TotalEma = v
-}
-
-// GetSuccessEma returns the SuccessEma value.
-func (m SyncSourceReport) GetSuccessEma() *float64 {
-	return m.SuccessEma
-}
-
-// SetSuccessEma sets the SuccessEma value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetSuccessEma(v *float64) {
-	m.SuccessEma = v
-}
-
-// GetFailureEma returns the FailureEma value.
-func (m SyncSourceReport) GetFailureEma() *float64 {
-	return m.FailureEma
-}
-
-// SetFailureEma sets the FailureEma value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetFailureEma(v *float64) {
-	m.FailureEma = v
-}
-
-// GetLastSyncDuration returns the LastSyncDuration value.
-func (m SyncSourceReport) GetLastSyncDuration() *int64 {
-	return m.LastSyncDuration
-}
-
-// SetLastSyncDuration sets the LastSyncDuration value and returns the updated SyncSourceReport.
-func (m *SyncSourceReport) SetLastSyncDuration(v *int64) {
-	m.LastSyncDuration = v
 }
 
 // GetName returns the Name value.
@@ -2717,16 +2648,6 @@ func (m *GetAllSiteSyncSourcesForSiteParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetUniqueHash returns the UniqueHash value.
-func (m GetAllSiteSyncSourcesForUniqueHashParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated GetAllSiteSyncSourcesForUniqueHashParams.
-func (m *GetAllSiteSyncSourcesForUniqueHashParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
 // GetSiteID returns the SiteID value.
 func (m CreateNightscoutSyncSourceParams) GetSiteID() string {
 	return m.SiteID
@@ -2757,33 +2678,23 @@ func (m *CreateNightscoutSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m CreateNightscoutSyncSourceParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
+// GetJsonObject returns the JsonObject value.
+func (m CreateNightscoutSyncSourceParams) GetJsonObject() interface{} {
+	return m.JsonObject
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m CreateNightscoutSyncSourceParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
+// SetJsonObject sets the JsonObject value and returns the updated CreateNightscoutSyncSourceParams.
+func (m *CreateNightscoutSyncSourceParams) SetJsonObject(v interface{}) {
+	m.JsonObject = v
 }
 
 // GetPassword returns the Password value.
-func (m UpdateNightscoutSyncSourceParams) GetPassword() string {
+func (m UpdateNightscoutSyncSourceParams) GetPassword() interface{} {
 	return m.Password
 }
 
 // SetPassword sets the Password value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetPassword(v string) {
+func (m *UpdateNightscoutSyncSourceParams) SetPassword(v interface{}) {
 	m.Password = v
 }
 
@@ -2797,84 +2708,24 @@ func (m *UpdateNightscoutSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateNightscoutSyncSourceParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
+// GetUrl returns the Url value.
+func (m UpdateNightscoutSyncSourceParams) GetUrl() interface{} {
+	return m.Url
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
+// SetUrl sets the Url value and returns the updated UpdateNightscoutSyncSourceParams.
+func (m *UpdateNightscoutSyncSourceParams) SetUrl(v interface{}) {
+	m.Url = v
 }
 
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateNightscoutSyncSourceParams) GetUniqueHash() string {
-	return m.UniqueHash
+// GetSiteid returns the Siteid value.
+func (m UpdateNightscoutSyncSourceParams) GetSiteid() string {
+	return m.Siteid
 }
 
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateNightscoutSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m UpdateNightscoutSyncSourceWithoutPasswordParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateNightscoutSyncSourceWithoutPasswordParams.
-func (m *UpdateNightscoutSyncSourceWithoutPasswordParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateNightscoutSyncSourceWithoutPasswordParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
-}
-
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateNightscoutSyncSourceWithoutPasswordParams.
-func (m *UpdateNightscoutSyncSourceWithoutPasswordParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateNightscoutSyncSourceWithoutPasswordParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateNightscoutSyncSourceWithoutPasswordParams.
-func (m *UpdateNightscoutSyncSourceWithoutPasswordParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateNightscoutSyncSourceWithoutPasswordParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateNightscoutSyncSourceWithoutPasswordParams.
-func (m *UpdateNightscoutSyncSourceWithoutPasswordParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DisableNightscoutSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DisableNightscoutSyncSourceParams.
-func (m *DisableNightscoutSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
+// SetSiteid sets the Siteid value and returns the updated UpdateNightscoutSyncSourceParams.
+func (m *UpdateNightscoutSyncSourceParams) SetSiteid(v string) {
+	m.Siteid = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2907,44 +2758,24 @@ func (m *CreateDexcomSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m CreateDexcomSyncSourceParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
+// GetUsername returns the Username value.
+func (m CreateDexcomSyncSourceParams) GetUsername() interface{} {
+	return m.Username
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
+// SetUsername sets the Username value and returns the updated CreateDexcomSyncSourceParams.
+func (m *CreateDexcomSyncSourceParams) SetUsername(v interface{}) {
+	m.Username = v
 }
 
-// GetDexcomRegion returns the DexcomRegion value.
-func (m CreateDexcomSyncSourceParams) GetDexcomRegion() consts.DexcomRegion {
-	return m.DexcomRegion
+// GetRegion returns the Region value.
+func (m CreateDexcomSyncSourceParams) GetRegion() interface{} {
+	return m.Region
 }
 
-// SetDexcomRegion sets the DexcomRegion value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetDexcomRegion(v consts.DexcomRegion) {
-	m.DexcomRegion = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m CreateDexcomSyncSourceParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetPassword returns the Password value.
-func (m UpdateDexcomSyncSourceParams) GetPassword() string {
-	return m.Password
-}
-
-// SetPassword sets the Password value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetPassword(v string) {
-	m.Password = v
+// SetRegion sets the Region value and returns the updated CreateDexcomSyncSourceParams.
+func (m *CreateDexcomSyncSourceParams) SetRegion(v interface{}) {
+	m.Region = v
 }
 
 // GetEnabled returns the Enabled value.
@@ -2957,94 +2788,74 @@ func (m *UpdateDexcomSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateDexcomSyncSourceParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
+// GetUsername returns the Username value.
+func (m UpdateDexcomSyncSourceParams) GetUsername() interface{} {
+	return m.Username
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
+// SetUsername sets the Username value and returns the updated UpdateDexcomSyncSourceParams.
+func (m *UpdateDexcomSyncSourceParams) SetUsername(v interface{}) {
+	m.Username = v
 }
 
-// GetDexcomRegion returns the DexcomRegion value.
-func (m UpdateDexcomSyncSourceParams) GetDexcomRegion() consts.DexcomRegion {
-	return m.DexcomRegion
+// GetRegion returns the Region value.
+func (m UpdateDexcomSyncSourceParams) GetRegion() interface{} {
+	return m.Region
 }
 
-// SetDexcomRegion sets the DexcomRegion value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetDexcomRegion(v consts.DexcomRegion) {
-	m.DexcomRegion = v
+// SetRegion sets the Region value and returns the updated UpdateDexcomSyncSourceParams.
+func (m *UpdateDexcomSyncSourceParams) SetRegion(v interface{}) {
+	m.Region = v
 }
 
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateDexcomSyncSourceParams) GetUniqueHash() string {
-	return m.UniqueHash
+// GetSiteid returns the Siteid value.
+func (m UpdateDexcomSyncSourceParams) GetSiteid() string {
+	return m.Siteid
 }
 
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
+// SetSiteid sets the Siteid value and returns the updated UpdateDexcomSyncSourceParams.
+func (m *UpdateDexcomSyncSourceParams) SetSiteid(v string) {
+	m.Siteid = v
 }
 
 // GetSiteID returns the SiteID value.
-func (m UpdateDexcomSyncSourceParams) GetSiteID() string {
+func (m CreateVirtualSyncSourceParams) GetSiteID() string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetSiteID(v string) {
+// SetSiteID sets the SiteID value and returns the updated CreateVirtualSyncSourceParams.
+func (m *CreateVirtualSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
 // GetEnabled returns the Enabled value.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetEnabled() bool {
+func (m CreateVirtualSyncSourceParams) GetEnabled() bool {
 	return m.Enabled
 }
 
-// SetEnabled sets the Enabled value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
-func (m *UpdateDexcomSyncSourceWithoutPasswordParams) SetEnabled(v bool) {
+// SetEnabled sets the Enabled value and returns the updated CreateVirtualSyncSourceParams.
+func (m *CreateVirtualSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
+// GetEnabled returns the Enabled value.
+func (m UpdateVirtualSyncSourceParams) GetEnabled() bool {
+	return m.Enabled
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
-func (m *UpdateDexcomSyncSourceWithoutPasswordParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
+// SetEnabled sets the Enabled value and returns the updated UpdateVirtualSyncSourceParams.
+func (m *UpdateVirtualSyncSourceParams) SetEnabled(v bool) {
+	m.Enabled = v
 }
 
-// GetDexcomRegion returns the DexcomRegion value.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetDexcomRegion() consts.DexcomRegion {
-	return m.DexcomRegion
+// GetSiteid returns the Siteid value.
+func (m UpdateVirtualSyncSourceParams) GetSiteid() string {
+	return m.Siteid
 }
 
-// SetDexcomRegion sets the DexcomRegion value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
-func (m *UpdateDexcomSyncSourceWithoutPasswordParams) SetDexcomRegion(v consts.DexcomRegion) {
-	m.DexcomRegion = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
-func (m *UpdateDexcomSyncSourceWithoutPasswordParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateDexcomSyncSourceWithoutPasswordParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateDexcomSyncSourceWithoutPasswordParams.
-func (m *UpdateDexcomSyncSourceWithoutPasswordParams) SetSiteID(v string) {
-	m.SiteID = v
+// SetSiteid sets the Siteid value and returns the updated UpdateVirtualSyncSourceParams.
+func (m *UpdateVirtualSyncSourceParams) SetSiteid(v string) {
+	m.Siteid = v
 }
 
 // GetType returns the Type value.
@@ -3065,6 +2876,96 @@ func (m DeleteSyncSourceParams) GetSiteID() string {
 // SetSiteID sets the SiteID value and returns the updated DeleteSyncSourceParams.
 func (m *DeleteSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
+}
+
+// GetSiteid returns the Siteid value.
+func (m UpdateSyncReportAttemptParams) GetSiteid() string {
+	return m.Siteid
+}
+
+// SetSiteid sets the Siteid value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetSiteid(v string) {
+	m.Siteid = v
+}
+
+// GetType returns the Type value.
+func (m UpdateSyncReportAttemptParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetElapsedMs returns the ElapsedMs value.
+func (m UpdateSyncSourceReportsSuccessParams) GetElapsedMs() *int64 {
+	return m.ElapsedMs
+}
+
+// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
+	m.ElapsedMs = v
+}
+
+// GetSiteid returns the Siteid value.
+func (m UpdateSyncSourceReportsSuccessParams) GetSiteid() string {
+	return m.Siteid
+}
+
+// SetSiteid sets the Siteid value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetSiteid(v string) {
+	m.Siteid = v
+}
+
+// GetType returns the Type value.
+func (m UpdateSyncSourceReportsSuccessParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetErrorMessages returns the ErrorMessages value.
+func (m UpdateSyncSourceReportsFailureParams) GetErrorMessages() errors.ErrorList {
+	return m.ErrorMessages
+}
+
+// SetErrorMessages sets the ErrorMessages value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetErrorMessages(v errors.ErrorList) {
+	m.ErrorMessages = v
+}
+
+// GetElapsedMs returns the ElapsedMs value.
+func (m UpdateSyncSourceReportsFailureParams) GetElapsedMs() *int64 {
+	return m.ElapsedMs
+}
+
+// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetElapsedMs(v *int64) {
+	m.ElapsedMs = v
+}
+
+// GetSiteid returns the Siteid value.
+func (m UpdateSyncSourceReportsFailureParams) GetSiteid() string {
+	return m.Siteid
+}
+
+// SetSiteid sets the Siteid value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetSiteid(v string) {
+	m.Siteid = v
+}
+
+// GetType returns the Type value.
+func (m UpdateSyncSourceReportsFailureParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
 }
 
 // GetID returns the ID value.
@@ -3235,65 +3136,5 @@ func (m GetSitesToDeleteInBatchParams) GetLastSeenAt() float64 {
 // SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDeleteInBatchParams.
 func (m *GetSitesToDeleteInBatchParams) SetLastSeenAt(v float64) {
 	m.LastSeenAt = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateSyncReportAttemptParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateSyncSourceReportsSuccessParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateSyncSourceReportsSuccessParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
-}
-
-// GetErrorMessages returns the ErrorMessages value.
-func (m UpdateSyncSourceReportsFailureParams) GetErrorMessages() errors.ErrorList {
-	return m.ErrorMessages
-}
-
-// SetErrorMessages sets the ErrorMessages value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetErrorMessages(v errors.ErrorList) {
-	m.ErrorMessages = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateSyncSourceReportsFailureParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
-}
-
-// GetUniqueHash returns the UniqueHash value.
-func (m UpdateSyncSourceReportsFailureParams) GetUniqueHash() string {
-	return m.UniqueHash
-}
-
-// SetUniqueHash sets the UniqueHash value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetUniqueHash(v string) {
-	m.UniqueHash = v
 }
 

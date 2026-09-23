@@ -277,7 +277,7 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 	return exists
 }
 
-func (db *ControlDB) UpdateSiteDateFlags(siteModel *control.Site, updateLastSeen bool, updateLastWrite bool) error {
+func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *control.Site, identityModel *control.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
 	subdomain := siteModel.ID
 
 	// Only update if not seen in 10 minutes
@@ -297,6 +297,12 @@ func (db *ControlDB) UpdateSiteDateFlags(siteModel *control.Site, updateLastSeen
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		ID:          subdomain,
+	})
+
+	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), control.UpdateSiteIdentityDateFlagsParams{
+		LastSeenAt:  lastSeenAt,
+		LastWriteAt: lastWriteAt,
+		ID:          identityModel.ID,
 	})
 
 	return nil
@@ -482,31 +488,6 @@ func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole)
 		Password:   password,
 		TotpSecret: totpSecretPtr,
 	}, nil
-}
-
-func (db *ControlDB) UpdateSiteIdentityDateFlags(identity *control.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
-
-	// Only update if not seen in 10 minutes
-	lastWriteMoreThan10MinutesAgo := identity.LastWriteAt == nil || time.Now().After(identity.LastWriteAtDate().Add(10*time.Minute))
-	lastSeenMoreThan10MinutesAgo := identity.LastSeenAt == nil || time.Now().After(identity.LastSeenAtDate().Add(10*time.Minute))
-
-	now := time.Now().UnixMilli()
-	var lastSeenAt *int64
-	var lastWriteAt *int64
-	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
-		lastSeenAt = &now
-	}
-	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
-		lastWriteAt = &now
-	}
-
-	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), control.UpdateSiteIdentityDateFlagsParams{
-		LastSeenAt:  lastSeenAt,
-		LastWriteAt: lastWriteAt,
-		ID:          identity.ID,
-	})
-
-	return nil
 }
 
 ////

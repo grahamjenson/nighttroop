@@ -9,20 +9,34 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 )
 
 const createDexcomSyncSource = `-- name: CreateDexcomSyncSource :exec
-INSERT INTO site_sync_sources (site_id, type, password, enabled, url_or_username, dexcom_region, unique_hash) 
-VALUES (?, "DEXCOM", ?, ?, ?, ?, ?)
+
+
+INSERT INTO site_sync_sources (
+    site_id, 
+    type, 
+    password, 
+    enabled, 
+    properties
+) 
+VALUES (
+    ?, 
+    'DEXCOM', 
+    ?, 
+    ?, 
+    json_object('username', ?4, 'region', ?5)
+)
 `
 
 type CreateDexcomSyncSourceParams struct {
-	SiteID        string
-	Password      string
-	Enabled       bool
-	UrlOrUsername string
-	DexcomRegion  consts.DexcomRegion
-	UniqueHash    string
+	SiteID   string
+	Password string
+	Enabled  bool
+	Username interface{}
+	Region   interface{}
 }
 
 // ---
@@ -33,42 +47,80 @@ func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSy
 		arg.SiteID,
 		arg.Password,
 		arg.Enabled,
-		arg.UrlOrUsername,
-		arg.DexcomRegion,
-		arg.UniqueHash,
+		arg.Username,
+		arg.Region,
 	)
 	return err
 }
 
 const createNightscoutSyncSource = `-- name: CreateNightscoutSyncSource :exec
 
-INSERT INTO site_sync_sources (site_id, type, password, enabled, url_or_username, unique_hash) 
-VALUES (?, "NIGHTSCOUT", ?, ?, ?, ?)
+INSERT INTO site_sync_sources (
+    site_id,
+    type,
+    password,
+    enabled,
+    properties
+)
+VALUES (
+    ?,
+    'NIGHTSCOUT',
+    ?,
+    ?,
+    json_object('url', ?)
+)
 `
 
 type CreateNightscoutSyncSourceParams struct {
-	SiteID        string
-	Password      string
-	Enabled       bool
-	UrlOrUsername string
-	UniqueHash    string
+	SiteID     string
+	Password   string
+	Enabled    bool
+	JsonObject interface{}
 }
 
 // ---
-// Nighscout
+// Nightscout
 // ----
 func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, arg CreateNightscoutSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource,
 		arg.SiteID,
 		arg.Password,
 		arg.Enabled,
-		arg.UrlOrUsername,
-		arg.UniqueHash,
+		arg.JsonObject,
 	)
 	return err
 }
 
+const createVirtualSyncSource = `-- name: CreateVirtualSyncSource :exec
+
+
+INSERT INTO site_sync_sources (
+    site_id, 
+    type,  
+    enabled
+) 
+VALUES (
+    ?, 
+    'VIRTUAL', 
+    ?
+)
+`
+
+type CreateVirtualSyncSourceParams struct {
+	SiteID  string
+	Enabled bool
+}
+
+// ----
+// VIRTUAL
+// ----
+func (q *Queries) CreateVirtualSyncSource(ctx context.Context, arg CreateVirtualSyncSourceParams) error {
+	_, err := q.exec(ctx, q.createVirtualSyncSourceStmt, createVirtualSyncSource, arg.SiteID, arg.Enabled)
+	return err
+}
+
 const deleteSyncSource = `-- name: DeleteSyncSource :exec
+
 DELETE FROM site_sync_sources WHERE type = ? and site_id = ?
 `
 
@@ -77,27 +129,16 @@ type DeleteSyncSourceParams struct {
 	SiteID string
 }
 
+// ----
 // DELETE is real for security
+// ----
 func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourceParams) error {
 	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, arg.Type, arg.SiteID)
 	return err
 }
 
-const disableNightscoutSyncSource = `-- name: DisableNightscoutSyncSource :exec
-UPDATE site_sync_sources SET enabled = 0, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND site_id = ?
-`
-
-type DisableNightscoutSyncSourceParams struct {
-	SiteID string
-}
-
-func (q *Queries) DisableNightscoutSyncSource(ctx context.Context, arg DisableNightscoutSyncSourceParams) error {
-	_, err := q.exec(ctx, q.disableNightscoutSyncSourceStmt, disableNightscoutSyncSource, arg.SiteID)
-	return err
-}
-
 const getAllSiteSyncSourcesForSite = `-- name: GetAllSiteSyncSourcesForSite :many
-SELECT id, site_id, type, url_or_username, password, dexcom_region, created_at, updated_at, enabled, unique_hash FROM site_sync_sources where site_id = ?
+SELECT site_id, type, properties, password, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSiteSyncSourcesForSiteParams struct {
@@ -114,16 +155,28 @@ func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSi
 	for rows.Next() {
 		var i SiteSyncSource
 		if err := rows.Scan(
-			&i.ID,
 			&i.SiteID,
 			&i.Type,
-			&i.UrlOrUsername,
+			&i.Properties,
 			&i.Password,
-			&i.DexcomRegion,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enabled,
-			&i.UniqueHash,
+			&i.SyncIntervalSecondsReason,
+			&i.SyncIntervalSeconds,
+			&i.LastAttemptedSync,
+			&i.LastSuccessfulSync,
+			&i.LastFailedSync,
+			&i.TotalSyncs,
+			&i.TotalSuccessfulSyncs,
+			&i.TotalFailedSyncs,
+			&i.ConsecutiveSuccessfulSyncs,
+			&i.ConsecutiveFailedSyncs,
+			&i.PreviousSyncErrors,
+			&i.TotalEma,
+			&i.SuccessEma,
+			&i.FailureEma,
+			&i.LastSyncDuration,
 		); err != nil {
 			return nil, err
 		}
@@ -138,16 +191,31 @@ func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSi
 	return items, nil
 }
 
-const getAllSiteSyncSourcesForUniqueHash = `-- name: GetAllSiteSyncSourcesForUniqueHash :many
-SELECT uss.id, uss.site_id, uss.type, uss.url_or_username, uss.password, uss.dexcom_region, uss.created_at, uss.updated_at, uss.enabled, uss.unique_hash FROM site_sync_sources uss JOIN sites u ON u.id = uss.site_id WHERE uss.unique_hash = ? AND u.deleted_at IS NULL
+const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
+
+
+
+SELECT us.site_id, us.type, us.properties, us.password, us.created_at, us.updated_at, us.enabled, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
+JOIN sites u ON u.id = us.site_id
+WHERE us.enabled = 1
+  AND u.deleted_at IS NULL
+  AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- site has been seen in the last day
+  AND (
+      us.last_attempted_sync IS NULL
+      OR us.last_attempted_sync <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (us.sync_interval_seconds * 1000)
+  )
 `
 
-type GetAllSiteSyncSourcesForUniqueHashParams struct {
-	UniqueHash string
-}
-
-func (q *Queries) GetAllSiteSyncSourcesForUniqueHash(ctx context.Context, arg GetAllSiteSyncSourcesForUniqueHashParams) ([]*SiteSyncSource, error) {
-	rows, err := q.query(ctx, q.getAllSiteSyncSourcesForUniqueHashStmt, getAllSiteSyncSourcesForUniqueHash, arg.UniqueHash)
+// ----
+// REPORTS
+// -----
+// Get All sync reports that:
+// 1. The site_sync_source is enabled
+// 2. The associated site has not been deleted
+// 3. The associated site has been seen in the last day
+// 4. The last attempted sync is either null or older than the sync interval
+func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, error) {
+	rows, err := q.query(ctx, q.getSyncReportsToRunStmt, getSyncReportsToRun)
 	if err != nil {
 		return nil, err
 	}
@@ -156,16 +224,28 @@ func (q *Queries) GetAllSiteSyncSourcesForUniqueHash(ctx context.Context, arg Ge
 	for rows.Next() {
 		var i SiteSyncSource
 		if err := rows.Scan(
-			&i.ID,
 			&i.SiteID,
 			&i.Type,
-			&i.UrlOrUsername,
+			&i.Properties,
 			&i.Password,
-			&i.DexcomRegion,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enabled,
-			&i.UniqueHash,
+			&i.SyncIntervalSecondsReason,
+			&i.SyncIntervalSeconds,
+			&i.LastAttemptedSync,
+			&i.LastSuccessfulSync,
+			&i.LastFailedSync,
+			&i.TotalSyncs,
+			&i.TotalSuccessfulSyncs,
+			&i.TotalFailedSyncs,
+			&i.ConsecutiveSuccessfulSyncs,
+			&i.ConsecutiveFailedSyncs,
+			&i.PreviousSyncErrors,
+			&i.TotalEma,
+			&i.SuccessEma,
+			&i.FailureEma,
+			&i.LastSyncDuration,
 		); err != nil {
 			return nil, err
 		}
@@ -181,93 +261,199 @@ func (q *Queries) GetAllSiteSyncSourcesForUniqueHash(ctx context.Context, arg Ge
 }
 
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
-UPDATE site_sync_sources SET password = ?, enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND site_id = ?
+WITH params AS (SELECT COALESCE(sqlc.narg(Password), '') AS password)
+UPDATE site_sync_sources SET 
+    password = CASE
+        WHEN params.password IN ('', '********') THEN password -- dont update if empty or masked
+        ELSE params.password
+    END,
+    enabled = ?1,
+    properties = json_set(
+        properties,
+        '$.username', COALESCE(NULLIF(?2, ''), json_extract(properties, '$.username')),
+        '$.region',   COALESCE(NULLIF(?3, ''), json_extract(properties, '$.region'))
+    ),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE type = 'DEXCOM' AND site_id = ?4
 `
 
 type UpdateDexcomSyncSourceParams struct {
-	Password      string
-	Enabled       bool
-	UrlOrUsername string
-	DexcomRegion  consts.DexcomRegion
-	UniqueHash    string
-	SiteID        string
+	Enabled  bool
+	Username interface{}
+	Region   interface{}
+	Siteid   string
 }
 
 func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSyncSourceParams) error {
 	_, err := q.exec(ctx, q.updateDexcomSyncSourceStmt, updateDexcomSyncSource,
-		arg.Password,
 		arg.Enabled,
-		arg.UrlOrUsername,
-		arg.DexcomRegion,
-		arg.UniqueHash,
-		arg.SiteID,
-	)
-	return err
-}
-
-const updateDexcomSyncSourceWithoutPassword = `-- name: UpdateDexcomSyncSourceWithoutPassword :exec
-UPDATE site_sync_sources SET enabled = ?, url_or_username = ?, dexcom_region = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "DEXCOM" AND site_id = ?
-`
-
-type UpdateDexcomSyncSourceWithoutPasswordParams struct {
-	Enabled       bool
-	UrlOrUsername string
-	DexcomRegion  consts.DexcomRegion
-	UniqueHash    string
-	SiteID        string
-}
-
-func (q *Queries) UpdateDexcomSyncSourceWithoutPassword(ctx context.Context, arg UpdateDexcomSyncSourceWithoutPasswordParams) error {
-	_, err := q.exec(ctx, q.updateDexcomSyncSourceWithoutPasswordStmt, updateDexcomSyncSourceWithoutPassword,
-		arg.Enabled,
-		arg.UrlOrUsername,
-		arg.DexcomRegion,
-		arg.UniqueHash,
-		arg.SiteID,
+		arg.Username,
+		arg.Region,
+		arg.Siteid,
 	)
 	return err
 }
 
 const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
-UPDATE site_sync_sources SET password = ?, enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND site_id = ?
+UPDATE site_sync_sources SET 
+    password = CASE
+        WHEN ?1 IS NULL OR sqlc.narg(Password) IN ('', '********') THEN password -- dont update if empty or masked
+        ELSE ?1
+    END,
+    enabled =  ?2,
+    properties = json_set(
+        properties,
+        '$.url', COALESCE(NULLIF(?3, ''), json_extract(properties, '$.url'))
+    ),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
+WHERE type = 'NIGHTSCOUT' AND site_id = ?4
 `
 
 type UpdateNightscoutSyncSourceParams struct {
-	Password      string
-	Enabled       bool
-	UrlOrUsername string
-	UniqueHash    string
-	SiteID        string
+	Password interface{}
+	Enabled  bool
+	Url      interface{}
+	Siteid   string
 }
 
 func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNightscoutSyncSourceParams) error {
 	_, err := q.exec(ctx, q.updateNightscoutSyncSourceStmt, updateNightscoutSyncSource,
 		arg.Password,
 		arg.Enabled,
-		arg.UrlOrUsername,
-		arg.UniqueHash,
-		arg.SiteID,
+		arg.Url,
+		arg.Siteid,
 	)
 	return err
 }
 
-const updateNightscoutSyncSourceWithoutPassword = `-- name: UpdateNightscoutSyncSourceWithoutPassword :exec
-UPDATE site_sync_sources SET enabled = ?, url_or_username = ?, unique_hash = ?, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE type = "NIGHTSCOUT" AND site_id = ?
+const updateSyncReportAttempt = `-- name: UpdateSyncReportAttempt :exec
+
+UPDATE site_sync_sources
+SET
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE site_id = ?1 AND type = ?2
 `
 
-type UpdateNightscoutSyncSourceWithoutPasswordParams struct {
-	Enabled       bool
-	UrlOrUsername string
-	UniqueHash    string
-	SiteID        string
+type UpdateSyncReportAttemptParams struct {
+	Siteid string
+	Type   consts.SyncSourceType
 }
 
-func (q *Queries) UpdateNightscoutSyncSourceWithoutPassword(ctx context.Context, arg UpdateNightscoutSyncSourceWithoutPasswordParams) error {
-	_, err := q.exec(ctx, q.updateNightscoutSyncSourceWithoutPasswordStmt, updateNightscoutSyncSourceWithoutPassword,
-		arg.Enabled,
-		arg.UrlOrUsername,
-		arg.UniqueHash,
-		arg.SiteID,
+// ---- Updates to the Sync Reporting -----
+func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, arg UpdateSyncReportAttemptParams) error {
+	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, arg.Siteid, arg.Type)
+	return err
+}
+
+const updateSyncSourceReportsFailure = `-- name: UpdateSyncSourceReportsFailure :exec
+UPDATE site_sync_sources
+SET
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_failed_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    previous_sync_errors = ?1,
+    last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    
+    -- Counters 
+    total_syncs = total_syncs + 1,
+    total_failed_syncs = total_failed_syncs + 1,
+    
+    consecutive_failed_syncs = consecutive_failed_syncs + 1,
+    consecutive_successful_syncs = 0,
+
+    
+
+    -- Timing
+    last_sync_duration = ?2,
+
+    failure_ema = CASE
+        WHEN failure_ema IS NULL THEN CAST(?2 AS REAL)
+        ELSE (0.2 * CAST(?2 AS REAL))
+            + (0.8 * failure_ema)
+    END,
+
+    total_ema = CASE
+        WHEN total_ema IS NULL THEN CAST(?2 AS REAL)
+        ELSE (0.2 * CAST(?2 AS REAL))
+            + (0.8 * total_ema)
+    END
+
+WHERE site_id = ?3 AND type = ?4
+`
+
+type UpdateSyncSourceReportsFailureParams struct {
+	ErrorMessages errors.ErrorList
+	ElapsedMs     *int64
+	Siteid        string
+	Type          consts.SyncSourceType
+}
+
+func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, arg UpdateSyncSourceReportsFailureParams) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure,
+		arg.ErrorMessages,
+		arg.ElapsedMs,
+		arg.Siteid,
+		arg.Type,
 	)
+	return err
+}
+
+const updateSyncSourceReportsSuccess = `-- name: UpdateSyncSourceReportsSuccess :exec
+UPDATE site_sync_sources
+SET
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_successful_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+
+    -- Counters
+    total_syncs = total_syncs + 1,
+    total_successful_syncs = total_successful_syncs + 1,
+    
+    consecutive_successful_syncs = consecutive_successful_syncs + 1,
+    consecutive_failed_syncs = 0,
+
+    -- Timing
+    last_sync_duration = ?1,
+
+    success_ema = CASE
+        WHEN success_ema IS NULL THEN CAST(?1 AS REAL)
+        ELSE (0.2 * CAST(?1 AS REAL))
+            + (0.8 * success_ema)
+    END,
+
+    total_ema = CASE
+        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
+        ELSE (0.2 * CAST(?1 AS REAL))
+            + (0.8 * total_ema)
+    END
+
+WHERE site_id = ?2 AND type = ?3
+`
+
+type UpdateSyncSourceReportsSuccessParams struct {
+	ElapsedMs *int64
+	Siteid    string
+	Type      consts.SyncSourceType
+}
+
+func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, arg UpdateSyncSourceReportsSuccessParams) error {
+	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, arg.ElapsedMs, arg.Siteid, arg.Type)
+	return err
+}
+
+const updateVirtualSyncSource = `-- name: UpdateVirtualSyncSource :exec
+UPDATE site_sync_sources SET 
+    enabled = ?1,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
+WHERE type = 'VIRTUAL' AND site_id =  ?2
+`
+
+type UpdateVirtualSyncSourceParams struct {
+	Enabled bool
+	Siteid  string
+}
+
+func (q *Queries) UpdateVirtualSyncSource(ctx context.Context, arg UpdateVirtualSyncSourceParams) error {
+	_, err := q.exec(ctx, q.updateVirtualSyncSourceStmt, updateVirtualSyncSource, arg.Enabled, arg.Siteid)
 	return err
 }

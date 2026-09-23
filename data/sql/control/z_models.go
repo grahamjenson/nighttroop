@@ -5,6 +5,7 @@
 package control
 
 import (
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 )
@@ -152,28 +153,13 @@ type SiteIdentity struct {
 }
 
 type SiteSyncSource struct {
-	ID            int64
-	SiteID        string
-	Type          consts.SyncSourceType
-	UrlOrUsername string
-	Password      string
-	DexcomRegion  consts.DexcomRegion
-	CreatedAt     int64
-	UpdatedAt     int64
-	Enabled       bool
-	UniqueHash    string
-}
-
-type SqliteSequence struct {
-	Name interface{}
-	Seq  interface{}
-}
-
-type SyncSourceReport struct {
-	ID                         int64
+	SiteID                     string
+	Type                       consts.SyncSourceType
+	Properties                 types.SyncSourceProperties
+	Password                   string
 	CreatedAt                  int64
 	UpdatedAt                  int64
-	UniqueHash                 string
+	Enabled                    bool
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
 	LastAttemptedSync          *int64
@@ -189,4 +175,9 @@ type SyncSourceReport struct {
 	SuccessEma                 *float64
 	FailureEma                 *float64
 	LastSyncDuration           *int64
+}
+
+type SqliteSequence struct {
+	Name interface{}
+	Seq  interface{}
 }

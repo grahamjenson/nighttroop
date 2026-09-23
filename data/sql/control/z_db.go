@@ -45,8 +45,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createSiteIdentityStmt, err = db.PrepareContext(ctx, createSiteIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSiteIdentity: %w", err)
 	}
-	if q.createSyncReportsForAllSyncSourcesStmt, err = db.PrepareContext(ctx, createSyncReportsForAllSyncSources); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateSyncReportsForAllSyncSources: %w", err)
+	if q.createVirtualSyncSourceStmt, err = db.PrepareContext(ctx, createVirtualSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateVirtualSyncSource: %w", err)
 	}
 	if q.deleteSitesStmt, err = db.PrepareContext(ctx, deleteSites); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSites: %w", err)
@@ -54,17 +54,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
 	}
-	if q.disableNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, disableNightscoutSyncSource); err != nil {
-		return nil, fmt.Errorf("error preparing query DisableNightscoutSyncSource: %w", err)
-	}
 	if q.disableSitesStmt, err = db.PrepareContext(ctx, disableSites); err != nil {
 		return nil, fmt.Errorf("error preparing query DisableSites: %w", err)
 	}
 	if q.getAllSiteSyncSourcesForSiteStmt, err = db.PrepareContext(ctx, getAllSiteSyncSourcesForSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSiteSyncSourcesForSite: %w", err)
-	}
-	if q.getAllSiteSyncSourcesForUniqueHashStmt, err = db.PrepareContext(ctx, getAllSiteSyncSourcesForUniqueHash); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAllSiteSyncSourcesForUniqueHash: %w", err)
 	}
 	if q.getAllSitesStmt, err = db.PrepareContext(ctx, getAllSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSites: %w", err)
@@ -102,14 +96,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateDexcomSyncSourceStmt, err = db.PrepareContext(ctx, updateDexcomSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSource: %w", err)
 	}
-	if q.updateDexcomSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateDexcomSyncSourceWithoutPassword); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateDexcomSyncSourceWithoutPassword: %w", err)
-	}
 	if q.updateNightscoutSyncSourceStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSource: %w", err)
-	}
-	if q.updateNightscoutSyncSourceWithoutPasswordStmt, err = db.PrepareContext(ctx, updateNightscoutSyncSourceWithoutPassword); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateNightscoutSyncSourceWithoutPassword: %w", err)
 	}
 	if q.updateSiteDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDateFlags: %w", err)
@@ -131,6 +119,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateSyncSourceReportsSuccessStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsSuccess); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsSuccess: %w", err)
+	}
+	if q.updateVirtualSyncSourceStmt, err = db.PrepareContext(ctx, updateVirtualSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateVirtualSyncSource: %w", err)
 	}
 	return &q, nil
 }
@@ -172,9 +163,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createSiteIdentityStmt: %w", cerr)
 		}
 	}
-	if q.createSyncReportsForAllSyncSourcesStmt != nil {
-		if cerr := q.createSyncReportsForAllSyncSourcesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createSyncReportsForAllSyncSourcesStmt: %w", cerr)
+	if q.createVirtualSyncSourceStmt != nil {
+		if cerr := q.createVirtualSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createVirtualSyncSourceStmt: %w", cerr)
 		}
 	}
 	if q.deleteSitesStmt != nil {
@@ -187,11 +178,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSyncSourceStmt: %w", cerr)
 		}
 	}
-	if q.disableNightscoutSyncSourceStmt != nil {
-		if cerr := q.disableNightscoutSyncSourceStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing disableNightscoutSyncSourceStmt: %w", cerr)
-		}
-	}
 	if q.disableSitesStmt != nil {
 		if cerr := q.disableSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing disableSitesStmt: %w", cerr)
@@ -200,11 +186,6 @@ func (q *Queries) Close() error {
 	if q.getAllSiteSyncSourcesForSiteStmt != nil {
 		if cerr := q.getAllSiteSyncSourcesForSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAllSiteSyncSourcesForSiteStmt: %w", cerr)
-		}
-	}
-	if q.getAllSiteSyncSourcesForUniqueHashStmt != nil {
-		if cerr := q.getAllSiteSyncSourcesForUniqueHashStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAllSiteSyncSourcesForUniqueHashStmt: %w", cerr)
 		}
 	}
 	if q.getAllSitesStmt != nil {
@@ -267,19 +248,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateDexcomSyncSourceStmt: %w", cerr)
 		}
 	}
-	if q.updateDexcomSyncSourceWithoutPasswordStmt != nil {
-		if cerr := q.updateDexcomSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateDexcomSyncSourceWithoutPasswordStmt: %w", cerr)
-		}
-	}
 	if q.updateNightscoutSyncSourceStmt != nil {
 		if cerr := q.updateNightscoutSyncSourceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateNightscoutSyncSourceStmt: %w", cerr)
-		}
-	}
-	if q.updateNightscoutSyncSourceWithoutPasswordStmt != nil {
-		if cerr := q.updateNightscoutSyncSourceWithoutPasswordStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateNightscoutSyncSourceWithoutPasswordStmt: %w", cerr)
 		}
 	}
 	if q.updateSiteDateFlagsStmt != nil {
@@ -315,6 +286,11 @@ func (q *Queries) Close() error {
 	if q.updateSyncSourceReportsSuccessStmt != nil {
 		if cerr := q.updateSyncSourceReportsSuccessStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSyncSourceReportsSuccessStmt: %w", cerr)
+		}
+	}
+	if q.updateVirtualSyncSourceStmt != nil {
+		if cerr := q.updateVirtualSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateVirtualSyncSourceStmt: %w", cerr)
 		}
 	}
 	return err
@@ -354,85 +330,79 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                            DBTX
-	tx                                            *sql.Tx
-	allSiteIdentitiesStmt                         *sql.Stmt
-	archiveSitesStmt                              *sql.Stmt
-	createControlIdentityStmt                     *sql.Stmt
-	createDexcomSyncSourceStmt                    *sql.Stmt
-	createNightscoutSyncSourceStmt                *sql.Stmt
-	createSiteStmt                                *sql.Stmt
-	createSiteIdentityStmt                        *sql.Stmt
-	createSyncReportsForAllSyncSourcesStmt        *sql.Stmt
-	deleteSitesStmt                               *sql.Stmt
-	deleteSyncSourceStmt                          *sql.Stmt
-	disableNightscoutSyncSourceStmt               *sql.Stmt
-	disableSitesStmt                              *sql.Stmt
-	getAllSiteSyncSourcesForSiteStmt              *sql.Stmt
-	getAllSiteSyncSourcesForUniqueHashStmt        *sql.Stmt
-	getAllSitesStmt                               *sql.Stmt
-	getBatchSitesToBackUpStmt                     *sql.Stmt
-	getControlIdentityStmt                        *sql.Stmt
-	getLiveAndDisabledSitesStmt                   *sql.Stmt
-	getSiteStmt                                   *sql.Stmt
-	getSiteIdentityStmt                           *sql.Stmt
-	getSitesToArchiveStmt                         *sql.Stmt
-	getSitesToDeleteInBatchStmt                   *sql.Stmt
-	getSitesToDisableStmt                         *sql.Stmt
-	getSyncReportsToRunStmt                       *sql.Stmt
-	siteExistsStmt                                *sql.Stmt
-	updateDexcomSyncSourceStmt                    *sql.Stmt
-	updateDexcomSyncSourceWithoutPasswordStmt     *sql.Stmt
-	updateNightscoutSyncSourceStmt                *sql.Stmt
-	updateNightscoutSyncSourceWithoutPasswordStmt *sql.Stmt
-	updateSiteDateFlagsStmt                       *sql.Stmt
-	updateSiteIdentityDateFlagsStmt               *sql.Stmt
-	updateSiteIdentitySettingsStmt                *sql.Stmt
-	updateSitesSettingsStmt                       *sql.Stmt
-	updateSyncReportAttemptStmt                   *sql.Stmt
-	updateSyncSourceReportsFailureStmt            *sql.Stmt
-	updateSyncSourceReportsSuccessStmt            *sql.Stmt
+	db                                 DBTX
+	tx                                 *sql.Tx
+	allSiteIdentitiesStmt              *sql.Stmt
+	archiveSitesStmt                   *sql.Stmt
+	createControlIdentityStmt          *sql.Stmt
+	createDexcomSyncSourceStmt         *sql.Stmt
+	createNightscoutSyncSourceStmt     *sql.Stmt
+	createSiteStmt                     *sql.Stmt
+	createSiteIdentityStmt             *sql.Stmt
+	createVirtualSyncSourceStmt        *sql.Stmt
+	deleteSitesStmt                    *sql.Stmt
+	deleteSyncSourceStmt               *sql.Stmt
+	disableSitesStmt                   *sql.Stmt
+	getAllSiteSyncSourcesForSiteStmt   *sql.Stmt
+	getAllSitesStmt                    *sql.Stmt
+	getBatchSitesToBackUpStmt          *sql.Stmt
+	getControlIdentityStmt             *sql.Stmt
+	getLiveAndDisabledSitesStmt        *sql.Stmt
+	getSiteStmt                        *sql.Stmt
+	getSiteIdentityStmt                *sql.Stmt
+	getSitesToArchiveStmt              *sql.Stmt
+	getSitesToDeleteInBatchStmt        *sql.Stmt
+	getSitesToDisableStmt              *sql.Stmt
+	getSyncReportsToRunStmt            *sql.Stmt
+	siteExistsStmt                     *sql.Stmt
+	updateDexcomSyncSourceStmt         *sql.Stmt
+	updateNightscoutSyncSourceStmt     *sql.Stmt
+	updateSiteDateFlagsStmt            *sql.Stmt
+	updateSiteIdentityDateFlagsStmt    *sql.Stmt
+	updateSiteIdentitySettingsStmt     *sql.Stmt
+	updateSitesSettingsStmt            *sql.Stmt
+	updateSyncReportAttemptStmt        *sql.Stmt
+	updateSyncSourceReportsFailureStmt *sql.Stmt
+	updateSyncSourceReportsSuccessStmt *sql.Stmt
+	updateVirtualSyncSourceStmt        *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                            tx,
-		tx:                                            tx,
-		allSiteIdentitiesStmt:                         q.allSiteIdentitiesStmt,
-		archiveSitesStmt:                              q.archiveSitesStmt,
-		createControlIdentityStmt:                     q.createControlIdentityStmt,
-		createDexcomSyncSourceStmt:                    q.createDexcomSyncSourceStmt,
-		createNightscoutSyncSourceStmt:                q.createNightscoutSyncSourceStmt,
-		createSiteStmt:                                q.createSiteStmt,
-		createSiteIdentityStmt:                        q.createSiteIdentityStmt,
-		createSyncReportsForAllSyncSourcesStmt:        q.createSyncReportsForAllSyncSourcesStmt,
-		deleteSitesStmt:                               q.deleteSitesStmt,
-		deleteSyncSourceStmt:                          q.deleteSyncSourceStmt,
-		disableNightscoutSyncSourceStmt:               q.disableNightscoutSyncSourceStmt,
-		disableSitesStmt:                              q.disableSitesStmt,
-		getAllSiteSyncSourcesForSiteStmt:              q.getAllSiteSyncSourcesForSiteStmt,
-		getAllSiteSyncSourcesForUniqueHashStmt:        q.getAllSiteSyncSourcesForUniqueHashStmt,
-		getAllSitesStmt:                               q.getAllSitesStmt,
-		getBatchSitesToBackUpStmt:                     q.getBatchSitesToBackUpStmt,
-		getControlIdentityStmt:                        q.getControlIdentityStmt,
-		getLiveAndDisabledSitesStmt:                   q.getLiveAndDisabledSitesStmt,
-		getSiteStmt:                                   q.getSiteStmt,
-		getSiteIdentityStmt:                           q.getSiteIdentityStmt,
-		getSitesToArchiveStmt:                         q.getSitesToArchiveStmt,
-		getSitesToDeleteInBatchStmt:                   q.getSitesToDeleteInBatchStmt,
-		getSitesToDisableStmt:                         q.getSitesToDisableStmt,
-		getSyncReportsToRunStmt:                       q.getSyncReportsToRunStmt,
-		siteExistsStmt:                                q.siteExistsStmt,
-		updateDexcomSyncSourceStmt:                    q.updateDexcomSyncSourceStmt,
-		updateDexcomSyncSourceWithoutPasswordStmt:     q.updateDexcomSyncSourceWithoutPasswordStmt,
-		updateNightscoutSyncSourceStmt:                q.updateNightscoutSyncSourceStmt,
-		updateNightscoutSyncSourceWithoutPasswordStmt: q.updateNightscoutSyncSourceWithoutPasswordStmt,
-		updateSiteDateFlagsStmt:                       q.updateSiteDateFlagsStmt,
-		updateSiteIdentityDateFlagsStmt:               q.updateSiteIdentityDateFlagsStmt,
-		updateSiteIdentitySettingsStmt:                q.updateSiteIdentitySettingsStmt,
-		updateSitesSettingsStmt:                       q.updateSitesSettingsStmt,
-		updateSyncReportAttemptStmt:                   q.updateSyncReportAttemptStmt,
-		updateSyncSourceReportsFailureStmt:            q.updateSyncSourceReportsFailureStmt,
-		updateSyncSourceReportsSuccessStmt:            q.updateSyncSourceReportsSuccessStmt,
+		db:                                 tx,
+		tx:                                 tx,
+		allSiteIdentitiesStmt:              q.allSiteIdentitiesStmt,
+		archiveSitesStmt:                   q.archiveSitesStmt,
+		createControlIdentityStmt:          q.createControlIdentityStmt,
+		createDexcomSyncSourceStmt:         q.createDexcomSyncSourceStmt,
+		createNightscoutSyncSourceStmt:     q.createNightscoutSyncSourceStmt,
+		createSiteStmt:                     q.createSiteStmt,
+		createSiteIdentityStmt:             q.createSiteIdentityStmt,
+		createVirtualSyncSourceStmt:        q.createVirtualSyncSourceStmt,
+		deleteSitesStmt:                    q.deleteSitesStmt,
+		deleteSyncSourceStmt:               q.deleteSyncSourceStmt,
+		disableSitesStmt:                   q.disableSitesStmt,
+		getAllSiteSyncSourcesForSiteStmt:   q.getAllSiteSyncSourcesForSiteStmt,
+		getAllSitesStmt:                    q.getAllSitesStmt,
+		getBatchSitesToBackUpStmt:          q.getBatchSitesToBackUpStmt,
+		getControlIdentityStmt:             q.getControlIdentityStmt,
+		getLiveAndDisabledSitesStmt:        q.getLiveAndDisabledSitesStmt,
+		getSiteStmt:                        q.getSiteStmt,
+		getSiteIdentityStmt:                q.getSiteIdentityStmt,
+		getSitesToArchiveStmt:              q.getSitesToArchiveStmt,
+		getSitesToDeleteInBatchStmt:        q.getSitesToDeleteInBatchStmt,
+		getSitesToDisableStmt:              q.getSitesToDisableStmt,
+		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
+		siteExistsStmt:                     q.siteExistsStmt,
+		updateDexcomSyncSourceStmt:         q.updateDexcomSyncSourceStmt,
+		updateNightscoutSyncSourceStmt:     q.updateNightscoutSyncSourceStmt,
+		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,
+		updateSiteIdentityDateFlagsStmt:    q.updateSiteIdentityDateFlagsStmt,
+		updateSiteIdentitySettingsStmt:     q.updateSiteIdentitySettingsStmt,
+		updateSitesSettingsStmt:            q.updateSitesSettingsStmt,
+		updateSyncReportAttemptStmt:        q.updateSyncReportAttemptStmt,
+		updateSyncSourceReportsFailureStmt: q.updateSyncSourceReportsFailureStmt,
+		updateSyncSourceReportsSuccessStmt: q.updateSyncSourceReportsSuccessStmt,
+		updateVirtualSyncSourceStmt:        q.updateVirtualSyncSourceStmt,
 	}
 }

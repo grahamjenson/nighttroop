@@ -4,6 +4,8 @@
 
 1. Define Nighttroop models, work on converters to DB params, and use those models to build json and htmx and html. Then can test all this across any form
 1. Sync settings is over complicated, remove the hash crap and just focus on the punishing bad behaviour or slowing down users that dont read the endpoints
+1. rename all columns with type e.g. password_hash, totp_secret_enc
+1. Use custom methods to replace 	DurationSum:        stats.DurationSum, DurationSquaredSum: stats.DurationSquaredSum,
 
 -- Errors
 1. Come up with an actual logging and error framework that makes sense (SQLite DB for search?)

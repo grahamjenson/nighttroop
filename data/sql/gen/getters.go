@@ -49,12 +49,10 @@ var TypeLookupMap = map[string]map[string]string{
 		"Errors": "errors.ErrorList",
 	},
 	"SiteSyncSource": {
-		"Type":         "consts.SyncSourceType",
-		"DexcomRegion": "consts.DexcomRegion",
-		"Enabled":      "bool",
-	},
-	"SyncSourceReport": {
+		"Type":               "consts.SyncSourceType",
+		"Enabled":            "bool",
 		"PreviousSyncErrors": "errors.ErrorList",
+		"Properties":         "types.SyncSourceProperties",
 	},
 	"FailJobParams": {
 		"Errors": "errors.ErrorList",
@@ -69,41 +67,42 @@ var TypeLookupMap = map[string]map[string]string{
 		"Role": "consts.IdentityRole",
 	},
 	"CreateNightscoutSyncSourceParams": {
-		"Type":         "consts.SyncSourceType",
-		"DexcomRegion": "consts.DexcomRegion",
-		"Enabled":      "bool",
+		"Type":    "consts.SyncSourceType",
+		"Enabled": "bool",
+	},
+	"UpdateSyncReportAttemptParams": {
+		"Type": "consts.SyncSourceType",
+	},
+	"CreateVirtualSyncSourceParams": {
+		"Enabled": "bool",
+	},
+	"UpdateVirtualSyncSourceParams": {
+		"Enabled": "bool",
 	},
 	"UpdateNightscoutSyncSourceParams": {
-		"Type":         "consts.SyncSourceType",
-		"DexcomRegion": "consts.DexcomRegion",
-		"Enabled":      "bool",
+		"Type":    "consts.SyncSourceType",
+		"Enabled": "bool",
 	},
 	"UpdateDexcomSyncSourceParams": {
-		"Type":         "consts.SyncSourceType",
-		"DexcomRegion": "consts.DexcomRegion",
-		"Enabled":      "bool",
-	},
-	"UpdateDexcomSyncSourceWithoutPasswordParams": {
-		"Type":         "consts.SyncSourceType",
-		"DexcomRegion": "consts.DexcomRegion",
-		"Enabled":      "bool",
+		"Type":    "consts.SyncSourceType",
+		"Enabled": "bool",
 	},
 	"CreateDexcomSyncSourceParams": {
-		"Type":         "consts.SyncSourceType",
-		"DexcomRegion": "consts.DexcomRegion",
-		"Enabled":      "bool",
+		"Type":    "consts.SyncSourceType",
+		"Enabled": "bool",
 	},
 	"DeleteJobsByIdsParams": {
 		"Ids": "[]int64",
-	},
-	"UpdateNightscoutSyncSourceWithoutPasswordParams": {
-		"Enabled": "bool",
 	},
 	"DeleteSyncSourceParams": {
 		"Type": "consts.SyncSourceType",
 	},
 	"UpdateSyncSourceReportsFailureParams": {
+		"Type":          "consts.SyncSourceType",
 		"ErrorMessages": "errors.ErrorList",
+	},
+	"UpdateSyncSourceReportsSuccessParams": {
+		"Type": "consts.SyncSourceType",
 	},
 	"ProfilePreset": {
 		"IsDefault": "bool",
@@ -341,11 +340,12 @@ func typeLookup(schemaName, fieldName string) string {
 }
 
 func getSQLiteGoType(col *plugin.Column, modelName, fieldName string) string {
+	ttt := getBaseSQLiteType(col.Type.Name)
+
 	if goType := typeLookup(modelName, fieldName); goType != "" {
 		return goType
 	}
 
-	ttt := getBaseSQLiteType(col.Type.Name)
 	if ttt == "interface{}" {
 		return ttt
 	}
