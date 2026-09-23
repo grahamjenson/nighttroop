@@ -261,23 +261,20 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 }
 
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
-WITH params AS (SELECT COALESCE(sqlc.narg(Password), '') AS password)
 UPDATE site_sync_sources SET 
-    password = CASE
-        WHEN params.password IN ('', '********') THEN password -- dont update if empty or masked
-        ELSE params.password
-    END,
-    enabled = ?1,
+    password = COALESCE(?1, password),
+    enabled = ?2,
     properties = json_set(
         properties,
-        '$.username', COALESCE(NULLIF(?2, ''), json_extract(properties, '$.username')),
-        '$.region',   COALESCE(NULLIF(?3, ''), json_extract(properties, '$.region'))
+        '$.username', COALESCE(NULLIF(?3, ''), json_extract(properties, '$.username')),
+        '$.region',   COALESCE(NULLIF(?4, ''), json_extract(properties, '$.region'))
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE type = 'DEXCOM' AND site_id = ?4
+WHERE type = 'DEXCOM' AND site_id = ?5
 `
 
 type UpdateDexcomSyncSourceParams struct {
+	Password *string
 	Enabled  bool
 	Username interface{}
 	Region   interface{}
@@ -286,6 +283,7 @@ type UpdateDexcomSyncSourceParams struct {
 
 func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSyncSourceParams) error {
 	_, err := q.exec(ctx, q.updateDexcomSyncSourceStmt, updateDexcomSyncSource,
+		arg.Password,
 		arg.Enabled,
 		arg.Username,
 		arg.Region,
@@ -296,10 +294,7 @@ func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSy
 
 const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
 UPDATE site_sync_sources SET 
-    password = CASE
-        WHEN ?1 IS NULL OR sqlc.narg(Password) IN ('', '********') THEN password -- dont update if empty or masked
-        ELSE ?1
-    END,
+    password = COALESCE(?1, password),
     enabled =  ?2,
     properties = json_set(
         properties,
@@ -310,7 +305,7 @@ WHERE type = 'NIGHTSCOUT' AND site_id = ?4
 `
 
 type UpdateNightscoutSyncSourceParams struct {
-	Password interface{}
+	Password *string
 	Enabled  bool
 	Url      interface{}
 	Siteid   string

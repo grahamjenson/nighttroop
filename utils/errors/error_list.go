@@ -47,6 +47,10 @@ func (e ErrorList) Value() (driver.Value, error) {
 }
 
 func (e *ErrorList) Scan(src interface{}) error {
+	if src == nil {
+		*e = ErrorList{}
+		return nil
+	}
 	switch src := src.(type) {
 	case string:
 		return json.Unmarshal([]byte(src), e)

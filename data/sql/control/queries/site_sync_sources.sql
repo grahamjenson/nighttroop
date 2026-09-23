@@ -24,10 +24,7 @@ VALUES (
 
 -- name: UpdateNightscoutSyncSource :exec
 UPDATE site_sync_sources SET 
-    password = CASE
-        WHEN sqlc.narg(Password) IS NULL OR sqlc.narg(Password) IN ('', '********') THEN password -- dont update if empty or masked
-        ELSE sqlc.narg(Password)
-    END,
+    password = COALESCE(sqlc.narg('password'), password),
     enabled =  sqlc.narg(Enabled),
     properties = json_set(
         properties,
@@ -60,12 +57,8 @@ VALUES (
 );
 
 -- name: UpdateDexcomSyncSource :exec
-WITH params AS (SELECT COALESCE(sqlc.narg(Password), '') AS password)
 UPDATE site_sync_sources SET 
-    password = CASE
-        WHEN params.password IN ('', '********') THEN password -- dont update if empty or masked
-        ELSE params.password
-    END,
+    password = COALESCE(sqlc.narg('password'), password),
     enabled = sqlc.narg(Enabled),
     properties = json_set(
         properties,

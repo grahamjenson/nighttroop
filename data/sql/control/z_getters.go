@@ -2689,12 +2689,12 @@ func (m *CreateNightscoutSyncSourceParams) SetJsonObject(v interface{}) {
 }
 
 // GetPassword returns the Password value.
-func (m UpdateNightscoutSyncSourceParams) GetPassword() interface{} {
+func (m UpdateNightscoutSyncSourceParams) GetPassword() *string {
 	return m.Password
 }
 
 // SetPassword sets the Password value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetPassword(v interface{}) {
+func (m *UpdateNightscoutSyncSourceParams) SetPassword(v *string) {
 	m.Password = v
 }
 
@@ -2776,6 +2776,16 @@ func (m CreateDexcomSyncSourceParams) GetRegion() interface{} {
 // SetRegion sets the Region value and returns the updated CreateDexcomSyncSourceParams.
 func (m *CreateDexcomSyncSourceParams) SetRegion(v interface{}) {
 	m.Region = v
+}
+
+// GetPassword returns the Password value.
+func (m UpdateDexcomSyncSourceParams) GetPassword() *string {
+	return m.Password
+}
+
+// SetPassword sets the Password value and returns the updated UpdateDexcomSyncSourceParams.
+func (m *UpdateDexcomSyncSourceParams) SetPassword(v *string) {
+	m.Password = v
 }
 
 // GetEnabled returns the Enabled value.
