@@ -3,8 +3,13 @@ package nighttroop
 import "nighttroop.t1d.nz/utils/consts"
 
 type SiteSyncSettings struct {
-	NightscoutSyncSettings *NightscoutSyncSettings
-	DexcomSyncSettings     *DexcomSyncSettings
+	NightscoutSyncSettings  *NightscoutSyncSettings  `json:"nightscout"`
+	DexcomSyncSettings      *DexcomSyncSettings      `json:"dexcom"`
+	VirtualPumpSyncSettings *VirtualPumpSyncSettings `json:"virtual_pump"`
+}
+
+type VirtualPumpSyncSettings struct {
+	Enabled bool `json:"enabled"`
 }
 
 type NightscoutSyncSettings struct {
@@ -34,9 +39,9 @@ func (n *NightscoutSyncSettings) IsEnabled() bool {
 }
 
 type DexcomSyncSettings struct {
-	Username  string `json:"username"`
-	USARegion bool   `json:"usa_region"`
-	Enabled   bool   `json:"enabled"`
+	Username string              `json:"username"`
+	Region   consts.DexcomRegion `json:"region"`
+	Enabled  bool                `json:"enabled"`
 }
 
 func (n *DexcomSyncSettings) GetUsername() string {
@@ -57,7 +62,7 @@ func (n *DexcomSyncSettings) IsUSARegion() bool {
 	if n == nil {
 		return false
 	}
-	return n.USARegion
+	return n.Region == consts.DexcomRegionUS
 }
 func (n *DexcomSyncSettings) IsEnabled() bool {
 	if n == nil {

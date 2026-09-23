@@ -71,9 +71,8 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 				return
 			}
 
-			syncSettings.DexcomSyncSettings.USARegion = dexcom.Properties.IsDexcomRegionUSA()
+			syncSettings.DexcomSyncSettings.Region = dexcom.Properties.DexcomRegion()
 			syncSettings.DexcomSyncSettings.Enabled = dexcom.Enabled
-
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
