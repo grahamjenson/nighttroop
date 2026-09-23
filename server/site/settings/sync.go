@@ -59,7 +59,6 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 				return
 			}
 			syncSettings.NightscoutSyncSettings.Enabled = nightscout.Enabled
-			syncSettings.NightscoutSyncSettings.ID = nightscout.ID
 
 		}
 
@@ -72,9 +71,8 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 				return
 			}
 
-			syncSettings.DexcomSyncSettings.USARegion = dexcom.DexcomRegion == consts.DexcomRegionUS
+			syncSettings.DexcomSyncSettings.USARegion = dexcom.Properties.IsDexcomRegionUSA()
 			syncSettings.DexcomSyncSettings.Enabled = dexcom.Enabled
-			syncSettings.DexcomSyncSettings.ID = dexcom.ID
 
 		}
 
@@ -291,18 +289,12 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 		return fmt.Errorf("Failed to encrypt Nightscout URL: %w", err)
 	}
 
-	uniqHash, err := generateUniqueHash(security, nsUrl, nsPassword, consts.SyncSourceTypeNightscout, "")
-	if err != nil {
-		return fmt.Errorf("Failed to generate unique hash for Nightscout sync source: %w", err)
-	}
-
 	if nightscout == nil { // NEW
 		err = controlDB.Queries.CreateNightscoutSyncSource(ctx, control.CreateNightscoutSyncSourceParams{
 			SiteID:        subdomain,
 			Password:      encPassword,
 			Enabled:       enabled,
 			UrlOrUsername: encUrl,
-			UniqueHash:    uniqHash,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to create Nightscout sync source: %w", err)
@@ -310,23 +302,17 @@ func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db
 		return nil
 	}
 
+	password := &encPassword
 	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = controlDB.Queries.UpdateNightscoutSyncSourceWithoutPassword(ctx, control.UpdateNightscoutSyncSourceWithoutPasswordParams{
-			SiteID:        subdomain,
-			Enabled:       enabled,
-			UrlOrUsername: encUrl,
-			UniqueHash:    uniqHash,
-		})
-	} else {
-		err = controlDB.Queries.UpdateNightscoutSyncSource(ctx, control.UpdateNightscoutSyncSourceParams{
-			SiteID:        subdomain,
-			Password:      encPassword,
-			Enabled:       enabled,
-			UrlOrUsername: encUrl,
-			UniqueHash:    uniqHash,
-		})
+		password = nil
 	}
 
+	err = controlDB.Queries.UpdateNightscoutSyncSource(ctx, control.UpdateNightscoutSyncSourceParams{
+		Siteid:        subdomain,
+		Password:      password,
+		Enabled:       enabled,
+		UrlOrUsername: &encUrl,
+	})
 	if err != nil {
 		return fmt.Errorf("Failed to update Nightscout sync source: %w", err)
 	}
@@ -405,11 +391,6 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 		return fmt.Errorf("Failed to encrypt Dexcom username: %w", err)
 	}
 
-	uniqHash, err := generateUniqueHash(security, dexUsername, dexPassword, consts.SyncSourceTypeDexcom, string(region))
-	if err != nil {
-		return fmt.Errorf("Failed to generate unique hash for Dexcom sync source: %w", err)
-	}
-
 	if dexcom == nil { // NEW
 
 		err = controlDB.Queries.CreateDexcomSyncSource(ctx, control.CreateDexcomSyncSourceParams{
@@ -417,8 +398,7 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 			Password:      encPassword,
 			Enabled:       dexEnabled,
 			UrlOrUsername: encUsername,
-			DexcomRegion:  region,
-			UniqueHash:    uniqHash,
+			Region:        region,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to create Dexcom sync source: %w", err)
@@ -426,45 +406,22 @@ func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.Con
 		return nil
 	}
 
+	password := &encPassword
 	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
-		err = controlDB.Queries.UpdateDexcomSyncSourceWithoutPassword(ctx, control.UpdateDexcomSyncSourceWithoutPasswordParams{
-			SiteID:        subdomain,
-			Enabled:       dexEnabled,
-			UrlOrUsername: encUsername,
-			DexcomRegion:  region,
-			UniqueHash:    uniqHash,
-		})
-	} else {
-		err = controlDB.Queries.UpdateDexcomSyncSource(ctx, control.UpdateDexcomSyncSourceParams{
-			SiteID:        subdomain,
-			Password:      encPassword,
-			Enabled:       dexEnabled,
-			UrlOrUsername: encUsername,
-			DexcomRegion:  region,
-			UniqueHash:    uniqHash,
-		})
+		password = nil
 	}
+
+	err = controlDB.Queries.UpdateDexcomSyncSource(ctx, control.UpdateDexcomSyncSourceParams{
+		Siteid:        subdomain,
+		Password:      password,
+		Enabled:       dexEnabled,
+		UrlOrUsername: &encUsername,
+		Region:        region,
+	})
 
 	if err != nil {
 		return fmt.Errorf("Failed to update Dexcom sync source: %w", err)
 	}
 
 	return nil
-}
-
-func generateUniqueHash(security *security.SecurityConfig, plainTextURLOrUsername string, plaintTextPassword string, syncSourceType consts.SyncSourceType, dexcomRegion string) (string, error) {
-
-	// Any two users with this constalations will be making the exact same request to the same URL.
-	// We are deduping these requests to prevent multiple calls
-	uniqString := fmt.Sprintf("%s:%s:%s", syncSourceType, plainTextURLOrUsername, plaintTextPassword)
-	if syncSourceType == consts.SyncSourceTypeDexcom {
-		uniqString = fmt.Sprintf("%s:%s:%s:%s", syncSourceType, plainTextURLOrUsername, plaintTextPassword, dexcomRegion)
-	}
-
-	uniqHash, err := security.GenerateHash(uniqString)
-	if err != nil {
-		return "", fmt.Errorf("error generating hash for sync job: %w", err)
-	}
-
-	return uniqHash, nil
 }

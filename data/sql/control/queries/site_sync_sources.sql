@@ -2,6 +2,9 @@
 -- name: GetAllSiteSyncSourcesForSite :many
 SELECT * FROM site_sync_sources where site_id = ?;
 
+-- name: GetSyncSource :one
+SELECT * FROM site_sync_sources where site_id = ? AND type = ? LIMIT 1;
+
 -----
 -- Nightscout
 ------ 
@@ -10,26 +13,23 @@ SELECT * FROM site_sync_sources where site_id = ?;
 INSERT INTO site_sync_sources (
     site_id,
     type,
+    url_or_username,
     password,
-    enabled,
-    properties
+    enabled
 )
 VALUES (
     ?,
     'NIGHTSCOUT',
     ?,
     ?,
-    json_object('url', ?)
+    ?
 );
 
 -- name: UpdateNightscoutSyncSource :exec
 UPDATE site_sync_sources SET 
     password = COALESCE(sqlc.narg('password'), password),
     enabled =  sqlc.narg(Enabled),
-    properties = json_set(
-        properties,
-        '$.url', COALESCE(NULLIF(sqlc.narg(Url), ''), json_extract(properties, '$.url'))
-    ),
+    url_or_username = COALESCE(sqlc.narg('url_or_username'), url_or_username),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = 'NIGHTSCOUT' AND site_id = sqlc.arg(SiteID);
 
@@ -44,6 +44,7 @@ WHERE type = 'NIGHTSCOUT' AND site_id = sqlc.arg(SiteID);
 INSERT INTO site_sync_sources (
     site_id, 
     type, 
+    url_or_username,
     password, 
     enabled, 
     properties
@@ -51,18 +52,19 @@ INSERT INTO site_sync_sources (
 VALUES (
     ?, 
     'DEXCOM', 
+    ?,
     ?, 
     ?, 
-    json_object('username', sqlc.arg(Username), 'region', sqlc.arg(Region))
+    json_object('region', sqlc.arg(Region))
 );
 
 -- name: UpdateDexcomSyncSource :exec
 UPDATE site_sync_sources SET 
+    url_or_username = COALESCE(sqlc.narg('url_or_username'), url_or_username),
     password = COALESCE(sqlc.narg('password'), password),
     enabled = sqlc.narg(Enabled),
     properties = json_set(
         properties,
-        '$.username', COALESCE(NULLIF(sqlc.narg(Username), ''), json_extract(properties, '$.username')),
         '$.region',   COALESCE(NULLIF(sqlc.narg(Region), ''), json_extract(properties, '$.region'))
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
@@ -78,12 +80,16 @@ WHERE type = 'DEXCOM' AND site_id = sqlc.arg(SiteID);
 INSERT INTO site_sync_sources (
     site_id, 
     type,  
-    enabled
+    enabled,
+    url_or_username,
+    password
 ) 
 VALUES (
     ?, 
     'VIRTUAL', 
-    ?
+    ?,
+    'virtual_username',
+    'virtual_password'
 );
 
 -- name: UpdateVirtualSyncSource :exec

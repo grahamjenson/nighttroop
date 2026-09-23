@@ -798,6 +798,16 @@ func (m *SiteSyncSource) SetProperties(v types.SyncSourceProperties) {
 	m.Properties = v
 }
 
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m SiteSyncSource) GetUrlOrUsername() string {
+	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetUrlOrUsername(v string) {
+	m.UrlOrUsername = v
+}
+
 // GetPassword returns the Password value.
 func (m SiteSyncSource) GetPassword() string {
 	return m.Password
@@ -2649,6 +2659,26 @@ func (m *GetAllSiteSyncSourcesForSiteParams) SetSiteID(v string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m GetSyncSourceParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSyncSourceParams.
+func (m *GetSyncSourceParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m GetSyncSourceParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated GetSyncSourceParams.
+func (m *GetSyncSourceParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m CreateNightscoutSyncSourceParams) GetSiteID() string {
 	return m.SiteID
 }
@@ -2656,6 +2686,16 @@ func (m CreateNightscoutSyncSourceParams) GetSiteID() string {
 // SetSiteID sets the SiteID value and returns the updated CreateNightscoutSyncSourceParams.
 func (m *CreateNightscoutSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
+}
+
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m CreateNightscoutSyncSourceParams) GetUrlOrUsername() string {
+	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateNightscoutSyncSourceParams.
+func (m *CreateNightscoutSyncSourceParams) SetUrlOrUsername(v string) {
+	m.UrlOrUsername = v
 }
 
 // GetPassword returns the Password value.
@@ -2678,16 +2718,6 @@ func (m *CreateNightscoutSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetJsonObject returns the JsonObject value.
-func (m CreateNightscoutSyncSourceParams) GetJsonObject() interface{} {
-	return m.JsonObject
-}
-
-// SetJsonObject sets the JsonObject value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetJsonObject(v interface{}) {
-	m.JsonObject = v
-}
-
 // GetPassword returns the Password value.
 func (m UpdateNightscoutSyncSourceParams) GetPassword() *string {
 	return m.Password
@@ -2708,14 +2738,14 @@ func (m *UpdateNightscoutSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrl returns the Url value.
-func (m UpdateNightscoutSyncSourceParams) GetUrl() interface{} {
-	return m.Url
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m UpdateNightscoutSyncSourceParams) GetUrlOrUsername() *string {
+	return m.UrlOrUsername
 }
 
-// SetUrl sets the Url value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetUrl(v interface{}) {
-	m.Url = v
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateNightscoutSyncSourceParams.
+func (m *UpdateNightscoutSyncSourceParams) SetUrlOrUsername(v *string) {
+	m.UrlOrUsername = v
 }
 
 // GetSiteid returns the Siteid value.
@@ -2738,6 +2768,16 @@ func (m *CreateDexcomSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m CreateDexcomSyncSourceParams) GetUrlOrUsername() string {
+	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateDexcomSyncSourceParams.
+func (m *CreateDexcomSyncSourceParams) SetUrlOrUsername(v string) {
+	m.UrlOrUsername = v
+}
+
 // GetPassword returns the Password value.
 func (m CreateDexcomSyncSourceParams) GetPassword() string {
 	return m.Password
@@ -2758,16 +2798,6 @@ func (m *CreateDexcomSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUsername returns the Username value.
-func (m CreateDexcomSyncSourceParams) GetUsername() interface{} {
-	return m.Username
-}
-
-// SetUsername sets the Username value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetUsername(v interface{}) {
-	m.Username = v
-}
-
 // GetRegion returns the Region value.
 func (m CreateDexcomSyncSourceParams) GetRegion() interface{} {
 	return m.Region
@@ -2776,6 +2806,16 @@ func (m CreateDexcomSyncSourceParams) GetRegion() interface{} {
 // SetRegion sets the Region value and returns the updated CreateDexcomSyncSourceParams.
 func (m *CreateDexcomSyncSourceParams) SetRegion(v interface{}) {
 	m.Region = v
+}
+
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m UpdateDexcomSyncSourceParams) GetUrlOrUsername() *string {
+	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateDexcomSyncSourceParams.
+func (m *UpdateDexcomSyncSourceParams) SetUrlOrUsername(v *string) {
+	m.UrlOrUsername = v
 }
 
 // GetPassword returns the Password value.
@@ -2796,16 +2836,6 @@ func (m UpdateDexcomSyncSourceParams) GetEnabled() bool {
 // SetEnabled sets the Enabled value and returns the updated UpdateDexcomSyncSourceParams.
 func (m *UpdateDexcomSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
-}
-
-// GetUsername returns the Username value.
-func (m UpdateDexcomSyncSourceParams) GetUsername() interface{} {
-	return m.Username
-}
-
-// SetUsername sets the Username value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetUsername(v interface{}) {
-	m.Username = v
 }
 
 // GetRegion returns the Region value.

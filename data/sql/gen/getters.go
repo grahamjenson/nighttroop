@@ -87,6 +87,9 @@ var TypeLookupMap = map[string]map[string]string{
 		"Type":    "consts.SyncSourceType",
 		"Enabled": "bool",
 	},
+	"GetSyncSourceParams": {
+		"Type": "consts.SyncSourceType",
+	},
 	"CreateDexcomSyncSourceParams": {
 		"Type":    "consts.SyncSourceType",
 		"Enabled": "bool",

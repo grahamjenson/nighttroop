@@ -156,6 +156,7 @@ type SiteSyncSource struct {
 	SiteID                     string
 	Type                       consts.SyncSourceType
 	Properties                 types.SyncSourceProperties
+	UrlOrUsername              string
 	Password                   string
 	CreatedAt                  int64
 	UpdatedAt                  int64

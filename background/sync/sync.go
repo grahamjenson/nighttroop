@@ -60,25 +60,23 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 
 	if err != nil {
 		errMsg := err.Error()
-		slog.Error("error syncing user data", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "error", err)
+		slog.Error("error syncing user data", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", err)
 		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), control.UpdateSyncSourceReportsFailureParams{
 			ErrorMessages: []string{errMsg},
 			ElapsedMs:     &elapsedTimeMS,
-			UniqueHash:    syncInfo.UniqueHash,
 		})
 		if updateError != nil {
-			slog.Error("error updating sync source report with failure", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "error", updateError)
+			slog.Error("error updating sync source report with failure", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
 		}
 		return err
 	}
 
-	slog.Info("finished sync", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
+	slog.Info("finished sync", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), control.UpdateSyncSourceReportsSuccessParams{
-		ElapsedMs:  &elapsedTimeMS,
-		UniqueHash: syncInfo.UniqueHash,
+		ElapsedMs: &elapsedTimeMS,
 	})
 	if updateError != nil {
-		slog.Error("error updating sync source report with success", "unique_hash", syncInfo.UniqueHash, "sync_type", syncInfo.Type, "error", updateError)
+		slog.Error("error updating sync source report with success", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
 		return updateError
 	}
 

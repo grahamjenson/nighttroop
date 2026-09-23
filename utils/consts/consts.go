@@ -117,6 +117,7 @@ type SyncSourceType string
 const (
 	SyncSourceTypeNightscout SyncSourceType = "NIGHTSCOUT"
 	SyncSourceTypeDexcom     SyncSourceType = "DEXCOM"
+	SyncSourceTypeVirtual    SyncSourceType = "VIRTUAL"
 )
 
 func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
@@ -125,6 +126,8 @@ func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
 		return SyncSourceTypeNightscout, nil
 	case "DEXCOM":
 		return SyncSourceTypeDexcom, nil
+	case "VIRTUAL":
+		return SyncSourceTypeVirtual, nil
 	default:
 		slog.Error("Invalid sync source type provided", "sync_source_type", s)
 		return "", fmt.Errorf("invalid sync source type: %s", s)

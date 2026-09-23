@@ -18,6 +18,7 @@ const createDexcomSyncSource = `-- name: CreateDexcomSyncSource :exec
 INSERT INTO site_sync_sources (
     site_id, 
     type, 
+    url_or_username,
     password, 
     enabled, 
     properties
@@ -25,18 +26,19 @@ INSERT INTO site_sync_sources (
 VALUES (
     ?, 
     'DEXCOM', 
+    ?,
     ?, 
     ?, 
-    json_object('username', ?4, 'region', ?5)
+    json_object('region', ?5)
 )
 `
 
 type CreateDexcomSyncSourceParams struct {
-	SiteID   string
-	Password string
-	Enabled  bool
-	Username interface{}
-	Region   interface{}
+	SiteID        string
+	UrlOrUsername string
+	Password      string
+	Enabled       bool
+	Region        interface{}
 }
 
 // ---
@@ -45,9 +47,9 @@ type CreateDexcomSyncSourceParams struct {
 func (q *Queries) CreateDexcomSyncSource(ctx context.Context, arg CreateDexcomSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createDexcomSyncSourceStmt, createDexcomSyncSource,
 		arg.SiteID,
+		arg.UrlOrUsername,
 		arg.Password,
 		arg.Enabled,
-		arg.Username,
 		arg.Region,
 	)
 	return err
@@ -58,24 +60,24 @@ const createNightscoutSyncSource = `-- name: CreateNightscoutSyncSource :exec
 INSERT INTO site_sync_sources (
     site_id,
     type,
+    url_or_username,
     password,
-    enabled,
-    properties
+    enabled
 )
 VALUES (
     ?,
     'NIGHTSCOUT',
     ?,
     ?,
-    json_object('url', ?)
+    ?
 )
 `
 
 type CreateNightscoutSyncSourceParams struct {
-	SiteID     string
-	Password   string
-	Enabled    bool
-	JsonObject interface{}
+	SiteID        string
+	UrlOrUsername string
+	Password      string
+	Enabled       bool
 }
 
 // ---
@@ -84,9 +86,9 @@ type CreateNightscoutSyncSourceParams struct {
 func (q *Queries) CreateNightscoutSyncSource(ctx context.Context, arg CreateNightscoutSyncSourceParams) error {
 	_, err := q.exec(ctx, q.createNightscoutSyncSourceStmt, createNightscoutSyncSource,
 		arg.SiteID,
+		arg.UrlOrUsername,
 		arg.Password,
 		arg.Enabled,
-		arg.JsonObject,
 	)
 	return err
 }
@@ -97,12 +99,16 @@ const createVirtualSyncSource = `-- name: CreateVirtualSyncSource :exec
 INSERT INTO site_sync_sources (
     site_id, 
     type,  
-    enabled
+    enabled,
+    url_or_username,
+    password
 ) 
 VALUES (
     ?, 
     'VIRTUAL', 
-    ?
+    ?,
+    'virtual_username',
+    'virtual_password'
 )
 `
 
@@ -138,7 +144,7 @@ func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourcePara
 }
 
 const getAllSiteSyncSourcesForSite = `-- name: GetAllSiteSyncSourcesForSite :many
-SELECT site_id, type, properties, password, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
+SELECT site_id, type, properties, url_or_username, password, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSiteSyncSourcesForSiteParams struct {
@@ -158,6 +164,7 @@ func (q *Queries) GetAllSiteSyncSourcesForSite(ctx context.Context, arg GetAllSi
 			&i.SiteID,
 			&i.Type,
 			&i.Properties,
+			&i.UrlOrUsername,
 			&i.Password,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -195,7 +202,7 @@ const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
 
 
 
-SELECT us.site_id, us.type, us.properties, us.password, us.created_at, us.updated_at, us.enabled, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
+SELECT us.site_id, us.type, us.properties, us.url_or_username, us.password, us.created_at, us.updated_at, us.enabled, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
@@ -227,6 +234,7 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 			&i.SiteID,
 			&i.Type,
 			&i.Properties,
+			&i.UrlOrUsername,
 			&i.Password,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -260,13 +268,53 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 	return items, nil
 }
 
+const getSyncSource = `-- name: GetSyncSource :one
+SELECT site_id, type, properties, url_or_username, password, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ? AND type = ? LIMIT 1
+`
+
+type GetSyncSourceParams struct {
+	SiteID string
+	Type   consts.SyncSourceType
+}
+
+func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*SiteSyncSource, error) {
+	row := q.queryRow(ctx, q.getSyncSourceStmt, getSyncSource, arg.SiteID, arg.Type)
+	var i SiteSyncSource
+	err := row.Scan(
+		&i.SiteID,
+		&i.Type,
+		&i.Properties,
+		&i.UrlOrUsername,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Enabled,
+		&i.SyncIntervalSecondsReason,
+		&i.SyncIntervalSeconds,
+		&i.LastAttemptedSync,
+		&i.LastSuccessfulSync,
+		&i.LastFailedSync,
+		&i.TotalSyncs,
+		&i.TotalSuccessfulSyncs,
+		&i.TotalFailedSyncs,
+		&i.ConsecutiveSuccessfulSyncs,
+		&i.ConsecutiveFailedSyncs,
+		&i.PreviousSyncErrors,
+		&i.TotalEma,
+		&i.SuccessEma,
+		&i.FailureEma,
+		&i.LastSyncDuration,
+	)
+	return &i, err
+}
+
 const updateDexcomSyncSource = `-- name: UpdateDexcomSyncSource :exec
 UPDATE site_sync_sources SET 
-    password = COALESCE(?1, password),
-    enabled = ?2,
+    url_or_username = COALESCE(?1, url_or_username),
+    password = COALESCE(?2, password),
+    enabled = ?3,
     properties = json_set(
         properties,
-        '$.username', COALESCE(NULLIF(?3, ''), json_extract(properties, '$.username')),
         '$.region',   COALESCE(NULLIF(?4, ''), json_extract(properties, '$.region'))
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
@@ -274,18 +322,18 @@ WHERE type = 'DEXCOM' AND site_id = ?5
 `
 
 type UpdateDexcomSyncSourceParams struct {
-	Password *string
-	Enabled  bool
-	Username interface{}
-	Region   interface{}
-	Siteid   string
+	UrlOrUsername *string
+	Password      *string
+	Enabled       bool
+	Region        interface{}
+	Siteid        string
 }
 
 func (q *Queries) UpdateDexcomSyncSource(ctx context.Context, arg UpdateDexcomSyncSourceParams) error {
 	_, err := q.exec(ctx, q.updateDexcomSyncSourceStmt, updateDexcomSyncSource,
+		arg.UrlOrUsername,
 		arg.Password,
 		arg.Enabled,
-		arg.Username,
 		arg.Region,
 		arg.Siteid,
 	)
@@ -296,26 +344,23 @@ const updateNightscoutSyncSource = `-- name: UpdateNightscoutSyncSource :exec
 UPDATE site_sync_sources SET 
     password = COALESCE(?1, password),
     enabled =  ?2,
-    properties = json_set(
-        properties,
-        '$.url', COALESCE(NULLIF(?3, ''), json_extract(properties, '$.url'))
-    ),
+    url_or_username = COALESCE(?3, url_or_username),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = 'NIGHTSCOUT' AND site_id = ?4
 `
 
 type UpdateNightscoutSyncSourceParams struct {
-	Password *string
-	Enabled  bool
-	Url      interface{}
-	Siteid   string
+	Password      *string
+	Enabled       bool
+	UrlOrUsername *string
+	Siteid        string
 }
 
 func (q *Queries) UpdateNightscoutSyncSource(ctx context.Context, arg UpdateNightscoutSyncSourceParams) error {
 	_, err := q.exec(ctx, q.updateNightscoutSyncSourceStmt, updateNightscoutSyncSource,
 		arg.Password,
 		arg.Enabled,
-		arg.Url,
+		arg.UrlOrUsername,
 		arg.Siteid,
 	)
 	return err

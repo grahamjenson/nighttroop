@@ -90,6 +90,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSyncReportsToRunStmt, err = db.PrepareContext(ctx, getSyncReportsToRun); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSyncReportsToRun: %w", err)
 	}
+	if q.getSyncSourceStmt, err = db.PrepareContext(ctx, getSyncSource); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSyncSource: %w", err)
+	}
 	if q.siteExistsStmt, err = db.PrepareContext(ctx, siteExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteExists: %w", err)
 	}
@@ -238,6 +241,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSyncReportsToRunStmt: %w", cerr)
 		}
 	}
+	if q.getSyncSourceStmt != nil {
+		if cerr := q.getSyncSourceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSyncSourceStmt: %w", cerr)
+		}
+	}
 	if q.siteExistsStmt != nil {
 		if cerr := q.siteExistsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing siteExistsStmt: %w", cerr)
@@ -354,6 +362,7 @@ type Queries struct {
 	getSitesToDeleteInBatchStmt        *sql.Stmt
 	getSitesToDisableStmt              *sql.Stmt
 	getSyncReportsToRunStmt            *sql.Stmt
+	getSyncSourceStmt                  *sql.Stmt
 	siteExistsStmt                     *sql.Stmt
 	updateDexcomSyncSourceStmt         *sql.Stmt
 	updateNightscoutSyncSourceStmt     *sql.Stmt
@@ -393,6 +402,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesToDeleteInBatchStmt:        q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:              q.getSitesToDisableStmt,
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
+		getSyncSourceStmt:                  q.getSyncSourceStmt,
 		siteExistsStmt:                     q.siteExistsStmt,
 		updateDexcomSyncSourceStmt:         q.updateDexcomSyncSourceStmt,
 		updateNightscoutSyncSourceStmt:     q.updateNightscoutSyncSourceStmt,

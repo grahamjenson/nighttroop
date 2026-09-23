@@ -253,7 +253,8 @@ CREATE TABLE site_sync_sources (
     type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM', 'VIRTUAL')),
 
     properties TEXT NOT NULL DEFAULT '{}' CHECK(length(properties) <= 2046), -- JSON blob for properties, e.g. url, username dex region
-
+    
+    url_or_username TEXT NOT NULL CHECK(length(url_or_username) <= 256),
     password TEXT NOT NULL CHECK(length(password) <= 256), -- or ns token
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

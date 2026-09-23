@@ -14,7 +14,7 @@ import (
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	if len(syncInfo.userSyncSources) == 0 {
-		return fmt.Errorf("Nightscout: No user sync sources found for unique hash: %s", syncInfo.UniqueHash)
+		return fmt.Errorf("Nightscout: No user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
 	}
 
 	nsc := nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password)

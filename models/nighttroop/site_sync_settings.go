@@ -8,7 +8,6 @@ type SiteSyncSettings struct {
 }
 
 type NightscoutSyncSettings struct {
-	ID      int64  `json:"id"`
 	URL     string `json:"url"`
 	Enabled bool   `json:"enabled"`
 }
@@ -35,7 +34,6 @@ func (n *NightscoutSyncSettings) IsEnabled() bool {
 }
 
 type DexcomSyncSettings struct {
-	ID        int64  `json:"id"`
 	Username  string `json:"username"`
 	USARegion bool   `json:"usa_region"`
 	Enabled   bool   `json:"enabled"`
