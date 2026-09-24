@@ -50,12 +50,12 @@ func FuzzRequestFiles(f *testing.F) {
 		}
 
 		for _, requests := range requestFile.Requests {
-			if requests.Body == "" {
+			if requests.Body == nil {
 				continue
 			}
 			var bodyJSON map[string]any
 
-			err := json.Unmarshal([]byte(requests.Body), &bodyJSON)
+			err := json.Unmarshal([]byte(*requests.Body), &bodyJSON)
 			if err != nil {
 				continue
 			}

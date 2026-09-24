@@ -60,7 +60,6 @@ const (
 	IdentityTypeAdmin  IdentityType = "admin"
 	IdentityTypeUser   IdentityType = "user"
 	IdentityTypeDevice IdentityType = "device"
-	IdentityTypeSync   IdentityType = "sync"
 )
 
 func (i IdentityRole) GetType() IdentityType {

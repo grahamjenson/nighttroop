@@ -85,50 +85,44 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 			t.Fatalf("failed to parse request file: %v", err)
 		}
 		for _, request := range requestFile.Requests {
-			realRequest, err := request.BuildRealRequest(requestContext)
+
 			if err != nil {
 				t.Fatalf("failed to build real request: %v", err)
 			}
 
-			if request.IsFunction {
-				requestContext, err = realRequest.ExecuteFunction(requestContext)
-				if err != nil {
-					t.Fatalf("failed to execute function: %v", err)
-				}
+			fmt.Println()
+			fmt.Println("=============== " + request.Name + "  ================")
+			fmt.Println()
+			request.PrintRequest()
+			fmt.Println()
+			fmt.Println("- - - - - - - - - - - - - - - - ")
+			fmt.Println()
+			// default information
 
-			} else {
-				fmt.Println()
-				fmt.Println("=============== " + request.Name + "  ================")
-				fmt.Println()
-				realRequest.PrintRequest()
-				fmt.Println()
-				fmt.Println("- - - - - - - - - - - - - - - - ")
-				fmt.Println()
-				// default information
-
-				statusCode, output, headers, newContext, err := realRequest.ExecuteRequest(router, requestContext)
-				if err != nil {
-					t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, realRequest.Method, realRequest.URL)
-				}
-				requestContext = newContext
-				fmt.Println()
-				fmt.Println("- - - - - - - - - - - - - - - - ")
-				fmt.Println()
-				fmt.Printf("STATUS CODE: %d\n", statusCode)
-				var buf bytes.Buffer
-				encoder := json.NewEncoder(&buf)
-				encoder.SetEscapeHTML(false)
-				encoder.SetIndent("", "  ")
-				if err := encoder.Encode(output); err != nil {
-					fmt.Printf("RESPONSE: %s and failed to format response: %v\n", output, err)
-				} else {
-					fmt.Printf("RESPONSE:\n%s", buf.String())
-				}
-				fmt.Println("===============================")
-
-				realRequest.ExecuteAsserts(t, statusCode, output, headers, requestContext)
-
+			newContext, err := request.ExecuteRequest(t, router, requestContext)
+			if err != nil {
+				t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, request.Method, request.URL)
 			}
+
+			output := newContext[request.Name]
+			statusCode := newContext[request.Name+"_status"]
+
+			requestContext = newContext
+			fmt.Println()
+			fmt.Println("- - - - - - - - - - - - - - - - ")
+			fmt.Println()
+			fmt.Printf("STATUS CODE: %d\n", statusCode)
+			var buf bytes.Buffer
+			encoder := json.NewEncoder(&buf)
+			encoder.SetEscapeHTML(false)
+			encoder.SetIndent("", "  ")
+			if err := encoder.Encode(output); err != nil {
+				fmt.Printf("RESPONSE: %s and failed to format response: %v\n", output, err)
+			} else {
+				fmt.Printf("RESPONSE:\n%s", buf.String())
+			}
+			fmt.Println("===============================")
+
 		}
 	})
 }

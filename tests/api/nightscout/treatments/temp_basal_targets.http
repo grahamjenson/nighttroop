@@ -1,21 +1,13 @@
 NAME create_new_site
 POST http://localhost/site
 ASSERT_STATUS 200
-
-# Assign the token to a variable
-NAME token
-SET {{ .create_new_site.pwd_nstoken }}
-
-NAME site
-SET {{ .create_new_site.site_subdomain }}.ns.localhost
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME jwtauth
 GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
 ASSERT_STATUS 200
-
-# Auth with JWT
-NAME jwt
-SET {{ .jwtauth.token }}
+SET jwt {{ .jwtauth.token }}
 
 
 NAME create_profile_switch_v3

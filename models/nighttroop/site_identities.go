@@ -15,6 +15,7 @@ type UserIdentity struct {
 	LastSeen        string
 	LastWrite       string
 	Role            string
+	Type            string
 	CurrentIdentity bool
 	HasTotpSecret   bool
 
@@ -37,12 +38,13 @@ func IdentityModelToUserIdentity(identity *control.SiteIdentity, currentIdentity
 		lastWrite = time.UnixMilli(*identity.LastWriteAt).Format("2006-01-02 15:04:05")
 	}
 	return &UserIdentity{
-		ID:              strconv.Itoa(int(identity.ID)),
-		Name:            identity.Name,
-		Created:         time.UnixMilli(identity.CreatedAt).Format("2006-01-02 15:04:05"),
-		LastSeen:        lastSeen,
-		LastWrite:       lastWrite,
-		Role:            string(identity.Role),
+		ID:        strconv.Itoa(int(identity.ID)),
+		Name:      identity.Name,
+		Created:   time.UnixMilli(identity.CreatedAt).Format("2006-01-02 15:04:05"),
+		LastSeen:  lastSeen,
+		LastWrite: lastWrite,
+		Role:      string(identity.Role),
+
 		CurrentIdentity: identity.Name == currentIdentityName,
 		HasTotpSecret:   identity.TotpSecret != "",
 		Enabled:         identity.Enabled,

@@ -53,8 +53,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Delete("/settings/identities/{id}", settings.DELETEIdentityHandler(controlDB, config))
 
 		// Settings Settings
-		r.Get("/settings/settings", settings.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/settings/settings", settings.GetSyncSettingsHandler(controlDB, config))
+		r.Get("/settings/config", settings.GETConfigSettingsHandler(controlDB, config))
+		r.Post("/settings/config", settings.POSTConfigSettingsHandler(controlDB, config))
 
 		// Actions
 		r.Post("/logout", site.POSTLogoutHandler(config))
