@@ -6,12 +6,15 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/settings"
 )
 
 const siteContextKey = "user_context"
 
 type SiteContext struct {
+	Config *config.ServerConfig
+
 	ControlDB *db.ControlDB
 	SiteDB    *db.SiteDB
 	SiteModel *control.Site
@@ -21,7 +24,9 @@ type SiteContext struct {
 	Subdomain string
 	IPAddress string
 
-	HTTPAction HTTPAction
+	HTTPAction  HTTPAction
+	AcceptType  AcceptType
+	ContentType ContentType
 
 	settings *settings.CombinedSettingsMap
 }
@@ -40,14 +45,17 @@ func GetSiteContext(ctx context.Context) *SiteContext {
 // SiteDB
 ////
 
-func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string, ipAddress string, httpAction HTTPAction) context.Context {
+func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string, ipAddress string, httpAction HTTPAction, acceptType AcceptType, contentType ContentType) context.Context {
 	siteContext := &SiteContext{}
+	siteContext.Config = config
 	siteContext.ControlDB = controlDB
 	siteContext.SiteDB = siteDB
 	siteContext.SiteModel = siteModel
 	siteContext.Subdomain = subdomain
 	siteContext.IPAddress = ipAddress
 	siteContext.HTTPAction = httpAction
+	siteContext.AcceptType = acceptType
+	siteContext.ContentType = contentType
 
 	return context.WithValue(ctx, siteContextKey, siteContext)
 }

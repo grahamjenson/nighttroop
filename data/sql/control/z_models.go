@@ -5,7 +5,6 @@
 package control
 
 import (
-	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 )
@@ -153,11 +152,12 @@ type SiteIdentity struct {
 }
 
 type SiteSyncSource struct {
+	ID                         int64
 	SiteID                     string
 	Type                       consts.SyncSourceType
-	Properties                 types.SyncSourceProperties
 	UrlOrUsername              string
 	Password                   string
+	Region                     *string
 	CreatedAt                  int64
 	UpdatedAt                  int64
 	Enabled                    bool

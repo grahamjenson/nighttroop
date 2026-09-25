@@ -9,20 +9,176 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
 	"nighttroop.t1d.nz/models/nighttroop"
 
-	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/site/siteutils"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
-	"nighttroop.t1d.nz/utils/security"
 )
+
+type SyncSettingsStore struct{}
+
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *nighttroop.SiteSyncSource) (bool, *siteutils.HTTPError) {
+	params := nighttroop.SyncSourceToCreate(model)
+	params.SiteID = siteContext.Subdomain
+
+	params.UrlOrUsername = strings.TrimSpace(params.UrlOrUsername)
+	if params.UrlOrUsername == "" {
+		return false, siteutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+	}
+
+	security := siteContext.Config.Security
+	var err error
+
+	// Nightscout specific validation and normalization
+	if params.Type == consts.SyncSourceTypeNightscout {
+		params.UrlOrUsername, err = nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
+		if err != nil {
+			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
+			return false, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", params.UrlOrUsername, err))
+		}
+	}
+
+	if params.Password == "" {
+		return false, siteutils.ErrMissingRequiredFieldWithHint("password")
+	}
+
+	params.Password, err = security.Encrypt(params.Password)
+	if err != nil {
+		return false, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
+	}
+
+	params.UrlOrUsername, err = security.Encrypt(params.UrlOrUsername)
+	if err != nil {
+		return false, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
+	}
+
+	err = siteContext.ControlDB.Queries.CreateSyncSource(ctx, params)
+	if err != nil {
+		if errors.IsSQLUniqueViolationError(err) {
+			return false, siteutils.ErrUniqueConstraintViolation
+		}
+		if errors.IsSQLConstraintNotNull(err) {
+			return false, siteutils.ErrMissingRequiredField
+		}
+		if errors.IsSQLConstraintCheck(err) {
+			return false, siteutils.ErrConstraintCheckFailed
+		}
+		return false, siteutils.ErrBadBody
+	}
+	return true, nil
+}
+
+func (s *SyncSettingsStore) CreateHTMXResponse(model *nighttroop.SiteSyncSource) templ.Component {
+	return site_settings_templ.SuccessfulUpdate(model)
+}
+
+func (s *SyncSettingsStore) CreateHTMLResponse(model *nighttroop.SiteSyncSource) templ.Component {
+	return site_settings_templ.SuccessfulUpdate(model)
+}
+
+func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*nighttroop.SiteSyncSource, *siteutils.HTTPError) {
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
+	}
+
+	model, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, control.GetSyncSourceParams{
+		ID:     int64(idInt),
+		SiteID: siteContext.Subdomain,
+	})
+
+	if err != nil {
+		return nil, siteutils.ErrBadBody
+	}
+	if model == nil {
+		return nil, siteutils.ErrNotFound
+	}
+
+	return nighttroop.SyncSourceFromDB(model), nil
+}
+
+func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *nighttroop.SiteSyncSource, model *nighttroop.SiteSyncSource) *siteutils.HTTPError {
+	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
+		return siteutils.ErrRateLimitExceeded(seconds)
+	}
+
+	params := nighttroop.SyncSourceToUpdate(model)
+	params.SiteID = siteContext.Subdomain
+
+	var err error
+
+	if params.UrlOrUsername != nil && strings.TrimSpace(*params.UrlOrUsername) == "" {
+		return siteutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+	}
+
+	security := siteContext.Config.Security
+
+	// Nightscout specific validation and normalization
+	if oldModel.Type == consts.SyncSourceTypeNightscout {
+		if params.UrlOrUsername != nil {
+			*params.UrlOrUsername, err = nsURLNormalizeValidate(*params.UrlOrUsername, siteContext.Config)
+			if err != nil {
+				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
+				return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", params.UrlOrUsername, err))
+			}
+		}
+	}
+
+	if params.Password != nil {
+		if strings.TrimSpace(*params.Password) == "" || *params.Password == consts.PASSWORD_GARBAGE_VALUE {
+			params.Password = nil
+		} else {
+			*params.Password, err = security.Encrypt(*params.Password)
+			if err != nil {
+				return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Password: %s", err))
+			}
+
+		}
+	}
+
+	if params.UrlOrUsername != nil {
+		*params.UrlOrUsername, err = security.Encrypt(*params.UrlOrUsername)
+		if err != nil {
+			return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt URL Or Username: %s", err))
+		}
+	}
+
+	err = siteContext.ControlDB.Queries.UpdateSyncSource(ctx, params)
+	if err != nil {
+		if errors.IsSQLUniqueViolationError(err) {
+			return siteutils.ErrUniqueConstraintViolation
+		}
+		if errors.IsSQLConstraintNotNull(err) {
+			return siteutils.ErrMissingRequiredField
+		}
+		if errors.IsSQLConstraintCheck(err) {
+			return siteutils.ErrConstraintCheckFailed
+		}
+		return siteutils.ErrBadBody
+	}
+
+	return nil
+}
+
+func (s *SyncSettingsStore) UpdateHTMXResponse(model *nighttroop.SiteSyncSource) templ.Component {
+	return site_settings_templ.SuccessfulUpdate(model)
+}
+
+func (s *SyncSettingsStore) UpdateHTMLResponse(model *nighttroop.SiteSyncSource) templ.Component {
+	return site_settings_templ.SuccessfulUpdate(model)
+}
+
+func (s *SyncSettingsStore) GetName() string {
+	return "sync_settings"
+}
 
 func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +195,9 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		nightscout, dexcom, err := GetAllSiteSyncSources(ctx, controlDB, siteContext.Subdomain)
+		dbSyncSources, err := controlDB.Queries.GetAllSyncSourcesForSite(ctx, control.GetAllSyncSourcesForSiteParams{
+			SiteID: siteContext.Subdomain,
+		})
 
 		if err != nil {
 			slog.Error("Failed to get sync sources from DB", "error", err)
@@ -47,36 +205,23 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		syncSettings := nighttroop.SiteSyncSettings{}
-
-		if nightscout != nil {
-			syncSettings.NightscoutSyncSettings = &nighttroop.NightscoutSyncSettings{}
-
-			syncSettings.NightscoutSyncSettings.URL, err = config.Security.Decrypt(nightscout.UrlOrUsername)
+		modelSyncSources := []*nighttroop.SiteSyncSource{}
+		for _, dbSyncSource := range dbSyncSources {
+			modelSyncSource := nighttroop.SyncSourceFromDB(dbSyncSource)
+			modelSyncSource.Password = consts.PASSWORD_GARBAGE_VALUE
+			modelSyncSource.UrlOrUsername, err = config.Security.Decrypt(modelSyncSource.UrlOrUsername)
 			if err != nil {
-				slog.Error("Failed to decrypt Nightscout URL from DB", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-			syncSettings.NightscoutSyncSettings.Enabled = nightscout.Enabled
-
-		}
-
-		if dexcom != nil {
-			syncSettings.DexcomSyncSettings = &nighttroop.DexcomSyncSettings{}
-			syncSettings.DexcomSyncSettings.Username, err = config.Security.Decrypt(dexcom.UrlOrUsername)
-			if err != nil {
-				slog.Error("Failed to decrypt Dexcom username from DB", "error", err)
+				slog.Error("Failed to decrypt sync source URL or username from DB", "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
 
-			syncSettings.DexcomSyncSettings.Region = dexcom.Properties.DexcomRegion()
-			syncSettings.DexcomSyncSettings.Enabled = dexcom.Enabled
+			modelSyncSources = append(modelSyncSources, modelSyncSource)
+
 		}
 
 		if acceptType == httputils.AcceptTypeHTML {
-			err = site_settings_templ.SyncSettingsFull(syncSettings).Render(r.Context(), w)
+			err = site_settings_templ.SyncSettingsFull(modelSyncSources).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTML template", "subdomain", siteContext.Subdomain)
 				return
@@ -85,7 +230,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		}
 
 		if acceptType == httputils.AcceptTypeHTMX {
-			err = site_settings_templ.SyncSettingsPartial(syncSettings).Render(r.Context(), w)
+			err = site_settings_templ.SyncSettingsPartial(modelSyncSources).Render(r.Context(), w)
 			if err != nil {
 				errors.TemplateFailureError(w, r, err, "Failed to render sync settings HTMX template", "subdomain", siteContext.Subdomain)
 				return
@@ -100,146 +245,9 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 	}
 }
 
-func GetAllSiteSyncSources(ctx context.Context, db *db.ControlDB, subdomain string) (nightscout *control.SiteSyncSource, dexcom *control.SiteSyncSource, err error) {
-	// TODO: This might become a problem we could make faster with a dirty flag or something
-	sync_sources, err := db.Queries.GetAllSiteSyncSourcesForSite(ctx, control.GetAllSiteSyncSourcesForSiteParams{
-		SiteID: subdomain,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("error getting sync sources: %w", err)
-	}
-
-	for _, ss := range sync_sources {
-		if ss.Type == consts.SyncSourceTypeNightscout {
-			nightscout = ss
-		}
-		if ss.Type == consts.SyncSourceTypeDexcom {
-			dexcom = ss
-		}
-	}
-
-	return nightscout, dexcom, nil
-
-}
-
-func POSTSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(config, r); !allowed {
-			http.Error(w, "Too Many Requests wait "+strconv.Itoa(seconds)+" seconds", http.StatusTooManyRequests)
-			return
-		}
-
-		syncSourceTypeStr := chi.URLParam(r, "type")
-		if syncSourceTypeStr == "" {
-			http.Error(w, "Bad Request: Missing type", http.StatusBadRequest)
-			return
-		}
-
-		syncSourceType, err := consts.NewSyncSourceTypeFromString(strings.ToUpper(syncSourceTypeStr))
-		if err != nil {
-			http.Error(w, "Bad Request: Invalid type", http.StatusBadRequest)
-			return
-		}
-
-		acceptType := httputils.GetAcceptType(r)
-		siteContext := httputils.GetSiteContext(r.Context())
-
-		ctx := r.Context()
-
-		// 1. Parse and validate form inputs
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-
-		nightscout, dexcom, err := GetAllSiteSyncSources(ctx, controlDB, siteContext.Subdomain)
-
-		if err != nil {
-			slog.Error("Failed to get sync sources from DB", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		if syncSourceType == consts.SyncSourceTypeNightscout {
-			err = saveNightScoutSettings(ctx, siteContext.Subdomain, controlDB, config, nightscout, r.FormValue("ns_url"), r.FormValue("ns_password"), r.FormValue("ns_enabled") == "on")
-		} else {
-			err = saveDexcomSettings(ctx, siteContext.Subdomain, controlDB, config.Security, dexcom, r.FormValue("dex_username"), r.FormValue("dex_password"), consts.NewDexcomRegionFromString(r.FormValue("dex_region")), r.FormValue("dex_enabled") == "on")
-		}
-
-		if err != nil {
-			slog.Error("Validation error for sync settings inputs", "error", err)
-			site_templ.Fail().Render(r.Context(), w)
-			return
-		}
-
-		if acceptType == httputils.AcceptTypeHTML {
-			// After saving, redirect back to the sync settings page
-			http.Redirect(w, r, "/settings/sync", http.StatusSeeOther)
-			return
-		}
-
-		if acceptType == httputils.AcceptTypeHTMX {
-			site_templ.Success().Render(r.Context(), w)
-			return
-		}
-
-		// Default to JSON response for unsupported types
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		jsonResponce := []byte(`{"message": "Sync settings saved successfully!"}`)
-		_, err = w.Write(jsonResponce)
-		if err != nil {
-			slog.Error("Failed to write JSON response for successful sync settings save", "error", err)
-		}
-	}
-}
-
 func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		acceptType := httputils.GetAcceptType(r)
-		siteContext := httputils.GetSiteContext(r.Context())
-
-		// 1. Extract ID from URL path
-		typeStr := chi.URLParam(r, "type")
-		if typeStr == "" {
-			http.Error(w, "Bad Request: Missing type", http.StatusBadRequest)
-			return
-		}
-
-		type_, err := consts.NewSyncSourceTypeFromString(strings.ToUpper(typeStr))
-		if err != nil {
-			http.Error(w, "Bad Request: Invalid type", http.StatusBadRequest)
-			return
-		}
-
-		err = controlDB.Queries.DeleteSyncSource(r.Context(), control.DeleteSyncSourceParams{
-			SiteID: siteContext.Subdomain,
-			Type:   type_,
-		})
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		if acceptType == httputils.AcceptTypeHTML {
-			// After deletion, redirect back to the sync settings page
-			http.Redirect(w, r, "/settings/sync", http.StatusSeeOther)
-			return
-		}
-
-		if acceptType == httputils.AcceptTypeHTMX {
-			// Return a success message that HTMX can use to trigger a toast notification
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-			w.Header().Set("HX-Redirect", "/settings/sync")
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		// Default to JSON response for unsupported types
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "success"}`))
+		w.WriteHeader(http.StatusNotImplemented)
 	}
 }
 
@@ -252,72 +260,6 @@ func GetSyncSettingsReportsHandler(controlDB *db.ControlDB, config *config.Serve
 ///////
 // UTIL METHODS
 ////////
-
-func saveNightScoutSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, config *config.ServerConfig, nightscout *control.SiteSyncSource, nsUrl string, nsPassword string, enabled bool) error {
-	nsUrl = strings.TrimSpace(nsUrl)
-	if nsUrl == "" {
-		return fmt.Errorf("Nightscout URL cannot be empty. ")
-	}
-
-	security := config.Security
-	var err error
-	errMsg := ""
-
-	nsUrl, err = nsURLNormalizeValidate(nsUrl, config)
-	if err != nil {
-		slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", nsUrl)
-		errMsg += fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", nsUrl, err)
-	}
-
-	if nsPassword == "" {
-		errMsg += "Nightscout password cannot be empty. "
-
-	}
-
-	if errMsg != "" {
-		return fmt.Errorf("%s", errMsg)
-	}
-
-	encPassword, err := security.Encrypt(nsPassword)
-	if err != nil {
-		return fmt.Errorf("Failed to encrypt Nightscout password: %w", err)
-	}
-
-	encUrl, err := security.Encrypt(nsUrl)
-	if err != nil {
-		return fmt.Errorf("Failed to encrypt Nightscout URL: %w", err)
-	}
-
-	if nightscout == nil { // NEW
-		err = controlDB.Queries.CreateNightscoutSyncSource(ctx, control.CreateNightscoutSyncSourceParams{
-			SiteID:        subdomain,
-			Password:      encPassword,
-			Enabled:       enabled,
-			UrlOrUsername: encUrl,
-		})
-		if err != nil {
-			return fmt.Errorf("Failed to create Nightscout sync source: %w", err)
-		}
-		return nil
-	}
-
-	password := &encPassword
-	if nsPassword == consts.PASSWORD_GARBAGE_VALUE {
-		password = nil
-	}
-
-	err = controlDB.Queries.UpdateNightscoutSyncSource(ctx, control.UpdateNightscoutSyncSourceParams{
-		Siteid:        subdomain,
-		Password:      password,
-		Enabled:       enabled,
-		UrlOrUsername: &encUrl,
-	})
-	if err != nil {
-		return fmt.Errorf("Failed to update Nightscout sync source: %w", err)
-	}
-
-	return nil
-}
 
 func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string, error) {
 	errMsg := ""
@@ -364,63 +306,4 @@ func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string,
 	}
 
 	return normalizedUrl, nil
-}
-
-func saveDexcomSettings(ctx context.Context, subdomain string, controlDB *db.ControlDB, security *security.SecurityConfig, dexcom *control.SiteSyncSource, dexUsername string, dexPassword string, region consts.DexcomRegion, dexEnabled bool) error {
-	var err error
-	errMsg := ""
-	if dexUsername == "" {
-		errMsg += "Dexcom username cannot be empty. "
-	}
-	if dexPassword == "" {
-		errMsg += "Dexcom password cannot be empty. "
-	}
-
-	if errMsg != "" {
-		return fmt.Errorf("%s", errMsg)
-	}
-
-	encPassword, err := security.Encrypt(dexPassword)
-	if err != nil {
-		return fmt.Errorf("Failed to encrypt Dexcom password: %w", err)
-	}
-
-	encUsername, err := security.Encrypt(dexUsername)
-	if err != nil {
-		return fmt.Errorf("Failed to encrypt Dexcom username: %w", err)
-	}
-
-	if dexcom == nil { // NEW
-
-		err = controlDB.Queries.CreateDexcomSyncSource(ctx, control.CreateDexcomSyncSourceParams{
-			SiteID:        subdomain,
-			Password:      encPassword,
-			Enabled:       dexEnabled,
-			UrlOrUsername: encUsername,
-			Region:        region,
-		})
-		if err != nil {
-			return fmt.Errorf("Failed to create Dexcom sync source: %w", err)
-		}
-		return nil
-	}
-
-	password := &encPassword
-	if dexPassword == consts.PASSWORD_GARBAGE_VALUE {
-		password = nil
-	}
-
-	err = controlDB.Queries.UpdateDexcomSyncSource(ctx, control.UpdateDexcomSyncSourceParams{
-		Siteid:        subdomain,
-		Password:      password,
-		Enabled:       dexEnabled,
-		UrlOrUsername: &encUsername,
-		Region:        region,
-	})
-
-	if err != nil {
-		return fmt.Errorf("Failed to update Dexcom sync source: %w", err)
-	}
-
-	return nil
 }

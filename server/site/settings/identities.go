@@ -17,21 +17,8 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type IdentityRenderer struct{}
-
-func (ir *IdentityRenderer) RenderPartial(ctx context.Context, w http.ResponseWriter) error {
-	// TODO: Implement partial rendering logic
-	return nil
-}
-
-func (ir *IdentityRenderer) RenderJSON(ctx context.Context, w http.ResponseWriter) error {
-	// TODO: Implement JSON rendering logic
-	return nil
-}
-
-func (ir *IdentityRenderer) RenderHTML(ctx context.Context, w http.ResponseWriter) error {
-	// TODO: Implement HTML rendering logic
-	return nil
+type IdentitiesStore struct {
+	ID int64
 }
 
 func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {

@@ -75,11 +75,11 @@ func IdentityHTTPWithinRateLimit(serverConfig *config.ServerConfig, r *http.Requ
 	return WithinRateLimitAll(limiter)
 }
 
-func UserUpdateSyncWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
-	siteContext := GetSiteContext(r.Context())
+func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
+
 	userSubdomain := siteContext.Subdomain
 
-	writeLimiter := serverConfig.RateLimiters.SiteUpdateSyncLimiter(userSubdomain)
+	writeLimiter := siteContext.Config.RateLimiters.SiteUpdateSyncLimiter(userSubdomain)
 
 	return WithinRateLimitAll(writeLimiter)
 }

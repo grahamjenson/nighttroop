@@ -4,7 +4,6 @@ package control
 import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
-	"nighttroop.t1d.nz/data/types"
 )
 
 
@@ -768,6 +767,16 @@ func (m *SiteIdentity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
+// GetID returns the ID value.
+func (m SiteSyncSource) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetID(v int64) {
+	m.ID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m SiteSyncSource) GetSiteID() string {
 	return m.SiteID
@@ -788,16 +797,6 @@ func (m *SiteSyncSource) SetType(v consts.SyncSourceType) {
 	m.Type = v
 }
 
-// GetProperties returns the Properties value.
-func (m SiteSyncSource) GetProperties() types.SyncSourceProperties {
-	return m.Properties
-}
-
-// SetProperties sets the Properties value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetProperties(v types.SyncSourceProperties) {
-	m.Properties = v
-}
-
 // GetUrlOrUsername returns the UrlOrUsername value.
 func (m SiteSyncSource) GetUrlOrUsername() string {
 	return m.UrlOrUsername
@@ -816,6 +815,16 @@ func (m SiteSyncSource) GetPassword() string {
 // SetPassword sets the Password value and returns the updated SiteSyncSource.
 func (m *SiteSyncSource) SetPassword(v string) {
 	m.Password = v
+}
+
+// GetRegion returns the Region value.
+func (m SiteSyncSource) GetRegion() *string {
+	return m.Region
+}
+
+// SetRegion sets the Region value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetRegion(v *string) {
+	m.Region = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -2648,14 +2657,14 @@ func (m *UpdateSiteIdentityDateFlagsParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m GetAllSiteSyncSourcesForSiteParams) GetSiteID() string {
-	return m.SiteID
+// GetID returns the ID value.
+func (m GetSyncSourceParams) GetID() int64 {
+	return m.ID
 }
 
-// SetSiteID sets the SiteID value and returns the updated GetAllSiteSyncSourcesForSiteParams.
-func (m *GetAllSiteSyncSourcesForSiteParams) SetSiteID(v string) {
-	m.SiteID = v
+// SetID sets the ID value and returns the updated GetSyncSourceParams.
+func (m *GetSyncSourceParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2668,244 +2677,144 @@ func (m *GetSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetType returns the Type value.
-func (m GetSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated GetSyncSourceParams.
-func (m *GetSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
 // GetSiteID returns the SiteID value.
-func (m CreateNightscoutSyncSourceParams) GetSiteID() string {
+func (m GetAllSyncSourcesForSiteParams) GetSiteID() string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetSiteID(v string) {
+// SetSiteID sets the SiteID value and returns the updated GetAllSyncSourcesForSiteParams.
+func (m *GetAllSyncSourcesForSiteParams) SetSiteID(v string) {
 	m.SiteID = v
-}
-
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m CreateNightscoutSyncSourceParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
-}
-
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
-}
-
-// GetPassword returns the Password value.
-func (m CreateNightscoutSyncSourceParams) GetPassword() string {
-	return m.Password
-}
-
-// SetPassword sets the Password value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetPassword(v string) {
-	m.Password = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m CreateNightscoutSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated CreateNightscoutSyncSourceParams.
-func (m *CreateNightscoutSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetPassword returns the Password value.
-func (m UpdateNightscoutSyncSourceParams) GetPassword() *string {
-	return m.Password
-}
-
-// SetPassword sets the Password value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetPassword(v *string) {
-	m.Password = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m UpdateNightscoutSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateNightscoutSyncSourceParams) GetUrlOrUsername() *string {
-	return m.UrlOrUsername
-}
-
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetUrlOrUsername(v *string) {
-	m.UrlOrUsername = v
-}
-
-// GetSiteid returns the Siteid value.
-func (m UpdateNightscoutSyncSourceParams) GetSiteid() string {
-	return m.Siteid
-}
-
-// SetSiteid sets the Siteid value and returns the updated UpdateNightscoutSyncSourceParams.
-func (m *UpdateNightscoutSyncSourceParams) SetSiteid(v string) {
-	m.Siteid = v
 }
 
 // GetSiteID returns the SiteID value.
-func (m CreateDexcomSyncSourceParams) GetSiteID() string {
+func (m CreateSyncSourceParams) GetSiteID() string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetSiteID(v string) {
+// SetSiteID sets the SiteID value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
-}
-
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m CreateDexcomSyncSourceParams) GetUrlOrUsername() string {
-	return m.UrlOrUsername
-}
-
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetUrlOrUsername(v string) {
-	m.UrlOrUsername = v
-}
-
-// GetPassword returns the Password value.
-func (m CreateDexcomSyncSourceParams) GetPassword() string {
-	return m.Password
-}
-
-// SetPassword sets the Password value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetPassword(v string) {
-	m.Password = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m CreateDexcomSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetRegion returns the Region value.
-func (m CreateDexcomSyncSourceParams) GetRegion() interface{} {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated CreateDexcomSyncSourceParams.
-func (m *CreateDexcomSyncSourceParams) SetRegion(v interface{}) {
-	m.Region = v
-}
-
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateDexcomSyncSourceParams) GetUrlOrUsername() *string {
-	return m.UrlOrUsername
-}
-
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetUrlOrUsername(v *string) {
-	m.UrlOrUsername = v
-}
-
-// GetPassword returns the Password value.
-func (m UpdateDexcomSyncSourceParams) GetPassword() *string {
-	return m.Password
-}
-
-// SetPassword sets the Password value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetPassword(v *string) {
-	m.Password = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m UpdateDexcomSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetRegion returns the Region value.
-func (m UpdateDexcomSyncSourceParams) GetRegion() interface{} {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetRegion(v interface{}) {
-	m.Region = v
-}
-
-// GetSiteid returns the Siteid value.
-func (m UpdateDexcomSyncSourceParams) GetSiteid() string {
-	return m.Siteid
-}
-
-// SetSiteid sets the Siteid value and returns the updated UpdateDexcomSyncSourceParams.
-func (m *UpdateDexcomSyncSourceParams) SetSiteid(v string) {
-	m.Siteid = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CreateVirtualSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreateVirtualSyncSourceParams.
-func (m *CreateVirtualSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m CreateVirtualSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated CreateVirtualSyncSourceParams.
-func (m *CreateVirtualSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m UpdateVirtualSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateVirtualSyncSourceParams.
-func (m *UpdateVirtualSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetSiteid returns the Siteid value.
-func (m UpdateVirtualSyncSourceParams) GetSiteid() string {
-	return m.Siteid
-}
-
-// SetSiteid sets the Siteid value and returns the updated UpdateVirtualSyncSourceParams.
-func (m *UpdateVirtualSyncSourceParams) SetSiteid(v string) {
-	m.Siteid = v
 }
 
 // GetType returns the Type value.
-func (m DeleteSyncSourceParams) GetType() consts.SyncSourceType {
+func (m CreateSyncSourceParams) GetType() consts.SyncSourceType {
 	return m.Type
 }
 
-// SetType sets the Type value and returns the updated DeleteSyncSourceParams.
-func (m *DeleteSyncSourceParams) SetType(v consts.SyncSourceType) {
+// SetType sets the Type value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetType(v consts.SyncSourceType) {
 	m.Type = v
+}
+
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m CreateSyncSourceParams) GetUrlOrUsername() string {
+	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetUrlOrUsername(v string) {
+	m.UrlOrUsername = v
+}
+
+// GetPassword returns the Password value.
+func (m CreateSyncSourceParams) GetPassword() string {
+	return m.Password
+}
+
+// SetPassword sets the Password value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetPassword(v string) {
+	m.Password = v
+}
+
+// GetRegion returns the Region value.
+func (m CreateSyncSourceParams) GetRegion() *string {
+	return m.Region
+}
+
+// SetRegion sets the Region value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetRegion(v *string) {
+	m.Region = v
+}
+
+// GetEnabled returns the Enabled value.
+func (m CreateSyncSourceParams) GetEnabled() bool {
+	return m.Enabled
+}
+
+// SetEnabled sets the Enabled value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
+// GetPassword returns the Password value.
+func (m UpdateSyncSourceParams) GetPassword() *string {
+	return m.Password
+}
+
+// SetPassword sets the Password value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetPassword(v *string) {
+	m.Password = v
+}
+
+// GetEnabled returns the Enabled value.
+func (m UpdateSyncSourceParams) GetEnabled() bool {
+	return m.Enabled
+}
+
+// SetEnabled sets the Enabled value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
+// GetUrlOrUsername returns the UrlOrUsername value.
+func (m UpdateSyncSourceParams) GetUrlOrUsername() *string {
+	return m.UrlOrUsername
+}
+
+// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetUrlOrUsername(v *string) {
+	m.UrlOrUsername = v
+}
+
+// GetRegion returns the Region value.
+func (m UpdateSyncSourceParams) GetRegion() *string {
+	return m.Region
+}
+
+// SetRegion sets the Region value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetRegion(v *string) {
+	m.Region = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSyncSourceParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncSourceParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m DeleteSyncSourceParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteSyncSourceParams.
+func (m *DeleteSyncSourceParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2918,24 +2827,14 @@ func (m *DeleteSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetSiteid returns the Siteid value.
-func (m UpdateSyncReportAttemptParams) GetSiteid() string {
-	return m.Siteid
+// GetID returns the ID value.
+func (m UpdateSyncReportAttemptParams) GetID() int64 {
+	return m.ID
 }
 
-// SetSiteid sets the Siteid value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetSiteid(v string) {
-	m.Siteid = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncReportAttemptParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
+// SetID sets the ID value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetElapsedMs returns the ElapsedMs value.
@@ -2948,24 +2847,14 @@ func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
 	m.ElapsedMs = v
 }
 
-// GetSiteid returns the Siteid value.
-func (m UpdateSyncSourceReportsSuccessParams) GetSiteid() string {
-	return m.Siteid
+// GetID returns the ID value.
+func (m UpdateSyncSourceReportsSuccessParams) GetID() int64 {
+	return m.ID
 }
 
-// SetSiteid sets the Siteid value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetSiteid(v string) {
-	m.Siteid = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncSourceReportsSuccessParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
+// SetID sets the ID value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetErrorMessages returns the ErrorMessages value.
@@ -2988,24 +2877,14 @@ func (m *UpdateSyncSourceReportsFailureParams) SetElapsedMs(v *int64) {
 	m.ElapsedMs = v
 }
 
-// GetSiteid returns the Siteid value.
-func (m UpdateSyncSourceReportsFailureParams) GetSiteid() string {
-	return m.Siteid
+// GetID returns the ID value.
+func (m UpdateSyncSourceReportsFailureParams) GetID() int64 {
+	return m.ID
 }
 
-// SetSiteid sets the Siteid value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetSiteid(v string) {
-	m.Siteid = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncSourceReportsFailureParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
+// SetID sets the ID value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetID returns the ID value.

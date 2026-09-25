@@ -1,109 +1,44 @@
 
--- name: GetAllSiteSyncSourcesForSite :many
+-- name: GetSyncSource :one
+SELECT * FROM site_sync_sources where id = ? AND site_id = ? LIMIT 1;
+
+-- name: GetAllSyncSourcesForSite :many
 SELECT * FROM site_sync_sources where site_id = ?;
 
--- name: GetSyncSource :one
-SELECT * FROM site_sync_sources where site_id = ? AND type = ? LIMIT 1;
 
------
--- Nightscout
------- 
-
--- name: CreateNightscoutSyncSource :exec
+-- name: CreateSyncSource :exec
 INSERT INTO site_sync_sources (
     site_id,
     type,
     url_or_username,
     password,
+    region,
     enabled
 )
 VALUES (
     ?,
-    'NIGHTSCOUT',
+    ?,
+    ?,
     ?,
     ?,
     ?
 );
 
--- name: UpdateNightscoutSyncSource :exec
+-- name: UpdateSyncSource :exec
 UPDATE site_sync_sources SET 
-    password = COALESCE(sqlc.narg('password'), password),
-    enabled =  sqlc.narg(Enabled),
-    url_or_username = COALESCE(sqlc.narg('url_or_username'), url_or_username),
+    password = COALESCE(sqlc.narg('Password'), password),
+    enabled =  COALESCE(sqlc.narg('Enabled'), enabled),
+    url_or_username = COALESCE(sqlc.narg('UrlOrUsername'), url_or_username),
+    region = COALESCE(sqlc.narg('Region'), region),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
-WHERE type = 'NIGHTSCOUT' AND site_id = sqlc.arg(SiteID);
-
-
-
------
--- DEXCOM
-------
-
-
--- name: CreateDexcomSyncSource :exec
-INSERT INTO site_sync_sources (
-    site_id, 
-    type, 
-    url_or_username,
-    password, 
-    enabled, 
-    properties
-) 
-VALUES (
-    ?, 
-    'DEXCOM', 
-    ?,
-    ?, 
-    ?, 
-    json_object('region', sqlc.arg(Region))
-);
-
--- name: UpdateDexcomSyncSource :exec
-UPDATE site_sync_sources SET 
-    url_or_username = COALESCE(sqlc.narg('url_or_username'), url_or_username),
-    password = COALESCE(sqlc.narg('password'), password),
-    enabled = sqlc.narg(Enabled),
-    properties = json_set(
-        properties,
-        '$.region',   COALESCE(NULLIF(sqlc.narg(Region), ''), json_extract(properties, '$.region'))
-    ),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE type = 'DEXCOM' AND site_id = sqlc.arg(SiteID);
-
-
-------
--- VIRTUAL
-------
-
-
--- name: CreateVirtualSyncSource :exec
-INSERT INTO site_sync_sources (
-    site_id, 
-    type,  
-    enabled,
-    url_or_username,
-    password
-) 
-VALUES (
-    ?, 
-    'VIRTUAL', 
-    ?,
-    'virtual_username',
-    'virtual_password'
-);
-
--- name: UpdateVirtualSyncSource :exec
-UPDATE site_sync_sources SET 
-    enabled = sqlc.narg(Enabled),
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
-WHERE type = 'VIRTUAL' AND site_id =  sqlc.arg(SiteID);
+WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
 
 ------
 -- DELETE is real for security
 ------
 
 -- name: DeleteSyncSource :exec
-DELETE FROM site_sync_sources WHERE type = ? and site_id = ?;
+DELETE FROM site_sync_sources WHERE id = ? AND site_id = ?;
 
 ------
 -- REPORTS
@@ -134,7 +69,7 @@ UPDATE site_sync_sources
 SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE site_id = sqlc.arg(SiteID) AND type = sqlc.arg(Type);
+WHERE id = sqlc.arg(ID);
 
 
 
@@ -167,7 +102,7 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE site_id = sqlc.arg(SiteID) AND type = sqlc.arg(Type);
+WHERE id = sqlc.arg(ID);
 
 
 -- name: UpdateSyncSourceReportsFailure :exec
@@ -202,4 +137,4 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE site_id = sqlc.arg(SiteID) AND type = sqlc.arg(Type);
+WHERE id = sqlc.arg(ID);

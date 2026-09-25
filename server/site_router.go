@@ -3,6 +3,7 @@ package server
 // User router enables user specific router, and can route to NS router if endpoint hits that layer.
 
 import (
+	"nighttroop.t1d.nz/models/nighttroop"
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/site"
 	"nighttroop.t1d.nz/server/site/settings"
@@ -14,6 +15,9 @@ import (
 )
 
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
+	//STORES
+	syncSettingsStore := &settings.SyncSettingsStore{}
+
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 
@@ -41,8 +45,9 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 		// Settings Sync
 		r.Get("/settings/sync", settings.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/settings/sync/{type}", settings.POSTSyncSettingsHandler(controlDB, config))
-		r.Delete("/settings/sync/{type}", settings.DELETESyncSettingsHandler(controlDB, config))
+		r.Post("/settings/sync", site.CreateHandler(controlDB, config, syncSettingsStore))
+		r.Post("/settings/sync/{id}", site.UpdateHandler[nighttroop.SiteSyncSource](controlDB, config, syncSettingsStore))
+		r.Delete("/settings/sync/{id}", settings.DELETESyncSettingsHandler(controlDB, config))
 		r.Get("/settings/sync/reports", settings.GetSyncSettingsReportsHandler(controlDB, config))
 
 		// Settings Identities

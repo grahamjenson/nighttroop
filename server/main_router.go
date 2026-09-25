@@ -60,7 +60,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case RouteTargetNightscout:
 			// so <siteid>.ns.domain routes to the nightscout compatible API
-			if exists, ctx := CreateSiteContext(ctx, controlDB, r, siteSubdomain, ipAddress); exists {
+			if exists, ctx := CreateSiteContext(ctx, config, controlDB, r, siteSubdomain, ipAddress); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for nightscout subdomain", "subdomain", siteSubdomain)
@@ -68,7 +68,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			}
 		case RouteTargetSite:
 			// Attach userdb and model to the context
-			if exists, ctx := CreateSiteContext(ctx, controlDB, r, siteSubdomain, ipAddress); exists {
+			if exists, ctx := CreateSiteContext(ctx, config, controlDB, r, siteSubdomain, ipAddress); exists {
 				siteRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				slog.Error("Main router 404 for subdomain", "subdomain", siteSubdomain)
@@ -88,14 +88,14 @@ func CreateControlContext(controlDB *db.ControlDB, r *http.Request, ipAddress st
 	return ctx
 }
 
-func CreateSiteContext(ctx context.Context, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
+func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
 	siteDB, siteModel, err := controlDB.GetSite(subdomain)
 	if err != nil {
 		slog.Error("Error getting site for subdomain", "subdomain", subdomain, "error", err)
 		return false, nil
 	}
 
-	ctx = httputils.CreateSiteContext(ctx, controlDB, siteDB, siteModel, subdomain, ipAddress, httputils.GetHTTPAction(r))
+	ctx = httputils.CreateSiteContext(ctx, config, controlDB, siteDB, siteModel, subdomain, ipAddress, httputils.GetHTTPAction(r), httputils.GetAcceptType(r), httputils.GetContentType(r))
 
 	return true, ctx
 }

@@ -93,6 +93,10 @@ const (
 
 func NewDexcomRegionFromString(s string) DexcomRegion {
 	switch s {
+	case "US":
+		return DexcomRegionUS
+	case "OUS":
+		return DexcomRegionOther
 	case "USA":
 		return DexcomRegionUS
 	case "OTHER":

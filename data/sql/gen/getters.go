@@ -52,7 +52,6 @@ var TypeLookupMap = map[string]map[string]string{
 		"Type":               "consts.SyncSourceType",
 		"Enabled":            "bool",
 		"PreviousSyncErrors": "errors.ErrorList",
-		"Properties":         "types.SyncSourceProperties",
 	},
 	"FailJobParams": {
 		"Errors": "errors.ErrorList",
@@ -66,42 +65,20 @@ var TypeLookupMap = map[string]map[string]string{
 	"CreateIfNotExistsIdentityParams": {
 		"Role": "consts.IdentityRole",
 	},
-	"CreateNightscoutSyncSourceParams": {
+	"CreateSyncSourceParams": {
 		"Type":    "consts.SyncSourceType",
 		"Enabled": "bool",
 	},
-	"UpdateSyncReportAttemptParams": {
-		"Type": "consts.SyncSourceType",
-	},
-	"CreateVirtualSyncSourceParams": {
-		"Enabled": "bool",
-	},
-	"UpdateVirtualSyncSourceParams": {
-		"Enabled": "bool",
-	},
-	"UpdateNightscoutSyncSourceParams": {
-		"Type":    "consts.SyncSourceType",
-		"Enabled": "bool",
-	},
-	"UpdateDexcomSyncSourceParams": {
-		"Type":    "consts.SyncSourceType",
+	"UpdateSyncSourceParams": {
 		"Enabled": "bool",
 	},
 	"GetSyncSourceParams": {
 		"Type": "consts.SyncSourceType",
 	},
-	"CreateDexcomSyncSourceParams": {
-		"Type":    "consts.SyncSourceType",
-		"Enabled": "bool",
-	},
 	"DeleteJobsByIdsParams": {
 		"Ids": "[]int64",
 	},
-	"DeleteSyncSourceParams": {
-		"Type": "consts.SyncSourceType",
-	},
 	"UpdateSyncSourceReportsFailureParams": {
-		"Type":          "consts.SyncSourceType",
 		"ErrorMessages": "errors.ErrorList",
 	},
 	"UpdateSyncSourceReportsSuccessParams": {

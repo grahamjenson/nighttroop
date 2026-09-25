@@ -15,7 +15,6 @@ sql:
           imports:
             - "nighttroop.t1d.nz/utils/consts"
             - "nighttroop.t1d.nz/utils/errors"
-            - "nighttroop.t1d.nz/data/types"
     gen:
       go:
         package: "control"

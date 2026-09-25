@@ -79,7 +79,6 @@ templ IdentitesTable(users []*nighttroop.UserIdentity, devices []*nighttroop.Use
 			@formCreateIdentity("devicesTable", "Device", []nighttroop.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
 		</div>
 		<!-- Error -->
-		<div id="error-container" class="mt-4"></div>
 		<div id="modal-container"></div>
 	</div>
 }

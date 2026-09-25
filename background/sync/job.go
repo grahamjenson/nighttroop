@@ -31,6 +31,7 @@ type SyncJobManager struct {
 }
 
 type SyncJobParams struct {
+	ID     int64
 	SiteID string
 	Type   consts.SyncSourceType
 }
@@ -81,7 +82,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) err
 		// This will filter out
 		syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, control.GetSyncSourceParams{
 			SiteID: syncJob.SiteID,
-			Type:   syncJob.Type,
+			ID:     syncJob.ID,
 		})
 		if err != nil {
 			slog.Error("Error getting user sync sources", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
@@ -140,7 +141,10 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncS
 
 	encUrlOrUserName := syncSource.UrlOrUsername
 	encPassword := syncSource.Password
-	dexcomRegion := syncSource.Properties.DexcomRegion()
+	dexcomRegion := consts.DexcomRegionOther
+	if syncSource.Region != nil {
+		dexcomRegion = consts.NewDexcomRegionFromString(*syncSource.Region)
+	}
 
 	unencUsername, err := b.security.Decrypt(encUrlOrUserName)
 	if err != nil {
@@ -193,6 +197,7 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 		for _, source := range syncSources {
 
 			syncJob := &SyncJobParams{
+				ID:     source.ID,
 				SiteID: source.SiteID,
 				Type:   source.Type,
 			}
@@ -205,7 +210,7 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 			err = queue.QueueJob(context.Background(), liteq.QueueJobParams{
 				Queue:       SYNC_JOB,
 				Job:         string(jsonRaw),
-				DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%d-%s", syncJob.SiteID, syncJob.Type)),
+				DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%d-%s-%s", syncJob.ID, syncJob.SiteID, syncJob.Type)),
 			})
 			if err != nil {
 				slog.Error("Error queueing sync job", "error", err)
