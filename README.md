@@ -3,13 +3,13 @@
 ## Before Alpha Testing
 
 1. Define Nighttroop models, work on converters to DB params, and use those models to build json and htmx and html. Then can test all this across any form
-1. Sync settings is over complicated, remove the hash crap and just focus on the punishing bad behaviour or slowing down users that dont read the endpoints
-1. rename all columns with type e.g. password_hash, totp_secret_enc
+1. Focus on sync settings slow down on bad and incorrect behaviour
+1. rename all columns with type suffix e.g. password_hash, totp_secret_enc
 1. Use custom methods to replace 	DurationSum:        stats.DurationSum, DurationSquaredSum: stats.DurationSquaredSum,
 
 -- Errors
 1. Come up with an actual logging and error framework that makes sense (SQLite DB for search?)
-1. check that users dont get error responses traces!
+1. Force all returned errors to be of type
 1. Optional error reporting with sentry (if a given key is present)
 
 1. make sync settings report endpoints

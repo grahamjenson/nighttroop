@@ -80,10 +80,6 @@ func (s *SyncSettingsStore) CreateHTMXResponse(model *nighttroop.SiteSyncSource)
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
-func (s *SyncSettingsStore) CreateHTMLResponse(model *nighttroop.SiteSyncSource) templ.Component {
-	return site_settings_templ.SuccessfulUpdate(model)
-}
-
 func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*nighttroop.SiteSyncSource, *siteutils.HTTPError) {
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
@@ -169,10 +165,6 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 }
 
 func (s *SyncSettingsStore) UpdateHTMXResponse(model *nighttroop.SiteSyncSource) templ.Component {
-	return site_settings_templ.SuccessfulUpdate(model)
-}
-
-func (s *SyncSettingsStore) UpdateHTMLResponse(model *nighttroop.SiteSyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 

@@ -797,7 +797,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ
 	})
 }
 
-func VirtualSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ.Component {
+func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -818,7 +818,7 @@ func VirtualSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ.Co
 			templ_7745c5c3_Var26 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<form hx-post=\"/settings/sync/nightscout\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Nightscout Sync</h5><div class=\"text-sm text-gray-400\">Connect your Nightscout instance</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<form hx-post=\"/settings/sync/nightscout\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Virtual Sync</h5><div class=\"text-sm text-gray-400\">This will create fake data for testing purposes.</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -837,7 +837,7 @@ func VirtualSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ.Co
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
 				ID:      "site--settings--nightscout-sync--enable",
 				Name:    "ns_enabled",
-				Checked: nightscoutSyncSettings.IsEnabled(),
+				Checked: synSource.IsEnabled(),
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {

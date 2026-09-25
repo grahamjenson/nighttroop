@@ -21,7 +21,6 @@ import (
 type CreateHandlerInterface[T any] interface {
 	CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *T) (bool, *siteutils.HTTPError)
 	CreateHTMXResponse(model *T) templ.Component
-	CreateHTMLResponse(model *T) templ.Component
 	GetName() string
 }
 
@@ -85,7 +84,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		case httputils.AcceptTypeHTMX:
 			store.CreateHTMXResponse(model).Render(r.Context(), w)
 		case httputils.AcceptTypeHTML:
-			store.CreateHTMLResponse(model).Render(r.Context(), w)
+			store.CreateHTMXResponse(model).Render(r.Context(), w)
 		default:
 			siteutils.WriteModelJSON(w, status, model)
 		}
@@ -100,7 +99,6 @@ type UpdateHandlerInterface[T any] interface {
 	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *siteutils.HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
-	UpdateHTMLResponse(model *T) templ.Component
 
 	GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*T, *siteutils.HTTPError)
 	GetName() string
@@ -170,7 +168,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		case httputils.AcceptTypeHTMX:
 			store.UpdateHTMXResponse(model).Render(r.Context(), w)
 		case httputils.AcceptTypeHTML:
-			store.UpdateHTMLResponse(model).Render(r.Context(), w)
+			store.UpdateHTMXResponse(model).Render(r.Context(), w)
 		default:
 			siteutils.WriteModelJSON(w, status, model)
 		}

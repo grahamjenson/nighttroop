@@ -278,7 +278,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) {
 	</form>
 }
 
-templ VirtualSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) {
+templ VirtualSyncForm(synSource *nighttroop.SiteSyncSource) {
 	<form hx-post="/settings/sync/nightscout" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
@@ -286,10 +286,10 @@ templ VirtualSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) {
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h5 class="font-semibold ">
-							Nightscout Sync
+							Virtual Sync
 						</h5>
 						<div class="text-sm text-gray-400">
-							Connect your Nightscout instance
+							This will create fake data for testing purposes.
 						</div>
 					</div>
 					@form.Item(form.ItemProps{
@@ -298,7 +298,7 @@ templ VirtualSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--nightscout-sync--enable",
 							Name:    "ns_enabled",
-							Checked: nightscoutSyncSettings.IsEnabled(),
+							Checked: synSource.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
 						@form.Label(form.LabelProps{
