@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -18,7 +18,7 @@ type ActivityCollection struct {
 
 func NewActivityCollection() ActivityCollection {
 	return ActivityCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Activity, nightscout.DBModelToActivity),
+		converter: nsutils.DBModelToRecord(nsutils.Activity, nightscoutmodels.DBModelToActivity),
 	}
 }
 
@@ -34,7 +34,7 @@ func (c ActivityCollection) Convert(dr *sitedb.Activity, siteContext *httputils.
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c ActivityCollection) Validate(nsModel nightscout.Activity, dbModel *sitedb.Activity) *nsutils.HTTPError {
+func (c ActivityCollection) Validate(nsModel nightscoutmodels.Activity, dbModel *sitedb.Activity) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -47,12 +47,12 @@ func (c ActivityCollection) Validate(nsModel nightscout.Activity, dbModel *sited
 	return nil
 }
 
-func (c ActivityCollection) ValidatePatch(nsModel nightscout.Activity, dbModel *sitedb.Activity) *nsutils.HTTPError {
+func (c ActivityCollection) ValidatePatch(nsModel nightscoutmodels.Activity, dbModel *sitedb.Activity) *nsutils.HTTPError {
 	return c.Validate(nsModel, dbModel)
 }
 
-func (c ActivityCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Activity, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.Activity, error) {
-	createParams := nightscout.ActivityToCreate(nsModel, cc)
+func (c ActivityCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.Activity, error) {
+	createParams := nightscoutmodels.ActivityToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
@@ -63,7 +63,7 @@ func (c ActivityCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, id
 	return q.GetActivity(ctx, sitedb.GetActivityParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c ActivityCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Activity) (*sitedb.Activity, error) {
+func (c ActivityCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity) (*sitedb.Activity, error) {
 	return nil, nil
 }
 
@@ -83,8 +83,8 @@ func (c ActivityCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.
 	return q.SoftDeleteActivitiesByType(ctx, sitedb.SoftDeleteActivitiesByTypeParams{ActivityType: typeString})
 }
 
-func (c ActivityCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Activity, identifier string, dbModel *sitedb.Activity, uc nightscout.ConverterContext) (*sitedb.Activity, error) {
-	updateParams := nightscout.ActivityToUpdate(nsModel, uc)
+func (c ActivityCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity, identifier string, dbModel *sitedb.Activity, uc nightscoutmodels.ConverterContext) (*sitedb.Activity, error) {
+	updateParams := nightscoutmodels.ActivityToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 
 	return q.UpdateActivity(ctx, updateParams)

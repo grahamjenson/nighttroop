@@ -9,7 +9,7 @@ import (
 	"reflect"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -37,9 +37,9 @@ func (c TreatmentCollection) Convert(dr *sitedb.EventGroupsBundle, siteContext *
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
+func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
 	// Validate the input
-	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
+	if nsModel.EventType == nil || *nsModel.EventType == nightscoutmodels.Unknown {
 		eventTypeError := "eventType: null"
 		if nsModel.EventType != nil {
 			eventTypeError = "eventType: " + nsModel.EventType.String()
@@ -61,7 +61,7 @@ func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *sit
 	return nil
 }
 
-func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
+func (c TreatmentCollection) ValidatePatch(nsModel nightscoutmodels.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
 	if nsModel.EventType != nil && nsModel.EventType.String() != dbModel.EventGroup.GroupType {
 		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
 		return nsutils.BadDataBodyError
@@ -69,7 +69,7 @@ func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel
 	return nil
 }
 
-func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)
 	err := createUpdateEventGroup(ctx, q, &tebg, cc)
@@ -77,7 +77,7 @@ func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context
 		return nil, err
 	}
 
-	createEventGroupParams := nightscout.EventGroupCreate(tebg.EventGroup, cc)
+	createEventGroupParams := nightscoutmodels.EventGroupCreate(tebg.EventGroup, cc)
 
 	if overrideIdentifier != nil {
 		createEventGroupParams.ID = *overrideIdentifier
@@ -98,7 +98,7 @@ func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context
 	return &tebg, nil
 }
 
-func (c TreatmentCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Treatment) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
 	eventGroups, rerr := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
@@ -126,10 +126,10 @@ func (c TreatmentCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, i
 	return &egb, nil
 }
 
-func (c TreatmentCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscout.ConverterContext) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
 	// This will be a partial update
 
-	nsModel.EventType = ptr(nightscout.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
+	nsModel.EventType = ptr(nightscoutmodels.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
 
 	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
 
@@ -142,7 +142,7 @@ func (c TreatmentCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context,
 		return nil, err
 	}
 
-	updateEventGroupParams := nightscout.EventGroupUpdate(dbModel.EventGroup, cc)
+	updateEventGroupParams := nightscoutmodels.EventGroupUpdate(dbModel.EventGroup, cc)
 	newEventGroup, err := q.UpdateEventGroup(ctx, updateEventGroupParams)
 	if err != nil {
 		slog.Error("failed to update event group in database", "error", err)
@@ -270,7 +270,7 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 // 3. Update if the EventGroup has an ID and a model
 //
 // TODO: This means events are always updated, we should selectivly update.
-func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscout.ConverterContext) error {
+func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error {
 
 	// GlucoseReading
 	if bundle.DeleteGlucoseReading() {
@@ -281,7 +281,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.GlucoseReadingID = nil
 	} else if bundle.CreateGlucoseReading() {
-		dbModel, err := q.CreateGlucoseReading(ctx, nightscout.GlucoseReadingCreate(*bundle.GlucoseReading, cc))
+		dbModel, err := q.CreateGlucoseReading(ctx, nightscoutmodels.GlucoseReadingCreate(*bundle.GlucoseReading, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create glucose reading in database", "error", err, "dbModel", dbModel)
 			return err
@@ -289,7 +289,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.GlucoseReadingID = &dbModel.ID
 		bundle.GlucoseReading = dbModel
 	} else if bundle.UpdateGlucoseReading() {
-		dbModel, err := q.UpdateGlucoseReading(ctx, nightscout.GlucoseReadingUpdate(*bundle.GlucoseReading, cc))
+		dbModel, err := q.UpdateGlucoseReading(ctx, nightscoutmodels.GlucoseReadingUpdate(*bundle.GlucoseReading, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update glucose reading in database", "error", err, "dbModel", dbModel)
 			return err
@@ -307,7 +307,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.InsulinDoseID = nil
 	} else if bundle.CreateInsulinDose() {
-		dbModel, err := q.CreateInsulinDose(ctx, nightscout.InsulinDoseCreate(*bundle.InsulinDose, cc))
+		dbModel, err := q.CreateInsulinDose(ctx, nightscoutmodels.InsulinDoseCreate(*bundle.InsulinDose, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create insulin dose in database", "error", err, "dbModel", dbModel)
 			return err
@@ -315,7 +315,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.InsulinDoseID = &dbModel.ID
 		bundle.InsulinDose = dbModel
 	} else if bundle.UpdateInsulinDose() {
-		dbModel, err := q.UpdateInsulinDose(ctx, nightscout.InsulinDoseUpdate(*bundle.InsulinDose, cc))
+		dbModel, err := q.UpdateInsulinDose(ctx, nightscoutmodels.InsulinDoseUpdate(*bundle.InsulinDose, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update insulin dose in database", "error", err, "dbModel", dbModel)
 			return err
@@ -332,7 +332,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.FoodIntakeID = nil
 	} else if bundle.CreateFoodIntake() {
-		dbModel, err := q.CreateFoodIntake(ctx, nightscout.FoodIntakeCreate(*bundle.FoodIntake, cc))
+		dbModel, err := q.CreateFoodIntake(ctx, nightscoutmodels.FoodIntakeCreate(*bundle.FoodIntake, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create food intake in database", "error", err, "dbModel", dbModel)
 			return err
@@ -340,7 +340,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.FoodIntakeID = &dbModel.ID
 		bundle.FoodIntake = dbModel
 	} else if bundle.UpdateFoodIntake() {
-		dbModel, err := q.UpdateFoodIntake(ctx, nightscout.FoodIntakeUpdate(*bundle.FoodIntake, cc))
+		dbModel, err := q.UpdateFoodIntake(ctx, nightscoutmodels.FoodIntakeUpdate(*bundle.FoodIntake, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update food intake in database", "error", err, "dbModel", dbModel)
 			return err
@@ -358,7 +358,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.TempBasalID = nil
 	} else if bundle.CreateTempBasal() {
-		dbModel, err := q.CreateTempBasal(ctx, nightscout.TempBasalCreate(*bundle.TempBasal, cc))
+		dbModel, err := q.CreateTempBasal(ctx, nightscoutmodels.TempBasalCreate(*bundle.TempBasal, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create temp basal in database", "error", err, "dbModel", dbModel)
 			return err
@@ -366,7 +366,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.TempBasalID = &dbModel.ID
 		bundle.TempBasal = dbModel
 	} else if bundle.UpdateTempBasal() {
-		dbModel, err := q.UpdateTempBasal(ctx, nightscout.TempBasalUpdate(*bundle.TempBasal, cc))
+		dbModel, err := q.UpdateTempBasal(ctx, nightscoutmodels.TempBasalUpdate(*bundle.TempBasal, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update temp basal in database", "error", err, "dbModel", dbModel)
 			return err
@@ -384,7 +384,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.TempTargetID = nil
 	} else if bundle.CreateTempTarget() {
-		dbModel, err := q.CreateTempTarget(ctx, nightscout.TempTargetCreate(*bundle.TempTarget, cc))
+		dbModel, err := q.CreateTempTarget(ctx, nightscoutmodels.TempTargetCreate(*bundle.TempTarget, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create temp target in database", "error", err, "dbModel", dbModel)
 			return err
@@ -392,7 +392,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.TempTargetID = &dbModel.ID
 		bundle.TempTarget = dbModel
 	} else if bundle.UpdateTempTarget() {
-		dbModel, err := q.UpdateTempTarget(ctx, nightscout.TempTargetUpdate(*bundle.TempTarget, cc))
+		dbModel, err := q.UpdateTempTarget(ctx, nightscoutmodels.TempTargetUpdate(*bundle.TempTarget, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update temp target in database", "error", err, "dbModel", dbModel)
 			return err
@@ -410,7 +410,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.ProfileSwitchID = nil
 	} else if bundle.CreateProfileSwitch() {
-		dbModel, err := q.CreateProfileSwitch(ctx, nightscout.ProfileSwitchCreate(*bundle.ProfileSwitch, cc))
+		dbModel, err := q.CreateProfileSwitch(ctx, nightscoutmodels.ProfileSwitchCreate(*bundle.ProfileSwitch, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create profile switch in database", "error", err, "dbModel", dbModel)
 			return err
@@ -418,7 +418,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.ProfileSwitchID = &dbModel.ID
 		bundle.ProfileSwitch = dbModel
 	} else if bundle.UpdateProfileSwitch() {
-		dbModel, err := q.UpdateProfileSwitch(ctx, nightscout.ProfileSwitchUpdate(*bundle.ProfileSwitch, cc))
+		dbModel, err := q.UpdateProfileSwitch(ctx, nightscoutmodels.ProfileSwitchUpdate(*bundle.ProfileSwitch, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update profile switch in database", "error", err, "dbModel", dbModel)
 			return err
@@ -436,7 +436,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.ComponentEventID = nil
 	} else if bundle.CreateComponentEvent() {
-		dbModel, err := q.CreateComponentEvent(ctx, nightscout.ComponentEventCreate(*bundle.ComponentEvent, cc))
+		dbModel, err := q.CreateComponentEvent(ctx, nightscoutmodels.ComponentEventCreate(*bundle.ComponentEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create component event in database", "error", err, "dbModel", dbModel)
 			return err
@@ -444,7 +444,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.ComponentEventID = &dbModel.ID
 		bundle.ComponentEvent = dbModel
 	} else if bundle.UpdateComponentEvent() {
-		dbModel, err := q.UpdateComponentEvent(ctx, nightscout.ComponentEventUpdate(*bundle.ComponentEvent, cc))
+		dbModel, err := q.UpdateComponentEvent(ctx, nightscoutmodels.ComponentEventUpdate(*bundle.ComponentEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update component event in database", "error", err, "dbModel", dbModel)
 			return err
@@ -463,7 +463,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.ActivityID = nil
 	} else if bundle.CreateActivity() {
-		dbModel, err := q.CreateActivity(ctx, nightscout.ActivityCreate(*bundle.Activity, cc))
+		dbModel, err := q.CreateActivity(ctx, nightscoutmodels.ActivityCreate(*bundle.Activity, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create activity in database", "error", err, "dbModel", dbModel)
 			return err
@@ -471,7 +471,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.ActivityID = &dbModel.ID
 		bundle.Activity = dbModel
 	} else if bundle.UpdateActivity() {
-		dbModel, err := q.UpdateActivity(ctx, nightscout.ActivityUpdate(*bundle.Activity, cc))
+		dbModel, err := q.UpdateActivity(ctx, nightscoutmodels.ActivityUpdate(*bundle.Activity, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update activity in database", "error", err, "dbModel", dbModel)
 			return err
@@ -489,7 +489,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		}
 		bundle.EventGroup.NotificationEventID = nil
 	} else if bundle.CreateNotificationEvent() {
-		dbModel, err := q.CreateNotificationEvent(ctx, nightscout.NotificationEventCreate(*bundle.NotificationEvent, cc))
+		dbModel, err := q.CreateNotificationEvent(ctx, nightscoutmodels.NotificationEventCreate(*bundle.NotificationEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to create note in database", "error", err, "dbModel", dbModel)
 			return err
@@ -497,7 +497,7 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 		bundle.EventGroup.NotificationEventID = &dbModel.ID
 		bundle.NotificationEvent = dbModel
 	} else if bundle.UpdateNotificationEvent() {
-		dbModel, err := q.UpdateNotificationEvent(ctx, nightscout.NotificationEventUpdate(*bundle.NotificationEvent, cc))
+		dbModel, err := q.UpdateNotificationEvent(ctx, nightscoutmodels.NotificationEventUpdate(*bundle.NotificationEvent, cc))
 		if err != nil || dbModel == nil {
 			slog.Error("failed to update note in database", "error", err, "dbModel", dbModel)
 			return err
@@ -650,8 +650,8 @@ func softDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier str
 }
 
 // Converts an incomming treatment to EventGroups
-func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) sitedb.EventGroupsBundle {
-	eventGroup := nightscout.TreatmentToEventGroup(treatment)
+func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.Treatment) sitedb.EventGroupsBundle {
+	eventGroup := nightscoutmodels.TreatmentToEventGroup(treatment)
 
 	glucoseReading := TreatmentToGlucoseReading(treatment)
 	insulinDose := TreatmentToInsulinDose(treatment)
@@ -668,18 +668,18 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 	//////
 
 	switch *treatment.EventType {
-	case nightscout.Announcement:
+	case nightscoutmodels.Announcement:
 		return sitedb.EventGroupsBundle{
 			EventGroup:        eventGroup,
 			GlucoseReading:    glucoseReading,
 			NotificationEvent: notificationEvent,
 		}
-	case nightscout.BGCheck:
+	case nightscoutmodels.BGCheck:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 		}
-	case nightscout.BolusWizard:
+	case nightscoutmodels.BolusWizard:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
@@ -687,12 +687,12 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			FoodIntake:     foodIntake,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.CarbCorrection:
+	case nightscoutmodels.CarbCorrection:
 		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 			FoodIntake: foodIntake,
 		}
-	case nightscout.ComboBolus:
+	case nightscoutmodels.ComboBolus:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
@@ -700,28 +700,28 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			FoodIntake:     foodIntake,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.CorrectionBolus:
+	case nightscoutmodels.CorrectionBolus:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			InsulinDose:    insulinDose,
 			GlucoseReading: glucoseReading,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.DADAlert:
+	case nightscoutmodels.DADAlert:
 		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 		}
-	case nightscout.Exercise:
+	case nightscoutmodels.Exercise:
 		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 			Activity:   activity,
 		}
-	case nightscout.InsulinChange:
+	case nightscoutmodels.InsulinChange:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.MealBolus:
+	case nightscoutmodels.MealBolus:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
@@ -729,7 +729,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			FoodIntake:     foodIntake,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.Note:
+	case nightscoutmodels.Note:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
@@ -739,42 +739,42 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			Activity:       activity,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.OpenAPSOffline:
+	case nightscoutmodels.OpenAPSOffline:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.ProfileSwitch:
+	case nightscoutmodels.ProfileSwitch:
 		return sitedb.EventGroupsBundle{
 			EventGroup:    eventGroup,
 			ProfileSwitch: profileSwitch,
 		}
-	case nightscout.PumpBatteryChange:
+	case nightscoutmodels.PumpBatteryChange:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.Question:
+	case nightscoutmodels.Question:
 		return sitedb.EventGroupsBundle{
 			EventGroup:        eventGroup,
 			NotificationEvent: notificationEvent,
 		}
-	case nightscout.SensorChange:
+	case nightscoutmodels.SensorChange:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.SensorStart:
+	case nightscoutmodels.SensorStart:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.SiteChange:
+	case nightscoutmodels.SiteChange:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.SnackBolus:
+	case nightscoutmodels.SnackBolus:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
@@ -782,39 +782,39 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			FoodIntake:     foodIntake,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.TempBasal:
+	case nightscoutmodels.TempBasal:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			TempBasal:      tempBasal,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.TemporaryTarget:
+	case nightscoutmodels.TemporaryTarget:
 		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 			TempTarget: tempTarget,
 		}
-	case nightscout.CannulaFill:
+	case nightscoutmodels.CannulaFill:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.Prime:
+	case nightscoutmodels.Prime:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.ReservoirChange:
+	case nightscoutmodels.ReservoirChange:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.Calibration:
+	case nightscoutmodels.Calibration:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			ComponentEvent: componentEvent,
 		}
-	case nightscout.Bolus:
+	case nightscoutmodels.Bolus:
 		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			InsulinDose:    insulinDose,
@@ -827,13 +827,13 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 
 // Merge a DB Event Group with one created from the
 func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.EventGroupsBundle) {
-	nightscout.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
+	nightscoutmodels.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
 
 	if updateBundle.InsulinDose != nil {
 		if dbModel.InsulinDose == nil {
 			dbModel.InsulinDose = updateBundle.InsulinDose
 		} else {
-			nightscout.UpdateToInsulinDose(updateBundle.InsulinDose, dbModel.InsulinDose)
+			nightscoutmodels.UpdateToInsulinDose(updateBundle.InsulinDose, dbModel.InsulinDose)
 		}
 	}
 
@@ -841,7 +841,7 @@ func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.Ev
 		if dbModel.GlucoseReading == nil {
 			dbModel.GlucoseReading = updateBundle.GlucoseReading
 		} else {
-			nightscout.UpdateToGlucoseReading(updateBundle.GlucoseReading, dbModel.GlucoseReading)
+			nightscoutmodels.UpdateToGlucoseReading(updateBundle.GlucoseReading, dbModel.GlucoseReading)
 		}
 	}
 
@@ -849,49 +849,49 @@ func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.Ev
 		if dbModel.FoodIntake == nil {
 			dbModel.FoodIntake = updateBundle.FoodIntake
 		} else {
-			nightscout.UpdateToFoodIntake(updateBundle.FoodIntake, dbModel.FoodIntake)
+			nightscoutmodels.UpdateToFoodIntake(updateBundle.FoodIntake, dbModel.FoodIntake)
 		}
 	}
 	if updateBundle.TempBasal != nil {
 		if dbModel.TempBasal == nil {
 			dbModel.TempBasal = updateBundle.TempBasal
 		} else {
-			nightscout.UpdateToTempBasal(updateBundle.TempBasal, dbModel.TempBasal)
+			nightscoutmodels.UpdateToTempBasal(updateBundle.TempBasal, dbModel.TempBasal)
 		}
 	}
 	if updateBundle.TempTarget != nil {
 		if dbModel.TempTarget == nil {
 			dbModel.TempTarget = updateBundle.TempTarget
 		} else {
-			nightscout.UpdateToTempTarget(updateBundle.TempTarget, dbModel.TempTarget)
+			nightscoutmodels.UpdateToTempTarget(updateBundle.TempTarget, dbModel.TempTarget)
 		}
 	}
 	if updateBundle.ProfileSwitch != nil {
 		if dbModel.ProfileSwitch == nil {
 			dbModel.ProfileSwitch = updateBundle.ProfileSwitch
 		} else {
-			nightscout.UpdateToProfileSwitch(updateBundle.ProfileSwitch, dbModel.ProfileSwitch)
+			nightscoutmodels.UpdateToProfileSwitch(updateBundle.ProfileSwitch, dbModel.ProfileSwitch)
 		}
 	}
 	if updateBundle.ComponentEvent != nil {
 		if dbModel.ComponentEvent == nil {
 			dbModel.ComponentEvent = updateBundle.ComponentEvent
 		} else {
-			nightscout.UpdateToComponentEvent(updateBundle.ComponentEvent, dbModel.ComponentEvent)
+			nightscoutmodels.UpdateToComponentEvent(updateBundle.ComponentEvent, dbModel.ComponentEvent)
 		}
 	}
 	if updateBundle.Activity != nil {
 		if dbModel.Activity == nil {
 			dbModel.Activity = updateBundle.Activity
 		} else {
-			nightscout.UpdateToActivity(updateBundle.Activity, dbModel.Activity)
+			nightscoutmodels.UpdateToActivity(updateBundle.Activity, dbModel.Activity)
 		}
 	}
 	if updateBundle.NotificationEvent != nil {
 		if dbModel.NotificationEvent == nil {
 			dbModel.NotificationEvent = updateBundle.NotificationEvent
 		} else {
-			nightscout.UpdateToNotificationEvent(updateBundle.NotificationEvent, dbModel.NotificationEvent)
+			nightscoutmodels.UpdateToNotificationEvent(updateBundle.NotificationEvent, dbModel.NotificationEvent)
 		}
 	}
 }
@@ -904,10 +904,10 @@ func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.Ev
 // Food Intake
 ///////
 
-func TreatmentToFoodIntake(source nightscout.Treatment) *sitedb.FoodIntake {
+func TreatmentToFoodIntake(source nightscoutmodels.Treatment) *sitedb.FoodIntake {
 	// Check some needed fields are assigned
 	if isAssigned(source.FoodType, source.PreBolus, source.Category, source.Subcategory, source.Carbs, source.Fat, source.Protein, source.Fibre, source.Energy, source.Portions) {
-		return ptr(nightscout.PartialTreatmentToFoodIntake(source))
+		return ptr(nightscoutmodels.PartialTreatmentToFoodIntake(source))
 	}
 	return nil
 }
@@ -916,8 +916,8 @@ func TreatmentToFoodIntake(source nightscout.Treatment) *sitedb.FoodIntake {
 // Glucose Reading
 ///////
 
-func TreatmentToGlucoseReading(source nightscout.Treatment) *sitedb.GlucoseReading {
-	target := nightscout.PartialTreatmentToGlucoseReading(source)
+func TreatmentToGlucoseReading(source nightscoutmodels.Treatment) *sitedb.GlucoseReading {
+	target := nightscoutmodels.PartialTreatmentToGlucoseReading(source)
 	target.ReadingType = "sgv"
 	target.Units = source.Units
 
@@ -927,11 +927,11 @@ func TreatmentToGlucoseReading(source nightscout.Treatment) *sitedb.GlucoseReadi
 
 	if source.GlucoseType != nil {
 		switch *source.GlucoseType {
-		case nightscout.Sensor:
+		case nightscoutmodels.Sensor:
 			target.ReadingType = "sgv"
-		case nightscout.Finger:
+		case nightscoutmodels.Finger:
 			target.ReadingType = "mbg"
-		case nightscout.Meter:
+		case nightscoutmodels.Meter:
 			target.ReadingType = "mbg"
 		}
 	}
@@ -945,9 +945,9 @@ func TreatmentToGlucoseReading(source nightscout.Treatment) *sitedb.GlucoseReadi
 // Insulin Dose
 ///////
 
-func TreatmentToInsulinDose(source nightscout.Treatment) *sitedb.InsulinDose {
+func TreatmentToInsulinDose(source nightscoutmodels.Treatment) *sitedb.InsulinDose {
 	if isAssigned(source.Insulin) {
-		return ptr(nightscout.PartialTreatmentToInsulinDose(source))
+		return ptr(nightscoutmodels.PartialTreatmentToInsulinDose(source))
 	}
 	return nil
 }
@@ -956,14 +956,14 @@ func TreatmentToInsulinDose(source nightscout.Treatment) *sitedb.InsulinDose {
 // NotificationEvents
 ///////
 
-func TreatmentToNotificationEvent(source nightscout.Treatment, eventType nightscout.TreatmentEventType) *sitedb.NotificationEvent {
-	target := nightscout.PartialTreatmentToNotificationEvent(source)
+func TreatmentToNotificationEvent(source nightscoutmodels.Treatment, eventType nightscoutmodels.TreatmentEventType) *sitedb.NotificationEvent {
+	target := nightscoutmodels.PartialTreatmentToNotificationEvent(source)
 
-	if eventType == nightscout.Announcement {
+	if eventType == nightscoutmodels.Announcement {
 		target.Severity = 0
 		target.NotificationType = "announcement"
 		target.Title = "Announcement"
-	} else if eventType == nightscout.Question {
+	} else if eventType == nightscoutmodels.Question {
 		target.Severity = 1
 		target.NotificationType = "question"
 		target.Title = "Question"
@@ -985,8 +985,8 @@ func TreatmentToNotificationEvent(source nightscout.Treatment, eventType nightsc
 // Profile Switch
 ///////
 
-func TreatmentToProfileSwitch(source nightscout.Treatment) *sitedb.ProfileSwitch {
-	target := nightscout.PartialTreatmentToProfileSwitch(source)
+func TreatmentToProfileSwitch(source nightscoutmodels.Treatment) *sitedb.ProfileSwitch {
+	target := nightscoutmodels.PartialTreatmentToProfileSwitch(source)
 
 	// TODO: This is the bit that will need more work, with the json of profile
 	if source.Profile != nil {
@@ -994,7 +994,7 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *sitedb.ProfileSwitch
 	}
 
 	if source.ProfileJSON != nil {
-		var profile nightscout.Profile
+		var profile nightscoutmodels.Profile
 		err := json.Unmarshal([]byte(*source.ProfileJSON), &profile)
 		if err == nil {
 
@@ -1056,9 +1056,9 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *sitedb.ProfileSwitch
 // Temp Basal
 ///////
 
-func TreatmentToTempBasal(source nightscout.Treatment) *sitedb.TempBasal {
+func TreatmentToTempBasal(source nightscoutmodels.Treatment) *sitedb.TempBasal {
 	if isAssigned(source.Absolute, source.Rate, source.Percent, source.DurationMinutes) {
-		return ptr(nightscout.PartialTreatmentToTempBasal(source))
+		return ptr(nightscoutmodels.PartialTreatmentToTempBasal(source))
 	}
 	return nil
 }
@@ -1067,7 +1067,7 @@ func TreatmentToTempBasal(source nightscout.Treatment) *sitedb.TempBasal {
 // Temp Targets
 ///////
 
-func TreatmentToTempTarget(source nightscout.Treatment) *sitedb.TempTarget {
+func TreatmentToTempTarget(source nightscoutmodels.Treatment) *sitedb.TempTarget {
 
 	if len(source.CorrectionRange) == 2 {
 		source.LowTarget = source.CorrectionRange[0]
@@ -1077,7 +1077,7 @@ func TreatmentToTempTarget(source nightscout.Treatment) *sitedb.TempTarget {
 		source.HighTarget = source.CorrectionRange[0]
 	}
 
-	target := nightscout.PartialTreatmentToTempTarget(source)
+	target := nightscoutmodels.PartialTreatmentToTempTarget(source)
 
 	if source.HighTarget != nil {
 		target.HighTarget = source.HighTarget.Float64()
@@ -1099,16 +1099,16 @@ func TreatmentToTempTarget(source nightscout.Treatment) *sitedb.TempTarget {
 	return nil
 }
 
-func TreatmentToComponentEvent(source nightscout.Treatment) *sitedb.ComponentEvent {
+func TreatmentToComponentEvent(source nightscoutmodels.Treatment) *sitedb.ComponentEvent {
 	if isAssigned(source.PumpID, source.PumpSerial, source.PumpType) {
-		return ptr(nightscout.PartialTreatmentToComponentEvent(source))
+		return ptr(nightscoutmodels.PartialTreatmentToComponentEvent(source))
 	}
 	return nil
 }
 
-func TreatmentToActivity(source nightscout.Treatment) *sitedb.Activity {
+func TreatmentToActivity(source nightscoutmodels.Treatment) *sitedb.Activity {
 	if isAssigned(source.Name, source.ActivityType, source.Calories, source.Steps, source.HeartRate) {
-		return ptr(nightscout.PartialTreatmentToActivity(source))
+		return ptr(nightscoutmodels.PartialTreatmentToActivity(source))
 	}
 	return nil
 }
@@ -1134,18 +1134,18 @@ func isAssigned(values ...any) bool {
 	return false
 }
 
-func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) nightscout.Treatment {
-	treatment := nightscout.EventGroupToTreatment(source.EventGroup)
+func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) nightscoutmodels.Treatment {
+	treatment := nightscoutmodels.EventGroupToTreatment(source.EventGroup)
 
-	nightscout.UpdateGlucoseReadingToTreatment(source.GlucoseReading, siteContext, treatment)
-	nightscout.UpdateInsulinDoseToTreatment(source.InsulinDose, treatment)
-	nightscout.UpdateFoodIntakeToTreatment(source.FoodIntake, treatment)
-	nightscout.UpdateTempBasalToTreatment(source.TempBasal, treatment)
-	nightscout.UpdateTempTargetToTreatment(source.TempTarget, treatment)
-	nightscout.UpdateProfileSwitchToTreatment(source.ProfileSwitch, siteContext, treatment)
-	nightscout.UpdateComponentEventToTreatment(source.ComponentEvent, treatment)
-	nightscout.UpdateActivityToTreatment(source.Activity, treatment)
-	nightscout.UpdateNotificationEventToTreatment(source.NotificationEvent, treatment)
+	nightscoutmodels.UpdateGlucoseReadingToTreatment(source.GlucoseReading, siteContext, treatment)
+	nightscoutmodels.UpdateInsulinDoseToTreatment(source.InsulinDose, treatment)
+	nightscoutmodels.UpdateFoodIntakeToTreatment(source.FoodIntake, treatment)
+	nightscoutmodels.UpdateTempBasalToTreatment(source.TempBasal, treatment)
+	nightscoutmodels.UpdateTempTargetToTreatment(source.TempTarget, treatment)
+	nightscoutmodels.UpdateProfileSwitchToTreatment(source.ProfileSwitch, siteContext, treatment)
+	nightscoutmodels.UpdateComponentEventToTreatment(source.ComponentEvent, treatment)
+	nightscoutmodels.UpdateActivityToTreatment(source.Activity, treatment)
+	nightscoutmodels.UpdateNotificationEventToTreatment(source.NotificationEvent, treatment)
 
 	return *treatment
 }

@@ -8,92 +8,92 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 )
 
 type QueryValues struct {
 	// Dates
 	// lte and gte both
-	DateGTE *nightscout.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
-	DateGT  *nightscout.DateInt `mapstructure:"dategt,omitempty" json:"dategt,omitempty"`
+	DateGTE *nightscoutmodels.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
+	DateGT  *nightscoutmodels.DateInt `mapstructure:"dategt,omitempty" json:"dategt,omitempty"`
 
-	DateEQ *nightscout.DateInt `mapstructure:"dateeq,omitempty" json:"dateeq,omitempty"`
+	DateEQ *nightscoutmodels.DateInt `mapstructure:"dateeq,omitempty" json:"dateeq,omitempty"`
 
-	DateLTE *nightscout.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
-	DateLT  *nightscout.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
+	DateLTE *nightscoutmodels.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
+	DateLT  *nightscoutmodels.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
 
-	CreatedAtGTE *nightscout.DateInt `mapstructure:"createdatgte,omitempty" json:"createdatgte,omitempty"`
-	CreatedAtGT  *nightscout.DateInt `mapstructure:"createdatgt,omitempty" json:"createdatgt,omitempty"`
+	CreatedAtGTE *nightscoutmodels.DateInt `mapstructure:"createdatgte,omitempty" json:"createdatgte,omitempty"`
+	CreatedAtGT  *nightscoutmodels.DateInt `mapstructure:"createdatgt,omitempty" json:"createdatgt,omitempty"`
 
-	CreatedAtLTE *nightscout.DateInt `mapstructure:"createdatlte,omitempty" json:"createdatlte,omitempty"`
-	CreatedAtLT  *nightscout.DateInt `mapstructure:"createdatlt,omitempty" json:"createdatlt,omitempty"`
+	CreatedAtLTE *nightscoutmodels.DateInt `mapstructure:"createdatlte,omitempty" json:"createdatlte,omitempty"`
+	CreatedAtLT  *nightscoutmodels.DateInt `mapstructure:"createdatlt,omitempty" json:"createdatlt,omitempty"`
 
-	UpdatedGTE *nightscout.DateInt `mapstructure:"updatedgte,omitempty" json:"updatedgte,omitempty"`
-	UpdatedGT  *nightscout.DateInt `mapstructure:"updatedgt,omitempty" json:"updatedgt,omitempty"`
-	UpdatedLTE *nightscout.DateInt `mapstructure:"updatedlte,omitempty" json:"updatedlte,omitempty"`
-	UpdatedLT  *nightscout.DateInt `mapstructure:"updatedlt,omitempty" json:"updatedlt,omitempty"`
+	UpdatedGTE *nightscoutmodels.DateInt `mapstructure:"updatedgte,omitempty" json:"updatedgte,omitempty"`
+	UpdatedGT  *nightscoutmodels.DateInt `mapstructure:"updatedgt,omitempty" json:"updatedgt,omitempty"`
+	UpdatedLTE *nightscoutmodels.DateInt `mapstructure:"updatedlte,omitempty" json:"updatedlte,omitempty"`
+	UpdatedLT  *nightscoutmodels.DateInt `mapstructure:"updatedlt,omitempty" json:"updatedlt,omitempty"`
 
 	// Type
-	TypeEq  *nightscout.ShortString `mapstructure:"typeeq,omitempty" json:"typeeq,omitempty"`
-	TypeNeq *nightscout.ShortString `mapstructure:"typeneq,omitempty" json:"typeneq,omitempty"`
-	TypeIn  *QueryStringArray       `mapstructure:"typein,omitempty" json:"typein,omitempty"`
-	TypeNin *QueryStringArray       `mapstructure:"typenin,omitempty" json:"typenin,omitempty"`
+	TypeEq  *nightscoutmodels.ShortString `mapstructure:"typeeq,omitempty" json:"typeeq,omitempty"`
+	TypeNeq *nightscoutmodels.ShortString `mapstructure:"typeneq,omitempty" json:"typeneq,omitempty"`
+	TypeIn  *QueryStringArray             `mapstructure:"typein,omitempty" json:"typein,omitempty"`
+	TypeNin *QueryStringArray             `mapstructure:"typenin,omitempty" json:"typenin,omitempty"`
 
 	// Identity
-	IDEq *nightscout.ShortString `mapstructure:"ideq,omitempty" json:"ideq,omitempty"`
-	IDIn *QueryStringArray       `mapstructure:"idin,omitempty" json:"idin,omitempty"`
+	IDEq *nightscoutmodels.ShortString `mapstructure:"ideq,omitempty" json:"ideq,omitempty"`
+	IDIn *QueryStringArray             `mapstructure:"idin,omitempty" json:"idin,omitempty"`
 
-	DeviceEq *nightscout.ShortString `mapstructure:"deviceeq,omitempty" json:"deviceeq,omitempty"`
-	AppEq    *nightscout.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
+	DeviceEq *nightscoutmodels.ShortString `mapstructure:"deviceeq,omitempty" json:"deviceeq,omitempty"`
+	AppEq    *nightscoutmodels.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
 	/////
 
 	// Entries
-	SgvEQ  *nightscout.FlexibleInt64 `mapstructure:"sgveq,omitempty" json:"sgveq,omitempty"`
-	SgvGTE *nightscout.FlexibleInt64 `mapstructure:"sgvgte,omitempty" json:"sgvgte,omitempty"`
-	SgvGT  *nightscout.FlexibleInt64 `mapstructure:"sgvgt,omitempty" json:"sgvgt,omitempty"`
-	SgvLTE *nightscout.FlexibleInt64 `mapstructure:"sgvlte,omitempty" json:"sgvlte,omitempty"`
-	SgvLT  *nightscout.FlexibleInt64 `mapstructure:"sgvlt,omitempty" json:"sgvlt,omitempty"`
+	SgvEQ  *nightscoutmodels.FlexibleInt64 `mapstructure:"sgveq,omitempty" json:"sgveq,omitempty"`
+	SgvGTE *nightscoutmodels.FlexibleInt64 `mapstructure:"sgvgte,omitempty" json:"sgvgte,omitempty"`
+	SgvGT  *nightscoutmodels.FlexibleInt64 `mapstructure:"sgvgt,omitempty" json:"sgvgt,omitempty"`
+	SgvLTE *nightscoutmodels.FlexibleInt64 `mapstructure:"sgvlte,omitempty" json:"sgvlte,omitempty"`
+	SgvLT  *nightscoutmodels.FlexibleInt64 `mapstructure:"sgvlt,omitempty" json:"sgvlt,omitempty"`
 
 	// Treatments
-	CarbsEQ  *nightscout.FlexibleInt64 `mapstructure:"carbseq,omitempty" json:"carbseq,omitempty"`
-	CarbsGTE *nightscout.FlexibleInt64 `mapstructure:"carbsgte,omitempty" json:"carbsgte,omitempty"`
-	CarbsGT  *nightscout.FlexibleInt64 `mapstructure:"carbsgt,omitempty" json:"carbsgt,omitempty"`
-	CarbsLTE *nightscout.FlexibleInt64 `mapstructure:"carbslte,omitempty" json:"carbslte,omitempty"`
-	CarbsLT  *nightscout.FlexibleInt64 `mapstructure:"carbslt,omitempty" json:"carbslt,omitempty"`
+	CarbsEQ  *nightscoutmodels.FlexibleInt64 `mapstructure:"carbseq,omitempty" json:"carbseq,omitempty"`
+	CarbsGTE *nightscoutmodels.FlexibleInt64 `mapstructure:"carbsgte,omitempty" json:"carbsgte,omitempty"`
+	CarbsGT  *nightscoutmodels.FlexibleInt64 `mapstructure:"carbsgt,omitempty" json:"carbsgt,omitempty"`
+	CarbsLTE *nightscoutmodels.FlexibleInt64 `mapstructure:"carbslte,omitempty" json:"carbslte,omitempty"`
+	CarbsLT  *nightscoutmodels.FlexibleInt64 `mapstructure:"carbslt,omitempty" json:"carbslt,omitempty"`
 
-	InsulinEQ  *nightscout.FlexibleInt64 `mapstructure:"insulineq,omitempty" json:"insulineq,omitempty"`
-	InsulinGTE *nightscout.FlexibleInt64 `mapstructure:"insulingte,omitempty" json:"insulingte,omitempty"`
-	InsulinGT  *nightscout.FlexibleInt64 `mapstructure:"insulingt,omitempty" json:"insulingt,omitempty"`
-	InsulinLTE *nightscout.FlexibleInt64 `mapstructure:"insulinlte,omitempty" json:"insulinlte,omitempty"`
-	InsulinLT  *nightscout.FlexibleInt64 `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
+	InsulinEQ  *nightscoutmodels.FlexibleInt64 `mapstructure:"insulineq,omitempty" json:"insulineq,omitempty"`
+	InsulinGTE *nightscoutmodels.FlexibleInt64 `mapstructure:"insulingte,omitempty" json:"insulingte,omitempty"`
+	InsulinGT  *nightscoutmodels.FlexibleInt64 `mapstructure:"insulingt,omitempty" json:"insulingt,omitempty"`
+	InsulinLTE *nightscoutmodels.FlexibleInt64 `mapstructure:"insulinlte,omitempty" json:"insulinlte,omitempty"`
+	InsulinLT  *nightscoutmodels.FlexibleInt64 `mapstructure:"insulinlt,omitempty" json:"insulinlt,omitempty"`
 
-	DurationEQ  *nightscout.FlexibleInt64 `mapstructure:"durationeq,omitempty" json:"durationeq,omitempty"`
-	DurationGTE *nightscout.FlexibleInt64 `mapstructure:"durationgte,omitempty" json:"durationgte,omitempty"`
-	DurationGT  *nightscout.FlexibleInt64 `mapstructure:"durationgt,omitempty" json:"durationgt,omitempty"`
-	DurationLTE *nightscout.FlexibleInt64 `mapstructure:"durationlte,omitempty" json:"durationlte,omitempty"`
-	DurationLT  *nightscout.FlexibleInt64 `mapstructure:"durationlt,omitempty" json:"durationlt,omitempty"`
+	DurationEQ  *nightscoutmodels.FlexibleInt64 `mapstructure:"durationeq,omitempty" json:"durationeq,omitempty"`
+	DurationGTE *nightscoutmodels.FlexibleInt64 `mapstructure:"durationgte,omitempty" json:"durationgte,omitempty"`
+	DurationGT  *nightscoutmodels.FlexibleInt64 `mapstructure:"durationgt,omitempty" json:"durationgt,omitempty"`
+	DurationLTE *nightscoutmodels.FlexibleInt64 `mapstructure:"durationlte,omitempty" json:"durationlte,omitempty"`
+	DurationLT  *nightscoutmodels.FlexibleInt64 `mapstructure:"durationlt,omitempty" json:"durationlt,omitempty"`
 
-	NameEq *nightscout.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
+	NameEq *nightscoutmodels.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
 	// Limits
-	Limit *nightscout.FlexibleInt64 `mapstructure:"limit,omitempty" json:"limit,omitempty"`
-	Skip  *nightscout.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
+	Limit *nightscoutmodels.FlexibleInt64 `mapstructure:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *nightscoutmodels.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
 
 	// Sort
-	Sort     *nightscout.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
-	SortDesc *nightscout.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
+	Sort     *nightscoutmodels.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
+	SortDesc *nightscoutmodels.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
 
-	Envelope *nightscout.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
-	Fields   *QueryStringArray        `mapstructure:"fields,omitempty" json:"fields,omitempty"`
+	Envelope *nightscoutmodels.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
+	Fields   *QueryStringArray              `mapstructure:"fields,omitempty" json:"fields,omitempty"`
 
-	IncludeDeleted *nightscout.FlexibleBool `mapstructure:"includeDeleted,omitempty" json:"includeDeleted,omitempty"`
+	IncludeDeleted *nightscoutmodels.FlexibleBool `mapstructure:"includeDeleted,omitempty" json:"includeDeleted,omitempty"`
 
 	// This is Nighttroops value to show RawJsonData
-	Raw *nightscout.FlexibleBool `mapstructure:"raw,omitempty" json:"raw,omitempty"`
+	Raw *nightscoutmodels.FlexibleBool `mapstructure:"raw,omitempty" json:"raw,omitempty"`
 
 	Token *string `mapstructure:"token,omitempty" json:"-"`
 

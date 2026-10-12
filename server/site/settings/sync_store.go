@@ -12,7 +12,7 @@ import (
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/models/site"
+	"nighttroop.t1d.nz/models/sitemodels"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/site/siteutils"
@@ -25,8 +25,8 @@ import (
 
 type SyncSettingsStore struct{}
 
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *site.SyncSource) (bool, *siteutils.HTTPError) {
-	params := site.SyncSourceToCreate(model)
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteutils.HTTPError) {
+	params := sitemodels.SyncSourceToCreate(model)
 	params.SiteID = siteContext.Subdomain
 
 	params.UrlOrUsername = strings.TrimSpace(params.UrlOrUsername)
@@ -76,11 +76,11 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httput
 	return true, nil
 }
 
-func (s *SyncSettingsStore) CreateHTMXResponse(model *site.SyncSource) templ.Component {
+func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
-func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*site.SyncSource, *siteutils.HTTPError) {
+func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteutils.HTTPError) {
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
@@ -98,15 +98,15 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 		return nil, nil
 	}
 
-	return site.SyncSourceFromDB(model), nil
+	return sitemodels.SyncSourceFromDB(model), nil
 }
 
-func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *site.SyncSource, model *site.SyncSource) *siteutils.HTTPError {
+func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteutils.HTTPError {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
 		return siteutils.ErrRateLimitExceeded(seconds)
 	}
 
-	params := site.SyncSourceToUpdate(model)
+	params := sitemodels.SyncSourceToUpdate(model)
 	params.SiteID = siteContext.Subdomain
 
 	var err error
@@ -123,7 +123,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 			*params.UrlOrUsername, err = nsURLNormalizeValidate(*params.UrlOrUsername, siteContext.Config)
 			if err != nil {
 				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
-				return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", params.UrlOrUsername, err))
+				return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%v' is not a valid URL. %s", params.UrlOrUsername, err))
 			}
 		}
 	}
@@ -164,7 +164,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	return nil
 }
 
-func (s *SyncSettingsStore) UpdateHTMXResponse(model *site.SyncSource) templ.Component {
+func (s *SyncSettingsStore) UpdateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
@@ -197,9 +197,9 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		modelSyncSources := []*site.SyncSource{}
+		modelSyncSources := []*sitemodels.SyncSource{}
 		for _, dbSyncSource := range dbSyncSources {
-			modelSyncSource := site.SyncSourceFromDB(dbSyncSource)
+			modelSyncSource := sitemodels.SyncSourceFromDB(dbSyncSource)
 			modelSyncSource.Password = consts.PASSWORD_GARBAGE_VALUE
 			modelSyncSource.UrlOrUsername, err = config.Security.Decrypt(modelSyncSource.UrlOrUsername)
 			if err != nil {

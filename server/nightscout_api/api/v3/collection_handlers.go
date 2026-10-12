@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 )
 
@@ -70,10 +70,10 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw nightscout.FlexibleBool
+		var raw nightscoutmodels.FlexibleBool
 		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
 		if rawError != nil {
-			raw = nightscout.FlexibleBool(false)
+			raw = nightscoutmodels.FlexibleBool(false)
 		}
 
 		// The Actual Create
@@ -173,10 +173,10 @@ func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw nightscout.FlexibleBool
+		var raw nightscoutmodels.FlexibleBool
 		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
 		if rawError != nil {
-			raw = nightscout.FlexibleBool(false)
+			raw = nightscoutmodels.FlexibleBool(false)
 		}
 
 		var doc map[string]any
@@ -215,10 +215,10 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw nightscout.FlexibleBool
+		var raw nightscoutmodels.FlexibleBool
 		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
 		if rawError != nil {
-			raw = nightscout.FlexibleBool(false)
+			raw = nightscoutmodels.FlexibleBool(false)
 		}
 
 		var doc map[string]any

@@ -7,7 +7,7 @@ import (
 	"runtime"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/models/public"
+	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -83,7 +83,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		err = public_templ.CreateSiteInfo(public.NewSiteInfo{
+		err = public_templ.CreateSiteInfo(publicmodels.NewSiteInfo{
 			URL:             siteCreateResult.SiteDB.URL(),
 			AdminPassword:   siteCreateResult.AdminPassword,
 			AdminTotpSecret: siteCreateResult.TotpSecret,

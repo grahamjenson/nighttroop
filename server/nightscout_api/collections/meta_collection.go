@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -17,7 +17,7 @@ type MetaCreateCollection[NS, DM any] interface {
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
 	GetDuplicateDBFunc(*sitedb.Queries, context.Context, NS) (*DM, error)
-	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
+	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscoutmodels.ConverterContext, *string) (*DM, error)
 }
 
 type MetaPatchCollection[NS, DM any] interface {
@@ -25,7 +25,7 @@ type MetaPatchCollection[NS, DM any] interface {
 	ValidatePatch(NS, *DM) *nsutils.HTTPError
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
-	PatchDBFunc(*sitedb.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
+	PatchDBFunc(*sitedb.Queries, context.Context, NS, string, *DM, nightscoutmodels.ConverterContext) (*DM, error)
 }
 
 type MetaGetCollection[DM any] interface {
@@ -52,7 +52,7 @@ type MetaReplaceCollection[NS, DM any] interface {
 	Validate(NS, *DM) *nsutils.HTTPError
 	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
 	HardDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
-	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
+	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscoutmodels.ConverterContext, *string) (*DM, error)
 }
 
 // //
@@ -102,7 +102,7 @@ func MetaCreate[NS, DM any](
 		q,
 		ctx,
 		nsModel,
-		nightscout.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
+		nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
 		nil,
 	)
 
@@ -297,7 +297,7 @@ func MetaReplace[NS interface {
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	cc := nightscout.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name}
+	cc := nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name}
 
 	creatingNewRecord := false
 
@@ -418,7 +418,7 @@ func MetaPatch[NS interface {
 		nsModel,
 		identifier,
 		updateingModel,
-		nightscout.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
+		nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
 	)
 
 	if err != nil {

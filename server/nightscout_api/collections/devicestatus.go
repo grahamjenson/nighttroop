@@ -7,7 +7,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -34,18 +34,18 @@ func (c DeviceStatusCollection) Convert(dr *sitedb.DeviceReport, siteContext *ht
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c DeviceStatusCollection) Validate(nsModel nightscout.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {
+func (c DeviceStatusCollection) Validate(nsModel nightscoutmodels.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
 	return nil
 }
 
-func (c DeviceStatusCollection) ValidatePatch(nsModel nightscout.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {
+func (c DeviceStatusCollection) ValidatePatch(nsModel nightscoutmodels.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {
 	return nil
 }
 
-func (c DeviceStatusCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
+func (c DeviceStatusCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
 	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
 
 	if overrideIdentifier != nil {
@@ -55,7 +55,7 @@ func (c DeviceStatusCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Cont
 	return q.CreateDeviceReport(ctx, createParams)
 }
 
-func (c DeviceStatusCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.DeviceStatus) (*sitedb.DeviceReport, error) {
+func (c DeviceStatusCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus) (*sitedb.DeviceReport, error) {
 	deviceStatuses, rerr := q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
@@ -82,8 +82,8 @@ func (c DeviceStatusCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.
 	return q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscout.ConverterContext) (*sitedb.DeviceReport, error) {
-	updateParams := nightscout.DeviceStatusToUpdateDeviceReport(nsModel, uc)
+func (c DeviceStatusCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
+	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
 	return q.UpdateDeviceReport(ctx, updateParams)
 }
@@ -144,36 +144,36 @@ func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httput
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httputils.SiteContext) nightscout.DeviceStatus {
+func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httputils.SiteContext) nightscoutmodels.DeviceStatus {
 	if source == nil {
-		return nightscout.DeviceStatus{}
+		return nightscoutmodels.DeviceStatus{}
 	}
 
-	nsModel := nightscout.DBModelToDeviceStatus(source, siteContext)
+	nsModel := nightscoutmodels.DBModelToDeviceStatus(source, siteContext)
 
 	if source.IsDeviceCharging != nil {
-		nsModel.IsCharging = ptr(nightscout.FlexibleBool(*source.IsDeviceCharging))
+		nsModel.IsCharging = ptr(nightscoutmodels.FlexibleBool(*source.IsDeviceCharging))
 	}
 	if source.DeviceBatteryPercent != nil {
-		nsModel.UploaderBattery = ptr(nightscout.FlexibleFloat64(*source.DeviceBatteryPercent))
+		nsModel.UploaderBattery = ptr(nightscoutmodels.FlexibleFloat64(*source.DeviceBatteryPercent))
 	}
 
 	/////
 	// Pump
 	/////
 	if source.PumpBatteryPercent != nil {
-		nsModel.Pump = &nightscout.PumpStatus{
-			Battery: &nightscout.PumpBattery{
-				Percent: ptr(nightscout.FlexibleFloat64(*source.PumpBatteryPercent)),
+		nsModel.Pump = &nightscoutmodels.PumpStatus{
+			Battery: &nightscoutmodels.PumpBattery{
+				Percent: ptr(nightscoutmodels.FlexibleFloat64(*source.PumpBatteryPercent)),
 			},
 		}
 	}
 
 	if source.PumpReservoir != nil {
 		if nsModel.Pump == nil {
-			nsModel.Pump = &nightscout.PumpStatus{}
+			nsModel.Pump = &nightscoutmodels.PumpStatus{}
 		}
-		nsModel.Pump.Reservoir = ptr(nightscout.FlexibleFloat64(*source.PumpReservoir))
+		nsModel.Pump.Reservoir = ptr(nightscoutmodels.FlexibleFloat64(*source.PumpReservoir))
 	}
 
 	///////
@@ -199,8 +199,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 // NIGHTSCOUT TO DB
 ///////
 
-func NightscoutToDBCreateDeviceReport(source nightscout.DeviceStatus, ctx nightscout.ConverterContext) sitedb.CreateDeviceReportParams {
-	createParams := nightscout.DeviceStatusToCreateDeviceReport(source, ctx)
+func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx nightscoutmodels.ConverterContext) sitedb.CreateDeviceReportParams {
+	createParams := nightscoutmodels.DeviceStatusToCreateDeviceReport(source, ctx)
 	if source.IsCharging != nil {
 		createParams.IsDeviceCharging = ptr(bool(*source.IsCharging))
 	}

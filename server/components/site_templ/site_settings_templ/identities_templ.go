@@ -8,7 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"nighttroop.t1d.nz/models/site"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -20,7 +20,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func Identities(siteContext *httputils.SiteContext, users []*site.UserIdentity, devices []*site.UserIdentity) templ.Component {
+func Identities(siteContext *httputils.SiteContext, users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -67,7 +67,7 @@ func Identities(siteContext *httputils.SiteContext, users []*site.UserIdentity, 
 	})
 }
 
-func IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) templ.Component {
+func IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -88,7 +88,7 @@ func IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) te
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"identities_table\"><div class=\"mb-4 border-b border-white/10 pb-3\"><div class=\"max-w-4xl mx-auto p-6 space-y-6\"><div class=\"text-center\"><h1 class=\"text-2xl font-bold\">Users & Devices </h1><p class=\"text-gray-500 mt-2\">Nighttroop uses strict role separation to improve security and reduce credential risk.</p></div><!-- Admin --><div class=\"border rounded-xl p-5 bg-red-50 border-red-200\"><h2 class=\"text-lg font-semibold text-red-700\">Admin</h2><p class=\"mt-2 text-gray-700\">Admins manage the system: they can create and manage users, configure site settings, and maintain the platform. For security reasons, admin accounts cannot access the Nightscout API.</p><ul class=\"mt-3 list-disc list-inside text-gray-700 space-y-1\"><li>Protected with TOTP-based two-factor authentication</li><li>No direct Nightscout API access</li><li>Recovery only via initial backup key</li></ul></div><!-- User --><div class=\"border rounded-xl p-5 bg-blue-50 border-blue-200\"><h2 class=\"text-lg font-semibold text-blue-700\">User</h2><p class=\"mt-2 text-gray-700\">A user represents a person using the system. Users can log in, generate reports, interact with Nighttroop, and use Nightscout features.</p></div><!-- Device --><div class=\"border rounded-xl p-5 bg-green-50 border-green-200\"><h2 class=\"text-lg font-semibold text-green-700\">Device</h2><p class=\"mt-2 text-gray-700\">A device is a connected endpoint such as a phone, SugarPixel, or display. It can communicate with the Nightscout API but cannot log into the website. It can also have a status, like battery level, to alert on, and recieve notifications once registered. The Person With Diabetes (PWD) phone is a special device whose credentials you put into the loop (AAPS, Trio...).</p></div><!-- Footer note --><div class=\"text-sm text-gray-500 text-center pt-2\">These distinctions enforce strong security boundaries. Each user and device should use separate credentials.</div></div></div><div id=\"usersTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Admins & Users</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"identities_table\"><div class=\"mb-4 border-b border-white/10 pb-3\"><div class=\"max-w-4xl mx-auto p-6 space-y-6\"><div class=\"text-center\"><h1 class=\"text-2xl font-bold\">Users & Devices </h1><p class=\"text-gray-500 mt-2\">Nighttroop uses strict role separation to improve security and reduce credential risk.</p></div><!-- Admin --><div class=\"border rounded-xl p-5 bg-red-50 border-red-200\"><h2 class=\"text-lg font-semibold text-red-700\">Admin</h2><p class=\"mt-2 text-gray-700\">Admins manage the system: they can create and manage users, configure site settings, and maintain the platform. For security reasons, admin accounts cannot access the Nightscout API.</p><ul class=\"mt-3 list-disc list-inside text-gray-700 space-y-1\"><li>Protected with TOTP-based two-factor authentication</li><li>No direct Nightscout API access</li><li>Recovery only via initial backup key</li></ul></div><!-- User --><div class=\"border rounded-xl p-5 bg-blue-50 border-blue-200\"><h2 class=\"text-lg font-semibold text-blue-700\">User</h2><p class=\"mt-2 text-gray-700\">A user represents a person using the system. Users can log in, generate reports, interact with Nighttroop, and use Nightscout features.</p></div><!-- Device --><div class=\"border rounded-xl p-5 bg-green-50 border-green-200\"><h2 class=\"text-lg font-semibold text-green-700\">Device</h2><p class=\"mt-2 text-gray-700\">A device is a connected endpoint such as a phone, SugarPixel, or display. It can communicate with the Nightscout API but cannot log into the websitemodels. It can also have a status, like battery level, to alert on, and recieve notifications once registered. The Person With Diabetes (PWD) phone is a special device whose credentials you put into the loop (AAPS, Trio...).</p></div><!-- Footer note --><div class=\"text-sm text-gray-500 text-center pt-2\">These distinctions enforce strong security boundaries. Each user and device should use separate credentials.</div></div></div><div id=\"usersTable\" class=\"border border-gray-300 rounded-lg mb-6 p-4\"><div>Admins & Users</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -100,7 +100,7 @@ func IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) te
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("usersTable", "User", []site.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -116,7 +116,7 @@ func IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) te
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("devicesTable", "Device", []site.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = formCreateIdentity("devicesTable", "Device", []sitemodels.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,7 +128,7 @@ func IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) te
 	})
 }
 
-func buildIdentityTable(id string, identities []*site.UserIdentity) templ.Component {
+func buildIdentityTable(id string, identities []*sitemodels.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -390,7 +390,7 @@ func buildIdentityTable(id string, identities []*site.UserIdentity) templ.Compon
 	})
 }
 
-func createTableRowForIdentity(identity *site.UserIdentity) templ.Component {
+func createTableRowForIdentity(identity *sitemodels.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -610,7 +610,7 @@ func createTableRowForIdentity(identity *site.UserIdentity) templ.Component {
 	})
 }
 
-func formCreateIdentity(tableid string, name string, roles []site.RoleOption) templ.Component {
+func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -911,7 +911,7 @@ func formCreateIdentity(tableid string, name string, roles []site.RoleOption) te
 	})
 }
 
-func CreateIdentityResponse(url string, identity *site.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
+func CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -952,7 +952,7 @@ func CreateIdentityResponse(url string, identity *site.UserIdentity, password st
 	})
 }
 
-func newIdentityModal(url string, identity *site.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
+func newIdentityModal(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

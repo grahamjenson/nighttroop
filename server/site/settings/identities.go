@@ -8,7 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/models/site"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -60,22 +60,22 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 	}
 }
 
-func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site.UserIdentity, []*site.UserIdentity, error) {
+func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*sitemodels.UserIdentity, []*sitemodels.UserIdentity, error) {
 	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}
-	userIdentities := []*site.UserIdentity{}
-	deviceIdentities := []*site.UserIdentity{}
+	userIdentities := []*sitemodels.UserIdentity{}
+	deviceIdentities := []*sitemodels.UserIdentity{}
 
 	for _, identity := range identities {
 		switch identity.Role.GetType() {
 		case consts.IdentityTypeAdmin:
-			userIdentities = append([]*site.UserIdentity{site.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
+			userIdentities = append([]*sitemodels.UserIdentity{sitemodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name)}, userIdentities...)
 		case consts.IdentityTypeUser:
-			userIdentities = append(userIdentities, site.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			userIdentities = append(userIdentities, sitemodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		case consts.IdentityTypeDevice:
-			deviceIdentities = append(deviceIdentities, site.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+			deviceIdentities = append(deviceIdentities, sitemodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
 		default:
 			continue
 		}
@@ -110,7 +110,7 @@ func POSTCreateIdentityHandler(controlDB *db.ControlDB, config *config.ServerCon
 			return
 		}
 
-		identity := &site.UserIdentity{
+		identity := &sitemodels.UserIdentity{
 			ID:      "",
 			Name:    name,
 			Role:    role,

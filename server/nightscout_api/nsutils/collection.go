@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 )
 
 type Collection string
@@ -66,9 +66,9 @@ func (c Collection) DefaultDateField() string {
 func (c Collection) IsTypeString(t string) bool {
 	switch c {
 	case Entries:
-		return t == string(nightscout.SGVType) || t == string(nightscout.MBGType)
+		return t == string(nightscoutmodels.SGVType) || t == string(nightscoutmodels.MBGType)
 	case Treatments:
-		for _, et := range nightscout.TreatmentEventTypes {
+		for _, et := range nightscoutmodels.TreatmentEventTypes {
 			if t == string(et) {
 				return true
 			}

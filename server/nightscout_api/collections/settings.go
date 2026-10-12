@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
@@ -51,7 +51,7 @@ func ConvertFromAnyTypeToSetting(source *settings.SettingAnyType, context *httpu
 // ///
 
 func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	var nsModel nightscout.Setting
+	var nsModel nightscoutmodels.Setting
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", "settings")
@@ -81,7 +81,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		patch["identifier"] = identifier
 	}
 
-	var nsModel nightscout.Setting
+	var nsModel nightscoutmodels.Setting
 	err := utils.FromMap(patch, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", "settings")
@@ -89,7 +89,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	if nsModel.Identifier.String() == "" {
-		nsModel.Identifier = ptr(nightscout.IdentifierString(identifier))
+		nsModel.Identifier = ptr(nightscoutmodels.IdentifierString(identifier))
 	}
 
 	if nsModel.Identifier.String() != identifier {

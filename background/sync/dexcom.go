@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
-	"nighttroop.t1d.nz/models/dexcom"
+	"nighttroop.t1d.nz/models/dexcommodels"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
@@ -32,7 +32,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
-			createParams := dexcom.EGVToCreate(e, "dexcom_sync")
+			createParams := dexcommodels.EGVToCreate(e, "dexcom_sync")
 			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if utilerrors.IsSQLDuplicateID(err) {

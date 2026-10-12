@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"nighttroop.t1d.nz/models/dexcom"
+	"nighttroop.t1d.nz/models/dexcommodels"
 )
 
 const (
@@ -188,7 +188,7 @@ func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string
 }
 
 // FetchEGVs fetches the last specified minutes of EGV readings.
-func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcom.EGV, error) {
+func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV, error) {
 	if c.sessionID == "" {
 		if err := c.Login(ctx); err != nil {
 			return nil, fmt.Errorf("Dexcom Login Error: %w", err)
@@ -235,10 +235,10 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcom.EGV, erro
 		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
 	}
 
-	out := make([]dexcom.EGV, 0, len(items))
+	out := make([]dexcommodels.EGV, 0, len(items))
 
 	for _, raw := range items {
-		var r dexcom.EGV
+		var r dexcommodels.EGV
 		if err := json.Unmarshal(raw, &r); err != nil {
 			slog.Error("Error unmarshalling Dexcom response", "error", err, "raw", string(raw))
 			continue

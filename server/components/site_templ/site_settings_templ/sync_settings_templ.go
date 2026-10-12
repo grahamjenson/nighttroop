@@ -9,7 +9,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/templui/templui/components/checkbox"
-	"nighttroop.t1d.nz/models/site"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -18,9 +18,9 @@ import (
 )
 
 func findSyncSource(
-	syncSettings []*site.SyncSource,
+	syncSettings []*sitemodels.SyncSource,
 	sourceType consts.SyncSourceType,
-) *site.SyncSource {
+) *sitemodels.SyncSource {
 	for _, ss := range syncSettings {
 		if ss.Type == sourceType {
 			return ss
@@ -29,7 +29,7 @@ func findSyncSource(
 	return nil
 }
 
-func SyncSettingsFull(syncSettings []*site.SyncSource) templ.Component {
+func SyncSettingsFull(syncSettings []*sitemodels.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -76,7 +76,7 @@ func SyncSettingsFull(syncSettings []*site.SyncSource) templ.Component {
 	})
 }
 
-func SyncSettingsPartial(syncSettings []*site.SyncSource) templ.Component {
+func SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -121,7 +121,7 @@ func SyncSettingsPartial(syncSettings []*site.SyncSource) templ.Component {
 	})
 }
 
-func DexcomSyncForm(dexcomSyncSettings *site.SyncSource) templ.Component {
+func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -485,7 +485,7 @@ func DexcomSyncForm(dexcomSyncSettings *site.SyncSource) templ.Component {
 	})
 }
 
-func NightscoutSyncForm(nightscoutSyncSettings *site.SyncSource) templ.Component {
+func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -797,7 +797,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *site.SyncSource) templ.Component
 	})
 }
 
-func VirtualSyncForm(synSource *site.SyncSource) templ.Component {
+func VirtualSyncForm(synSource *sitemodels.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -950,7 +950,7 @@ func VirtualSyncForm(synSource *site.SyncSource) templ.Component {
 	})
 }
 
-func SuccessfulUpdate(model *site.SyncSource) templ.Component {
+func SuccessfulUpdate(model *sitemodels.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

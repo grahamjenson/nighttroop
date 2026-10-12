@@ -1,7 +1,7 @@
 package site_settings_templ
 
 import (
-	"nighttroop.t1d.nz/models/site"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -13,13 +13,13 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-templ Identities(siteContext *httputils.SiteContext, users []*site.UserIdentity, devices []*site.UserIdentity) {
+templ Identities(siteContext *httputils.SiteContext, users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
 	@site_templ.SiteBase() {
 		@IdentitesTable(users, devices)
 	}
 }
 
-templ IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) {
+templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
 	<div id="identities_table">
 		<div class="mb-4 border-b border-white/10 pb-3">
 			<div class="max-w-4xl mx-auto p-6 space-y-6">
@@ -55,7 +55,7 @@ templ IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) {
 					<h2 class="text-lg font-semibold text-green-700">Device</h2>
 					<p class="mt-2 text-gray-700">
 						A device is a connected endpoint such as a phone, SugarPixel, or display.
-						It can communicate with the Nightscout API but cannot log into the website.
+						It can communicate with the Nightscout API but cannot log into the websitemodels.
 						It can also have a status, like battery level, to alert on, and recieve notifications once registered.
 						The Person With Diabetes (PWD) phone is a special device whose credentials you put into the loop (AAPS, Trio...).
 					</p>
@@ -70,20 +70,20 @@ templ IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) {
 			<div>Admins & Users</div>
 			@buildIdentityTable("usersTable", users)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("usersTable", "User", []site.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
+			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
 		</div>
 		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
 			<div>Devices</div>
 			@buildIdentityTable("devicesTable", devices)
 			<div class="border border-black-900"></div>
-			@formCreateIdentity("devicesTable", "Device", []site.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
+			@formCreateIdentity("devicesTable", "Device", []sitemodels.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
 		</div>
 		<!-- Error -->
 		<div id="modal-container"></div>
 	</div>
 }
 
-templ buildIdentityTable(id string, identities []*site.UserIdentity) {
+templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 	@table.Table(table.Props{
 		ID:    id,
 		Class: "border border-gray-300 rounded-lg mb-6",
@@ -118,7 +118,7 @@ templ buildIdentityTable(id string, identities []*site.UserIdentity) {
 	}
 }
 
-templ createTableRowForIdentity(identity *site.UserIdentity) {
+templ createTableRowForIdentity(identity *sitemodels.UserIdentity) {
 	@table.Row() {
 		@table.Cell() {
 			{ identity.Name }
@@ -141,7 +141,7 @@ templ createTableRowForIdentity(identity *site.UserIdentity) {
 	}
 }
 
-templ formCreateIdentity(tableid string, name string, roles []site.RoleOption) {
+templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOption) {
 	{{ formID := "createIdentityForm" + tableid }}
 	<div class="flex justify-end items-end mt-4">
 		<form
@@ -209,14 +209,14 @@ templ formCreateIdentity(tableid string, name string, roles []site.RoleOption) {
 	</div>
 }
 
-templ CreateIdentityResponse(url string, identity *site.UserIdentity, password string, totpSecret *string, nsToken *string) {
+templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	@createTableRowForIdentity(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
 		@newIdentityModal(url, identity, password, totpSecret, nsToken)
 	</div>
 }
 
-templ newIdentityModal(url string, identity *site.UserIdentity, password string, totpSecret *string, nsToken *string) {
+templ newIdentityModal(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
 		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md flex flex-col items-center justify-center">
 			@createdUserInfo(url, identity.Name, password, totpSecret, nsToken)

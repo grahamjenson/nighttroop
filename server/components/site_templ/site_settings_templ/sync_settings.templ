@@ -2,7 +2,7 @@ package site_settings_templ
 
 import (
 	"github.com/templui/templui/components/checkbox"
-	"nighttroop.t1d.nz/models/site"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -11,9 +11,9 @@ import (
 )
 
 func findSyncSource(
-	syncSettings []*site.SyncSource,
+	syncSettings []*sitemodels.SyncSource,
 	sourceType consts.SyncSourceType,
-) *site.SyncSource {
+) *sitemodels.SyncSource {
 	for _, ss := range syncSettings {
 		if ss.Type == sourceType {
 			return ss
@@ -22,13 +22,13 @@ func findSyncSource(
 	return nil
 }
 
-templ SyncSettingsFull(syncSettings []*site.SyncSource) {
+templ SyncSettingsFull(syncSettings []*sitemodels.SyncSource) {
 	@site_templ.SiteBase() {
 		@SyncSettingsPartial(syncSettings)
 	}
 }
 
-templ SyncSettingsPartial(syncSettings []*site.SyncSource) {
+templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 	<div id="mainForm" class="border-0">
 		<div class="mb-3 border-bottom pb-2">
 			<h3 class="mb-1 font-bold">Sync Settings</h3>
@@ -43,7 +43,7 @@ templ SyncSettingsPartial(syncSettings []*site.SyncSource) {
 	</div>
 }
 
-templ DexcomSyncForm(dexcomSyncSettings *site.SyncSource) {
+templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 	<form hx-post="/settings/sync/dexcom" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
@@ -166,7 +166,7 @@ templ DexcomSyncForm(dexcomSyncSettings *site.SyncSource) {
 	</form>
 }
 
-templ NightscoutSyncForm(nightscoutSyncSettings *site.SyncSource) {
+templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 	<form hx-post="/settings/sync/nightscout" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
@@ -278,7 +278,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *site.SyncSource) {
 	</form>
 }
 
-templ VirtualSyncForm(synSource *site.SyncSource) {
+templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 	<form hx-post="/settings/sync/nightscout" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
@@ -337,7 +337,7 @@ templ VirtualSyncForm(synSource *site.SyncSource) {
 	</form>
 }
 
-templ SuccessfulUpdate(model *site.SyncSource) {
+templ SuccessfulUpdate(model *sitemodels.SyncSource) {
 	<div class="rounded-lg border border-green-500 bg-green-100 p-4">
 		<div class="text-green-800">
 			Settings updated { model.Type } successfully.

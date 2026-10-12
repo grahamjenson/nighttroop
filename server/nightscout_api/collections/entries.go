@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/models/nightscout"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -18,7 +18,7 @@ type EntriesCollection struct {
 
 func NewEntriesCollection() EntriesCollection {
 	return EntriesCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Entries, nightscout.DBModelToEntry),
+		converter: nsutils.DBModelToRecord(nsutils.Entries, nightscoutmodels.DBModelToEntry),
 	}
 }
 
@@ -36,7 +36,7 @@ func (c EntriesCollection) Convert(dr *sitedb.GlucoseReading, siteContext *httpu
 
 // Cannot change properties
 
-func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
+func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -50,19 +50,19 @@ func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *sitedb.Gl
 
 }
 
-func (c EntriesCollection) ValidatePatch(nsModel nightscout.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
+func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
 	return c.Validate(nsModel, dbModel)
 }
 
-func (c EntriesCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.GlucoseReading, error) {
-	createParams := nightscout.EntryToCreate(nsModel, cc)
+func (c EntriesCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.GlucoseReading, error) {
+	createParams := nightscoutmodels.EntryToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Entry) (*sitedb.GlucoseReading, error) {
+func (c EntriesCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
 	glucoseReadings, rerr := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
@@ -97,8 +97,8 @@ func (c EntriesCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.C
 	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscout.ConverterContext) (*sitedb.GlucoseReading, error) {
-	updateParams := nightscout.EntryToUpdate(nsModel, uc)
+func (c EntriesCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
+	updateParams := nightscoutmodels.EntryToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 
 	return q.UpdateGlucoseReading(ctx, updateParams)

@@ -7,7 +7,8 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/models/nightscout"
+
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -29,7 +30,7 @@ func (c ProfileCollection) Convert(dr *sitedb.ProfilePresetBundle, siteContext *
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *sitedb.ProfilePresetBundle) *nsutils.HTTPError {
+func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbModel *sitedb.ProfilePresetBundle) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -37,7 +38,7 @@ func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *si
 	return nil
 }
 
-func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
+func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
 	manyCreateParams := NightscoutToDBCreateProfilePreset(nsModel, cc)
 
 	ret := sitedb.ProfilePresetBundle([]*sitedb.ProfilePreset{})
@@ -52,7 +53,7 @@ func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, 
 	return &ret, nil
 }
 
-func (c ProfileCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
+func (c ProfileCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
 	profilePresets, rerr := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
@@ -138,13 +139,13 @@ func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext) nightscout.ProfileStore {
+func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext) nightscoutmodels.ProfileStore {
 	if source == nil {
-		return nightscout.ProfileStore{}
+		return nightscoutmodels.ProfileStore{}
 	}
 	realSource := *source
 	if len(realSource) == 0 {
-		return nightscout.ProfileStore{}
+		return nightscoutmodels.ProfileStore{}
 	}
 	defaultProfile := realSource[0]
 	for _, p := range realSource {
@@ -155,16 +156,16 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	}
 	settingsUnits := siteContext.GetSettings().GetUnits()
 
-	profileStore := nightscout.DBModelToProfileStore(defaultProfile, siteContext)
-	profileStore.Store = make(map[nightscout.ShortString]nightscout.Profile)
-	profileStore.DefaultProfile = ptr(nightscout.ShortString(defaultProfile.Name))
+	profileStore := nightscoutmodels.DBModelToProfileStore(defaultProfile, siteContext)
+	profileStore.Store = make(map[nightscoutmodels.ShortString]nightscoutmodels.Profile)
+	profileStore.DefaultProfile = ptr(nightscoutmodels.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
 
 	for _, p := range realSource {
-		profile := nightscout.DBModelToProfile(p, siteContext)
+		profile := nightscoutmodels.DBModelToProfile(p, siteContext)
 		profile.Units = settingsUnits
 
-		profileStore.Store[nightscout.ShortString(p.Name)] = profile
+		profileStore.Store[nightscoutmodels.ShortString(p.Name)] = profile
 	}
 
 	return profileStore
@@ -174,16 +175,16 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 // NIGHTSCOUT TO DB
 ///////
 
-func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []sitedb.CreateProfilePresetParams {
+func NightscoutToDBCreateProfilePreset(source nightscoutmodels.ProfileStore, ctx nightscoutmodels.ConverterContext) []sitedb.CreateProfilePresetParams {
 	createParams := []sitedb.CreateProfilePresetParams{}
-	profileStoreID := nightscout.AssignID()
+	profileStoreID := nightscoutmodels.AssignID()
 	var loopSettingsJSON *string
 	if source.LoopSettings != nil {
 		loopSettingsJSON = TryValueToJSON(source.LoopSettings)
 	}
 	defaultUnits := source.Units
 	for name, profile := range source.Store {
-		createParam := nightscout.PartialProfileStoreToCreate(source, ctx)
+		createParam := nightscoutmodels.PartialProfileStoreToCreate(source, ctx)
 		createParam.ProfileStoreID = profileStoreID
 		createParam.LoopSettingsJson = loopSettingsJSON
 		createParam.Name = string(name)
