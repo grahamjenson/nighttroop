@@ -1,4 +1,4 @@
-package nighttroop
+package public
 
 type NewSiteInfo struct {
 	URL             string

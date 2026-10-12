@@ -1,7 +1,7 @@
 package public_templ
 
 import (
-	"nighttroop.t1d.nz/models/nighttroop"
+	"nighttroop.t1d.nz/models/public"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 )
@@ -76,7 +76,7 @@ templ CreateSiteRateLimited(seconds int) {
 </script>
 }
 
-templ CreateSiteInfo(newsite nighttroop.NewSiteInfo) {
+templ CreateSiteInfo(newsite public.NewSiteInfo) {
 	<div class="text-left w-full">
 		<div id="Step1" class="max-w-2xl mx-auto space-y-6">
 			<!-- Credentials Display Box -->

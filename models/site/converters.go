@@ -1,3 +1,3 @@
-package nighttroop
+package site
 
 //go:generate goverter gen .

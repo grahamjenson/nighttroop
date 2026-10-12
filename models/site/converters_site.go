@@ -1,4 +1,4 @@
-package nighttroop
+package site
 
 import (
 	"nighttroop.t1d.nz/data/sql/control"
@@ -12,12 +12,12 @@ import (
 type SiteConverter interface {
 
 	///////
-	// ACTIVITIES
+	// SYNC SOURCE
 	///////
 
-	SyncSourceFromDB(source *control.SiteSyncSource) *SiteSyncSource
+	SyncSourceFromDB(source *control.SiteSyncSource) *SyncSource
 
-	SyncSourceToUpdate(source *SiteSyncSource) control.UpdateSyncSourceParams
+	SyncSourceToUpdate(source *SyncSource) control.UpdateSyncSourceParams
 
-	SyncSourceToCreate(source *SiteSyncSource) control.CreateSyncSourceParams
+	SyncSourceToCreate(source *SyncSource) control.CreateSyncSourceParams
 }

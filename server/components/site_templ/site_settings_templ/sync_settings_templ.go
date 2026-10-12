@@ -9,7 +9,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/templui/templui/components/checkbox"
-	"nighttroop.t1d.nz/models/nighttroop"
+	"nighttroop.t1d.nz/models/site"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -18,9 +18,9 @@ import (
 )
 
 func findSyncSource(
-	syncSettings []*nighttroop.SiteSyncSource,
+	syncSettings []*site.SyncSource,
 	sourceType consts.SyncSourceType,
-) *nighttroop.SiteSyncSource {
+) *site.SyncSource {
 	for _, ss := range syncSettings {
 		if ss.Type == sourceType {
 			return ss
@@ -29,7 +29,7 @@ func findSyncSource(
 	return nil
 }
 
-func SyncSettingsFull(syncSettings []*nighttroop.SiteSyncSource) templ.Component {
+func SyncSettingsFull(syncSettings []*site.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -76,7 +76,7 @@ func SyncSettingsFull(syncSettings []*nighttroop.SiteSyncSource) templ.Component
 	})
 }
 
-func SyncSettingsPartial(syncSettings []*nighttroop.SiteSyncSource) templ.Component {
+func SyncSettingsPartial(syncSettings []*site.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -121,7 +121,7 @@ func SyncSettingsPartial(syncSettings []*nighttroop.SiteSyncSource) templ.Compon
 	})
 }
 
-func DexcomSyncForm(dexcomSyncSettings *nighttroop.SiteSyncSource) templ.Component {
+func DexcomSyncForm(dexcomSyncSettings *site.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -444,7 +444,7 @@ func DexcomSyncForm(dexcomSyncSettings *nighttroop.SiteSyncSource) templ.Compone
 			Variant: button.VariantDestructive,
 			Attributes: templ.Attributes{
 				"hx-include": "none",
-				"hx-delete":  "/settings/sync/DEXCOM",
+				"hx-delete":  "/settings/sync/dexcom",
 				"hx-confirm": "Are you sure you want to delete this Dexcom sync source?",
 				"hx-target":  "#mainForm",
 				"hx-swap":    "innerHTML",
@@ -485,7 +485,7 @@ func DexcomSyncForm(dexcomSyncSettings *nighttroop.SiteSyncSource) templ.Compone
 	})
 }
 
-func NightscoutSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ.Component {
+func NightscoutSyncForm(nightscoutSyncSettings *site.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -755,7 +755,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ
 			Variant: button.VariantDestructive,
 			Attributes: templ.Attributes{
 				"hx-include": "none",
-				"hx-delete":  "/settings/sync/NIGHTSCOUT",
+				"hx-delete":  "/settings/sync/nightscout",
 				"hx-confirm": "Are you sure you want to delete this Nightscout sync source?",
 				"hx-target":  "#mainForm",
 				"hx-swap":    "innerHTML",
@@ -797,7 +797,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *nighttroop.SiteSyncSource) templ
 	})
 }
 
-func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
+func VirtualSyncForm(synSource *site.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -835,7 +835,7 @@ func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
-				ID:      "site--settings--nightscout-sync--enable",
+				ID:      "site--settings--virtual-sync--enable",
 				Name:    "ns_enabled",
 				Checked: synSource.IsEnabled(),
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
@@ -866,7 +866,7 @@ func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = form.Label(form.LabelProps{
-				For:   "site--settings--nightscout-sync--enable",
+				For:   "site--settings--virtual-sync--enable",
 				Class: "item-center flex cursor-pointer gap-2",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -903,13 +903,13 @@ func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			ID:      "site--settings--nightscout-sync--delete",
+			ID:      "site--settings--virtual-sync--delete",
 			Type:    "button",
 			Variant: button.VariantDestructive,
 			Attributes: templ.Attributes{
 				"hx-include": "none",
-				"hx-delete":  "/settings/sync/NIGHTSCOUT",
-				"hx-confirm": "Are you sure you want to delete this Nightscout sync source?",
+				"hx-delete":  "/settings/sync/virtual",
+				"hx-confirm": "Are you sure you want to delete this Virtual sync source?",
 				"hx-target":  "#mainForm",
 				"hx-swap":    "innerHTML",
 			},
@@ -936,7 +936,7 @@ func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			ID:   "site--settings--nightscout-sync--submit",
+			ID:   "site--settings--virtual-sync--submit",
 			Type: button.TypeSubmit,
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -950,7 +950,7 @@ func VirtualSyncForm(synSource *nighttroop.SiteSyncSource) templ.Component {
 	})
 }
 
-func SuccessfulUpdate(model *nighttroop.SiteSyncSource) templ.Component {
+func SuccessfulUpdate(model *site.SyncSource) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

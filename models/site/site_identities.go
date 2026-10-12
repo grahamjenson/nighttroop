@@ -1,4 +1,4 @@
-package nighttroop
+package site
 
 import (
 	"strconv"

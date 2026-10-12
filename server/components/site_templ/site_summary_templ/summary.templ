@@ -1,11 +1,11 @@
 package site_summary_templ
 
 import (
-	"nighttroop.t1d.nz/models/nighttroop"
+	"nighttroop.t1d.nz/models/site"
 	"nighttroop.t1d.nz/server/components/site_templ"
 )
 
-templ Summary(summary nighttroop.Summary) {
+templ Summary(summary site.Summary) {
 	@site_templ.SiteBase() {
 		<div class="container-fluid p-4">
 			<!-- TOP METRICS -->

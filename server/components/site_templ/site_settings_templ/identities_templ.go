@@ -8,7 +8,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"nighttroop.t1d.nz/models/nighttroop"
+	"nighttroop.t1d.nz/models/site"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -20,7 +20,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func Identities(siteContext *httputils.SiteContext, users []*nighttroop.UserIdentity, devices []*nighttroop.UserIdentity) templ.Component {
+func Identities(siteContext *httputils.SiteContext, users []*site.UserIdentity, devices []*site.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -67,7 +67,7 @@ func Identities(siteContext *httputils.SiteContext, users []*nighttroop.UserIden
 	})
 }
 
-func IdentitesTable(users []*nighttroop.UserIdentity, devices []*nighttroop.UserIdentity) templ.Component {
+func IdentitesTable(users []*site.UserIdentity, devices []*site.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -100,7 +100,7 @@ func IdentitesTable(users []*nighttroop.UserIdentity, devices []*nighttroop.User
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("usersTable", "User", []nighttroop.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = formCreateIdentity("usersTable", "User", []site.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -116,7 +116,7 @@ func IdentitesTable(users []*nighttroop.UserIdentity, devices []*nighttroop.User
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = formCreateIdentity("devicesTable", "Device", []nighttroop.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = formCreateIdentity("devicesTable", "Device", []site.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,7 +128,7 @@ func IdentitesTable(users []*nighttroop.UserIdentity, devices []*nighttroop.User
 	})
 }
 
-func buildIdentityTable(id string, identities []*nighttroop.UserIdentity) templ.Component {
+func buildIdentityTable(id string, identities []*site.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -390,7 +390,7 @@ func buildIdentityTable(id string, identities []*nighttroop.UserIdentity) templ.
 	})
 }
 
-func createTableRowForIdentity(identity *nighttroop.UserIdentity) templ.Component {
+func createTableRowForIdentity(identity *site.UserIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -610,7 +610,7 @@ func createTableRowForIdentity(identity *nighttroop.UserIdentity) templ.Componen
 	})
 }
 
-func formCreateIdentity(tableid string, name string, roles []nighttroop.RoleOption) templ.Component {
+func formCreateIdentity(tableid string, name string, roles []site.RoleOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -911,7 +911,7 @@ func formCreateIdentity(tableid string, name string, roles []nighttroop.RoleOpti
 	})
 }
 
-func CreateIdentityResponse(url string, identity *nighttroop.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
+func CreateIdentityResponse(url string, identity *site.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -952,7 +952,7 @@ func CreateIdentityResponse(url string, identity *nighttroop.UserIdentity, passw
 	})
 }
 
-func newIdentityModal(url string, identity *nighttroop.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
+func newIdentityModal(url string, identity *site.UserIdentity, password string, totpSecret *string, nsToken *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/models/nighttroop"
+	"nighttroop.t1d.nz/models/site"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/site/siteutils"
@@ -25,8 +25,8 @@ import (
 
 type SyncSettingsStore struct{}
 
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *nighttroop.SiteSyncSource) (bool, *siteutils.HTTPError) {
-	params := nighttroop.SyncSourceToCreate(model)
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *site.SyncSource) (bool, *siteutils.HTTPError) {
+	params := site.SyncSourceToCreate(model)
 	params.SiteID = siteContext.Subdomain
 
 	params.UrlOrUsername = strings.TrimSpace(params.UrlOrUsername)
@@ -76,11 +76,11 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httput
 	return true, nil
 }
 
-func (s *SyncSettingsStore) CreateHTMXResponse(model *nighttroop.SiteSyncSource) templ.Component {
+func (s *SyncSettingsStore) CreateHTMXResponse(model *site.SyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
-func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*nighttroop.SiteSyncSource, *siteutils.HTTPError) {
+func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*site.SyncSource, *siteutils.HTTPError) {
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
@@ -95,18 +95,18 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 		return nil, siteutils.ErrBadBody
 	}
 	if model == nil {
-		return nil, siteutils.ErrNotFound
+		return nil, nil
 	}
 
-	return nighttroop.SyncSourceFromDB(model), nil
+	return site.SyncSourceFromDB(model), nil
 }
 
-func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *nighttroop.SiteSyncSource, model *nighttroop.SiteSyncSource) *siteutils.HTTPError {
+func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *site.SyncSource, model *site.SyncSource) *siteutils.HTTPError {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
 		return siteutils.ErrRateLimitExceeded(seconds)
 	}
 
-	params := nighttroop.SyncSourceToUpdate(model)
+	params := site.SyncSourceToUpdate(model)
 	params.SiteID = siteContext.Subdomain
 
 	var err error
@@ -164,7 +164,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	return nil
 }
 
-func (s *SyncSettingsStore) UpdateHTMXResponse(model *nighttroop.SiteSyncSource) templ.Component {
+func (s *SyncSettingsStore) UpdateHTMXResponse(model *site.SyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
@@ -197,9 +197,9 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		modelSyncSources := []*nighttroop.SiteSyncSource{}
+		modelSyncSources := []*site.SyncSource{}
 		for _, dbSyncSource := range dbSyncSources {
-			modelSyncSource := nighttroop.SyncSourceFromDB(dbSyncSource)
+			modelSyncSource := site.SyncSourceFromDB(dbSyncSource)
 			modelSyncSource.Password = consts.PASSWORD_GARBAGE_VALUE
 			modelSyncSource.UrlOrUsername, err = config.Security.Decrypt(modelSyncSource.UrlOrUsername)
 			if err != nil {

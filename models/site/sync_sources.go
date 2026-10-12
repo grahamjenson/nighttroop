@@ -1,10 +1,10 @@
-package nighttroop
+package site
 
 import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-type SiteSyncSource struct {
+type SyncSource struct {
 	ID            int64
 	SiteID        string
 	Type          consts.SyncSourceType
@@ -14,47 +14,47 @@ type SiteSyncSource struct {
 	Enabled       bool
 }
 
-func (n *SiteSyncSource) GetDexcomRegion() consts.DexcomRegion {
+func (n *SyncSource) GetDexcomRegion() consts.DexcomRegion {
 	if n == nil {
 		return consts.DexcomRegionOther
 	}
 	return consts.NewDexcomRegionFromString(n.Region)
 }
 
-func (n *SiteSyncSource) IsUSARegion() bool {
+func (n *SyncSource) IsUSARegion() bool {
 	if n == nil {
 		return false
 	}
 	return n.GetDexcomRegion() == consts.DexcomRegionUS
 }
 
-func (n *SiteSyncSource) IsEnabled() bool {
+func (n *SyncSource) IsEnabled() bool {
 	if n == nil {
 		return false
 	}
 	return n.Enabled
 }
-func (n *SiteSyncSource) GetUsername() string {
+func (n *SyncSource) GetUsername() string {
 	if n == nil {
 		return ""
 	}
 	return n.UrlOrUsername
 }
-func (n *SiteSyncSource) GetURL() string {
+func (n *SyncSource) GetURL() string {
 	if n == nil {
 		return ""
 	}
 	return n.UrlOrUsername
 }
 
-func (n *SiteSyncSource) GetPassword() string {
+func (n *SyncSource) GetPassword() string {
 	if n == nil {
 		return ""
 	}
 	return n.Password
 }
 
-func (n *SiteSyncSource) GetPasswordGarbage() string {
+func (n *SyncSource) GetPasswordGarbage() string {
 	if n == nil {
 		return ""
 	}
