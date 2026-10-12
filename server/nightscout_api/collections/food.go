@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -13,7 +13,7 @@ import (
 )
 
 type FoodCollection struct {
-	converter func(c *site.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	converter func(c *sitedb.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewFoodCollection() FoodCollection {
@@ -30,11 +30,11 @@ func (c FoodCollection) Name() string {
 	return "food"
 }
 
-func (c FoodCollection) Convert(dr *site.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+func (c FoodCollection) Convert(dr *sitedb.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
+func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *sitedb.FoodPreset) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -47,11 +47,11 @@ func (c FoodCollection) Validate(nsModel nightscout.Food, dbModel *site.FoodPres
 	return nil
 }
 
-func (c FoodCollection) ValidatePatch(nsModel nightscout.Food, dbModel *site.FoodPreset) *nsutils.HTTPError {
+func (c FoodCollection) ValidatePatch(nsModel nightscout.Food, dbModel *sitedb.FoodPreset) *nsutils.HTTPError {
 	return c.Validate(nsModel, dbModel)
 }
 
-func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.FoodPreset, error) {
+func (c FoodCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Food, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.FoodPreset, error) {
 	createParams := nightscout.FoodToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -60,8 +60,8 @@ func (c FoodCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsMod
 
 }
 
-func (c FoodCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food) (*site.FoodPreset, error) {
-	foodPresets, rerr := q.SearchFoodPresets(ctx, site.SearchFoodPresetsParams{
+func (c FoodCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Food) (*sitedb.FoodPreset, error) {
+	foodPresets, rerr := q.SearchFoodPresets(ctx, sitedb.SearchFoodPresetsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		Limit:    1,
@@ -75,29 +75,29 @@ func (c FoodCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context,
 	return nil, nil
 }
 
-func (c FoodCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.FoodPreset, error) {
-	return q.GetFoodPreset(ctx, site.GetFoodPresetParams{ID: identifier})
+func (c FoodCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.FoodPreset, error) {
+	return q.GetFoodPreset(ctx, sitedb.GetFoodPresetParams{ID: identifier})
 }
 
-func (c FoodCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteFoodPreset(ctx, site.HardDeleteFoodPresetParams{ID: identifier})
-}
-
-// SoftDeleteDBFunc Only Hard Deletes For Presets
-func (c FoodCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteFoodPreset(ctx, site.HardDeleteFoodPresetParams{ID: identifier})
-}
-
-func (c FoodCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
-	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
+func (c FoodCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteFoodPreset(ctx, sitedb.HardDeleteFoodPresetParams{ID: identifier})
 }
 
 // SoftDeleteDBFunc Only Hard Deletes For Presets
-func (c FoodCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
-	return q.HardDeleteFoodPresetsByType(ctx, site.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
+func (c FoodCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteFoodPreset(ctx, sitedb.HardDeleteFoodPresetParams{ID: identifier})
 }
 
-func (c FoodCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Food, identifier string, dbModel *site.FoodPreset, uc nightscout.ConverterContext) (*site.FoodPreset, error) {
+func (c FoodCollection) HardDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
+	return q.HardDeleteFoodPresetsByType(ctx, sitedb.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
+}
+
+// SoftDeleteDBFunc Only Hard Deletes For Presets
+func (c FoodCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
+	return q.HardDeleteFoodPresetsByType(ctx, sitedb.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
+}
+
+func (c FoodCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Food, identifier string, dbModel *sitedb.FoodPreset, uc nightscout.ConverterContext) (*sitedb.FoodPreset, error) {
 	updateParams := nightscout.FoodToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 
@@ -129,7 +129,7 @@ func (c FoodCollection) DeleteType(ctx context.Context, siteContext *httputils.S
 }
 
 func (c FoodCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	var foodPresets []*site.FoodPreset
+	var foodPresets []*sitedb.FoodPreset
 	var rerr error
 
 	// There are three options,

@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/settings"
 )
@@ -17,9 +17,9 @@ type SiteContext struct {
 
 	ControlDB *db.ControlDB
 	SiteDB    *db.SiteDB
-	SiteModel *control.Site
+	SiteModel *controldb.Site
 
-	IdentityModel *control.SiteIdentity
+	IdentityModel *controldb.SiteIdentity
 
 	Subdomain string
 	IPAddress string
@@ -45,7 +45,7 @@ func GetSiteContext(ctx context.Context) *SiteContext {
 // SiteDB
 ////
 
-func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *control.Site, subdomain string, ipAddress string, httpAction HTTPAction, acceptType AcceptType, contentType ContentType) context.Context {
+func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *controldb.Site, subdomain string, ipAddress string, httpAction HTTPAction, acceptType AcceptType, contentType ContentType) context.Context {
 	siteContext := &SiteContext{}
 	siteContext.Config = config
 	siteContext.ControlDB = controlDB
@@ -67,7 +67,7 @@ func CreateSiteContext(ctx context.Context, config *config.ServerConfig, control
 // //
 // IdentityModel
 // //
-func SetIdentityModelInSiteContext(ctx context.Context, identityModel *control.SiteIdentity) context.Context {
+func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb.SiteIdentity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
 	return context.WithValue(ctx, siteContextKey, siteContext)

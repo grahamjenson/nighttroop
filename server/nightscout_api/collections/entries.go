@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -13,7 +13,7 @@ import (
 )
 
 type EntriesCollection struct {
-	converter func(c *site.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	converter func(c *sitedb.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewEntriesCollection() EntriesCollection {
@@ -30,13 +30,13 @@ func (c EntriesCollection) Name() string {
 	return "entries"
 }
 
-func (c EntriesCollection) Convert(dr *site.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+func (c EntriesCollection) Convert(dr *sitedb.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
 	return c.converter(dr, siteContext, raw)
 }
 
 // Cannot change properties
 
-func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *site.GlucoseReading) *nsutils.HTTPError {
+func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -50,11 +50,11 @@ func (c EntriesCollection) Validate(nsModel nightscout.Entry, dbModel *site.Gluc
 
 }
 
-func (c EntriesCollection) ValidatePatch(nsModel nightscout.Entry, dbModel *site.GlucoseReading) *nsutils.HTTPError {
+func (c EntriesCollection) ValidatePatch(nsModel nightscout.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
 	return c.Validate(nsModel, dbModel)
 }
 
-func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.GlucoseReading, error) {
+func (c EntriesCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Entry, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.GlucoseReading, error) {
 	createParams := nightscout.EntryToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -62,8 +62,8 @@ func (c EntriesCollection) CreateDBFunc(q *site.Queries, ctx context.Context, ns
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry) (*site.GlucoseReading, error) {
-	glucoseReadings, rerr := q.SearchGlucoseReadings(ctx, site.SearchGlucoseReadingsParams{
+func (c EntriesCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Entry) (*sitedb.GlucoseReading, error) {
+	glucoseReadings, rerr := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		Limit:    1,
@@ -77,27 +77,27 @@ func (c EntriesCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Conte
 	return nil, nil
 }
 
-func (c EntriesCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.GlucoseReading, error) {
-	return q.GetGlucoseReading(ctx, site.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
+func (c EntriesCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
+	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c EntriesCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: identifier})
+func (c EntriesCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	return q.HardDeleteGlucoseReadingsByType(ctx, site.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+func (c EntriesCollection) HardDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	return q.HardDeleteGlucoseReadingsByType(ctx, sitedb.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	return q.SoftDeleteGlucoseReadingsByType(ctx, site.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+func (c EntriesCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Entry, identifier string, dbModel *site.GlucoseReading, uc nightscout.ConverterContext) (*site.GlucoseReading, error) {
+func (c EntriesCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscout.ConverterContext) (*sitedb.GlucoseReading, error) {
 	updateParams := nightscout.EntryToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 
@@ -129,7 +129,7 @@ func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 }
 
 func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	var entries []*site.GlucoseReading
+	var entries []*sitedb.GlucoseReading
 	var rerr error
 
 	// There are three options,

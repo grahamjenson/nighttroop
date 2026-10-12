@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/site"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -54,7 +54,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.SiteIdentity, bool, error) {
+func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*controldb.SiteIdentity, bool, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -78,7 +78,7 @@ func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	return nil, true, fmt.Errorf("No JWT token found")
 }
 
-func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*control.SiteIdentity, error) {
+func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*controldb.SiteIdentity, error) {
 
 	// We first try to get the token, then the secret param, both equal in Nighttroop
 	tokenParam := r.URL.Query().Get("token")

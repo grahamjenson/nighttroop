@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
@@ -20,7 +20,7 @@ import (
 )
 
 type ControlDB struct {
-	*control.DB
+	*controldb.DB
 
 	// previously modified
 	sites map[string]*SiteDB
@@ -32,7 +32,7 @@ type ControlDB struct {
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
 
-	rawDB, err := control.NewDB(ctx, serverConfig)
+	rawDB, err := controldb.NewDB(ctx, serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open control db: %w", err)
 	}
@@ -77,7 +77,7 @@ func (db *ControlDB) fillSites() ([]string, error) {
 		sites = append(sites, model.ID)
 
 		// Site DB has to be available
-		path := site.GetPath(model.ID, db.ServerConfig)
+		path := sitedb.GetPath(model.ID, db.ServerConfig)
 
 		if !utils.FileExists(path) {
 			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.ID)
@@ -158,7 +158,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	db.sitesRWLock.Lock()
 	defer db.sitesRWLock.Unlock()
 
-	_, err = db.Queries.CreateSite(context.TODO(), control.CreateSiteParams{
+	_, err = db.Queries.CreateSite(context.TODO(), controldb.CreateSiteParams{
 		ID:            subdomain,
 		BackupKeyHash: backupKeyHash,
 	})
@@ -206,12 +206,12 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 		return nil
 	}
 	bytes, _ := json.Marshal(subdomains)
-	deletedSubdomains, err := db.Queries.DeleteSites(context.TODO(), control.DeleteSitesParams{
+	deletedSubdomains, err := db.Queries.DeleteSites(context.TODO(), controldb.DeleteSitesParams{
 		JsonEach: string(bytes),
 	})
 
 	if err != nil {
-		return fmt.Errorf("cannot delete user: %w", err)
+		return fmt.Errorf("cannot delete site: %w", err)
 	}
 
 	fmt.Println("TRYING TO DELETE", subdomains, "DELETED", deletedSubdomains)
@@ -231,9 +231,9 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 
 		err := utils.DeleteFiles([]string{site.Path, site.BackupPath})
 		if err != nil {
-			slog.Error("Failed to delete user db files", "subdomain", subdomain, "error", err)
+			slog.Error("Failed to delete site db files", "subdomain", subdomain, "error", err)
 		} else {
-			slog.Info("Deleted user db files", "subdomain", subdomain)
+			slog.Info("Deleted site db files", "subdomain", subdomain)
 		}
 	}
 
@@ -268,7 +268,7 @@ func (db *ControlDB) AllSites() []*SiteDB {
 }
 
 func (db *ControlDB) SubdomainUsed(subdomain string) bool {
-	exists, err := db.Queries.SiteExists(context.TODO(), control.SiteExistsParams{
+	exists, err := db.Queries.SiteExists(context.TODO(), controldb.SiteExistsParams{
 		ID: subdomain,
 	})
 	if err != nil {
@@ -277,7 +277,7 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 	return exists
 }
 
-func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *control.Site, identityModel *control.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
+func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, identityModel *controldb.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
 	subdomain := siteModel.ID
 
 	// Only update if not seen in 10 minutes
@@ -293,13 +293,13 @@ func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *control.Site, ide
 	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
 		lastWriteAt = &now
 	}
-	db.Queries.UpdateSiteDateFlags(context.TODO(), control.UpdateSiteDateFlagsParams{
+	db.Queries.UpdateSiteDateFlags(context.TODO(), controldb.UpdateSiteDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		ID:          subdomain,
 	})
 
-	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), control.UpdateSiteIdentityDateFlagsParams{
+	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), controldb.UpdateSiteIdentityDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		ID:          identityModel.ID,
@@ -308,9 +308,9 @@ func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *control.Site, ide
 	return nil
 }
 
-func (db *ControlDB) GetSite(subdomain string) (*SiteDB, *control.Site, error) {
+func (db *ControlDB) GetSite(subdomain string) (*SiteDB, *controldb.Site, error) {
 	// Check if site exists in the db
-	model, err := db.Queries.GetSite(context.TODO(), control.GetSiteParams{
+	model, err := db.Queries.GetSite(context.TODO(), controldb.GetSiteParams{
 		ID: subdomain,
 	})
 
@@ -426,7 +426,7 @@ func (db *ControlDB) CreateSiteIdentity(siteID string, name string, role consts.
 		encTOTPSecret = encTOTPSecretRet
 	}
 
-	err = db.Queries.CreateSiteIdentity(context.TODO(), control.CreateSiteIdentityParams{
+	err = db.Queries.CreateSiteIdentity(context.TODO(), controldb.CreateSiteIdentityParams{
 		SiteID:     siteID,
 		Name:       name,
 		Password:   hashedPassword,
@@ -473,7 +473,7 @@ func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole)
 	totpSecretPtr = &totpSecret
 	encTOTPSecret = encTOTPSecretRet
 
-	err = db.Queries.CreateControlIdentity(context.TODO(), control.CreateControlIdentityParams{
+	err = db.Queries.CreateControlIdentity(context.TODO(), controldb.CreateControlIdentityParams{
 		Name:       name,
 		Password:   hashedPassword,
 		TotpSecret: encTOTPSecret,
@@ -502,7 +502,7 @@ func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole)
 // Utils
 ////
 
-func (db *ControlDB) GetSiteDBsFromModels(models []*control.Site) ([]*SiteDB, error) {
+func (db *ControlDB) GetSiteDBsFromModels(models []*controldb.Site) ([]*SiteDB, error) {
 	sites := []*SiteDB{}
 	db.sitesRWLock.RLock()
 	defer db.sitesRWLock.RUnlock()

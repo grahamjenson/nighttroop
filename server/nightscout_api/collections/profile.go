@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -14,7 +14,7 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *site.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	converter func(c *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewProfileCollection() ProfileCollection {
@@ -25,11 +25,11 @@ func (c ProfileCollection) Name() string {
 	return "profile"
 }
 
-func (c ProfileCollection) Convert(dr *site.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+func (c ProfileCollection) Convert(dr *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *site.ProfilePresetBundle) *nsutils.HTTPError {
+func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *sitedb.ProfilePresetBundle) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -37,10 +37,10 @@ func (c ProfileCollection) Validate(nsModel nightscout.ProfileStore, dbModel *si
 	return nil
 }
 
-func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.ProfilePresetBundle, error) {
+func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.ProfileStore, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
 	manyCreateParams := NightscoutToDBCreateProfilePreset(nsModel, cc)
 
-	ret := site.ProfilePresetBundle([]*site.ProfilePreset{})
+	ret := sitedb.ProfilePresetBundle([]*sitedb.ProfilePreset{})
 
 	for _, createParams := range manyCreateParams {
 		dbModel, err := q.CreateProfilePreset(ctx, createParams)
@@ -52,8 +52,8 @@ func (c ProfileCollection) CreateDBFunc(q *site.Queries, ctx context.Context, ns
 	return &ret, nil
 }
 
-func (c ProfileCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.ProfileStore) (*site.ProfilePresetBundle, error) {
-	profilePresets, rerr := q.SearchProfileStores(ctx, site.SearchProfileStoresParams{
+func (c ProfileCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
+	profilePresets, rerr := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		Limit:    1,
@@ -68,24 +68,24 @@ func (c ProfileCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Conte
 	return nil, nil
 }
 
-func (c ProfileCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.ProfilePresetBundle, error) {
-	ret, err := q.GetProfileStore(ctx, site.GetProfileStoreParams{ProfileStoreID: identifier})
+func (c ProfileCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.ProfilePresetBundle, error) {
+	ret, err := q.GetProfileStore(ctx, sitedb.GetProfileStoreParams{ProfileStoreID: identifier})
 	if err != nil {
 		return nil, err
 	}
-	wrapper := site.ProfilePresetBundle(ret)
+	wrapper := sitedb.ProfilePresetBundle(ret)
 	if len(wrapper) == 0 {
 		return nil, sql.ErrNoRows
 	}
 	return &wrapper, nil
 }
 
-func (c ProfileCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteProfileStore(ctx, site.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
+func (c ProfileCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
 }
 
-func (c ProfileCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteProfileStore(ctx, site.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
+func (c ProfileCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
 }
 
 // ////
@@ -100,7 +100,7 @@ func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteC
 }
 
 func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	var profilePresets []*site.ProfilePreset
+	var profilePresets []*sitedb.ProfilePreset
 	var rerr error
 
 	// There are three options,
@@ -114,8 +114,8 @@ func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.Si
 		slog.Error("failed to query profile presets from database", "error", rerr)
 		return nil, nsutils.ErrInternal
 	}
-	wrappers := site.ManyPresetsToMayWrappers(profilePresets)
-	return nsutils.CreateRecordSlice[*site.ProfilePresetBundle](wrappers, c.converter, siteContext, query.Raw), nil
+	wrappers := sitedb.ManyPresetsToMayWrappers(profilePresets)
+	return nsutils.CreateRecordSlice[*sitedb.ProfilePresetBundle](wrappers, c.converter, siteContext, query.Raw), nil
 }
 
 func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -138,7 +138,7 @@ func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.Sit
 // DB TO NIGHTSCOUT
 ///////
 
-func DBToNightscoutProfileStore(source *site.ProfilePresetBundle, siteContext *httputils.SiteContext) nightscout.ProfileStore {
+func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext) nightscout.ProfileStore {
 	if source == nil {
 		return nightscout.ProfileStore{}
 	}
@@ -174,8 +174,8 @@ func DBToNightscoutProfileStore(source *site.ProfilePresetBundle, siteContext *h
 // NIGHTSCOUT TO DB
 ///////
 
-func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []site.CreateProfilePresetParams {
-	createParams := []site.CreateProfilePresetParams{}
+func NightscoutToDBCreateProfilePreset(source nightscout.ProfileStore, ctx nightscout.ConverterContext) []sitedb.CreateProfilePresetParams {
+	createParams := []sitedb.CreateProfilePresetParams{}
 	profileStoreID := nightscout.AssignID()
 	var loopSettingsJSON *string
 	if source.LoopSettings != nil {

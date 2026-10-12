@@ -3,7 +3,7 @@ package nightscout
 import (
 	"encoding/json"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -27,7 +27,7 @@ type DBModelConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
 	//
-	DBModelToActivity(source *site.Activity, siteContext *httputils.SiteContext) Activity
+	DBModelToActivity(source *sitedb.Activity, siteContext *httputils.SiteContext) Activity
 
 	///////
 	// ENTRIES TO GLUCOSE READINGS
@@ -48,7 +48,7 @@ type DBModelConverter interface {
 	// goverter:map ReadingType Type
 	// goverter:map Delta Trend
 	// goverter:map Rssi RSSI
-	DBModelToEntry(source *site.GlucoseReading, siteContext *httputils.SiteContext) Entry
+	DBModelToEntry(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) Entry
 
 	///////
 	// DEVICE REPORT TO DEVICE STATUS
@@ -64,7 +64,7 @@ type DBModelConverter interface {
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	//
 	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop OpenAPSRaw LoopRaw ConfigurationRaw Configuration
-	DBModelToDeviceStatus(source *site.DeviceReport, siteContext *httputils.SiteContext) DeviceStatus
+	DBModelToDeviceStatus(source *sitedb.DeviceReport, siteContext *httputils.SiteContext) DeviceStatus
 
 	///////
 	// FOOD TO FOOD PRESET
@@ -78,7 +78,7 @@ type DBModelConverter interface {
 	//
 	// goverter:ignore Unit GI HideAfterUse Hidden Position
 	// goverter:map CreatedAt Date
-	DBModelToFood(source *site.FoodPreset, siteContext *httputils.SiteContext) Food
+	DBModelToFood(source *sitedb.FoodPreset, siteContext *httputils.SiteContext) Food
 
 	///////
 	// Profile To Profile Preset
@@ -96,7 +96,7 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
 	// goverter:map LoopSettingsJson LoopSettings | JSONToLoopSettings
-	DBModelToProfileStore(source *site.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
+	DBModelToProfileStore(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
 
 	// goverter:context siteContext
 	// goverter:map CarbRatiosJson           CarbRatio  | JSONToScheduleValueSlice
@@ -104,7 +104,7 @@ type DBModelConverter interface {
 	// goverter:map BasalRatesJson           Basal      | JSONToScheduleValueSlice
 	// goverter:map TargetsHighJson          TargetHigh | JSONToScheduleValueSliceWithUnitConversionFromMGDL
 	// goverter:map TargetsLowJson           TargetLow  | JSONToScheduleValueSliceWithUnitConversionFromMGDL
-	DBModelToProfile(source *site.ProfilePreset, siteContext *httputils.SiteContext) Profile
+	DBModelToProfile(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) Profile
 }
 
 // //

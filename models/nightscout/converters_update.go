@@ -1,7 +1,7 @@
 package nightscout
 
 import (
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 )
 
 // goverter:converter
@@ -24,7 +24,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore Reason
-	ActivityToUpdate(source Activity, ctx ConverterContext) site.UpdateActivityParams
+	ActivityToUpdate(source Activity, ctx ConverterContext) sitedb.UpdateActivityParams
 
 	///////
 	// ENTRIES TO GLUCOSE READINGS
@@ -35,7 +35,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore Notes Reason
-	EntryToUpdate(source Entry, ctx ConverterContext) site.UpdateGlucoseReadingParams
+	EntryToUpdate(source Entry, ctx ConverterContext) sitedb.UpdateGlucoseReadingParams
 
 	///////
 	// FOOD TO FOOD PRESET
@@ -46,7 +46,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	FoodToUpdate(source Food, ctx ConverterContext) site.UpdateFoodPresetParams
+	FoodToUpdate(source Food, ctx ConverterContext) sitedb.UpdateFoodPresetParams
 
 	//
 	//
@@ -61,7 +61,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	//
 	// goverter:ignore
-	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx ConverterContext) site.UpdateDeviceReportParams
+	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.UpdateDeviceReportParams
 }
 
 // //

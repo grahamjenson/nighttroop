@@ -3,7 +3,7 @@ package nightscout
 import (
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -36,7 +36,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	ActivityToCreate(source Activity, ctx ConverterContext) site.CreateActivityParams
+	ActivityToCreate(source Activity, ctx ConverterContext) sitedb.CreateActivityParams
 
 	///////
 	// ENTRIES TO GLUCOSE READINGS
@@ -53,7 +53,7 @@ type CreateMapConverter interface {
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
 	// goverter:map RSSI Rssi
-	EntryToCreate(source Entry, ctx ConverterContext) site.CreateGlucoseReadingParams
+	EntryToCreate(source Entry, ctx ConverterContext) sitedb.CreateGlucoseReadingParams
 
 	///////
 	// FOOD TO FOOD PRESET
@@ -65,7 +65,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
-	FoodToCreate(source Food, ctx ConverterContext) site.CreateFoodPresetParams
+	FoodToCreate(source Food, ctx ConverterContext) sitedb.CreateFoodPresetParams
 
 	///////
 	// ProfileStore To Profile Preset
@@ -79,7 +79,7 @@ type CreateMapConverter interface {
 	//
 	// goverter:ignore Name CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone CarbsHr Delay Units IsDefault ProfileStoreID LoopSettingsJson
 	// goverter:map Date OccurredAt | OrNow
-	PartialProfileStoreToCreate(source ProfileStore, ctx ConverterContext) site.CreateProfilePresetParams
+	PartialProfileStoreToCreate(source ProfileStore, ctx ConverterContext) sitedb.CreateProfilePresetParams
 
 	////////////////////////////////////////
 	// DEVICE STATUS TO CREATE/UPDATE
@@ -93,7 +93,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	//
 	// goverter:ignore LoopName LoopSettingsJson ConfigurationSettingsJson LoopPredictionsDefault LoopPredictionsZt LoopPredictionsStartTime IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir  LoopIob LoopIobBasal LoopIobTreatment LoopCob
-	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) site.CreateDeviceReportParams
+	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.CreateDeviceReportParams
 }
 
 // //

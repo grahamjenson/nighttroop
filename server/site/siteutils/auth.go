@@ -1,8 +1,8 @@
 package siteutils
 
-import "nighttroop.t1d.nz/data/sql/control"
+import "nighttroop.t1d.nz/data/sql/controldb"
 
-func HasPermission(storeName string, identity *control.SiteIdentity) bool {
+func HasPermission(storeName string, identity *controldb.SiteIdentity) bool {
 	// TODO
 	return true
 }

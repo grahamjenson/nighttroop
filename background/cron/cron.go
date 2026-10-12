@@ -9,7 +9,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/jobs"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/errors"
 )
 
@@ -58,7 +58,7 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 					err = fmt.Errorf("%v:%T", r, r)
 				}
 				slog.Error("Cron: Command panicked", "name", name, "stack", string(buf), "error", err)
-				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobs.InsertFailedCronJobParams{
+				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
 					Errors:            errors.ErrorList{err.Error()},
@@ -70,13 +70,13 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 		case v := <-ch:
 			if err := cmd(); err != nil {
 				slog.Error("Cron: Command returned error", "name", name, "error", err)
-				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobs.InsertFailedCronJobParams{
+				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
 					Errors:            errors.ErrorList{err.Error()},
 				})
 			} else {
-				c.jobsDB.Queries.InsertSuccessfulCronJob(context.TODO(), jobs.InsertSuccessfulCronJobParams{
+				c.jobsDB.Queries.InsertSuccessfulCronJob(context.TODO(), jobsdb.InsertSuccessfulCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
 				})

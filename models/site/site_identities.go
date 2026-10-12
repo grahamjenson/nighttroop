@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -27,7 +27,7 @@ type RoleOption struct {
 	Value consts.IdentityRole
 }
 
-func IdentityModelToUserIdentity(identity *control.SiteIdentity, currentIdentityName string) *UserIdentity {
+func IdentityModelToUserIdentity(identity *controldb.SiteIdentity, currentIdentityName string) *UserIdentity {
 	lastSeen := "Never"
 	if identity.LastSeenAt != nil && *identity.LastSeenAt != 0 {
 		lastSeen = time.UnixMilli(*identity.LastSeenAt).Format("2006-01-02 15:04:05")

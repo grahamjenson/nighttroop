@@ -1,0 +1,163 @@
+version: "2"
+plugins:
+  - name: getters
+    process:
+      cmd: "../../../bin/getters"
+sql:
+  - schema: "schema_gen.sql"
+    queries: "./queries"
+    engine: "sqlite"
+    codegen:
+      - plugin: getters
+        out: "."
+        options:
+          package: "controldb"
+          imports:
+            - "nighttroop.t1d.nz/utils/consts"
+            - "nighttroop.t1d.nz/utils/errors"
+    gen:
+      go:
+        package: "controldb"
+        out: "."
+
+        emit_prepared_queries: true
+        emit_pointers_for_null_types: true
+        emit_result_struct_pointers: true
+
+        query_parameter_limit: 0
+        
+        output_files_suffix: ".gen"
+        output_db_file_name: "z_db.go"
+        output_models_file_name: "z_models.go"
+        output_querier_file_name: "z_querier.go"
+        output_batch_file_name: "z_batch.go"
+        output_copyfrom_file_name: "z_copyfrom.go"
+
+overrides:
+  go:
+    overrides:   
+
+      # Sync Sources   
+      - column: "site_sync_sources.previous_sync_errors"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/errors"
+          type: "ErrorList"
+
+      - column: "site_sync_sources.properties"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "SyncSourceProperties"
+
+      - column: "site_sync_sources.type"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "SyncSourceType"
+      - column: "site_sync_sources.enabled"
+        go_type:
+          type: "bool"
+
+      # site
+
+      # Control Identities
+      - column: "control_identities.role"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "ControlRole"
+      
+      # Site Identities
+      - column: "site_identities.enabled"
+        go_type:
+          type: "bool"
+
+      - column: "site_identities.role"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "IdentityRole"
+
+
+      # Settings
+
+      - column: "sites.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "sites.alarm_urgent_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_urgent_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_fast_rise_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_fast_drop_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_no_data_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_battery_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_battery_low_pwd_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_reservoir_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.notifications_enabled"
+        go_type:
+          type: "*bool"
+      - column: "sites.alarm_low_prediction_enabled"
+        go_type:
+          type: "*bool"
+
+      - column: "site_identities.units"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "Units"
+          pointer: true
+      - column: "site_identities.alarm_urgent_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_urgent_high_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_fast_rise_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_fast_drop_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_no_data_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_battery_low_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_battery_low_pwd_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_low_reservoir_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.notifications_enabled"
+        go_type:
+          type: "*bool"
+      - column: "site_identities.alarm_low_prediction_enabled"
+        go_type:
+          type: "*bool"
+          

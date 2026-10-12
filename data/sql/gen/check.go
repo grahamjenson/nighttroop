@@ -12,9 +12,9 @@ import (
 	"slices"
 
 	_ "modernc.org/sqlite"
-	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/jobs"
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
@@ -28,17 +28,17 @@ func main() {
 		Mode: consts.Test, // Get In memory Database
 	}
 
-	siteDB, err := site.NewDB(context.TODO(), "subdomain", &config)
+	siteDB, err := sitedb.NewDB(context.TODO(), "subdomain", &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create site DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	controlDB, err := control.NewDB(context.TODO(), &config)
+	controlDB, err := controldb.NewDB(context.TODO(), &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create control DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	jobsDB, err := jobs.NewDB(context.TODO(), &config)
+	jobsDB, err := jobsdb.NewDB(context.TODO(), &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create jobs DB: %v %s", topwrapper, err, bottomwrapper)
 	}

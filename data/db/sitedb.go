@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 
 	"nighttroop.t1d.nz/utils/config"
 )
@@ -14,13 +14,13 @@ import (
 // //
 
 type SiteDB struct {
-	*site.DB
+	*sitedb.DB
 
 	Subdomain string
 }
 
 func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) (*SiteDB, error) {
-	rawDB, err := site.NewDB(ctx, subdomain, cfg)
+	rawDB, err := sitedb.NewDB(ctx, subdomain, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open site db: %s %w", subdomain, err)
 	}
@@ -34,7 +34,7 @@ func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) 
 	return siteDB, nil
 }
 
-// WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWOLLOWED
+// WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWALLOWED
 
 func (db *SiteDB) URL() string {
 	return fmt.Sprintf("%s://%s.%s:%d", db.ServerConfig.HostProtocol, db.Subdomain, db.ServerConfig.HostName, db.ServerConfig.HostPort)

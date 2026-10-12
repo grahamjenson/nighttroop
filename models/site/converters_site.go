@@ -1,7 +1,7 @@
 package site
 
 import (
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 )
 
 // goverter:converter
@@ -15,9 +15,9 @@ type SiteConverter interface {
 	// SYNC SOURCE
 	///////
 
-	SyncSourceFromDB(source *control.SiteSyncSource) *SyncSource
+	SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource
 
-	SyncSourceToUpdate(source *SyncSource) control.UpdateSyncSourceParams
+	SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams
 
-	SyncSourceToCreate(source *SyncSource) control.CreateSyncSourceParams
+	SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/site"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 
@@ -61,7 +61,7 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 }
 
 func extractAndGetIdentities(siteContext *httputils.SiteContext, context context.Context) ([]*site.UserIdentity, []*site.UserIdentity, error) {
-	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, control.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
+	identities, err := siteContext.ControlDB.Queries.AllSiteIdentities(context, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, nil, err
 	}

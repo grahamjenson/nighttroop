@@ -9,8 +9,8 @@ import (
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/jobs"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/server/nightscout_api"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -46,7 +46,7 @@ type SyncJobInfo struct {
 }
 
 type SyncUserInfo struct {
-	siteModel *control.Site
+	siteModel *controldb.Site
 	siteDB    *db.SiteDB
 	controlDB *db.ControlDB
 }
@@ -70,9 +70,9 @@ func (b *SyncJobManager) GetConsumer(queue *liteq.JobQueue) *liteq.ConsumerSuper
 
 // There is no filtering at this level,
 // Once a job has been scheduled, it will be run.
-func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) error {
+func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobsdb.Job) error {
 
-	return func(ctx context.Context, j *jobs.Job) error {
+	return func(ctx context.Context, j *jobsdb.Job) error {
 		var syncJob SyncJobParams
 		err := json.Unmarshal([]byte(j.Job), &syncJob)
 		if err != nil {
@@ -80,7 +80,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) err
 			return nil
 		}
 		// This will filter out
-		syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, control.GetSyncSourceParams{
+		syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 			SiteID: syncJob.SiteID,
 			ID:     syncJob.ID,
 		})
@@ -94,7 +94,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) err
 		}
 
 		userInfoSyncSources := []*SyncUserInfo{}
-		for _, syncSource := range []*control.SiteSyncSource{syncSource} {
+		for _, syncSource := range []*controldb.SiteSyncSource{syncSource} {
 			userInfo, err := b.AttachSyncSourceWithUserInfo(syncSource)
 			if err != nil {
 				slog.Error("Error attaching sync source with user info", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
@@ -131,7 +131,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobs.Job) err
 	}
 }
 
-func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncSource) (string, string, consts.DexcomRegion, error) {
+func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyncSource) (string, string, consts.DexcomRegion, error) {
 	if syncSource == nil {
 		return "", "", consts.DexcomRegionOther, fmt.Errorf("sync source is nil")
 	}
@@ -157,7 +157,7 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *control.SiteSyncS
 	return unencUsername, unencPassword, dexcomRegion, nil
 }
 
-func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *control.SiteSyncSource) (*SyncUserInfo, error) {
+func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *controldb.SiteSyncSource) (*SyncUserInfo, error) {
 	userDb, userModel, err := b.controlDB.GetSite(syncSource.SiteID)
 	if err != nil {
 		fmt.Println("Cant findn the user for site ID:", syncSource.SiteID)

@@ -9,8 +9,8 @@ import (
 
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
@@ -174,7 +174,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
 
 	trackTrim = len(paths) > 0
 
-	err = b.S3Client.UploadFilesToS3(site.GetS3BatchPath(char, b.ServerConfig), paths)
+	err = b.S3Client.UploadFilesToS3(sitedb.GetS3BatchPath(char, b.ServerConfig), paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
@@ -190,7 +190,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
 func GetSiteBatch(controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 
 	sites := []*db.SiteDB{}
-	res, err := controlDB.Queries.GetBatchSitesToBackUp(context.TODO(), control.GetBatchSitesToBackUpParams{
+	res, err := controlDB.Queries.GetBatchSitesToBackUp(context.TODO(), controldb.GetBatchSitesToBackUpParams{
 		Batch: char,
 	})
 	if err != nil {
@@ -202,7 +202,7 @@ func GetSiteBatch(controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 
 // GetNeverUsedSites retrieves sites that have never been logged into
 func GetNeverUsedSites(controlDB *db.ControlDB, char string, lastSeenMinutes time.Duration) ([]*db.SiteDB, error) {
-	res, err := controlDB.Queries.GetSitesToDeleteInBatch(context.TODO(), control.GetSitesToDeleteInBatchParams{
+	res, err := controlDB.Queries.GetSitesToDeleteInBatch(context.TODO(), controldb.GetSitesToDeleteInBatchParams{
 		Batch:      char,
 		LastSeenAt: lastSeenMinutes.Minutes(),
 	})

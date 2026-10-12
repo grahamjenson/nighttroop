@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"nighttroop.t1d.nz/data/sql/jobs"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/config"
 )
 
 type JobsDB struct {
-	*jobs.DB
+	*jobsdb.DB
 }
 
 func NewJobsDB(ctx context.Context, cfg *config.ServerConfig) (*JobsDB, error) {
 
-	rawDB, err := jobs.NewDB(ctx, cfg)
+	rawDB, err := jobsdb.NewDB(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open jobs db: %w", err)
 	}
@@ -31,7 +31,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 	q := j.Queries
 
 	// Get the Jobs to be summarised
-	gotJobs, err := q.GetJobsToBeSummarised(ctx, jobs.GetJobsToBeSummarisedParams{
+	gotJobs, err := q.GetJobsToBeSummarised(ctx, jobsdb.GetJobsToBeSummarisedParams{
 		SecondsAgo: secondsAgo,
 	})
 	if err != nil {
@@ -39,7 +39,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 	}
 
 	ids := make([]int64, len(gotJobs))
-	dayQueueJobMap := make(map[string]jobs.JobStatsDaily)
+	dayQueueJobMap := make(map[string]jobsdb.JobStatsDaily)
 	for i, j := range gotJobs {
 		ids[i] = j.ID
 
@@ -54,7 +54,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 			stats.Errors = stats.Errors.AddAll(j.Errors)
 			dayQueueJobMap[j.DayQueueJob()] = stats
 		} else {
-			dayQueueJobMap[j.DayQueueJob()] = jobs.JobStatsDaily{
+			dayQueueJobMap[j.DayQueueJob()] = jobsdb.JobStatsDaily{
 				DayQueueJob:        j.DayQueueJob(),
 				TotalJobs:          1,
 				TotalSuccess:       j.TotalSuccess(),
@@ -67,7 +67,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 	}
 
 	for k := range dayQueueJobMap {
-		_, err := q.EnsureJobStatsDailyForGroup(ctx, jobs.EnsureJobStatsDailyForGroupParams{
+		_, err := q.EnsureJobStatsDailyForGroup(ctx, jobsdb.EnsureJobStatsDailyForGroupParams{
 			DayQueueJob: k,
 		})
 		if err != nil {
@@ -84,7 +84,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 	qtx := j.Queries.WithTx(tx)
 
 	for _, stats := range dayQueueJobMap {
-		err = qtx.UpdateJobStatsDaily(ctx, jobs.UpdateJobStatsDailyParams{
+		err = qtx.UpdateJobStatsDaily(ctx, jobsdb.UpdateJobStatsDailyParams{
 			DayQueueJob:        stats.DayQueueJob,
 			TotalJobs:          stats.TotalJobs,
 			TotalSuccess:       stats.TotalSuccess,
@@ -101,7 +101,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 		return fmt.Errorf("Error updating job stats daily: %w", err)
 	}
 
-	err = qtx.DeleteJobsByIds(ctx, jobs.DeleteJobsByIdsParams{
+	err = qtx.DeleteJobsByIds(ctx, jobsdb.DeleteJobsByIdsParams{
 		Ids: ids,
 	})
 	if err != nil {

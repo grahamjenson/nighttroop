@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils"
@@ -16,43 +16,43 @@ type MetaCreateCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
-	GetDuplicateDBFunc(*site.Queries, context.Context, NS) (*DM, error)
-	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
+	GetDuplicateDBFunc(*sitedb.Queries, context.Context, NS) (*DM, error)
+	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
 }
 
 type MetaPatchCollection[NS, DM any] interface {
 	Name() string
 	ValidatePatch(NS, *DM) *nsutils.HTTPError
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
-	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
-	PatchDBFunc(*site.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
+	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
+	PatchDBFunc(*sitedb.Queries, context.Context, NS, string, *DM, nightscout.ConverterContext) (*DM, error)
 }
 
 type MetaGetCollection[DM any] interface {
 	Name() string
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
-	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
+	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
 }
 
 type MetaDeleteCollection interface {
 	Name() string
-	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
-	SoftDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
+	HardDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
+	SoftDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
 }
 
 type MetaDeleteTypeCollection interface {
 	Name() string
-	HardDeleteTypeDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
-	SoftDeleteTypeDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
+	HardDeleteTypeDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
+	SoftDeleteTypeDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
 }
 
 type MetaReplaceCollection[NS, DM any] interface {
 	Name() string
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
 	Validate(NS, *DM) *nsutils.HTTPError
-	GetDBFunc(*site.Queries, context.Context, string, bool) (*DM, error)
-	HardDeleteDBFunc(*site.Queries, context.Context, string) (sql.Result, error)
-	CreateDBFunc(*site.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
+	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
+	HardDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
+	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscout.ConverterContext, *string) (*DM, error)
 }
 
 // //

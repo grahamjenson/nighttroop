@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -218,7 +218,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
-	params := &control.UpdateSiteIdentitySettingsParams{
+	params := &controldb.UpdateSiteIdentitySettingsParams{
 		ID:     siteContext.IdentityModel.ID,
 		SiteID: siteContext.IdentityModel.SiteID,
 	}

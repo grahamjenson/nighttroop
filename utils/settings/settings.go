@@ -3,7 +3,7 @@ package settings
 import (
 	"fmt"
 
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -21,7 +21,7 @@ func DefaultCombinedSettingsMap() *CombinedSettingsMap {
 	}
 }
 
-func NewCombinedSettingsMap(site *control.Site, identity *control.SiteIdentity) *CombinedSettingsMap {
+func NewCombinedSettingsMap(site *controldb.Site, identity *controldb.SiteIdentity) *CombinedSettingsMap {
 	return &CombinedSettingsMap{
 		SiteSettingsMap:     NewSettingsMap(site, &site.CreatedAt, ptr("site")),
 		IdentitySettingsMap: NewSettingsMap(identity, &identity.CreatedAt, ptr("identity")),

@@ -4,12 +4,12 @@
 package nightscout
 
 import (
-	site "nighttroop.t1d.nz/data/sql/site"
+	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
 	consts "nighttroop.t1d.nz/utils/consts"
 	httputils "nighttroop.t1d.nz/utils/httputils"
 )
 
-func DBModelToActivity(source *site.Activity, context *httputils.SiteContext) Activity {
+func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) Activity {
 	var nightscoutActivity Activity
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -67,7 +67,7 @@ func DBModelToActivity(source *site.Activity, context *httputils.SiteContext) Ac
 	}
 	return nightscoutActivity
 }
-func DBModelToDeviceStatus(source *site.DeviceReport, context *httputils.SiteContext) DeviceStatus {
+func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteContext) DeviceStatus {
 	var nightscoutDeviceStatus DeviceStatus
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -95,7 +95,7 @@ func DBModelToDeviceStatus(source *site.DeviceReport, context *httputils.SiteCon
 	}
 	return nightscoutDeviceStatus
 }
-func DBModelToEntry(source *site.GlucoseReading, context *httputils.SiteContext) Entry {
+func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContext) Entry {
 	var nightscoutEntry Entry
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -156,7 +156,7 @@ func DBModelToEntry(source *site.GlucoseReading, context *httputils.SiteContext)
 	}
 	return nightscoutEntry
 }
-func DBModelToFood(source *site.FoodPreset, context *httputils.SiteContext) Food {
+func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Food {
 	var nightscoutFood Food
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)
@@ -225,7 +225,7 @@ func DBModelToFood(source *site.FoodPreset, context *httputils.SiteContext) Food
 	}
 	return nightscoutFood
 }
-func DBModelToProfile(source *site.ProfilePreset, context *httputils.SiteContext) Profile {
+func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteContext) Profile {
 	var nightscoutProfile Profile
 	if source != nil {
 		if (*source).Units != nil {
@@ -256,7 +256,7 @@ func DBModelToProfile(source *site.ProfilePreset, context *httputils.SiteContext
 	}
 	return nightscoutProfile
 }
-func DBModelToProfileStore(source *site.ProfilePreset, context *httputils.SiteContext) ProfileStore {
+func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.SiteContext) ProfileStore {
 	var nightscoutProfileStore ProfileStore
 	if source != nil {
 		pNightscoutIdentifierString := IdentifierString((*source).ID)

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -42,7 +42,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	for _, userSyncSource := range syncInfo.userSyncSources {
 		siteContext := &httputils.SiteContext{
 			Subdomain: userSyncSource.siteModel.ID,
-			IdentityModel: &control.SiteIdentity{
+			IdentityModel: &controldb.SiteIdentity{
 				Name: "nightscout_sync",
 			},
 			ControlDB:  userSyncSource.controlDB,

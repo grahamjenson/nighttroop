@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"reflect"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscout"
 	"nighttroop.t1d.nz/server/nightscout_api/nsquery"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
@@ -16,7 +16,7 @@ import (
 )
 
 type TreatmentCollection struct {
-	converter func(c *site.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	converter func(c *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
 func NewTreatmentCollection() TreatmentCollection {
@@ -33,11 +33,11 @@ func (c TreatmentCollection) Name() string {
 	return "treatments"
 }
 
-func (c TreatmentCollection) Convert(dr *site.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+func (c TreatmentCollection) Convert(dr *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
 	return c.converter(dr, siteContext, raw)
 }
 
-func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
+func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
 	// Validate the input
 	if nsModel.EventType == nil || *nsModel.EventType == nightscout.Unknown {
 		eventTypeError := "eventType: null"
@@ -61,7 +61,7 @@ func (c TreatmentCollection) Validate(nsModel nightscout.Treatment, dbModel *sit
 	return nil
 }
 
-func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel *site.EventGroupsBundle) *nsutils.HTTPError {
+func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
 	if nsModel.EventType != nil && nsModel.EventType.String() != dbModel.EventGroup.GroupType {
 		slog.Error("treatment event type is not good", "eventType", nsModel.EventType.String())
 		return nsutils.BadDataBodyError
@@ -69,7 +69,7 @@ func (c TreatmentCollection) ValidatePatch(nsModel nightscout.Treatment, dbModel
 	return nil
 }
 
-func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*site.EventGroupsBundle, error) {
+func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Treatment, cc nightscout.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)
 	err := createUpdateEventGroup(ctx, q, &tebg, cc)
@@ -98,8 +98,8 @@ func (c TreatmentCollection) CreateDBFunc(q *site.Queries, ctx context.Context, 
 	return &tebg, nil
 }
 
-func (c TreatmentCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment) (*site.EventGroupsBundle, error) {
-	eventGroups, rerr := q.SearchEventGroups(ctx, site.SearchEventGroupsParams{
+func (c TreatmentCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Treatment) (*sitedb.EventGroupsBundle, error) {
+	eventGroups, rerr := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
 		TypeEq:   nsModel.EventType.Stringp(),
@@ -109,24 +109,24 @@ func (c TreatmentCollection) GetDuplicateDBFunc(q *site.Queries, ctx context.Con
 		return nil, rerr
 	}
 	if len(eventGroups) > 0 {
-		egb := site.GetEventGroupToEventGroupsBundle(site.SearchEventGroupToGetEventGroup(*eventGroups[0]))
+		egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eventGroups[0]))
 		return &egb, nil
 	}
 	return nil, nil
 }
 
-func (c TreatmentCollection) GetDBFunc(q *site.Queries, ctx context.Context, identifier string, includeDeleted bool) (*site.EventGroupsBundle, error) {
-	dbModel, err := q.GetEventGroup(ctx, site.GetEventGroupParams{ID: identifier, IncludeDeleted: includeDeleted})
+func (c TreatmentCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.EventGroupsBundle, error) {
+	dbModel, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: identifier, IncludeDeleted: includeDeleted})
 	if err != nil {
 		return nil, err
 	}
 
-	egb := site.GetEventGroupToEventGroupsBundle(*dbModel)
+	egb := sitedb.GetEventGroupToEventGroupsBundle(*dbModel)
 
 	return &egb, nil
 }
 
-func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *site.EventGroupsBundle, cc nightscout.ConverterContext) (*site.EventGroupsBundle, error) {
+func (c TreatmentCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscout.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscout.ConverterContext) (*sitedb.EventGroupsBundle, error) {
 	// This will be a partial update
 
 	nsModel.EventType = ptr(nightscout.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
@@ -159,17 +159,17 @@ func (c TreatmentCollection) PatchDBFunc(q *site.Queries, ctx context.Context, n
 	return dbModel, nil
 }
 
-func (c TreatmentCollection) HardDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c TreatmentCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return hardDeleteEventGroup(ctx, q, identifier)
 }
 
-func (c TreatmentCollection) SoftDeleteDBFunc(q *site.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c TreatmentCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return softDeleteEventGroup(ctx, q, identifier)
 }
 
-func (c TreatmentCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c TreatmentCollection) HardDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
 
-	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, site.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: true})
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: true})
 	if err != nil {
 		return nil, err
 	}
@@ -185,8 +185,8 @@ func (c TreatmentCollection) HardDeleteTypeDBFunc(q *site.Queries, ctx context.C
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
-func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *site.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, site.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
+func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
 	if err != nil {
 		return nil, err
 	}
@@ -241,17 +241,17 @@ func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.S
 	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
 }
 
-func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*site.EventGroupsBundle, *nsutils.HTTPError) {
+func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*sitedb.EventGroupsBundle, *nsutils.HTTPError) {
 	eventGroups, rerr := siteContext.SiteDB.Queries.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
 	if rerr != nil {
 		slog.Error("failed to query event groups from database", "error", rerr)
 		return nil, nsutils.ErrInternal
 	}
 
-	res := []*site.EventGroupsBundle{}
+	res := []*sitedb.EventGroupsBundle{}
 	for _, eg := range eventGroups {
 		if eg != nil {
-			egb := site.GetEventGroupToEventGroupsBundle(site.SearchEventGroupToGetEventGroup(*eg))
+			egb := sitedb.GetEventGroupToEventGroupsBundle(sitedb.SearchEventGroupToGetEventGroup(*eg))
 			res = append(res, &egb)
 		}
 	}
@@ -270,11 +270,11 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 // 3. Update if the EventGroup has an ID and a model
 //
 // TODO: This means events are always updated, we should selectivly update.
-func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.EventGroupsBundle, cc nightscout.ConverterContext) error {
+func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscout.ConverterContext) error {
 
 	// GlucoseReading
 	if bundle.DeleteGlucoseReading() {
-		_, err := q.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: *bundle.EventGroup.GlucoseReadingID})
+		_, err := q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: *bundle.EventGroup.GlucoseReadingID})
 		if err != nil {
 			slog.Error("failed to delete glucose reading from database", "error", err)
 			return err
@@ -300,7 +300,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// InsulinDose
 	if bundle.DeleteInsulinDose() {
-		_, err := q.HardDeleteInsulinDose(ctx, site.HardDeleteInsulinDoseParams{ID: *bundle.EventGroup.InsulinDoseID})
+		_, err := q.HardDeleteInsulinDose(ctx, sitedb.HardDeleteInsulinDoseParams{ID: *bundle.EventGroup.InsulinDoseID})
 		if err != nil {
 			slog.Error("failed to delete insulin dose from database", "error", err)
 			return err
@@ -325,7 +325,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 	}
 
 	if bundle.DeleteFoodIntake() {
-		_, err := q.HardDeleteFoodIntake(ctx, site.HardDeleteFoodIntakeParams{ID: *bundle.EventGroup.FoodIntakeID})
+		_, err := q.HardDeleteFoodIntake(ctx, sitedb.HardDeleteFoodIntakeParams{ID: *bundle.EventGroup.FoodIntakeID})
 		if err != nil {
 			slog.Error("failed to delete food intake from database", "error", err)
 			return err
@@ -351,7 +351,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// TempBasal
 	if bundle.DeleteTempBasal() {
-		_, err := q.HardDeleteTempBasal(ctx, site.HardDeleteTempBasalParams{ID: *bundle.EventGroup.TempBasalID})
+		_, err := q.HardDeleteTempBasal(ctx, sitedb.HardDeleteTempBasalParams{ID: *bundle.EventGroup.TempBasalID})
 		if err != nil {
 			slog.Error("failed to delete temp basal from database", "error", err)
 			return err
@@ -377,7 +377,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// TempTarget
 	if bundle.DeleteTempTarget() {
-		_, err := q.HardDeleteTempTarget(ctx, site.HardDeleteTempTargetParams{ID: *bundle.EventGroup.TempTargetID})
+		_, err := q.HardDeleteTempTarget(ctx, sitedb.HardDeleteTempTargetParams{ID: *bundle.EventGroup.TempTargetID})
 		if err != nil {
 			slog.Error("failed to delete temp target from database", "error", err)
 			return err
@@ -403,7 +403,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// ProfileSwitch
 	if bundle.DeleteProfileSwitch() {
-		_, err := q.HardDeleteProfileSwitch(ctx, site.HardDeleteProfileSwitchParams{ID: *bundle.EventGroup.ProfileSwitchID})
+		_, err := q.HardDeleteProfileSwitch(ctx, sitedb.HardDeleteProfileSwitchParams{ID: *bundle.EventGroup.ProfileSwitchID})
 		if err != nil {
 			slog.Error("failed to delete profile switch from database", "error", err)
 			return err
@@ -429,7 +429,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// ComponentEvent
 	if bundle.DeleteComponentEvent() {
-		_, err := q.HardDeleteComponentEvent(ctx, site.HardDeleteComponentEventParams{ID: *bundle.EventGroup.ComponentEventID})
+		_, err := q.HardDeleteComponentEvent(ctx, sitedb.HardDeleteComponentEventParams{ID: *bundle.EventGroup.ComponentEventID})
 		if err != nil {
 			slog.Error("failed to delete component event from database", "error", err)
 			return err
@@ -455,7 +455,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// Activity
 	if bundle.DeleteActivity() {
-		_, err := q.HardDeleteActivity(ctx, site.HardDeleteActivityParams{ID: *bundle.EventGroup.ActivityID})
+		_, err := q.HardDeleteActivity(ctx, sitedb.HardDeleteActivityParams{ID: *bundle.EventGroup.ActivityID})
 		if err != nil {
 			slog.Error("failed to delete activity from database", "error", err)
 			return err
@@ -482,7 +482,7 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 
 	// note
 	if bundle.DeleteNotificationEvent() {
-		_, err := q.HardDeleteNotificationEvent(ctx, site.HardDeleteNotificationEventParams{ID: *bundle.EventGroup.NotificationEventID})
+		_, err := q.HardDeleteNotificationEvent(ctx, sitedb.HardDeleteNotificationEventParams{ID: *bundle.EventGroup.NotificationEventID})
 		if err != nil {
 			slog.Error("failed to delete note from database", "error", err)
 			return err
@@ -509,8 +509,8 @@ func createUpdateEventGroup(ctx context.Context, q *site.Queries, bundle *site.E
 	return nil
 }
 
-func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) (sql.Result, error) {
-	eventGroup, err := q.HardDeleteEventGroup(ctx, site.HardDeleteEventGroupParams{ID: identifier})
+func hardDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier string) (sql.Result, error) {
+	eventGroup, err := q.HardDeleteEventGroup(ctx, sitedb.HardDeleteEventGroupParams{ID: identifier})
 	if err != nil {
 		slog.Error("failed to hard delete eventGroup event group by ID", "error", err)
 		return nil, err
@@ -522,55 +522,55 @@ func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	}
 
 	if eventGroup.GlucoseReadingID != nil {
-		if res, err := q.HardDeleteGlucoseReading(ctx, site.HardDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
+		if res, err := q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
 			slog.Error("failed to delete glucose reading by ID", "error", err, "glucoseReadingID", *eventGroup.GlucoseReadingID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.InsulinDoseID != nil {
-		if res, err := q.HardDeleteInsulinDose(ctx, site.HardDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
+		if res, err := q.HardDeleteInsulinDose(ctx, sitedb.HardDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
 			slog.Error("failed to delete insulin dose by ID", "error", err, "insulinDoseID", *eventGroup.InsulinDoseID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.FoodIntakeID != nil {
-		if res, err := q.HardDeleteFoodIntake(ctx, site.HardDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
+		if res, err := q.HardDeleteFoodIntake(ctx, sitedb.HardDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
 			slog.Error("failed to delete food intake by ID", "error", err, "foodIntakeID", *eventGroup.FoodIntakeID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.TempBasalID != nil {
-		if res, err := q.HardDeleteTempBasal(ctx, site.HardDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
+		if res, err := q.HardDeleteTempBasal(ctx, sitedb.HardDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
 			slog.Error("failed to delete temp basal by ID", "error", err, "tempBasalID", *eventGroup.TempBasalID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.TempTargetID != nil {
-		if res, err := q.HardDeleteTempTarget(ctx, site.HardDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
+		if res, err := q.HardDeleteTempTarget(ctx, sitedb.HardDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
 			slog.Error("failed to delete temp target by ID", "error", err, "tempTargetID", *eventGroup.TempTargetID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.ProfileSwitchID != nil {
-		if res, err := q.HardDeleteProfileSwitch(ctx, site.HardDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
+		if res, err := q.HardDeleteProfileSwitch(ctx, sitedb.HardDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
 			slog.Error("failed to delete profile switch by ID", "error", err, "profileSwitchID", *eventGroup.ProfileSwitchID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.ComponentEventID != nil {
-		if res, err := q.HardDeleteComponentEvent(ctx, site.HardDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
+		if res, err := q.HardDeleteComponentEvent(ctx, sitedb.HardDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
 			slog.Error("failed to delete component event by ID", "error", err, "componentEventID", *eventGroup.ComponentEventID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.ActivityID != nil {
-		if res, err := q.HardDeleteActivity(ctx, site.HardDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
+		if res, err := q.HardDeleteActivity(ctx, sitedb.HardDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
 			slog.Error("failed to delete activity by ID", "error", err, "activityID", *eventGroup.ActivityID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.NotificationEventID != nil {
-		if res, err := q.HardDeleteNotificationEvent(ctx, site.HardDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
+		if res, err := q.HardDeleteNotificationEvent(ctx, sitedb.HardDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
 			slog.Error("failed to delete notification event by ID", "error", err, "notificationEventID", *eventGroup.NotificationEventID, "result", res)
 			return nil, err
 		}
@@ -579,8 +579,8 @@ func hardDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
 
-func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier string) (sql.Result, error) {
-	eventGroup, err := q.SoftDeleteEventGroup(ctx, site.SoftDeleteEventGroupParams{ID: identifier})
+func softDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier string) (sql.Result, error) {
+	eventGroup, err := q.SoftDeleteEventGroup(ctx, sitedb.SoftDeleteEventGroupParams{ID: identifier})
 	if err != nil {
 		slog.Error("failed to soft delete eventGroup event group by ID", "error", err)
 		return nil, err
@@ -592,55 +592,55 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 	}
 
 	if eventGroup.GlucoseReadingID != nil {
-		if res, err := q.SoftDeleteGlucoseReading(ctx, site.SoftDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
+		if res, err := q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
 			slog.Error("failed to soft delete glucose reading by ID", "error", err, "glucoseReadingID", *eventGroup.GlucoseReadingID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.InsulinDoseID != nil {
-		if res, err := q.SoftDeleteInsulinDose(ctx, site.SoftDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
+		if res, err := q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
 			slog.Error("failed to soft delete insulin dose by ID", "error", err, "insulinDoseID", *eventGroup.InsulinDoseID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.FoodIntakeID != nil {
-		if res, err := q.SoftDeleteFoodIntake(ctx, site.SoftDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
+		if res, err := q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
 			slog.Error("failed to soft delete food intake by ID", "error", err, "foodIntakeID", *eventGroup.FoodIntakeID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.TempBasalID != nil {
-		if res, err := q.SoftDeleteTempBasal(ctx, site.SoftDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
+		if res, err := q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
 			slog.Error("failed to soft delete temp basal by ID", "error", err, "tempBasalID", *eventGroup.TempBasalID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.TempTargetID != nil {
-		if res, err := q.SoftDeleteTempTarget(ctx, site.SoftDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
+		if res, err := q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
 			slog.Error("failed to soft delete temp target by ID", "error", err, "tempTargetID", *eventGroup.TempTargetID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.ProfileSwitchID != nil {
-		if res, err := q.SoftDeleteProfileSwitch(ctx, site.SoftDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
+		if res, err := q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
 			slog.Error("failed to soft delete profile switch by ID", "error", err, "profileSwitchID", *eventGroup.ProfileSwitchID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.ComponentEventID != nil {
-		if res, err := q.SoftDeleteComponentEvent(ctx, site.SoftDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
+		if res, err := q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
 			slog.Error("failed to soft delete component event by ID", "error", err, "componentEventID", *eventGroup.ComponentEventID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.ActivityID != nil {
-		if res, err := q.SoftDeleteActivity(ctx, site.SoftDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
+		if res, err := q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
 			slog.Error("failed to soft delete activity by ID", "error", err, "activityID", *eventGroup.ActivityID, "result", res)
 			return nil, err
 		}
 	}
 	if eventGroup.NotificationEventID != nil {
-		if res, err := q.SoftDeleteNotificationEvent(ctx, site.SoftDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
+		if res, err := q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
 			slog.Error("failed to soft delete notification event by ID", "error", err, "notificationEventID", *eventGroup.NotificationEventID, "result", res)
 			return nil, err
 		}
@@ -650,7 +650,7 @@ func softDeleteEventGroup(ctx context.Context, q *site.Queries, identifier strin
 }
 
 // Converts an incomming treatment to EventGroups
-func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) site.EventGroupsBundle {
+func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatment) sitedb.EventGroupsBundle {
 	eventGroup := nightscout.TreatmentToEventGroup(treatment)
 
 	glucoseReading := TreatmentToGlucoseReading(treatment)
@@ -669,18 +669,18 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 
 	switch *treatment.EventType {
 	case nightscout.Announcement:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:        eventGroup,
 			GlucoseReading:    glucoseReading,
 			NotificationEvent: notificationEvent,
 		}
 	case nightscout.BGCheck:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 		}
 	case nightscout.BolusWizard:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
@@ -688,12 +688,12 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.CarbCorrection:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 			FoodIntake: foodIntake,
 		}
 	case nightscout.ComboBolus:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
@@ -701,28 +701,28 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.CorrectionBolus:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			InsulinDose:    insulinDose,
 			GlucoseReading: glucoseReading,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.DADAlert:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 		}
 	case nightscout.Exercise:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 			Activity:   activity,
 		}
 	case nightscout.InsulinChange:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.MealBolus:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
@@ -730,7 +730,7 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.Note:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
@@ -740,42 +740,42 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.OpenAPSOffline:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.ProfileSwitch:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:    eventGroup,
 			ProfileSwitch: profileSwitch,
 		}
 	case nightscout.PumpBatteryChange:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.Question:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:        eventGroup,
 			NotificationEvent: notificationEvent,
 		}
 	case nightscout.SensorChange:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.SensorStart:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.SiteChange:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.SnackBolus:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			InsulinDose:    insulinDose,
@@ -783,50 +783,50 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscout.Treatme
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.TempBasal:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			TempBasal:      tempBasal,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.TemporaryTarget:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup: eventGroup,
 			TempTarget: tempTarget,
 		}
 	case nightscout.CannulaFill:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.Prime:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.ReservoirChange:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.Calibration:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			GlucoseReading: glucoseReading,
 			ComponentEvent: componentEvent,
 		}
 	case nightscout.Bolus:
-		return site.EventGroupsBundle{
+		return sitedb.EventGroupsBundle{
 			EventGroup:     eventGroup,
 			InsulinDose:    insulinDose,
 			ComponentEvent: componentEvent,
 		}
 	}
 
-	return site.EventGroupsBundle{EventGroup: eventGroup}
+	return sitedb.EventGroupsBundle{EventGroup: eventGroup}
 }
 
 // Merge a DB Event Group with one created from the
-func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventGroupsBundle) {
+func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.EventGroupsBundle) {
 	nightscout.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
 
 	if updateBundle.InsulinDose != nil {
@@ -904,7 +904,7 @@ func MergeUpdateBundle(dbModel *site.EventGroupsBundle, updateBundle site.EventG
 // Food Intake
 ///////
 
-func TreatmentToFoodIntake(source nightscout.Treatment) *site.FoodIntake {
+func TreatmentToFoodIntake(source nightscout.Treatment) *sitedb.FoodIntake {
 	// Check some needed fields are assigned
 	if isAssigned(source.FoodType, source.PreBolus, source.Category, source.Subcategory, source.Carbs, source.Fat, source.Protein, source.Fibre, source.Energy, source.Portions) {
 		return ptr(nightscout.PartialTreatmentToFoodIntake(source))
@@ -916,7 +916,7 @@ func TreatmentToFoodIntake(source nightscout.Treatment) *site.FoodIntake {
 // Glucose Reading
 ///////
 
-func TreatmentToGlucoseReading(source nightscout.Treatment) *site.GlucoseReading {
+func TreatmentToGlucoseReading(source nightscout.Treatment) *sitedb.GlucoseReading {
 	target := nightscout.PartialTreatmentToGlucoseReading(source)
 	target.ReadingType = "sgv"
 	target.Units = source.Units
@@ -945,7 +945,7 @@ func TreatmentToGlucoseReading(source nightscout.Treatment) *site.GlucoseReading
 // Insulin Dose
 ///////
 
-func TreatmentToInsulinDose(source nightscout.Treatment) *site.InsulinDose {
+func TreatmentToInsulinDose(source nightscout.Treatment) *sitedb.InsulinDose {
 	if isAssigned(source.Insulin) {
 		return ptr(nightscout.PartialTreatmentToInsulinDose(source))
 	}
@@ -956,7 +956,7 @@ func TreatmentToInsulinDose(source nightscout.Treatment) *site.InsulinDose {
 // NotificationEvents
 ///////
 
-func TreatmentToNotificationEvent(source nightscout.Treatment, eventType nightscout.TreatmentEventType) *site.NotificationEvent {
+func TreatmentToNotificationEvent(source nightscout.Treatment, eventType nightscout.TreatmentEventType) *sitedb.NotificationEvent {
 	target := nightscout.PartialTreatmentToNotificationEvent(source)
 
 	if eventType == nightscout.Announcement {
@@ -985,7 +985,7 @@ func TreatmentToNotificationEvent(source nightscout.Treatment, eventType nightsc
 // Profile Switch
 ///////
 
-func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
+func TreatmentToProfileSwitch(source nightscout.Treatment) *sitedb.ProfileSwitch {
 	target := nightscout.PartialTreatmentToProfileSwitch(source)
 
 	// TODO: This is the bit that will need more work, with the json of profile
@@ -1056,7 +1056,7 @@ func TreatmentToProfileSwitch(source nightscout.Treatment) *site.ProfileSwitch {
 // Temp Basal
 ///////
 
-func TreatmentToTempBasal(source nightscout.Treatment) *site.TempBasal {
+func TreatmentToTempBasal(source nightscout.Treatment) *sitedb.TempBasal {
 	if isAssigned(source.Absolute, source.Rate, source.Percent, source.DurationMinutes) {
 		return ptr(nightscout.PartialTreatmentToTempBasal(source))
 	}
@@ -1067,7 +1067,7 @@ func TreatmentToTempBasal(source nightscout.Treatment) *site.TempBasal {
 // Temp Targets
 ///////
 
-func TreatmentToTempTarget(source nightscout.Treatment) *site.TempTarget {
+func TreatmentToTempTarget(source nightscout.Treatment) *sitedb.TempTarget {
 
 	if len(source.CorrectionRange) == 2 {
 		source.LowTarget = source.CorrectionRange[0]
@@ -1099,14 +1099,14 @@ func TreatmentToTempTarget(source nightscout.Treatment) *site.TempTarget {
 	return nil
 }
 
-func TreatmentToComponentEvent(source nightscout.Treatment) *site.ComponentEvent {
+func TreatmentToComponentEvent(source nightscout.Treatment) *sitedb.ComponentEvent {
 	if isAssigned(source.PumpID, source.PumpSerial, source.PumpType) {
 		return ptr(nightscout.PartialTreatmentToComponentEvent(source))
 	}
 	return nil
 }
 
-func TreatmentToActivity(source nightscout.Treatment) *site.Activity {
+func TreatmentToActivity(source nightscout.Treatment) *sitedb.Activity {
 	if isAssigned(source.Name, source.ActivityType, source.Calories, source.Steps, source.HeartRate) {
 		return ptr(nightscout.PartialTreatmentToActivity(source))
 	}
@@ -1134,7 +1134,7 @@ func isAssigned(values ...any) bool {
 	return false
 }
 
-func DBModelToTreatment(source *site.EventGroupsBundle, siteContext *httputils.SiteContext) nightscout.Treatment {
+func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) nightscout.Treatment {
 	treatment := nightscout.EventGroupToTreatment(source.EventGroup)
 
 	nightscout.UpdateGlucoseReadingToTreatment(source.GlucoseReading, siteContext, treatment)

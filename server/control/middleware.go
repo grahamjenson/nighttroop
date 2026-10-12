@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -42,14 +42,14 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 	}
 }
 
-func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (*control.ControlIdentity, error) {
+func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (*controldb.ControlIdentity, error) {
 	userName, role, err := verifyControlJWTToken(controlDB, config, r)
 
 	if err != nil {
 		return nil, err
 	}
 
-	controlIdentity, err := controlDB.Queries.GetControlIdentity(context.Background(), control.GetControlIdentityParams{
+	controlIdentity, err := controlDB.Queries.GetControlIdentity(context.Background(), controldb.GetControlIdentityParams{
 		Name: userName,
 	})
 

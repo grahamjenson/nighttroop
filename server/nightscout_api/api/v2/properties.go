@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -104,7 +104,7 @@ type SensorAge struct {
 	Min          *string     `json:"min,omitempty"`
 }
 
-func GetIOB(dr *site.DeviceReport) IOB {
+func GetIOB(dr *sitedb.DeviceReport) IOB {
 	if dr == nil {
 		return IOB{
 			Found: ptr(false),
@@ -118,7 +118,7 @@ func GetIOB(dr *site.DeviceReport) IOB {
 	}
 }
 
-func GetCOB(dr *site.DeviceReport) COB {
+func GetCOB(dr *sitedb.DeviceReport) COB {
 	if dr == nil {
 		return COB{
 			Found: ptr(false),
@@ -130,7 +130,7 @@ func GetCOB(dr *site.DeviceReport) COB {
 	}
 }
 
-func GetDeviceTime(lastDevice *site.ComponentEvent) DeviceTime {
+func GetDeviceTime(lastDevice *sitedb.ComponentEvent) DeviceTime {
 	if lastDevice == nil {
 		return DeviceTime{
 			Found: ptr(false),
@@ -142,7 +142,7 @@ func GetDeviceTime(lastDevice *site.ComponentEvent) DeviceTime {
 	}
 }
 
-func GetSensorAge(lastSensorStart, lastSensorChange *site.ComponentEvent) SensorAge {
+func GetSensorAge(lastSensorStart, lastSensorChange *sitedb.ComponentEvent) SensorAge {
 	ssTime := GetDeviceTime(lastSensorStart)
 	scTime := GetDeviceTime(lastSensorChange)
 	var min *string
@@ -165,7 +165,7 @@ func GetSensorAge(lastSensorStart, lastSensorChange *site.ComponentEvent) Sensor
 	}
 }
 
-func GetUptimeBattery(dr *site.DeviceReport) UptimeBattery {
+func GetUptimeBattery(dr *sitedb.DeviceReport) UptimeBattery {
 	if dr == nil || dr.DeviceBatteryPercent == nil {
 		return UptimeBattery{
 			Found: ptr(false),

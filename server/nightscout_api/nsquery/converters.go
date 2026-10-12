@@ -1,6 +1,6 @@
 package nsquery
 
-import "nighttroop.t1d.nz/data/sql/site"
+import "nighttroop.t1d.nz/data/sql/sitedb"
 
 //go:generate goverter gen .
 
@@ -23,49 +23,49 @@ type ToSearchParams interface {
 	// GLUCOSE READINGS
 	//////
 
-	GlucoseAll(source Query) site.AllGlucoseReadingsParams
-	GlucoseSearch(source Query) site.SearchGlucoseReadingsParams
+	GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams
+	GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams
 
 	//////
 	// Activities
 	//////
 
-	ActivityAll(source Query) site.AllActivitiesParams
-	ActivitySearch(source Query) site.SearchActivitiesParams
+	ActivityAll(source Query) sitedb.AllActivitiesParams
+	ActivitySearch(source Query) sitedb.SearchActivitiesParams
 
 	//////
 	// DEVICE REPORTS
 	//////
 
-	DeviceReportAll(source Query) site.AllDeviceReportsParams
-	DeviceReportSearch(source Query) site.SearchDeviceReportsParams
+	DeviceReportAll(source Query) sitedb.AllDeviceReportsParams
+	DeviceReportSearch(source Query) sitedb.SearchDeviceReportsParams
 
 	//////
 	// FoodPresets
 	//////
 
-	FoodPresetAll(source Query) site.AllFoodPresetsParams
-	FoodPresetSearch(source Query) site.SearchFoodPresetsParams
+	FoodPresetAll(source Query) sitedb.AllFoodPresetsParams
+	FoodPresetSearch(source Query) sitedb.SearchFoodPresetsParams
 	//////
 	// FoodIntake
 	//////
 
-	FoodIntakeAll(source Query) site.AllFoodIntakesParams
-	FoodIntakeSearch(source Query) site.SearchFoodIntakesParams
+	FoodIntakeAll(source Query) sitedb.AllFoodIntakesParams
+	FoodIntakeSearch(source Query) sitedb.SearchFoodIntakesParams
 
 	///////
 	// Event Group
 	///////
 
-	EventGroupAll(source Query) site.AllEventGroupsParams
-	EventGroupSearch(source Query) site.SearchEventGroupsParams
+	EventGroupAll(source Query) sitedb.AllEventGroupsParams
+	EventGroupSearch(source Query) sitedb.SearchEventGroupsParams
 
 	///////
 	// Profiles Presets
 	////////
 
-	ProfilePresetsAll(source Query) site.AllProfilePresetsParams
-	ProfileStoreSearch(source Query) site.SearchProfileStoresParams
+	ProfilePresetsAll(source Query) sitedb.AllProfilePresetsParams
+	ProfileStoreSearch(source Query) sitedb.SearchProfileStoresParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {

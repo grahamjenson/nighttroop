@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -61,7 +61,7 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	if err != nil {
 		errMsg := err.Error()
 		slog.Error("error syncing user data", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", err)
-		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), control.UpdateSyncSourceReportsFailureParams{
+		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
 			ErrorMessages: []string{errMsg},
 			ElapsedMs:     &elapsedTimeMS,
 		})
@@ -72,7 +72,7 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	}
 
 	slog.Info("finished sync", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
-	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), control.UpdateSyncSourceReportsSuccessParams{
+	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), controldb.UpdateSyncSourceReportsSuccessParams{
 		ElapsedMs: &elapsedTimeMS,
 	})
 	if updateError != nil {

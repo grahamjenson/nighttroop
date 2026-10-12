@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/jobs"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -27,7 +27,7 @@ func TestAddFunc(t *testing.T) {
 	require.NotZero(t, entryid)
 
 	require.Len(t, cron.Entries(), 1)
-	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobs.GetJobsToBeSummarisedParams{
+	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
 		SecondsAgo: 0,
 	})
 	require.NoError(t, err)
@@ -37,7 +37,7 @@ func TestAddFunc(t *testing.T) {
 	entry := cron.Entry(entryid)
 	entry.Job.Run()
 
-	jobsTBS, err = jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobs.GetJobsToBeSummarisedParams{
+	jobsTBS, err = jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
 		SecondsAgo: 0,
 	})
 	require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestAddFuncPanic(t *testing.T) {
 	// Should not panic and be caught by the jobs DB
 	entry.Job.Run()
 
-	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobs.GetJobsToBeSummarisedParams{
+	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
 		SecondsAgo: 0,
 	})
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestAddFuncError(t *testing.T) {
 	// Simulate an error in the job
 	entry.Job.Run()
 
-	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobs.GetJobsToBeSummarisedParams{
+	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
 		SecondsAgo: 0,
 	})
 	require.NoError(t, err)

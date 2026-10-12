@@ -3,125 +3,125 @@
 
 package nightscout
 
-import site "nighttroop.t1d.nz/data/sql/site"
+import sitedb "nighttroop.t1d.nz/data/sql/sitedb"
 
-func ActivityToUpdate(source Activity, context ConverterContext) site.UpdateActivityParams {
-	var siteUpdateActivityParams site.UpdateActivityParams
+func ActivityToUpdate(source Activity, context ConverterContext) sitedb.UpdateActivityParams {
+	var sitedbUpdateActivityParams sitedb.UpdateActivityParams
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
-		siteUpdateActivityParams.Name = &xstring
+		sitedbUpdateActivityParams.Name = &xstring
 	}
 	if source.ActivityType != nil {
 		xstring2 := ShortStringToString(*source.ActivityType)
-		siteUpdateActivityParams.ActivityType = &xstring2
+		sitedbUpdateActivityParams.ActivityType = &xstring2
 	}
 	if source.DurationMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
-		siteUpdateActivityParams.DurationMinutes = &xint64
+		sitedbUpdateActivityParams.DurationMinutes = &xint64
 	}
 	if source.Calories != nil {
 		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		siteUpdateActivityParams.Calories = &xint642
+		sitedbUpdateActivityParams.Calories = &xint642
 	}
 	if source.Steps != nil {
 		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		siteUpdateActivityParams.Steps = &xint643
+		sitedbUpdateActivityParams.Steps = &xint643
 	}
 	if source.HeartRate != nil {
 		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		siteUpdateActivityParams.HeartRate = &xint644
+		sitedbUpdateActivityParams.HeartRate = &xint644
 	}
 	if source.Notes != nil {
 		xstring3 := SanitizedStringToString(*source.Notes)
-		siteUpdateActivityParams.Notes = &xstring3
+		sitedbUpdateActivityParams.Notes = &xstring3
 	}
 	pString := source.RawJsonData
-	siteUpdateActivityParams.RawJsonData = &pString
-	siteUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
+	sitedbUpdateActivityParams.RawJsonData = &pString
+	sitedbUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateActivityParams.ID = string(*source.Identifier)
+		sitedbUpdateActivityParams.ID = string(*source.Identifier)
 	}
-	return siteUpdateActivityParams
+	return sitedbUpdateActivityParams
 }
-func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterContext) site.UpdateDeviceReportParams {
-	var siteUpdateDeviceReportParams site.UpdateDeviceReportParams
+func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterContext) sitedb.UpdateDeviceReportParams {
+	var sitedbUpdateDeviceReportParams sitedb.UpdateDeviceReportParams
 	pString := source.RawJsonData
-	siteUpdateDeviceReportParams.RawJsonData = &pString
-	siteUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
+	sitedbUpdateDeviceReportParams.RawJsonData = &pString
+	sitedbUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateDeviceReportParams.ID = string(*source.Identifier)
+		sitedbUpdateDeviceReportParams.ID = string(*source.Identifier)
 	}
-	return siteUpdateDeviceReportParams
+	return sitedbUpdateDeviceReportParams
 }
-func EntryToUpdate(source Entry, context ConverterContext) site.UpdateGlucoseReadingParams {
-	var siteUpdateGlucoseReadingParams site.UpdateGlucoseReadingParams
+func EntryToUpdate(source Entry, context ConverterContext) sitedb.UpdateGlucoseReadingParams {
+	var sitedbUpdateGlucoseReadingParams sitedb.UpdateGlucoseReadingParams
 	if source.Mgdl != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Mgdl)
-		siteUpdateGlucoseReadingParams.Mgdl = &xfloat64
+		sitedbUpdateGlucoseReadingParams.Mgdl = &xfloat64
 	}
 	pString := source.RawJsonData
-	siteUpdateGlucoseReadingParams.RawJsonData = &pString
-	siteUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
+	sitedbUpdateGlucoseReadingParams.RawJsonData = &pString
+	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateGlucoseReadingParams.ID = string(*source.Identifier)
+		sitedbUpdateGlucoseReadingParams.ID = string(*source.Identifier)
 	}
-	return siteUpdateGlucoseReadingParams
+	return sitedbUpdateGlucoseReadingParams
 }
-func FoodToUpdate(source Food, context ConverterContext) site.UpdateFoodPresetParams {
-	var siteUpdateFoodPresetParams site.UpdateFoodPresetParams
+func FoodToUpdate(source Food, context ConverterContext) sitedb.UpdateFoodPresetParams {
+	var sitedbUpdateFoodPresetParams sitedb.UpdateFoodPresetParams
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
-		siteUpdateFoodPresetParams.Name = &xstring
+		sitedbUpdateFoodPresetParams.Name = &xstring
 	}
 	if source.FoodType != nil {
 		xstring2 := ShortStringToString(*source.FoodType)
-		siteUpdateFoodPresetParams.FoodType = &xstring2
+		sitedbUpdateFoodPresetParams.FoodType = &xstring2
 	}
 	if source.Category != nil {
 		xstring3 := ShortStringToString(*source.Category)
-		siteUpdateFoodPresetParams.Category = &xstring3
+		sitedbUpdateFoodPresetParams.Category = &xstring3
 	}
 	if source.Subcategory != nil {
 		xstring4 := ShortStringToString(*source.Subcategory)
-		siteUpdateFoodPresetParams.Subcategory = &xstring4
+		sitedbUpdateFoodPresetParams.Subcategory = &xstring4
 	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.AbsorptionTimeMinutes)
-		siteUpdateFoodPresetParams.AbsorptionTimeMinutes = &xint64
+		sitedbUpdateFoodPresetParams.AbsorptionTimeMinutes = &xint64
 	}
 	if source.PreBolus != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.PreBolus)
-		siteUpdateFoodPresetParams.PreBolus = &xfloat64
+		sitedbUpdateFoodPresetParams.PreBolus = &xfloat64
 	}
 	if source.Portions != nil {
 		xfloat642 := FlexibleFloat64ToFloat64(*source.Portions)
-		siteUpdateFoodPresetParams.Portions = &xfloat642
+		sitedbUpdateFoodPresetParams.Portions = &xfloat642
 	}
 	if source.Carbs != nil {
 		xfloat643 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteUpdateFoodPresetParams.Carbs = &xfloat643
+		sitedbUpdateFoodPresetParams.Carbs = &xfloat643
 	}
 	if source.Fat != nil {
 		xfloat644 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteUpdateFoodPresetParams.Fat = &xfloat644
+		sitedbUpdateFoodPresetParams.Fat = &xfloat644
 	}
 	if source.Protein != nil {
 		xfloat645 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteUpdateFoodPresetParams.Protein = &xfloat645
+		sitedbUpdateFoodPresetParams.Protein = &xfloat645
 	}
 	if source.Fibre != nil {
 		xfloat646 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteUpdateFoodPresetParams.Fibre = &xfloat646
+		sitedbUpdateFoodPresetParams.Fibre = &xfloat646
 	}
 	if source.Energy != nil {
 		xfloat647 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteUpdateFoodPresetParams.Energy = &xfloat647
+		sitedbUpdateFoodPresetParams.Energy = &xfloat647
 	}
 	pString := source.RawJsonData
-	siteUpdateFoodPresetParams.RawJsonData = &pString
-	siteUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
+	sitedbUpdateFoodPresetParams.RawJsonData = &pString
+	sitedbUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
-		siteUpdateFoodPresetParams.ID = string(*source.Identifier)
+		sitedbUpdateFoodPresetParams.ID = string(*source.Identifier)
 	}
-	return siteUpdateFoodPresetParams
+	return sitedbUpdateFoodPresetParams
 }

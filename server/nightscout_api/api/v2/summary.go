@@ -3,7 +3,7 @@ package v2
 import (
 	"net/http"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -103,21 +103,21 @@ type Alarm struct {
 	SilenceExpiresMills *int64 `json:"silenceExpiresMills"`
 }
 
-func GetIOBFloat(dr *site.DeviceReport) *float64 {
+func GetIOBFloat(dr *sitedb.DeviceReport) *float64 {
 	if dr == nil || dr.LoopIob == nil {
 		return nil
 	}
 	return dr.LoopIob
 }
 
-func GetCOBFloat(dr *site.DeviceReport) *float64 {
+func GetCOBFloat(dr *sitedb.DeviceReport) *float64 {
 	if dr == nil || dr.LoopCob == nil {
 		return nil
 	}
 	return dr.LoopCob
 }
 
-func GetComponentEventOccuredAt(lastSensorChange *site.ComponentEvent) *int64 {
+func GetComponentEventOccuredAt(lastSensorChange *sitedb.ComponentEvent) *int64 {
 	if lastSensorChange == nil || lastSensorChange.OccurredAt == 0 {
 		return nil
 	}

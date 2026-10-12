@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -120,7 +120,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 // Then try get the cookie
 const BearerPrefix = "bearer "
 
-func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control.SiteIdentity, error) {
+func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*controldb.SiteIdentity, error) {
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
@@ -161,13 +161,13 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	return nil, fmt.Errorf("No JWT token found")
 }
 
-func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*control.SiteIdentity, error) {
+func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*controldb.SiteIdentity, error) {
 	siteContext := httputils.GetSiteContext(ctx)
 	if subdomain != siteContext.Subdomain {
 		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
 	}
 
-	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, control.GetSiteIdentityParams{
+	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{
 		SiteID: subdomain,
 		Name:   identityName,
 	})

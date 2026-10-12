@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 )
 
 const controlContextKey = "control_context"
 
 type ControlContext struct {
-	IdentityModel *control.ControlIdentity
+	IdentityModel *controldb.ControlIdentity
 
 	ControlDB *db.ControlDB
 
@@ -39,7 +39,7 @@ func CreateControlContext(ctx context.Context, controlDB *db.ControlDB, ipAddres
 	return context.WithValue(ctx, controlContextKey, controlContext)
 }
 
-func SetAdminControlContext(ctx context.Context, identity *control.ControlIdentity) context.Context {
+func SetAdminControlContext(ctx context.Context, identity *controldb.ControlIdentity) context.Context {
 	controlContext := GetControlContext(ctx)
 	controlContext.IdentityModel = identity
 	return context.WithValue(ctx, controlContextKey, controlContext)

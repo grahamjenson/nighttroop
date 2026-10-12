@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/control_templ/control_login_templ"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/errors"
@@ -121,8 +121,8 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*control.ControlIdentity, error) {
-	admin, err := controlDB.Queries.GetControlIdentity(context.TODO(), control.GetControlIdentityParams{
+func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*controldb.ControlIdentity, error) {
+	admin, err := controlDB.Queries.GetControlIdentity(context.TODO(), controldb.GetControlIdentityParams{
 		Name: username,
 	})
 

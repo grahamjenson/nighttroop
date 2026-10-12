@@ -3,10 +3,10 @@ package v2
 import (
 	"context"
 
-	"nighttroop.t1d.nz/data/sql/site"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 )
 
-func LastDeviceStatusFromPWD(q *site.Queries, ctx context.Context) *site.DeviceReport {
+func LastDeviceStatusFromPWD(q *sitedb.Queries, ctx context.Context) *sitedb.DeviceReport {
 	// We are going to ignore the error here, because not important
 	ret, err := q.GetLatestDeviceReportWithPWDInformation(ctx)
 	if err != nil {
@@ -15,21 +15,21 @@ func LastDeviceStatusFromPWD(q *site.Queries, ctx context.Context) *site.DeviceR
 	return ret
 }
 
-func GetLastSensorChangeCannulaChange(q *site.Queries, ctx context.Context) (*site.ComponentEvent, *site.ComponentEvent, *site.ComponentEvent) {
-	lastSensorChange, err := q.GetComponentEventByType(ctx, site.GetComponentEventByTypeParams{
+func GetLastSensorChangeCannulaChange(q *sitedb.Queries, ctx context.Context) (*sitedb.ComponentEvent, *sitedb.ComponentEvent, *sitedb.ComponentEvent) {
+	lastSensorChange, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{
 		EventType: "Sensor Change",
 	})
 	if err != nil {
 		lastSensorChange = nil
 	}
-	lastSensorStart, err := q.GetComponentEventByType(ctx, site.GetComponentEventByTypeParams{
+	lastSensorStart, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{
 		EventType: "Sensor Start",
 	})
 	if err != nil {
 		lastSensorStart = nil
 	}
 
-	lastCannulaChange, err := q.GetComponentEventByType(ctx, site.GetComponentEventByTypeParams{
+	lastCannulaChange, err := q.GetComponentEventByType(ctx, sitedb.GetComponentEventByTypeParams{
 		EventType: "Insulin Change",
 	})
 	if err != nil {

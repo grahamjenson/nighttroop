@@ -7,7 +7,7 @@ import (
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -54,7 +54,7 @@ func (b *BackupControlJobManager) BackupToS3() error {
 	}
 
 	// Copy the control db to S3 path
-	err = b.S3Client.UploadFilesToS3(control.GetS3Path(b.ServerConfig), []string{b.controlDB.BackupPath})
+	err = b.S3Client.UploadFilesToS3(controldb.GetS3Path(b.ServerConfig), []string{b.controlDB.BackupPath})
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}

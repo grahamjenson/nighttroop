@@ -11,7 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/control"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/site"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
@@ -86,7 +86,7 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 		return nil, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
 	}
 
-	model, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, control.GetSyncSourceParams{
+	model, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 		ID:     int64(idInt),
 		SiteID: siteContext.Subdomain,
 	})
@@ -187,7 +187,7 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			return
 		}
 
-		dbSyncSources, err := controlDB.Queries.GetAllSyncSourcesForSite(ctx, control.GetAllSyncSourcesForSiteParams{
+		dbSyncSources, err := controlDB.Queries.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
 			SiteID: siteContext.Subdomain,
 		})
 

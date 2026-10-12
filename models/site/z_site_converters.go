@@ -4,11 +4,11 @@
 package site
 
 import (
-	control "nighttroop.t1d.nz/data/sql/control"
+	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	consts "nighttroop.t1d.nz/utils/consts"
 )
 
-func SyncSourceFromDB(source *control.SiteSyncSource) *SyncSource {
+func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
 	var pSiteSyncSource *SyncSource
 	if source != nil {
 		var siteSyncSource SyncSource
@@ -25,33 +25,33 @@ func SyncSourceFromDB(source *control.SiteSyncSource) *SyncSource {
 	}
 	return pSiteSyncSource
 }
-func SyncSourceToCreate(source *SyncSource) control.CreateSyncSourceParams {
-	var controlCreateSyncSourceParams control.CreateSyncSourceParams
+func SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams {
+	var controldbCreateSyncSourceParams controldb.CreateSyncSourceParams
 	if source != nil {
-		controlCreateSyncSourceParams.SiteID = (*source).SiteID
-		controlCreateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
-		controlCreateSyncSourceParams.UrlOrUsername = (*source).UrlOrUsername
-		controlCreateSyncSourceParams.Password = (*source).Password
+		controldbCreateSyncSourceParams.SiteID = (*source).SiteID
+		controldbCreateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
+		controldbCreateSyncSourceParams.UrlOrUsername = (*source).UrlOrUsername
+		controldbCreateSyncSourceParams.Password = (*source).Password
 		pString := (*source).Region
-		controlCreateSyncSourceParams.Region = &pString
-		controlCreateSyncSourceParams.Enabled = (*source).Enabled
+		controldbCreateSyncSourceParams.Region = &pString
+		controldbCreateSyncSourceParams.Enabled = (*source).Enabled
 	}
-	return controlCreateSyncSourceParams
+	return controldbCreateSyncSourceParams
 }
-func SyncSourceToUpdate(source *SyncSource) control.UpdateSyncSourceParams {
-	var controlUpdateSyncSourceParams control.UpdateSyncSourceParams
+func SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams {
+	var controldbUpdateSyncSourceParams controldb.UpdateSyncSourceParams
 	if source != nil {
 		pString := (*source).Password
-		controlUpdateSyncSourceParams.Password = &pString
-		controlUpdateSyncSourceParams.Enabled = (*source).Enabled
+		controldbUpdateSyncSourceParams.Password = &pString
+		controldbUpdateSyncSourceParams.Enabled = (*source).Enabled
 		pString2 := (*source).UrlOrUsername
-		controlUpdateSyncSourceParams.UrlOrUsername = &pString2
+		controldbUpdateSyncSourceParams.UrlOrUsername = &pString2
 		pString3 := (*source).Region
-		controlUpdateSyncSourceParams.Region = &pString3
-		controlUpdateSyncSourceParams.ID = (*source).ID
-		controlUpdateSyncSourceParams.SiteID = (*source).SiteID
+		controldbUpdateSyncSourceParams.Region = &pString3
+		controldbUpdateSyncSourceParams.ID = (*source).ID
+		controldbUpdateSyncSourceParams.SiteID = (*source).SiteID
 	}
-	return controlUpdateSyncSourceParams
+	return controldbUpdateSyncSourceParams
 }
 func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) consts.SyncSourceType {
 	var constsSyncSourceType consts.SyncSourceType

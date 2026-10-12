@@ -3,212 +3,212 @@
 
 package nightscout
 
-import site "nighttroop.t1d.nz/data/sql/site"
+import sitedb "nighttroop.t1d.nz/data/sql/sitedb"
 
-func ActivityToCreate(source Activity, context ConverterContext) site.CreateActivityParams {
-	var siteCreateActivityParams site.CreateActivityParams
-	siteCreateActivityParams.ID = AssignID()
+func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateActivityParams {
+	var sitedbCreateActivityParams sitedb.CreateActivityParams
+	sitedbCreateActivityParams.ID = AssignID()
 	if source.Name != nil {
 		xstring := ShortStringToString(*source.Name)
-		siteCreateActivityParams.Name = &xstring
+		sitedbCreateActivityParams.Name = &xstring
 	}
 	if source.ActivityType != nil {
-		siteCreateActivityParams.ActivityType = ShortStringToString(*source.ActivityType)
+		sitedbCreateActivityParams.ActivityType = ShortStringToString(*source.ActivityType)
 	}
 	if source.DurationMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
-		siteCreateActivityParams.DurationMinutes = &xint64
+		sitedbCreateActivityParams.DurationMinutes = &xint64
 	}
 	if source.Calories != nil {
 		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		siteCreateActivityParams.Calories = &xint642
+		sitedbCreateActivityParams.Calories = &xint642
 	}
 	if source.Steps != nil {
 		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		siteCreateActivityParams.Steps = &xint643
+		sitedbCreateActivityParams.Steps = &xint643
 	}
 	if source.HeartRate != nil {
 		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		siteCreateActivityParams.HeartRate = &xint644
+		sitedbCreateActivityParams.HeartRate = &xint644
 	}
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
-		siteCreateActivityParams.Notes = &xstring2
+		sitedbCreateActivityParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
 		xstring3 := SanitizedStringToString(*source.Reason)
-		siteCreateActivityParams.Reason = &xstring3
+		sitedbCreateActivityParams.Reason = &xstring3
 	}
-	siteCreateActivityParams.OccurredAt = OrNow(source.Date)
+	sitedbCreateActivityParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateActivityParams.UtcOffsetMinutes = &xint645
+		sitedbCreateActivityParams.UtcOffsetMinutes = &xint645
 	}
 	pString := source.RawJsonData
-	siteCreateActivityParams.RawJsonData = &pString
+	sitedbCreateActivityParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring4 := ShortStringToString(*source.App)
-		siteCreateActivityParams.CreatedByAppName = &xstring4
+		sitedbCreateActivityParams.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
 		xstring5 := ShortStringToString(*source.Device)
-		siteCreateActivityParams.CreatedByDeviceName = &xstring5
+		sitedbCreateActivityParams.CreatedByDeviceName = &xstring5
 	}
-	siteCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateActivityParams
+	sitedbCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return sitedbCreateActivityParams
 }
-func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterContext) site.CreateDeviceReportParams {
-	var siteCreateDeviceReportParams site.CreateDeviceReportParams
-	siteCreateDeviceReportParams.ID = AssignID()
+func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterContext) sitedb.CreateDeviceReportParams {
+	var sitedbCreateDeviceReportParams sitedb.CreateDeviceReportParams
+	sitedbCreateDeviceReportParams.ID = AssignID()
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateDeviceReportParams.UtcOffsetMinutes = &xint64
+		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint64
 	}
-	siteCreateDeviceReportParams.OccurredAt = OrNow(source.Date)
+	sitedbCreateDeviceReportParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
-	siteCreateDeviceReportParams.RawJsonData = &pString
+	sitedbCreateDeviceReportParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring := ShortStringToString(*source.App)
-		siteCreateDeviceReportParams.CreatedByAppName = &xstring
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring
 	}
 	if source.Device != nil {
 		xstring2 := ShortStringToString(*source.Device)
-		siteCreateDeviceReportParams.CreatedByDeviceName = &xstring2
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring2
 	}
-	siteCreateDeviceReportParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateDeviceReportParams
+	sitedbCreateDeviceReportParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return sitedbCreateDeviceReportParams
 }
-func EntryToCreate(source Entry, context ConverterContext) site.CreateGlucoseReadingParams {
-	var siteCreateGlucoseReadingParams site.CreateGlucoseReadingParams
-	siteCreateGlucoseReadingParams.ID = AssignID()
+func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseReadingParams {
+	var sitedbCreateGlucoseReadingParams sitedb.CreateGlucoseReadingParams
+	sitedbCreateGlucoseReadingParams.ID = AssignID()
 	if source.Mgdl != nil {
-		siteCreateGlucoseReadingParams.Mgdl = FlexibleFloat64ToFloat64(*source.Mgdl)
+		sitedbCreateGlucoseReadingParams.Mgdl = FlexibleFloat64ToFloat64(*source.Mgdl)
 	}
-	siteCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
-	siteCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
+	sitedbCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
+	sitedbCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
 	if source.Trend != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Trend)
-		siteCreateGlucoseReadingParams.Delta = &xfloat64
+		sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 	}
 	if source.Direction != nil {
 		xstring := *source.Direction
-		siteCreateGlucoseReadingParams.Direction = &xstring
+		sitedbCreateGlucoseReadingParams.Direction = &xstring
 	}
 	if source.Noise != nil {
 		xfloat642 := FlexibleFloat64ToFloat64(*source.Noise)
-		siteCreateGlucoseReadingParams.Noise = &xfloat642
+		sitedbCreateGlucoseReadingParams.Noise = &xfloat642
 	}
 	if source.Filtered != nil {
 		xfloat643 := FlexibleFloat64ToFloat64(*source.Filtered)
-		siteCreateGlucoseReadingParams.Filtered = &xfloat643
+		sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
 	}
 	if source.Unfiltered != nil {
 		xfloat644 := FlexibleFloat64ToFloat64(*source.Unfiltered)
-		siteCreateGlucoseReadingParams.Unfiltered = &xfloat644
+		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
 	}
 	if source.RSSI != nil {
 		xfloat645 := FlexibleFloat64ToFloat64(*source.RSSI)
-		siteCreateGlucoseReadingParams.Rssi = &xfloat645
+		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
+		sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
-	siteCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
+	sitedbCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
 	pString := source.RawJsonData
-	siteCreateGlucoseReadingParams.RawJsonData = &pString
+	sitedbCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring2 := ShortStringToString(*source.App)
-		siteCreateGlucoseReadingParams.CreatedByAppName = &xstring2
+		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
 		xstring3 := ShortStringToString(*source.Device)
-		siteCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
+		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
 	}
-	siteCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateGlucoseReadingParams
+	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return sitedbCreateGlucoseReadingParams
 }
-func FoodToCreate(source Food, context ConverterContext) site.CreateFoodPresetParams {
-	var siteCreateFoodPresetParams site.CreateFoodPresetParams
-	siteCreateFoodPresetParams.ID = AssignID()
+func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPresetParams {
+	var sitedbCreateFoodPresetParams sitedb.CreateFoodPresetParams
+	sitedbCreateFoodPresetParams.ID = AssignID()
 	if source.Name != nil {
-		siteCreateFoodPresetParams.Name = ShortStringToString(*source.Name)
+		sitedbCreateFoodPresetParams.Name = ShortStringToString(*source.Name)
 	}
 	if source.FoodType != nil {
 		xstring := ShortStringToString(*source.FoodType)
-		siteCreateFoodPresetParams.FoodType = &xstring
+		sitedbCreateFoodPresetParams.FoodType = &xstring
 	}
 	if source.Category != nil {
 		xstring2 := ShortStringToString(*source.Category)
-		siteCreateFoodPresetParams.Category = &xstring2
+		sitedbCreateFoodPresetParams.Category = &xstring2
 	}
 	if source.Subcategory != nil {
 		xstring3 := ShortStringToString(*source.Subcategory)
-		siteCreateFoodPresetParams.Subcategory = &xstring3
+		sitedbCreateFoodPresetParams.Subcategory = &xstring3
 	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.AbsorptionTimeMinutes)
-		siteCreateFoodPresetParams.AbsorptionTimeMinutes = &xint64
+		sitedbCreateFoodPresetParams.AbsorptionTimeMinutes = &xint64
 	}
 	if source.PreBolus != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.PreBolus)
-		siteCreateFoodPresetParams.PreBolus = &xfloat64
+		sitedbCreateFoodPresetParams.PreBolus = &xfloat64
 	}
 	if source.Portions != nil {
 		xfloat642 := FlexibleFloat64ToFloat64(*source.Portions)
-		siteCreateFoodPresetParams.Portions = &xfloat642
+		sitedbCreateFoodPresetParams.Portions = &xfloat642
 	}
 	if source.Carbs != nil {
 		xfloat643 := FlexibleFloat64ToFloat64(*source.Carbs)
-		siteCreateFoodPresetParams.Carbs = &xfloat643
+		sitedbCreateFoodPresetParams.Carbs = &xfloat643
 	}
 	if source.Fat != nil {
 		xfloat644 := FlexibleFloat64ToFloat64(*source.Fat)
-		siteCreateFoodPresetParams.Fat = &xfloat644
+		sitedbCreateFoodPresetParams.Fat = &xfloat644
 	}
 	if source.Protein != nil {
 		xfloat645 := FlexibleFloat64ToFloat64(*source.Protein)
-		siteCreateFoodPresetParams.Protein = &xfloat645
+		sitedbCreateFoodPresetParams.Protein = &xfloat645
 	}
 	if source.Fibre != nil {
 		xfloat646 := FlexibleFloat64ToFloat64(*source.Fibre)
-		siteCreateFoodPresetParams.Fibre = &xfloat646
+		sitedbCreateFoodPresetParams.Fibre = &xfloat646
 	}
 	if source.Energy != nil {
 		xfloat647 := FlexibleFloat64ToFloat64(*source.Energy)
-		siteCreateFoodPresetParams.Energy = &xfloat647
+		sitedbCreateFoodPresetParams.Energy = &xfloat647
 	}
 	pString := source.RawJsonData
-	siteCreateFoodPresetParams.RawJsonData = &pString
+	sitedbCreateFoodPresetParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring4 := ShortStringToString(*source.App)
-		siteCreateFoodPresetParams.CreatedByAppName = &xstring4
+		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
 		xstring5 := ShortStringToString(*source.Device)
-		siteCreateFoodPresetParams.CreatedByDeviceName = &xstring5
+		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
 	}
-	siteCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateFoodPresetParams
+	sitedbCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return sitedbCreateFoodPresetParams
 }
-func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) site.CreateProfilePresetParams {
-	var siteCreateProfilePresetParams site.CreateProfilePresetParams
-	siteCreateProfilePresetParams.ID = AssignID()
-	siteCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
+func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) sitedb.CreateProfilePresetParams {
+	var sitedbCreateProfilePresetParams sitedb.CreateProfilePresetParams
+	sitedbCreateProfilePresetParams.ID = AssignID()
+	sitedbCreateProfilePresetParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		siteCreateProfilePresetParams.UtcOffsetMinutes = &xint64
+		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	pString := source.RawJsonData
-	siteCreateProfilePresetParams.RawJsonData = &pString
+	sitedbCreateProfilePresetParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring := ShortStringToString(*source.App)
-		siteCreateProfilePresetParams.CreatedByAppName = &xstring
+		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring
 	}
 	if source.Device != nil {
 		xstring2 := ShortStringToString(*source.Device)
-		siteCreateProfilePresetParams.CreatedByDeviceName = &xstring2
+		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring2
 	}
-	siteCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
-	return siteCreateProfilePresetParams
+	sitedbCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	return sitedbCreateProfilePresetParams
 }

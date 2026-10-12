@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/alitto/pond/v2"
+
 	"nighttroop.t1d.nz/data/db"
 
-	"nighttroop.t1d.nz/data/sql/jobs"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 )
 
 func New(controlDB *db.ControlDB) *JobQueue {
@@ -16,7 +17,7 @@ func New(controlDB *db.ControlDB) *JobQueue {
 }
 
 type JobQueue struct {
-	queries *jobs.Queries
+	queries *jobsdb.Queries
 }
 
 type QueueJobParams struct {
@@ -59,7 +60,7 @@ func (j *JobQueue) QueueJob(ctx context.Context, params QueueJobParams) error {
 		params.DedupingKey = IgnoreDuplicate("")
 	}
 
-	doParams := jobs.QueueJobIgnoreDupeParams{
+	doParams := jobsdb.QueueJobIgnoreDupeParams{
 		Queue:             params.Queue,
 		Job:               params.Job,
 		ExecuteAfter:      params.ExecuteAfter,
@@ -72,7 +73,7 @@ func (j *JobQueue) QueueJob(ctx context.Context, params QueueJobParams) error {
 	}
 
 	if params.DedupingKey.ReplaceDuplicate() {
-		return j.queries.QueueJobReplaceDupe(ctx, jobs.QueueJobReplaceDupeParams(doParams))
+		return j.queries.QueueJobReplaceDupe(ctx, jobsdb.QueueJobReplaceDupeParams(doParams))
 	}
 
 	return j.queries.QueueJobIgnoreDupe(ctx, doParams)
@@ -84,7 +85,7 @@ type GrabJobsParams struct {
 	Count        int64
 }
 
-func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*jobs.Job, error) {
+func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*jobsdb.Job, error) {
 	executeAfter := time.Now().Unix()
 	if params.ExecuteAfter > 0 {
 		executeAfter = params.ExecuteAfter
@@ -94,14 +95,14 @@ func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*jobs
 		limit = params.Count
 	}
 
-	return j.queries.MarkJobsForConsumer(ctx, jobs.MarkJobsForConsumerParams{
+	return j.queries.MarkJobsForConsumer(ctx, jobsdb.MarkJobsForConsumerParams{
 		Queue:        params.Queue,
 		ExecuteAfter: executeAfter,
 		Limit:        limit,
 	})
 }
 
-type WorkerFunc func(context.Context, *jobs.Job) error
+type WorkerFunc func(context.Context, *jobsdb.Job) error
 
 type ConsumeParams struct {
 	Queue             string
@@ -125,7 +126,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		}
 
 		if params.VisibilityTimeout > 0 {
-			_, err := j.queries.ResetJobs(ctx, jobs.ResetJobsParams{
+			_, err := j.queries.ResetJobs(ctx, jobsdb.ResetJobsParams{
 				Queue:             params.Queue,
 				ConsumerFetchedAt: time.Now().UnixMilli() - (params.VisibilityTimeout * 1000),
 			})
@@ -155,14 +156,14 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 			workers.Submit(func() {
 				err := params.Worker(ctx, job)
 				if err != nil {
-					j.queries.FailJob(ctx, jobs.FailJobParams{
+					j.queries.FailJob(ctx, jobsdb.FailJobParams{
 						Errors: job.Errors.Add(err.Error()),
 						ID:     job.ID,
 					})
 					return
 				}
 
-				j.queries.CompleteJob(ctx, jobs.CompleteJobParams{
+				j.queries.CompleteJob(ctx, jobsdb.CompleteJobParams{
 					ID: job.ID,
 				})
 			})
