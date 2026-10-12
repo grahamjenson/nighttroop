@@ -17,7 +17,7 @@ CREATE TABLE data_source_block_list(
     username TEXT CHECK(length(username) <= 32), -- in case it is a dexcom account or something
     url TEXT CHECK(length(url) <= 256),
     reason TEXT CHECK(length(reason) <= 256)
-);
+) STRICT;
 
 --------------------------
 --- SITE TABLES
@@ -122,7 +122,7 @@ CREATE TABLE sites (
     -- NOTIFICATIONS
     notifications_enabled INTEGER
 
-);
+) STRICT;
 
 
 -- SITE TABLES
@@ -146,7 +146,7 @@ CREATE TABLE control_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
-);
+) STRICT;
 
 -- This table is like users and devices
 CREATE TABLE site_identities (
@@ -242,14 +242,14 @@ CREATE TABLE site_identities (
 
     -- Constraints
     UNIQUE(site_id, name)
-);
+) STRICT;
 
 -- USER SYNC TABLES
 
 -- This is the table that the site can update and delete from
 CREATE TABLE site_sync_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
+
     -- Nightscout/Dexcom
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
     type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM', 'VIRTUAL')),
@@ -298,7 +298,7 @@ CREATE TABLE site_sync_sources (
 
     -- Unique contraint of site_id and type
     UNIQUE(site_id, type)
-);
+) STRICT;
 
 
 

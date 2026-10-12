@@ -25,7 +25,7 @@ CREATE TABLE activities (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE component_events (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -55,7 +55,7 @@ CREATE TABLE component_events (
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -100,7 +100,7 @@ CREATE TABLE device_reports (
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE event_groups (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -134,7 +134,7 @@ CREATE TABLE event_groups (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE food_intakes (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -169,7 +169,7 @@ CREATE TABLE food_intakes (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE food_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -199,7 +199,7 @@ CREATE TABLE food_presets (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE glucose_readings (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -233,7 +233,7 @@ CREATE TABLE glucose_readings (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -259,7 +259,7 @@ CREATE TABLE insulin_doses (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE notification_events (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -284,7 +284,7 @@ CREATE TABLE notification_events (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE profile_presets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -325,7 +325,7 @@ CREATE TABLE profile_presets (
 
     -- Constraints
     UNIQUE (name, profile_store_id)
-);
+) STRICT;
 
 CREATE TABLE profile_switches (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -364,7 +364,7 @@ CREATE TABLE profile_switches (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -388,7 +388,7 @@ CREATE TABLE temp_basals (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE TABLE temp_targets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
@@ -413,7 +413,7 @@ CREATE TABLE temp_targets (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW activities_vw AS SELECT activities.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN activities ON TRUE;
 

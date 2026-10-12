@@ -18,7 +18,7 @@ CREATE TABLE control_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
-);
+) STRICT;
 
 CREATE TABLE data_source_block_list(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +26,7 @@ CREATE TABLE data_source_block_list(
     username TEXT CHECK(length(username) <= 32), -- in case it is a dexcom account or something
     url TEXT CHECK(length(url) <= 256),
     reason TEXT CHECK(length(reason) <= 256)
-);
+) STRICT;
 
 CREATE TABLE site_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,11 +121,11 @@ CREATE TABLE site_identities (
 
     -- Constraints
     UNIQUE(site_id, name)
-);
+) STRICT;
 
 CREATE TABLE site_sync_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
+
     -- Nightscout/Dexcom
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
     type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM', 'VIRTUAL')),
@@ -174,7 +174,7 @@ CREATE TABLE site_sync_sources (
 
     -- Unique contraint of site_id and type
     UNIQUE(site_id, type)
-);
+) STRICT;
 
 CREATE TABLE sites (
     id TEXT PRIMARY KEY CHECK(length(id) <= 32),
@@ -266,7 +266,7 @@ CREATE TABLE sites (
     -- NOTIFICATIONS
     notifications_enabled INTEGER
 
-);
+) STRICT;
 
 CREATE TABLE sqlite_sequence(name,seq);
 

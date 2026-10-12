@@ -1,6 +1,0 @@
-DROP INDEX IF EXISTS dedupe;
-DROP INDEX IF EXISTS todo;
-
-DROP TABLE IF EXISTS jobs;
-
-DROP TABLE IF EXISTS job_stats_daily;

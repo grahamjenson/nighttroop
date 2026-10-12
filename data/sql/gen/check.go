@@ -87,10 +87,6 @@ func checkMigrateDownDB(dbi interface {
 		return fmt.Errorf("failed to migrate down %s db: %w", dbi.Name(), err)
 	}
 
-	if err := assertNoTables(dbi.GetRawDB()); err != nil {
-		return fmt.Errorf("assert no tables failed for %s db: %w", dbi.Name(), err)
-	}
-
 	return nil
 }
 

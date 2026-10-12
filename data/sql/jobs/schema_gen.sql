@@ -25,7 +25,7 @@ CREATE TABLE job_stats_daily (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
 
     PRIMARY KEY (day_queue_job)
-);
+) STRICT;
 
 CREATE TABLE jobs (
     id INTEGER NOT NULL,
@@ -41,5 +41,5 @@ CREATE TABLE jobs (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (id)
-);
+) STRICT;
 

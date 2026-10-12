@@ -38,7 +38,7 @@ CREATE TABLE glucose_readings (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW glucose_readings_vw AS SELECT glucose_readings.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN glucose_readings ON TRUE;
 
@@ -67,7 +67,7 @@ CREATE TABLE insulin_doses (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW insulin_doses_vw AS SELECT insulin_doses.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN insulin_doses ON TRUE;
 
@@ -104,7 +104,7 @@ CREATE TABLE food_intakes (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW food_intakes_vw AS SELECT food_intakes.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN food_intakes ON TRUE;
 
@@ -135,7 +135,7 @@ CREATE TABLE activities (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW activities_vw AS SELECT activities.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN activities ON TRUE;
 
@@ -162,7 +162,7 @@ CREATE TABLE notification_events (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW notification_events_vw AS SELECT notification_events.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN notification_events ON TRUE;
 
@@ -190,7 +190,7 @@ CREATE TABLE temp_basals (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW temp_basals_vw AS SELECT temp_basals.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN temp_basals ON TRUE;
 
@@ -217,7 +217,7 @@ CREATE TABLE temp_targets (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW temp_targets_vw AS SELECT temp_targets.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN temp_targets ON TRUE;
 
@@ -259,7 +259,7 @@ CREATE TABLE profile_switches (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW profile_switches_vw AS SELECT profile_switches.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN profile_switches ON TRUE;
 
@@ -291,7 +291,7 @@ CREATE TABLE component_events (
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 CREATE VIEW component_events_vw AS SELECT component_events.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN component_events ON TRUE;
 
@@ -329,7 +329,7 @@ CREATE TABLE event_groups (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 
 ------------
@@ -378,7 +378,7 @@ CREATE TABLE device_reports (
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 
 ----------
@@ -413,7 +413,7 @@ CREATE TABLE food_presets (
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-);
+) STRICT;
 
 -- e.g. this is just a list of available profiles and user settings to choose from
 CREATE TABLE profile_presets (
@@ -455,5 +455,5 @@ CREATE TABLE profile_presets (
 
     -- Constraints
     UNIQUE (name, profile_store_id)
-);
+) STRICT;
 

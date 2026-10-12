@@ -13,7 +13,7 @@ CREATE TABLE jobs (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (id)
-);
+) STRICT;
 
 CREATE INDEX todo ON jobs (queue, job_status, execute_after)
 WHERE
@@ -45,4 +45,4 @@ CREATE TABLE job_stats_daily (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch() AS INTEGER)),
 
     PRIMARY KEY (day_queue_job)
-);
+) STRICT;
