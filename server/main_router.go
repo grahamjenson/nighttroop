@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/nightscout_api"
+	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -21,7 +21,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 	controlRouter := NewControlRouter(controlDB, config)
 	siteRouter := NewSiteRouter(controlDB, config)
 	public := NewPublicRouter(controlDB, config)
-	nightscoutRouter := nightscout_api.NewNightscoutRouter(controlDB, config)
+	nightscoutRouter := nightscoutapi.NewNightscoutRouter(controlDB, config)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

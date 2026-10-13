@@ -19,7 +19,7 @@
 1. Sync
     1. Check Sync Creds before save/enable -- e.g. check nightscout is a real endpoint and auth works
     1. Sync treatments and entries using v3 API
-    1. Use v3 last_modified nightscout sync, and existing nightscout_api to write the values to the DB
+    1. Use v3 last_modified nightscout sync, and existing nightscoutapi to write the values to the DB
 
 1. create_identity check limits, max identities
 1. Control UI

@@ -5,8 +5,9 @@ package server
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/assets/static"
-	"nighttroop.t1d.nz/server/site"
-	"nighttroop.t1d.nz/server/site/settings"
+	"nighttroop.t1d.nz/server/siteapi"
+	"nighttroop.t1d.nz/server/siteapi/settings"
+	"nighttroop.t1d.nz/server/siteapi/siteutils"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -23,30 +24,30 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	httputils.AddStandardMiddleware(r, config)
 
 	// Rate Limiter is before auth because auth can be expencive
-	r.Use(site.SiteRateLimitMiddleware(config))
+	r.Use(siteapi.SiteRateLimitMiddleware(config))
 
 	static.AddStaticRoutes(r)
 
 	// Publically available (if the person knows the subdomain) endpoints
 	r.Group(func(r chi.Router) {
-		r.Get("/login", site.GETLoginPageHandler())
-		r.Post("/login", site.POSTLogin(controlDB, config))
-		r.Post("/login/totp", site.POSTLoginTOTP(controlDB, config))
+		r.Get("/login", siteapi.GETLoginPageHandler())
+		r.Post("/login", siteapi.POSTLogin(controlDB, config))
+		r.Post("/login/totp", siteapi.POSTLoginTOTP(controlDB, config))
 	})
 
 	r.Group(func(r chi.Router) {
 		// Checks read and write rates and makes sure not over limit
-		r.Use(site.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
-		r.Use(site.SiteIdentityRateLimitMiddleware(config))
-		r.Use(site.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
+		r.Use(siteapi.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
+		r.Use(siteapi.SiteIdentityRateLimitMiddleware(config))
+		r.Use(siteapi.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
 		// Summary page
-		r.Get("/", site.GetSummaryHandler(controlDB, config))
-		r.Get("/summary", site.GetSummaryHandler(controlDB, config))
+		r.Get("/", siteapi.GetSummaryHandler(controlDB, config))
+		r.Get("/summary", siteapi.GetSummaryHandler(controlDB, config))
 
 		// Settings Sync
 		r.Get("/settings/sync", settings.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/settings/sync/{id}", site.CreateUpdateHandler[sitemodels.SyncSource](controlDB, config, syncSettingsStore))
+		r.Post("/settings/sync/{id}", siteutils.CreateUpdateHandler[sitemodels.SyncSource](controlDB, config, syncSettingsStore))
 		r.Delete("/settings/sync/{id}", settings.DELETESyncSettingsHandler(controlDB, config))
 		r.Get("/settings/sync/reports", settings.GetSyncSettingsReportsHandler(controlDB, config))
 
@@ -62,7 +63,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/config", settings.POSTConfigSettingsHandler(controlDB, config))
 
 		// Actions
-		r.Post("/logout", site.POSTLogoutHandler(config))
+		r.Post("/logout", siteapi.POSTLogoutHandler(config))
 
 	})
 

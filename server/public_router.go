@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
-	"nighttroop.t1d.nz/server/public"
+	"nighttroop.t1d.nz/server/publicapi"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -15,9 +15,9 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 
 	static.AddStaticRoutes(r)
 
-	r.Get("/", public.GETMainPageHandler(controlDB))
+	r.Get("/", publicapi.GETMainPageHandler(controlDB))
 
-	r.Post("/site", public.POSTCreateSiteHandler(controlDB, config))
+	r.Post("/site", publicapi.POSTCreateSiteHandler(controlDB, config))
 
 	// TODO public routes
 	// 1. Documentation

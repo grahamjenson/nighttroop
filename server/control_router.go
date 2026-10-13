@@ -4,7 +4,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
-	"nighttroop.t1d.nz/server/control"
+
+	"nighttroop.t1d.nz/server/controlapi"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -15,14 +16,14 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 	static.AddStaticRoutes(r)
 
-	r.Get("/login", control.GETLoginPageHandler())
+	r.Get("/login", controlapi.GETLoginPageHandler())
 
-	r.Post("/login", control.POSTLogin(controlDB, config))
+	r.Post("/login", controlapi.POSTLogin(controlDB, config))
 
 	r.Group(func(r chi.Router) {
-		r.Use(control.JWTAuthMiddleware(controlDB, config))
-		r.Get("/", control.GetDashboardHandler(controlDB, config))
-		r.Post("/logout", control.POSTLogoutHandler(config))
+		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
+		r.Get("/", controlapi.GetDashboardHandler(controlDB, config))
+		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
 		//// TODO
 		// Get Users probably with pagination returns htmx

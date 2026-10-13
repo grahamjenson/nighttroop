@@ -8,7 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/server/nightscout_api/nsutils"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 

@@ -11,7 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
-	"nighttroop.t1d.nz/server/nightscout_api"
+	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -27,7 +27,7 @@ type SyncJobManager struct {
 	BackgroundSyncWorkers int
 
 	// For Nightscout API
-	nightscoutStore *nightscout_api.NightTroopAPIStore
+	nightscoutStore *nightscoutapi.NightTroopAPIStore
 }
 
 type SyncJobParams struct {
@@ -58,7 +58,7 @@ func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *
 		security:              config.Security,
 		SyncIntervalInSeconds: config.SyncIntervalInSeconds,
 		BackgroundSyncWorkers: config.BackgroundSyncWorkers,
-		nightscoutStore:       nightscout_api.NewNightTroopAPIStore(controlDB, config),
+		nightscoutStore:       nightscoutapi.NewNightTroopAPIStore(controlDB, config),
 	}
 
 	return jobs
