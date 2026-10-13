@@ -1,4 +1,4 @@
-package settings
+package sitesettings
 
 import (
 	"net/http"

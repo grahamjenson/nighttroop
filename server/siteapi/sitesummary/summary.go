@@ -1,4 +1,4 @@
-package siteapi
+package sitesummary
 
 import (
 	"net/http"

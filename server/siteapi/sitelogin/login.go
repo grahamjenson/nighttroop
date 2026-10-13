@@ -1,4 +1,4 @@
-package siteapi
+package sitelogin
 
 import (
 	"context"

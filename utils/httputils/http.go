@@ -90,3 +90,18 @@ func GetHTTPAction(r *http.Request) HTTPAction {
 		return HTTPActionWrite
 	}
 }
+
+//////
+// Writer
+//////
+
+// THIS IS SO STUPID THAT I HAVE TO DO THIS TO CHECK THE STATUS OF THE RETURNED RESPONSE.
+type StatusResponseWriter struct {
+	http.ResponseWriter
+	Status int
+}
+
+func (w *StatusResponseWriter) WriteHeader(code int) {
+	w.Status = code
+	w.ResponseWriter.WriteHeader(code)
+}

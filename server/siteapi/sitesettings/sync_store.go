@@ -1,4 +1,4 @@
-package settings
+package sitesettings
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteutils"
+	"nighttroop.t1d.nz/server/siteapi"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -25,13 +25,13 @@ import (
 
 type SyncSettingsStore struct{}
 
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteutils.HTTPError) {
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapi.HTTPError) {
 	params := sitemodels.SyncSourceToCreate(model)
 	params.SiteID = siteContext.Subdomain
 
 	params.UrlOrUsername = strings.TrimSpace(params.UrlOrUsername)
 	if params.UrlOrUsername == "" {
-		return false, siteutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		return false, siteapi.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
 
 	security := siteContext.Config.Security
@@ -42,36 +42,36 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httput
 		params.UrlOrUsername, err = nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
 		if err != nil {
 			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
-			return false, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", params.UrlOrUsername, err))
+			return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", params.UrlOrUsername, err))
 		}
 	}
 
 	if params.Password == "" {
-		return false, siteutils.ErrMissingRequiredFieldWithHint("password")
+		return false, siteapi.ErrMissingRequiredFieldWithHint("password")
 	}
 
 	params.Password, err = security.Encrypt(params.Password)
 	if err != nil {
-		return false, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
+		return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
 	}
 
 	params.UrlOrUsername, err = security.Encrypt(params.UrlOrUsername)
 	if err != nil {
-		return false, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
+		return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
 	}
 
 	err = siteContext.ControlDB.Queries.CreateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
-			return false, siteutils.ErrUniqueConstraintViolation
+			return false, siteapi.ErrUniqueConstraintViolation
 		}
 		if errors.IsSQLConstraintNotNull(err) {
-			return false, siteutils.ErrMissingRequiredField
+			return false, siteapi.ErrMissingRequiredField
 		}
 		if errors.IsSQLConstraintCheck(err) {
-			return false, siteutils.ErrConstraintCheckFailed
+			return false, siteapi.ErrConstraintCheckFailed
 		}
-		return false, siteutils.ErrBadBody
+		return false, siteapi.ErrBadBody
 	}
 	return true, nil
 }
@@ -80,10 +80,10 @@ func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) tem
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
-func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteutils.HTTPError) {
+func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteapi.HTTPError) {
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		return nil, siteutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
+		return nil, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
 	}
 
 	model, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
@@ -92,7 +92,7 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 	})
 
 	if err != nil {
-		return nil, siteutils.ErrBadBody
+		return nil, siteapi.ErrBadBody
 	}
 	if model == nil {
 		return nil, nil
@@ -101,9 +101,9 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 	return sitemodels.SyncSourceFromDB(model), nil
 }
 
-func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteutils.HTTPError {
+func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapi.HTTPError {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
-		return siteutils.ErrRateLimitExceeded(seconds)
+		return siteapi.ErrRateLimitExceeded(seconds)
 	}
 
 	params := sitemodels.SyncSourceToUpdate(model)
@@ -112,7 +112,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	var err error
 
 	if params.UrlOrUsername != nil && strings.TrimSpace(*params.UrlOrUsername) == "" {
-		return siteutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		return siteapi.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
 
 	security := siteContext.Config.Security
@@ -123,7 +123,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 			*params.UrlOrUsername, err = nsURLNormalizeValidate(*params.UrlOrUsername, siteContext.Config)
 			if err != nil {
 				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
-				return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%v' is not a valid URL. %s", params.UrlOrUsername, err))
+				return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%v' is not a valid URL. %s", params.UrlOrUsername, err))
 			}
 		}
 	}
@@ -134,7 +134,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 		} else {
 			*params.Password, err = security.Encrypt(*params.Password)
 			if err != nil {
-				return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Password: %s", err))
+				return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Password: %s", err))
 			}
 
 		}
@@ -143,22 +143,22 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	if params.UrlOrUsername != nil {
 		*params.UrlOrUsername, err = security.Encrypt(*params.UrlOrUsername)
 		if err != nil {
-			return siteutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt URL Or Username: %s", err))
+			return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt URL Or Username: %s", err))
 		}
 	}
 
 	err = siteContext.ControlDB.Queries.UpdateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
-			return siteutils.ErrUniqueConstraintViolation
+			return siteapi.ErrUniqueConstraintViolation
 		}
 		if errors.IsSQLConstraintNotNull(err) {
-			return siteutils.ErrMissingRequiredField
+			return siteapi.ErrMissingRequiredField
 		}
 		if errors.IsSQLConstraintCheck(err) {
-			return siteutils.ErrConstraintCheckFailed
+			return siteapi.ErrConstraintCheckFailed
 		}
-		return siteutils.ErrBadBody
+		return siteapi.ErrBadBody
 	}
 
 	return nil
