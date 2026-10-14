@@ -4,27 +4,27 @@ import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 )
 
 templ CreateSite() {
 	@PublicBase() {
-		<div class="flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50 ">
-			<!-- Header -->
-			<div class="text-center mb-4">
-				<h2 class="text-4xl font-extrabold tracking-tight text-gray-900">
-					NightTroop<span class="ml-2 inline-flex items-center rounded-full bg-amber-200 px-2.5 py-0.5 text-sm font-semibold text-rose-800 align-middle">Alpha</span>
-				</h2>
-			</div>
-			<!-- Main Content -->
-			<div id="panel-content" class="flex flex-col items-center justify-center">
-				<div class="w-full flex flex-col items-center justify-center">
-					<!-- Centered & Larger Templ Button -->
+		<main class="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-slate-100 via-slate-50 to-white">
+			<div class="w-full max-w-3xl text-center">
+				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+					@icon.Rocket(icon.Props{Class: "size-3.5 text-amber-500"})
+					Free Nightscout hosting
+					<span class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800">Alpha</span>
+				</p>
+				<h1 class="mt-6 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900">NightTroop</h1>
+				<p class="mt-4 text-lg text-slate-600 max-w-xl mx-auto">
+					Your own Nightscout site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.
+				</p>
+				<div id="panel-content" class="mt-10 flex flex-col items-center">
 					@button.Button(button.Props{
-						ID:        "public--create-site-button",
-						Size:      button.SizeLg,
-						Variant:   button.VariantSecondary,
-						Class:     "h-16 w-64 bg-blue-600 shadow-2xl hover:bg-blue-900 transition-all duration-200",
-						FullWidth: true,
+						ID:    "public--create-site-button",
+						Size:  button.SizeLg,
+						Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all duration-200",
 						Attributes: templ.Attributes{
 							"hx-post":       "/site",
 							"hx-target":     "#panel-content",
@@ -33,18 +33,28 @@ templ CreateSite() {
 							"hx-status:5xx": "target:#error-container",
 						},
 					}) {
-						<div class="h-2 w-5"></div>
-						<span class="text-2xl font-extrabold tracking-wide text-white">
-							Create Site
-						</span>
-						<div class="h-2 w-5"></div>
+						Create Site
 					}
-					<!-- HTMX Loading Indicator -->
-					<div id="error-container" class="h-8 w-full"></div>
+					<div id="error-container" class="h-8 w-full mt-2"></div>
 				</div>
+				<dl class="mt-12 grid gap-6 sm:grid-cols-3 text-left">
+					@feature(icon.MousePointerClick, "One click", "No account to make. Your site and its credentials are generated instantly.")
+					@feature(icon.ShieldCheck, "Private by default", "Each site is isolated with its own admin login, TOTP and backup key.")
+					@feature(icon.RefreshCw, "Syncs your data", "Upload from AAPS or Trio, or pull from Dexcom, Libre and other Nightscout sites.")
+				</dl>
 			</div>
-		</div>
+		</main>
 	}
+}
+
+templ feature(ic func(...icon.Props) templ.Component, title, body string) {
+	<div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+		<dt class="flex items-center gap-2 font-semibold text-slate-900">
+			@ic(icon.Props{Class: "size-5 text-blue-600"})
+			{ title }
+		</dt>
+		<dd class="mt-2 text-sm text-slate-600">{ body }</dd>
+	</div>
 }
 
 templ CreateSiteRateLimited(seconds int) {
