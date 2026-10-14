@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install code generators
+        run: |
+          go install github.com/a-h/templ/cmd/templ@v0.3.1020
+          go install github.com/jmattheis/goverter/cmd/goverter@v1.10.0
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
+          sudo curl -sSL -o /usr/local/bin/tailwindcss \
+            https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64
+          sudo chmod +x /usr/local/bin/tailwindcss
+
+      - name: Check generated code is up to date
+        run: |
+          go generate ./...
+          git add -N .
+          git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
+
+      - name: Start minio
+        run: docker compose up -d
+
+      - name: Install playwright browser
+        run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
+
+      - name: Test
+        run: go test ./...
