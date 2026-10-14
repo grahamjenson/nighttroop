@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"mime"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -85,17 +84,32 @@ func (c Config) GetFileVars() []StaticFile {
 	return ll
 }
 
-func getContentType(filename string) string {
-	// filepath.Ext returns the extension including the dot (e.g., ".png")
-	ext := filepath.Ext(filename)
+// contentTypes is a fixed table so generated output does not depend on the
+// host OS mime database (which differs between macOS and Linux).
+var contentTypes = map[string]string{
+	".css":   "text/css; charset=utf-8",
+	".js":    "text/javascript; charset=utf-8",
+	".mjs":   "text/javascript; charset=utf-8",
+	".json":  "application/json",
+	".txt":   "text/plain; charset=utf-8",
+	".html":  "text/html; charset=utf-8",
+	".svg":   "image/svg+xml",
+	".png":   "image/png",
+	".jpg":   "image/jpeg",
+	".jpeg":  "image/jpeg",
+	".gif":   "image/gif",
+	".webp":  "image/webp",
+	".ico":   "image/x-icon",
+	".woff":  "font/woff",
+	".woff2": "font/woff2",
+	".wasm":  "application/wasm",
+}
 
-	// mime.TypeByExtension returns the MIME type (e.g., "image/png")
-	// It returns an empty string if the extension is unknown
-	contentType := mime.TypeByExtension(ext)
-	if contentType == "" {
-		return "application/octet-stream" // Default for generic binary data
+func getContentType(filename string) string {
+	if contentType, ok := contentTypes[filepath.Ext(filename)]; ok {
+		return contentType
 	}
-	return contentType
+	return "application/octet-stream" // Default for generic binary data
 }
 
 func main() {
