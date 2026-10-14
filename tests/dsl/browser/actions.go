@@ -126,7 +126,7 @@ func (r *Click) AddAssert(assert Assert) {
 
 func (r *Click) NeedsResponseOrPage() (bool, bool) {
 	// check for new page first
-	if r.Asserts != nil || len(r.Asserts) == 0 {
+	if len(r.Asserts) == 0 {
 		return false, false
 	}
 
@@ -190,8 +190,14 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		)
 	}
 
-	// We have to wait for the reponses to be captured
+	// We have to wait for the reponses to be captured. A status assert needs
+	// a response, so keep waiting (bounded) until one arrives: on a busy CI
+	// runner the request can take well over 50ms.
 	time.Sleep(50 * time.Millisecond)
+	needsResponse, _ := r.NeedsResponseOrPage()
+	for deadline := time.Now().Add(5 * time.Second); needsResponse && len(responses) == 0 && time.Now().Before(deadline); {
+		time.Sleep(20 * time.Millisecond)
+	}
 
 	newURL := false
 	if page.URL() != oldURL {
