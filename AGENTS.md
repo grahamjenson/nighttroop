@@ -41,8 +41,8 @@ Do not change generated code. All generated files either:
 
 Keep every change as small as possible.
 
-- A single change must modify no more than 50 lines of code.
+- A single change must modify no more than 100 lines of code.
 - Do not reformat surrounding code.
 - Do not make unrelated changes.
-- If a change requires more than 50 changed lines, stop and ask for approval before proceeding.
+- If a change requires more than 100 changed lines, stop and ask for approval before proceeding.
 - Before implementing a function check to see if it has similar functions in utils or imported libraries
