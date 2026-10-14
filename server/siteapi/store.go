@@ -2,7 +2,6 @@ package siteapi
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -102,7 +101,6 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		fmt.Println("Updating model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", oldModel)
 		requestModel, herr := extractModelFromRequest[T](siteContext, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
@@ -172,14 +170,12 @@ func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerCo
 		}
 
 		if oldModel == nil {
-			fmt.Println("Creating new model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", requestModel)
 			_, herr = store.CreateModel(r.Context(), &id, siteContext, requestModel)
 			if herr != nil {
 				herr.Write(siteContext.AcceptType, w)
 				return
 			}
 		} else {
-			fmt.Println("Updating model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", oldModel)
 
 			herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
 			if herr != nil {
