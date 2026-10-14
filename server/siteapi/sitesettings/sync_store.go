@@ -49,11 +49,12 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 
 	// Nightscout specific validation and normalization
 	if params.Type == consts.SyncSourceTypeNightscout {
-		params.UrlOrUsername, err = nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
+		normalized, err := nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
 		if err != nil {
-			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
-			return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", params.UrlOrUsername, err))
+			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsername)
+			return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsername, err))
 		}
+		params.UrlOrUsername = normalized
 	}
 
 	if params.Password == nil || *params.Password == "" {
