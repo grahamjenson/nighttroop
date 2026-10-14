@@ -40,10 +40,10 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 	}
 	params.Type = sstype
 
-	params.UrlOrUsername = ptr(strings.TrimSpace(*params.UrlOrUsername))
-	if params.UrlOrUsername == nil || *params.UrlOrUsername == "" {
+	if params.UrlOrUsername == nil || strings.TrimSpace(*params.UrlOrUsername) == "" {
 		return false, siteapi.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
+	params.UrlOrUsername = ptr(strings.TrimSpace(*params.UrlOrUsername))
 
 	security := siteContext.Config.Security
 
@@ -124,7 +124,9 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	}
 
 	params := sitemodels.SyncSourceToUpdate(model)
+	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
 	params.SiteID = siteContext.Subdomain
+	params.Type = oldModel.Type
 
 	var err error
 
@@ -137,11 +139,12 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	// Nightscout specific validation and normalization
 	if oldModel.Type == consts.SyncSourceTypeNightscout {
 		if params.UrlOrUsername != nil {
-			params.UrlOrUsername, err = nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
+			normalized, err := nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
 			if err != nil {
-				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
-				return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%v' is not a valid URL. %s", params.UrlOrUsername, err))
+				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsername)
+				return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsername, err))
 			}
+			params.UrlOrUsername = normalized
 		}
 	}
 

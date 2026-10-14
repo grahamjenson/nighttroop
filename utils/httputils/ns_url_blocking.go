@@ -2,6 +2,8 @@ package httputils
 
 import (
 	"fmt"
+	"net"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -29,18 +31,45 @@ func IsNightscoutURLBlocked(host string, cfg *config.ServerConfig) error {
 	if cfg.IsDev() {
 		return nil
 	}
+	if host == "" {
+		return fmt.Errorf("Nightscout URL must have a host.")
+	}
 
 	// Cant be the host or a subdomain of the host
-	if strings.HasSuffix(host, "."+cfg.HostName) {
+	if host == cfg.HostName || strings.HasSuffix(host, "."+cfg.HostName) {
 		return fmt.Errorf("Nightscout cannot be on this host.")
 	}
 
 	// Check if the URL is in the blocked list
-	for _, blocked := range blockedHostList {
-		if host == blocked {
-			return fmt.Errorf("Nightscout cannot be on this host.")
+	if slices.Contains(blockedHostList, host) {
+		return fmt.Errorf("Nightscout cannot be on this host.")
+	}
+
+	// Literal IPs are checked directly; hostnames are resolved so a name that
+	// points at a private or local address is rejected too.
+	ips := []net.IP{}
+	if ip := net.ParseIP(host); ip != nil {
+		ips = append(ips, ip)
+	} else if resolved, err := net.LookupIP(host); err == nil {
+		ips = resolved
+	}
+	for _, ip := range ips {
+		if isBlockedIP(ip) {
+			return fmt.Errorf("Nightscout cannot be on a private or local network.")
 		}
 	}
 
 	return nil
+}
+
+func isBlockedIP(ip net.IP) bool {
+	if ip.IsUnspecified() {
+		return true
+	}
+	for _, cidr := range blockedIPCidrs {
+		if _, network, err := net.ParseCIDR(cidr); err == nil && network.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }
