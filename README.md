@@ -85,11 +85,12 @@
 
 # Nighttroop
 
-Nighttroop is primarly a simple, free live diabates dashboard that will quickly get you up and running.
+Nighttroop is a multi user rewrite of Nightscout.
+Its core goals are to be:
 
-The tradeoffs:
-1. Historical data
-1. Complexity with setups.
+1. Simple - Single binary deployment, limited and optional external dependencies
+It is written in Golang using SQLite 
+
 
 
 

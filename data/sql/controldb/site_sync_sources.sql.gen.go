@@ -34,8 +34,8 @@ VALUES (
 type CreateSyncSourceParams struct {
 	SiteID        string
 	Type          consts.SyncSourceType
-	UrlOrUsername string
-	Password      string
+	UrlOrUsername *string
+	Password      *string
 	Region        *string
 	Enabled       bool
 }
@@ -54,24 +54,30 @@ func (q *Queries) CreateSyncSource(ctx context.Context, arg CreateSyncSourcePara
 
 const deleteSyncSource = `-- name: DeleteSyncSource :exec
 
-DELETE FROM site_sync_sources WHERE id = ? AND site_id = ?
+UPDATE site_sync_sources SET 
+    enabled = 0,
+    url_or_username = NULL,
+    password = NULL,
+    previous_sync_errors = NULL,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE type = ? AND site_id = ?
 `
 
 type DeleteSyncSourceParams struct {
-	ID     int64
+	Type   consts.SyncSourceType
 	SiteID string
 }
 
 // ----
-// DELETE is real for security
+// DELETE just removes some values, but we remember things that would slow down, to punish malicious activity
 // ----
 func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourceParams) error {
-	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, arg.ID, arg.SiteID)
+	_, err := q.exec(ctx, q.deleteSyncSourceStmt, deleteSyncSource, arg.Type, arg.SiteID)
 	return err
 }
 
 const getAllSyncSourcesForSite = `-- name: GetAllSyncSourcesForSite :many
-SELECT id, site_id, type, url_or_username, password, region, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
+SELECT site_id, type, url_or_username, password, region, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSyncSourcesForSiteParams struct {
@@ -88,7 +94,6 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 	for rows.Next() {
 		var i SiteSyncSource
 		if err := rows.Scan(
-			&i.ID,
 			&i.SiteID,
 			&i.Type,
 			&i.UrlOrUsername,
@@ -129,8 +134,7 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
 
 
-
-SELECT us.id, us.site_id, us.type, us.url_or_username, us.password, us.region, us.created_at, us.updated_at, us.enabled, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
+SELECT us.site_id, us.type, us.url_or_username, us.password, us.region, us.created_at, us.updated_at, us.enabled, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
@@ -159,7 +163,6 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 	for rows.Next() {
 		var i SiteSyncSource
 		if err := rows.Scan(
-			&i.ID,
 			&i.SiteID,
 			&i.Type,
 			&i.UrlOrUsername,
@@ -198,19 +201,18 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 }
 
 const getSyncSource = `-- name: GetSyncSource :one
-SELECT id, site_id, type, url_or_username, password, region, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where id = ? AND site_id = ? LIMIT 1
+SELECT site_id, type, url_or_username, password, region, created_at, updated_at, enabled, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
 `
 
 type GetSyncSourceParams struct {
-	ID     int64
+	Type   consts.SyncSourceType
 	SiteID string
 }
 
 func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*SiteSyncSource, error) {
-	row := q.queryRow(ctx, q.getSyncSourceStmt, getSyncSource, arg.ID, arg.SiteID)
+	row := q.queryRow(ctx, q.getSyncSourceStmt, getSyncSource, arg.Type, arg.SiteID)
 	var i SiteSyncSource
 	err := row.Scan(
-		&i.ID,
 		&i.SiteID,
 		&i.Type,
 		&i.UrlOrUsername,
@@ -244,16 +246,17 @@ UPDATE site_sync_sources
 SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE id = ?1
+WHERE type = ? AND site_id = ?
 `
 
 type UpdateSyncReportAttemptParams struct {
-	ID int64
+	Type   consts.SyncSourceType
+	SiteID string
 }
 
 // ---- Updates to the Sync Reporting -----
 func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, arg UpdateSyncReportAttemptParams) error {
-	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, arg.ID)
+	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, arg.Type, arg.SiteID)
 	return err
 }
 
@@ -264,7 +267,7 @@ UPDATE site_sync_sources SET
     url_or_username = COALESCE(?3, url_or_username),
     region = COALESCE(?4, region),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
-WHERE id = ?5 AND site_id = ?6
+WHERE type = ?5 AND site_id = ?6
 `
 
 type UpdateSyncSourceParams struct {
@@ -272,7 +275,7 @@ type UpdateSyncSourceParams struct {
 	Enabled       bool
 	UrlOrUsername *string
 	Region        *string
-	ID            int64
+	Type          consts.SyncSourceType
 	SiteID        string
 }
 
@@ -282,7 +285,7 @@ func (q *Queries) UpdateSyncSource(ctx context.Context, arg UpdateSyncSourcePara
 		arg.Enabled,
 		arg.UrlOrUsername,
 		arg.Region,
-		arg.ID,
+		arg.Type,
 		arg.SiteID,
 	)
 	return err
@@ -320,17 +323,23 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE id = ?3
+WHERE type = ?3 AND site_id = ?4
 `
 
 type UpdateSyncSourceReportsFailureParams struct {
 	ErrorMessages errors.ErrorList
 	ElapsedMs     *int64
-	ID            int64
+	Type          consts.SyncSourceType
+	SiteID        string
 }
 
 func (q *Queries) UpdateSyncSourceReportsFailure(ctx context.Context, arg UpdateSyncSourceReportsFailureParams) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure, arg.ErrorMessages, arg.ElapsedMs, arg.ID)
+	_, err := q.exec(ctx, q.updateSyncSourceReportsFailureStmt, updateSyncSourceReportsFailure,
+		arg.ErrorMessages,
+		arg.ElapsedMs,
+		arg.Type,
+		arg.SiteID,
+	)
 	return err
 }
 
@@ -363,15 +372,16 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE id = ?2
+WHERE type = ?2 AND site_id = ?3
 `
 
 type UpdateSyncSourceReportsSuccessParams struct {
 	ElapsedMs *int64
-	ID        int64
+	Type      consts.SyncSourceType
+	SiteID    string
 }
 
 func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, arg UpdateSyncSourceReportsSuccessParams) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, arg.ElapsedMs, arg.ID)
+	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, arg.ElapsedMs, arg.Type, arg.SiteID)
 	return err
 }

@@ -71,6 +71,7 @@ var TypeLookupMap = map[string]map[string]string{
 	},
 	"UpdateSyncSourceParams": {
 		"Enabled": "bool",
+		"Type":    "consts.SyncSourceType",
 	},
 	"GetSyncSourceParams": {
 		"Type": "consts.SyncSourceType",
@@ -80,6 +81,13 @@ var TypeLookupMap = map[string]map[string]string{
 	},
 	"UpdateSyncSourceReportsFailureParams": {
 		"ErrorMessages": "errors.ErrorList",
+		"Type":          "consts.SyncSourceType",
+	},
+	"DeleteSyncSourceParams": {
+		"Type": "consts.SyncSourceType",
+	},
+	"UpdateSyncReportAttemptParams": {
+		"Type": "consts.SyncSourceType",
 	},
 	"UpdateSyncSourceReportsSuccessParams": {
 		"Type": "consts.SyncSourceType",

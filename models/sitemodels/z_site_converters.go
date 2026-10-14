@@ -12,14 +12,20 @@ func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {
 		var sitemodelsSyncSource SyncSource
-		sitemodelsSyncSource.ID = (*source).ID
 		sitemodelsSyncSource.SiteID = (*source).SiteID
 		sitemodelsSyncSource.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
 		if (*source).Region != nil {
-			sitemodelsSyncSource.Region = *(*source).Region
+			xstring := *(*source).Region
+			sitemodelsSyncSource.Region = &xstring
 		}
-		sitemodelsSyncSource.UrlOrUsername = (*source).UrlOrUsername
-		sitemodelsSyncSource.Password = (*source).Password
+		if (*source).UrlOrUsername != nil {
+			xstring2 := *(*source).UrlOrUsername
+			sitemodelsSyncSource.UrlOrUsername = &xstring2
+		}
+		if (*source).Password != nil {
+			xstring3 := *(*source).Password
+			sitemodelsSyncSource.Password = &xstring3
+		}
 		sitemodelsSyncSource.Enabled = (*source).Enabled
 		pSitemodelsSyncSource = &sitemodelsSyncSource
 	}
@@ -30,10 +36,18 @@ func SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams {
 	if source != nil {
 		controldbCreateSyncSourceParams.SiteID = (*source).SiteID
 		controldbCreateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
-		controldbCreateSyncSourceParams.UrlOrUsername = (*source).UrlOrUsername
-		controldbCreateSyncSourceParams.Password = (*source).Password
-		pString := (*source).Region
-		controldbCreateSyncSourceParams.Region = &pString
+		if (*source).UrlOrUsername != nil {
+			xstring := *(*source).UrlOrUsername
+			controldbCreateSyncSourceParams.UrlOrUsername = &xstring
+		}
+		if (*source).Password != nil {
+			xstring2 := *(*source).Password
+			controldbCreateSyncSourceParams.Password = &xstring2
+		}
+		if (*source).Region != nil {
+			xstring3 := *(*source).Region
+			controldbCreateSyncSourceParams.Region = &xstring3
+		}
 		controldbCreateSyncSourceParams.Enabled = (*source).Enabled
 	}
 	return controldbCreateSyncSourceParams
@@ -41,14 +55,20 @@ func SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams {
 func SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams {
 	var controldbUpdateSyncSourceParams controldb.UpdateSyncSourceParams
 	if source != nil {
-		pString := (*source).Password
-		controldbUpdateSyncSourceParams.Password = &pString
+		if (*source).Password != nil {
+			xstring := *(*source).Password
+			controldbUpdateSyncSourceParams.Password = &xstring
+		}
 		controldbUpdateSyncSourceParams.Enabled = (*source).Enabled
-		pString2 := (*source).UrlOrUsername
-		controldbUpdateSyncSourceParams.UrlOrUsername = &pString2
-		pString3 := (*source).Region
-		controldbUpdateSyncSourceParams.Region = &pString3
-		controldbUpdateSyncSourceParams.ID = (*source).ID
+		if (*source).UrlOrUsername != nil {
+			xstring2 := *(*source).UrlOrUsername
+			controldbUpdateSyncSourceParams.UrlOrUsername = &xstring2
+		}
+		if (*source).Region != nil {
+			xstring3 := *(*source).Region
+			controldbUpdateSyncSourceParams.Region = &xstring3
+		}
+		controldbUpdateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
 		controldbUpdateSyncSourceParams.SiteID = (*source).SiteID
 	}
 	return controldbUpdateSyncSourceParams

@@ -20,6 +20,9 @@ import (
 func FuzzRequestFiles(f *testing.F) {
 	//// SETUP DEFUALT OBJECTS
 	config, controlDB, siteInformation, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	if err != nil {
+		f.Fatalf("failed to get config and databases: %v", err)
+	}
 	subdomain := siteInformation.SiteDB.Subdomain
 	token := siteInformation.PwdNSToken
 	if err != nil {

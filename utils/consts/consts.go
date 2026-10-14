@@ -118,18 +118,18 @@ func NewDexcomRegionFromString(s string) DexcomRegion {
 type SyncSourceType string
 
 const (
-	SyncSourceTypeNightscout SyncSourceType = "NIGHTSCOUT"
-	SyncSourceTypeDexcom     SyncSourceType = "DEXCOM"
-	SyncSourceTypeVirtual    SyncSourceType = "VIRTUAL"
+	SyncSourceTypeNightscout SyncSourceType = "nightscout"
+	SyncSourceTypeDexcom     SyncSourceType = "dexcom"
+	SyncSourceTypeVirtual    SyncSourceType = "virtual"
 )
 
 func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
 	switch s {
-	case "NIGHTSCOUT":
+	case "nightscout":
 		return SyncSourceTypeNightscout, nil
-	case "DEXCOM":
+	case "dexcom":
 		return SyncSourceTypeDexcom, nil
-	case "VIRTUAL":
+	case "virtual":
 		return SyncSourceTypeVirtual, nil
 	default:
 		slog.Error("Invalid sync source type provided", "sync_source_type", s)

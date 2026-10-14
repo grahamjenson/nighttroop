@@ -203,14 +203,14 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 					<div class="md:col-span-7">
 						@form.Item(form.ItemProps{}) {
 							@form.Label(form.LabelProps{
-								For: "ns_url",
+								For: "url_or_username",
 							}) {
 								Nightscout URL
 							}
 							@input.Input(input.Props{
 								ID:          "site--settings--nightscout-sync--url",
 								Type:        "url",
-								Name:        "ns_url",
+								Name:        "url_or_username",
 								Placeholder: "https://your-nightscout.herokuapp.com",
 
 								Required: true,
@@ -231,14 +231,14 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 					<div class="md:col-span-5">
 						@form.Item(form.ItemProps{}) {
 							@form.Label(form.LabelProps{
-								For: "ns_password",
+								For: "password",
 							}) {
 								API Secret
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--nightscout-sync--password",
 								Type:     "password",
-								Name:     "ns_password",
+								Name:     "password",
 								Required: true,
 								Value:    nightscoutSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
@@ -297,7 +297,7 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--virtual-sync--enable",
-							Name:    "ns_enabled",
+							Name:    "enabled",
 							Checked: synSource.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
@@ -340,7 +340,7 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 templ SuccessfulUpdate(model *sitemodels.SyncSource) {
 	<div class="rounded-lg border border-green-500 bg-green-100 p-4">
 		<div class="text-green-800">
-			Settings updated { model.Type } successfully.
+			Sync Updated { model.Type } successfully.
 		</div>
 	</div>
 }

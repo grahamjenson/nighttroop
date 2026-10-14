@@ -603,7 +603,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Com
 				return nil
 			})
 			templ_7745c5c3_Err = form.Label(form.LabelProps{
-				For: "ns_url",
+				For: "url_or_username",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -615,7 +615,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Com
 			templ_7745c5c3_Err = input.Input(input.Props{
 				ID:          "site--settings--nightscout-sync--url",
 				Type:        "url",
-				Name:        "ns_url",
+				Name:        "url_or_username",
 				Placeholder: "https://your-nightscout.herokuapp.com",
 
 				Required: true,
@@ -697,7 +697,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Com
 				return nil
 			})
 			templ_7745c5c3_Err = form.Label(form.LabelProps{
-				For: "ns_password",
+				For: "password",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -709,7 +709,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Com
 			templ_7745c5c3_Err = input.Input(input.Props{
 				ID:       "site--settings--nightscout-sync--password",
 				Type:     "password",
-				Name:     "ns_password",
+				Name:     "password",
 				Required: true,
 				Value:    nightscoutSyncSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
@@ -836,7 +836,7 @@ func VirtualSyncForm(synSource *sitemodels.SyncSource) templ.Component {
 			ctx = templ.InitializeContext(ctx)
 			templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
 				ID:      "site--settings--virtual-sync--enable",
-				Name:    "ns_enabled",
+				Name:    "enabled",
 				Checked: synSource.IsEnabled(),
 				Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 			}).Render(ctx, templ_7745c5c3_Buffer)
@@ -971,14 +971,14 @@ func SuccessfulUpdate(model *sitemodels.SyncSource) templ.Component {
 			templ_7745c5c3_Var31 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div class=\"rounded-lg border border-green-500 bg-green-100 p-4\"><div class=\"text-green-800\">Settings updated ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div class=\"rounded-lg border border-green-500 bg-green-100 p-4\"><div class=\"text-green-800\">Sync Updated ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(model.Type)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/sync_settings.templ`, Line: 343, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/sync_settings.templ`, Line: 343, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {

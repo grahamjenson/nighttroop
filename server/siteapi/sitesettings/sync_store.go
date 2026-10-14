@@ -2,11 +2,11 @@ package sitesettings
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -25,17 +25,27 @@ import (
 
 type SyncSettingsStore struct{}
 
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapi.HTTPError) {
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapi.HTTPError) {
+	var err error
 	params := sitemodels.SyncSourceToCreate(model)
+	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
 	params.SiteID = siteContext.Subdomain
+	if id == nil {
+		return false, siteapi.ErrMissingRequiredFieldWithHint("id/type")
+	}
 
-	params.UrlOrUsername = strings.TrimSpace(params.UrlOrUsername)
-	if params.UrlOrUsername == "" {
+	sstype, err := consts.NewSyncSourceTypeFromString(*id)
+	if err != nil {
+		return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
+	}
+	params.Type = sstype
+
+	params.UrlOrUsername = ptr(strings.TrimSpace(*params.UrlOrUsername))
+	if params.UrlOrUsername == nil || *params.UrlOrUsername == "" {
 		return false, siteapi.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
 
 	security := siteContext.Config.Security
-	var err error
 
 	// Nightscout specific validation and normalization
 	if params.Type == consts.SyncSourceTypeNightscout {
@@ -46,19 +56,21 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httput
 		}
 	}
 
-	if params.Password == "" {
+	if params.Password == nil || *params.Password == "" {
 		return false, siteapi.ErrMissingRequiredFieldWithHint("password")
 	}
 
-	params.Password, err = security.Encrypt(params.Password)
+	encPassword, err := security.Encrypt(*params.Password)
 	if err != nil {
 		return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
 	}
+	params.Password = &encPassword
 
-	params.UrlOrUsername, err = security.Encrypt(params.UrlOrUsername)
+	encUrlOrUsername, err := security.Encrypt(*params.UrlOrUsername)
 	if err != nil {
 		return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
 	}
+	params.UrlOrUsername = &encUrlOrUsername
 
 	err = siteContext.ControlDB.Queries.CreateSyncSource(ctx, params)
 	if err != nil {
@@ -69,7 +81,7 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, siteContext *httput
 			return false, siteapi.ErrMissingRequiredField
 		}
 		if errors.IsSQLConstraintCheck(err) {
-			return false, siteapi.ErrConstraintCheckFailed
+			return false, siteapi.ErrConstraintCheckFailedWithHint(err.Error())
 		}
 		return false, siteapi.ErrBadBody
 	}
@@ -81,17 +93,21 @@ func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) tem
 }
 
 func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteapi.HTTPError) {
-	idInt, err := strconv.Atoi(id)
+	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
-		return nil, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Invalid id: %s", id))
+		return nil, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", id))
 	}
 
 	model, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
-		ID:     int64(idInt),
+		Type:   sstype,
 		SiteID: siteContext.Subdomain,
 	})
 
 	if err != nil {
+		fmt.Println("Error fetching sync source:", err)
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, siteapi.ErrBadBody
 	}
 	if model == nil {
@@ -120,7 +136,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	// Nightscout specific validation and normalization
 	if oldModel.Type == consts.SyncSourceTypeNightscout {
 		if params.UrlOrUsername != nil {
-			*params.UrlOrUsername, err = nsURLNormalizeValidate(*params.UrlOrUsername, siteContext.Config)
+			params.UrlOrUsername, err = nsURLNormalizeValidate(params.UrlOrUsername, siteContext.Config)
 			if err != nil {
 				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", params.UrlOrUsername)
 				return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%v' is not a valid URL. %s", params.UrlOrUsername, err))
@@ -200,12 +216,16 @@ func GetSyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		modelSyncSources := []*sitemodels.SyncSource{}
 		for _, dbSyncSource := range dbSyncSources {
 			modelSyncSource := sitemodels.SyncSourceFromDB(dbSyncSource)
-			modelSyncSource.Password = consts.PASSWORD_GARBAGE_VALUE
-			modelSyncSource.UrlOrUsername, err = config.Security.Decrypt(modelSyncSource.UrlOrUsername)
-			if err != nil {
-				slog.Error("Failed to decrypt sync source URL or username from DB", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
+			modelSyncSource.Password = ptr(consts.PASSWORD_GARBAGE_VALUE)
+
+			if modelSyncSource.UrlOrUsername != nil {
+				encUrlOrUserName, err := config.Security.Decrypt(*modelSyncSource.UrlOrUsername)
+				if err != nil {
+					slog.Error("Failed to decrypt sync source URL or username from DB", "error", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
+				modelSyncSource.UrlOrUsername = &encUrlOrUserName
 			}
 
 			modelSyncSources = append(modelSyncSources, modelSyncSource)
@@ -253,9 +273,12 @@ func GetSyncSettingsReportsHandler(controlDB *db.ControlDB, config *config.Serve
 // UTIL METHODS
 ////////
 
-func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string, error) {
+func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*string, error) {
+	if rawUrl == nil {
+		return nil, fmt.Errorf("URL is nil")
+	}
 	errMsg := ""
-	nsURL, err := url.Parse(rawUrl)
+	nsURL, err := url.Parse(*rawUrl)
 	if err != nil {
 		return rawUrl, fmt.Errorf("Invalid URL: %w", err)
 	}
@@ -297,5 +320,9 @@ func nsURLNormalizeValidate(rawUrl string, config *config.ServerConfig) (string,
 		normalizedUrl = fmt.Sprintf("%s://%s:%s", scheme, host, port)
 	}
 
-	return normalizedUrl, nil
+	return ptr(normalizedUrl), nil
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

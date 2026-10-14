@@ -28,10 +28,8 @@ func FormToMap(form url.Values) map[string]any {
 		if len(values) == 0 {
 			continue
 		}
-
 		setNestedValue(doc, strings.Split(key, "."), values[0])
 	}
-
 	return doc
 }
 

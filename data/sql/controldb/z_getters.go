@@ -767,16 +767,6 @@ func (m *SiteIdentity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
-// GetID returns the ID value.
-func (m SiteSyncSource) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetID(v int64) {
-	m.ID = v
-}
-
 // GetSiteID returns the SiteID value.
 func (m SiteSyncSource) GetSiteID() string {
 	return m.SiteID
@@ -798,22 +788,22 @@ func (m *SiteSyncSource) SetType(v consts.SyncSourceType) {
 }
 
 // GetUrlOrUsername returns the UrlOrUsername value.
-func (m SiteSyncSource) GetUrlOrUsername() string {
+func (m SiteSyncSource) GetUrlOrUsername() *string {
 	return m.UrlOrUsername
 }
 
 // SetUrlOrUsername sets the UrlOrUsername value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetUrlOrUsername(v string) {
+func (m *SiteSyncSource) SetUrlOrUsername(v *string) {
 	m.UrlOrUsername = v
 }
 
 // GetPassword returns the Password value.
-func (m SiteSyncSource) GetPassword() string {
+func (m SiteSyncSource) GetPassword() *string {
 	return m.Password
 }
 
 // SetPassword sets the Password value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetPassword(v string) {
+func (m *SiteSyncSource) SetPassword(v *string) {
 	m.Password = v
 }
 
@@ -2657,14 +2647,14 @@ func (m *UpdateSiteIdentityDateFlagsParams) SetID(v int64) {
 	m.ID = v
 }
 
-// GetID returns the ID value.
-func (m GetSyncSourceParams) GetID() int64 {
-	return m.ID
+// GetType returns the Type value.
+func (m GetSyncSourceParams) GetType() consts.SyncSourceType {
+	return m.Type
 }
 
-// SetID sets the ID value and returns the updated GetSyncSourceParams.
-func (m *GetSyncSourceParams) SetID(v int64) {
-	m.ID = v
+// SetType sets the Type value and returns the updated GetSyncSourceParams.
+func (m *GetSyncSourceParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2708,22 +2698,22 @@ func (m *CreateSyncSourceParams) SetType(v consts.SyncSourceType) {
 }
 
 // GetUrlOrUsername returns the UrlOrUsername value.
-func (m CreateSyncSourceParams) GetUrlOrUsername() string {
+func (m CreateSyncSourceParams) GetUrlOrUsername() *string {
 	return m.UrlOrUsername
 }
 
 // SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetUrlOrUsername(v string) {
+func (m *CreateSyncSourceParams) SetUrlOrUsername(v *string) {
 	m.UrlOrUsername = v
 }
 
 // GetPassword returns the Password value.
-func (m CreateSyncSourceParams) GetPassword() string {
+func (m CreateSyncSourceParams) GetPassword() *string {
 	return m.Password
 }
 
 // SetPassword sets the Password value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetPassword(v string) {
+func (m *CreateSyncSourceParams) SetPassword(v *string) {
 	m.Password = v
 }
 
@@ -2787,14 +2777,14 @@ func (m *UpdateSyncSourceParams) SetRegion(v *string) {
 	m.Region = v
 }
 
-// GetID returns the ID value.
-func (m UpdateSyncSourceParams) GetID() int64 {
-	return m.ID
+// GetType returns the Type value.
+func (m UpdateSyncSourceParams) GetType() consts.SyncSourceType {
+	return m.Type
 }
 
-// SetID sets the ID value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetID(v int64) {
-	m.ID = v
+// SetType sets the Type value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2807,14 +2797,14 @@ func (m *UpdateSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetID returns the ID value.
-func (m DeleteSyncSourceParams) GetID() int64 {
-	return m.ID
+// GetType returns the Type value.
+func (m DeleteSyncSourceParams) GetType() consts.SyncSourceType {
+	return m.Type
 }
 
-// SetID sets the ID value and returns the updated DeleteSyncSourceParams.
-func (m *DeleteSyncSourceParams) SetID(v int64) {
-	m.ID = v
+// SetType sets the Type value and returns the updated DeleteSyncSourceParams.
+func (m *DeleteSyncSourceParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2827,14 +2817,24 @@ func (m *DeleteSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetID returns the ID value.
-func (m UpdateSyncReportAttemptParams) GetID() int64 {
-	return m.ID
+// GetType returns the Type value.
+func (m UpdateSyncReportAttemptParams) GetType() consts.SyncSourceType {
+	return m.Type
 }
 
-// SetID sets the ID value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetID(v int64) {
-	m.ID = v
+// SetType sets the Type value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncReportAttemptParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetElapsedMs returns the ElapsedMs value.
@@ -2847,14 +2847,24 @@ func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
 	m.ElapsedMs = v
 }
 
-// GetID returns the ID value.
-func (m UpdateSyncSourceReportsSuccessParams) GetID() int64 {
-	return m.ID
+// GetType returns the Type value.
+func (m UpdateSyncSourceReportsSuccessParams) GetType() consts.SyncSourceType {
+	return m.Type
 }
 
-// SetID sets the ID value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetID(v int64) {
-	m.ID = v
+// SetType sets the Type value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncSourceReportsSuccessParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetErrorMessages returns the ErrorMessages value.
@@ -2877,14 +2887,24 @@ func (m *UpdateSyncSourceReportsFailureParams) SetElapsedMs(v *int64) {
 	m.ElapsedMs = v
 }
 
-// GetID returns the ID value.
-func (m UpdateSyncSourceReportsFailureParams) GetID() int64 {
-	return m.ID
+// GetType returns the Type value.
+func (m UpdateSyncSourceReportsFailureParams) GetType() consts.SyncSourceType {
+	return m.Type
 }
 
-// SetID sets the ID value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetID(v int64) {
-	m.ID = v
+// SetType sets the Type value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncSourceReportsFailureParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsFailureParams.
+func (m *UpdateSyncSourceReportsFailureParams) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetID returns the ID value.

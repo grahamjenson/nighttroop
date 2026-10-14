@@ -5,20 +5,19 @@ import (
 )
 
 type SyncSource struct {
-	ID            int64
-	SiteID        string
-	Type          consts.SyncSourceType
-	Region        string
-	UrlOrUsername string
-	Password      string
-	Enabled       bool
+	SiteID        string                `json:"site_id"`
+	Type          consts.SyncSourceType `json:"type"`
+	Region        *string               `json:"region"`
+	UrlOrUsername *string               `json:"url_or_username"`
+	Password      *string               `json:"password"`
+	Enabled       bool                  `json:"enabled"`
 }
 
 func (n *SyncSource) GetDexcomRegion() consts.DexcomRegion {
-	if n == nil {
+	if n == nil || n.Region == nil {
 		return consts.DexcomRegionOther
 	}
-	return consts.NewDexcomRegionFromString(n.Region)
+	return consts.NewDexcomRegionFromString(*n.Region)
 }
 
 func (n *SyncSource) IsUSARegion() bool {
@@ -35,23 +34,23 @@ func (n *SyncSource) IsEnabled() bool {
 	return n.Enabled
 }
 func (n *SyncSource) GetUsername() string {
-	if n == nil {
+	if n == nil || n.UrlOrUsername == nil {
 		return ""
 	}
-	return n.UrlOrUsername
+	return *n.UrlOrUsername
 }
 func (n *SyncSource) GetURL() string {
-	if n == nil {
+	if n == nil || n.UrlOrUsername == nil {
 		return ""
 	}
-	return n.UrlOrUsername
+	return *n.UrlOrUsername
 }
 
 func (n *SyncSource) GetPassword() string {
-	if n == nil {
+	if n == nil || n.Password == nil {
 		return ""
 	}
-	return n.Password
+	return *n.Password
 }
 
 func (n *SyncSource) GetPasswordGarbage() string {

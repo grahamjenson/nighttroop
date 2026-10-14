@@ -152,11 +152,10 @@ type SiteIdentity struct {
 }
 
 type SiteSyncSource struct {
-	ID                         int64
 	SiteID                     string
 	Type                       consts.SyncSourceType
-	UrlOrUsername              string
-	Password                   string
+	UrlOrUsername              *string
+	Password                   *string
 	Region                     *string
 	CreatedAt                  int64
 	UpdatedAt                  int64

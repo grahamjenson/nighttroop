@@ -1,6 +1,6 @@
 
 -- name: GetSyncSource :one
-SELECT * FROM site_sync_sources where id = ? AND site_id = ? LIMIT 1;
+SELECT * FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1;
 
 -- name: GetAllSyncSourcesForSite :many
 SELECT * FROM site_sync_sources where site_id = ?;
@@ -31,19 +31,24 @@ UPDATE site_sync_sources SET
     url_or_username = COALESCE(sqlc.narg('UrlOrUsername'), url_or_username),
     region = COALESCE(sqlc.narg('Region'), region),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
-WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
+WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
 ------
--- DELETE is real for security
+-- DELETE just removes some values, but we remember things that would slow down, to punish malicious activity
 ------
 
 -- name: DeleteSyncSource :exec
-DELETE FROM site_sync_sources WHERE id = ? AND site_id = ?;
+UPDATE site_sync_sources SET 
+    enabled = 0,
+    url_or_username = NULL,
+    password = NULL,
+    previous_sync_errors = NULL,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE type = ? AND site_id = ?;
 
 ------
 -- REPORTS
 -------
-
 
 -- Get All sync reports that:
 -- 1. The site_sync_source is enabled
@@ -69,7 +74,7 @@ UPDATE site_sync_sources
 SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_attempted_sync = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE id = sqlc.arg(ID);
+WHERE type = ? AND site_id = ?;
 
 
 
@@ -102,7 +107,7 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE id = sqlc.arg(ID);
+WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
 
 -- name: UpdateSyncSourceReportsFailure :exec
@@ -137,4 +142,4 @@ SET
             + (0.8 * total_ema)
     END
 
-WHERE id = sqlc.arg(ID);
+WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');

@@ -16,6 +16,48 @@ type Assert interface {
 	Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error
 }
 
+/////
+// ASSERT TEXT VISIBLE
+/////
+
+type AssertTextVisible struct {
+	Text string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *AssertTextVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	html, err := page.Content()
+	if err != nil {
+		return err
+	}
+
+	prettyOutput := PrettifyHTML(html)
+
+	locator := page.GetByText(r.Text, playwright.PageGetByTextOptions{
+		Exact: playwright.Bool(false),
+	})
+
+	if locator == nil {
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n",
+			r.ToErrorLine(), r.Text, prettyOutput)
+	}
+
+	visible, err := locator.IsVisible()
+	if err != nil {
+		t.Fatalf("ASSERT_VISIBLE_TEXT: error checking visibility of %q: %v", r.Text, err)
+	}
+	if !visible {
+		t.Errorf("ASSERT_VISIBLE_TEXT: text %q is not visible", r.Text)
+	}
+	return nil
+}
+
+func (r *AssertTextVisible) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected Text '%s' to be visible for user", r.TestPath, r.TestLine, r.Text)
+}
+
 // //
 // ASSERT VISIBLE
 // //
@@ -108,8 +150,16 @@ func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright
 		t.Fatalf("\n\n%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
 	}
 	for _, resp := range resps {
+		body := ""
+		bodyBytes, err := resp.Body()
+		if err != nil {
+			body = "Error reading body"
+		} else {
+			body = string(bodyBytes)
+		}
+
 		if resp.Status() != r.Code {
-			t.Fatalf("\n\n%s\n assertStatus failed: expected status code %d, got %d for URL %s\n\n", r.ToErrorLine(), r.Code, resp.Status(), resp.URL())
+			t.Fatalf("\n\n%s\n assertStatus failed: expected status code %d, got %d for URL %s with Body: %s\n\n", r.ToErrorLine(), r.Code, resp.Status(), resp.URL(), body)
 		}
 	}
 

@@ -20,7 +20,7 @@ import (
 ///////
 
 type CreateHandlerInterface[T any] interface {
-	CreateModel(ctx context.Context, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 	CreateHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -39,37 +39,13 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		var doc map[string]any
-
-		switch siteContext.ContentType {
-		case httputils.ContentTypeJSON:
-			if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-				slog.Error("failed to read JSON body", "error", err)
-				ErrBadBody.Write(siteContext.AcceptType, w)
-				return
-			}
-		case httputils.ContentTypeForm:
-
-			if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
-				slog.Debug("failed to parse form data", "error", err)
-				ErrBadForm.Write(siteContext.AcceptType, w)
-				return
-			}
-			doc = FormToMap(r.Form)
-		default:
-			ErrUnknownContent.Write(siteContext.AcceptType, w)
+		requestModel, herr := extractModelFromRequest[T](siteContext, r)
+		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		var model *T
-		err := utils.FromMap(doc, model)
-		if err != nil {
-			slog.Error("failed to convert doc to model", "error", err)
-			ErrBadBody.Write(siteContext.AcceptType, w)
-			return
-		}
-
-		created, herr := store.CreateModel(r.Context(), siteContext, model)
+		created, herr := store.CreateModel(r.Context(), nil, siteContext, requestModel)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -83,11 +59,11 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
-			store.CreateHTMXResponse(model).Render(r.Context(), w)
+			store.CreateHTMXResponse(requestModel).Render(r.Context(), w)
 		case httputils.AcceptTypeHTML:
-			store.CreateHTMXResponse(model).Render(r.Context(), w)
+			store.CreateHTMXResponse(requestModel).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, model)
+			WriteModelJSON(w, status, requestModel)
 		}
 	}
 }
@@ -126,39 +102,14 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		var doc map[string]any
-
 		fmt.Println("Updating model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", oldModel)
-
-		switch siteContext.ContentType {
-		case httputils.ContentTypeJSON:
-			if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-				slog.Error("failed to read JSON body", "error", err)
-				ErrBadBody.Write(siteContext.AcceptType, w)
-				return
-			}
-		case httputils.ContentTypeForm:
-
-			if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
-				slog.Debug("failed to parse form data", "error", err)
-				ErrBadForm.Write(siteContext.AcceptType, w)
-				return
-			}
-			doc = FormToMap(r.Form)
-		default:
-			ErrUnknownContent.Write(siteContext.AcceptType, w)
+		requestModel, herr := extractModelFromRequest[T](siteContext, r)
+		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		var model *T
-		err := utils.FromMap(doc, model)
-		if err != nil {
-			slog.Error("failed to convert doc to model", "error", err)
-			ErrBadBody.Write(siteContext.AcceptType, w)
-			return
-		}
-
-		herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, model)
+		herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -169,11 +120,11 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
-			store.UpdateHTMXResponse(model).Render(r.Context(), w)
+			store.UpdateHTMXResponse(requestModel).Render(r.Context(), w)
 		case httputils.AcceptTypeHTML:
-			store.UpdateHTMXResponse(model).Render(r.Context(), w)
+			store.UpdateHTMXResponse(requestModel).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, model)
+			WriteModelJSON(w, status, requestModel)
 		}
 	}
 }
@@ -183,6 +134,8 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type CreateUpdateHandlerInterface[T any] interface {
+	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+
 	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
@@ -191,7 +144,7 @@ type CreateUpdateHandlerInterface[T any] interface {
 	GetName() string
 }
 
-func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpdateHandlerInterface[T]) http.HandlerFunc {
+func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store CreateUpdateHandlerInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -208,47 +161,31 @@ func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerCo
 
 		oldModel, herr := store.GetModel(r.Context(), id, siteContext)
 		if herr != nil {
-			fmt.Println("FASHUOHFASOUF")
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		var doc map[string]any
-
-		fmt.Println("Updating model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", oldModel)
-
-		switch siteContext.ContentType {
-		case httputils.ContentTypeJSON:
-			if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-				slog.Error("failed to read JSON body", "error", err)
-				ErrBadBody.Write(siteContext.AcceptType, w)
-				return
-			}
-		case httputils.ContentTypeForm:
-
-			if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
-				slog.Debug("failed to parse form data", "error", err)
-				ErrBadForm.Write(siteContext.AcceptType, w)
-				return
-			}
-			doc = FormToMap(r.Form)
-		default:
-			ErrUnknownContent.Write(siteContext.AcceptType, w)
-			return
-		}
-
-		var model *T
-		err := utils.FromMap(doc, model)
-		if err != nil {
-			slog.Error("failed to convert doc to model", "error", err)
-			ErrBadBody.Write(siteContext.AcceptType, w)
-			return
-		}
-
-		herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, model)
+		requestModel, herr := extractModelFromRequest[T](siteContext, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
+		}
+
+		if oldModel == nil {
+			fmt.Println("Creating new model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", requestModel)
+			_, herr = store.CreateModel(r.Context(), &id, siteContext, requestModel)
+			if herr != nil {
+				herr.Write(siteContext.AcceptType, w)
+				return
+			}
+		} else {
+			fmt.Println("Updating model with ID:", id, "siteContext:", siteContext, "ContentType:", siteContext.ContentType, "model:", oldModel)
+
+			herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
+			if herr != nil {
+				herr.Write(siteContext.AcceptType, w)
+				return
+			}
 		}
 
 		status := http.StatusOK
@@ -256,11 +193,40 @@ func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerCo
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
-			store.UpdateHTMXResponse(model).Render(r.Context(), w)
+			store.UpdateHTMXResponse(requestModel).Render(r.Context(), w)
 		case httputils.AcceptTypeHTML:
-			store.UpdateHTMXResponse(model).Render(r.Context(), w)
+			store.UpdateHTMXResponse(requestModel).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, model)
+			WriteModelJSON(w, status, requestModel)
 		}
 	}
+}
+
+func extractModelFromRequest[T any](siteContext *httputils.SiteContext, r *http.Request) (*T, *HTTPError) {
+	var doc map[string]any
+	switch siteContext.ContentType {
+	case httputils.ContentTypeJSON:
+		if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
+			slog.Error("failed to read JSON body", "error", err)
+			return nil, ErrBadBody
+
+		}
+	case httputils.ContentTypeForm:
+
+		if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
+			slog.Debug("failed to parse form data", "error", err)
+			return nil, ErrBadForm
+		}
+		doc = FormToMap(r.Form)
+	default:
+		return nil, ErrUnknownContent
+	}
+
+	model := new(T)
+	err := utils.FromMap(doc, model)
+	if err != nil {
+		slog.Error("failed to convert doc to model", "error", err)
+		return nil, ErrBadBody
+	}
+	return model, nil
 }

@@ -75,7 +75,10 @@ var (
 	ErrMissingRequiredFieldWithHint = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: "Missing required field " + field}
 	}
-	ErrConstraintCheckFailed     = &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed"}
+	ErrConstraintCheckFailed         = &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed"}
+	ErrConstraintCheckFailedWithHint = func(field string) *HTTPError {
+		return &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed: " + field}
+	}
 	ErrUniqueConstraintViolation = &HTTPError{Status: http.StatusConflict, Message: "Unique constraint violation"}
 )
 

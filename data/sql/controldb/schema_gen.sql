@@ -124,18 +124,15 @@ CREATE TABLE site_identities (
 ) STRICT;
 
 CREATE TABLE site_sync_sources (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
     -- Nightscout/Dexcom
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
-    type TEXT NOT NULL CHECK(type IN ('NIGHTSCOUT', 'DEXCOM', 'VIRTUAL')),
+    type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'virtual')),
     
-    url_or_username TEXT NOT NULL CHECK(length(url_or_username) <= 256),
-    password TEXT NOT NULL CHECK(length(password) <= 256), -- or ns token
+    url_or_username TEXT CHECK(length(url_or_username) <= 256),
+    password TEXT CHECK(length(password) <= 256), -- or ns token
 
     -- Specific Info
     region TEXT CHECK(region IN ('US', 'OUS')), -- dexcom at the moment
-
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

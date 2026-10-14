@@ -31,7 +31,6 @@ type SyncJobManager struct {
 }
 
 type SyncJobParams struct {
-	ID     int64
 	SiteID string
 	Type   consts.SyncSourceType
 }
@@ -82,7 +81,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobsdb.Job) e
 		// This will filter out
 		syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 			SiteID: syncJob.SiteID,
-			ID:     syncJob.ID,
+			Type:   syncJob.Type,
 		})
 		if err != nil {
 			slog.Error("Error getting user sync sources", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
@@ -142,15 +141,18 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyn
 	encUrlOrUserName := syncSource.UrlOrUsername
 	encPassword := syncSource.Password
 	dexcomRegion := consts.DexcomRegionOther
+	if encUrlOrUserName == nil || encPassword == nil {
+		return "", "", consts.DexcomRegionOther, fmt.Errorf("encrypted username or password is nil")
+	}
 	if syncSource.Region != nil {
 		dexcomRegion = consts.NewDexcomRegionFromString(*syncSource.Region)
 	}
 
-	unencUsername, err := b.security.Decrypt(encUrlOrUserName)
+	unencUsername, err := b.security.Decrypt(*encUrlOrUserName)
 	if err != nil {
 		return "", "", consts.DexcomRegionOther, fmt.Errorf("error decrypting username: %w", err)
 	}
-	unencPassword, err := b.security.Decrypt(encPassword)
+	unencPassword, err := b.security.Decrypt(*encPassword)
 	if err != nil {
 		return "", "", consts.DexcomRegionOther, fmt.Errorf("error decrypting password: %w", err)
 	}
@@ -197,7 +199,6 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 		for _, source := range syncSources {
 
 			syncJob := &SyncJobParams{
-				ID:     source.ID,
 				SiteID: source.SiteID,
 				Type:   source.Type,
 			}
@@ -210,7 +211,7 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 			err = queue.QueueJob(context.Background(), liteq.QueueJobParams{
 				Queue:       SYNC_JOB,
 				Job:         string(jsonRaw),
-				DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%d-%s-%s", syncJob.ID, syncJob.SiteID, syncJob.Type)),
+				DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%s-%s", syncJob.SiteID, syncJob.Type)),
 			})
 			if err != nil {
 				slog.Error("Error queueing sync job", "error", err)
