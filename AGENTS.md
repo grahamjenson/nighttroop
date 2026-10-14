@@ -52,3 +52,9 @@ Small PRs are the goal. Prefer several small PRs over one large one.
   their own PR.
 - Before writing a function, look for an equivalent in `utils` or an
   imported library.
+
+## UI Changes
+
+- Any PR that changes how a page looks includes before and after
+  screenshots of that page, rendered at desktop width, in its description
+  (inline images or a link to a published comparison).
