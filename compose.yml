@@ -2,19 +2,20 @@ version: '3.8'
 
 services:
   minio:
-    image: minio/minio
+    image: chainguard/minio:latest
+    user: "0"
     ports:
       - "9000:9000"
       - "9001:9001"
     command: server /data --console-address ":9001"
     environment:
-      - "MINIO_ACCESS_KEY=minioadmin"
-      - "MINIO_SECRET_KEY=minioadmin"
+      - "MINIO_ROOT_USER=minioadmin"
+      - "MINIO_ROOT_PASSWORD=minioadmin"
     volumes:
       - minio-data:/data
 
   createbuckets:
-    image: minio/mc
+    image: chainguard/minio-client:latest-dev
     depends_on:
       - minio
     entrypoint: >
