@@ -13,15 +13,36 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: false
+
+      # Saved on every run (key includes the commit) so the build cache stays fresh.
+      - name: Cache Go modules and build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
+          restore-keys: |
+            go-${{ runner.os }}-${{ hashFiles('go.sum') }}-
+            go-${{ runner.os }}-
+
+      - name: Cache code generator binaries
+        id: tools
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: tools-${{ runner.os }}-templ0.3.1020-goverter1.10.0-sqlc1.31.1-tailwind4.3.0
 
       - name: Install code generators
+        if: steps.tools.outputs.cache-hit != 'true'
         run: |
           go install github.com/a-h/templ/cmd/templ@v0.3.1020
           go install github.com/jmattheis/goverter/cmd/goverter@v1.10.0
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
-          sudo curl -sSL -o /usr/local/bin/tailwindcss \
+          curl -sSL -o ~/go/bin/tailwindcss \
             https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64
-          sudo chmod +x /usr/local/bin/tailwindcss
+          chmod +x ~/go/bin/tailwindcss
 
       - name: Check generated code is up to date
         run: |
@@ -32,8 +53,15 @@ jobs:
       - name: Start minio
         run: docker compose up -d
 
+      - name: Cache playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-v0.6201.1
+
       - name: Install playwright browser
         run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
 
+      # -count=1 so integration tests always run instead of replaying cached results.
       - name: Test
-        run: go test ./...
+        run: go test -count=1 ./...
