@@ -39,10 +39,16 @@ Do not change generated code. All generated files either:
 
 ## Change Size
 
-Keep every change as small as possible.
+Small PRs are the goal. Prefer several small PRs over one large one.
 
-- A single change must modify no more than 50 lines of code.
-- Do not reformat surrounding code.
-- Do not make unrelated changes.
-- If a change requires more than 50 changed lines, stop and ask for approval before proceeding.
-- Before implementing a function check to see if it has similar functions in utils or imported libraries
+- Budget: at most 100 changed lines per PR, counted as added plus removed
+  lines of hand-written code. Generated files (see above) do not count.
+- Check before pushing: `scripts/changed_lines.sh` prints the count against
+  `origin/main` and exits non-zero over budget. CI runs it on every PR.
+- Over budget? Split the work: ship the first independently mergeable slice
+  as its own PR, stack the next slice on it, and name the next slice in the
+  PR description. Do not ask for a bigger budget.
+- Do not reformat surrounding code or bundle unrelated fixes; those are
+  their own PR.
+- Before writing a function, look for an equivalent in `utils` or an
+  imported library.
