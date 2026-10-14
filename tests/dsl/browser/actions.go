@@ -190,12 +190,23 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		)
 	}
 
-	// We have to wait for the reponses to be captured. A status assert needs
-	// a response, so keep waiting (bounded) until one arrives: on a busy CI
-	// runner the request can take well over 50ms.
+	// We have to wait for the reponses to be captured. An assert that needs a
+	// response, a new page or a new URL keeps waiting (bounded) until it
+	// arrives: on a busy CI runner this can take well over 50ms.
 	time.Sleep(50 * time.Millisecond)
-	needsResponse, _ := r.NeedsResponseOrPage()
-	for deadline := time.Now().Add(5 * time.Second); needsResponse && len(responses) == 0 && time.Now().Before(deadline); {
+	needsResponse, needsPage, needsURL := false, false, false
+	for _, a := range r.Asserts {
+		switch a.(type) {
+		case *AssertStatus:
+			needsResponse = true
+		case *AssertNewPage:
+			needsPage = true
+		case *AssertNewURL:
+			needsURL = true
+		}
+	}
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline) &&
+		((needsResponse && len(responses) == 0) || (needsPage && len(newPages) == 0) || (needsURL && page.URL() == oldURL)); {
 		time.Sleep(20 * time.Millisecond)
 	}
 
