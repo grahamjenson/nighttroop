@@ -29,6 +29,10 @@ type Screenshot struct {
 	TestLine int
 }
 
+// screenshotMask is painted over in every capture: definition values, which
+// is where per-site secrets (backup key, NS token) are shown.
+const screenshotMask = "dd"
+
 // Execute writes tests/screenshots/<bdd file>/<name>.png. go test runs with
 // the package directory (tests/bdd) as the working directory. The committed
 // captures are rendered on Linux (CI); other platforms render text
@@ -44,8 +48,9 @@ func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.P
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	// Let web fonts finish loading so the image is the same from run to run.
-	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
+	// Drop focus rings and let web fonts finish loading, so the image is the
+	// same from run to run.
+	if _, err := page.Evaluate("document.activeElement && document.activeElement.blur(); document.fonts.ready"); err != nil {
 		return err
 	}
 	_, err := page.Screenshot(playwright.PageScreenshotOptions{
@@ -53,6 +58,7 @@ func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.P
 		FullPage:   playwright.Bool(true),
 		Animations: playwright.ScreenshotAnimationsDisabled,
 		Caret:      playwright.ScreenshotCaretHide,
+		Mask:       []playwright.Locator{page.Locator(screenshotMask)},
 	})
 	return err
 }

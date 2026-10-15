@@ -3,6 +3,7 @@ package bdd_test
 import (
 	"embed"
 	"io/fs"
+	"net"
 	"net/http/httptest"
 	"net/url"
 	"path/filepath"
@@ -37,7 +38,14 @@ func TestSite(t *testing.T) {
 
 	router := server.GetMainHandler(controlDB, config)
 
-	server := httptest.NewServer(router)
+	// Fixed port so URLs in screenshots are the same from run to run; fall
+	// back to a random port if it is taken.
+	server := httptest.NewUnstartedServer(router)
+	if l, err := net.Listen("tcp", "127.0.0.1:42183"); err == nil {
+		server.Listener.Close()
+		server.Listener = l
+	}
+	server.Start()
 	t.Cleanup(server.Close)
 
 	u, err := url.Parse(server.URL)
