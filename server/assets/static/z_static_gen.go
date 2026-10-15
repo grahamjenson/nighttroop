@@ -112,6 +112,14 @@ var StaticSelectboxMinJsETag = generateETag([]byte(StaticSelectboxMinJs))
 var StaticStyleGenCss []byte
 var StaticStyleGenCssETag = generateETag([]byte(StaticStyleGenCss))
 
+//go:embed toast.js
+var StaticToastJs []byte
+var StaticToastJsETag = generateETag([]byte(StaticToastJs))
+
+//go:embed toast.min.js
+var StaticToastMinJs []byte
+var StaticToastMinJsETag = generateETag([]byte(StaticToastMinJs))
+
 //go:embed z_static_gen.go
 var StaticZStaticGenGo []byte
 var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
@@ -390,6 +398,28 @@ func AddStaticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticStyleGenCss))
 		if err != nil {
 			slog.Error("Failed to write response for style_gen.css", "error", err)
+		}
+	})
+	r.Get("/toast.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticToastJsETag)
+
+		_, err := w.Write([]byte(StaticToastJs))
+		if err != nil {
+			slog.Error("Failed to write response for toast.js", "error", err)
+		}
+	})
+	r.Get("/toast.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		w.Header().Set("ETag", StaticToastMinJsETag)
+
+		_, err := w.Write([]byte(StaticToastMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for toast.min.js", "error", err)
 		}
 	})
 	r.Get("/z_static_gen.go", func(w http.ResponseWriter, r *http.Request) {

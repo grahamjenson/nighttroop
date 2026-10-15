@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 func Base() templ.Component {
@@ -71,7 +72,11 @@ func Base() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script src=\"/qrcode.js\"></script></head><body hx-ext=\"response-targets\">")
+		templ_7745c5c3_Err = toast.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script src=\"/qrcode.js\"></script></head><body hx-ext=\"response-targets\"><div id=\"toaster\" class=\"mb-3\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,7 +133,7 @@ func SiteBase() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"main-content\" class=\"flex-1 container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div id=\"error-container\" class=\"mt-3\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"main-content\" class=\"flex-1 container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -550,6 +555,41 @@ func Footer() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<footer class=\"mt-16 border-t border-white/10 bg-gray-900/80 backdrop-blur-md\"><div class=\"flex w-full flex-col gap-3 py-4 flex-row items-center justify-between\"><!-- Middle links --><div class=\"flex items-center justify-center gap-6 text-sm w-full\"><a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Privacy </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Terms </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Support </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Contact </a></div></div></footer>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func SiteError(message string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var17 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var17 == nil {
+			templ_7745c5c3_Var17 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = toast.Toast(toast.Props{
+			Description: message,
+			Variant:     toast.VariantError,
+			Position:    toast.PositionTopCenter,
+			Dismissible: true,
+			Icon:        true,
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -5,7 +5,6 @@
 1. Define Nighttroop models, work on converters to DB params, and use those models to build json and htmx and html. Then can test all this across any form
 1. Focus on sync settings slow down on bad and incorrect behaviour
 1. rename all columns with type suffix e.g. password_hash, totp_secret_enc
-1. Use custom methods to replace 	DurationSum:        stats.DurationSum, DurationSquaredSum: stats.DurationSquaredSum,
 
 -- Errors
 1. Come up with an actual logging and error framework that makes sense (SQLite DB for search?)
@@ -88,8 +87,11 @@
 Nighttroop is a multi user rewrite of Nightscout.
 Its core goals are to be:
 
-1. Simple - Single binary deployment, limited and optional external dependencies
-It is written in Golang using SQLite 
+1. Simple         - Single binary deployment, limited and optional external dependencies
+1. Cheap Per User - It should consume very little resources per user
+1. Multi-user     - A single server should support 10,000 users
+
+It is written in Golang using SQLite to make it a single binary.
 
 
 

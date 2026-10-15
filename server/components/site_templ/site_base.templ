@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 templ Base() {
@@ -31,9 +32,11 @@ templ Base() {
 			@inputotp.Script()
 			@checkbox.Script()
 			@selectbox.Script()
+			@toast.Script()
 			<script src="/qrcode.js"></script>
 		</head>
 		<body hx-ext="response-targets">
+			<div id="toaster" class="mb-3"></div>
 			{ children... }
 		</body>
 	</html>
@@ -47,7 +50,6 @@ templ SiteBase() {
 				id="main-content"
 				class="flex-1 container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
 			>
-				<div id="error-container" class="mt-3"></div>
 				{ children... }
 			</div>
 			@Footer()
@@ -160,4 +162,14 @@ templ Footer() {
 			</div>
 		</div>
 	</footer>
+}
+
+templ SiteError(message string) {
+	@toast.Toast(toast.Props{
+		Description: message,
+		Variant:     toast.VariantError,
+		Position:    toast.PositionTopCenter,
+		Dismissible: true,
+		Icon:        true,
+	})
 }

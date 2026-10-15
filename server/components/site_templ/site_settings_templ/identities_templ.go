@@ -658,7 +658,7 @@ func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpti
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><div class=\"flex w-x1 justify-end items-end gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#toaster\" hx-status:5xx=\"target:#toaster\"><div class=\"flex w-x1 justify-end items-end gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

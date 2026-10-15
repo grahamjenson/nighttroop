@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 templ Login() {
@@ -17,8 +18,8 @@ templ Login() {
 					hx-post="/login"
 					hx-target="closest .login-form-target"
 					hx-swap="outerHTML"
-					hx-status:4xx="target:#error-container"
-					hx-status:5xx="target:#error-container"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
 				>
 					<div class="text-center mb-6">
 						<h2 class="font-bold text-2xl">NightTroop Login</h2>
@@ -68,7 +69,6 @@ templ Login() {
 					}) {
 						Log In
 					}
-					<div id="error-container" class="mt-3"></div>
 				</form>
 			</div>
 		</div>
@@ -84,8 +84,8 @@ templ LoginTOTP() {
 				hx-post="/login/totp"
 				hx-target="body"
 				hx-swap="outerHTML"
-				hx-status:4xx="target:#error-container "
-				hx-status:5xx="target:#error-container "
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
 				class="needs-validation"
 			>
 				<div class="text-center mb-6">
@@ -146,8 +146,17 @@ templ LoginTOTP() {
 				}) {
 					Log In
 				}
-				<div id="error-container" class="mt-3"></div>
 			</form>
 		</div>
 	</div>
+}
+
+templ LoginError(err string) {
+	@toast.Toast(toast.Props{
+		Description: err,
+		Variant:     toast.VariantError,
+		Position:    toast.PositionTopCenter,
+		Dismissible: true,
+		Icon:        true,
+	})
 }

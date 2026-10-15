@@ -14,6 +14,8 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
+const errorHTMLXDivID = `#error`
+
 //////
 // CREATE
 ///////

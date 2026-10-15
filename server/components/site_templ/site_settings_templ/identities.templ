@@ -149,8 +149,8 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 			hx-post="/settings/identities"
 			hx-target={ "#" + tableid + " tbody" }
 			hx-swap="beforeend"
-			hx-status:4xx="target:#error-container"
-			hx-status:5xx="target:#error-container"
+			hx-status:4xx="target:#toaster"
+			hx-status:5xx="target:#toaster"
 		>
 			<div class="flex w-x1 justify-end items-end gap-2">
 				@form.Item(form.ItemProps{

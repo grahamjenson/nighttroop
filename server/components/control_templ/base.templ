@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 templ ControlBase() {
@@ -31,6 +32,7 @@ templ ControlBase() {
 			@inputotp.Script()
 			@checkbox.Script()
 			@selectbox.Script()
+			@toast.Script()
 			<script src="/qrcode.js"></script>
 		</head>
 		<body class="min-h-screen flex flex-col">

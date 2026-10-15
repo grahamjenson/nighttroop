@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 func ControlBase() templ.Component {
@@ -68,6 +69,10 @@ func ControlBase() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = selectbox.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = toast.Script().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

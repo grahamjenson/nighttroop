@@ -51,3 +51,7 @@ Keep every change as small as possible.
 ## UI Changes
 
 - During go test tests/bdd we store screenshots in tests/screenshots. Any UI test must commit these screenshots folder to show the changes
+
+## Tests
+
+Tests should also be simple.

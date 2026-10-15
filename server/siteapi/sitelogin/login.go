@@ -13,7 +13,6 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 
-	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
@@ -347,7 +346,7 @@ func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusTooManyRequests)
 
-	err := site_templ.LoginError("Too many attempts").Render(r.Context(), w)
+	err := site_login_templ.LoginError("Too many attempts").Render(r.Context(), w)
 	if err != nil {
 		slog.Error("Failed to render login error template", "error", err)
 	}
@@ -366,7 +365,7 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 		usrMsg = "Invalid login attempt"
 	}
 	w.WriteHeader(http.StatusUnauthorized)
-	err = site_templ.LoginError(usrMsg).Render(r.Context(), w)
+	err = site_login_templ.LoginError(usrMsg).Render(r.Context(), w)
 	if err != nil {
 		slog.Error("Failed to render login error template", "error", err)
 	}

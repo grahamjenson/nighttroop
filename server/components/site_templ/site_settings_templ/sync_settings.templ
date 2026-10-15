@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -39,12 +40,18 @@ templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 		@NightscoutSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeNightscout))
 		@DexcomSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeDexcom))
 		@VirtualSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeVirtual))
-		<div id="feedback" class="mb-3"></div>
 	</div>
 }
 
 templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
-	<form hx-post="/settings/sync/dexcom" hx-target="#feedback" class="mt-4">
+	<form
+		hx-post="/settings/sync/dexcom"
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
 				<!-- Header -->
@@ -70,7 +77,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 							For:   "dexcomSync",
 							Class: "item-center flex cursor-pointer gap-2",
 						}) {
-							Enable Sync
+							Enable Dexcom
 						}
 					}
 				</div>
@@ -80,14 +87,16 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 					<div class="md:col-span-5">
 						@form.Item(form.ItemProps{}) {
 							@form.Label(form.LabelProps{
-								For: "dex_username",
+								For: "dex_url_or_username",
 							}) {
 								Dexcom Username
 							}
 							@input.Input(input.Props{
-								Type:  "text",
-								Name:  "url_or_username",
-								Value: dexcomSyncSettings.GetUsername(),
+								ID:       "dex_url_or_username",
+								Type:     "text",
+								Name:     "url_or_username",
+								Required: true,
+								Value:    dexcomSyncSettings.GetUsername(),
 								Attributes: templ.Attributes{
 									"autocomplete":   "new-password",
 									"autocapitalize": "none",
@@ -105,9 +114,11 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 								Dexcom Password
 							}
 							@input.Input(input.Props{
-								Type:  "password",
-								Name:  "password",
-								Value: dexcomSyncSettings.GetPasswordGarbage(),
+								ID:       "dex_password",
+								Type:     "password",
+								Name:     "password",
+								Required: true,
+								Value:    dexcomSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               "event.preventDefault(); this.select();",
 									"data-placeholder-password": "true",
@@ -170,7 +181,14 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 }
 
 templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
-	<form hx-post="/settings/sync/nightscout" hx-target="#feedback" class="mt-4">
+	<form
+		hx-post="/settings/sync/nightscout"
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
 				<!-- Header -->
@@ -282,7 +300,14 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 }
 
 templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
-	<form hx-post="/settings/sync/virtual" hx-target="#feedback" class="mt-4">
+	<form
+		hx-post="/settings/sync/virtual"
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
 				<!-- Header -->
@@ -341,9 +366,14 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 }
 
 templ SuccessfulUpdate(model *sitemodels.SyncSource) {
-	<div class="rounded-lg border border-green-500 bg-green-100 p-4">
-		<div class="text-green-800">
-			Sync Updated { model.Type } successfully.
-		</div>
-	</div>
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   "Sync Updated",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
 }

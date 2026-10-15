@@ -73,20 +73,31 @@ func (r *AssertTextVisible) Execute(t *testing.T, ctx map[string]any, page playw
 
 	prettyOutput := PrettifyHTML(html)
 
-	locator := page.GetByText(r.Text, playwright.PageGetByTextOptions{
+	locators, err := page.GetByText(r.Text, playwright.PageGetByTextOptions{
 		Exact: playwright.Bool(false),
-	})
+	}).All()
 
-	if locator == nil {
+	if err != nil {
+		t.Fatalf("ASSERT_VISIBLE_TEXT: error getting all locators for %q: %v", r.Text, err)
+	}
+
+	if len(locators) == 0 {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n",
 			r.ToErrorLine(), r.Text, prettyOutput)
 	}
 
-	visible, err := locator.IsVisible()
-	if err != nil {
-		t.Fatalf("ASSERT_VISIBLE_TEXT: error checking visibility of %q: %v", r.Text, err)
+	anyVisible := false
+	for _, locator := range locators {
+		visible, err := locator.IsVisible()
+		if err != nil {
+			t.Fatalf("ASSERT_VISIBLE_TEXT: error checking visibility of %q: %v", r.Text, err)
+		}
+		if visible {
+			anyVisible = true
+			break
+		}
 	}
-	if !visible {
+	if !anyVisible {
 		t.Errorf("ASSERT_VISIBLE_TEXT: text %q is not visible", r.Text)
 	}
 	return nil

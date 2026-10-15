@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -113,7 +114,7 @@ func SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) templ.Component 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div id=\"feedback\" class=\"mb-3\"></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -142,7 +143,7 @@ func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<form hx-post=\"/settings/sync/dexcom\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Dexcom Share Sync</h5><div class=\"text-sm text-gray-400\">Connect your Dexcom Account</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<form hx-post=\"/settings/sync/dexcom\" hx-target=\"#toaster\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Dexcom Share Sync</h5><div class=\"text-sm text-gray-400\">Connect your Dexcom Account</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -183,7 +184,7 @@ func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Enable Sync")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Enable Dexcom")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -239,7 +240,7 @@ func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = form.Label(form.LabelProps{
-				For: "dex_username",
+				For: "dex_url_or_username",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -249,9 +250,11 @@ func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = input.Input(input.Props{
-				Type:  "text",
-				Name:  "url_or_username",
-				Value: dexcomSyncSettings.GetUsername(),
+				ID:       "dex_url_or_username",
+				Type:     "text",
+				Name:     "url_or_username",
+				Required: true,
+				Value:    dexcomSyncSettings.GetUsername(),
 				Attributes: templ.Attributes{
 					"autocomplete":   "new-password",
 					"autocapitalize": "none",
@@ -312,9 +315,11 @@ func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = input.Input(input.Props{
-				Type:  "password",
-				Name:  "password",
-				Value: dexcomSyncSettings.GetPasswordGarbage(),
+				ID:       "dex_password",
+				Type:     "password",
+				Name:     "password",
+				Required: true,
+				Value:    dexcomSyncSettings.GetPasswordGarbage(),
 				Attributes: templ.Attributes{
 					"onmousedown":               "event.preventDefault(); this.select();",
 					"data-placeholder-password": "true",
@@ -511,7 +516,7 @@ func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Com
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<form hx-post=\"/settings/sync/nightscout\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Nightscout Sync</h5><div class=\"text-sm text-gray-400\">Connect your Nightscout instance</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<form hx-post=\"/settings/sync/nightscout\" hx-target=\"#toaster\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Nightscout Sync</h5><div class=\"text-sm text-gray-400\">Connect your Nightscout instance</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -823,7 +828,7 @@ func VirtualSyncForm(synSource *sitemodels.SyncSource) templ.Component {
 			templ_7745c5c3_Var26 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<form hx-post=\"/settings/sync/virtual\" hx-target=\"#feedback\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Virtual Sync</h5><div class=\"text-sm text-gray-400\">This will create fake data for testing purposes.</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<form hx-post=\"/settings/sync/virtual\" hx-target=\"#toaster\" hx-swap=\"beforeend\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"mt-4\"><div class=\"rounded-lg border border-gray-900 shadow-sm\"><div class=\"p-6\"><!-- Header --><div class=\"mb-4 flex items-center justify-between\"><div><h5 class=\"font-semibold\">Virtual Sync</h5><div class=\"text-sm text-gray-400\">This will create fake data for testing purposes.</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -976,20 +981,16 @@ func SuccessfulUpdate(model *sitemodels.SyncSource) templ.Component {
 			templ_7745c5c3_Var31 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<div class=\"rounded-lg border border-green-500 bg-green-100 p-4\"><div class=\"text-green-800\">Sync Updated ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(model.Type)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/sync_settings.templ`, Line: 346, Col: 28}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, " successfully.</div></div>")
+		templ_7745c5c3_Err = toast.Toast(toast.Props{
+			Title:         "Success",
+			Description:   "Sync Updated",
+			Variant:       toast.VariantSuccess,
+			Position:      toast.PositionTopCenter,
+			Duration:      5000,
+			Dismissible:   true,
+			Icon:          true,
+			ShowIndicator: true,
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
