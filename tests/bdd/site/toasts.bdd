@@ -1,0 +1,20 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+ASSERT_PATH /login
+
+// Double click login with the wrong password: both errors stack, newest on top
+INPUT #site--login--name admin
+INPUT #site--login--password wrongpassword
+
+CLICK #site--login-button
+ASSERT_STATUS 401
+CLICK #site--login-button
+ASSERT_STATUS 401
+
+SCREENSHOT stack_toast
