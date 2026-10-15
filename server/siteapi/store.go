@@ -213,8 +213,7 @@ func extractModelFromRequest[T any](siteContext *httputils.SiteContext, r *http.
 			slog.Debug("failed to parse form data", "error", err)
 			return nil, ErrBadForm
 		}
-		doc = FormToMap(r.Form)
-		coerceFormValues(doc, new(T))
+		doc = FormToMap[T](r.Form)
 	default:
 		return nil, ErrUnknownContent
 	}
