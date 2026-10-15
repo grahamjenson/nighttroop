@@ -44,11 +44,25 @@ jobs:
             https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64
           chmod +x ~/go/bin/tailwindcss
 
-      - name: Check generated code is up to date
+      - name: Generate code
+        run: go generate ./...
+
+      # Runs the browser suite in the same container the script uses locally,
+      # so the screenshots it makes should match the committed golden files.
+      - name: Generate screenshots
+        run: ./scripts/screenshots/generateScreenshots.sh
+
+      - name: Check generated code and screenshots are committed
         run: |
-          go generate ./...
           git add -N .
-          git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
+          git diff --exit-code --stat || { echo "::error::generated files differ; run go generate ./... and scripts/screenshots/generateScreenshots.sh then commit"; exit 1; }
+
+      - name: Upload generated screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: tests/screenshots
 
       - name: Start minio
         run: docker compose up -d
