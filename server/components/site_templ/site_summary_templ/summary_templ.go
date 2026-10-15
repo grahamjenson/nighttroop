@@ -78,7 +78,26 @@ func Summary(summary sitemodels.Summary) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- GRAPH --><div class=\"rounded-xl border border-gray-200 bg-white p-4 shadow-sm\"><h2 class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">Last 24 hours</h2><div id=\"glucoseGraph\" class=\"graph-container\"></div></div><!-- BOTTOM ROW --><div class=\"row g-3 mt-3\"><div class=\"col-md-4\"><div class=\"card p-3\"><h6>Recent Insulin</h6><div>2.0 U, 26 min ago</div></div></div><div class=\"col-md-4\"><div class=\"card p-3\"><h6>Last Meal</h6><div>18g carbs, 45 min ago</div></div></div><div class=\"col-md-4\"><div class=\"card p-3\"><h6>System Status</h6><div>CGM ✔ PUMP ✔ CAREPORTAL ✔</div></div></div></div></div><!-- D3 Example --> <script>\n    document.addEventListener(\"DOMContentLoaded\", function () {\n        const svg = d3.select(\"#glucoseGraph\")\n            .append(\"svg\")\n            .attr(\"width\", \"100%\")\n            .attr(\"height\", 300);\n\n        // Placeholder line\n        svg.append(\"line\")\n            .attr(\"x1\", 0)\n            .attr(\"y1\", 150)\n            .attr(\"x2\", 1000)\n            .attr(\"y2\", 150)\n            .attr(\"stroke\", \"#22c55e\")\n            .attr(\"stroke-width\", 2);\n    });\n</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- GRAPH --><div class=\"rounded-xl border border-gray-200 bg-white p-4 shadow-sm\"><h2 class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">Last 24 hours</h2>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(summary.Last24Hours) == 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"flex h-48 items-center justify-center text-sm text-gray-400\">No readings in the last 24 hours</div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"glucoseGraph\" class=\"mt-2\"></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templ.JSONScript("glucose-data", summary.Last24Hours).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><!-- BOTTOM ROW --><div class=\"row g-3 mt-3\"><div class=\"col-md-4\"><div class=\"card p-3\"><h6>Recent Insulin</h6><div>2.0 U, 26 min ago</div></div></div><div class=\"col-md-4\"><div class=\"card p-3\"><h6>Last Meal</h6><div>18g carbs, 45 min ago</div></div></div><div class=\"col-md-4\"><div class=\"card p-3\"><h6>System Status</h6><div>CGM ✔ PUMP ✔ CAREPORTAL ✔</div></div></div></div></div><script>\n    document.addEventListener(\"DOMContentLoaded\", function () {\n        const el = document.getElementById(\"glucose-data\");\n        if (!el) return;\n        const points = JSON.parse(el.textContent).filter(p => p.GlucoseReading != null);\n        const low = points[0].LowTarget ?? 70, high = points[0].HighTarget ?? 180;\n        const width = 1000, height = 260, m = {top: 10, right: 16, bottom: 24, left: 36};\n        const svg = d3.select(\"#glucoseGraph\").append(\"svg\")\n            .attr(\"viewBox\", `0 0 ${width} ${height}`).attr(\"class\", \"w-full h-auto\");\n        const now = Date.now();\n        const x = d3.scaleTime().domain([now - 24 * 3600 * 1000, now]).range([m.left, width - m.right]);\n        const y = d3.scaleLinear()\n            .domain([Math.min(40, d3.min(points, p => p.GlucoseReading)), Math.max(250, d3.max(points, p => p.GlucoseReading))])\n            .nice().range([height - m.bottom, m.top]);\n        // target band, then axes, then the trace and readings\n        svg.append(\"rect\").attr(\"x\", m.left).attr(\"width\", width - m.left - m.right)\n            .attr(\"y\", y(high)).attr(\"height\", y(low) - y(high)).attr(\"fill\", \"#dcfce7\");\n        svg.append(\"g\").attr(\"transform\", `translate(0,${height - m.bottom})`)\n            .call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat(\"%H:%M\"))).attr(\"color\", \"#9ca3af\");\n        svg.append(\"g\").attr(\"transform\", `translate(${m.left},0)`)\n            .call(d3.axisLeft(y).ticks(5).tickSize(-(width - m.left - m.right))).attr(\"color\", \"#9ca3af\")\n            .call(g => g.selectAll(\".tick line\").attr(\"stroke\", \"#e5e7eb\"));\n        svg.append(\"path\").datum(points).attr(\"fill\", \"none\").attr(\"stroke\", \"#6b7280\").attr(\"stroke-width\", 1.5)\n            .attr(\"d\", d3.line().x(p => x(p.Timestamp)).y(p => y(p.GlucoseReading)));\n        svg.selectAll(\"circle\").data(points).join(\"circle\")\n            .attr(\"cx\", p => x(p.Timestamp)).attr(\"cy\", p => y(p.GlucoseReading)).attr(\"r\", 3)\n            .attr(\"fill\", p => p.GlucoseReading > high ? \"#f59e0b\" : p.GlucoseReading < low ? \"#e11d48\" : \"#16a34a\");\n    });\n</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -113,103 +132,103 @@ func glucoseHero(summary sitemodels.Summary) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-wrap items-end justify-between gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-wrap items-end justify-between gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if summary.Glucose != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div><div class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">Glucose</div><div class=\"flex items-baseline gap-2\"><span class=\"text-6xl font-extrabold tracking-tight text-gray-900\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div><div class=\"text-sm font-semibold uppercase tracking-wide text-gray-500\">Glucose</div><div class=\"flex items-baseline gap-2\"><span class=\"text-6xl font-extrabold tracking-tight text-gray-900\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(summary.Glucose.ValueStr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 80, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 96, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if summary.Units != nil {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<span class=\"text-lg text-gray-500\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<span class=\"text-lg text-gray-500\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(string(*summary.Units))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 82, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 98, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<span class=\"ml-2 text-2xl font-semibold text-gray-700\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<span class=\"ml-2 text-2xl font-semibold text-gray-700\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(summary.Glucose.Diff)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 84, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 100, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span></div><div class=\"mt-1 text-sm text-gray-500\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></div><div class=\"mt-1 text-sm text-gray-500\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(summary.Glucose.TimeAgo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 86, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 102, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div><div class=\"text-2xl font-bold text-gray-900\">No glucose data yet</div><div class=\"mt-1 text-sm text-gray-500\">Upload from your phone, or connect a source under Settings → Sync.</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div><div class=\"text-2xl font-bold text-gray-900\">No glucose data yet</div><div class=\"mt-1 text-sm text-gray-500\">Upload from your phone, or connect a source under Settings → Sync.</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if summary.Alarm != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span class=\"rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-800\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<span class=\"rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-800\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(summary.Alarm.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 95, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 111, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -238,7 +257,7 @@ func tile(label, value string, ic func(...icon.Props) templ.Component) templ.Com
 			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"rounded-xl border border-gray-200 bg-white p-4 shadow-sm\"><div class=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"rounded-xl border border-gray-200 bg-white p-4 shadow-sm\"><div class=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -249,26 +268,26 @@ func tile(label, value string, ic func(...icon.Props) templ.Component) templ.Com
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 104, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 120, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div><div class=\"mt-1 text-2xl font-bold tabular-nums text-gray-900\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><div class=\"mt-1 text-2xl font-bold tabular-nums text-gray-900\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 106, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/summary.templ`, Line: 122, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
