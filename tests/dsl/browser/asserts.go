@@ -25,10 +25,13 @@ type Assert interface {
 // ///
 type Screenshot struct {
 	Name     string
-	Mask     string // CSS selectors, comma separated, painted over before capture
 	TestPath string
 	TestLine int
 }
+
+// screenshotMask is painted over in every capture: definition values, which
+// is where per-site secrets (backup key, NS token) are shown.
+const screenshotMask = "dd"
 
 // Execute writes tests/screenshots/<bdd file>/<name>.png. go test runs with
 // the package directory (tests/bdd) as the working directory. The committed
@@ -50,16 +53,12 @@ func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.P
 	if _, err := page.Evaluate("document.activeElement && document.activeElement.blur(); document.fonts.ready"); err != nil {
 		return err
 	}
-	var mask []playwright.Locator
-	if r.Mask != "" {
-		mask = append(mask, page.Locator(r.Mask))
-	}
 	_, err := page.Screenshot(playwright.PageScreenshotOptions{
 		Path:       playwright.String(filepath.Join(dir, r.Name+".png")),
 		FullPage:   playwright.Bool(true),
 		Animations: playwright.ScreenshotAnimationsDisabled,
 		Caret:      playwright.ScreenshotCaretHide,
-		Mask:       mask,
+		Mask:       []playwright.Locator{page.Locator(screenshotMask)},
 	})
 	return err
 }

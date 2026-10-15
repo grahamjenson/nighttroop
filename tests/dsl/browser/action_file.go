@@ -132,13 +132,10 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
 
-			// SCREENSHOT <name> [MASK <css selector>[, <css selector>...]]
-			name, mask, _ := strings.Cut(second, " MASK ")
 			assertable.AddAssert(&Screenshot{
 				TestPath: path,
 				TestLine: lineNumber,
-				Name:     strings.TrimSpace(name),
-				Mask:     strings.TrimSpace(mask),
+				Name:     second,
 			})
 		case "ASSERT_STATUS":
 			if current == nil {
