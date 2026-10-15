@@ -67,15 +67,6 @@ jobs:
       - name: Generate screenshots
         run: ./scripts/screenshots/generateScreenshots.sh
 
-      - name: Report screenshot changes
-        run: |
-          git add -N tests/screenshots
-          changed=$(git diff --name-only -- tests/screenshots)
-          if [ -n "$changed" ]; then
-            echo "::warning::screenshots differ from the committed ones; see the screenshots artifact"
-            { echo "### Screenshots changed"; echo "$changed" | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
       - name: Upload generated screenshots
         uses: actions/upload-artifact@v4
         with:
