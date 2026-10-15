@@ -44,11 +44,8 @@ jobs:
             https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64
           chmod +x ~/go/bin/tailwindcss
 
-      - name: Check generated code is up to date
-        run: |
-          go generate ./...
-          git add -N .
-          git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
+      - name: Generate code
+        run: go generate ./...
 
       - name: Start minio
         run: docker compose up -d
@@ -61,6 +58,23 @@ jobs:
 
       - name: Install playwright browser
         run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
+
+      # Regenerates tests/screenshots from the browser suite; the diff check
+      # below fails if they differ from the committed golden files.
+      - name: Generate screenshots
+        run: ./scripts/screenshots/generateScreenshots.sh
+
+      - name: Check generated code and screenshots are committed
+        run: |
+          git add -N .
+          git diff --exit-code --stat || { echo "::error::generated files differ; run go generate ./... and scripts/screenshots/generateScreenshots.sh then commit"; exit 1; }
+
+      - name: Upload generated screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: tests/screenshots
 
       # -count=1 so integration tests always run instead of replaying cached results.
       - name: Test
