@@ -46,3 +46,13 @@ INPUT #site--settings--nightscout-sync--password    not_a_token
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE "Nighttroop"
+SCREENSHOT site_summary_virtual
