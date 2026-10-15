@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -29,9 +30,17 @@ type Screenshot struct {
 }
 
 // Execute writes tests/screenshots/<bdd file>/<name>.png. go test runs with
-// the package directory (tests/bdd) as the working directory.
+// the package directory (tests/bdd) as the working directory. The committed
+// captures are rendered on Linux (CI); other platforms render text
+// differently, so they write to the ignored .test directory instead, and
+// scripts/screenshots.sh regenerates the committed set in a Linux container.
 func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	dir := filepath.Join("..", "screenshots", strings.TrimSuffix(r.TestPath, filepath.Ext(r.TestPath)))
+	root := filepath.Join("..", "screenshots")
+	if runtime.GOOS != "linux" {
+		root = filepath.Join("..", "..", ".test", "screenshots")
+		t.Logf("SCREENSHOT %s: not on linux, writing under .test/screenshots instead of tests/screenshots", r.Name)
+	}
+	dir := filepath.Join(root, strings.TrimSuffix(r.TestPath, filepath.Ext(r.TestPath)))
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
