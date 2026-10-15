@@ -71,7 +71,7 @@ func ControlBase() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script src=\"/qrcode.js\"></script></head><body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script src=\"/qrcode.js\"></script></head><body class=\"min-h-screen flex flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -79,7 +79,7 @@ func ControlBase() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"main-content\" class=\"container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div id=\"error-container\" class=\"mt-3\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"main-content\" class=\"flex-1 container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div id=\"error-container\" class=\"mt-3\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -449,7 +449,7 @@ func Footer() templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"mt-16 bottom-0\"></div><footer class=\"fixed bottom-0 left-0 right-0 border-t border-white/10 bg-gray-900/80 backdrop-blur-md\"><div class=\"flex w-full flex-col gap-3 py-4 flex-row items-center justify-between\"><!-- Middle links --><div class=\"flex items-center justify-center gap-6 text-sm w-full\"><a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Privacy </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Terms </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Support </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Contact </a></div></div></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<footer class=\"mt-16 border-t border-white/10 bg-gray-900/80 backdrop-blur-md\"><div class=\"flex w-full flex-col gap-3 py-4 flex-row items-center justify-between\"><!-- Middle links --><div class=\"flex items-center justify-center gap-6 text-sm w-full\"><a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Privacy </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Terms </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Support </a> <a href=\"#\" class=\"text-gray-400 hover:text-white transition\">Contact </a></div></div></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
