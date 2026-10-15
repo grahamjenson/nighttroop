@@ -26,7 +26,12 @@ templ Summary(summary sitemodels.Summary) {
 			<!-- GRAPH -->
 			<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Last 24 hours</h2>
-				<div id="glucoseGraph" class="graph-container"></div>
+				if len(summary.Last24Hours) == 0 {
+					<div class="flex h-48 items-center justify-center text-sm text-gray-400">No readings in the last 24 hours</div>
+				} else {
+					<div id="glucoseGraph" class="mt-2"></div>
+					@templ.JSONScript("glucose-data", summary.Last24Hours)
+				}
 			</div>
 			<!-- BOTTOM ROW -->
 			<div class="row g-3 mt-3">
@@ -50,22 +55,33 @@ templ Summary(summary sitemodels.Summary) {
 				</div>
 			</div>
 		</div>
-		<!-- D3 Example -->
 		<script>
     document.addEventListener("DOMContentLoaded", function () {
-        const svg = d3.select("#glucoseGraph")
-            .append("svg")
-            .attr("width", "100%")
-            .attr("height", 300);
-
-        // Placeholder line
-        svg.append("line")
-            .attr("x1", 0)
-            .attr("y1", 150)
-            .attr("x2", 1000)
-            .attr("y2", 150)
-            .attr("stroke", "#22c55e")
-            .attr("stroke-width", 2);
+        const el = document.getElementById("glucose-data");
+        if (!el) return;
+        const points = JSON.parse(el.textContent).filter(p => p.GlucoseReading != null);
+        const low = points[0].LowTarget ?? 70, high = points[0].HighTarget ?? 180;
+        const width = 1000, height = 260, m = {top: 10, right: 16, bottom: 24, left: 36};
+        const svg = d3.select("#glucoseGraph").append("svg")
+            .attr("viewBox", `0 0 ${width} ${height}`).attr("class", "w-full h-auto");
+        const now = Date.now();
+        const x = d3.scaleTime().domain([now - 24 * 3600 * 1000, now]).range([m.left, width - m.right]);
+        const y = d3.scaleLinear()
+            .domain([Math.min(40, d3.min(points, p => p.GlucoseReading)), Math.max(250, d3.max(points, p => p.GlucoseReading))])
+            .nice().range([height - m.bottom, m.top]);
+        // target band, then axes, then the trace and readings
+        svg.append("rect").attr("x", m.left).attr("width", width - m.left - m.right)
+            .attr("y", y(high)).attr("height", y(low) - y(high)).attr("fill", "#dcfce7");
+        svg.append("g").attr("transform", `translate(0,${height - m.bottom})`)
+            .call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%H:%M"))).attr("color", "#9ca3af");
+        svg.append("g").attr("transform", `translate(${m.left},0)`)
+            .call(d3.axisLeft(y).ticks(5).tickSize(-(width - m.left - m.right))).attr("color", "#9ca3af")
+            .call(g => g.selectAll(".tick line").attr("stroke", "#e5e7eb"));
+        svg.append("path").datum(points).attr("fill", "none").attr("stroke", "#6b7280").attr("stroke-width", 1.5)
+            .attr("d", d3.line().x(p => x(p.Timestamp)).y(p => y(p.GlucoseReading)));
+        svg.selectAll("circle").data(points).join("circle")
+            .attr("cx", p => x(p.Timestamp)).attr("cy", p => y(p.GlucoseReading)).attr("r", 3)
+            .attr("fill", p => p.GlucoseReading > high ? "#f59e0b" : p.GlucoseReading < low ? "#e11d48" : "#16a34a");
     });
 </script>
 	}
