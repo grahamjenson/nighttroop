@@ -33,27 +33,16 @@ templ Summary(summary sitemodels.Summary) {
 					@templ.JSONScript("glucose-data", summary.Last24Hours)
 				}
 			</div>
-			<!-- BOTTOM ROW -->
-			<div class="row g-3 mt-3">
-				<div class="col-md-4">
-					<div class="card p-3">
-						<h6>Recent Insulin</h6>
-						<div>2.0 U, 26 min ago</div>
-					</div>
+			if len(summary.Alerts)+len(summary.Notifications) > 0 {
+				<div class="flex flex-wrap gap-2">
+					for _, a := range summary.Alerts {
+						@pill(a, "bg-amber-100 text-amber-900")
+					}
+					for _, n := range summary.Notifications {
+						@pill(n, "bg-gray-100 text-gray-700")
+					}
 				</div>
-				<div class="col-md-4">
-					<div class="card p-3">
-						<h6>Last Meal</h6>
-						<div>18g carbs, 45 min ago</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="card p-3">
-						<h6>System Status</h6>
-						<div>CGM ✔ PUMP ✔ CAREPORTAL ✔</div>
-					</div>
-				</div>
-			</div>
+			}
 		</div>
 		<script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -121,4 +110,8 @@ templ tile(label, value string, ic func(...icon.Props) templ.Component) {
 		</div>
 		<div class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ value }</div>
 	</div>
+}
+
+templ pill(n sitemodels.Notification, color string) {
+	<span class={ "rounded-full px-3 py-1 text-sm font-medium", color } title={ n.Tooltip }>{ n.Icon } { n.Value }</span>
 }
