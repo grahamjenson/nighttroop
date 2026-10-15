@@ -8,5 +8,4 @@ docker build -q -t nighttroop-screenshots -f scripts/Dockerfile.screenshots scri
 docker run --rm -v "$PWD":/src \
 	-v nighttroop-go-mod:/root/go/pkg/mod \
 	-v nighttroop-go-build:/root/.cache/go-build \
-	-v nighttroop-pw-driver:/root/.cache/ms-playwright-go \
 	nighttroop-screenshots go test -count=1 ./tests/bdd "$@"
