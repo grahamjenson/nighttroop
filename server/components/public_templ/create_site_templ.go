@@ -55,7 +55,7 @@ func CreateSite() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "Free Nightscout hosting <span class=\"rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800\">Alpha</span></p><h1 class=\"mt-6 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900\">NightTroop</h1><p class=\"mt-4 text-lg text-slate-600 max-w-xl mx-auto\">Your own Nightscout site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.</p><div id=\"panel-content\" class=\"mt-10 flex flex-col items-center\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "Free hosting, Nightscout compatible <span class=\"rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800\">Alpha</span></p><h1 class=\"mt-6 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900\">NightTroop</h1><p class=\"mt-4 text-lg text-slate-600 max-w-xl mx-auto\">Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.</p><div id=\"panel-content\" class=\"mt-10 flex flex-col items-center\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -104,7 +104,7 @@ func CreateSite() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = feature(icon.RefreshCw, "Syncs your data", "Upload from AAPS or Trio, or pull from Dexcom, Libre and other Nightscout sites.").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = feature(icon.RefreshCw, "Works with your apps", "Upload from AAPS or Trio like you would to Nightscout, or pull from Dexcom, Libre or a Nightscout site.").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
