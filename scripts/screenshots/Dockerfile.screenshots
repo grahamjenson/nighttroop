@@ -1,11 +1,29 @@
-# linux env for generating screenshots with playwright-go
-FROM mcr.microsoft.com/playwright:v1.62.1-noble
-ARG GO_VERSION=1.26.0
-RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-$(dpkg --print-architecture).tar.gz" | tar -C /usr/local -xz
-ENV PATH=/usr/local/go/bin:/root/go/bin:$PATH
+# Linux environment for generating screenshots with playwright-go.
+# It mirrors the GitHub Actions runner: Ubuntu 24.04, the same playwright
+# install, plus fonts-dejavu-core, which the runner image already carries.
+# Without DejaVu fontconfig resolves sans-serif to WenQuanYi Zen Hei and
+# every screenshot differs from CI.
+FROM ubuntu:24.04
 
-# playwright-go needs its Node driver bundle; --version downloads it without
-# touching the browsers the image already ships in PLAYWRIGHT_BROWSERS_PATH.
-RUN go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 --version
+ARG GO_VERSION=1.26.0
+ARG PLAYWRIGHT_VERSION=0.6201.1
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/usr/local/go/bin:/root/go/bin:$PATH
+ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    tar \
+    ca-certificates \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL \
+    "https://go.dev/dl/go${GO_VERSION}.linux-$(dpkg --print-architecture).tar.gz" \
+    | tar -C /usr/local -xz
+
+# Install the matching Playwright driver, browsers, and OS dependencies.
+RUN go run github.com/mxschmitt/playwright-go/cmd/playwright@v${PLAYWRIGHT_VERSION} install --with-deps chromium
 
 WORKDIR /src
