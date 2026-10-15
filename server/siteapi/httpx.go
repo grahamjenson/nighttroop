@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -55,4 +57,27 @@ func WriteModelsJSON(w http.ResponseWriter, status int, models []Model) {
 
 func WriteModelJSON(w http.ResponseWriter, status int, model Model) {
 	writeJSON(w, map[string]any{"status": status, "result": model})
+}
+
+// coerceFormValues makes a form submission look like the JSON the API takes:
+// form values are strings, so bool and number fields of model (by json tag)
+// are converted, and an absent checkbox becomes false.
+func coerceFormValues(doc map[string]any, model any) {
+	t := reflect.TypeOf(model).Elem()
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		name := strings.Split(f.Tag.Get("json"), ",")[0]
+		if name == "" || name == "-" {
+			name = f.Name
+		}
+		str, present := doc[name].(string)
+		switch f.Type.Kind() {
+		case reflect.Bool:
+			doc[name] = present && (str == "on" || str == "true" || str == "1")
+		case reflect.Int, reflect.Int64, reflect.Float64:
+			if n, err := strconv.ParseFloat(str, 64); present && err == nil {
+				doc[name] = n
+			}
+		}
+	}
 }

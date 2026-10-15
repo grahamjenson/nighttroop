@@ -214,6 +214,7 @@ func extractModelFromRequest[T any](siteContext *httputils.SiteContext, r *http.
 			return nil, ErrBadForm
 		}
 		doc = FormToMap(r.Form)
+		coerceFormValues(doc, new(T))
 	default:
 		return nil, ErrUnknownContent
 	}
