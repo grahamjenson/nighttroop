@@ -8,13 +8,16 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/a-h/templ"
+	ntsync "nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/server/siteapi"
 
 	"nighttroop.t1d.nz/utils/config"
@@ -39,6 +42,11 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 		return false, siteapi.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
 	}
 	params.Type = sstype
+
+	// The virtual source has no upstream; the sync job ignores these values.
+	if params.Type == consts.SyncSourceTypeVirtual {
+		params.UrlOrUsername, params.Password = ptr("virtual"), ptr("virtual")
+	}
 
 	if params.UrlOrUsername == nil || strings.TrimSpace(*params.UrlOrUsername) == "" {
 		return false, siteapi.ErrMissingRequiredFieldWithHint("Url Or Username")
@@ -86,7 +94,23 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 		}
 		return false, siteapi.ErrBadBody
 	}
-	return true, nil
+	return true, seedVirtual(ctx, siteContext, params.Type, model.Enabled)
+}
+
+// seedVirtual writes the last 30 minutes of virtual data as soon as the
+// virtual source is enabled, so the site has something to show right away.
+func seedVirtual(ctx context.Context, siteContext *httputils.SiteContext, sstype consts.SyncSourceType, enabled bool) *siteapi.HTTPError {
+	if sstype != consts.SyncSourceTypeVirtual || !enabled {
+		return nil
+	}
+	store := nightscoutapi.NewNightTroopAPIStore(siteContext.ControlDB, siteContext.Config)
+	added, err := ntsync.WriteVirtualData(ctx, store, siteContext, time.Now(), 30*time.Minute)
+	if err != nil {
+		slog.Error("Failed to seed virtual sync data", "error", err, "site_id", siteContext.Subdomain)
+		return siteapi.ErrBadBodyWithHint(fmt.Sprintf("Failed to create virtual data: %s", err))
+	}
+	slog.Info("Seeded virtual sync data", "site_id", siteContext.Subdomain, "added", added)
+	return nil
 }
 
 func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
@@ -181,7 +205,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 		return siteapi.ErrBadBody
 	}
 
-	return nil
+	return seedVirtual(ctx, siteContext, oldModel.Type, model.Enabled)
 }
 
 func (s *SyncSettingsStore) UpdateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
