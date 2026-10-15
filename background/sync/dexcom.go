@@ -13,7 +13,7 @@ import (
 )
 
 func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
-	if len(syncInfo.userSyncSources) == 0 {
+	if len(syncInfo.UserSyncSources) == 0 {
 		return fmt.Errorf("Dexcom, no user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
 	}
 
@@ -29,11 +29,11 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 		return fmt.Errorf("Dexcom Error: %w", err)
 	}
 	totalAddedColumns := 0
-	for _, userSyncSource := range syncInfo.userSyncSources {
+	for _, userSyncSource := range syncInfo.UserSyncSources {
 		addedColumns := false
 		for _, e := range egvs {
 			createParams := dexcommodels.EGVToCreate(e, "dexcom_sync")
-			res, err := userSyncSource.siteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
+			res, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
 			if err != nil {
 				if utilerrors.IsSQLDuplicateID(err) {
 					continue
@@ -51,7 +51,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 
 		// Update that it has been seen and used recently
 		if addedColumns {
-			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.siteModel.ID)
+			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.SiteModel.ID)
 			totalAddedColumns += 1
 		}
 	}

@@ -3,8 +3,11 @@ package sync
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"slices"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -72,9 +75,13 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 
 // WriteVirtualData writes the virtual documents for the window into the
 // site through the Nightscout collections, returning how many were new.
-func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, end time.Time, span time.Duration) (int, error) {
+// Collections named in skip are left out.
+func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, end time.Time, span time.Duration, skip ...nsutils.Collection) (int, error) {
 	added := 0
 	for _, doc := range VirtualDocuments(end, span) {
+		if slices.Contains(skip, doc.collection) {
+			continue
+		}
 		collectionStore, ok := store.GetStore(doc.collection)
 		if !ok {
 			return added, fmt.Errorf("virtual: collection %s not found", doc.collection)
@@ -88,4 +95,35 @@ func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPISto
 		}
 	}
 	return added, nil
+}
+
+// syncVirtual is the 5 minute job: it writes the current slot's glucose
+// reading, device status, temp basal, temp target and profile switch. The
+// profile store is only written when the source is enabled. Slots already
+// written are deduped, so running more often than every 5 minutes is a no-op.
+func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
+	if len(syncInfo.UserSyncSources) == 0 {
+		return fmt.Errorf("Virtual: No user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	for _, userSyncSource := range syncInfo.UserSyncSources {
+		siteContext := &httputils.SiteContext{
+			Subdomain:     userSyncSource.SiteModel.ID,
+			IdentityModel: &controldb.SiteIdentity{Name: "virtual_sync"},
+			ControlDB:     userSyncSource.ControlDB,
+			SiteDB:        userSyncSource.SiteDB,
+			SiteModel:     userSyncSource.SiteModel,
+			HTTPAction:    httputils.HTTPActionWrite,
+		}
+		added, err := WriteVirtualData(ctx, b.nightscoutStore, siteContext, time.Now(), virtualSlot, nsutils.Profile)
+		if err != nil {
+			return err
+		}
+		if added > 0 {
+			slog.Info("Added virtual data for user", "subdomain", userSyncSource.SiteModel.ID, "added", added)
+		}
+	}
+	return nil
 }

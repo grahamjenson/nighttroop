@@ -55,6 +55,8 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 		err = b.syncNightscout(syncInfo)
 	case consts.SyncSourceTypeDexcom:
 		err = b.syncDexcom(syncInfo)
+	case consts.SyncSourceTypeVirtual:
+		err = b.syncVirtual(syncInfo)
 	}
 	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
@@ -64,6 +66,8 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
 			ErrorMessages: []string{errMsg},
 			ElapsedMs:     &elapsedTimeMS,
+			Type:          syncInfo.Type,
+			SiteID:        syncInfo.SiteID,
 		})
 		if updateError != nil {
 			slog.Error("error updating sync source report with failure", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
@@ -74,6 +78,8 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	slog.Info("finished sync", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), controldb.UpdateSyncSourceReportsSuccessParams{
 		ElapsedMs: &elapsedTimeMS,
+		Type:      syncInfo.Type,
+		SiteID:    syncInfo.SiteID,
 	})
 	if updateError != nil {
 		slog.Error("error updating sync source report with success", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
