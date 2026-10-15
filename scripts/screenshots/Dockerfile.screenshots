@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # linux env for generating screenshots with playwright-go
 FROM mcr.microsoft.com/playwright:v1.62.1-noble
 ARG GO_VERSION=1.26.0
@@ -7,5 +8,42 @@ ENV PATH=/usr/local/go/bin:/root/go/bin:$PATH
 # playwright-go needs its Node driver bundle; --version downloads it without
 # touching the browsers the image already ships in PLAYWRIGHT_BROWSERS_PATH.
 RUN go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 --version
+
+# Fonts: make Chromium render like macOS. The site's CSS asks for the system
+# fonts (system-ui / ui-monospace), which on a Mac are San Francisco and Menlo.
+# Inter is the closest free relative of San Francisco and DejaVu Sans Mono is
+# the base Menlo was built from, so alias every name in the font stack to them
+# and switch off hinting / subpixel AA the way CoreText does.
+ARG INTER_VERSION=4.1
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core fonts-noto-color-emoji unzip \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& curl -fsSL -o /tmp/inter.zip "https://github.com/rsms/inter/releases/download/v${INTER_VERSION}/Inter-${INTER_VERSION}.zip" \
+	&& mkdir -p /usr/share/fonts/truetype/inter \
+	&& unzip -q -j /tmp/inter.zip 'extras/ttf/Inter-*.ttf' -d /usr/share/fonts/truetype/inter \
+	&& rm /tmp/inter.zip
+COPY <<'EOT' /etc/fonts/local.conf
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <alias binding="strong"><family>sans-serif</family><prefer><family>Inter</family></prefer></alias>
+  <alias binding="strong"><family>system-ui</family><prefer><family>Inter</family></prefer></alias>
+  <alias binding="strong"><family>ui-sans-serif</family><prefer><family>Inter</family></prefer></alias>
+  <alias binding="strong"><family>-apple-system</family><prefer><family>Inter</family></prefer></alias>
+  <alias binding="strong"><family>BlinkMacSystemFont</family><prefer><family>Inter</family></prefer></alias>
+  <alias binding="strong"><family>monospace</family><prefer><family>DejaVu Sans Mono</family></prefer></alias>
+  <alias binding="strong"><family>ui-monospace</family><prefer><family>DejaVu Sans Mono</family></prefer></alias>
+  <alias binding="strong"><family>Menlo</family><prefer><family>DejaVu Sans Mono</family></prefer></alias>
+  <alias binding="strong"><family>SFMono-Regular</family><prefer><family>DejaVu Sans Mono</family></prefer></alias>
+  <match target="font">
+    <edit name="antialias" mode="assign"><bool>true</bool></edit>
+    <edit name="hinting" mode="assign"><bool>false</bool></edit>
+    <edit name="hintstyle" mode="assign"><const>hintnone</const></edit>
+    <edit name="autohint" mode="assign"><bool>false</bool></edit>
+    <edit name="rgba" mode="assign"><const>none</const></edit>
+  </match>
+</fontconfig>
+EOT
+RUN fc-cache -f
 
 WORKDIR /src
