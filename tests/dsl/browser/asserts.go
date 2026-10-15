@@ -3,6 +3,9 @@ package browser
 import (
 	"fmt"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
@@ -25,8 +28,24 @@ type Screenshot struct {
 	TestLine int
 }
 
+// Execute writes tests/screenshots/<bdd file>/<name>.png. go test runs with
+// the package directory (tests/bdd) as the working directory.
 func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	return nil
+	dir := filepath.Join("..", "screenshots", strings.TrimSuffix(r.TestPath, filepath.Ext(r.TestPath)))
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	// Let web fonts finish loading so the image is the same from run to run.
+	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
+		return err
+	}
+	_, err := page.Screenshot(playwright.PageScreenshotOptions{
+		Path:       playwright.String(filepath.Join(dir, r.Name+".png")),
+		FullPage:   playwright.Bool(true),
+		Animations: playwright.ScreenshotAnimationsDisabled,
+		Caret:      playwright.ScreenshotCaretHide,
+	})
+	return err
 }
 
 /////
