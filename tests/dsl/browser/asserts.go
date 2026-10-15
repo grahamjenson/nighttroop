@@ -16,6 +16,19 @@ type Assert interface {
 	Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error
 }
 
+// ///
+// TAKE A  SCREENSHOT
+// ///
+type Screenshot struct {
+	Name     string
+	TestPath string
+	TestLine int
+}
+
+func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	return nil
+}
+
 /////
 // ASSERT TEXT VISIBLE
 /////

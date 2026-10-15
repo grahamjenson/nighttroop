@@ -42,6 +42,12 @@ Do not change generated code. All generated files either:
 Keep every change as small as possible.
 
 - A single change must modify no more than 100 lines of code (not including generated code). If a change requires more changed lines, stop and ask for approval before proceeding.
+- Do not edit more than 50 files in a single change.
 - Do not reformat surrounding code.
-- Do not make unrelated changes.
-- Before implementing a function check to see if it has similar functions in utils or imported libraries
+- Do not reformat surrounding code or bundle unrelated fixes; those are their own PR.
+- Before writing a function, look for an equivalent in `utils` or an imported library.
+- Any UI change must be accompanied with 
+
+## UI Changes
+
+- During go test tests/bdd we store screenshots in tests/screenshots. Any UI test must commit these screenshots folder to show the changes

@@ -122,7 +122,21 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				Key:      key,
 				Value:    value,
 			}
-		// Addint to action
+		// Adding screenshot action
+		case "SCREENSHOT":
+			if current == nil {
+				return nil, fmt.Errorf("screenshot before action")
+			}
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+
+			assertable.AddAssert(&Screenshot{
+				TestPath: path,
+				TestLine: lineNumber,
+				Name:     second,
+			})
 		case "ASSERT_STATUS":
 			if current == nil {
 				return nil, fmt.Errorf("assert_status before action")

@@ -1,0 +1,48 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS           200
+SCREENSHOT home
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+SCREENSHOT site_create
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+SCREENSHOT site_login
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+SCREENSHOT site_login_totp
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+SCREENSHOT site_home
+
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--sync-button
+SCREENSHOT site_settings_menu
+
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/sync
+
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable
+ASSERT_VISIBLE #site--settings--nightscout-sync--url
+ASSERT_VISIBLE #site--settings--nightscout-sync--password
+ASSERT_VISIBLE #site--settings--nightscout-sync--delete
+ASSERT_VISIBLE #site--settings--nightscout-sync--submit
+
+INPUT #site--settings--nightscout-sync--url         http://will_not_pass_the_test.test
+INPUT #site--settings--nightscout-sync--password    not_a_token
+
+CLICK #site--settings--nightscout-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
