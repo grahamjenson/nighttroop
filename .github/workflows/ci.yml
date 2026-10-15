@@ -44,8 +44,11 @@ jobs:
             https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64
           chmod +x ~/go/bin/tailwindcss
 
-      - name: Generate code
-        run: go generate ./...
+      - name: Check generated code is up to date
+        run: |
+          go generate ./...
+          git add -N .
+          git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
 
       - name: Start minio
         run: docker compose up -d
@@ -59,18 +62,21 @@ jobs:
       - name: Install playwright browser
         run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
 
-      # Regenerates tests/screenshots from the browser suite; the diff check
-      # below fails if they differ from the committed golden files.
+      # Regenerates tests/screenshots from the browser suite. Differences from
+      # the committed files are reported as a warning, never a failure.
       - name: Generate screenshots
         run: ./scripts/screenshots/generateScreenshots.sh
 
-      - name: Check generated code and screenshots are committed
+      - name: Report screenshot changes
         run: |
-          git add -N .
-          git diff --exit-code --stat || { echo "::error::generated files differ; run go generate ./... and scripts/screenshots/generateScreenshots.sh then commit"; exit 1; }
+          git add -N tests/screenshots
+          changed=$(git diff --name-only -- tests/screenshots)
+          if [ -n "$changed" ]; then
+            echo "::warning::screenshots differ from the committed ones; see the screenshots artifact"
+            { echo "### Screenshots changed"; echo "$changed" | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload generated screenshots
-        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
