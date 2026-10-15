@@ -1,11 +1,11 @@
-# Linux environment matching the CI runner (Ubuntu noble, the Chromium build
-# the pinned playwright-go driver expects) with Go added, used by
-# scripts/screenshots.sh to regenerate tests/screenshots from any machine.
+# linux env for generating screenshots with playwright-go
 FROM mcr.microsoft.com/playwright:v1.62.1-noble
 ARG GO_VERSION=1.26.0
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-$(dpkg --print-architecture).tar.gz" | tar -C /usr/local -xz
 ENV PATH=/usr/local/go/bin:/root/go/bin:$PATH
+
 # playwright-go needs its Node driver bundle; --version downloads it without
 # touching the browsers the image already ships in PLAYWRIGHT_BROWSERS_PATH.
 RUN go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 --version
+
 WORKDIR /src

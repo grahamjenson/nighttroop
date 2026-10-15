@@ -5,12 +5,31 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
 )
+
+func ScreenshotPage(page playwright.Page, foldername string, testPath string, name string) (string, error) {
+	root := filepath.Join("..", "..", ".test", foldername)
+
+	dir := filepath.Join(root, strings.TrimSuffix(testPath, filepath.Ext(testPath)))
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	// Let web fonts finish loading so the image is the same from run to run.
+	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
+		return "", err
+	}
+	_, err := page.Screenshot(playwright.PageScreenshotOptions{
+		Path:       playwright.String(filepath.Join(dir, name+".png")),
+		FullPage:   playwright.Bool(true),
+		Animations: playwright.ScreenshotAnimationsDisabled,
+		Caret:      playwright.ScreenshotCaretHide,
+	})
+	return filepath.Join(dir, name+".png"), err
+}
 
 // /////////////////////
 // ASSERTS
@@ -29,31 +48,9 @@ type Screenshot struct {
 	TestLine int
 }
 
-// Execute writes tests/screenshots/<bdd file>/<name>.png. go test runs with
-// the package directory (tests/bdd) as the working directory. The committed
-// captures are rendered on Linux (CI); other platforms render text
-// differently, so they write to the ignored .test directory instead, and
-// scripts/screenshots.sh regenerates the committed set in a Linux container.
+// Execute writes ./tests/screenshots/<bdd file>/<name>.png we can see the screenshots
 func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	root := filepath.Join("..", "screenshots")
-	if runtime.GOOS != "linux" {
-		root = filepath.Join("..", "..", ".test", "screenshots")
-		t.Logf("SCREENSHOT %s: not on linux, writing under .test/screenshots instead of tests/screenshots", r.Name)
-	}
-	dir := filepath.Join(root, strings.TrimSuffix(r.TestPath, filepath.Ext(r.TestPath)))
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-	// Let web fonts finish loading so the image is the same from run to run.
-	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
-		return err
-	}
-	_, err := page.Screenshot(playwright.PageScreenshotOptions{
-		Path:       playwright.String(filepath.Join(dir, r.Name+".png")),
-		FullPage:   playwright.Bool(true),
-		Animations: playwright.ScreenshotAnimationsDisabled,
-		Caret:      playwright.ScreenshotCaretHide,
-	})
+	_, err := ScreenshotPage(page, "savedScreenshots", r.TestPath, r.Name)
 	return err
 }
 

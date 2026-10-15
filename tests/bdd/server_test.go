@@ -51,7 +51,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 		if err != nil {
 			t.Fatalf("failed to parse action file: %v", err)
 		}
-		for _, action := range actionFile.Actions {
+		for i, action := range actionFile.Actions {
 			fmt.Println()
 			fmt.Println("=============== " + action.ToFlatString() + "  ================")
 			fmt.Println()
@@ -68,6 +68,11 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			if page == nil {
 				t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
 			}
+			screenshotPath, err := browser.ScreenshotPage(page, "allScreenshots", path, fmt.Sprintf("%03d", i))
+			if err != nil {
+				t.Fatalf("failed to take screenshot: %v", err)
+			}
+			fmt.Println("Screenshot saved to:", screenshotPath)
 			fmt.Println("===============================")
 		}
 
