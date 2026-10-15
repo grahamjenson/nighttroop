@@ -47,8 +47,20 @@ jobs:
       - name: Generate code
         run: go generate ./...
 
-      # Runs the browser suite in the same container the script uses locally,
-      # so the screenshots it makes should match the committed golden files.
+      - name: Start minio
+        run: docker compose up -d
+
+      - name: Cache playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-v0.6201.1
+
+      - name: Install playwright browser
+        run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
+
+      # Regenerates tests/screenshots from the browser suite; the diff check
+      # below fails if they differ from the committed golden files.
       - name: Generate screenshots
         run: ./scripts/screenshots/generateScreenshots.sh
 
@@ -63,18 +75,6 @@ jobs:
         with:
           name: screenshots
           path: tests/screenshots
-
-      - name: Start minio
-        run: docker compose up -d
-
-      - name: Cache playwright browser
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v0.6201.1
-
-      - name: Install playwright browser
-        run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
 
       # -count=1 so integration tests always run instead of replaying cached results.
       - name: Test
