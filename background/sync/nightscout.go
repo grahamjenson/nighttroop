@@ -13,7 +13,7 @@ import (
 )
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
-	if len(syncInfo.userSyncSources) == 0 {
+	if len(syncInfo.UserSyncSources) == 0 {
 		return fmt.Errorf("Nightscout: No user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
 	}
 
@@ -39,15 +39,15 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	////
 
 	totalAddedColumns := 0
-	for _, userSyncSource := range syncInfo.userSyncSources {
+	for _, userSyncSource := range syncInfo.UserSyncSources {
 		siteContext := &httputils.SiteContext{
-			Subdomain: userSyncSource.siteModel.ID,
+			Subdomain: userSyncSource.SiteModel.ID,
 			IdentityModel: &controldb.SiteIdentity{
 				Name: "nightscout_sync",
 			},
-			ControlDB:  userSyncSource.controlDB,
-			SiteDB:     userSyncSource.siteDB,
-			SiteModel:  userSyncSource.siteModel,
+			ControlDB:  userSyncSource.ControlDB,
+			SiteDB:     userSyncSource.SiteDB,
+			SiteModel:  userSyncSource.SiteModel,
 			HTTPAction: httputils.HTTPActionWrite,
 		}
 
@@ -70,7 +70,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		}
 		// Update that it has been seen and used recently
 		if addedColumns {
-			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.siteModel.ID)
+			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.SiteModel.ID)
 
 		}
 	}

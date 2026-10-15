@@ -26,7 +26,11 @@ func TestSyncVirtualAddsOneSlotAndDedupes(t *testing.T) {
 	siteDB, siteModel, err := controlDB.GetSite(siteInformation.SiteDB.Subdomain)
 	require.NoError(t, err)
 	manager := ntsync.SetupSyncJobManager(config, controlDB)
-	syncInfo := ntsync.NewSyncJobInfo(siteModel.ID, consts.SyncSourceTypeVirtual, siteModel, siteDB, controlDB)
+	syncInfo := &ntsync.SyncJobInfo{
+		SiteID:          siteModel.ID,
+		Type:            consts.SyncSourceTypeVirtual,
+		UserSyncSources: []*ntsync.SyncUserInfo{{SiteModel: siteModel, SiteDB: siteDB, ControlDB: controlDB}},
+	}
 
 	for range 2 {
 		require.NoError(t, manager.SyncUserData(syncInfo))

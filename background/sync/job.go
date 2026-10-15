@@ -38,16 +38,16 @@ type SyncJobParams struct {
 type SyncJobInfo struct {
 	SiteID          string
 	Type            consts.SyncSourceType
-	userSyncSources []*SyncUserInfo
+	UserSyncSources []*SyncUserInfo
 	urlOrUsername   string
 	password        string
 	region          consts.DexcomRegion
 }
 
 type SyncUserInfo struct {
-	siteModel *controldb.Site
-	siteDB    *db.SiteDB
-	controlDB *db.ControlDB
+	SiteModel *controldb.Site
+	SiteDB    *db.SiteDB
+	ControlDB *db.ControlDB
 }
 
 func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -121,7 +121,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobsdb.Job) e
 		syncInfo := &SyncJobInfo{
 			SiteID:          syncJob.SiteID,
 			Type:            syncJob.Type,
-			userSyncSources: userInfoSyncSources,
+			UserSyncSources: userInfoSyncSources,
 			urlOrUsername:   username,
 			password:        password,
 			region:          region,
@@ -170,9 +170,9 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *controldb.Site
 	}
 
 	return &SyncUserInfo{
-		siteDB:    userDb,
-		siteModel: userModel,
-		controlDB: b.controlDB,
+		SiteDB:    userDb,
+		SiteModel: userModel,
+		ControlDB: b.controlDB,
 	}, nil
 }
 
@@ -219,15 +219,5 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 		}
 
 		return nil
-	}
-}
-
-// NewSyncJobInfo builds the job input for one site, as the worker does from
-// a queued job; exported so tests can drive SyncUserData directly.
-func NewSyncJobInfo(siteID string, sstype consts.SyncSourceType, siteModel *controldb.Site, siteDB *db.SiteDB, controlDB *db.ControlDB) *SyncJobInfo {
-	return &SyncJobInfo{
-		SiteID:          siteID,
-		Type:            sstype,
-		userSyncSources: []*SyncUserInfo{{siteModel: siteModel, siteDB: siteDB, controlDB: controlDB}},
 	}
 }
