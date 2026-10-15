@@ -221,3 +221,13 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 		return nil
 	}
 }
+
+// NewSyncJobInfo builds the job input for one site, as the worker does from
+// a queued job; exported so tests can drive SyncUserData directly.
+func NewSyncJobInfo(siteID string, sstype consts.SyncSourceType, siteModel *controldb.Site, siteDB *db.SiteDB, controlDB *db.ControlDB) *SyncJobInfo {
+	return &SyncJobInfo{
+		SiteID:          siteID,
+		Type:            sstype,
+		userSyncSources: []*SyncUserInfo{{siteModel: siteModel, siteDB: siteDB, controlDB: controlDB}},
+	}
+}
