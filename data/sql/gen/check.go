@@ -10,6 +10,7 @@ import (
 	"log"
 	"reflect"
 	"slices"
+	"strings"
 
 	_ "modernc.org/sqlite"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -61,6 +62,18 @@ func main() {
 	}
 
 	////////
+	// CHECK ALL TABLES ARE STRICT
+	////////
+	for _, dbi := range []interface {
+		Name() string
+		GetRawDB() *sql.DB
+	}{siteDB, controlDB, jobsDB} {
+		if err := assertAllTablesStrict(dbi.GetRawDB()); err != nil {
+			log.Fatalf("%s%s DB: %v %s", topwrapper, dbi.Name(), err, bottomwrapper)
+		}
+	}
+
+	////////
 	/// CHECK MIGRATIONS DOWN
 	/////////
 	if err := checkMigrateDownDB(siteDB); err != nil {
@@ -87,6 +100,43 @@ func checkMigrateDownDB(dbi interface {
 		return fmt.Errorf("failed to migrate down %s db: %w", dbi.Name(), err)
 	}
 
+	return nil
+}
+
+// assertAllTablesStrict fails if any table created by the migrations is not
+// declared STRICT, so column types are enforced instead of being affinities.
+func assertAllTablesStrict(db *sql.DB) error {
+	rows, err := db.Query(`
+		SELECT name, sql
+		FROM sqlite_master
+		WHERE type = 'table'
+		  AND name NOT LIKE 'sqlite_%'
+		  AND name <> 'schema_migrations'
+	`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var notStrict []string
+	for rows.Next() {
+		var name, createSQL string
+		if err := rows.Scan(&name, &createSQL); err != nil {
+			return err
+		}
+		// Table options follow the closing parenthesis of the column list.
+		options := createSQL[strings.LastIndex(createSQL, ")")+1:]
+		if !strings.Contains(strings.ToUpper(options), "STRICT") {
+			notStrict = append(notStrict, name)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	if len(notStrict) > 0 {
+		return fmt.Errorf("tables must be created STRICT: %v", notStrict)
+	}
 	return nil
 }
 
