@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -21,7 +23,11 @@ func writeJSON(w http.ResponseWriter, body any) {
 	encoder.Encode(body)
 }
 
-func FormToMap(form url.Values) map[string]any {
+// FormToMap turns a form submission into the document a JSON client would
+// send for T. Dotted names nest, and because form values are only strings,
+// bool and number fields of T (matched by json tag) are converted; an absent
+// checkbox becomes false.
+func FormToMap[T any](form url.Values) map[string]any {
 	doc := make(map[string]any)
 
 	for key, values := range form {
@@ -29,6 +35,24 @@ func FormToMap(form url.Values) map[string]any {
 			continue
 		}
 		setNestedValue(doc, strings.Split(key, "."), values[0])
+	}
+
+	t := reflect.TypeFor[T]()
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		name := strings.Split(f.Tag.Get("json"), ",")[0]
+		if name == "" || name == "-" {
+			name = f.Name
+		}
+		str, present := doc[name].(string)
+		switch f.Type.Kind() {
+		case reflect.Bool:
+			doc[name] = present && (str == "on" || str == "true" || str == "1")
+		case reflect.Int, reflect.Int64, reflect.Float64:
+			if n, err := strconv.ParseFloat(str, 64); present && err == nil {
+				doc[name] = n
+			}
+		}
 	}
 	return doc
 }

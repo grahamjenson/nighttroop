@@ -62,7 +62,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "dexcomSync",
-							Name:    "dex_enabled",
+							Name:    "enabled",
 							Checked: dexcomSyncSettings.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
@@ -86,7 +86,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 							}
 							@input.Input(input.Props{
 								Type:  "text",
-								Name:  "username",
+								Name:  "url_or_username",
 								Value: dexcomSyncSettings.GetUsername(),
 								Attributes: templ.Attributes{
 									"autocomplete":   "new-password",
@@ -106,7 +106,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 							}
 							@input.Input(input.Props{
 								Type:  "password",
-								Name:  "dex_password",
+								Name:  "password",
 								Value: dexcomSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
 									"onmousedown":               "event.preventDefault(); this.select();",
@@ -127,10 +127,13 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 							<div class="flex items-center gap-3 rounded-md border border-gray-300 px-3 py-2 bg-gray-100">
 								@checkbox.Checkbox(checkbox.Props{
 									ID:      "dex_region",
-									Name:    "dex_region",
+									Name:    "region",
+									Value:   "US",
 									Checked: dexcomSyncSettings.IsUSARegion(),
 									Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 								})
+								<!-- first region value wins, so unchecked falls through to OUS -->
+								<input type="hidden" name="region" value="OUS"/>
 								@form.Label(form.LabelProps{
 									For: "dex_region",
 								}) {
@@ -185,7 +188,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
 							ID:      "site--settings--nightscout-sync--enable",
-							Name:    "ns_enabled",
+							Name:    "enabled",
 							Checked: nightscoutSyncSettings.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
@@ -279,7 +282,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 }
 
 templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
-	<form hx-post="/settings/sync/nightscout" hx-target="#feedback" class="mt-4">
+	<form hx-post="/settings/sync/virtual" hx-target="#feedback" class="mt-4">
 		<div class="rounded-lg border border-gray-900 shadow-sm">
 			<div class="p-6">
 				<!-- Header -->

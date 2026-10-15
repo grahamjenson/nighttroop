@@ -19,7 +19,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed nightscout/**
+//go:embed nightscout/** nighttroop/**
 var embeddedFiles embed.FS
 
 func TestNS(t *testing.T) {
