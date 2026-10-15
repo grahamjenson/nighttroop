@@ -1,59 +1,32 @@
 package site_summary_templ
 
 import (
+	"fmt"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 )
+
+func fmtPtr(v *int64, suffix string) string {
+	if v == nil {
+		return "–"
+	}
+	return fmt.Sprintf("%d%s", *v, suffix)
+}
 
 templ Summary(summary sitemodels.Summary) {
 	@site_templ.SiteBase() {
-		<div class="container-fluid p-4">
-			<!-- TOP METRICS -->
-			<!-- GRAPH -->
-			<div class="card p-3 mb-4">
-				<h5>Glucose Graph</h5>
-				<div id="glucoseGraph" class="graph-container"></div>
+		<div class="w-full py-4 space-y-4">
+			@glucoseHero(summary)
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+				@tile("Insulin on board", fmtPtr(summary.IOB, " U"), icon.Syringe)
+				@tile("Carbs on board", fmtPtr(summary.COB, " g"), icon.Utensils)
+				@tile("Profile", fmtPtr(summary.ProfilePercent, "%"), icon.Activity)
 			</div>
-			<!-- LOWER METRICS -->
-			<div class="row g-3">
-				<div class="col-md-2">
-					<div class="card p-3">
-						<h6>BG</h6>
-						<h4>114</h4>
-					</div>
-				</div>
-				<div class="col-md-2">
-					<div class="card p-3">
-						<h6>Delta</h6>
-						<h4 class="text-danger">-3</h4>
-					</div>
-				</div>
-				<div class="col-md-2">
-					<div class="card p-3">
-						<h6>Basal Rate</h6>
-						<h4>0.80 U/h</h4>
-					</div>
-				</div>
-				<div class="col-md-2">
-					<div class="card p-3">
-						<h6>Bolus</h6>
-						<h4>2.0 U</h4>
-					</div>
-				</div>
-				<div class="col-md-2">
-					<div class="card p-3">
-						<h6>Carbs</h6>
-						<h4>18 g</h4>
-					</div>
-				</div>
-				<div class="col-md-2">
-					<div class="card p-3">
-						<h6>Battery</h6>
-						<div class="progress">
-							<div class="progress-bar" style="width: 85%">85%</div>
-						</div>
-					</div>
-				</div>
+			<!-- GRAPH -->
+			<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Last 24 hours</h2>
+				<div id="glucoseGraph" class="graph-container"></div>
 			</div>
 			<!-- BOTTOM ROW -->
 			<div class="row g-3 mt-3">
@@ -96,4 +69,40 @@ templ Summary(summary sitemodels.Summary) {
     });
 </script>
 	}
+}
+
+templ glucoseHero(summary sitemodels.Summary) {
+	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-wrap items-end justify-between gap-4">
+		if summary.Glucose != nil {
+			<div>
+				<div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</div>
+				<div class="flex items-baseline gap-2">
+					<span class="text-6xl font-extrabold tracking-tight text-gray-900">{ summary.Glucose.ValueStr }</span>
+					if summary.Units != nil {
+						<span class="text-lg text-gray-500">{ string(*summary.Units) }</span>
+					}
+					<span class="ml-2 text-2xl font-semibold text-gray-700">{ summary.Glucose.Diff }</span>
+				</div>
+				<div class="mt-1 text-sm text-gray-500">{ summary.Glucose.TimeAgo }</div>
+			</div>
+		} else {
+			<div>
+				<div class="text-2xl font-bold text-gray-900">No glucose data yet</div>
+				<div class="mt-1 text-sm text-gray-500">Upload from your phone, or connect a source under Settings → Sync.</div>
+			</div>
+		}
+		if summary.Alarm != nil {
+			<span class="rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-800">{ summary.Alarm.Name }</span>
+		}
+	</div>
+}
+
+templ tile(label, value string, ic func(...icon.Props) templ.Component) {
+	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+		<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+			@ic(icon.Props{Class: "size-4"})
+			{ label }
+		</div>
+		<div class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ value }</div>
+	</div>
 }
