@@ -4,7 +4,7 @@
 # Usage: scripts/screenshots.sh [extra go test args, e.g. -run TestSite/screenshots.bdd]
 set -e
 cd "$(dirname "$0")/.."
-docker build -q -t nighttroop-screenshots -f tests/Dockerfile.screenshots tests
+docker build -q -t nighttroop-screenshots -f scripts/Dockerfile.screenshots scripts
 docker run --rm -v "$PWD":/src \
 	-v nighttroop-go-mod:/root/go/pkg/mod \
 	-v nighttroop-go-build:/root/.cache/go-build \
