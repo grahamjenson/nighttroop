@@ -4,7 +4,7 @@ SCREENSHOT home
 
 CLICK "Create Site"
 ASSERT_STATUS 200
-SCREENSHOT site_create
+SCREENSHOT site_create MASK #panel-content dd
 
 CLICK #public--login-button
 ASSERT_NEW_PAGE

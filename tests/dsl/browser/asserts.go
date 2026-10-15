@@ -25,6 +25,7 @@ type Assert interface {
 // ///
 type Screenshot struct {
 	Name     string
+	Mask     string // CSS selectors, comma separated, painted over before capture
 	TestPath string
 	TestLine int
 }
@@ -44,15 +45,21 @@ func (r *Screenshot) Execute(t *testing.T, ctx map[string]any, page playwright.P
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	// Let web fonts finish loading so the image is the same from run to run.
-	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
+	// Drop focus rings and let web fonts finish loading, so the image is the
+	// same from run to run.
+	if _, err := page.Evaluate("document.activeElement && document.activeElement.blur(); document.fonts.ready"); err != nil {
 		return err
+	}
+	var mask []playwright.Locator
+	if r.Mask != "" {
+		mask = append(mask, page.Locator(r.Mask))
 	}
 	_, err := page.Screenshot(playwright.PageScreenshotOptions{
 		Path:       playwright.String(filepath.Join(dir, r.Name+".png")),
 		FullPage:   playwright.Bool(true),
 		Animations: playwright.ScreenshotAnimationsDisabled,
 		Caret:      playwright.ScreenshotCaretHide,
+		Mask:       mask,
 	})
 	return err
 }
