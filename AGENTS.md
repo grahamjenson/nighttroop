@@ -41,7 +41,7 @@ Do not change generated code. All generated files either:
 
 Keep every change as small as possible.
 
-- A single change must modify no more than 100 lines of code (not including generated code). If a change requires more changed lines, stop and ask for approval before proceeding.
+- A single change must modify no more than 100 lines of code (not including generated code, not including test code). If a change requires more changed lines, stop and ask for approval before proceeding.
 - Do not edit more than 50 files in a single change.
 - Do not reformat surrounding code.
 - Do not reformat surrounding code or bundle unrelated fixes; those are their own PR.
