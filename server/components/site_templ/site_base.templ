@@ -173,3 +173,9 @@ templ SiteError(message string) {
 		Icon:        true,
 	})
 }
+
+templ FullPage(content templ.Component) {
+	@SiteBase() {
+		@content
+	}
+}

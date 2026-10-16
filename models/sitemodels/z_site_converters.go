@@ -6,9 +6,10 @@ package sitemodels
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	consts "nighttroop.t1d.nz/utils/consts"
+	security "nighttroop.t1d.nz/utils/security"
 )
 
-func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
+func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {
 		var sitemodelsSyncSource SyncSource
@@ -18,18 +19,16 @@ func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
 			xstring := *(*source).Region
 			sitemodelsSyncSource.Region = &xstring
 		}
-		if (*source).UrlOrUsername != nil {
-			xstring2 := *(*source).UrlOrUsername
-			sitemodelsSyncSource.UrlOrUsername = &xstring2
+		pString, err := Decrypt((*source).UrlOrUsername, context)
+		if err != nil {
+			return nil, err
 		}
-		if (*source).Password != nil {
-			xstring3 := *(*source).Password
-			sitemodelsSyncSource.Password = &xstring3
-		}
+		sitemodelsSyncSource.UrlOrUsername = pString
+		sitemodelsSyncSource.Password = SetPasswordGarbage()
 		sitemodelsSyncSource.Enabled = (*source).Enabled
 		pSitemodelsSyncSource = &sitemodelsSyncSource
 	}
-	return pSitemodelsSyncSource
+	return pSitemodelsSyncSource, nil
 }
 func SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams {
 	var controldbCreateSyncSourceParams controldb.CreateSyncSourceParams

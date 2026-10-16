@@ -1,4 +1,4 @@
-package siteapi
+package siteapiutils
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/components/site_templ"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
@@ -130,10 +131,10 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 }
 
 /////
-// CREATE UPDATE HANDLER
+// UPSERT HANDLER
 /////
 
-type CreateUpdateHandlerInterface[T any] interface {
+type UpsertInterface[T any] interface {
 	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 
 	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
@@ -144,7 +145,7 @@ type CreateUpdateHandlerInterface[T any] interface {
 	GetName() string
 }
 
-func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store CreateUpdateHandlerInterface[T]) http.HandlerFunc {
+func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpsertInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		siteContext := httputils.GetSiteContext(r.Context())
@@ -200,6 +201,54 @@ func CreateUpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerCo
 	}
 }
 
+/////
+// READ
+/////
+
+type SearchInterface[T any] interface {
+	SearchModels(ctx context.Context, query *Query, siteContext *httputils.SiteContext) ([]*T, *HTTPError)
+	SearchHTMXResponse(models []*T) templ.Component
+	GetName() string
+}
+
+func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store SearchInterface[T]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		siteContext := httputils.GetSiteContext(r.Context())
+		if siteContext == nil {
+			slog.Error("site context is nil")
+			ErrNotFound.Write(siteContext.AcceptType, w)
+			return
+		}
+		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
+			ErrForbidden.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		query := QueryFromParams(r.URL.Query())
+		models, herr := store.SearchModels(r.Context(), query, siteContext)
+		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		status := http.StatusOK
+		w.WriteHeader(status)
+
+		switch siteContext.AcceptType {
+		case httputils.AcceptTypeHTMX:
+			store.SearchHTMXResponse(models).Render(r.Context(), w)
+		case httputils.AcceptTypeHTML:
+			site_templ.FullPage(store.SearchHTMXResponse(models)).Render(r.Context(), w)
+		default:
+			WriteModelJSON(w, status, models)
+		}
+	}
+}
+
+// ////
+// UTILS
+// ////
 func extractModelFromRequest[T any](siteContext *httputils.SiteContext, r *http.Request) (*T, *HTTPError) {
 	var doc map[string]any
 	switch siteContext.ContentType {

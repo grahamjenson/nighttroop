@@ -3,7 +3,6 @@ package site_settings_templ
 import (
 	"github.com/templui/templui/components/checkbox"
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -21,12 +20,6 @@ func findSyncSource(
 		}
 	}
 	return nil
-}
-
-templ SyncSettingsFull(syncSettings []*sitemodels.SyncSource) {
-	@site_templ.SiteBase() {
-		@SyncSettingsPartial(syncSettings)
-	}
 }
 
 templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {

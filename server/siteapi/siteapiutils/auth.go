@@ -1,4 +1,4 @@
-package siteapi
+package siteapiutils
 
 import "nighttroop.t1d.nz/data/sql/controldb"
 

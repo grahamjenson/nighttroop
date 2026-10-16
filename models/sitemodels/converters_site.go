@@ -2,6 +2,8 @@ package sitemodels
 
 import (
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // goverter:converter
@@ -15,9 +17,35 @@ type SiteConverter interface {
 	// SYNC SOURCE
 	///////
 
-	SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource
+	// goverter:map Password | SetPasswordGarbage
+	// goverter:map UrlOrUsername UrlOrUsername | Decrypt
+	// goverter:context security
+	SyncSourceFromDB(source *controldb.SiteSyncSource, security *security.SecurityConfig) (*SyncSource, error)
 
 	SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams
 
 	SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams
+}
+
+func SetPasswordGarbage() *string {
+	return ptr(consts.PASSWORD_GARBAGE_VALUE)
+}
+
+// goverter:context security
+func Decrypt(encString *string, security *security.SecurityConfig) (*string, error) {
+	if encString != nil {
+		decString, err := security.Decrypt(*encString)
+		if err != nil {
+			return nil, err
+		}
+		encString = &decString
+	}
+	if encString != nil {
+		return encString, nil
+	}
+	return nil, nil
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

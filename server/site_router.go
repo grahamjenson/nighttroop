@@ -4,7 +4,7 @@ package server
 
 import (
 	"nighttroop.t1d.nz/server/assets/static"
-	"nighttroop.t1d.nz/server/siteapi"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
 	"nighttroop.t1d.nz/server/siteapi/sitesettings"
 	"nighttroop.t1d.nz/server/siteapi/sitesummary"
@@ -37,7 +37,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 	r.Group(func(r chi.Router) {
 		// Checks read and write rates and makes sure not over limit
-		r.Use(siteapi.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
+		r.Use(siteapiutils.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
@@ -46,10 +46,9 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/summary", sitesummary.GetSummaryHandler(controlDB, config))
 
 		// Settings Sync
-		r.Get("/settings/sync", sitesettings.GetSyncSettingsHandler(controlDB, config))
-		r.Post("/settings/sync/{id}", siteapi.CreateUpdateHandler(controlDB, config, syncSettingsStore))
+		r.Get("/settings/sync", siteapiutils.SearchHandler(controlDB, config, syncSettingsStore))
+		r.Post("/settings/sync/{id}", siteapiutils.UpsertHandler(controlDB, config, syncSettingsStore))
 		r.Delete("/settings/sync/{id}", sitesettings.DELETESyncSettingsHandler(controlDB, config))
-		r.Get("/settings/sync/reports", sitesettings.GetSyncSettingsReportsHandler(controlDB, config))
 
 		// Settings Identities
 		r.Get("/settings/identities", sitesettings.GETIdentitiesHandler(controlDB, config))
