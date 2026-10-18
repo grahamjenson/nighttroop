@@ -68,6 +68,8 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 
 		select {
 		case v := <-ch:
+			// Deferred so a panic in cmd still lets the next run start
+			defer func() { ch <- v }()
 			if err := cmd(); err != nil {
 				slog.Error("Cron: Command returned error", "name", name, "error", err)
 				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
@@ -81,7 +83,6 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 					ConsumerFetchedAt: startedAt,
 				})
 			}
-			ch <- v
 		default:
 			slog.Info("Cron: Skipping execution because previous run is still in progress", "name", name)
 		}
