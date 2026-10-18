@@ -46,7 +46,7 @@ Keep every change as small as possible.
 - Do not reformat surrounding code.
 - Do not reformat surrounding code or bundle unrelated fixes; those are their own PR.
 - Before writing a function, look for an equivalent in `utils` or an imported library.
-- Any UI change must be accompanied with 
+- Any UI change must be accompanied with a BDD test to render and check the UI renders and works.
 
 ## UI Changes
 
@@ -54,4 +54,11 @@ Keep every change as small as possible.
 
 ## Tests
 
-Tests should also be simple.
+We will rely more on the integration tests in the `/tests` folder, both API and BDD. 
+The goal there is to first make sure that the user experience is never broken and working as intended.
+
+A unit test is preferred if:
+
+1. Too many options: A user path has a combinatorial explosion making it is too large a space for integration tests to be practical, e.g. checking all possible constraints on a model. In this case we would prefer unit tests of test matrices, building test structs and a for loop, this will make those many tests easier to read and debug.
+1. Impractical: A function or user path is impractical to test, e.g. integration with other services, or testing side effects like logging or error handling. In these cases custom mocks, stubs, or dependency injection will need to be used to test those code pathways.
+1. Async Timing: We don't want to wait for background job, cron or some other async task to run to confirm a test works. Either: either we implement a feature in a way that avoids this by e.g. calling immediately if test, or we write unit tests with of the async task, but confirm it is scheduled in the bdd test.
