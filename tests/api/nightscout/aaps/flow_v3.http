@@ -31,12 +31,12 @@ NAME get_last_modified
 GET http://{{ site }}/api/v3/lastModified
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@result.collections" }}
-ASSERT {{ assertExists "@result.collections.entries" }}
-ASSERT {{ assertExists "@result.collections.treatments" }}
-ASSERT {{ assertExists "@result.collections.food" }}
-ASSERT {{ assertExists "@result.collections.devicestatus" }}
-ASSERT {{ assertExists "@result.collections.devicestatus" }}
+ASSERT_EXISTS "@result.collections"
+ASSERT_EXISTS "@result.collections.entries"
+ASSERT_EXISTS "@result.collections.treatments"
+ASSERT_EXISTS "@result.collections.food"
+ASSERT_EXISTS "@result.collections.devicestatus"
+ASSERT_EXISTS "@result.collections.devicestatus"
 
 // grabs the food
 NAME get_food
@@ -73,8 +73,8 @@ ASSERT_STATUS 201
 ASSERT_EQUALS 196.416 "@result.sgv"
 ASSERT_EQUALS "sgv" "@result.type"
 ASSERT_EQUALS 720 "@result.utcOffset"
-ASSERT {{ assertExists "@result.identifier" }}
-ASSERT {{ assertExists "@result.date" }}
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
 ASSERT_EQUALS "AAPS" "@result.app"
 ASSERT_EQUALS "Random" "@result.device"
 ASSERT_EQUALS "FortyFiveUp" "@result.direction"
@@ -915,14 +915,14 @@ NAME get_treatments_from_history_new
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 0 "@result" }}
+ASSERT_LENGTH 0 "@result"
 
 
 NAME get_treatments_from_history_old
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 30 }}?limit=500
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 21 "@result" }}
+ASSERT_LENGTH 21 "@result"
 
 
 /////

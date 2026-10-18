@@ -1,4 +1,4 @@
 NAME jwtauth
 GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@token" }}
+ASSERT_EXISTS "@token"

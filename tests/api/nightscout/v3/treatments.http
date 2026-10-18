@@ -32,19 +32,19 @@ B {
  }
 ASSERT_STATUS 201
 ASSERT_EQUALS "Bolus Wizard" "@result.eventType"
-ASSERT {{ assertExists "@result.created_at" }}
+ASSERT_EXISTS "@result.created_at"
 ASSERT_EQUALS 15 "@result.glucose"
 ASSERT_EQUALS "Sensor" "@result.glucoseType"
 ASSERT_EQUALS 46 "@result.carbs"
 ASSERT_EQUALS 1.54 "@result.insulin"
 ASSERT_EQUALS "Here are some notes" "@result.notes"
 ASSERT_EQUALS "lunch" "@result.reason"
-ASSERT {{ assertExists "@result.identifier" }}
-ASSERT {{ assertExists "@result.date" }}
-ASSERT {{ assertExists "@result.subject" }}
-ASSERT {{ assertExists "@result.utcOffset" }}
-ASSERT {{ assertExists "@result.srvCreated" }}
-ASSERT {{ assertExists "@result.srvModified" }}
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.subject"
+ASSERT_EXISTS "@result.utcOffset"
+ASSERT_EXISTS "@result.srvCreated"
+ASSERT_EXISTS "@result.srvModified"
 
 NAME create_profile_switch_v3
 POST http://{{ site }}/api/v3/treatments
@@ -136,22 +136,22 @@ NAME get_lastmodified
 GET http://{{ site }}/api/v3/lastmodified
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@result.collections" }}
-ASSERT {{ assertExists "@result.collections.treatments" }}
+ASSERT_EXISTS "@result.collections"
+ASSERT_EXISTS "@result.collections.treatments"
 ASSERT_EQUALS  ".get_patched_test_v3_again_again.lastModified" "@result.collections.treatments"
 
 NAME get_history
 GET http://{{ site }}/api/v3/treatments/history/{{ dig "get_lastmodified.result.collections.treatments" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@result.0" }}
+ASSERT_EXISTS "@result.0"
 ASSERT_CONTAINS "@result.0.srvModified" "#Etag.0"
 
 NAME get_history
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 0 "@result" }}
+ASSERT_LENGTH 0 "@result"
 
 
 #######
