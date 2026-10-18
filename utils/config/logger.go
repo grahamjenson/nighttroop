@@ -11,12 +11,8 @@ import (
 
 func setupLogging(mode consts.ServerMode) *slog.Logger {
 	if mode == consts.Test {
-		// Discard logs in tests so a failure shows only its own output; TEST_LOGS=1 shows them
-		var handler slog.Handler = slog.DiscardHandler
-		if os.Getenv("TEST_LOGS") != "" {
-			handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
-		}
-		logger := slog.New(handler)
+		// Discard logs in tests so a failure shows only its own output
+		logger := slog.New(slog.DiscardHandler)
 		slog.SetDefault(logger)
 		return logger
 	}
