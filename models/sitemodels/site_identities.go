@@ -46,7 +46,7 @@ func IdentityModelToUserIdentity(identity *controldb.SiteIdentity, currentIdenti
 		Role:      string(identity.Role),
 
 		CurrentIdentity: identity.Name == currentIdentityName,
-		HasTotpSecret:   identity.TotpSecret != "",
+		HasTotpSecret:   identity.TotpSecretEnc != "",
 		Enabled:         identity.Enabled,
 	}
 }

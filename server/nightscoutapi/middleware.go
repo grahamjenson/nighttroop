@@ -113,7 +113,7 @@ func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*cont
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
-	if identity.TotpSecret != "" {
+	if identity.TotpSecretEnc != "" {
 		return nil, fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
 	}
 
@@ -122,7 +122,7 @@ func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*cont
 		return nil, fmt.Errorf("legacy token cannot be used for admin identities")
 	}
 
-	if !config.Security.VerifyPasswordWithCache(tokenParamPassword, identity.Password) {
+	if !config.Security.VerifyPasswordWithCache(tokenParamPassword, identity.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
 	}
 

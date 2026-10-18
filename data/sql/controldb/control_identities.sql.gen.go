@@ -14,8 +14,8 @@ import (
 const createControlIdentity = `-- name: CreateControlIdentity :exec
 INSERT INTO control_identities (
     name,
-    password,
-    totp_secret,
+    password_hash,
+    totp_secret_enc,
     role,
     created_by_identity_id,
     created_by_identity_name
@@ -31,8 +31,8 @@ INSERT INTO control_identities (
 
 type CreateControlIdentityParams struct {
 	Name                  string
-	Password              string
-	TotpSecret            string
+	PasswordHash          string
+	TotpSecretEnc         string
 	Role                  consts.ControlRole
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
@@ -41,8 +41,8 @@ type CreateControlIdentityParams struct {
 func (q *Queries) CreateControlIdentity(ctx context.Context, arg CreateControlIdentityParams) error {
 	_, err := q.exec(ctx, q.createControlIdentityStmt, createControlIdentity,
 		arg.Name,
-		arg.Password,
-		arg.TotpSecret,
+		arg.PasswordHash,
+		arg.TotpSecretEnc,
 		arg.Role,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
@@ -51,7 +51,7 @@ func (q *Queries) CreateControlIdentity(ctx context.Context, arg CreateControlId
 }
 
 const getControlIdentity = `-- name: GetControlIdentity :one
-SELECT id, name, password, totp_secret, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at FROM control_identities WHERE name = ?1 LIMIT 1
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at FROM control_identities WHERE name = ?1 LIMIT 1
 `
 
 type GetControlIdentityParams struct {
@@ -64,8 +64,8 @@ func (q *Queries) GetControlIdentity(ctx context.Context, arg GetControlIdentity
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Password,
-		&i.TotpSecret,
+		&i.PasswordHash,
+		&i.TotpSecretEnc,
 		&i.Role,
 		&i.CreatedAt,
 		&i.LastSeenAt,

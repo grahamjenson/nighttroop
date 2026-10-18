@@ -12,8 +12,8 @@ import (
 type ControlIdentity struct {
 	ID                    int64
 	Name                  string
-	Password              string
-	TotpSecret            string
+	PasswordHash          string
+	TotpSecretEnc         string
 	Role                  consts.ControlRole
 	CreatedAt             int64
 	LastSeenAt            *int64
@@ -94,8 +94,8 @@ type SiteIdentity struct {
 	ID                        int64
 	SiteID                    string
 	Name                      string
-	Password                  string
-	TotpSecret                string
+	PasswordHash              string
+	TotpSecretEnc             string
 	Role                      consts.IdentityRole
 	CreatedAt                 int64
 	LastSeenAt                *int64
@@ -154,8 +154,8 @@ type SiteIdentity struct {
 type SiteSyncSource struct {
 	SiteID                     string
 	Type                       consts.SyncSourceType
-	UrlOrUsername              *string
-	Password                   *string
+	UrlOrUsernameEnc           *string
+	PasswordEnc                *string
 	Region                     *string
 	CreatedAt                  int64
 	UpdatedAt                  int64

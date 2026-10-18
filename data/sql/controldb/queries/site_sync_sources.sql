@@ -10,8 +10,8 @@ SELECT * FROM site_sync_sources where site_id = ?;
 INSERT INTO site_sync_sources (
     site_id,
     type,
-    url_or_username,
-    password,
+    url_or_username_enc,
+    password_enc,
     region,
     enabled
 )
@@ -26,9 +26,9 @@ VALUES (
 
 -- name: UpdateSyncSource :exec
 UPDATE site_sync_sources SET 
-    password = COALESCE(sqlc.narg('Password'), password),
+    password_enc = COALESCE(sqlc.narg('PasswordEnc'), password_enc),
     enabled =  COALESCE(sqlc.narg('Enabled'), enabled),
-    url_or_username = COALESCE(sqlc.narg('UrlOrUsername'), url_or_username),
+    url_or_username_enc = COALESCE(sqlc.narg('UrlOrUsernameEnc'), url_or_username_enc),
     region = COALESCE(sqlc.narg('Region'), region),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
@@ -40,8 +40,8 @@ WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 -- name: DeleteSyncSource :exec
 UPDATE site_sync_sources SET 
     enabled = 0,
-    url_or_username = NULL,
-    password = NULL,
+    url_or_username_enc = NULL,
+    password_enc = NULL,
     previous_sync_errors = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE type = ? AND site_id = ?;
