@@ -59,8 +59,15 @@ func run() error {
 	//
 	s3Client := s3utils.NewS3Client(serverConfig)
 
+	// S3 is optional: without it there is no restore on start or backup upload
+	if err := s3Client.TestS3Client(); err != nil {
+		slog.Warn("S3 is not working, running without S3 restore or backups", "error", err)
+	} else {
+		serverConfig.Status.S3Working = true
+	}
+
 	// Run some tests to make sure the server is setup properly
-	err = ValidateServer(s3Client)
+	err = ValidateServer()
 	if err != nil {
 		return fmt.Errorf("server validation failed: %w", err)
 	}
@@ -154,16 +161,10 @@ func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http
 	return httpServer
 }
 
-func ValidateServer(c *s3utils.S3Client) error {
+func ValidateServer() error {
 	_, _, err := security.SecureCredentials(bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("error generating secure credentials: %w", err)
-	}
-
-	// Test s3 client is working wither permissions otherwise fail
-	err = c.TestS3Client()
-	if err != nil {
-		return fmt.Errorf("error testing S3 client: %w", err)
 	}
 
 	return nil
