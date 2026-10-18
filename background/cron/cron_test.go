@@ -110,3 +110,18 @@ func TestAddFuncError(t *testing.T) {
 	require.Len(t, jobStats[0].Errors, 1)
 	require.Contains(t, jobStats[0].Errors[0], "test error")
 }
+
+func TestAddFuncRunsAgainAfterPanic(t *testing.T) {
+	config := testutils.GetTestServerConfig()
+	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
+
+	cron := cron.NewCron(jobsDB)
+	runs := 0
+	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { runs++; panic("test panic") })
+	entry := cron.Entry(entryid)
+	entry.Job.Run()
+	// A panic must not leave the job marked as still running
+	entry.Job.Run()
+
+	require.Equal(t, 2, runs)
+}
