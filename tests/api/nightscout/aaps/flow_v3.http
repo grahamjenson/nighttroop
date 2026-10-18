@@ -14,8 +14,8 @@ PATCH http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 B {"value":  "mg/dL"}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
 
 // We need to check that all return values satisfy the core/nssdk models
 
@@ -70,19 +70,19 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 196.416 "@result.sgv" }}
-ASSERT {{ assertEquals "sgv" "@result.type" }}
-ASSERT {{ assertEquals 720 "@result.utcOffset" }}
+ASSERT_EQUALS 196.416 "@result.sgv"
+ASSERT_EQUALS "sgv" "@result.type"
+ASSERT_EQUALS 720 "@result.utcOffset"
 ASSERT {{ assertExists "@result.identifier" }}
 ASSERT {{ assertExists "@result.date" }}
-ASSERT {{ assertEquals "AAPS" "@result.app" }}
-ASSERT {{ assertEquals "Random" "@result.device" }}
-ASSERT {{ assertEquals "FortyFiveUp" "@result.direction" }}
-ASSERT {{ assertEquals 0.0 "@result.filtered" }}
-ASSERT {{ assertEquals 0.0 "@result.unfiltered" }}
-ASSERT {{ assertEquals true "@result.isValid" }}
-ASSERT {{ assertEquals false "@result.isReadOnly" }}
-ASSERT {{ assertEquals "mg/dL" "@result.units" }}
+ASSERT_EQUALS "AAPS" "@result.app"
+ASSERT_EQUALS "Random" "@result.device"
+ASSERT_EQUALS "FortyFiveUp" "@result.direction"
+ASSERT_EQUALS 0.0 "@result.filtered"
+ASSERT_EQUALS 0.0 "@result.unfiltered"
+ASSERT_EQUALS true "@result.isValid"
+ASSERT_EQUALS false "@result.isReadOnly"
+ASSERT_EQUALS "mg/dL" "@result.units"
 
 NAME add_treatment_cc
 POST http://{{ site }}/api/v3/treatments
@@ -341,7 +341,7 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 20 "@result.duration" }}
+ASSERT_EQUALS 20 "@result.duration"
 
 NAME add_treatments_exercise
 POST http://{{ site }}/api/v3/treatments
@@ -380,7 +380,7 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 100 "@result.glucose" }}
+ASSERT_EQUALS 100 "@result.glucose"
 
 
 NAME add_treatments_questions_have_glucose_too
@@ -557,7 +557,7 @@ B {
     "uploaderBattery": 100
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "SMB" "@result.configuration.aps" }}
+ASSERT_EQUALS "SMB" "@result.configuration.aps"
 
 
 
@@ -724,7 +724,7 @@ B {
     "uploaderBattery": 100
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "SMB" "@result.openaps.suggested.algorithm" }}
+ASSERT_EQUALS "SMB" "@result.openaps.suggested.algorithm"
 
 ////////
 // PROFILE
@@ -968,5 +968,5 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "Meal Bolus" "@result.eventType" }}
-ASSERT {{ assertEquals 25.0 "@result.carbs" }}
+ASSERT_EQUALS "Meal Bolus" "@result.eventType"
+ASSERT_EQUALS 25.0 "@result.carbs"

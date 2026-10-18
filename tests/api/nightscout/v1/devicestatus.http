@@ -47,11 +47,11 @@ B {
     "created_at": "{{ time 0 }}"
   }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "AAPS" "@0.app" }}
-ASSERT {{ assertEquals true "@0.isCharging" }}
-ASSERT {{ assertEquals 1.127 "@0.openaps.iob.iob" }}
-ASSERT {{ assertEquals -0.444 "@0.openaps.iob.basaliob" }}
-ASSERT {{ assertEquals 46 "@0.pump.reservoir" }}
+ASSERT_EQUALS "AAPS" "@0.app"
+ASSERT_EQUALS true "@0.isCharging"
+ASSERT_EQUALS 1.127 "@0.openaps.iob.iob"
+ASSERT_EQUALS -0.444 "@0.openaps.iob.basaliob"
+ASSERT_EQUALS 46 "@0.pump.reservoir"
 
 NAME create_loop_devicestatus_v1
 POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
@@ -108,8 +108,8 @@ B {
     "utcOffset": 0
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 1.0870623804830117 "@0.loop.iob.iob" }}
-ASSERT {{ assertEquals 5.0947962907626785 "@0.loop.cob.cob" }}
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+ASSERT_EQUALS 5.0947962907626785 "@0.loop.cob.cob"
 
 ####
 # READ
@@ -117,11 +117,11 @@ ASSERT {{ assertEquals 5.0947962907626785 "@0.loop.cob.cob" }}
 NAME get_devicestatus_aaps_v1
 GET http://{{ site }}/api/v1/devicestatus?token={{ token }}&find[_id]={{ dig "create_aaps_devicestatus_v1.0._id"  }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "AAPS" "@0.app" }}
-ASSERT {{ assertEquals true "@0.isCharging" }}
-ASSERT {{ assertEquals 1.127 "@0.openaps.iob.iob" }}
-ASSERT {{ assertEquals -0.444 "@0.openaps.iob.basaliob" }}
-ASSERT {{ assertEquals 46 "@0.pump.reservoir" }}
+ASSERT_EQUALS "AAPS" "@0.app"
+ASSERT_EQUALS true "@0.isCharging"
+ASSERT_EQUALS 1.127 "@0.openaps.iob.iob"
+ASSERT_EQUALS -0.444 "@0.openaps.iob.basaliob"
+ASSERT_EQUALS 46 "@0.pump.reservoir"
 
 
 
@@ -129,4 +129,4 @@ ASSERT {{ assertEquals 46 "@0.pump.reservoir" }}
 NAME get_raw_devicestatus_v1
 GET http://{{ site }}/api/v1/devicestatus?token={{ token }}&raw=true
 ASSERT_STATUS 200
-ASSERT {{ assertEquals false "@1.pump.bolusing" }}
+ASSERT_EQUALS false "@1.pump.bolusing"

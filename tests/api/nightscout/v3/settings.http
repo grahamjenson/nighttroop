@@ -21,9 +21,9 @@ NAME get_settings_unit_v3
 GET http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mmol/L" "@result.value" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mmol/L" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
 
 # Returns all the 
 NAME create_settings_v3
@@ -31,9 +31,9 @@ POST http://{{ site }}/api/v3/settings
 H Authorization: Bearer {{ jwt }}
 B {"identifier": "units", "type": "string", "value": "mg/dL" }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
 
 NAME create_put_settings_v3
 PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
@@ -41,9 +41,9 @@ H Authorization: Bearer {{ jwt }}
 B { "value": 30 }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_onset_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals 30 "@result.value" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS 30 "@result.value"
+ASSERT_EQUALS "number" "@result.type"
 
 NAME create_patch_settings_v3
 PATCH http://{{ site }}/api/v3/settings/alarm_low_enabled
@@ -51,9 +51,9 @@ H Authorization: Bearer {{ jwt }}
 B { "value": true }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals true "@result.value" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS true "@result.value"
+ASSERT_EQUALS "boolean" "@result.type"
 
 
 #####
@@ -64,24 +64,24 @@ NAME get_unit_settings_v3
 GET http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
 
 NAME get_timezone_settings_v3
 GET http://{{ site }}/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "timezone" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "UTC" "@result.value" }}
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "UTC" "@result.value"
 
 NAME get_language_settings_v3
 GET http://{{ site }}/api/v3/settings/language
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "language" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "en-NZ" "@result.value" }}
+ASSERT_EQUALS "language" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "en-NZ" "@result.value"
 
 ####
 # UPDATE
@@ -93,8 +93,8 @@ PATCH http://{{ site }}/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 B {"value":  "Europe/London"}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "timezone" "@result.identifier" }}
-ASSERT {{ assertEquals "Europe/London" "@result.value" }}
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "Europe/London" "@result.value"
 
 ####
 # Parsing different types
@@ -107,9 +107,9 @@ H Authorization: Bearer {{ jwt }}
 B { "value": "false" }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals false "@result.value" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS false "@result.value"
+ASSERT_EQUALS "boolean" "@result.type"
 
 NAME put_with_parsing_types_units
 PUT http://{{ site }}/api/v3/settings/units
@@ -117,8 +117,8 @@ H Authorization: Bearer {{ jwt }}
 B { "value": "mgdl" }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
 
 NAME put_with_parsing_types_bolus_onset_minutes
 PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
@@ -126,8 +126,8 @@ H Authorization: Bearer {{ jwt }}
 B { "value": "15" }
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_onset_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals 15 "@result.value" }}
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS 15 "@result.value"
 
 #####
 # DELETE/CLEAN UP
@@ -164,348 +164,348 @@ NAME get_units_settings_v3
 GET http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "mmol/L" "@result.value" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "mmol/L" "@result.value"
 
 NAME get_timezone_settings_v3
 GET http://{{ site }}/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "timezone" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "UTC" "@result.value" }}
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "UTC" "@result.value"
 
 NAME get_language_settings_v3
 GET http://{{ site }}/api/v3/settings/language
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "language" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "en-NZ" "@result.value" }}
+ASSERT_EQUALS "language" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "en-NZ" "@result.value"
 
 
 NAME get_date_format_settings_v3
 GET http://{{ site }}/api/v3/settings/date_format
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "date_format" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "YYYY-MM-DD" "@result.value" }}
+ASSERT_EQUALS "date_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "YYYY-MM-DD" "@result.value"
 
 NAME get_time_format_settings_v3
 GET http://{{ site }}/api/v3/settings/time_format
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "time_format" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "HH:mm:ss" "@result.value" }}
+ASSERT_EQUALS "time_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "HH:mm:ss" "@result.value"
 
 
 NAME get_week_start_day_settings_v3
 GET http://{{ site }}/api/v3/settings/week_start_day
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "week_start_day" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "monday" "@result.value" }}
+ASSERT_EQUALS "week_start_day" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "monday" "@result.value"
 
 NAME get_bolus_dia_hours_settings_v3
 GET http://{{ site }}/api/v3/settings/bolus_dia_hours
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_dia_hours" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 6 "@result.value" }}
+ASSERT_EQUALS "bolus_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 6 "@result.value"
 
 NAME get_bolus_onset_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/bolus_onset_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_onset_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 20 "@result.value" }}
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
 
 NAME get_bolus_peak_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/bolus_peak_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_peak_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 60 "@result.value" }}
+ASSERT_EQUALS "bolus_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 60 "@result.value"
 
 NAME get_basal_dia_hours_settings_v3
 GET http://{{ site }}/api/v3/settings/basal_dia_hours
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "basal_dia_hours" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 24 "@result.value" }}
+ASSERT_EQUALS "basal_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 24 "@result.value"
 
 NAME get_basal_onset_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/basal_onset_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "basal_onset_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 60 "@result.value" }}
+ASSERT_EQUALS "basal_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 60 "@result.value"
 
 NAME get_basal_peak_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/basal_peak_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "basal_peak_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 120 "@result.value" }}
+ASSERT_EQUALS "basal_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 120 "@result.value"
 
 NAME get_default_insulin_sensitivity_settings_v3
 GET http://{{ site }}/api/v3/settings/default_insulin_sensitivity
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_insulin_sensitivity" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 10 "@result.value" }}
+ASSERT_EQUALS "default_insulin_sensitivity" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 10 "@result.value"
 
 NAME get_default_carb_ratio_settings_v3
 GET http://{{ site }}/api/v3/settings/default_carb_ratio
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_carb_ratio" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 10 "@result.value" }}
+ASSERT_EQUALS "default_carb_ratio" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 10 "@result.value"
 
 NAME get_default_basal_rate_settings_v3
 GET http://{{ site }}/api/v3/settings/default_basal_rate
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_basal_rate" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 1 "@result.value" }}
+ASSERT_EQUALS "default_basal_rate" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 1 "@result.value"
 
 NAME get_carb_max_absorption_hours_settings_v3
 GET http://{{ site }}/api/v3/settings/carb_max_absorption_hours
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "carb_max_absorption_hours" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 6 "@result.value" }}
+ASSERT_EQUALS "carb_max_absorption_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 6 "@result.value"
 
 
 NAME get_carb_min_5m_impact_settings_v3
 GET http://{{ site }}/api/v3/settings/carb_min_5m_impact
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "carb_min_5m_impact" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 10 "@result.value" }}
+ASSERT_EQUALS "carb_min_5m_impact" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 10 "@result.value"
 
 NAME get_alarm_urgent_low_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_urgent_low_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_urgent_low
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_low" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 56 "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_low" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 56 "@result.value"
 
 NAME get_alarm_low_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_low_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 72 "@result.value" }}
+ASSERT_EQUALS "alarm_low" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 72 "@result.value"
 
 NAME get_alarm_low_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 5 "@result.value" }}
+ASSERT_EQUALS "alarm_low_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 5 "@result.value"
 
 NAME get_alarm_low_prediction_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low_prediction_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_prediction_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_low_prediction_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_high_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_high_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_high_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_high_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_high
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_high" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 180 "@result.value" }}
+ASSERT_EQUALS "alarm_high" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 180 "@result.value"
 
 NAME get_alarm_high_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_high_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_high_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 30 "@result.value" }}
+ASSERT_EQUALS "alarm_high_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 30 "@result.value"
 
 NAME get_alarm_urgent_high_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_urgent_high_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_high_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_urgent_high_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_urgent_high
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_high" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 270 "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_high" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 270 "@result.value"
 
 NAME get_alarm_fast_rise_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_fast_rise_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_rise_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_fast_rise_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_fast_rise_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_fast_rise
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_rise" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 18 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_rise" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 18 "@result.value"
 
 NAME get_alarm_fast_rise_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_fast_rise_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_rise_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 15 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_rise_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 15 "@result.value"
 
 NAME get_alarm_fast_drop_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_fast_drop_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_drop_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_fast_drop_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_fast_drop_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_fast_drop
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_drop" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 18 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_drop" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 18 "@result.value"
 
 NAME get_alarm_fast_drop_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_fast_drop_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_drop_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 15 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_drop_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 15 "@result.value"
 
 NAME get_alarm_no_data_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_no_data_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_no_data_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_no_data_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_no_data_minutes_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_no_data_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_no_data_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 20 "@result.value" }}
+ASSERT_EQUALS "alarm_no_data_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
 
 NAME get_alarm_battery_low_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_battery_low_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_battery_low_percent_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_battery_low_percent
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_percent" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 20 "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_percent" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
 
 NAME get_alarm_battery_low_pwd_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_pwd_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_pwd_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_battery_low_pwd_percent_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_percent
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_pwd_percent" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 20 "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_pwd_percent" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
 
 NAME get_alarm_low_reservoir_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_reservoir_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "alarm_low_reservoir_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_low_reservoir_units_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low_reservoir_units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_reservoir_units" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 25 "@result.value" }}
+ASSERT_EQUALS "alarm_low_reservoir_units" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 25 "@result.value"
 
 NAME get_notifications_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/notifications_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "notifications_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals false "@result.value" }}
+ASSERT_EQUALS "notifications_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS false "@result.value"
 
 
 #######
@@ -517,27 +517,27 @@ PUT http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 B { "value": "mg/dL" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "mg/dL" "@result.value"
 
 NAME put_timezone_settings_v3
 PUT http://{{ site }}/api/v3/settings/timezone
 H Authorization: Bearer {{ jwt }}
 B { "value": "Europe/London" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "timezone" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "Europe/London" "@result.value" }}
+ASSERT_EQUALS "timezone" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "Europe/London" "@result.value"
 
 NAME put_language_settings_v3
 PUT http://{{ site }}/api/v3/settings/language
 H Authorization: Bearer {{ jwt }}
 B { "value": "en-AU" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "language" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "en-AU" "@result.value" }}
+ASSERT_EQUALS "language" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "en-AU" "@result.value"
 
 
 NAME put_date_format_settings_v3
@@ -545,18 +545,18 @@ PUT http://{{ site }}/api/v3/settings/date_format
 H Authorization: Bearer {{ jwt }}
 B { "value": "MM-DD-YYYY" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "date_format" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "MM-DD-YYYY" "@result.value" }}
+ASSERT_EQUALS "date_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "MM-DD-YYYY" "@result.value"
 
 NAME put_time_format_settings_v3
 PUT http://{{ site }}/api/v3/settings/time_format
 H Authorization: Bearer {{ jwt }}
 B { "value": "HH:mm" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "time_format" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "HH:mm" "@result.value" }}
+ASSERT_EQUALS "time_format" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "HH:mm" "@result.value"
 
 
 NAME put_week_start_day_settings_v3
@@ -564,99 +564,99 @@ PUT http://{{ site }}/api/v3/settings/week_start_day
 H Authorization: Bearer {{ jwt }}
 B { "value": "sunday" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "week_start_day" "@result.identifier" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
-ASSERT {{ assertEquals "sunday" "@result.value" }}
+ASSERT_EQUALS "week_start_day" "@result.identifier"
+ASSERT_EQUALS "string" "@result.type"
+ASSERT_EQUALS "sunday" "@result.value"
 
 NAME put_bolus_dia_hours_settings_v3
 PUT http://{{ site }}/api/v3/settings/bolus_dia_hours
 H Authorization: Bearer {{ jwt }}
 B { "value": 8 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_dia_hours" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 8 "@result.value" }}
+ASSERT_EQUALS "bolus_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 8 "@result.value"
 
 NAME put_bolus_onset_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/bolus_onset_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_onset_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "bolus_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_bolus_peak_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/bolus_peak_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "bolus_peak_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "bolus_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_basal_dia_hours_settings_v3
 PUT http://{{ site }}/api/v3/settings/basal_dia_hours
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "basal_dia_hours" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "basal_dia_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_basal_onset_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/basal_onset_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "basal_onset_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "basal_onset_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_basal_peak_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/basal_peak_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "basal_peak_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "basal_peak_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_default_insulin_sensitivity_settings_v3
 PUT http://{{ site }}/api/v3/settings/default_insulin_sensitivity
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_insulin_sensitivity" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "default_insulin_sensitivity" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_default_carb_ratio_settings_v3
 PUT http://{{ site }}/api/v3/settings/default_carb_ratio
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_carb_ratio" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "default_carb_ratio" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_default_basal_rate_settings_v3
 PUT http://{{ site }}/api/v3/settings/default_basal_rate
 H Authorization: Bearer {{ jwt }}
 B { "value": 8 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "default_basal_rate" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 8 "@result.value" }}
+ASSERT_EQUALS "default_basal_rate" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 8 "@result.value"
 
 NAME put_carb_max_absorption_hours_settings_v3
 PUT http://{{ site }}/api/v3/settings/carb_max_absorption_hours
 H Authorization: Bearer {{ jwt }}
 B { "value": 8 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "carb_max_absorption_hours" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 8 "@result.value" }}
+ASSERT_EQUALS "carb_max_absorption_hours" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 8 "@result.value"
 
 
 NAME put_carb_min_5m_impact_settings_v3
@@ -664,243 +664,243 @@ PUT http://{{ site }}/api/v3/settings/carb_min_5m_impact
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "carb_min_5m_impact" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "carb_min_5m_impact" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_urgent_low_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_urgent_low_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_urgent_low
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_low" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_low" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_low_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_low_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_low" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_low_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_low_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_low_prediction_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_prediction_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_prediction_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_low_prediction_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_high_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_high_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_high_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_high_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_high
 H Authorization: Bearer {{ jwt }}
 B { "value": 70 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_high" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 70 "@result.value" }}
+ASSERT_EQUALS "alarm_high" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 70 "@result.value"
 
 NAME put_alarm_high_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_high_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_high_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_high_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_urgent_high_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_urgent_high_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_high_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_high_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_urgent_high_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_urgent_high
 H Authorization: Bearer {{ jwt }}
 B { "value": 100 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_urgent_high" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 100 "@result.value" }}
+ASSERT_EQUALS "alarm_urgent_high" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 100 "@result.value"
 
 NAME put_alarm_fast_rise_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_rise_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_fast_rise_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_fast_rise_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_fast_rise
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_rise" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_rise" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_fast_rise_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_rise_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_rise_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_fast_drop_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_drop_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_fast_drop_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_fast_drop_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_fast_drop
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_drop" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_drop" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_fast_drop_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_fast_drop_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_fast_drop_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_no_data_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_no_data_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_no_data_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_no_data_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_no_data_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_no_data_minutes
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_no_data_minutes" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_no_data_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_battery_low_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_battery_low_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_battery_low_percent_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_battery_low_percent
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_percent" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_percent" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_battery_low_pwd_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_pwd_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_pwd_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_battery_low_pwd_percent_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_percent
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_battery_low_pwd_percent" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_battery_low_pwd_percent" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_alarm_low_reservoir_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_reservoir_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "alarm_low_reservoir_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_low_reservoir_units_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_units
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "alarm_low_reservoir_units" "@result.identifier" }}
-ASSERT {{ assertEquals "number" "@result.type" }}
-ASSERT {{ assertEquals 32 "@result.value" }}
+ASSERT_EQUALS "alarm_low_reservoir_units" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 32 "@result.value"
 
 NAME put_notifications_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/notifications_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "notifications_enabled" "@result.identifier" }}
-ASSERT {{ assertEquals "boolean" "@result.type" }}
-ASSERT {{ assertEquals true "@result.value" }}
+ASSERT_EQUALS "notifications_enabled" "@result.identifier"
+ASSERT_EQUALS "boolean" "@result.type"
+ASSERT_EQUALS true "@result.value"
 
 
 

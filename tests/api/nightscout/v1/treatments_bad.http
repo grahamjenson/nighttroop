@@ -2,4 +2,4 @@ NAME create_without_event_type
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {"app":"AAPS","date":1787481585647}
 ASSERT_STATUS 400
-ASSERT {{ assertContains "eventType" "@message" }}
+ASSERT_CONTAINS "eventType" "@message"

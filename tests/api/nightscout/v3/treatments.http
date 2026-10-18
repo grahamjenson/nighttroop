@@ -31,14 +31,14 @@ B {
   "reason": "lunch"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "Bolus Wizard" "@result.eventType" }}
+ASSERT_EQUALS "Bolus Wizard" "@result.eventType"
 ASSERT {{ assertExists "@result.created_at" }}
-ASSERT {{ assertEquals 15 "@result.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@result.glucoseType" }}
-ASSERT {{ assertEquals 46 "@result.carbs" }}
-ASSERT {{ assertEquals 1.54 "@result.insulin" }}
-ASSERT {{ assertEquals "Here are some notes" "@result.notes" }}
-ASSERT {{ assertEquals "lunch" "@result.reason" }}
+ASSERT_EQUALS 15 "@result.glucose"
+ASSERT_EQUALS "Sensor" "@result.glucoseType"
+ASSERT_EQUALS 46 "@result.carbs"
+ASSERT_EQUALS 1.54 "@result.insulin"
+ASSERT_EQUALS "Here are some notes" "@result.notes"
+ASSERT_EQUALS "lunch" "@result.reason"
 ASSERT {{ assertExists "@result.identifier" }}
 ASSERT {{ assertExists "@result.date" }}
 ASSERT {{ assertExists "@result.subject" }}
@@ -62,7 +62,7 @@ B {
     "created_at": "2026-08-08T10:24:34.000Z"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "Profile Switch" "@result.eventType" }}
+ASSERT_EQUALS "Profile Switch" "@result.eventType"
 
 ////////
 // Update
@@ -74,58 +74,58 @@ POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B { "app": "AAPS", "date": 1786184674000, "eventType": "Meal Bolus", "insulin": 4.3}
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "Meal Bolus" "@result.eventType" }}
-ASSERT {{ assertEquals 4.3 "@result.insulin" }}
+ASSERT_EQUALS "Meal Bolus" "@result.eventType"
+ASSERT_EQUALS 4.3 "@result.insulin"
 
 NAME patch_test_v3
 PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "carbs": 45, "notes": "Updated notes from patch_test_v3" }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated notes from patch_test_v3" "@result.notes" }}
-ASSERT {{ assertEquals 45 "@result.carbs" }}
-ASSERT {{ assertEquals 4.3 "@result.insulin" }}
+ASSERT_EQUALS "Updated notes from patch_test_v3" "@result.notes"
+ASSERT_EQUALS 45 "@result.carbs"
+ASSERT_EQUALS 4.3 "@result.insulin"
 
 NAME get_patched_test_v3
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated notes from patch_test_v3" "@result.notes" }}
-ASSERT {{ assertEquals 45 "@result.carbs" }}
-ASSERT {{ assertEquals 4.3 "@result.insulin" }}
+ASSERT_EQUALS "Updated notes from patch_test_v3" "@result.notes"
+ASSERT_EQUALS 45 "@result.carbs"
+ASSERT_EQUALS 4.3 "@result.insulin"
 
 NAME patch_patched_again_note_v3
 PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "notes": "Updated by patch_patched_again_note_v3", "carbs": 20, "insulin": 1.2 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated by patch_patched_again_note_v3" "@result.notes" }}
-ASSERT {{ assertEquals 20 "@result.carbs" }}
-ASSERT {{ assertEquals 1.2 "@result.insulin" }}
+ASSERT_EQUALS "Updated by patch_patched_again_note_v3" "@result.notes"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS 1.2 "@result.insulin"
 
 
 NAME get_patched_test_v3_again
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated by patch_patched_again_note_v3" "@result.notes" }}
-ASSERT {{ assertEquals 20 "@result.carbs" }}
-ASSERT {{ assertEquals 1.2 "@result.insulin" }}
+ASSERT_EQUALS "Updated by patch_patched_again_note_v3" "@result.notes"
+ASSERT_EQUALS 20 "@result.carbs"
+ASSERT_EQUALS 1.2 "@result.insulin"
 
 NAME patch_test_v3_again_again
 PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 B { "carbs": 0 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 0 "@result.carbs" }}
+ASSERT_EQUALS 0 "@result.carbs"
 
 NAME get_patched_test_v3_again_again
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_patch_test_v3.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated by patch_patched_again_note_v3" "@result.notes" }}
-ASSERT {{ assertEquals 0 "@result.carbs" }}
-ASSERT {{ assertEquals 1.2 "@result.insulin" }}
+ASSERT_EQUALS "Updated by patch_patched_again_note_v3" "@result.notes"
+ASSERT_EQUALS 0 "@result.carbs"
+ASSERT_EQUALS 1.2 "@result.insulin"
 
 
 /////
@@ -138,14 +138,14 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertExists "@result.collections" }}
 ASSERT {{ assertExists "@result.collections.treatments" }}
-ASSERT {{ assertEquals  ".get_patched_test_v3_again_again.lastModified" "@result.collections.treatments" }}
+ASSERT_EQUALS  ".get_patched_test_v3_again_again.lastModified" "@result.collections.treatments"
 
 NAME get_history
 GET http://{{ site }}/api/v3/treatments/history/{{ dig "get_lastmodified.result.collections.treatments" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT {{ assertExists "@result.0" }}
-ASSERT {{ assertContains "@result.0.srvModified" "#Etag.0" }}
+ASSERT_CONTAINS "@result.0.srvModified" "#Etag.0"
 
 NAME get_history
 GET http://{{ site }}/api/v3/treatments/history/{{ itime 0 }}
@@ -187,6 +187,6 @@ B {
     "utcOffset": 720
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals true "@isDeduplication" }}
-ASSERT {{ assertEquals ".create_first_identical_treatments_v3.identifier" "@deduplicatedIdentifier" }}
-ASSERT {{ assertEquals ".create_second_identical_treatments_v3.identifier" "@identifier" }}
+ASSERT_EQUALS true "@isDeduplication"
+ASSERT_EQUALS ".create_first_identical_treatments_v3.identifier" "@deduplicatedIdentifier"
+ASSERT_EQUALS ".create_second_identical_treatments_v3.identifier" "@identifier"

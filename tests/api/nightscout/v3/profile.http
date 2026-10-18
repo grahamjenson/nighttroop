@@ -64,13 +64,13 @@ B {
     }
   }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "Default" "@result.defaultProfile" }}
-ASSERT {{ assertEquals "mmol/L" "@result.units" }}
-ASSERT {{ assertEquals "US/Eastern" "@result.store.Default.timezone" }}
-ASSERT {{ assertEquals 0.35 "@result.store.Default.basal.0.value" }}
-ASSERT {{ assertEquals "Pacific/Honolulu" "@result.store.Work.timezone" }}
-ASSERT {{ assertEquals 25 "@result.store.Work.carbs_hr" }}
-ASSERT {{ assertEquals 23 "@result.store.Work.delay" }}
+ASSERT_EQUALS "Default" "@result.defaultProfile"
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS "US/Eastern" "@result.store.Default.timezone"
+ASSERT_EQUALS 0.35 "@result.store.Default.basal.0.value"
+ASSERT_EQUALS "Pacific/Honolulu" "@result.store.Work.timezone"
+ASSERT_EQUALS 25 "@result.store.Work.carbs_hr"
+ASSERT_EQUALS 23 "@result.store.Work.delay"
 
 
 NAME create_profile_aaps_v3
@@ -377,9 +377,9 @@ B {
     "utcOffset": 720
   }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "ArmDash-2025" "@result.defaultProfile" }}
-ASSERT {{ assertEquals "mmol/L" "@result.store.ArmDash-2025.units" }}
-ASSERT {{ assertEquals "Pacific/Auckland" "@result.store.ArmDash-2025.timezone" }}
+ASSERT_EQUALS "ArmDash-2025" "@result.defaultProfile"
+ASSERT_EQUALS "mmol/L" "@result.store.ArmDash-2025.units"
+ASSERT_EQUALS "Pacific/Auckland" "@result.store.ArmDash-2025.timezone"
 
 
 
@@ -391,11 +391,11 @@ NAME get_profiles_type_v3
 GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Default" "@result.defaultProfile" }}
-ASSERT {{ assertEquals "mmol/L" "@result.units" }}
-ASSERT {{ assertEquals "US/Eastern" "@result.store.Default.timezone" }}
-ASSERT {{ assertEquals 0.35 "@result.store.Default.basal.0.value" }}
-ASSERT {{ assertEquals "Pacific/Honolulu" "@result.store.Work.timezone" }}
+ASSERT_EQUALS "Default" "@result.defaultProfile"
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS "US/Eastern" "@result.store.Default.timezone"
+ASSERT_EQUALS 0.35 "@result.store.Default.basal.0.value"
+ASSERT_EQUALS "Pacific/Honolulu" "@result.store.Work.timezone"
 
 
 NAME get_profiles_type_v3

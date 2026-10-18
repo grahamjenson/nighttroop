@@ -55,19 +55,91 @@ func (a AssertTemplate) Execute(t *testing.T, name string, statusCode int, outpu
 	return nil
 }
 
-func assertTemplateCheck(assertStruct AssertTemplate, ctx map[string]any, localResult any, headers map[string][]string, t *testing.T) (string, error) {
-	// Need to forse the headers to be json-esk so types work
+// jsonHeaders converts headers to plain JSON types so "#" lookups compare like body values.
+func jsonHeaders(t *testing.T, headers map[string][]string) map[string]any {
 	b, err := json.Marshal(headers)
 	if err != nil {
 		t.Fatalf("Some weird Marshalerror happened in templateDig: %v", err)
-		return "false", err
 	}
 	var headersConverted map[string]any
-	err = json.Unmarshal(b, &headersConverted)
-	if err != nil {
+	if err := json.Unmarshal(b, &headersConverted); err != nil {
 		t.Fatalf("Some weird Unmarshal error happened in templateDig: %v", err)
-		return "false", err
 	}
+	return headersConverted
+}
+
+////////
+// Equals and Contains
+////////
+
+// AssertEquals is ASSERT_EQUALS <expected> <actual>, e.g. ASSERT_EQUALS 101 "@0.sgv".
+type AssertEquals struct {
+	Path     string
+	Line     int
+	Expected any
+	Actual   string
+}
+
+func (a AssertEquals) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
+	h := jsonHeaders(t, headers)
+	expected := normalizeStringSearch(a.Expected, output, h, ctx)
+	actual := normalizeStringSearch(a.Actual, output, h, ctx)
+	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(output)
+	message := fmt.Sprintf("ASSERT_EQUALS failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, a.Actual, prettyOutput)
+	AssertEqual(t, expected, actual, message, a.Path, a.Line)
+	return nil
+}
+
+// AssertContains is ASSERT_CONTAINS <expected> <actual>, e.g. ASSERT_CONTAINS "not a valid URL" "@message".
+type AssertContains struct {
+	Path     string
+	Line     int
+	Expected any
+	Actual   string
+}
+
+func (a AssertContains) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
+	h := jsonHeaders(t, headers)
+	expected := normalizeStringSearch(a.Expected, output, h, ctx)
+	actual := normalizeStringSearch(a.Actual, output, h, ctx)
+	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(output)
+	message := fmt.Sprintf("ASSERT_CONTAINS failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, a.Actual, prettyOutput)
+	AssertContainsValue(t, formatAnyAsString(expected), actual, message, a.Path, a.Line)
+	return nil
+}
+
+// parseAssertArgs splits `<expected> <actual>`: expected is a quoted string,
+// number, true or false, and actual is a quoted lookup like "@result.id".
+func parseAssertArgs(s string) (any, string, error) {
+	s = strings.TrimSpace(s)
+	var expected any
+	if strings.HasPrefix(s, `"`) {
+		quoted, err := strconv.QuotedPrefix(s)
+		if err != nil {
+			return nil, "", err
+		}
+		expected, _ = strconv.Unquote(quoted)
+		s = s[len(quoted):]
+	} else {
+		raw, rest, _ := strings.Cut(s, " ")
+		s = rest
+		if raw == "true" || raw == "false" {
+			expected = raw == "true"
+		} else if f, err := strconv.ParseFloat(raw, 64); err == nil {
+			expected = f
+		} else {
+			return nil, "", fmt.Errorf("expected value %q must be quoted, a number, true or false", raw)
+		}
+	}
+	actual, err := strconv.Unquote(strings.TrimSpace(s))
+	if err != nil {
+		return nil, "", fmt.Errorf("actual value %q must be a quoted string", strings.TrimSpace(s))
+	}
+	return expected, actual, nil
+}
+
+func assertTemplateCheck(assertStruct AssertTemplate, ctx map[string]any, localResult any, headers map[string][]string, t *testing.T) (string, error) {
+	headersConverted := jsonHeaders(t, headers)
 
 	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(localResult)
 	tmpl, err := template.New("req").
@@ -77,20 +149,6 @@ func assertTemplateCheck(assertStruct AssertTemplate, ctx map[string]any, localR
 				return templateDig(ctx, path)
 			},
 			// TESTING FUNCTIONS
-			"assertEquals": func(rawExpected, rawActual any) string {
-				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
-				message := fmt.Sprintf("assertEquals failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
-				AssertEqual(t, expected, actual, message, assertStruct.Path, assertStruct.Line)
-				return "true"
-			},
-			"assertContains": func(rawExpected, rawActual any) string {
-				expected := normalizeStringSearch(rawExpected, localResult, headersConverted, ctx)
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
-				message := fmt.Sprintf("assertContains failed: expected %v:%T got %v:%T from [%v] output: %s", expected, expected, actual, actual, rawActual, prettyOutput)
-				AssertContains(t, formatAnyAsString(expected), actual, message, assertStruct.Path, assertStruct.Line)
-				return "true"
-			},
 			"assertExists": func(rawActual any) string {
 				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
 				message := fmt.Sprintf("assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
@@ -232,7 +290,7 @@ func formatAnyAsString(v any) string {
 	}
 }
 
-func AssertContains(t *testing.T, expected, actual any, message string, file string, line int) bool {
+func AssertContainsValue(t *testing.T, expected, actual any, message string, file string, line int) bool {
 	t.Helper()
 
 	contains := false
