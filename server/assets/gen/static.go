@@ -41,8 +41,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/{{.FileName}}", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "{{.ContentType}}")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", {{.VarName}}ETag)
+		if r.Header.Get("If-None-Match") == {{.VarName}}ETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte({{.VarName}}))
 		if err != nil {
