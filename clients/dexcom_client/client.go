@@ -24,10 +24,15 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"testing"
 	"time"
 
 	"nighttroop.t1d.nz/models/dexcommodels"
 )
+
+// TestValidUsername is the only Dexcom username that logs in under go test,
+// which never makes HTTP calls; any other username is rejected.
+const TestValidUsername = "valid-dexcom-user"
 
 const (
 	usBaseURL        = "https://share2.dexcom.com"
@@ -67,6 +72,13 @@ func NewClient(username, password string, outsideUS bool) *Client {
 
 // Login authenticates and stores the Dexcom session ID.
 func (c *Client) Login(ctx context.Context) error {
+	if testing.Testing() {
+		if c.username != TestValidUsername {
+			return fmt.Errorf("dexcom authentication failed: invalid username or password")
+		}
+		c.sessionID = "test-session"
+		return nil
+	}
 	accountID, err := c.authenticate(ctx)
 	if err != nil {
 		return err
@@ -193,6 +205,9 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 		if err := c.Login(ctx); err != nil {
 			return nil, fmt.Errorf("Dexcom Login Error: %w", err)
 		}
+	}
+	if testing.Testing() {
+		return nil, nil
 	}
 
 	values := url.Values{}

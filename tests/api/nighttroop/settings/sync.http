@@ -10,13 +10,21 @@ GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
 ASSERT_STATUS 200
 SET jwt {{ .jwtauth.token }}
 
+NAME create_nightscout_sync_unreachable
+POST http://{{ site }}/settings/sync/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://bad.nightscout.test", "password": "a-token", "enabled": true}
+ASSERT_STATUS 400
+ASSERT {{ assertContains "Could not connect to nightscout" "@message" }}
+
 NAME create_nightscout_sync
 POST http://{{ site }}/settings/sync/nightscout
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"url_or_username": "http://ns.example.test", "password": "a-token", "enabled": true}
+B {"url_or_username": "http://valid.nightscout.test", "password": "a-token", "enabled": true}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "http://ns.example.test" "@result.url_or_username" }}
+ASSERT {{ assertEquals "http://valid.nightscout.test" "@result.url_or_username" }}
 
 NAME update_nightscout_sync_bad_url
 POST http://{{ site }}/settings/sync/nightscout
@@ -26,11 +34,34 @@ B {"url_or_username": "not a url", "enabled": true}
 ASSERT_STATUS 400
 ASSERT {{ assertContains "not a valid URL" "@message" }}
 
+NAME update_nightscout_sync_unreachable
+POST http://{{ site }}/settings/sync/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://bad.nightscout.test", "enabled": true}
+ASSERT_STATUS 400
+ASSERT {{ assertContains "Could not connect to nightscout" "@message" }}
+
+NAME update_nightscout_sync_keeps_stored_password
+POST http://{{ site }}/settings/sync/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://valid.nightscout.test", "password": "********", "enabled": true}
+ASSERT_STATUS 200
+
+NAME create_dexcom_sync_bad_login
+POST http://{{ site }}/settings/sync/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": true}
+ASSERT_STATUS 400
+ASSERT {{ assertContains "Could not connect to dexcom" "@message" }}
+
 NAME create_dexcom_sync
 POST http://{{ site }}/settings/sync/dexcom
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": false}
+B {"url_or_username": "valid-dexcom-user", "password": "dex-pass", "region": "US", "enabled": true}
 ASSERT_STATUS 200
 ASSERT {{ assertEquals "US" "@result.region" }}
 
