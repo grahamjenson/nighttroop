@@ -64,8 +64,8 @@ type Config struct {
 	Filters []Filter
 }
 
-// credentialParams are query and route params that carry tokens or secrets
-var credentialParams = []string{"token", "secret"}
+// credentialParams are query and route params that carry tokens
+var credentialParams = []string{"token"}
 
 // redactCredentials keeps tokens out of logs, and so out of Sentry
 func redactCredentials(path, query string, params map[string]string) (string, string) {
