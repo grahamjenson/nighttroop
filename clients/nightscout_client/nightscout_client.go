@@ -18,8 +18,13 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"testing"
 	"time"
 )
+
+// TestValidURL is the only Nightscout URL that authenticates under go test, which
+// never makes HTTP calls; any other URL fails as if the host does not exist.
+const TestValidURL = "http://valid.nightscout.test"
 
 type Client struct {
 	baseURL    string
@@ -69,6 +74,9 @@ func (c *Client) doRequest(
 		if err != nil {
 			return nil, fmt.Errorf("error refreshing JWT: %w", err)
 		}
+	}
+	if testing.Testing() {
+		return map[string]any{"result": []any{}}, nil
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
@@ -129,7 +137,20 @@ var (
 	ErrJWTInvalidResponse = errors.New("invalid JWT response")
 )
 
+// Verify checks the URL and token work by requesting a JWT.
+func (c *Client) Verify() error {
+	return c.refreshJWT()
+}
+
 func (c *Client) refreshJWT() error {
+	if testing.Testing() {
+		if c.baseURL != TestValidURL {
+			return ErrJWTNoHost
+		}
+		jwt, expire := "test-jwt", time.Now().Add(time.Hour)
+		c.jwt, c.jwtExpire = &jwt, &expire
+		return nil
+	}
 	resp, err := c.httpClient.Get(jwtEndpoint(c.baseURL, c.token))
 	if err != nil {
 		var netErr net.Error
