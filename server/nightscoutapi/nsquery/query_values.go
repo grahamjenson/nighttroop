@@ -96,6 +96,8 @@ type QueryValues struct {
 	Raw *nightscoutmodels.FlexibleBool `mapstructure:"raw,omitempty" json:"raw,omitempty"`
 
 	Token *string `mapstructure:"token,omitempty" json:"-"`
+	// Legacy auth param, named so it is not logged as an unrecognized param
+	Secret *string `mapstructure:"secret,omitempty" json:"-"`
 
 	Other map[string]interface{} `mapstructure:",remain"`
 }
@@ -304,6 +306,7 @@ var nonFilters = map[string]bool{
 	"Envelope": true,
 	"Fields":   true,
 	"Token":    true,
+	"Secret":   true,
 	"Raw":      true,
 	"Other":    true,
 }

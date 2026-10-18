@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"regexp"
 	"slices"
 	"strconv"
@@ -61,6 +62,31 @@ type Config struct {
 	WithCustomMessage  func(w http.ResponseWriter, r *http.Request) string
 
 	Filters []Filter
+}
+
+// credentialParams are query and route params that carry tokens or secrets
+var credentialParams = []string{"token", "secret"}
+
+// redactCredentials keeps tokens out of logs, and so out of Sentry
+func redactCredentials(path, query string, params map[string]string) (string, string) {
+	for _, k := range credentialParams {
+		if v := params[k]; v != "" {
+			path = strings.ReplaceAll(path, v, "REDACTED")
+			params[k] = "REDACTED"
+		}
+	}
+	return path, RedactQuery(query)
+}
+
+// RedactQuery replaces credential values in a raw query string
+func RedactQuery(query string) string {
+	values, _ := url.ParseQuery(query)
+	for _, k := range credentialParams {
+		if values.Has(k) {
+			values.Set(k, "REDACTED")
+		}
+	}
+	return values.Encode()
 }
 
 // New returns a `func(http.Handler) http.Handler` (middleware) that logs requests using slog.
@@ -140,6 +166,7 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 				for i, k := range chi.RouteContext(r.Context()).URLParams.Keys {
 					params[k] = chi.RouteContext(r.Context()).URLParams.Values[i]
 				}
+				path, query := redactCredentials(path, query, params)
 
 				status := ww.Status()
 				method := r.Method
