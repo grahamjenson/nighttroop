@@ -6,8 +6,8 @@
 INSERT INTO site_identities (
     site_id,
     name,
-    password,
-    totp_secret,
+    password_hash,
+    totp_secret_enc,
     role,
     created_by_identity_id,
     created_by_identity_name

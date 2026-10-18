@@ -27,24 +27,24 @@ func (m *ControlIdentity) SetName(v string) {
 	m.Name = v
 }
 
-// GetPassword returns the Password value.
-func (m ControlIdentity) GetPassword() string {
-	return m.Password
+// GetPasswordHash returns the PasswordHash value.
+func (m ControlIdentity) GetPasswordHash() string {
+	return m.PasswordHash
 }
 
-// SetPassword sets the Password value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetPassword(v string) {
-	m.Password = v
+// SetPasswordHash sets the PasswordHash value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetPasswordHash(v string) {
+	m.PasswordHash = v
 }
 
-// GetTotpSecret returns the TotpSecret value.
-func (m ControlIdentity) GetTotpSecret() string {
-	return m.TotpSecret
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m ControlIdentity) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated ControlIdentity.
-func (m *ControlIdentity) SetTotpSecret(v string) {
-	m.TotpSecret = v
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated ControlIdentity.
+func (m *ControlIdentity) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
 }
 
 // GetRole returns the Role value.
@@ -217,24 +217,24 @@ func (m *SiteIdentity) SetName(v string) {
 	m.Name = v
 }
 
-// GetPassword returns the Password value.
-func (m SiteIdentity) GetPassword() string {
-	return m.Password
+// GetPasswordHash returns the PasswordHash value.
+func (m SiteIdentity) GetPasswordHash() string {
+	return m.PasswordHash
 }
 
-// SetPassword sets the Password value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetPassword(v string) {
-	m.Password = v
+// SetPasswordHash sets the PasswordHash value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetPasswordHash(v string) {
+	m.PasswordHash = v
 }
 
-// GetTotpSecret returns the TotpSecret value.
-func (m SiteIdentity) GetTotpSecret() string {
-	return m.TotpSecret
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m SiteIdentity) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetTotpSecret(v string) {
-	m.TotpSecret = v
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
 }
 
 // GetRole returns the Role value.
@@ -787,24 +787,24 @@ func (m *SiteSyncSource) SetType(v consts.SyncSourceType) {
 	m.Type = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m SiteSyncSource) GetUrlOrUsername() *string {
-	return m.UrlOrUsername
+// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
+func (m SiteSyncSource) GetUrlOrUsernameEnc() *string {
+	return m.UrlOrUsernameEnc
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetUrlOrUsername(v *string) {
-	m.UrlOrUsername = v
+// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetUrlOrUsernameEnc(v *string) {
+	m.UrlOrUsernameEnc = v
 }
 
-// GetPassword returns the Password value.
-func (m SiteSyncSource) GetPassword() *string {
-	return m.Password
+// GetPasswordEnc returns the PasswordEnc value.
+func (m SiteSyncSource) GetPasswordEnc() *string {
+	return m.PasswordEnc
 }
 
-// SetPassword sets the Password value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetPassword(v *string) {
-	m.Password = v
+// SetPasswordEnc sets the PasswordEnc value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetPasswordEnc(v *string) {
+	m.PasswordEnc = v
 }
 
 // GetRegion returns the Region value.
@@ -1567,24 +1567,24 @@ func (m *CreateControlIdentityParams) SetName(v string) {
 	m.Name = v
 }
 
-// GetPassword returns the Password value.
-func (m CreateControlIdentityParams) GetPassword() string {
-	return m.Password
+// GetPasswordHash returns the PasswordHash value.
+func (m CreateControlIdentityParams) GetPasswordHash() string {
+	return m.PasswordHash
 }
 
-// SetPassword sets the Password value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetPassword(v string) {
-	m.Password = v
+// SetPasswordHash sets the PasswordHash value and returns the updated CreateControlIdentityParams.
+func (m *CreateControlIdentityParams) SetPasswordHash(v string) {
+	m.PasswordHash = v
 }
 
-// GetTotpSecret returns the TotpSecret value.
-func (m CreateControlIdentityParams) GetTotpSecret() string {
-	return m.TotpSecret
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m CreateControlIdentityParams) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated CreateControlIdentityParams.
-func (m *CreateControlIdentityParams) SetTotpSecret(v string) {
-	m.TotpSecret = v
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated CreateControlIdentityParams.
+func (m *CreateControlIdentityParams) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
 }
 
 // GetRole returns the Role value.
@@ -2537,24 +2537,24 @@ func (m *CreateSiteIdentityParams) SetName(v string) {
 	m.Name = v
 }
 
-// GetPassword returns the Password value.
-func (m CreateSiteIdentityParams) GetPassword() string {
-	return m.Password
+// GetPasswordHash returns the PasswordHash value.
+func (m CreateSiteIdentityParams) GetPasswordHash() string {
+	return m.PasswordHash
 }
 
-// SetPassword sets the Password value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetPassword(v string) {
-	m.Password = v
+// SetPasswordHash sets the PasswordHash value and returns the updated CreateSiteIdentityParams.
+func (m *CreateSiteIdentityParams) SetPasswordHash(v string) {
+	m.PasswordHash = v
 }
 
-// GetTotpSecret returns the TotpSecret value.
-func (m CreateSiteIdentityParams) GetTotpSecret() string {
-	return m.TotpSecret
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m CreateSiteIdentityParams) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
 }
 
-// SetTotpSecret sets the TotpSecret value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetTotpSecret(v string) {
-	m.TotpSecret = v
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated CreateSiteIdentityParams.
+func (m *CreateSiteIdentityParams) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
 }
 
 // GetRole returns the Role value.
@@ -2697,24 +2697,24 @@ func (m *CreateSyncSourceParams) SetType(v consts.SyncSourceType) {
 	m.Type = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m CreateSyncSourceParams) GetUrlOrUsername() *string {
-	return m.UrlOrUsername
+// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
+func (m CreateSyncSourceParams) GetUrlOrUsernameEnc() *string {
+	return m.UrlOrUsernameEnc
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetUrlOrUsername(v *string) {
-	m.UrlOrUsername = v
+// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetUrlOrUsernameEnc(v *string) {
+	m.UrlOrUsernameEnc = v
 }
 
-// GetPassword returns the Password value.
-func (m CreateSyncSourceParams) GetPassword() *string {
-	return m.Password
+// GetPasswordEnc returns the PasswordEnc value.
+func (m CreateSyncSourceParams) GetPasswordEnc() *string {
+	return m.PasswordEnc
 }
 
-// SetPassword sets the Password value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetPassword(v *string) {
-	m.Password = v
+// SetPasswordEnc sets the PasswordEnc value and returns the updated CreateSyncSourceParams.
+func (m *CreateSyncSourceParams) SetPasswordEnc(v *string) {
+	m.PasswordEnc = v
 }
 
 // GetRegion returns the Region value.
@@ -2737,14 +2737,14 @@ func (m *CreateSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetPassword returns the Password value.
-func (m UpdateSyncSourceParams) GetPassword() *string {
-	return m.Password
+// GetPasswordEnc returns the PasswordEnc value.
+func (m UpdateSyncSourceParams) GetPasswordEnc() *string {
+	return m.PasswordEnc
 }
 
-// SetPassword sets the Password value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetPassword(v *string) {
-	m.Password = v
+// SetPasswordEnc sets the PasswordEnc value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetPasswordEnc(v *string) {
+	m.PasswordEnc = v
 }
 
 // GetEnabled returns the Enabled value.
@@ -2757,14 +2757,14 @@ func (m *UpdateSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetUrlOrUsername returns the UrlOrUsername value.
-func (m UpdateSyncSourceParams) GetUrlOrUsername() *string {
-	return m.UrlOrUsername
+// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
+func (m UpdateSyncSourceParams) GetUrlOrUsernameEnc() *string {
+	return m.UrlOrUsernameEnc
 }
 
-// SetUrlOrUsername sets the UrlOrUsername value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetUrlOrUsername(v *string) {
-	m.UrlOrUsername = v
+// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated UpdateSyncSourceParams.
+func (m *UpdateSyncSourceParams) SetUrlOrUsernameEnc(v *string) {
+	m.UrlOrUsernameEnc = v
 }
 
 // GetRegion returns the Region value.

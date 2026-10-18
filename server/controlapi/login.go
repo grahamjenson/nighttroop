@@ -129,12 +129,12 @@ func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, u
 	if err != nil {
 		return nil, fmt.Errorf("admin not found: %w", err)
 	}
-	totpSecret, err := config.Security.Decrypt(admin.TotpSecret)
+	totpSecret, err := config.Security.Decrypt(admin.TotpSecretEnc)
 	if err != nil {
 		return nil, err
 	}
 
-	if !config.Security.VerifyPassword(password, admin.Password) {
+	if !config.Security.VerifyPassword(password, admin.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
 	}
 	if !config.Security.TOTPValidate(totpToken, totpSecret) {

@@ -102,7 +102,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			return
 		}
 
-		if can.MustLoginWithTotp(identity.Role, identity.TotpSecret != "") {
+		if can.MustLoginWithTotp(identity.Role, identity.TotpSecretEnc != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
 			err = config.Security.SetUserPreAuthCookie(w, identity.Name)
 			if err != nil {
@@ -231,7 +231,7 @@ func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
-	if !securityConfig.VerifyPassword(formPassword, identity.Password) {
+	if !securityConfig.VerifyPassword(formPassword, identity.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
 	}
 
@@ -243,11 +243,11 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *controldb.SiteI
 		return fmt.Errorf("TOTP token is required")
 	}
 
-	if identity.TotpSecret == "" {
+	if identity.TotpSecretEnc == "" {
 		return fmt.Errorf("identity does not have a TOTP secret set")
 	}
 
-	totpSecret, err := config.Security.Decrypt(identity.TotpSecret)
+	totpSecret, err := config.Security.Decrypt(identity.TotpSecretEnc)
 	if err != nil {
 		return err
 	}
@@ -325,11 +325,11 @@ func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.Serv
 	}
 
 	// An Identity only requires a TOTP secret if the role is admin
-	if can.MustLoginWithTotp(device.Role, device.TotpSecret != "") {
+	if can.MustLoginWithTotp(device.Role, device.TotpSecretEnc != "") {
 		if totpToken == "" {
 			return nil, fmt.Errorf("user requires TOTP secret")
 		}
-		totpSecret, err := cfg.Security.Decrypt(device.TotpSecret)
+		totpSecret, err := cfg.Security.Decrypt(device.TotpSecretEnc)
 		if err != nil {
 			return nil, err
 		}

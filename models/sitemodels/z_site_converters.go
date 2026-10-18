@@ -19,7 +19,7 @@ func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.Securi
 			xstring := *(*source).Region
 			sitemodelsSyncSource.Region = &xstring
 		}
-		pString, err := Decrypt((*source).UrlOrUsername, context)
+		pString, err := Decrypt((*source).UrlOrUsernameEnc, context)
 		if err != nil {
 			return nil, err
 		}
@@ -37,11 +37,11 @@ func SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams {
 		controldbCreateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
 		if (*source).UrlOrUsername != nil {
 			xstring := *(*source).UrlOrUsername
-			controldbCreateSyncSourceParams.UrlOrUsername = &xstring
+			controldbCreateSyncSourceParams.UrlOrUsernameEnc = &xstring
 		}
 		if (*source).Password != nil {
 			xstring2 := *(*source).Password
-			controldbCreateSyncSourceParams.Password = &xstring2
+			controldbCreateSyncSourceParams.PasswordEnc = &xstring2
 		}
 		if (*source).Region != nil {
 			xstring3 := *(*source).Region
@@ -56,12 +56,12 @@ func SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams {
 	if source != nil {
 		if (*source).Password != nil {
 			xstring := *(*source).Password
-			controldbUpdateSyncSourceParams.Password = &xstring
+			controldbUpdateSyncSourceParams.PasswordEnc = &xstring
 		}
 		controldbUpdateSyncSourceParams.Enabled = (*source).Enabled
 		if (*source).UrlOrUsername != nil {
 			xstring2 := *(*source).UrlOrUsername
-			controldbUpdateSyncSourceParams.UrlOrUsername = &xstring2
+			controldbUpdateSyncSourceParams.UrlOrUsernameEnc = &xstring2
 		}
 		if (*source).Region != nil {
 			xstring3 := *(*source).Region

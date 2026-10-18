@@ -427,11 +427,11 @@ func (db *ControlDB) CreateSiteIdentity(siteID string, name string, role consts.
 	}
 
 	err = db.Queries.CreateSiteIdentity(context.TODO(), controldb.CreateSiteIdentityParams{
-		SiteID:     siteID,
-		Name:       name,
-		Password:   hashedPassword,
-		TotpSecret: encTOTPSecret,
-		Role:       role,
+		SiteID:        siteID,
+		Name:          name,
+		PasswordHash:  hashedPassword,
+		TotpSecretEnc: encTOTPSecret,
+		Role:          role,
 	})
 
 	if err != nil {
@@ -474,10 +474,10 @@ func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole)
 	encTOTPSecret = encTOTPSecretRet
 
 	err = db.Queries.CreateControlIdentity(context.TODO(), controldb.CreateControlIdentityParams{
-		Name:       name,
-		Password:   hashedPassword,
-		TotpSecret: encTOTPSecret,
-		Role:       role,
+		Name:          name,
+		PasswordHash:  hashedPassword,
+		TotpSecretEnc: encTOTPSecret,
+		Role:          role,
 	})
 
 	if err != nil {

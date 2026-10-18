@@ -18,12 +18,16 @@ type SiteConverter interface {
 	///////
 
 	// goverter:map Password | SetPasswordGarbage
-	// goverter:map UrlOrUsername UrlOrUsername | Decrypt
+	// goverter:map UrlOrUsernameEnc UrlOrUsername | Decrypt
 	// goverter:context security
 	SyncSourceFromDB(source *controldb.SiteSyncSource, security *security.SecurityConfig) (*SyncSource, error)
 
+	// goverter:map Password PasswordEnc
+	// goverter:map UrlOrUsername UrlOrUsernameEnc
 	SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams
 
+	// goverter:map Password PasswordEnc
+	// goverter:map UrlOrUsername UrlOrUsernameEnc
 	SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams
 }
 

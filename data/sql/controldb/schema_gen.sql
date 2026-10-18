@@ -3,8 +3,8 @@ CREATE TABLE control_identities (
 
     name TEXT NOT NULL UNIQUE CHECK(length(name) <= 32),
 
-    password TEXT NOT NULL CHECK(length(password) <= 128),
-    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
+    password_hash TEXT NOT NULL CHECK(length(password_hash) <= 128),
+    totp_secret_enc TEXT NOT NULL CHECK(length(totp_secret_enc) <= 128),
     role TEXT NOT NULL CHECK(length(role) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -34,8 +34,8 @@ CREATE TABLE site_identities (
 
     name TEXT NOT NULL CHECK(length(name) <= 32),
 
-    password TEXT NOT NULL CHECK(length(password) <= 128),
-    totp_secret TEXT NOT NULL CHECK(length(totp_secret) <= 128),
+    password_hash TEXT NOT NULL CHECK(length(password_hash) <= 128),
+    totp_secret_enc TEXT NOT NULL CHECK(length(totp_secret_enc) <= 128),
     role TEXT NOT NULL CHECK(length(role) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -128,8 +128,8 @@ CREATE TABLE site_sync_sources (
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
     type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'virtual')),
     
-    url_or_username TEXT CHECK(length(url_or_username) <= 256),
-    password TEXT CHECK(length(password) <= 256), -- or ns token
+    url_or_username_enc TEXT CHECK(length(url_or_username_enc) <= 256),
+    password_enc TEXT CHECK(length(password_enc) <= 256), -- or ns token
 
     -- Specific Info
     region TEXT CHECK(region IN ('US', 'OUS')), -- dexcom at the moment

@@ -138,8 +138,8 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyn
 		return "virtual_username", "virtual_password", consts.DexcomRegionOther, nil
 	}
 
-	encUrlOrUserName := syncSource.UrlOrUsername
-	encPassword := syncSource.Password
+	encUrlOrUserName := syncSource.UrlOrUsernameEnc
+	encPassword := syncSource.PasswordEnc
 	dexcomRegion := consts.DexcomRegionOther
 	if encUrlOrUserName == nil || encPassword == nil {
 		return "", "", consts.DexcomRegionOther, fmt.Errorf("encrypted username or password is nil")
