@@ -104,7 +104,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		if can.MustLoginWithTotp(identity.Role, identity.TotpSecretEnc != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
-			err = config.Security.SetUserPreAuthCookie(w, identity.Name)
+			err = config.Security.SetUserPreAuthCookie(w, siteContext.Subdomain, identity.Name)
 			if err != nil {
 				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to set pre-auth cookie: %w", err))
 				return
@@ -145,7 +145,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		siteContext := httputils.GetSiteContext(r.Context())
 
 		// 1. Fetch And Validate Pre-Auth Token
-		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r)
+		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r, siteContext.Subdomain)
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
 			return
@@ -259,13 +259,13 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *controldb.SiteI
 	return nil
 }
 
-func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request) (string, error) {
+func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request, subdomain string) (string, error) {
 	preAuthToken, err := security.GetUserPreAuthTokenFromRequest(r)
 	if err != nil {
 		return "", fmt.Errorf("Pre-auth token is required: %w", err)
 	}
 
-	identityName, err := config.Security.VerifyPreAuthJWTToken(preAuthToken)
+	identityName, err := config.Security.VerifyPreAuthJWTToken(preAuthToken, subdomain)
 	if err != nil {
 		return "", fmt.Errorf("Invalid pre-auth token: %w", err)
 	}

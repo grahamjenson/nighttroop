@@ -53,6 +53,7 @@ func (config *SecurityConfig) createJWTPrimitives() error {
 	preAuthValidator, err := jwt.NewValidator(&jwt.ValidatorOpts{
 		ExpectIssuedInThePast: true,
 		ExpectedAudience:      &PreAuthAudience,
+		IgnoreIssuer:          true, // VerifyPreAuthJWTToken checks the subdomain
 	})
 
 	if err != nil {
@@ -189,7 +190,7 @@ func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, strin
 // PREAUTH JWT (For TOTP flow)
 ///
 
-func (config *SecurityConfig) GeneratePreAuthJWTToken(deviceName string) (string, time.Time, error) {
+func (config *SecurityConfig) GeneratePreAuthJWTToken(subdomain string, deviceName string) (string, time.Time, error) {
 
 	now := time.Now()
 
@@ -197,6 +198,7 @@ func (config *SecurityConfig) GeneratePreAuthJWTToken(deviceName string) (string
 
 	rawJWT, err := jwt.NewRawJWT(&jwt.RawJWTOptions{
 		Subject:   &deviceName,
+		Issuer:    &subdomain, // binds the password step to this site
 		Audience:  &PreAuthAudience,
 		ExpiresAt: &expiresAt,
 		IssuedAt:  &now,
@@ -212,10 +214,15 @@ func (config *SecurityConfig) GeneratePreAuthJWTToken(deviceName string) (string
 	return tokenString, expiresAt, nil
 }
 
-func (config *SecurityConfig) VerifyPreAuthJWTToken(tokenStr string) (string, error) {
+func (config *SecurityConfig) VerifyPreAuthJWTToken(tokenStr string, subdomain string) (string, error) {
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtPreAuthValidator)
 	if err != nil {
 		return "", err
+	}
+
+	issuer, err := verifiedJWT.Issuer()
+	if err != nil || issuer != subdomain {
+		return "", fmt.Errorf("pre-auth token is for a different site")
 	}
 
 	subject, err := verifiedJWT.Subject()
