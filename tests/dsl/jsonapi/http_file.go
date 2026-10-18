@@ -125,6 +125,21 @@ func parseFile(r io.Reader, path string) ([]*Request, error) {
 				Code: statusCode,
 			})
 
+		case "ASSERT_EQUALS", "ASSERT_CONTAINS":
+			inBody = false
+			if current == nil {
+				return nil, fmt.Errorf("%s before NAME", first)
+			}
+			expected, actual, err := parseAssertArgs(second)
+			if err != nil {
+				return nil, fmt.Errorf("%s:%d: invalid %s: %w", path, lineNumber, first, err)
+			}
+			if first == "ASSERT_EQUALS" {
+				current.AddAssert(AssertEquals{Path: path, Line: lineNumber, Expected: expected, Actual: actual})
+			} else {
+				current.AddAssert(AssertContains{Path: path, Line: lineNumber, Expected: expected, Actual: actual})
+			}
+
 		case "ASSERT":
 			inBody = false
 			if current == nil {

@@ -16,7 +16,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "http://bad.nightscout.test", "password": "a-token", "enabled": true}
 ASSERT_STATUS 400
-ASSERT {{ assertContains "Could not connect to nightscout" "@message" }}
+ASSERT_CONTAINS "Could not connect to nightscout" "@message"
 
 NAME create_nightscout_sync
 POST http://{{ site }}/settings/sync/nightscout
@@ -24,7 +24,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "http://valid.nightscout.test", "password": "a-token", "enabled": true}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "http://valid.nightscout.test" "@result.url_or_username" }}
+ASSERT_EQUALS "http://valid.nightscout.test" "@result.url_or_username"
 
 NAME update_nightscout_sync_bad_url
 POST http://{{ site }}/settings/sync/nightscout
@@ -32,7 +32,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "not a url", "enabled": true}
 ASSERT_STATUS 400
-ASSERT {{ assertContains "not a valid URL" "@message" }}
+ASSERT_CONTAINS "not a valid URL" "@message"
 
 NAME update_nightscout_sync_unreachable
 POST http://{{ site }}/settings/sync/nightscout
@@ -40,7 +40,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "http://bad.nightscout.test", "enabled": true}
 ASSERT_STATUS 400
-ASSERT {{ assertContains "Could not connect to nightscout" "@message" }}
+ASSERT_CONTAINS "Could not connect to nightscout" "@message"
 
 NAME update_nightscout_sync_keeps_stored_password
 POST http://{{ site }}/settings/sync/nightscout
@@ -55,7 +55,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": true}
 ASSERT_STATUS 400
-ASSERT {{ assertContains "Could not connect to dexcom" "@message" }}
+ASSERT_CONTAINS "Could not connect to dexcom" "@message"
 
 NAME create_dexcom_sync
 POST http://{{ site }}/settings/sync/dexcom
@@ -63,7 +63,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "valid-dexcom-user", "password": "dex-pass", "region": "US", "enabled": true}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "US" "@result.region" }}
+ASSERT_EQUALS "US" "@result.region"
 
 NAME create_virtual_sync
 POST http://{{ site }}/settings/sync/virtual
@@ -71,13 +71,13 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"enabled": true}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals true "@result.enabled" }}
+ASSERT_EQUALS true "@result.enabled"
 
 NAME virtual_entries_seeded
 GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
 ASSERT_STATUS 200
 ASSERT {{ assertLength 6 "@" }}
-ASSERT {{ assertEquals "virtual://nighttroop" "@0.device" }}
+ASSERT_EQUALS "virtual://nighttroop" "@0.device"
 
 NAME virtual_devicestatus_seeded
 GET http://{{ .ns_site }}/api/v1/devicestatus?count=50&token={{ token }}
@@ -92,7 +92,7 @@ ASSERT {{ assertLength 3 "@" }}
 NAME virtual_profile_seeded
 GET http://{{ .ns_site }}/api/v1/profile?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Virtual" "@0.defaultProfile" }}
+ASSERT_EQUALS "Virtual" "@0.defaultProfile"
 
 NAME enable_virtual_sync_again_is_idempotent
 POST http://{{ site }}/settings/sync/virtual

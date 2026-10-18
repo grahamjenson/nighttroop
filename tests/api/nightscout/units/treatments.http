@@ -13,9 +13,9 @@ NAME check_default_is_mmol
 GET http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mmol/L" "@result.value" }}
-ASSERT {{ assertEquals "string" "@result.type" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mmol/L" "@result.value"
+ASSERT_EQUALS "string" "@result.type"
 
 
 #########
@@ -42,9 +42,9 @@ B {
     "created_at": "{{ time 0 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertContains "\"units\":\"mmol/L\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":6" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":8" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":6" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":8" "@result.profileJson"
 
 NAME create_mgdl_profile_switch
 POST http://{{ site }}/api/v3/treatments
@@ -62,9 +62,9 @@ B {
     "created_at": "{{ time 1 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertContains "\"units\":\"mmol/L\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":3.885" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":5.55" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":3.885" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":5.55" "@result.profileJson"
 
 NAME create_unlabeled_mmol_profile_switch
 POST http://{{ site }}/api/v3/treatments
@@ -82,9 +82,9 @@ B {
     "created_at": "{{ time 2 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertContains "\"units\":\"mmol/L\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":6" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":8" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":6" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":8" "@result.profileJson"
 
 NAME create_unlabeled_mgdl_profile_switch
 POST http://{{ site }}/api/v3/treatments
@@ -102,9 +102,9 @@ B {
     "created_at": "{{ time 3 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertContains "\"units\":\"mmol/L\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":3.885" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":5.55" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":3.885" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":5.55" "@result.profileJson"
 
 ### Glucose Settings
 
@@ -120,8 +120,8 @@ B {
     "created_at": "{{ time 1 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "mmol/L" "@result.units" }}
-ASSERT {{ assertEquals 7 "@result.glucose" }}
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 7 "@result.glucose"
 
 NAME create_mgdl_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -135,8 +135,8 @@ B {
     "created_at": "{{ time 2 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "mmol/L" "@result.units" }}
-ASSERT {{ assertEquals 3.885 "@result.glucose" }}
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 3.885 "@result.glucose"
 
 NAME create_unlabeled_mmol_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -149,8 +149,8 @@ B {
     "created_at": "{{ time 3 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "mmol/L" "@result.units" }}
-ASSERT {{ assertEquals 7 "@result.glucose" }}
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 7 "@result.glucose"
 
 NAME create_unlabeled_mgdl_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -163,8 +163,8 @@ B {
     "created_at": "{{ time 4 }}"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals "mmol/L" "@result.units" }}
-ASSERT {{ assertEquals 3.885 "@result.glucose" }}
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 3.885 "@result.glucose"
 
 # GET
 
@@ -177,42 +177,42 @@ PATCH http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
 B {"value":  "mg/dL"}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "units" "@result.identifier" }}
-ASSERT {{ assertEquals "mg/dL" "@result.value" }}
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
 
 
 NAME get_profile_switch_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_profile_switch.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertContains "\"units\":\"mg/dL\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":108.108" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":144.144" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
 
 NAME get_profile_switch_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_profile_switch.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertContains "\"units\":\"mg/dL\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":70" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":100" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
 
 
 NAME get_profile_switch_unlabeled_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mmol_profile_switch.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertContains "\"units\":\"mg/dL\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":108.108" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":144.144" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
 
 NAME get_profile_switch_unlabeled_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mgdl_profile_switch.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertContains "\"units\":\"mg/dL\"" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":70" "@result.profileJson"}}
-ASSERT {{ assertContains "\"value\":100" "@result.profileJson"}}
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
 
 
 # Glucose 
@@ -221,26 +221,26 @@ NAME get_glucose_reading_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "mg/dL" "@result.units" }}
-ASSERT {{ assertEquals 126.126 "@result.glucose" }}
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME get_glucose_reading_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "mg/dL" "@result.units" }}
-ASSERT {{ assertEquals 70 "@result.glucose" }}
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
 
 NAME get_unlabeled_glucose_reading_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mmol_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "mg/dL" "@result.units" }}
-ASSERT {{ assertEquals 126.126 "@result.glucose" }}
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME get_unlabeled_glucose_reading_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mgdl_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "mg/dL" "@result.units" }}
-ASSERT {{ assertEquals 70 "@result.glucose" }}
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"

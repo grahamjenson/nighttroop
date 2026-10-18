@@ -29,15 +29,15 @@ B {
   "reason": "lunch"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Meal Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 10 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 4.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
-ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT_EQUALS 10 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 4.2 "@0.insulin"
+ASSERT_EQUALS "Here are some notes" "@0.notes"
+ASSERT_EQUALS "lunch" "@0.reason"
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
@@ -45,9 +45,9 @@ NAME create_minimal_correction_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Correction Bolus", "insulin": 4.2 }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Correction Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Correction Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 4.2 "@0.insulin" }}
+ASSERT_EQUALS 4.2 "@0.insulin"
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
@@ -422,23 +422,23 @@ ASSERT_STATUS 200
 NAME get_treatments_v1
 GET http://{{ site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Meal Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 10 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 4.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Here are some notes" "@0.notes" }}
-ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT_EQUALS 10 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 4.2 "@0.insulin"
+ASSERT_EQUALS "Here are some notes" "@0.notes"
+ASSERT_EQUALS "lunch" "@0.reason"
 ASSERT {{ assertExists "@0._id" }}
 ASSERT {{ assertExists "@0.utcOffset" }}
 
 NAME get_treatments_type_v1
 GET http://{{ site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
-ASSERT {{ assertEquals 10 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
+ASSERT_EQUALS "Meal Bolus" "@0.eventType"
+ASSERT_EQUALS 10 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
 
 NAME put_update_treatments_v1
 PUT http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -452,7 +452,7 @@ ASSERT_STATUS 200
 NAME get_treatments_after_updates_v1
 GET http://{{ site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated from put_update_treatments_v1" "@0.notes" }}
+ASSERT_EQUALS "Updated from put_update_treatments_v1" "@0.notes"
 
 NAME put_create_treatments_v1
 PUT http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -462,13 +462,13 @@ B {
   "notes": "Updated from put_create_treatments_v1"
   }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@notes" }}
-ASSERT {{ assertEquals "myveryownid" "@_id" }}
+ASSERT_EQUALS "Updated from put_create_treatments_v1" "@notes"
+ASSERT_EQUALS "myveryownid" "@_id"
 
 NAME get_treatments_after_user_id_create_v1
 GET http://{{ site }}/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Updated from put_create_treatments_v1" "@0.notes" }}
+ASSERT_EQUALS "Updated from put_create_treatments_v1" "@0.notes"
 
 
 ////////
@@ -491,11 +491,11 @@ B {
   "name": "Name"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Announcement" "@0.eventType" }}
+ASSERT_EQUALS "Announcement" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Announcement" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "Name" "@0.name" }}
+ASSERT_EQUALS "Announcement" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "Name" "@0.name"
 
 
 # Note         TreatmentEventType = "Note"
@@ -559,43 +559,43 @@ B {
   
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Note" "@0.eventType" }}
+ASSERT_EQUALS "Note" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Note" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "Hells Pizza" "@0.name" }}
-ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
-ASSERT {{ assertEquals "Fast Food" "@0.category" }}
-ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 10 "@0.preBolus" }}
-ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
-ASSERT {{ assertEquals 20 "@0.protein" }}
-ASSERT {{ assertEquals 10 "@0.fat" }}
-ASSERT {{ assertEquals 5 "@0.fibre" }}
-ASSERT {{ assertEquals 300 "@0.energy" }}
-ASSERT {{ assertEquals 2 "@0.portions" }}
-ASSERT {{ assertEquals "Weekend" "@0.profile" }}
-ASSERT {{ assertEquals "{\"units\":\"mmol/L\",\"dia\":6,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}" "@0.profileJson" }}
-ASSERT {{ assertEquals 90 "@0.duration" }}
-ASSERT {{ assertEquals 50 "@0.percentage" }}
-ASSERT {{ assertEquals 1 "@0.timeshift" }}
-ASSERT {{ assertEquals "Running" "@0.activityType" }}
-ASSERT {{ assertEquals 500 "@0.calories" }}
-ASSERT {{ assertEquals 10000 "@0.steps" }}
-ASSERT {{ assertEquals 120 "@0.heartRate" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Note" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "Hells Pizza" "@0.name"
+ASSERT_EQUALS "Pizza" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.preBolus"
+ASSERT_EQUALS 120 "@0.absorptionTime"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "Weekend" "@0.profile"
+ASSERT_EQUALS "{\"units\":\"mmol/L\",\"dia\":6,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}" "@0.profileJson"
+ASSERT_EQUALS 90 "@0.duration"
+ASSERT_EQUALS 50 "@0.percentage"
+ASSERT_EQUALS 1 "@0.timeshift"
+ASSERT_EQUALS "Running" "@0.activityType"
+ASSERT_EQUALS 500 "@0.calories"
+ASSERT_EQUALS 10000 "@0.steps"
+ASSERT_EQUALS 120 "@0.heartRate"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 
@@ -614,11 +614,11 @@ B {
   "name": "Name"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Question" "@0.eventType" }}
+ASSERT_EQUALS "Question" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Question" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "Name" "@0.name" }}
+ASSERT_EQUALS "Question" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "Name" "@0.name"
 
 
 # DADAlert     TreatmentEventType = "D.A.D. Alert"
@@ -634,10 +634,10 @@ B {
   "reason": "reason"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "D.A.D. Alert" "@0.eventType" }}
+ASSERT_EQUALS "D.A.D. Alert" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "D.A.D. Alert" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
+ASSERT_EQUALS "D.A.D. Alert" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
 
 
 # BGCheck TreatmentEventType = "BG Check"
@@ -661,13 +661,13 @@ B {
   "reason": "lunch"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "BG Check" "@0.eventType" }}
+ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals 12 "@0.glucose" }}
-ASSERT {{ assertEquals "Meter" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals "Pizza is nice" "@0.notes" }}
-ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT_EQUALS 12 "@0.glucose"
+ASSERT_EQUALS "Meter" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS "Pizza is nice" "@0.notes"
+ASSERT_EQUALS "lunch" "@0.reason"
 
 # CarbCorrection TreatmentEventType = "Carb Correction"
 # return site.EventGroupsBundle{
@@ -700,21 +700,21 @@ B {
   "reason": "lunch"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Carb Correction" "@0.eventType" }}
+ASSERT_EQUALS "Carb Correction" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
-ASSERT {{ assertEquals "Fast Food" "@0.category" }}
-ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 10 "@0.preBolus" }}
-ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
-ASSERT {{ assertEquals 20 "@0.protein" }}
-ASSERT {{ assertEquals 10 "@0.fat" }}
-ASSERT {{ assertEquals 5 "@0.fibre" }}
-ASSERT {{ assertEquals 300 "@0.energy" }}
-ASSERT {{ assertEquals 2 "@0.portions" }}
-ASSERT {{ assertEquals "Pizza is nice" "@0.notes" }}
-ASSERT {{ assertEquals "lunch" "@0.reason" }}
+ASSERT_EQUALS "Pizza" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.preBolus"
+ASSERT_EQUALS 120 "@0.absorptionTime"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "Pizza is nice" "@0.notes"
+ASSERT_EQUALS "lunch" "@0.reason"
 
 # Bolus           TreatmentEventType = "Bolus"
 # return site.EventGroupsBundle{
@@ -742,19 +742,19 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Bolus" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Bolus" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # BolusWizard     TreatmentEventType = "Bolus Wizard"
@@ -805,34 +805,34 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Bolus Wizard" "@0.eventType" }}
+ASSERT_EQUALS "Bolus Wizard" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Bolus Wizard" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Finger" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "Hells Pizza" "@0.name" }}
-ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
-ASSERT {{ assertEquals "Fast Food" "@0.category" }}
-ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 10 "@0.preBolus" }}
-ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
-ASSERT {{ assertEquals 20 "@0.protein" }}
-ASSERT {{ assertEquals 10 "@0.fat" }}
-ASSERT {{ assertEquals 5 "@0.fibre" }}
-ASSERT {{ assertEquals 300 "@0.energy" }}
-ASSERT {{ assertEquals 2 "@0.portions" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Bolus Wizard" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Finger" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "Hells Pizza" "@0.name"
+ASSERT_EQUALS "Pizza" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.preBolus"
+ASSERT_EQUALS 120 "@0.absorptionTime"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # ComboBolus      TreatmentEventType = "Combo Bolus"
@@ -883,34 +883,34 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Combo Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Combo Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Combo Bolus" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "Hells Pizza" "@0.name" }}
-ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
-ASSERT {{ assertEquals "Fast Food" "@0.category" }}
-ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 10 "@0.preBolus" }}
-ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
-ASSERT {{ assertEquals 20 "@0.protein" }}
-ASSERT {{ assertEquals 10 "@0.fat" }}
-ASSERT {{ assertEquals 5 "@0.fibre" }}
-ASSERT {{ assertEquals 300 "@0.energy" }}
-ASSERT {{ assertEquals 2 "@0.portions" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Combo Bolus" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "Hells Pizza" "@0.name"
+ASSERT_EQUALS "Pizza" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.preBolus"
+ASSERT_EQUALS 120 "@0.absorptionTime"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 
@@ -945,22 +945,22 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Correction Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Correction Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Correction Bolus" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Correction Bolus" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # MealBolus       TreatmentEventType = "Meal Bolus"
@@ -1011,34 +1011,34 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Meal Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Meal Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Meal Bolus" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "Hells Pizza" "@0.name" }}
-ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
-ASSERT {{ assertEquals "Fast Food" "@0.category" }}
-ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 10 "@0.preBolus" }}
-ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
-ASSERT {{ assertEquals 20 "@0.protein" }}
-ASSERT {{ assertEquals 10 "@0.fat" }}
-ASSERT {{ assertEquals 5 "@0.fibre" }}
-ASSERT {{ assertEquals 300 "@0.energy" }}
-ASSERT {{ assertEquals 2 "@0.portions" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Meal Bolus" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "Hells Pizza" "@0.name"
+ASSERT_EQUALS "Pizza" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.preBolus"
+ASSERT_EQUALS 120 "@0.absorptionTime"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # SnackBolus      TreatmentEventType = "Snack Bolus"
@@ -1088,34 +1088,34 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Snack Bolus" "@0.eventType" }}
+ASSERT_EQUALS "Snack Bolus" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Snack Bolus" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals 1.2 "@0.insulin" }}
-ASSERT {{ assertEquals "Bolus" "@0.type" }}
-ASSERT {{ assertEquals 70 "@0.splitNow" }}
-ASSERT {{ assertEquals 30 "@0.splitExt" }}
-ASSERT {{ assertEquals "Hells Pizza" "@0.name" }}
-ASSERT {{ assertEquals "Pizza" "@0.foodType" }}
-ASSERT {{ assertEquals "Fast Food" "@0.category" }}
-ASSERT {{ assertEquals "Italian" "@0.subcategory" }}
-ASSERT {{ assertEquals 45 "@0.carbs" }}
-ASSERT {{ assertEquals 10 "@0.preBolus" }}
-ASSERT {{ assertEquals 120 "@0.absorptionTime" }}
-ASSERT {{ assertEquals 20 "@0.protein" }}
-ASSERT {{ assertEquals 10 "@0.fat" }}
-ASSERT {{ assertEquals 5 "@0.fibre" }}
-ASSERT {{ assertEquals 300 "@0.energy" }}
-ASSERT {{ assertEquals 2 "@0.portions" }} 
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Snack Bolus" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 1.2 "@0.insulin"
+ASSERT_EQUALS "Bolus" "@0.type"
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+ASSERT_EQUALS "Hells Pizza" "@0.name"
+ASSERT_EQUALS "Pizza" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS 10 "@0.preBolus"
+ASSERT_EQUALS 120 "@0.absorptionTime"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 
@@ -1140,16 +1140,16 @@ B {
   "heartRate": 120
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Exercise" "@0.eventType" }}
+ASSERT_EQUALS "Exercise" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Exercise" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "Activity Name" "@0.name" }}
-ASSERT {{ assertEquals "Running" "@0.activityType" }}
-ASSERT {{ assertEquals 60 "@0.duration" }}
-ASSERT {{ assertEquals 500 "@0.calories" }}
-ASSERT {{ assertEquals 10000 "@0.steps" }}
-ASSERT {{ assertEquals 120 "@0.heartRate" }}
+ASSERT_EQUALS "Exercise" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "Activity Name" "@0.name"
+ASSERT_EQUALS "Running" "@0.activityType"
+ASSERT_EQUALS 60 "@0.duration"
+ASSERT_EQUALS 500 "@0.calories"
+ASSERT_EQUALS 10000 "@0.steps"
+ASSERT_EQUALS 120 "@0.heartRate"
 
 # ProfileSwitch   TreatmentEventType = "Profile Switch"
 # return site.EventGroupsBundle{
@@ -1171,15 +1171,15 @@ B {
   "timeshift": -3
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Profile Switch" "@0.eventType" }}
+ASSERT_EQUALS "Profile Switch" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Profile Switch" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "Weekend" "@0.profile" }}
-ASSERT {{ assertEquals "{\"units\":\"mmol/L\",\"dia\":5,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}" "@0.profileJson" }}
-ASSERT {{ assertEquals 60 "@0.duration" }}
-ASSERT {{ assertEquals 110 "@0.percentage" }}
-ASSERT {{ assertEquals -3 "@0.timeshift" }}
+ASSERT_EQUALS "Profile Switch" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "Weekend" "@0.profile"
+ASSERT_EQUALS "{\"units\":\"mmol/L\",\"dia\":5,\"timezone\":\"Pacific/Kwajalein\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":20}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":5.5}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":7}]}" "@0.profileJson"
+ASSERT_EQUALS 60 "@0.duration"
+ASSERT_EQUALS 110 "@0.percentage"
+ASSERT_EQUALS -3 "@0.timeshift"
 
 # TempBasal       TreatmentEventType = "Temp Basal"
 # return site.EventGroupsBundle{
@@ -1202,15 +1202,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Temp Basal" "@0.eventType" }}
+ASSERT_EQUALS "Temp Basal" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Temp Basal" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Temp Basal" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # TemporaryTarget TreatmentEventType = "Temporary Target"
@@ -1227,10 +1227,10 @@ B {
   "reason": "reason"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Temporary Target" "@0.eventType" }}
+ASSERT_EQUALS "Temporary Target" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Temporary Target" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
+ASSERT_EQUALS "Temporary Target" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
 
 # OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
 # return site.EventGroupsBundle{
@@ -1253,15 +1253,15 @@ B {
  }
 
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "OpenAPS Offline" "@0.eventType" }}
+ASSERT_EQUALS "OpenAPS Offline" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "OpenAPS Offline" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "OpenAPS Offline" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # PumpBatteryChange TreatmentEventType = "Pump Battery Change"
@@ -1284,15 +1284,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Pump Battery Change" "@0.eventType" }}
+ASSERT_EQUALS "Pump Battery Change" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Pump Battery Change" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Pump Battery Change" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # SensorChange      TreatmentEventType = "Sensor Change"
@@ -1315,15 +1315,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Sensor Change" "@0.eventType" }}
+ASSERT_EQUALS "Sensor Change" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Sensor Change" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Sensor Change" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # SensorStart       TreatmentEventType = "Sensor Start"
@@ -1346,15 +1346,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Sensor Start" "@0.eventType" }}
+ASSERT_EQUALS "Sensor Start" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Sensor Start" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Sensor Start" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # SiteChange        TreatmentEventType = "Site Change"
@@ -1377,15 +1377,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Site Change" "@0.eventType" }}
+ASSERT_EQUALS "Site Change" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Site Change" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Site Change" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # InsulinChange     TreatmentEventType = "Insulin Change"
@@ -1408,15 +1408,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Insulin Change" "@0.eventType" }}
+ASSERT_EQUALS "Insulin Change" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Insulin Change" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Insulin Change" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # CannulaFill       TreatmentEventType = "Cannula Fill"
@@ -1439,15 +1439,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Cannula Fill" "@0.eventType" }}
+ASSERT_EQUALS "Cannula Fill" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Cannula Fill" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Cannula Fill" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # Prime             TreatmentEventType = "Prime"
@@ -1470,15 +1470,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Prime" "@0.eventType" }}
+ASSERT_EQUALS "Prime" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Prime" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Prime" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 # ReservoirChange   TreatmentEventType = "Reservoir Change"
@@ -1501,15 +1501,15 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Reservoir Change" "@0.eventType" }}
+ASSERT_EQUALS "Reservoir Change" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Reservoir Change" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Reservoir Change" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 
@@ -1538,18 +1538,18 @@ B {
   "pumpType": "Insulin Pump"
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Calibration" "@0.eventType" }}
+ASSERT_EQUALS "Calibration" "@0.eventType"
 ASSERT {{ assertExists "@0.created_at" }}
-ASSERT {{ assertEquals "Calibration" "@0.notes" }}
-ASSERT {{ assertEquals "reason" "@0.reason" }}
-ASSERT {{ assertEquals 5.5 "@0.glucose" }}
-ASSERT {{ assertEquals "Sensor" "@0.glucoseType" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals "ABC123" "@0.sensorCode" }}
-ASSERT {{ assertEquals "XYZ789" "@0.transmitterId" }}
-ASSERT {{ assertEquals "PUMP123" "@0.pumpId" }}
-ASSERT {{ assertEquals "SERIAL123" "@0.pumpSerial" }}
-ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
+ASSERT_EQUALS "Calibration" "@0.notes"
+ASSERT_EQUALS "reason" "@0.reason"
+ASSERT_EQUALS 5.5 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 
 
 
@@ -1561,44 +1561,44 @@ ASSERT {{ assertEquals "Insulin Pump" "@0.pumpType" }}
 NAME delete_treatments_v1
 DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 1 "@deletedCount" }}
+ASSERT_EQUALS 1 "@deletedCount"
 
 
 NAME delete_treatments_again_v1
 DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 0 "@deletedCount" }}
+ASSERT_EQUALS 0 "@deletedCount"
 
 
 NAME delete_treatments_permanent_v1
 DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}&permanent=true
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 1 "@deletedCount" }}
+ASSERT_EQUALS 1 "@deletedCount"
 
 NAME delete_treatments_permanent_again_v1
 DELETE http://{{ site }}/api/v1/treatments/{{ dig "create_full_calibration_v1.0._id" }}?token={{ token }}&permanent=true
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 0 "@deletedCount" }}
+ASSERT_EQUALS 0 "@deletedCount"
 
 
 NAME delete_treatments_by_type_v1
 DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 3 "@deletedCount" }}
+ASSERT_EQUALS 3 "@deletedCount"
 
 
 NAME delete_treatments_by_type_again_v1
 DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 0 "@deletedCount" }}
+ASSERT_EQUALS 0 "@deletedCount"
 
 
 NAME delete_treatments_permanent_by_type_v1
 DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}&permanent=true
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 3 "@deletedCount" }}
+ASSERT_EQUALS 3 "@deletedCount"
 
 NAME delete_treatments_permanent_by_type_again_v1
 DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}&permanent=true
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 0 "@deletedCount" }}
+ASSERT_EQUALS 0 "@deletedCount"

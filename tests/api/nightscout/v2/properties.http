@@ -75,11 +75,11 @@ ASSERT_STATUS 200
 NAME get_properties_v2
 GET http://{{ site }}/api/v2/properties?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 90 "@upbat.min.battery" }}
-ASSERT {{ assertEquals 1.127 "@iob.iob" }}
-ASSERT {{ assertEquals 1.571 "@iob.treatmentIob" }}
-ASSERT {{ assertEquals -0.444 "@iob.basaliob" }}
-ASSERT {{ assertEquals 12.03 "@cob.cob" }}
+ASSERT_EQUALS 90 "@upbat.min.battery"
+ASSERT_EQUALS 1.127 "@iob.iob"
+ASSERT_EQUALS 1.571 "@iob.treatmentIob"
+ASSERT_EQUALS -0.444 "@iob.basaliob"
+ASSERT_EQUALS 12.03 "@cob.cob"
 
 
 

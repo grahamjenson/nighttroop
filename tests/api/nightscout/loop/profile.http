@@ -134,19 +134,19 @@ B {
     "units": "mg/dL"
  }
 ASSERT_STATUS 201
-ASSERT {{ assertEquals 6 "@result.store.loopProfile.dia" }}
-ASSERT {{ assertEquals true "@result.loopSettings.dosingEnabled" }}
-ASSERT {{ assertEquals "automaticBolus" "@result.loopSettings.dosingStrategy" }}
-ASSERT {{ assertEquals "com.libre.new3.loopkit.Loop.Loop" "@result.loopSettings.bundleIdentifier" }}
-ASSERT {{ assertEquals 4 "@result.loopSettings.maximumBasalRatePerHour" }}
-ASSERT {{ assertEquals 12 "@result.loopSettings.maximumBolus" }}
-ASSERT {{ assertEquals 75 "@result.loopSettings.minimumBGGuard" }}
-ASSERT {{ assertEquals "asddsfdfgghfghfghaswqeadssawqqweasddsfdfgghfghfghaswqeadssawqqwe" "@result.loopSettings.deviceToken" }}
-ASSERT {{ assertEquals "🏐" "@result.loopSettings.overridePresets.0.symbol" }}
-ASSERT {{ assertEquals "b" "@result.loopSettings.overridePresets.0.name" }}
-ASSERT {{ assertEquals 0.7 "@result.loopSettings.overridePresets.0.insulinNeedsScaleFactor" }}
-ASSERT {{ assertEquals 150 "@result.loopSettings.overridePresets.0.targetRange.0" }}
-ASSERT {{ assertEquals 180 "@result.loopSettings.overridePresets.0.targetRange.1" }}
-ASSERT {{ assertEquals 0 "@result.loopSettings.overridePresets.0.duration" }}
-ASSERT {{ assertEquals 80 "@result.loopSettings.preMealTargetRange.0" }}
-ASSERT {{ assertEquals 85 "@result.loopSettings.preMealTargetRange.1" }}
+ASSERT_EQUALS 6 "@result.store.loopProfile.dia"
+ASSERT_EQUALS true "@result.loopSettings.dosingEnabled"
+ASSERT_EQUALS "automaticBolus" "@result.loopSettings.dosingStrategy"
+ASSERT_EQUALS "com.libre.new3.loopkit.Loop.Loop" "@result.loopSettings.bundleIdentifier"
+ASSERT_EQUALS 4 "@result.loopSettings.maximumBasalRatePerHour"
+ASSERT_EQUALS 12 "@result.loopSettings.maximumBolus"
+ASSERT_EQUALS 75 "@result.loopSettings.minimumBGGuard"
+ASSERT_EQUALS "asddsfdfgghfghfghaswqeadssawqqweasddsfdfgghfghfghaswqeadssawqqwe" "@result.loopSettings.deviceToken"
+ASSERT_EQUALS "🏐" "@result.loopSettings.overridePresets.0.symbol"
+ASSERT_EQUALS "b" "@result.loopSettings.overridePresets.0.name"
+ASSERT_EQUALS 0.7 "@result.loopSettings.overridePresets.0.insulinNeedsScaleFactor"
+ASSERT_EQUALS 150 "@result.loopSettings.overridePresets.0.targetRange.0"
+ASSERT_EQUALS 180 "@result.loopSettings.overridePresets.0.targetRange.1"
+ASSERT_EQUALS 0 "@result.loopSettings.overridePresets.0.duration"
+ASSERT_EQUALS 80 "@result.loopSettings.preMealTargetRange.0"
+ASSERT_EQUALS 85 "@result.loopSettings.preMealTargetRange.1"

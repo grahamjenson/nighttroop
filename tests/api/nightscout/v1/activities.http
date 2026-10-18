@@ -15,26 +15,26 @@ B {
     "steps": 1000
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "walking" "@0.activityType" }}
-ASSERT {{ assertEquals 3600 "@0.duration" }}
-ASSERT {{ assertEquals 120 "@0.heartRate" }}
-ASSERT {{ assertEquals "activity walking" "@0.notes" }}
-ASSERT {{ assertEquals 1000 "@0.steps" }}
+ASSERT_EQUALS "walking" "@0.activityType"
+ASSERT_EQUALS 3600 "@0.duration"
+ASSERT_EQUALS 120 "@0.heartRate"
+ASSERT_EQUALS "activity walking" "@0.notes"
+ASSERT_EQUALS 1000 "@0.steps"
 
 NAME get_activity_v1
 GET http://{{ site }}/api/v1/activity?token={{ token }}&find[_id]={{ dig "create_activity_v1.0._id"  }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "walking" "@0.activityType" }}
-ASSERT {{ assertEquals 3600 "@0.duration" }}
-ASSERT {{ assertEquals 120 "@0.heartRate" }}
-ASSERT {{ assertEquals "activity walking" "@0.notes" }}
-ASSERT {{ assertEquals 1000 "@0.steps" }}
+ASSERT_EQUALS "walking" "@0.activityType"
+ASSERT_EQUALS 3600 "@0.duration"
+ASSERT_EQUALS 120 "@0.heartRate"
+ASSERT_EQUALS "activity walking" "@0.notes"
+ASSERT_EQUALS 1000 "@0.steps"
 
 NAME get_activity_by_type_v1
 GET http://{{ site }}/api/v1/activity?token={{ token }}&find[activityType]=walking
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "walking" "@0.activityType" }}
-ASSERT {{ assertEquals 3600 "@0.duration" }}
-ASSERT {{ assertEquals 120 "@0.heartRate" }}
-ASSERT {{ assertEquals "activity walking" "@0.notes" }}
-ASSERT {{ assertEquals 1000 "@0.steps" }}
+ASSERT_EQUALS "walking" "@0.activityType"
+ASSERT_EQUALS 3600 "@0.duration"
+ASSERT_EQUALS 120 "@0.heartRate"
+ASSERT_EQUALS "activity walking" "@0.notes"
+ASSERT_EQUALS 1000 "@0.steps"

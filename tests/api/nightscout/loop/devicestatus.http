@@ -67,4 +67,4 @@ B {
     "utcOffset": 0
  }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 1.0870623804830117 "@0.loop.iob.iob" }}
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"

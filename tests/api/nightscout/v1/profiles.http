@@ -63,12 +63,12 @@ B {
     }
   }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
-ASSERT {{ assertEquals 0.35 "@0.store.Default.basal.0.value" }}
-ASSERT {{ assertEquals 5.55 "@0.store.Default.target_low.0.value" }}
-ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS "US/Eastern" "@0.store.Default.timezone"
+ASSERT_EQUALS 0.35 "@0.store.Default.basal.0.value"
+ASSERT_EQUALS 5.55 "@0.store.Default.target_low.0.value"
+ASSERT_EQUALS "Pacific/Honolulu" "@0.store.Work.timezone"
 
 
 NAME create_profile_aaps_v1
@@ -374,9 +374,9 @@ B {
     "utcOffset": 720
   }
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "ArmDash-2025" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mmol/L" "@0.store.ArmDash-2025.units" }}
-ASSERT {{ assertEquals "Pacific/Auckland" "@0.store.ArmDash-2025.timezone" }}
+ASSERT_EQUALS "ArmDash-2025" "@0.defaultProfile"
+ASSERT_EQUALS "mmol/L" "@0.store.ArmDash-2025.units"
+ASSERT_EQUALS "Pacific/Auckland" "@0.store.ArmDash-2025.timezone"
 
 
 
@@ -387,12 +387,12 @@ ASSERT {{ assertEquals "Pacific/Auckland" "@0.store.ArmDash-2025.timezone" }}
 NAME get_profiles_type_v1
 GET http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals "Default" "@0.defaultProfile" }}
-ASSERT {{ assertEquals "mmol/L" "@0.units" }}
-ASSERT {{ assertEquals "US/Eastern" "@0.store.Default.timezone" }}
-ASSERT {{ assertEquals 0.35 "@0.store.Default.basal.0.value" }}
-ASSERT {{ assertEquals 5.55 "@0.store.Default.target_low.0.value" }}
-ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS "US/Eastern" "@0.store.Default.timezone"
+ASSERT_EQUALS 0.35 "@0.store.Default.basal.0.value"
+ASSERT_EQUALS 5.55 "@0.store.Default.target_low.0.value"
+ASSERT_EQUALS "Pacific/Honolulu" "@0.store.Work.timezone"
 
 /////
 // UPDATE
@@ -406,4 +406,4 @@ ASSERT {{ assertEquals "Pacific/Honolulu" "@0.store.Work.timezone" }}
 NAME delete_profile_v1
 DELETE http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertEquals 1 "@deletedCount" }}
+ASSERT_EQUALS 1 "@deletedCount"
