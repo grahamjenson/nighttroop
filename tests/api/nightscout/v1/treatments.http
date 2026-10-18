@@ -30,7 +30,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Meal Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS 10 "@0.glucose"
 ASSERT_EQUALS "Sensor" "@0.glucoseType"
 ASSERT_EQUALS "mmol/L" "@0.units"
@@ -38,18 +38,18 @@ ASSERT_EQUALS 45 "@0.carbs"
 ASSERT_EQUALS 4.2 "@0.insulin"
 ASSERT_EQUALS "Here are some notes" "@0.notes"
 ASSERT_EQUALS "lunch" "@0.reason"
-ASSERT {{ assertExists "@0._id" }}
-ASSERT {{ assertExists "@0.utcOffset" }}
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
 
 NAME create_minimal_correction_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Correction Bolus", "insulin": 4.2 }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Correction Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS 4.2 "@0.insulin"
-ASSERT {{ assertExists "@0._id" }}
-ASSERT {{ assertExists "@0.utcOffset" }}
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
 
 NAME create_treatmentses_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -423,15 +423,15 @@ NAME get_treatments_v1
 GET http://{{ site }}/api/v1/treatments/{{ dig "create_meal_bolus_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Meal Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS 10 "@0.glucose"
 ASSERT_EQUALS "Sensor" "@0.glucoseType"
 ASSERT_EQUALS 45 "@0.carbs"
 ASSERT_EQUALS 4.2 "@0.insulin"
 ASSERT_EQUALS "Here are some notes" "@0.notes"
 ASSERT_EQUALS "lunch" "@0.reason"
-ASSERT {{ assertExists "@0._id" }}
-ASSERT {{ assertExists "@0.utcOffset" }}
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
 
 NAME get_treatments_type_v1
 GET http://{{ site }}/api/v1/treatments/Meal%20Bolus?token={{ token }}
@@ -492,7 +492,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Announcement" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Announcement" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "Name" "@0.name"
@@ -560,7 +560,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Note" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Note" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"
@@ -615,7 +615,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Question" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Question" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "Name" "@0.name"
@@ -635,7 +635,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "D.A.D. Alert" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "D.A.D. Alert" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 
@@ -662,7 +662,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "BG Check" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS 12 "@0.glucose"
 ASSERT_EQUALS "Meter" "@0.glucoseType"
 ASSERT_EQUALS "mmol/L" "@0.units"
@@ -701,7 +701,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Carb Correction" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Pizza" "@0.foodType"
 ASSERT_EQUALS "Fast Food" "@0.category"
 ASSERT_EQUALS "Italian" "@0.subcategory"
@@ -743,7 +743,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Bolus" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 1.2 "@0.insulin"
@@ -806,7 +806,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Bolus Wizard" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Bolus Wizard" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"
@@ -884,7 +884,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Combo Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Combo Bolus" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"
@@ -946,7 +946,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Correction Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Correction Bolus" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"
@@ -1012,7 +1012,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Meal Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Meal Bolus" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"
@@ -1089,7 +1089,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Snack Bolus" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Snack Bolus" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"
@@ -1141,7 +1141,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Exercise" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Exercise" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "Activity Name" "@0.name"
@@ -1172,7 +1172,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Profile Switch" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Profile Switch" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "Weekend" "@0.profile"
@@ -1203,7 +1203,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Temp Basal" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Temp Basal" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1228,7 +1228,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Temporary Target" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Temporary Target" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 
@@ -1254,7 +1254,7 @@ B {
 
 ASSERT_STATUS 200
 ASSERT_EQUALS "OpenAPS Offline" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "OpenAPS Offline" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1285,7 +1285,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Pump Battery Change" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Pump Battery Change" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1316,7 +1316,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Sensor Change" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Sensor Change" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1347,7 +1347,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Sensor Start" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Sensor Start" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1378,7 +1378,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Site Change" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Site Change" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1409,7 +1409,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Insulin Change" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Insulin Change" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1440,7 +1440,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Cannula Fill" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Cannula Fill" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1471,7 +1471,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Prime" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Prime" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1502,7 +1502,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Reservoir Change" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Reservoir Change" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS "ABC123" "@0.sensorCode"
@@ -1539,7 +1539,7 @@ B {
  }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Calibration" "@0.eventType"
-ASSERT {{ assertExists "@0.created_at" }}
+ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Calibration" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 5.5 "@0.glucose"

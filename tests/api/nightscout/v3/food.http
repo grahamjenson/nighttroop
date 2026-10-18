@@ -10,12 +10,12 @@ H Authorization: Bearer {{ jwt }}
 B { "carbs": 27 }
 ASSERT_STATUS 201
 ASSERT_EQUALS 27 "@result.carbs"
-ASSERT {{ assertExists "@result.identifier" }}
-ASSERT {{ assertExists "@result.date" }}
-ASSERT {{ assertExists "@result.subject" }}
-ASSERT {{ assertExists "@result.utcOffset" }}
-ASSERT {{ assertExists "@result.srvCreated" }}
-ASSERT {{ assertExists "@result.srvModified" }}
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.subject"
+ASSERT_EXISTS "@result.utcOffset"
+ASSERT_EXISTS "@result.srvCreated"
+ASSERT_EXISTS "@result.srvModified"
 
 
 //////

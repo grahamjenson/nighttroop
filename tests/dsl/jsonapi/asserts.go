@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"text/template"
 )
 
 type Assert interface {
@@ -32,26 +31,6 @@ func (a AssertStatus) Execute(t *testing.T, name string, statusCode int, output 
 	message := fmt.Sprintf("request %s expected status %d but got %d with body %v", name, a.Code, statusCode, string(outputRaw))
 	AssertEqual(t, a.Code, statusCode, message, a.Path, a.Line)
 
-	return nil
-}
-
-////////
-// Template
-////////
-
-type AssertTemplate struct {
-	Path string
-	Line int
-	Raw  string
-}
-
-func (a AssertTemplate) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
-	outputRaw, _ := MarshalJsonWithoutEscapeHTML(output)
-
-	_, err := assertTemplateCheck(a, ctx, output, headers, t)
-	if err != nil {
-		t.Fatalf("assert Template Error %s assert %s output %v render failed: %v", name, a.Raw, string(outputRaw), err)
-	}
 	return nil
 }
 
@@ -138,68 +117,47 @@ func parseAssertArgs(s string) (any, string, error) {
 	return expected, actual, nil
 }
 
-func assertTemplateCheck(assertStruct AssertTemplate, ctx map[string]any, localResult any, headers map[string][]string, t *testing.T) (string, error) {
-	headersConverted := jsonHeaders(t, headers)
+////////
+// Exists and Length
+////////
 
-	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(localResult)
-	tmpl, err := template.New("req").
-		Option("missingkey=error").
-		Funcs(template.FuncMap{
-			"dig": func(path string) any {
-				return templateDig(ctx, path)
-			},
-			// TESTING FUNCTIONS
-			"assertExists": func(rawActual any) string {
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
-				message := fmt.Sprintf("assertExists failed: expected value to exist, got nil from [%v], output: %s", rawActual, prettyOutput)
-				AssertNotNil(t, actual, message, assertStruct.Path, assertStruct.Line)
-				return "true"
-			},
-			"assertLength": func(expectedLength int, rawActual any) string {
-				actual := normalizeStringSearch(rawActual, localResult, headersConverted, ctx)
+// AssertExists is ASSERT_EXISTS <actual>, e.g. ASSERT_EXISTS "@0._id".
+type AssertExists struct {
+	Path   string
+	Line   int
+	Actual string
+}
 
-				actualLength := -1
+func (a AssertExists) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
+	actual := normalizeStringSearch(a.Actual, output, jsonHeaders(t, headers), ctx)
+	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(output)
+	message := fmt.Sprintf("ASSERT_EXISTS failed: expected value to exist, got nil from [%v], output: %s", a.Actual, prettyOutput)
+	AssertNotNil(t, actual, message, a.Path, a.Line)
+	return nil
+}
 
-				value := reflect.ValueOf(actual)
+// AssertLength is ASSERT_LENGTH <expected> <actual>, e.g. ASSERT_LENGTH 3 "@".
+// Strings, arrays and objects have a length; anything else counts as -1.
+type AssertLength struct {
+	Path     string
+	Line     int
+	Expected int
+	Actual   string
+}
 
-				if value.IsValid() {
-					switch value.Kind() {
-					case reflect.Array, reflect.Slice, reflect.Map, reflect.String:
-						actualLength = value.Len()
-					}
-				}
-
-				message := fmt.Sprintf(
-					"assertLength failed: expected length %d, got %d from [%v], output: %s",
-					expectedLength,
-					actualLength,
-					rawActual,
-					prettyOutput,
-				)
-
-				AssertEqual(
-					t,
-					expectedLength,
-					actualLength,
-					message,
-					assertStruct.Path,
-					assertStruct.Line,
-				)
-
-				return "true"
-			},
-		}).
-		Parse(assertStruct.Raw)
-	if err != nil {
-		return "", err
+func (a AssertLength) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
+	actual := normalizeStringSearch(a.Actual, output, jsonHeaders(t, headers), ctx)
+	actualLength := -1
+	if value := reflect.ValueOf(actual); value.IsValid() {
+		switch value.Kind() {
+		case reflect.Array, reflect.Slice, reflect.Map, reflect.String:
+			actualLength = value.Len()
+		}
 	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, ctx); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
+	prettyOutput, _ := MarshalJsonWithoutEscapeHTML(output)
+	message := fmt.Sprintf("ASSERT_LENGTH failed: expected length %d, got %d from [%v], output: %s", a.Expected, actualLength, a.Actual, prettyOutput)
+	AssertEqual(t, a.Expected, actualLength, message, a.Path, a.Line)
+	return nil
 }
 
 func MarshalJsonWithoutEscapeHTML(v any) (string, error) {

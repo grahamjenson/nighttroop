@@ -76,18 +76,18 @@ ASSERT_EQUALS true "@result.enabled"
 NAME virtual_entries_seeded
 GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 6 "@" }}
+ASSERT_LENGTH 6 "@"
 ASSERT_EQUALS "virtual://nighttroop" "@0.device"
 
 NAME virtual_devicestatus_seeded
 GET http://{{ .ns_site }}/api/v1/devicestatus?count=50&token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 6 "@" }}
+ASSERT_LENGTH 6 "@"
 
 NAME virtual_treatments_seeded
 GET http://{{ .ns_site }}/api/v1/treatments?count=50&token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 3 "@" }}
+ASSERT_LENGTH 3 "@"
 
 NAME virtual_profile_seeded
 GET http://{{ .ns_site }}/api/v1/profile?token={{ token }}
@@ -104,4 +104,4 @@ ASSERT_STATUS 200
 NAME virtual_entries_not_duplicated
 GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 6 "@" }}
+ASSERT_LENGTH 6 "@"

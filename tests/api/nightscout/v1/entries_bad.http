@@ -49,8 +49,8 @@ B { "sgv": 101, "type": "sgv", "device": "my-device", "app": "my-app", "dateStri
 ASSERT_STATUS 200
 ASSERT_EQUALS 101 "@0.sgv"
 ASSERT_EQUALS "sgv" "@0.type"
-ASSERT {{ assertExists "@0._id" }}
-ASSERT {{ assertExists "@0.utcOffset" }}
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
 
 NAME bad_update_but_change_device_v1
 PUT http://{{ site }}/api/v1/entries?token={{ token }}

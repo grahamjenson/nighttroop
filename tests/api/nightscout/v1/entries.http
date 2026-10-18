@@ -27,8 +27,8 @@ B { "sgv": 101, "type": "sgv"}
 ASSERT_STATUS 200
 ASSERT_EQUALS 101 "@0.sgv"
 ASSERT_EQUALS "sgv" "@0.type"
-ASSERT {{ assertExists "@0._id" }}
-ASSERT {{ assertExists "@0.utcOffset" }}
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
 
 NAME create_full_entry_v1
 POST http://{{ site }}/api/v1/entries?token={{ token}}
@@ -50,7 +50,7 @@ ASSERT_EQUALS "sgv" "@0.type"
 ASSERT_EQUALS "test-app" "@0.app"
 ASSERT_EQUALS "Flat" "@0.direction"
 ASSERT_EQUALS 3 "@0.trend"
-ASSERT {{ assertExists "@0.dateString" }}
+ASSERT_EXISTS "@0.dateString"
 ASSERT_EQUALS 139.2 "@0.filtered"
 ASSERT_EQUALS 141.7 "@0.unfiltered"
 ASSERT_EQUALS -62 "@0.rssi"
@@ -67,8 +67,8 @@ GET http://{{ site }}/api/v1/entries/{{ dig "create_entry_v1.0._id" }}?token={{ 
 ASSERT_STATUS 200
 ASSERT_EQUALS 101 "@0.sgv"
 ASSERT_EQUALS "sgv" "@0.type"
-ASSERT {{ assertExists "@0._id" }}
-ASSERT {{ assertExists "@0.utcOffset" }}
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.utcOffset"
 
 NAME get_entries_type_v1
 GET http://{{ site }}/api/v1/entries/sgv?token={{ token }}
@@ -90,7 +90,7 @@ ASSERT_EQUALS 100 "@0.sgv"
 NAME get_entries_current_v1
 GET http://{{ site }}/api/v1/entries/current?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@0._id" }}
+ASSERT_EXISTS "@0._id"
 
 
 NAME get_entries_count_v1
@@ -101,19 +101,19 @@ ASSERT_EQUALS 3 "@count"
 NAME get_entries_times_v1
 GET http://{{ site }}/api/v1/times/2026-01-02?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertLength 1 "@" }}
+ASSERT_LENGTH 1 "@"
 
 NAME get_entries_slice_v1
 GET http://{{ site }}/api/v1/slice/entries/dateString/sgv/2026-01?token={{ token }}
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@0._id" }}
+ASSERT_EXISTS "@0._id"
 
 
 
 NAME get_entries_echo_v1
 GET http://{{ .site }}/api/v1/echo/entries/sgv?token={{ token }}&find[sgv][$gte]=100
 ASSERT_STATUS 200
-ASSERT {{ assertExists "@query" }}
+ASSERT_EXISTS "@query"
 
 
 /////

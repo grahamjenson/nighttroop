@@ -140,17 +140,31 @@ func parseFile(r io.Reader, path string) ([]*Request, error) {
 				current.AddAssert(AssertContains{Path: path, Line: lineNumber, Expected: expected, Actual: actual})
 			}
 
-		case "ASSERT":
+		case "ASSERT_EXISTS":
 			inBody = false
 			if current == nil {
-				return nil, fmt.Errorf("assert before NAME")
+				return nil, fmt.Errorf("%s before NAME", first)
 			}
+			actual, err := strconv.Unquote(second)
+			if err != nil {
+				return nil, fmt.Errorf("%s:%d: invalid %s: value %q must be a quoted string", path, lineNumber, first, second)
+			}
+			current.AddAssert(AssertExists{Path: path, Line: lineNumber, Actual: actual})
 
-			current.AddAssert(AssertTemplate{
-				Path: path,
-				Line: lineNumber,
-				Raw:  second,
-			})
+		case "ASSERT_LENGTH":
+			inBody = false
+			if current == nil {
+				return nil, fmt.Errorf("%s before NAME", first)
+			}
+			expected, actual, err := parseAssertArgs(second)
+			length, isNumber := expected.(float64)
+			if err == nil && (!isNumber || length != float64(int(length))) {
+				err = fmt.Errorf("expected length %v must be a whole number", expected)
+			}
+			if err != nil {
+				return nil, fmt.Errorf("%s:%d: invalid %s: %w", path, lineNumber, first, err)
+			}
+			current.AddAssert(AssertLength{Path: path, Line: lineNumber, Expected: int(length), Actual: actual})
 		case "H":
 			inBody = false
 			if current == nil {

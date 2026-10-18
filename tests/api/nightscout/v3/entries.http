@@ -29,12 +29,12 @@ B { "sgv": 101, "type": "sgv" }
 ASSERT_STATUS 201
 ASSERT_EQUALS 101 "@result.sgv"
 ASSERT_EQUALS "sgv" "@result.type"
-ASSERT {{ assertExists "@result.identifier" }}
-ASSERT {{ assertExists "@result.date" }}
-ASSERT {{ assertExists "@result.subject" }}
-ASSERT {{ assertExists "@result.utcOffset" }}
-ASSERT {{ assertExists "@result.srvCreated" }}
-ASSERT {{ assertExists "@result.srvModified" }}
+ASSERT_EXISTS "@result.identifier"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.subject"
+ASSERT_EXISTS "@result.utcOffset"
+ASSERT_EXISTS "@result.srvCreated"
+ASSERT_EXISTS "@result.srvModified"
 
 
 //////
