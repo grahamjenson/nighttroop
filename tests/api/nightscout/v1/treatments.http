@@ -470,6 +470,18 @@ GET http://{{ site }}/api/v1/treatments/myveryownid?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Updated from put_create_treatments_v1" "@0.notes"
 
+NAME put_create_uuid_treatments_v1
+PUT http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "_id": "0b9e2c4a-6f1d-4e8b-9a37-5c2d8e1f4a60", "eventType": "Note", "notes": "uuid identifier" }
+ASSERT_STATUS 200
+ASSERT_EQUALS "0b9e2c4a-6f1d-4e8b-9a37-5c2d8e1f4a60" "@_id"
+
+NAME get_uuid_treatments_v3
+GET http://{{ site }}/api/v3/treatments/0b9e2c4a-6f1d-4e8b-9a37-5c2d8e1f4a60
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "uuid identifier" "@result.notes"
+
 
 ////////
 // FULL TESTS

@@ -50,7 +50,7 @@ func ValidateIdentifierIsntBad(identifier string) *HTTPError {
 		return BadIdentifierError
 	}
 
-	if len(identifier) >= 36 {
+	if len(identifier) > 36 {
 		return BadIdentifierError
 	}
 
