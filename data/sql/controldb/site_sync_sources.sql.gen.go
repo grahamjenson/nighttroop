@@ -306,6 +306,11 @@ SET
     consecutive_failed_syncs = consecutive_failed_syncs + 1,
     consecutive_successful_syncs = 0,
 
+    -- Back off: double the wait after every failure (bad status, timeout,
+    -- bad credentials), capped at an hour, so a broken source is not hammered
+    sync_interval_seconds = MIN(sync_interval_seconds * 2, 3600),
+    sync_interval_seconds_reason = 'error_response',
+
     
 
     -- Timing
@@ -356,6 +361,10 @@ SET
     
     consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
+
+    -- Back to the default interval once a sync works again
+    sync_interval_seconds = 60,
+    sync_interval_seconds_reason = 'default',
 
     -- Timing
     last_sync_duration = ?1,
