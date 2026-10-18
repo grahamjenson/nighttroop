@@ -11,10 +11,14 @@ import (
 
 func setupLogging(mode consts.ServerMode) *slog.Logger {
 	if mode == consts.Test {
-		// In test mode, use a no-op logger to avoid cluttering test output.
-		return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug, // Set minimum log level
-		}))
+		// Discard logs in tests so a failure shows only its own output; TEST_LOGS=1 shows them
+		var handler slog.Handler = slog.DiscardHandler
+		if os.Getenv("TEST_LOGS") != "" {
+			handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+		}
+		logger := slog.New(handler)
+		slog.SetDefault(logger)
+		return logger
 	}
 
 	// 1. Create a JSON handler writing to standard output

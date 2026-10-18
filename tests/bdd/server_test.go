@@ -36,10 +36,6 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 		if err != nil {
 			t.Fatalf("failed to read action file: %v", err)
 		}
-		fmt.Println()
-		fmt.Println("===============================================")
-		fmt.Printf("Running action file: %s\n", path)
-		fmt.Println("===============================================")
 
 		actionContext := map[string]any{
 			"server_url":    serverURL,
@@ -52,13 +48,8 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			t.Fatalf("failed to parse action file: %v", err)
 		}
 		for i, action := range actionFile.Actions {
-			fmt.Println()
-			fmt.Println("=============== " + action.ToFlatString() + "  ================")
-			fmt.Println()
-			action.PrintAction()
-			fmt.Println()
-			fmt.Println("- - - - - - - - - - - - - - - - ")
-			fmt.Println()
+			// t.Logf keeps each trace with its subtest, so go test only prints the failing ones
+			t.Logf("=============== %s ================", action.ToFlatString())
 			// default information
 
 			page, err = action.Execute(t, page, actionContext)
@@ -72,8 +63,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			if err != nil {
 				t.Fatalf("failed to take screenshot: %v", err)
 			}
-			fmt.Println("Screenshot saved to:", screenshotPath)
-			fmt.Println("===============================")
+			t.Logf("Screenshot saved to: %s", screenshotPath)
 		}
 
 	})

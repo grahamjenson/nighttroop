@@ -32,7 +32,6 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 	var actions []Action
 	var current Action
 
-	fmt.Println("Parsing action file:", path)
 	flush := func() {
 		if current != nil {
 			actions = append(actions, current)

@@ -46,7 +46,7 @@ func (r *Request) ToFlatString() string {
 	return fmt.Sprintf("NAME %s METHOD %s URL %s", r.Name, r.Method, r.URL)
 }
 
-func (r *Request) PrintRequest() {
+func (r *Request) PrintRequest(t *testing.T) {
 	// String URL of token param
 	urlToPrint := r.URL
 	u, err := url.Parse(r.URL)
@@ -56,9 +56,9 @@ func (r *Request) PrintRequest() {
 		u.RawQuery = q.Encode()
 		urlToPrint = u.String()
 	}
-	fmt.Printf("REQUEST %s: %s %s\n", r.Name, r.Method, urlToPrint)
+	t.Logf("REQUEST %s: %s %s", r.Name, r.Method, urlToPrint)
 	if r.Body != nil && len(*r.Body) > 0 {
-		fmt.Printf("BODY %s\n", strings.ReplaceAll(*r.Body, "\n", " "))
+		t.Logf("BODY %s", strings.ReplaceAll(*r.Body, "\n", " "))
 	}
 	for k, v := range r.Headers {
 		if k == "Accept" || k == "Content-Type" {
@@ -67,7 +67,7 @@ func (r *Request) PrintRequest() {
 		if k == "Authorization" {
 			v = []string{"<REDACTED>"}
 		}
-		fmt.Printf("H %s: %s\n", k, strings.Join(v, ", "))
+		t.Logf("H %s: %s", k, strings.Join(v, ", "))
 	}
 }
 

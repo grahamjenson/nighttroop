@@ -12,7 +12,6 @@ import (
 type Action interface {
 	ToErrorLine(msg string) string
 	ToFlatString() string
-	PrintAction()
 	Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error)
 }
 
@@ -46,10 +45,6 @@ func (r *Goto) ToErrorLine(msg string) string {
 		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
 	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Goto) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Goto) AddAssert(assert Assert) {
@@ -114,10 +109,6 @@ func (r *Click) ToErrorLine(msg string) string {
 		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
 	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Click) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Click) AddAssert(assert Assert) {
@@ -299,10 +290,6 @@ func (r *Input) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *Input) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
 func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	html, err := page.Content()
 	if err != nil {
@@ -349,10 +336,6 @@ func (r *Set) ToErrorLine(msg string) string {
 		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
 	}
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Set) PrintAction() {
-	fmt.Println(r.ToFlatString())
 }
 
 func (r *Set) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {

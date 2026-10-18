@@ -5,7 +5,6 @@ import (
 	"embed"
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"net/http"
 	"path/filepath"
@@ -70,11 +69,6 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 		if err != nil {
 			t.Fatalf("failed to read request file: %v", err)
 		}
-		fmt.Println()
-		fmt.Println("===============================================")
-		fmt.Printf("Running request file: %s\n", path)
-		fmt.Println("===============================================")
-
 		requestContext := map[string]any{
 			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
 			"default_token": siteInformation.PwdNSToken,
@@ -90,14 +84,9 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 				t.Fatalf("failed to build real request: %v", err)
 			}
 
-			fmt.Println()
-			fmt.Println("=============== " + request.Name + "  ================")
-			fmt.Println()
-			request.PrintRequest()
-			fmt.Println()
-			fmt.Println("- - - - - - - - - - - - - - - - ")
-			fmt.Println()
-			// default information
+			// t.Logf keeps each trace with its subtest, so go test only prints the failing ones
+			t.Logf("=============== %s ================", request.Name)
+			request.PrintRequest(t)
 
 			newContext, err := request.ExecuteRequest(t, router, requestContext)
 			if err != nil {
@@ -108,20 +97,15 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 			statusCode := newContext[request.Name+"_status"]
 
 			requestContext = newContext
-			fmt.Println()
-			fmt.Println("- - - - - - - - - - - - - - - - ")
-			fmt.Println()
-			fmt.Printf("STATUS CODE: %d\n", statusCode)
 			var buf bytes.Buffer
 			encoder := json.NewEncoder(&buf)
 			encoder.SetEscapeHTML(false)
 			encoder.SetIndent("", "  ")
 			if err := encoder.Encode(output); err != nil {
-				fmt.Printf("RESPONSE: %s and failed to format response: %v\n", output, err)
+				t.Logf("STATUS CODE: %d\nRESPONSE: %s and failed to format response: %v", statusCode, output, err)
 			} else {
-				fmt.Printf("RESPONSE:\n%s", buf.String())
+				t.Logf("STATUS CODE: %d\nRESPONSE:\n%s", statusCode, buf.String())
 			}
-			fmt.Println("===============================")
 
 		}
 	})

@@ -31,7 +31,6 @@ func parseFile(r io.Reader, path string) ([]*Request, error) {
 	var requests []*Request
 	var current *Request
 
-	fmt.Println("Parsing request file:", path)
 	flush := func() {
 		if current != nil {
 			requests = append(requests, current)
