@@ -17,8 +17,16 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
+// ServerStatus records which optional services are working. It is filled in
+// at startup and read by anything that depends on them.
+type ServerStatus struct {
+	S3Working bool
+}
+
 type ServerConfig struct {
 	Mode consts.ServerMode
+
+	Status ServerStatus
 
 	HostName     string
 	HostPort     int

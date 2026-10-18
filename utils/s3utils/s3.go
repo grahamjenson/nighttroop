@@ -144,6 +144,9 @@ func (c *S3Client) TestObjectPath() string {
 ////
 
 func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
+	if !c.ServerConfig.Status.S3Working {
+		return nil
+	}
 	info := ""
 	defer aslog.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, &info)
 	if len(paths) == 0 {
@@ -203,6 +206,9 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.R
 ////
 
 func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (int64, bool, error) {
+	if !c.ServerConfig.Status.S3Working {
+		return 0, false, nil
+	}
 	info := ""
 	defer aslog.TrackTime(time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
 
