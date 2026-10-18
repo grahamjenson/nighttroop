@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -369,7 +370,7 @@ func findMode(flags map[string]string) consts.ServerMode {
 	}
 
 	// If go test is running then it is test mode
-	if strings.HasSuffix(os.Args[0], ".test") {
+	if testing.Testing() {
 		return consts.Test
 	}
 
