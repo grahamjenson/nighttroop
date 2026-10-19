@@ -18,7 +18,6 @@ type StoreTx struct {
 	siteContext *httputils.SiteContext
 	controlTx   *sql.Tx
 	siteTx      *sql.Tx
-	afterCommit []func(ctx context.Context) *HTTPError
 }
 
 func NewStoreTx(ctx context.Context, siteContext *httputils.SiteContext) *StoreTx {
@@ -47,12 +46,7 @@ func (t *StoreTx) Site() (*sitedb.Queries, error) {
 	return t.siteContext.SiteDB.Queries.WithTx(t.siteTx), nil
 }
 
-// AfterCommit runs fn once both transactions have committed, for work that uses the DBs directly
-func (t *StoreTx) AfterCommit(fn func(ctx context.Context) *HTTPError) {
-	t.afterCommit = append(t.afterCommit, fn)
-}
-
-// Finish commits on success, otherwise rolls back, then runs the AfterCommit hooks
+// Finish commits on success, otherwise rolls back
 func (t *StoreTx) Finish(herr *HTTPError) *HTTPError {
 	if herr != nil {
 		t.Rollback()
@@ -71,11 +65,6 @@ func (t *StoreTx) Finish(herr *HTTPError) *HTTPError {
 	}
 	if err != nil {
 		return ErrInternalServerError
-	}
-	for _, fn := range t.afterCommit {
-		if herr := fn(t.ctx); herr != nil {
-			return herr
-		}
 	}
 	return nil
 }
