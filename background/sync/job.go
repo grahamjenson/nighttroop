@@ -42,6 +42,8 @@ type SyncJobInfo struct {
 	urlOrUsername   string
 	password        string
 	region          consts.DexcomRegion
+	// firstSync is the first sync since the source was saved; if it fails the source is disabled
+	firstSync bool
 }
 
 type SyncUserInfo struct {
@@ -78,56 +80,61 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobsdb.Job) e
 			slog.Error("Error unmarshalling sync job params", "error", err, "job", j.Job)
 			return nil
 		}
-		// This will filter out
-		syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
-			SiteID: syncJob.SiteID,
-			Type:   syncJob.Type,
-		})
-		if err != nil {
-			slog.Error("Error getting user sync sources", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-			return err
-		}
-		if syncSource == nil {
-			slog.Error("workerFunc: No user sync sources found for site", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-			return nil
-		}
-
-		userInfoSyncSources := []*SyncUserInfo{}
-		for _, syncSource := range []*controldb.SiteSyncSource{syncSource} {
-			userInfo, err := b.AttachSyncSourceWithUserInfo(syncSource)
-			if err != nil {
-				slog.Error("Error attaching sync source with user info", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-				continue
-			}
-
-			if userInfo == nil {
-				slog.Error("No user info found for sync source", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-				continue
-			}
-			userInfoSyncSources = append(userInfoSyncSources, userInfo)
-		}
-
-		if len(userInfoSyncSources) == 0 {
-			slog.Error("No user info sync sources found for unique hash", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-			return nil
-		}
-
-		username, password, region, err := b.getUsernamePasswordRegion(syncSource)
-		if err != nil {
-			slog.Error("Error getting username, password, and region", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-			return nil
-		}
-
-		syncInfo := &SyncJobInfo{
-			SiteID:          syncJob.SiteID,
-			Type:            syncJob.Type,
-			UserSyncSources: userInfoSyncSources,
-			urlOrUsername:   username,
-			password:        password,
-			region:          region,
-		}
-		return b.SyncUserData(syncInfo)
+		return b.SyncSource(ctx, syncJob)
 	}
+}
+
+// SyncSource runs one sync of a site's sync source now, recording the result on the source
+func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) error {
+	syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
+		SiteID: syncJob.SiteID,
+		Type:   syncJob.Type,
+	})
+	if err != nil {
+		slog.Error("Error getting user sync sources", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		return err
+	}
+	if syncSource == nil {
+		slog.Error("workerFunc: No user sync sources found for site", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		return nil
+	}
+
+	userInfoSyncSources := []*SyncUserInfo{}
+	for _, syncSource := range []*controldb.SiteSyncSource{syncSource} {
+		userInfo, err := b.AttachSyncSourceWithUserInfo(syncSource)
+		if err != nil {
+			slog.Error("Error attaching sync source with user info", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+			continue
+		}
+
+		if userInfo == nil {
+			slog.Error("No user info found for sync source", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+			continue
+		}
+		userInfoSyncSources = append(userInfoSyncSources, userInfo)
+	}
+
+	if len(userInfoSyncSources) == 0 {
+		slog.Error("No user info sync sources found for unique hash", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		return nil
+	}
+
+	username, password, region, err := b.getUsernamePasswordRegion(syncSource)
+	if err != nil {
+		slog.Error("Error getting username, password, and region", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		return nil
+	}
+
+	syncInfo := &SyncJobInfo{
+		SiteID:          syncJob.SiteID,
+		Type:            syncJob.Type,
+		UserSyncSources: userInfoSyncSources,
+		urlOrUsername:   username,
+		password:        password,
+		region:          region,
+		firstSync:       syncSource.FirstSyncPending == 1,
+	}
+	return b.SyncUserData(syncInfo)
 }
 
 func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyncSource) (string, string, consts.DexcomRegion, error) {

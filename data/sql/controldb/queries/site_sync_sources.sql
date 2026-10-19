@@ -30,6 +30,9 @@ UPDATE site_sync_sources SET
     enabled =  COALESCE(sqlc.narg('Enabled'), enabled),
     url_or_username_enc = COALESCE(sqlc.narg('UrlOrUsernameEnc'), url_or_username_enc),
     region = COALESCE(sqlc.narg('Region'), region),
+    -- New settings get a fresh first sync, and old errors no longer apply
+    first_sync_pending = 1,
+    previous_sync_errors = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
@@ -91,6 +94,7 @@ SET
     
     consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
+    first_sync_pending = 0,
 
     -- Back to the default interval once a sync works again
     sync_interval_seconds = 60,
@@ -128,6 +132,10 @@ SET
     
     consecutive_failed_syncs = consecutive_failed_syncs + 1,
     consecutive_successful_syncs = 0,
+
+    -- A failed first sync means the settings do not work, so stop syncing until they are saved again
+    enabled = CASE WHEN first_sync_pending = 1 THEN 0 ELSE enabled END,
+    first_sync_pending = 0,
 
     -- Back off: double the wait after every failure (bad status, timeout,
     -- bad credentials), capped at an hour, so a broken source is not hammered

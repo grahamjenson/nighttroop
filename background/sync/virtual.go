@@ -117,7 +117,12 @@ func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
 			SiteModel:     userSyncSource.SiteModel,
 			HTTPAction:    httputils.HTTPActionWrite,
 		}
-		added, err := WriteVirtualData(ctx, b.nightscoutStore, siteContext, time.Now(), virtualSlot, nsutils.Profile)
+		// The first sync fills the last 30 minutes, profile included, so the site has data to show straight away
+		span, skip := virtualSlot, []nsutils.Collection{nsutils.Profile}
+		if syncInfo.firstSync {
+			span, skip = 30*time.Minute, nil
+		}
+		added, err := WriteVirtualData(ctx, b.nightscoutStore, siteContext, time.Now(), span, skip...)
 		if err != nil {
 			return err
 		}

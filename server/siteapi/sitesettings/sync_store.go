@@ -7,17 +7,13 @@ import (
 	"log/slog"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/a-h/templ"
 	ntsync "nighttroop.t1d.nz/background/sync"
-	"nighttroop.t1d.nz/clients/dexcom_client"
-	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/nightscoutapi"
 
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
@@ -80,13 +76,6 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 		return false, siteapiutils.ErrMissingRequiredFieldWithHint("password")
 	}
 
-	if model.Enabled {
-		// TODO: this makes a network call, and an upsert has already opened the control DB transaction in GetModel
-		if herr := verifySyncSource(ctx, params.Type, *params.UrlOrUsernameEnc, *params.PasswordEnc, params.Region); herr != nil {
-			return false, herr
-		}
-	}
-
 	encPassword, err := security.Encrypt(*params.PasswordEnc)
 	if err != nil {
 		return false, siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
@@ -117,24 +106,26 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 		return false, siteapiutils.ErrBadBody
 	}
 
-	if sstype == consts.SyncSourceTypeVirtual && model.Enabled {
-		// Seeding writes through its own queries, so it waits until this transaction commits
-		tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError { return seedVirtual(ctx, siteContext) })
+	if model.Enabled {
+		syncAfterCommitInTests(tx, siteContext, sstype)
 	}
 	return true, nil
 }
 
-// seedVirtual writes the last 30 minutes of virtual data as soon as the
-// virtual source is enabled, so the site has something to show right away.
-func seedVirtual(ctx context.Context, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
-	store := nightscoutapi.NewNightTroopAPIStore(siteContext.ControlDB, siteContext.Config)
-	added, err := ntsync.WriteVirtualData(ctx, store, siteContext, time.Now(), 30*time.Minute)
-	if err != nil {
-		slog.Error("Failed to seed virtual sync data", "error", err, "site_id", siteContext.Subdomain)
-		return siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to create virtual data: %s", err))
+// syncAfterCommitInTests runs the first sync as soon as the source is saved when testing,
+// since tests cannot wait for the sync cron. Its result is recorded on the source, and a
+// failure disables it, so the request itself does not fail.
+func syncAfterCommitInTests(tx *siteapiutils.StoreTx, siteContext *httputils.SiteContext, sstype consts.SyncSourceType) {
+	if !siteContext.Config.IsTest() {
+		return
 	}
-	slog.Info("Seeded virtual sync data", "site_id", siteContext.Subdomain, "added", added)
-	return nil
+	tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError {
+		jobs := ntsync.SetupSyncJobManager(siteContext.Config, siteContext.ControlDB)
+		if err := jobs.SyncSource(ctx, ntsync.SyncJobParams{SiteID: siteContext.Subdomain, Type: sstype}); err != nil {
+			slog.Info("First sync failed", "site_id", siteContext.Subdomain, "sync_type", sstype, "error", err)
+		}
+		return nil
+	})
 }
 
 func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
@@ -157,8 +148,12 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 
 	var err error
 
-	if params.UrlOrUsernameEnc != nil && strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
-		return siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+	if params.UrlOrUsernameEnc != nil {
+		if strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
+			return siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		}
+		// Trim like create does, so pasted spaces do not make the URL invalid
+		params.UrlOrUsernameEnc = ptr(strings.TrimSpace(*params.UrlOrUsernameEnc))
 	}
 
 	security := siteContext.Config.Security
@@ -178,13 +173,6 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 	q, err := tx.Control()
 	if err != nil {
 		return siteapiutils.ErrInternalServerError
-	}
-
-	if model.Enabled {
-		// TODO: this can make a network call while the control DB transaction is open
-		if herr := verifyUpdatedSyncSource(ctx, q, siteContext, oldModel.Type, params); herr != nil {
-			return herr
-		}
 	}
 
 	if params.PasswordEnc != nil {
@@ -220,9 +208,8 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 		return siteapiutils.ErrBadBody
 	}
 
-	if oldModel.Type == consts.SyncSourceTypeVirtual && model.Enabled {
-		// Seeding writes through its own queries, so it waits until this transaction commits
-		tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError { return seedVirtual(ctx, siteContext) })
+	if model.Enabled {
+		syncAfterCommitInTests(tx, siteContext, oldModel.Type)
 	}
 
 	return nil
@@ -328,55 +315,6 @@ func (s *SyncSettingsStore) DeleteHTMXResponse(model *sitemodels.SyncSource) tem
 ///////
 // UTIL METHODS
 ////////
-
-// verifySyncSource connects to the source with these details and fails if
-// they do not work, so broken credentials are never saved.
-func verifySyncSource(ctx context.Context, sstype consts.SyncSourceType, urlOrUsername, password string, region *string) *siteapiutils.HTTPError {
-	var err error
-	switch sstype {
-	case consts.SyncSourceTypeNightscout:
-		err = nightscout_client.NewClient(urlOrUsername, password).Verify()
-	case consts.SyncSourceTypeDexcom:
-		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
-		defer cancel()
-		outsideUS := region == nil || consts.NewDexcomRegionFromString(*region) == consts.DexcomRegionOther
-		err = dexcom_client.NewClient(urlOrUsername, password, outsideUS).Login(ctx)
-	}
-	if err != nil {
-		return siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Could not connect to %s with these details: %s", sstype, err))
-	}
-	return nil
-}
-
-// verifyUpdatedSyncSource verifies an update, taking any detail it leaves out
-// (the form sends a placeholder for an unchanged password) from the stored source.
-func verifyUpdatedSyncSource(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, sstype consts.SyncSourceType, params controldb.UpdateSyncSourceParams) *siteapiutils.HTTPError {
-	password := params.PasswordEnc
-	if password != nil && (strings.TrimSpace(*password) == "" || *password == consts.PASSWORD_GARBAGE_VALUE) {
-		password = nil
-	}
-	if sstype == consts.SyncSourceTypeVirtual || (params.UrlOrUsernameEnc == nil && password == nil && params.Region == nil) {
-		return nil
-	}
-	stored, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{Type: sstype, SiteID: siteContext.Subdomain})
-	if err != nil {
-		return siteapiutils.ErrBadBody
-	}
-	security := siteContext.Config.Security
-	if params.UrlOrUsernameEnc == nil {
-		params.UrlOrUsernameEnc, err = sitemodels.Decrypt(stored.UrlOrUsernameEnc, security)
-	}
-	if err == nil && password == nil {
-		password, err = sitemodels.Decrypt(stored.PasswordEnc, security)
-	}
-	if err != nil || params.UrlOrUsernameEnc == nil || password == nil {
-		return siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username and password")
-	}
-	if params.Region == nil {
-		params.Region = stored.Region
-	}
-	return verifySyncSource(ctx, sstype, *params.UrlOrUsernameEnc, *password, params.Region)
-}
 
 func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*string, error) {
 	if rawUrl == nil {

@@ -15,8 +15,16 @@ POST http://{{ site }}/settings/sync/nightscout
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "http://bad.nightscout.test", "password": "a-token", "enabled": true}
-ASSERT_STATUS 400
-ASSERT_CONTAINS "Could not connect to nightscout" "@message"
+ASSERT_STATUS 200
+
+// Saving does not check the details; the first sync does, and turns syncing off when it fails
+NAME nightscout_first_sync_failed
+GET http://{{ site }}/settings/sync
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.0.enabled"
+ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.0.previous_sync_errors.0"
 
 NAME create_nightscout_sync
 POST http://{{ site }}/settings/sync/nightscout
@@ -25,6 +33,14 @@ H Accept: application/json
 B {"url_or_username": "http://valid.nightscout.test", "password": "a-token", "enabled": true}
 ASSERT_STATUS 200
 ASSERT_EQUALS "http://valid.nightscout.test" "@result.url_or_username"
+
+// Saving working details clears the error and the first sync keeps syncing on
+NAME nightscout_first_sync_worked
+GET http://{{ site }}/settings/sync
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@result.0.enabled"
 
 NAME update_nightscout_sync_bad_url
 POST http://{{ site }}/settings/sync/nightscout
@@ -39,8 +55,15 @@ POST http://{{ site }}/settings/sync/nightscout
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "http://bad.nightscout.test", "enabled": true}
-ASSERT_STATUS 400
-ASSERT_CONTAINS "Could not connect to nightscout" "@message"
+ASSERT_STATUS 200
+
+NAME nightscout_first_sync_after_update_failed
+GET http://{{ site }}/settings/sync
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.0.enabled"
+ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.0.previous_sync_errors.0"
 
 NAME update_nightscout_sync_keeps_stored_password
 POST http://{{ site }}/settings/sync/nightscout
@@ -54,8 +77,16 @@ POST http://{{ site }}/settings/sync/dexcom
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": true}
-ASSERT_STATUS 400
-ASSERT_CONTAINS "Could not connect to dexcom" "@message"
+ASSERT_STATUS 200
+
+// Sources are listed by type, so dexcom is first
+NAME dexcom_first_sync_failed
+GET http://{{ site }}/settings/sync
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.0.enabled"
+ASSERT_CONTAINS "dexcom authentication failed" "@result.0.previous_sync_errors.0"
 
 NAME create_dexcom_sync
 POST http://{{ site }}/settings/sync/dexcom

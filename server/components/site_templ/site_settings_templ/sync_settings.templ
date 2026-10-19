@@ -36,6 +36,17 @@ templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 	</div>
 }
 
+// SyncErrors shows why the last sync failed, e.g. that the first sync failed so syncing was turned off
+templ SyncErrors(source *sitemodels.SyncSource, name string) {
+	if source != nil && len(source.PreviousSyncErrors) > 0 {
+		<div id={ "site--settings--" + name + "-sync--errors" } class="mb-4 rounded-md border border-red-500 p-3 text-sm text-red-500">
+			for _, syncError := range source.PreviousSyncErrors {
+				<p>{ syncError }</p>
+			}
+		</div>
+	}
+}
+
 templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 	<form
 		hx-post="/settings/sync/dexcom"
@@ -74,6 +85,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 						}
 					}
 				</div>
+				@SyncErrors(dexcomSyncSettings, "dexcom")
 				<!-- Fields -->
 				<div id="dex-fields" class="grid gap-4 md:grid-cols-12">
 					<!-- Username -->
@@ -211,6 +223,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 						}
 					}
 				</div>
+				@SyncErrors(nightscoutSyncSettings, "nightscout")
 				<!-- Fields -->
 				<div id="ns-fields" class="grid gap-4 md:grid-cols-12">
 					<!-- URL -->
@@ -330,6 +343,7 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 						}
 					}
 				</div>
+				@SyncErrors(synSource, "virtual")
 				<!-- Footer -->
 				<div class="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 md:flex-row md:items-center md:justify-between">
 					@button.Button(button.Props{

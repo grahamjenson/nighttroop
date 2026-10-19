@@ -62,6 +62,9 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 
 	if err != nil {
 		errMsg := err.Error()
+		if syncInfo.firstSync {
+			errMsg = "The first sync failed, so syncing has been turned off. Check the details and save to try again. " + errMsg
+		}
 		slog.Error("error syncing user data", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", err)
 		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
 			ErrorMessages: []string{errMsg},
