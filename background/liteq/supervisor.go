@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 )
 
 ///////
@@ -88,5 +90,22 @@ func (c *ConsumerSupervisor) loop() {
 		case <-timer.C:
 			slog.Info("QueueConsumer restarting consumer", "queue", c.queueName, "retryDelay", retryDelay.String())
 		}
+	}
+}
+
+// RunQueued runs every job waiting in the queue now, one at a time, and returns once it is empty.
+// Tests use it in place of Start so background work has finished before they check its results.
+func (c *ConsumerSupervisor) RunQueued(ctx context.Context) error {
+	for {
+		jobs, err := c.queue.GrabJobs(ctx, GrabJobsParams{Queue: c.queueName, Count: 1})
+		if err != nil || len(jobs) == 0 {
+			return err
+		}
+		job := jobs[0]
+		if err := c.worker(ctx, job); err != nil {
+			c.queue.queries.FailJob(ctx, jobsdb.FailJobParams{Errors: job.Errors.Add(err.Error()), ID: job.ID})
+			continue
+		}
+		c.queue.queries.CompleteJob(ctx, jobsdb.CompleteJobParams{ID: job.ID})
 	}
 }

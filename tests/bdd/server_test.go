@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
+	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/browser"
@@ -24,7 +25,7 @@ func NewRouter(t *testing.T) http.Handler {
 	return router
 }
 
-func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, siteInformation *db.SiteCreateResult, defaultJwt string) {
+func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, backgroundJobs *background.BackGroundManager, siteInformation *db.SiteCreateResult, defaultJwt string) {
 	page, err := context.NewPage()
 	if err != nil {
 		t.Fatalf("failed to create new page: %v", err)
@@ -77,6 +78,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			if page == nil {
 				t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
 			}
+			backgroundJobs.RunAllNow(t.Context())
 			// A screenshot of every step is slow, so only take them with go test -v
 			if testing.Verbose() {
 				screenshotPath, err := browser.ScreenshotPage(page, "allScreenshots", path, fmt.Sprintf("%03d", i))

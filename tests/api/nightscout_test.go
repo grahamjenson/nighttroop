@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	_ "embed"
 	"encoding/json"
@@ -12,10 +13,12 @@ import (
 	"strings"
 	"testing"
 
+	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -36,6 +39,8 @@ func TestNS(t *testing.T) {
 	}
 
 	router := server.GetMainHandler(controlDB, config)
+	// Background jobs are run after every request instead of on their timers
+	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 
 	testutils.DumpOnFailure(t, controlDB, "test_ns")
 
@@ -52,7 +57,7 @@ func TestNS(t *testing.T) {
 			return nil
 		}
 
-		RunTheRequestFileAsATest(t, "nightscout", path, router, siteInformation, defaultJwt)
+		RunTheRequestFileAsATest(t, "nightscout", path, router, backgroundJobs, siteInformation, defaultJwt)
 
 		return nil
 	})
@@ -63,7 +68,7 @@ func TestNS(t *testing.T) {
 
 }
 
-func RunTheRequestFileAsATest(t *testing.T, root string, path string, router http.Handler, siteInformation *db.SiteCreateResult, defaultJwt string) {
+func RunTheRequestFileAsATest(t *testing.T, root string, path string, router http.Handler, backgroundJobs *background.BackGroundManager, siteInformation *db.SiteCreateResult, defaultJwt string) {
 	removeNightscout := strings.TrimPrefix(path, root+"/")
 	t.Run(removeNightscout, func(t *testing.T) {
 		requestFileBytes, err := embeddedFiles.ReadFile(path)
@@ -103,6 +108,7 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 			if err != nil {
 				t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, request.Method, request.URL)
 			}
+			backgroundJobs.RunAllNow(context.Background())
 
 			output := newContext[request.Name]
 			statusCode := newContext[request.Name+"_status"]

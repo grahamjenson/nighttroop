@@ -132,7 +132,7 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		urlOrUsername:   username,
 		password:        password,
 		region:          region,
-		firstSync:       syncSource.FirstSyncPending == 1,
+		firstSync:       syncSource.FirstSyncTime == nil,
 	}
 	return b.SyncUserData(syncInfo)
 }

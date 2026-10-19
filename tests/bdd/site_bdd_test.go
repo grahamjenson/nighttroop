@@ -1,6 +1,7 @@
 package bdd_test
 
 import (
+	"context"
 	"embed"
 	"io/fs"
 	"net/http/httptest"
@@ -11,8 +12,10 @@ import (
 
 	"github.com/mxschmitt/playwright-go"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -38,6 +41,8 @@ func TestSite(t *testing.T) {
 	require.NotEmpty(t, defaultJwt) // TODO insert this as a cookie to dodge login for default
 
 	router := server.GetMainHandler(controlDB, config)
+	// Background jobs are run after every action instead of on their timers
+	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
@@ -89,7 +94,7 @@ func TestSite(t *testing.T) {
 
 		context.SetDefaultTimeout(1000) // 1 second
 
-		RunTheActionFileAsATest(t, "site", path, context, server.URL, siteInformation, defaultJwt)
+		RunTheActionFileAsATest(t, "site", path, context, server.URL, backgroundJobs, siteInformation, defaultJwt)
 		context.Close()
 		return nil
 	})

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	ntsync "nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 
@@ -106,26 +105,7 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 		return false, siteapiutils.ErrBadBody
 	}
 
-	if model.Enabled {
-		syncAfterCommitInTests(tx, siteContext, sstype)
-	}
 	return true, nil
-}
-
-// syncAfterCommitInTests runs the first sync as soon as the source is saved when testing,
-// since tests cannot wait for the sync cron. Its result is recorded on the source, and a
-// failure disables it, so the request itself does not fail.
-func syncAfterCommitInTests(tx *siteapiutils.StoreTx, siteContext *httputils.SiteContext, sstype consts.SyncSourceType) {
-	if !siteContext.Config.IsTest() {
-		return
-	}
-	tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError {
-		jobs := ntsync.SetupSyncJobManager(siteContext.Config, siteContext.ControlDB)
-		if err := jobs.SyncSource(ctx, ntsync.SyncJobParams{SiteID: siteContext.Subdomain, Type: sstype}); err != nil {
-			slog.Info("First sync failed", "site_id", siteContext.Subdomain, "sync_type", sstype, "error", err)
-		}
-		return nil
-	})
 }
 
 func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
@@ -206,10 +186,6 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 			return siteapiutils.ErrConstraintCheckFailed
 		}
 		return siteapiutils.ErrBadBody
-	}
-
-	if model.Enabled {
-		syncAfterCommitInTests(tx, siteContext, oldModel.Type)
 	}
 
 	return nil
