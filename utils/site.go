@@ -2,6 +2,7 @@ package utils
 
 import (
 	"regexp"
+	"sync"
 
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -25,8 +26,12 @@ var firstSubdomains = []string{
 	"frankzzz",
 }
 
+var firstSubdomainsLock sync.Mutex
+
 func NextSiteSubdomain(usePrecomputedList bool) string {
 	if usePrecomputedList {
+		firstSubdomainsLock.Lock()
+		defer firstSubdomainsLock.Unlock()
 		if !(len(firstSubdomains) == 0) {
 			next := firstSubdomains[0]
 			firstSubdomains = firstSubdomains[1:]
