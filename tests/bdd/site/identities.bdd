@@ -21,7 +21,7 @@ ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 
 CLICK #site--settings-menu
-CLICK "User/Device Identities"
+CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
 ASSERT_TEXT_VISIBLE Admins & Users
@@ -40,6 +40,6 @@ ASSERT_TEXT_VISIBLE kitchen
 
 // Opening the page again lists the new device
 CLICK #site--settings-menu
-CLICK "User/Device Identities"
+CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE kitchen
