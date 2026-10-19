@@ -104,7 +104,6 @@ type SiteIdentity struct {
 	UpdatedByIdentityName     *string
 	CreatedByIdentityID       int64
 	CreatedByIdentityName     string
-	DeletedAt                 *int64
 	Enabled                   bool
 	Units                     *consts.Units
 	Timezone                  *string

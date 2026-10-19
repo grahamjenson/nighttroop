@@ -30,18 +30,18 @@ INSERT INTO site_identities (
 
 
 -- name: AllSiteIdentities :many
-SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND deleted_at IS NULL ORDER BY created_at DESC, id DESC; -- id breaks ties, as identities made together can share a millisecond
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') ORDER BY created_at DESC, id DESC; -- id breaks ties, as identities made together can share a millisecond
 
 -- name: CountSiteIdentities :one
-SELECT COUNT(*) FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND deleted_at IS NULL;
+SELECT COUNT(*) FROM site_identities WHERE site_id = sqlc.arg('SiteID');
 
 
 -- name: GetSiteIdentity :one
-SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') AND deleted_at IS NULL LIMIT 1;
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') LIMIT 1;
 
 
 -- name: GetSiteIdentityByID :one
-SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') AND deleted_at IS NULL LIMIT 1;
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') LIMIT 1;
 
 
 --------
@@ -64,7 +64,7 @@ SET
     enabled = sqlc.arg('Enabled'),
     updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
-WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') AND deleted_at IS NULL;
+WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 
 
 --------

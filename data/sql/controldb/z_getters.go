@@ -317,16 +317,6 @@ func (m *SiteIdentity) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetDeletedAt returns the DeletedAt value.
-func (m SiteIdentity) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// SetDeletedAt sets the DeletedAt value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetDeletedAt(v *int64) {
-	m.DeletedAt = v
-}
-
 // GetEnabled returns the Enabled value.
 func (m SiteIdentity) GetEnabled() bool {
 	return m.Enabled
