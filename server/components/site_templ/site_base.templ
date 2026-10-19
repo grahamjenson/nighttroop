@@ -52,7 +52,6 @@ templ SiteBase() {
 			<main id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
 				{ children... }
 			</main>
-			@Footer()
 		</div>
 	}
 }
@@ -148,15 +147,6 @@ templ Header() {
 			}
 		</div>
 	</header>
-}
-
-templ Footer() {
-	<footer class="border-t border-gray-200">
-		<div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-1 px-4 py-6 text-sm text-gray-500 sm:flex-row sm:px-6 lg:px-8">
-			<span>Alpha software: features may change.</span>
-			<span>Nightscout compatible</span>
-		</div>
-	</footer>
 }
 
 templ SiteError(message string) {
