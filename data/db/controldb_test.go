@@ -2,10 +2,13 @@ package db_test
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -42,4 +45,20 @@ func TestCreateSiteConcurrently(t *testing.T) {
 		_, err = siteDB.Queries.GetMostRecentProfileStore(context.TODO())
 		require.NoError(t, err, "site %s DB is not usable", subdomains[i])
 	}
+}
+
+// A site DB that cannot be created is an error, not a panic
+func TestCreateSiteWhenSiteDBFails(t *testing.T) {
+	cfg, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+
+	// A file where the data folder should be, so the site DB cannot be written
+	badCfg := *cfg
+	badCfg.Mode = consts.Development
+	badCfg.DataDir = filepath.Join(t.TempDir(), "not-a-folder")
+	require.NoError(t, os.WriteFile(badCfg.DataDir, nil, 0o600))
+	controlDB.ServerConfig = &badCfg
+
+	_, err = controlDB.CreateSite()
+	require.ErrorContains(t, err, "Site DB Creation Error")
 }
