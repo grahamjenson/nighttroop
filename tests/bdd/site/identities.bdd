@@ -25,7 +25,7 @@ CLICK "User/Device Identities"
 ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
 ASSERT_TEXT_VISIBLE Admins & Users
-ASSERT_TEXT_VISIBLE device_pwd_phone
+ASSERT_TEXT_VISIBLE PWD Phone
 SCREENSHOT identities
 
 // Adding a device shows its credentials once
