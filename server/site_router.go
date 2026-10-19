@@ -48,7 +48,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Settings Sync
 		r.Get("/settings/sync", siteapiutils.SearchHandler(controlDB, config, syncSettingsStore))
 		r.Post("/settings/sync/{id}", siteapiutils.UpsertHandler(controlDB, config, syncSettingsStore))
-		r.Delete("/settings/sync/{id}", sitesettings.DELETESyncSettingsHandler(controlDB, config))
+		r.Delete("/settings/sync/{id}", siteapiutils.DeleteHandler(controlDB, config, syncSettingsStore))
 
 		// Settings Identities
 		r.Get("/settings/identities", sitesettings.GETIdentitiesHandler(controlDB, config))

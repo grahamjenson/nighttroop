@@ -370,3 +370,16 @@ templ SuccessfulUpdate(model *sitemodels.SyncSource) {
 		ShowIndicator: true,
 	})
 }
+
+templ SuccessfulDelete() {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   "Sync Deleted",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}

@@ -247,6 +247,63 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 }
 
 // ////
+// DELETE
+// ////
+
+type DeleteInterface[T any] interface {
+	GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	DeleteModel(ctx context.Context, model *T, siteContext *httputils.SiteContext) *HTTPError
+	DeleteHTMXResponse(model *T) templ.Component
+	GetName() string
+}
+
+func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store DeleteInterface[T]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		siteContext := httputils.GetSiteContext(r.Context())
+		if siteContext == nil {
+			slog.Error("site context is nil")
+			ErrNotFound.Write(siteContext.AcceptType, w)
+			return
+		}
+		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
+			ErrForbidden.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			ErrBadRequest.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		model, err := store.GetModel(r.Context(), id, siteContext)
+		if err != nil {
+			ErrNotFound.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		herr := store.DeleteModel(r.Context(), model, siteContext)
+		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		status := http.StatusOK
+		w.WriteHeader(status)
+
+		switch siteContext.AcceptType {
+		case httputils.AcceptTypeHTMX:
+			store.DeleteHTMXResponse(model).Render(r.Context(), w)
+		case httputils.AcceptTypeHTML:
+			// return to the page they came from
+			http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
+		default:
+			w.Write([]byte(`{"status":"deleted"}`))
+		}
+	}
+}
+
+// ////
 // UTILS
 // ////
 func extractModelFromRequest[T any](siteContext *httputils.SiteContext, r *http.Request) (*T, *HTTPError) {

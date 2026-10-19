@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -14,7 +13,6 @@ import (
 	ntsync "nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/clients/dexcom_client"
 	"nighttroop.t1d.nz/clients/nightscout_client"
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 
@@ -31,10 +29,16 @@ import (
 
 type SyncSettingsStore struct{}
 
+// ////
+// Shared
+// ////
 func (s *SyncSettingsStore) GetName() string {
 	return "sync_settings"
 }
 
+// ////
+// CREATE
+// ////
 func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapiutils.HTTPError) {
 	var err error
 	params := sitemodels.SyncSourceToCreate(model)
@@ -107,15 +111,18 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 		}
 		return false, siteapiutils.ErrBadBody
 	}
-	return true, seedVirtual(ctx, siteContext, params.Type, model.Enabled)
+
+	if sstype == consts.SyncSourceTypeVirtual && model.Enabled {
+		if err := seedVirtual(ctx, siteContext); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 // seedVirtual writes the last 30 minutes of virtual data as soon as the
 // virtual source is enabled, so the site has something to show right away.
-func seedVirtual(ctx context.Context, siteContext *httputils.SiteContext, sstype consts.SyncSourceType, enabled bool) *siteapiutils.HTTPError {
-	if sstype != consts.SyncSourceTypeVirtual || !enabled {
-		return nil
-	}
+func seedVirtual(ctx context.Context, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
 	store := nightscoutapi.NewNightTroopAPIStore(siteContext.ControlDB, siteContext.Config)
 	added, err := ntsync.WriteVirtualData(ctx, store, siteContext, time.Now(), 30*time.Minute)
 	if err != nil {
@@ -129,6 +136,10 @@ func seedVirtual(ctx context.Context, siteContext *httputils.SiteContext, sstype
 func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
+
+// ///
+// Update
+// ///
 
 func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
@@ -199,13 +210,22 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 		return siteapiutils.ErrBadBody
 	}
 
-	return seedVirtual(ctx, siteContext, oldModel.Type, model.Enabled)
+	if oldModel.Type == consts.SyncSourceTypeVirtual && model.Enabled {
+		if err := seedVirtual(ctx, siteContext); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *SyncSettingsStore) UpdateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
 	return site_settings_templ.SuccessfulUpdate(model)
 }
 
+// ////
+// Get Model
+// /////
 func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteapiutils.HTTPError) {
 	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
@@ -235,6 +255,10 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 	return respMode, nil
 }
 
+// ///
+// Search Models
+// ///
+
 func (s *SyncSettingsStore) SearchModels(ctx context.Context, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, *siteapiutils.HTTPError) {
 	dbSyncSources, err := siteContext.ControlDB.Queries.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
 		SiteID: siteContext.Subdomain,
@@ -260,10 +284,24 @@ func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource) 
 	return site_settings_templ.SyncSettingsPartial(models)
 }
 
-func DELETESyncSettingsHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+// ///
+// Delete
+// ///
+
+func (s *SyncSettingsStore) DeleteModel(ctx context.Context, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+	err := siteContext.ControlDB.Queries.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{
+		Type:   model.Type,
+		SiteID: model.SiteID,
+	})
+	if err != nil {
+		slog.Error("Error deleting sync source", "error", err)
+		return siteapiutils.ErrInternalServerError
 	}
+	return nil
+}
+
+func (s *SyncSettingsStore) DeleteHTMXResponse(model *sitemodels.SyncSource) templ.Component {
+	return site_settings_templ.SuccessfulDelete()
 }
 
 ///////
