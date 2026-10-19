@@ -155,7 +155,6 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 
 	siteDB, err := NewSiteDB(context.TODO(), subdomain, db.ServerConfig)
 	if err != nil {
-		siteDB.TryCloseAndDelete()
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
 	}
 
