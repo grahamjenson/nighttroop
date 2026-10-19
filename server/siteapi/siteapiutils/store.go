@@ -21,14 +21,10 @@ const errorHTMLXDivID = `#error`
 // CREATE
 ///////
 
-// VerifyModel checks and normalizes a request model before any transaction is opened, so it is
-// where network calls (e.g. testing credentials) belong. oldModel is nil when creating.
-type VerifyInterface[T any] interface {
-	VerifyModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
-}
-
 type CreateHandlerInterface[T any] interface {
-	VerifyInterface[T]
+	// VerifyModel checks and normalizes a request model before any transaction is opened, so it is
+	// where network calls (e.g. testing credentials) belong. oldModel is nil when creating.
+	VerifyModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 	CreateHTMXResponse(model *T) templ.Component
 	GetName() string
@@ -87,7 +83,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 ///////
 
 type UpdateHandlerInterface[T any] interface {
-	VerifyInterface[T]
+	VerifyModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
@@ -153,7 +149,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type UpsertInterface[T any] interface {
-	VerifyInterface[T]
+	VerifyModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 
 	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
