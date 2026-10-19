@@ -22,7 +22,7 @@ const errorHTMLXDivID = `#error`
 ///////
 
 type CreateHandlerInterface[T any] interface {
-	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 	CreateHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -47,8 +47,10 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		created, herr := store.CreateModel(r.Context(), nil, siteContext, requestModel)
-		if herr != nil {
+		tx := NewStoreTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		created, herr := store.CreateModel(r.Context(), tx, nil, siteContext, requestModel)
+		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
@@ -75,11 +77,11 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 ///////
 
 type UpdateHandlerInterface[T any] interface {
-	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
 
-	GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
 	GetName() string
 }
 
@@ -98,20 +100,22 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		id := chi.URLParam(r, "id")
 
-		oldModel, herr := store.GetModel(r.Context(), id, siteContext)
-		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
-			return
-		}
-
 		requestModel, herr := extractModelFromRequest[T](siteContext, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
+		tx := NewStoreTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		oldModel, herr := store.GetModel(r.Context(), tx, id, siteContext)
 		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		herr = store.UpdateModel(r.Context(), tx, id, siteContext, oldModel, requestModel)
+		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
@@ -135,13 +139,13 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type UpsertInterface[T any] interface {
-	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 
-	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
 
-	GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
 	GetName() string
 }
 
@@ -160,31 +164,28 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		id := chi.URLParam(r, "id")
 
-		oldModel, herr := store.GetModel(r.Context(), id, siteContext)
-		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
-			return
-		}
-
 		requestModel, herr := extractModelFromRequest[T](siteContext, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		if oldModel == nil {
-			_, herr = store.CreateModel(r.Context(), &id, siteContext, requestModel)
-			if herr != nil {
-				herr.Write(siteContext.AcceptType, w)
-				return
-			}
-		} else {
+		tx := NewStoreTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		oldModel, herr := store.GetModel(r.Context(), tx, id, siteContext)
+		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
 
-			herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
-			if herr != nil {
-				herr.Write(siteContext.AcceptType, w)
-				return
-			}
+		if oldModel == nil {
+			_, herr = store.CreateModel(r.Context(), tx, &id, siteContext, requestModel)
+		} else {
+			herr = store.UpdateModel(r.Context(), tx, id, siteContext, oldModel, requestModel)
+		}
+		if herr = tx.Finish(herr); herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
 		}
 
 		status := http.StatusOK
@@ -206,7 +207,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type SearchInterface[T any] interface {
-	SearchModels(ctx context.Context, query *Query, siteContext *httputils.SiteContext) ([]*T, *HTTPError)
+	SearchModels(ctx context.Context, tx *StoreTx, query *Query, siteContext *httputils.SiteContext) ([]*T, *HTTPError)
 	SearchHTMXResponse(models []*T) templ.Component
 	GetName() string
 }
@@ -226,8 +227,10 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		query := QueryFromParams(r.URL.Query())
-		models, herr := store.SearchModels(r.Context(), query, siteContext)
-		if herr != nil {
+		tx := NewStoreTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		models, herr := store.SearchModels(r.Context(), tx, query, siteContext)
+		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
@@ -251,8 +254,8 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // ////
 
 type DeleteInterface[T any] interface {
-	GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
-	DeleteModel(ctx context.Context, model *T, siteContext *httputils.SiteContext) *HTTPError
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	DeleteModel(ctx context.Context, tx *StoreTx, model *T, siteContext *httputils.SiteContext) *HTTPError
 	DeleteHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -276,13 +279,15 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		model, err := store.GetModel(r.Context(), id, siteContext)
+		tx := NewStoreTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		model, err := store.GetModel(r.Context(), tx, id, siteContext)
 		if err != nil {
 			ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		herr := store.DeleteModel(r.Context(), model, siteContext)
+		herr := tx.Finish(store.DeleteModel(r.Context(), tx, model, siteContext))
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return

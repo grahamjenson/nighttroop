@@ -39,7 +39,7 @@ func (s *SyncSettingsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapiutils.HTTPError) {
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapiutils.HTTPError) {
 	var err error
 	params := sitemodels.SyncSourceToCreate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
@@ -81,6 +81,7 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 	}
 
 	if model.Enabled {
+		// TODO: this makes a network call, and an upsert has already opened the control DB transaction in GetModel
 		if herr := verifySyncSource(ctx, params.Type, *params.UrlOrUsernameEnc, *params.PasswordEnc, params.Region); herr != nil {
 			return false, herr
 		}
@@ -98,7 +99,11 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 	}
 	params.UrlOrUsernameEnc = &encUrlOrUsername
 
-	err = siteContext.ControlDB.Queries.CreateSyncSource(ctx, params)
+	q, err := tx.Control()
+	if err != nil {
+		return false, siteapiutils.ErrInternalServerError
+	}
+	err = q.CreateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
 			return false, siteapiutils.ErrUniqueConstraintViolation
@@ -113,9 +118,8 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 	}
 
 	if sstype == consts.SyncSourceTypeVirtual && model.Enabled {
-		if err := seedVirtual(ctx, siteContext); err != nil {
-			return false, err
-		}
+		// Seeding writes through its own queries, so it waits until this transaction commits
+		tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError { return seedVirtual(ctx, siteContext) })
 	}
 	return true, nil
 }
@@ -141,7 +145,7 @@ func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) tem
 // Update
 // ///
 
-func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
+func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
 		return siteapiutils.ErrRateLimitExceeded(seconds)
 	}
@@ -171,8 +175,14 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 		}
 	}
 
+	q, err := tx.Control()
+	if err != nil {
+		return siteapiutils.ErrInternalServerError
+	}
+
 	if model.Enabled {
-		if herr := verifyUpdatedSyncSource(ctx, siteContext, oldModel.Type, params); herr != nil {
+		// TODO: this can make a network call while the control DB transaction is open
+		if herr := verifyUpdatedSyncSource(ctx, q, siteContext, oldModel.Type, params); herr != nil {
 			return herr
 		}
 	}
@@ -196,7 +206,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 		}
 	}
 
-	err = siteContext.ControlDB.Queries.UpdateSyncSource(ctx, params)
+	err = q.UpdateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
 			return siteapiutils.ErrUniqueConstraintViolation
@@ -211,9 +221,8 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	}
 
 	if oldModel.Type == consts.SyncSourceTypeVirtual && model.Enabled {
-		if err := seedVirtual(ctx, siteContext); err != nil {
-			return err
-		}
+		// Seeding writes through its own queries, so it waits until this transaction commits
+		tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError { return seedVirtual(ctx, siteContext) })
 	}
 
 	return nil
@@ -226,13 +235,17 @@ func (s *SyncSettingsStore) UpdateHTMXResponse(model *sitemodels.SyncSource) tem
 // ////
 // Get Model
 // /////
-func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteapiutils.HTTPError) {
+func (s *SyncSettingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *siteapiutils.HTTPError) {
 	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
 		return nil, siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", id))
 	}
 
-	model, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
+	q, err := tx.Control()
+	if err != nil {
+		return nil, siteapiutils.ErrInternalServerError
+	}
+	model, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 		Type:   sstype,
 		SiteID: siteContext.Subdomain,
 	})
@@ -259,8 +272,12 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 // Search Models
 // ///
 
-func (s *SyncSettingsStore) SearchModels(ctx context.Context, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, *siteapiutils.HTTPError) {
-	dbSyncSources, err := siteContext.ControlDB.Queries.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
+func (s *SyncSettingsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, *siteapiutils.HTTPError) {
+	q, err := tx.Control()
+	if err != nil {
+		return nil, siteapiutils.ErrInternalServerError
+	}
+	dbSyncSources, err := q.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
 		SiteID: siteContext.Subdomain,
 	})
 
@@ -288,8 +305,12 @@ func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource) 
 // Delete
 // ///
 
-func (s *SyncSettingsStore) DeleteModel(ctx context.Context, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
-	err := siteContext.ControlDB.Queries.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{
+func (s *SyncSettingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+	q, err := tx.Control()
+	if err != nil {
+		return siteapiutils.ErrInternalServerError
+	}
+	err = q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{
 		Type:   model.Type,
 		SiteID: model.SiteID,
 	})
@@ -329,7 +350,7 @@ func verifySyncSource(ctx context.Context, sstype consts.SyncSourceType, urlOrUs
 
 // verifyUpdatedSyncSource verifies an update, taking any detail it leaves out
 // (the form sends a placeholder for an unchanged password) from the stored source.
-func verifyUpdatedSyncSource(ctx context.Context, siteContext *httputils.SiteContext, sstype consts.SyncSourceType, params controldb.UpdateSyncSourceParams) *siteapiutils.HTTPError {
+func verifyUpdatedSyncSource(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, sstype consts.SyncSourceType, params controldb.UpdateSyncSourceParams) *siteapiutils.HTTPError {
 	password := params.PasswordEnc
 	if password != nil && (strings.TrimSpace(*password) == "" || *password == consts.PASSWORD_GARBAGE_VALUE) {
 		password = nil
@@ -337,7 +358,7 @@ func verifyUpdatedSyncSource(ctx context.Context, siteContext *httputils.SiteCon
 	if sstype == consts.SyncSourceTypeVirtual || (params.UrlOrUsernameEnc == nil && password == nil && params.Region == nil) {
 		return nil
 	}
-	stored, err := siteContext.ControlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{Type: sstype, SiteID: siteContext.Subdomain})
+	stored, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{Type: sstype, SiteID: siteContext.Subdomain})
 	if err != nil {
 		return siteapiutils.ErrBadBody
 	}
