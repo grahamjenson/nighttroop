@@ -33,18 +33,18 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc("bad-user"), PasswordEnc: enc("pass"), Enabled: true}))
 	require.Error(t, runSync())
 	s := get()
-	require.NotNil(t, s.FirstSyncTime)
+	require.Nil(t, s.FirstSuccessfulSyncTime)
 	require.False(t, s.Enabled)
 	require.Contains(t, s.PreviousSyncErrors[0], "The first sync failed, so syncing has been turned off")
 
 	// Saving working details clears the error, and the next sync is a first sync again
 	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(dexcom_client.TestValidUsername), Enabled: true}))
 	s = get()
-	require.Nil(t, s.FirstSyncTime)
+	require.Nil(t, s.FirstSuccessfulSyncTime)
 	require.Empty(t, s.PreviousSyncErrors)
 	require.NoError(t, runSync())
 	s = get()
-	require.NotNil(t, s.FirstSyncTime)
+	require.NotNil(t, s.FirstSuccessfulSyncTime)
 	require.True(t, s.Enabled)
 
 	// After the first sync has worked, a failure only backs off, it does not turn syncing off
@@ -55,7 +55,7 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	require.True(t, s.Enabled)
 	require.NotContains(t, s.PreviousSyncErrors[0], "first sync")
 
-	// Deleting clears it, so a deleted source does not keep its first sync time
+	// Deleting clears it, so a deleted source does not keep its first successful sync time
 	require.NoError(t, q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{SiteID: siteID, Type: typ}))
-	require.Nil(t, get().FirstSyncTime)
+	require.Nil(t, get().FirstSuccessfulSyncTime)
 }

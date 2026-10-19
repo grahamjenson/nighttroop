@@ -847,14 +847,14 @@ func (m *SiteSyncSource) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
-// GetFirstSyncTime returns the FirstSyncTime value.
-func (m SiteSyncSource) GetFirstSyncTime() *int64 {
-	return m.FirstSyncTime
+// GetFirstSuccessfulSyncTime returns the FirstSuccessfulSyncTime value.
+func (m SiteSyncSource) GetFirstSuccessfulSyncTime() *int64 {
+	return m.FirstSuccessfulSyncTime
 }
 
-// SetFirstSyncTime sets the FirstSyncTime value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetFirstSyncTime(v *int64) {
-	m.FirstSyncTime = v
+// SetFirstSuccessfulSyncTime sets the FirstSuccessfulSyncTime value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetFirstSuccessfulSyncTime(v *int64) {
+	m.FirstSuccessfulSyncTime = v
 }
 
 // GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.

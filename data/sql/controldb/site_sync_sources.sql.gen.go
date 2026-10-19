@@ -59,7 +59,7 @@ UPDATE site_sync_sources SET
     url_or_username_enc = NULL,
     password_enc = NULL,
     previous_sync_errors = NULL,
-    first_sync_time = NULL,
+    first_successful_sync_time = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE type = ? AND site_id = ?
 `
@@ -78,7 +78,7 @@ func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourcePara
 }
 
 const getAllSyncSourcesForSite = `-- name: GetAllSyncSourcesForSite :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSyncSourcesForSiteParams struct {
@@ -103,7 +103,7 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enabled,
-			&i.FirstSyncTime,
+			&i.FirstSuccessfulSyncTime,
 			&i.SyncIntervalSecondsReason,
 			&i.SyncIntervalSeconds,
 			&i.LastAttemptedSync,
@@ -136,14 +136,14 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
 
 
-SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_sync_time, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
+SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
   AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- site has been seen in the last day
   AND (
       us.last_attempted_sync IS NULL
-      OR us.first_sync_time IS NULL -- just saved, so check the new settings straight away
+      OR us.first_successful_sync_time IS NULL -- just saved, so check the new settings straight away
       OR us.last_attempted_sync <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (us.sync_interval_seconds * 1000)
   )
 `
@@ -174,7 +174,7 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enabled,
-			&i.FirstSyncTime,
+			&i.FirstSuccessfulSyncTime,
 			&i.SyncIntervalSecondsReason,
 			&i.SyncIntervalSeconds,
 			&i.LastAttemptedSync,
@@ -205,7 +205,7 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 }
 
 const getSyncSource = `-- name: GetSyncSource :one
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
 `
 
 type GetSyncSourceParams struct {
@@ -225,7 +225,7 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Enabled,
-		&i.FirstSyncTime,
+		&i.FirstSuccessfulSyncTime,
 		&i.SyncIntervalSecondsReason,
 		&i.SyncIntervalSeconds,
 		&i.LastAttemptedSync,
@@ -272,7 +272,7 @@ UPDATE site_sync_sources SET
     url_or_username_enc = COALESCE(?3, url_or_username_enc),
     region = COALESCE(?4, region),
     -- New settings get a fresh first sync, and old errors no longer apply
-    first_sync_time = NULL,
+    first_successful_sync_time = NULL,
     previous_sync_errors = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = ?5 AND site_id = ?6
@@ -315,8 +315,7 @@ SET
     consecutive_successful_syncs = 0,
 
     -- A failed first sync means the settings do not work, so stop syncing until they are saved again
-    enabled = CASE WHEN first_sync_time IS NULL THEN 0 ELSE enabled END,
-    first_sync_time = COALESCE(first_sync_time, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    enabled = CASE WHEN first_successful_sync_time IS NULL THEN 0 ELSE enabled END,
 
     -- Back off: double the wait after every failure (bad status, timeout,
     -- bad credentials), capped at an hour, so a broken source is not hammered
@@ -373,7 +372,7 @@ SET
     
     consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
-    first_sync_time = COALESCE(first_sync_time, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    first_successful_sync_time = COALESCE(first_successful_sync_time, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
     -- Back to the default interval once a sync works again
     sync_interval_seconds = 60,

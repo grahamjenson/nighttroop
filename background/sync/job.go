@@ -42,7 +42,7 @@ type SyncJobInfo struct {
 	urlOrUsername   string
 	password        string
 	region          consts.DexcomRegion
-	// firstSync is the first sync since the source was saved; if it fails the source is disabled
+	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
 }
 
@@ -132,7 +132,7 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		urlOrUsername:   username,
 		password:        password,
 		region:          region,
-		firstSync:       syncSource.FirstSyncTime == nil,
+		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
 	}
 	return b.SyncUserData(syncInfo)
 }

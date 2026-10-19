@@ -138,7 +138,7 @@ CREATE TABLE site_sync_sources (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
     enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
-    first_sync_time INTEGER, -- when the first sync after the last save ran; NULL until then, and if that sync fails the source is disabled
+    first_successful_sync_time INTEGER, -- when a sync first worked since the last save; while NULL a failed sync disables the source
 
     -- REPORTING
 
