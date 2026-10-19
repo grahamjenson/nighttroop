@@ -169,7 +169,7 @@ SELECT * FROM jobs
 WHERE
     job_status IN ('completed', 'failed')
     AND remaining_attempts = 0
-    AND created_at <= (CAST(unixepoch('subsec') * 1000 AS INTEGER) - CAST(sqlc.arg('SecondsAgo') AS INTEGER)); --jobs created at more than 1 minute ago
+    AND created_at <= (CAST(unixepoch('subsec') * 1000 AS INTEGER) - CAST(sqlc.arg('SecondsAgo') AS INTEGER) * 1000); -- created_at is in milliseconds
 
 
 
