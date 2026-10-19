@@ -68,14 +68,7 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') AND deleted_at IS NUL
 -- DELETE
 --------
 
--- Soft delete keeps the row for the audit trail, but wipes the credentials so it can never log in again
+-- Hard delete: the row and its credentials are gone, so the name can be used again
 -- name: DeleteSiteIdentity :exec
-UPDATE site_identities
-SET
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    enabled = 0,
-    password_hash = '',
-    totp_secret_enc = '',
-    updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'),
-    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
-WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') AND deleted_at IS NULL;
+DELETE FROM site_identities
+WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');

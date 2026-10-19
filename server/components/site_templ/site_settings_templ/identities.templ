@@ -5,6 +5,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -81,6 +82,9 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 				@table.Head() {
 					Last Write 
 				}
+				@table.Head() {
+					<span class="sr-only">Actions</span>
+				}
 			}
 		}
 		@table.Body() {
@@ -111,7 +115,54 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 		@table.Cell() {
 			{ identity.LastWrite }
 		}
+		@table.Cell() {
+			@identityActions(identity)
+		}
 	}
+}
+
+// identityActions turns an identity on or off, or deletes it. Your own identity cannot be changed here.
+// The toggle's hx-vals keeps its form from being empty when unchecked, and a failed update flips it back.
+templ identityActions(identity *sitemodels.UserIdentity) {
+	{{ id := "site--identities--" + identity.Name }}
+	<div class="flex items-center justify-end gap-2">
+		<label id={ id + "--enabled" } title="Enabled" class={ "relative inline-flex items-center", templ.KV("cursor-pointer", !identity.CurrentIdentity), templ.KV("opacity-50", identity.CurrentIdentity) }>
+			<input
+				type="checkbox"
+				name="enabled"
+				class="peer sr-only"
+				checked?={ identity.Enabled }
+				disabled?={ identity.CurrentIdentity }
+				hx-post={ "/settings/identities/" + identity.ID }
+				hx-trigger="change"
+				hx-vals={ `{"id": "` + identity.ID + `"}` }
+				hx-target="#toaster"
+				hx-swap="beforeend"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+				hx-on::after:request="if (ctx.response.status >= 400) this.checked = !this.checked"
+			/>
+			<span class="h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-gray-900 after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
+		</label>
+		@button.Button(button.Props{
+			ID:       id + "--delete",
+			Variant:  button.VariantGhost,
+			Size:     button.SizeIcon,
+			Disabled: identity.CurrentIdentity,
+			Attributes: templ.Attributes{
+				"title":         "Delete",
+				"hx-delete":     "/settings/identities/" + identity.ID,
+				"hx-confirm":    "Delete " + identity.Name + "? Its password and tokens will stop working.",
+				"hx-target":     "#toaster",
+				"hx-swap":       "beforeend",
+				"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+				"hx-status:4xx": "target:#toaster swap:beforeend",
+				"hx-status:5xx": "target:#toaster swap:beforeend",
+			},
+		}) {
+			@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+		}
+	</div>
 }
 
 templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOption) {
@@ -273,10 +324,14 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 	</div>
 }
 
-templ IdentityUpdated() {
+templ IdentityUpdated(identity *sitemodels.UserIdentity) {
+	{{ state := "disabled" }}
+	if identity.Enabled {
+		{{ state = "enabled" }}
+	}
 	@toast.Toast(toast.Props{
 		Title:         "Success",
-		Description:   "Identity Updated",
+		Description:   identity.Name + " " + state,
 		Variant:       toast.VariantSuccess,
 		Position:      toast.PositionTopCenter,
 		Duration:      5000,

@@ -155,35 +155,21 @@ func (q *Queries) CreateSiteIdentity(ctx context.Context, arg CreateSiteIdentity
 
 const deleteSiteIdentity = `-- name: DeleteSiteIdentity :exec
 
-UPDATE site_identities
-SET
-    deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    enabled = 0,
-    password_hash = '',
-    totp_secret_enc = '',
-    updated_by_identity_id = ?1,
-    updated_by_identity_name = ?2
-WHERE site_id = ?3 AND id = ?4 AND deleted_at IS NULL
+DELETE FROM site_identities
+WHERE site_id = ?1 AND id = ?2
 `
 
 type DeleteSiteIdentityParams struct {
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	SiteID                string
-	ID                    int64
+	SiteID string
+	ID     int64
 }
 
 // ------
 // DELETE
 // ------
-// Soft delete keeps the row for the audit trail, but wipes the credentials so it can never log in again
+// Hard delete: the row and its credentials are gone, so the name can be used again
 func (q *Queries) DeleteSiteIdentity(ctx context.Context, arg DeleteSiteIdentityParams) error {
-	_, err := q.exec(ctx, q.deleteSiteIdentityStmt, deleteSiteIdentity,
-		arg.UpdatedByIdentityID,
-		arg.UpdatedByIdentityName,
-		arg.SiteID,
-		arg.ID,
-	)
+	_, err := q.exec(ctx, q.deleteSiteIdentityStmt, deleteSiteIdentity, arg.SiteID, arg.ID)
 	return err
 }
 

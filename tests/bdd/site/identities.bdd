@@ -43,3 +43,16 @@ CLICK #site--settings-menu
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE kitchen
+
+// A device can be turned off and back on
+CLICK #site--identities--kitchen--enabled
+ASSERT_TEXT_VISIBLE kitchen disabled
+CLICK #site--identities--kitchen--enabled
+ASSERT_TEXT_VISIBLE kitchen enabled
+SCREENSHOT identities_actions
+
+// Deleting asks first (the test accepts), then removes the row
+CLICK #site--identities--kitchen--delete
+ASSERT_TEXT_VISIBLE Identity Deleted
+ASSERT_NOT_VISIBLE #site--identities--kitchen--enabled
+SCREENSHOT identities_device_deleted
