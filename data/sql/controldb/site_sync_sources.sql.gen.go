@@ -59,6 +59,7 @@ UPDATE site_sync_sources SET
     url_or_username_enc = NULL,
     password_enc = NULL,
     previous_sync_errors = NULL,
+    first_sync_time = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE type = ? AND site_id = ?
 `

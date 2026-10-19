@@ -54,4 +54,8 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	s = get()
 	require.True(t, s.Enabled)
 	require.NotContains(t, s.PreviousSyncErrors[0], "first sync")
+
+	// Deleting clears it, so a deleted source does not keep its first sync time
+	require.NoError(t, q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{SiteID: siteID, Type: typ}))
+	require.Nil(t, get().FirstSyncTime)
 }
