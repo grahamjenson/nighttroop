@@ -71,6 +71,9 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			fmt.Println()
 			// default information
 
+			if _, ok := action.(*browser.RunBackgroundJobs); ok {
+				backgroundJobs.RunAllNow(t.Context())
+			}
 			page, err = action.Execute(t, page, actionContext)
 			if err != nil {
 				t.Fatalf("failed to execute action: %v, action: %s", err, action.ToFlatString())
@@ -78,7 +81,6 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			if page == nil {
 				t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
 			}
-			backgroundJobs.RunAllNow(t.Context())
 			// A screenshot of every step is slow, so only take them with go test -v
 			if testing.Verbose() {
 				screenshotPath, err := browser.ScreenshotPage(page, "allScreenshots", path, fmt.Sprintf("%03d", i))

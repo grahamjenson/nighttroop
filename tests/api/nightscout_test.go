@@ -90,6 +90,11 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 			t.Fatalf("failed to parse request file: %v", err)
 		}
 		for _, request := range requestFile.Requests {
+			if request.RunBackgroundJobs {
+				fmt.Println("=============== RUN_BACKGROUND_JOBS ================")
+				backgroundJobs.RunAllNow(context.Background())
+				continue
+			}
 
 			if err != nil {
 				t.Fatalf("failed to build real request: %v", err)
@@ -108,7 +113,6 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 			if err != nil {
 				t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, request.Method, request.URL)
 			}
-			backgroundJobs.RunAllNow(context.Background())
 
 			output := newContext[request.Name]
 			statusCode := newContext[request.Name+"_status"]

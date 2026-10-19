@@ -47,6 +47,8 @@ CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
 
+RUN_BACKGROUND_JOBS
+
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--settings--sync-button
 

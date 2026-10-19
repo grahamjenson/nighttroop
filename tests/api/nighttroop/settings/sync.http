@@ -17,6 +17,8 @@ H Accept: application/json
 B {"url_or_username": "http://bad.nightscout.test", "password": "a-token", "enabled": true}
 ASSERT_STATUS 200
 
+RUN_BACKGROUND_JOBS
+
 // Saving does not check the details; the first sync does, and turns syncing off when it fails
 NAME nightscout_first_sync_failed
 GET http://{{ site }}/settings/sync
@@ -33,6 +35,8 @@ H Accept: application/json
 B {"url_or_username": "http://valid.nightscout.test", "password": "a-token", "enabled": true}
 ASSERT_STATUS 200
 ASSERT_EQUALS "http://valid.nightscout.test" "@result.url_or_username"
+
+RUN_BACKGROUND_JOBS
 
 // Saving working details clears the error and the first sync keeps syncing on
 NAME nightscout_first_sync_worked
@@ -57,6 +61,8 @@ H Accept: application/json
 B {"url_or_username": "http://bad.nightscout.test", "enabled": true}
 ASSERT_STATUS 200
 
+RUN_BACKGROUND_JOBS
+
 NAME nightscout_first_sync_after_update_failed
 GET http://{{ site }}/settings/sync
 H Authorization: Bearer {{ jwt }}
@@ -78,6 +84,8 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": true}
 ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
 
 // Sources are listed by type, so dexcom is first
 NAME dexcom_first_sync_failed
@@ -103,6 +111,8 @@ H Accept: application/json
 B {"enabled": true}
 ASSERT_STATUS 200
 ASSERT_EQUALS true "@result.enabled"
+
+RUN_BACKGROUND_JOBS
 
 NAME virtual_entries_seeded
 GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
@@ -131,6 +141,8 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"enabled": true}
 ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
 
 NAME virtual_entries_not_duplicated
 GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}

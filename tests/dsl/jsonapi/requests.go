@@ -40,6 +40,9 @@ type Request struct {
 
 	Asserts []Assert
 	Sets    []Set
+
+	// RunBackgroundJobs marks a RUN_BACKGROUND_JOBS step, which runs every background and cron job instead of a request
+	RunBackgroundJobs bool
 }
 
 func (r *Request) ToFlatString() string {
