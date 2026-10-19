@@ -32,6 +32,15 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 
 	removeNightscout := strings.TrimPrefix(path, root+"/")
 	t.Run(removeNightscout, func(t *testing.T) {
+		// Always keep a screenshot of the page a failing file stopped on
+		t.Cleanup(func() {
+			if t.Failed() {
+				if screenshotPath, err := browser.ScreenshotPage(page, "allScreenshots", path, "failed"); err == nil {
+					t.Logf("Failure screenshot saved to: %s", screenshotPath)
+				}
+			}
+		})
+
 		actionFileBytes, err := embeddedFiles.ReadFile(path)
 		if err != nil {
 			t.Fatalf("failed to read action file: %v", err)
@@ -68,11 +77,14 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			if page == nil {
 				t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
 			}
-			screenshotPath, err := browser.ScreenshotPage(page, "allScreenshots", path, fmt.Sprintf("%03d", i))
-			if err != nil {
-				t.Fatalf("failed to take screenshot: %v", err)
+			// A screenshot of every step is slow, so only take them with go test -v
+			if testing.Verbose() {
+				screenshotPath, err := browser.ScreenshotPage(page, "allScreenshots", path, fmt.Sprintf("%03d", i))
+				if err != nil {
+					t.Fatalf("failed to take screenshot: %v", err)
+				}
+				fmt.Println("Screenshot saved to:", screenshotPath)
 			}
-			fmt.Println("Screenshot saved to:", screenshotPath)
 			fmt.Println("===============================")
 		}
 
