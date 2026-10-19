@@ -2,22 +2,15 @@ package site_settings_templ
 
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/httputils"
 )
-
-templ Identities(siteContext *httputils.SiteContext, users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
-	@site_templ.SiteBase() {
-		@IdentitesTable(users, devices)
-	}
-}
 
 templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
 	<div id="identities_table">
@@ -112,13 +105,13 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 		}
 		@table.Body() {
 			for _, identity := range identities {
-				@createTableRowForIdentity(identity)
+				@IdentityRow(identity)
 			}
 		}
 	}
 }
 
-templ createTableRowForIdentity(identity *sitemodels.UserIdentity) {
+templ IdentityRow(identity *sitemodels.UserIdentity) {
 	@table.Row() {
 		@table.Cell() {
 			{ identity.Name }
@@ -210,7 +203,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 }
 
 templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
-	@createTableRowForIdentity(identity)
+	@IdentityRow(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
 		@newIdentityModal(url, identity, password, totpSecret, nsToken)
 	</div>
@@ -298,4 +291,30 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 			</div>
 		</div>
 	</div>
+}
+
+templ IdentityUpdated() {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   "Identity Updated",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}
+
+templ IdentityDeleted() {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   "Identity Deleted",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
 }
