@@ -25,8 +25,14 @@ ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 SCREENSHOT site_home
 
+ASSERT_TEXT_VISIBLE Alpha software: features may change.
+
+// The menu says who is signed in and links to each settings page
 CLICK #site--settings-menu
+ASSERT_TEXT_VISIBLE Signed in as
+ASSERT_VISIBLE #site--settings--identities-button
 ASSERT_VISIBLE #site--settings--sync-button
+ASSERT_VISIBLE #site--settings--logout-button
 SCREENSHOT site_settings_menu
 
 CLICK #site--settings--sync-button
