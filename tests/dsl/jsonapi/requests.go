@@ -173,6 +173,7 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 
 	context[r.Name] = out
 	context[r.Name+"_status"] = rr.Code
+	context[r.Name+"_headers"] = rr.Header()
 
 	// EXECUTE THE SETS
 	for _, setStruct := range r.Sets {

@@ -128,8 +128,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticCheckboxJsETag)
+		if r.Header.Get("If-None-Match") == StaticCheckboxJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticCheckboxJs))
 		if err != nil {
@@ -139,8 +144,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/checkbox.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticCheckboxMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticCheckboxMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticCheckboxMinJs))
 		if err != nil {
@@ -150,8 +160,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/copybutton.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticCopybuttonJsETag)
+		if r.Header.Get("If-None-Match") == StaticCopybuttonJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticCopybuttonJs))
 		if err != nil {
@@ -161,8 +176,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/copybutton.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticCopybuttonMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticCopybuttonMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticCopybuttonMinJs))
 		if err != nil {
@@ -172,8 +192,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/d3.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticD3JsETag)
+		if r.Header.Get("If-None-Match") == StaticD3JsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticD3Js))
 		if err != nil {
@@ -183,8 +208,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/dropdown.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticDropdownJsETag)
+		if r.Header.Get("If-None-Match") == StaticDropdownJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticDropdownJs))
 		if err != nil {
@@ -194,8 +224,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/dropdown.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticDropdownMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticDropdownMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticDropdownMinJs))
 		if err != nil {
@@ -205,8 +240,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/empty", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/octet-stream")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticEmptyETag)
+		if r.Header.Get("If-None-Match") == StaticEmptyETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticEmpty))
 		if err != nil {
@@ -216,8 +256,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/x-icon")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticFaviconIcoETag)
+		if r.Header.Get("If-None-Match") == StaticFaviconIcoETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticFaviconIco))
 		if err != nil {
@@ -227,8 +272,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/floating_ui_core.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticFloatingUiCoreJsETag)
+		if r.Header.Get("If-None-Match") == StaticFloatingUiCoreJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticFloatingUiCoreJs))
 		if err != nil {
@@ -238,8 +288,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/floating_ui_dom.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticFloatingUiDomJsETag)
+		if r.Header.Get("If-None-Match") == StaticFloatingUiDomJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticFloatingUiDomJs))
 		if err != nil {
@@ -249,8 +304,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticHtmxJsETag)
+		if r.Header.Get("If-None-Match") == StaticHtmxJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticHtmxJs))
 		if err != nil {
@@ -260,8 +320,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticInputJsETag)
+		if r.Header.Get("If-None-Match") == StaticInputJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticInputJs))
 		if err != nil {
@@ -271,8 +336,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/input.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticInputMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticInputMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticInputMinJs))
 		if err != nil {
@@ -282,8 +352,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/inputotp.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticInputotpJsETag)
+		if r.Header.Get("If-None-Match") == StaticInputotpJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticInputotpJs))
 		if err != nil {
@@ -293,8 +368,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/inputotp.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticInputotpMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticInputotpMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticInputotpMinJs))
 		if err != nil {
@@ -304,8 +384,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/label.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticLabelJsETag)
+		if r.Header.Get("If-None-Match") == StaticLabelJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticLabelJs))
 		if err != nil {
@@ -315,8 +400,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/label.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticLabelMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticLabelMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticLabelMinJs))
 		if err != nil {
@@ -326,8 +416,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/popover.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticPopoverJsETag)
+		if r.Header.Get("If-None-Match") == StaticPopoverJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticPopoverJs))
 		if err != nil {
@@ -337,8 +432,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/popover.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticPopoverMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticPopoverMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticPopoverMinJs))
 		if err != nil {
@@ -348,8 +448,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/qrcode.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticQrcodeJsETag)
+		if r.Header.Get("If-None-Match") == StaticQrcodeJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticQrcodeJs))
 		if err != nil {
@@ -359,8 +464,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticRobotsTxtETag)
+		if r.Header.Get("If-None-Match") == StaticRobotsTxtETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticRobotsTxt))
 		if err != nil {
@@ -370,8 +480,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/selectbox.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticSelectboxJsETag)
+		if r.Header.Get("If-None-Match") == StaticSelectboxJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticSelectboxJs))
 		if err != nil {
@@ -381,8 +496,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/selectbox.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticSelectboxMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticSelectboxMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticSelectboxMinJs))
 		if err != nil {
@@ -392,8 +512,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticStyleGenCssETag)
+		if r.Header.Get("If-None-Match") == StaticStyleGenCssETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticStyleGenCss))
 		if err != nil {
@@ -403,8 +528,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/toast.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticToastJsETag)
+		if r.Header.Get("If-None-Match") == StaticToastJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticToastJs))
 		if err != nil {
@@ -414,8 +544,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/toast.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticToastMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticToastMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticToastMinJs))
 		if err != nil {
@@ -425,8 +560,13 @@ func AddStaticRoutes(r chi.Router) error {
 	r.Get("/z_static_gen.go", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/octet-stream")
 
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("ETag", StaticZStaticGenGoETag)
+		if r.Header.Get("If-None-Match") == StaticZStaticGenGoETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
 		_, err := w.Write([]byte(StaticZStaticGenGo))
 		if err != nil {
