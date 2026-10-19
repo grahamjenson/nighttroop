@@ -2627,6 +2627,26 @@ func (m *GetSiteIdentityParams) SetName(v string) {
 	m.Name = v
 }
 
+// GetSiteID returns the SiteID value.
+func (m GetSiteIdentityByIDParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityByIDParams.
+func (m *GetSiteIdentityByIDParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteIdentityByIDParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteIdentityByIDParams.
+func (m *GetSiteIdentityByIDParams) SetID(v int64) {
+	m.ID = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m UpdateSiteIdentityDateFlagsParams) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
@@ -2654,6 +2674,96 @@ func (m UpdateSiteIdentityDateFlagsParams) GetID() int64 {
 
 // SetID sets the ID value and returns the updated UpdateSiteIdentityDateFlagsParams.
 func (m *UpdateSiteIdentityDateFlagsParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetEnabled returns the Enabled value.
+func (m UpdateSiteIdentityEnabledParams) GetEnabled() bool {
+	return m.Enabled
+}
+
+// SetEnabled sets the Enabled value and returns the updated UpdateSiteIdentityEnabledParams.
+func (m *UpdateSiteIdentityEnabledParams) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateSiteIdentityEnabledParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateSiteIdentityEnabledParams.
+func (m *UpdateSiteIdentityEnabledParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateSiteIdentityEnabledParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateSiteIdentityEnabledParams.
+func (m *UpdateSiteIdentityEnabledParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSiteIdentityEnabledParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityEnabledParams.
+func (m *UpdateSiteIdentityEnabledParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteIdentityEnabledParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteIdentityEnabledParams.
+func (m *UpdateSiteIdentityEnabledParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m DeleteSiteIdentityParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated DeleteSiteIdentityParams.
+func (m *DeleteSiteIdentityParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m DeleteSiteIdentityParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated DeleteSiteIdentityParams.
+func (m *DeleteSiteIdentityParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteSiteIdentityParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityParams.
+func (m *DeleteSiteIdentityParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m DeleteSiteIdentityParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteSiteIdentityParams.
+func (m *DeleteSiteIdentityParams) SetID(v int64) {
 	m.ID = v
 }
 

@@ -109,6 +109,9 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		oldModel, herr := store.GetModel(r.Context(), tx, id, siteContext)
+		if herr == nil && oldModel == nil {
+			herr = ErrNotFound
+		}
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -249,6 +252,52 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 	}
 }
 
+type GetInterface[T any] interface {
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	GetHTMXResponse(model *T) templ.Component
+	GetName() string
+}
+
+func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store GetInterface[T]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		siteContext := httputils.GetSiteContext(r.Context())
+		if siteContext == nil {
+			slog.Error("site context is nil")
+			ErrNotFound.Write(siteContext.AcceptType, w)
+			return
+		}
+		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
+			ErrForbidden.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		id := chi.URLParam(r, "id")
+		tx := NewStoreTx(r.Context(), siteContext)
+		defer tx.Rollback()
+		model, herr := store.GetModel(r.Context(), tx, id, siteContext)
+		if herr == nil && model == nil {
+			herr = ErrNotFound
+		}
+		if herr = tx.Finish(herr); herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
+
+		status := http.StatusOK
+		w.WriteHeader(status)
+
+		switch siteContext.AcceptType {
+		case httputils.AcceptTypeHTMX:
+			store.GetHTMXResponse(model).Render(r.Context(), w)
+		case httputils.AcceptTypeHTML:
+			site_templ.FullPage(store.GetHTMXResponse(model)).Render(r.Context(), w)
+		default:
+			WriteModelJSON(w, status, model)
+		}
+	}
+}
+
 // ////
 // DELETE
 // ////
@@ -282,7 +331,7 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, err := store.GetModel(r.Context(), tx, id, siteContext)
-		if err != nil {
+		if err != nil || model == nil {
 			ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}

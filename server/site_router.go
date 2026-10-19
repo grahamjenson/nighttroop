@@ -19,6 +19,7 @@ import (
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	//STORES
 	syncSettingsStore := &sitesettings.SyncSettingsStore{}
+	identitiesStore := &sitesettings.IdentitiesStore{}
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
@@ -51,11 +52,11 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Delete("/settings/sync/{id}", siteapiutils.DeleteHandler(controlDB, config, syncSettingsStore))
 
 		// Settings Identities
-		r.Get("/settings/identities", sitesettings.GETIdentitiesHandler(controlDB, config))
-		r.Get("/settings/identities/{id}", sitesettings.GETIdentitiesHandler(controlDB, config))
-		r.Post("/settings/identities", sitesettings.POSTCreateIdentityHandler(controlDB, config))
-		r.Post("/settings/identities/{id}", sitesettings.POSTUpdateIdentityHandler(controlDB, config))
-		r.Delete("/settings/identities/{id}", sitesettings.DELETEIdentityHandler(controlDB, config))
+		r.Get("/settings/identities", siteapiutils.SearchHandler(controlDB, config, identitiesStore))
+		r.Get("/settings/identities/{id}", siteapiutils.GetHandler(controlDB, config, identitiesStore))
+		r.Post("/settings/identities", siteapiutils.CreateHandler(controlDB, config, identitiesStore))
+		r.Post("/settings/identities/{id}", siteapiutils.UpdateHandler(controlDB, config, identitiesStore))
+		r.Delete("/settings/identities/{id}", siteapiutils.DeleteHandler(controlDB, config, identitiesStore))
 
 		// Settings Settings
 		r.Get("/settings/config", sitesettings.GETConfigSettingsHandler(controlDB, config))

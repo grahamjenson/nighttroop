@@ -1,0 +1,45 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+CLICK #site--settings-menu
+CLICK "User/Device Identities"
+ASSERT_STATUS 200
+ASSERT_PATH /settings/identities
+ASSERT_TEXT_VISIBLE Admins & Users
+ASSERT_TEXT_VISIBLE device_pwd_phone
+SCREENSHOT identities
+
+// Adding a device shows its credentials once
+INPUT #name-createIdentityFormdevicesTable kitchen
+CLICK "Add Device"
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE I Have Saved These
+SCREENSHOT identities_device_created
+
+CLICK "I Have Saved These"
+ASSERT_TEXT_VISIBLE kitchen
+
+// Opening the page again lists the new device
+CLICK #site--settings-menu
+CLICK "User/Device Identities"
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE kitchen

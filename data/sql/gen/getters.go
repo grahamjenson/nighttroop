@@ -69,6 +69,9 @@ var TypeLookupMap = map[string]map[string]string{
 		"Type":    "consts.SyncSourceType",
 		"Enabled": "bool",
 	},
+	"UpdateSiteIdentityEnabledParams": {
+		"Enabled": "bool",
+	},
 	"UpdateSyncSourceParams": {
 		"Enabled": "bool",
 		"Type":    "consts.SyncSourceType",

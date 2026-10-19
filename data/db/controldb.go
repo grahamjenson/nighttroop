@@ -372,7 +372,7 @@ func (db *ControlDB) Close() error {
 
 func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
-	adminIdentity, err := db.CreateSiteIdentity(subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	adminIdentity, err := db.CreateSiteIdentity(context.TODO(), db.Queries, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
@@ -382,7 +382,7 @@ func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityVal
 
 	// Create Default PWD User (Able to write data on the ns API)
 
-	pwdIdentity, err := db.CreateSiteIdentity(subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
+	pwdIdentity, err := db.CreateSiteIdentity(context.TODO(), db.Queries, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
 	}
@@ -391,7 +391,7 @@ func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityVal
 	}
 
 	// Create Default Read-Only User
-	readOnlyIdentity, err := db.CreateSiteIdentity(subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
+	readOnlyIdentity, err := db.CreateSiteIdentity(context.TODO(), db.Queries, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User:	 %w", err)
 	}
@@ -408,7 +408,8 @@ type IdentityValues struct {
 	NSToken    *string
 }
 
-func (db *ControlDB) CreateSiteIdentity(siteID string, name string, role consts.IdentityRole) (*IdentityValues, error) {
+// CreateSiteIdentity writes with q, so a caller can pass the queries of its transaction
+func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Queries, siteID string, name string, role consts.IdentityRole) (*IdentityValues, error) {
 
 	security := db.ServerConfig.Security
 	hostname := db.ServerConfig.HostName
@@ -431,7 +432,7 @@ func (db *ControlDB) CreateSiteIdentity(siteID string, name string, role consts.
 		encTOTPSecret = encTOTPSecretRet
 	}
 
-	err = db.Queries.CreateSiteIdentity(context.TODO(), controldb.CreateSiteIdentityParams{
+	err = q.CreateSiteIdentity(ctx, controldb.CreateSiteIdentityParams{
 		SiteID:        siteID,
 		Name:          name,
 		PasswordHash:  hashedPassword,
