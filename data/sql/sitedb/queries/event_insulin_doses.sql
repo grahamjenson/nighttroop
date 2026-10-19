@@ -17,9 +17,10 @@ INSERT INTO insulin_doses (
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
-    created_by_identity_name
+    created_by_identity_name,
+    created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -96,6 +97,7 @@ UPDATE insulin_doses SET
     ),
     
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
 RETURNING *; 

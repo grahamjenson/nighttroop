@@ -23,7 +23,9 @@ CREATE TABLE activities (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -51,9 +53,11 @@ CREATE TABLE component_events (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
 
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -96,9 +100,11 @@ CREATE TABLE device_reports (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
 
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -132,7 +138,9 @@ CREATE TABLE event_groups (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -167,7 +175,9 @@ CREATE TABLE food_intakes (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -197,7 +207,9 @@ CREATE TABLE food_presets (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -231,7 +243,9 @@ CREATE TABLE glucose_readings (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER, -- the name can be reused after an identity is deleted, the id cannot
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -257,7 +271,9 @@ CREATE TABLE insulin_doses (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -282,7 +298,9 @@ CREATE TABLE notification_events (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -320,7 +338,9 @@ CREATE TABLE profile_presets (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64),
 
     -- Constraints
@@ -362,7 +382,9 @@ CREATE TABLE profile_switches (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -386,7 +408,9 @@ CREATE TABLE temp_basals (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
@@ -411,7 +435,9 @@ CREATE TABLE temp_targets (
     
     created_by_app_name TEXT CHECK(length(created_by_app_name) <= 64),
     created_by_device_name TEXT CHECK(length(created_by_device_name)  <= 64),
+    updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
+    created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 

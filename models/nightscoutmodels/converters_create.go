@@ -35,6 +35,7 @@ type CreateMapConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
 	ActivityToCreate(source Activity, ctx ConverterContext) sitedb.CreateActivityParams
 
@@ -48,6 +49,7 @@ type CreateMapConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                         | AssignID
 	// goverter:map CreatedByIdentityName      | AssignCreatedByName
+	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
 	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
@@ -64,6 +66,7 @@ type CreateMapConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
 	FoodToCreate(source Food, ctx ConverterContext) sitedb.CreateFoodPresetParams
 
@@ -76,6 +79,7 @@ type CreateMapConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
 	// goverter:ignore Name CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson Dia Timezone CarbsHr Delay Units IsDefault ProfileStoreID LoopSettingsJson
 	// goverter:map Date OccurredAt | OrNow
@@ -91,6 +95,7 @@ type CreateMapConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
+	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
 	// goverter:ignore LoopName LoopSettingsJson ConfigurationSettingsJson LoopPredictionsDefault LoopPredictionsZt LoopPredictionsStartTime IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir  LoopIob LoopIobBasal LoopIobTreatment LoopCob
 	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.CreateDeviceReportParams
@@ -107,6 +112,16 @@ func AssignID() string {
 // goverter:context ctx
 func AssignCreatedByName(ctx ConverterContext) string {
 	return ctx.IdentityName
+}
+
+// AssignCreatedByID records which identity wrote the record, as its name can be reused once it is deleted.
+// Background jobs write as an identity with no ID, which is stored as NULL.
+// goverter:context ctx
+func AssignCreatedByID(ctx ConverterContext) *int64 {
+	if ctx.IdentityID == 0 {
+		return nil
+	}
+	return &ctx.IdentityID
 }
 
 func ToDateInt(createdAt int64) *DateInt {

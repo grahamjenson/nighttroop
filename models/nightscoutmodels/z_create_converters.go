@@ -55,6 +55,7 @@ func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateAc
 		sitedbCreateActivityParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateActivityParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateActivityParams
 }
 func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterContext) sitedb.CreateDeviceReportParams {
@@ -76,6 +77,7 @@ func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterCont
 		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring2
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateDeviceReportParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateDeviceReportParams
 }
 func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseReadingParams {
@@ -126,6 +128,7 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring3
 	}
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateGlucoseReadingParams
 }
 func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPresetParams {
@@ -189,6 +192,7 @@ func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPreset
 		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateFoodPresetParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateFoodPresetParams
 }
 func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) sitedb.CreateProfilePresetParams {
@@ -210,5 +214,6 @@ func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) 
 		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring2
 	}
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateProfilePresetParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateProfilePresetParams
 }

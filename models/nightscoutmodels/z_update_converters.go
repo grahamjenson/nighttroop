@@ -37,6 +37,7 @@ func ActivityToUpdate(source Activity, context ConverterContext) sitedb.UpdateAc
 	}
 	pString := source.RawJsonData
 	sitedbUpdateActivityParams.RawJsonData = &pString
+	sitedbUpdateActivityParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		sitedbUpdateActivityParams.ID = string(*source.Identifier)
@@ -47,6 +48,7 @@ func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterCont
 	var sitedbUpdateDeviceReportParams sitedb.UpdateDeviceReportParams
 	pString := source.RawJsonData
 	sitedbUpdateDeviceReportParams.RawJsonData = &pString
+	sitedbUpdateDeviceReportParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		sitedbUpdateDeviceReportParams.ID = string(*source.Identifier)
@@ -61,6 +63,7 @@ func EntryToUpdate(source Entry, context ConverterContext) sitedb.UpdateGlucoseR
 	}
 	pString := source.RawJsonData
 	sitedbUpdateGlucoseReadingParams.RawJsonData = &pString
+	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		sitedbUpdateGlucoseReadingParams.ID = string(*source.Identifier)
@@ -119,6 +122,7 @@ func FoodToUpdate(source Food, context ConverterContext) sitedb.UpdateFoodPreset
 	}
 	pString := source.RawJsonData
 	sitedbUpdateFoodPresetParams.RawJsonData = &pString
+	sitedbUpdateFoodPresetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
 		sitedbUpdateFoodPresetParams.ID = string(*source.Identifier)

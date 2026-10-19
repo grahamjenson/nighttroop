@@ -26,7 +26,9 @@ type ActivitiesVw struct {
 	UpdatedAt             *int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -48,7 +50,9 @@ type Activity struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -68,9 +72,11 @@ type ComponentEvent struct {
 	OccurredAt            int64
 	CreatedAt             int64
 	UpdatedAt             int64
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -90,9 +96,11 @@ type ComponentEventsVw struct {
 	OccurredAt            *int64
 	CreatedAt             *int64
 	UpdatedAt             *int64
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -120,9 +128,11 @@ type DeviceReport struct {
 	OccurredAt                int64
 	CreatedAt                 int64
 	UpdatedAt                 int64
+	UpdatedByIdentityID       *int64
 	UpdatedByIdentityName     *string
 	CreatedByAppName          *string
 	CreatedByDeviceName       *string
+	CreatedByIdentityID       *int64
 	CreatedByIdentityName     string
 }
 
@@ -149,7 +159,9 @@ type EventGroup struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -177,7 +189,9 @@ type FoodIntake struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -205,7 +219,9 @@ type FoodIntakesVw struct {
 	UpdatedAt             *int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -228,7 +244,9 @@ type FoodPreset struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -254,7 +272,9 @@ type GlucoseReading struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -280,7 +300,9 @@ type GlucoseReadingsVw struct {
 	UpdatedAt             *int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -300,7 +322,9 @@ type InsulinDose struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -320,7 +344,9 @@ type InsulinDosesVw struct {
 	UpdatedAt             *int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -340,7 +366,9 @@ type NotificationEvent struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -360,7 +388,9 @@ type NotificationEventsVw struct {
 	UpdatedAt             *int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -387,7 +417,9 @@ type ProfilePreset struct {
 	UpdatedAt                int64
 	CreatedByAppName         *string
 	CreatedByDeviceName      *string
+	UpdatedByIdentityID      *int64
 	UpdatedByIdentityName    *string
+	CreatedByIdentityID      *int64
 	CreatedByIdentityName    string
 }
 
@@ -417,7 +449,9 @@ type ProfileSwitch struct {
 	UpdatedAt                int64
 	CreatedByAppName         *string
 	CreatedByDeviceName      *string
+	UpdatedByIdentityID      *int64
 	UpdatedByIdentityName    *string
+	CreatedByIdentityID      *int64
 	CreatedByIdentityName    string
 }
 
@@ -447,7 +481,9 @@ type ProfileSwitchesVw struct {
 	UpdatedAt                *int64
 	CreatedByAppName         *string
 	CreatedByDeviceName      *string
+	UpdatedByIdentityID      *int64
 	UpdatedByIdentityName    *string
+	CreatedByIdentityID      *int64
 	CreatedByIdentityName    *string
 }
 
@@ -466,7 +502,9 @@ type TempBasal struct {
 	UpdatedAt             int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName string
 }
 
@@ -485,7 +523,9 @@ type TempBasalsVw struct {
 	UpdatedAt             *int64
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
+	CreatedByIdentityID   *int64
 	CreatedByIdentityName *string
 }
 
@@ -505,7 +545,9 @@ type TempTarget struct {
 	UpdatedAt               int64
 	CreatedByAppName        *string
 	CreatedByDeviceName     *string
+	UpdatedByIdentityID     *int64
 	UpdatedByIdentityName   *string
+	CreatedByIdentityID     *int64
 	CreatedByIdentityName   string
 }
 
@@ -525,6 +567,8 @@ type TempTargetsVw struct {
 	UpdatedAt               *int64
 	CreatedByAppName        *string
 	CreatedByDeviceName     *string
+	UpdatedByIdentityID     *int64
 	UpdatedByIdentityName   *string
+	CreatedByIdentityID     *int64
 	CreatedByIdentityName   *string
 }

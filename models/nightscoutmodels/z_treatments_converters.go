@@ -58,6 +58,7 @@ func ActivityCreate(source sitedb.Activity, context ConverterContext) sitedb.Cre
 		sitedbCreateActivityParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateActivityParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateActivityParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateActivityParams
 }
 func ActivityUpdate(source sitedb.Activity, context ConverterContext) sitedb.UpdateActivityParams {
@@ -96,6 +97,7 @@ func ActivityUpdate(source sitedb.Activity, context ConverterContext) sitedb.Upd
 		xstring4 := *source.RawJsonData
 		sitedbUpdateActivityParams.RawJsonData = &xstring4
 	}
+	sitedbUpdateActivityParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateActivityParams.ID = source.ID
 	return sitedbUpdateActivityParams
@@ -142,6 +144,7 @@ func ComponentEventCreate(source sitedb.ComponentEvent, context ConverterContext
 		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring8
 	}
 	sitedbCreateComponentEventParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateComponentEventParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateComponentEventParams
 }
 func ComponentEventUpdate(source sitedb.ComponentEvent, context ConverterContext) sitedb.UpdateComponentEventParams {
@@ -158,6 +161,7 @@ func ComponentEventUpdate(source sitedb.ComponentEvent, context ConverterContext
 		xstring3 := *source.RawJsonData
 		sitedbUpdateComponentEventParams.RawJsonData = &xstring3
 	}
+	sitedbUpdateComponentEventParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateComponentEventParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateComponentEventParams.ID = source.ID
 	return sitedbUpdateComponentEventParams
@@ -232,6 +236,7 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring14
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateEventGroupParams
 }
 func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
@@ -326,6 +331,7 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring12 := *source.RawJsonData
 		sitedbUpdateEventGroupParams.RawJsonData = &xstring12
 	}
+	sitedbUpdateEventGroupParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateEventGroupParams.ID = source.ID
 	return sitedbUpdateEventGroupParams
@@ -407,6 +413,7 @@ func FoodIntakeCreate(source sitedb.FoodIntake, context ConverterContext) sitedb
 		sitedbCreateFoodIntakeParams.CreatedByDeviceName = &xstring9
 	}
 	sitedbCreateFoodIntakeParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateFoodIntakeParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateFoodIntakeParams
 }
 func FoodIntakeUpdate(source sitedb.FoodIntake, context ConverterContext) sitedb.UpdateFoodIntakeParams {
@@ -471,6 +478,7 @@ func FoodIntakeUpdate(source sitedb.FoodIntake, context ConverterContext) sitedb
 		xstring7 := *source.RawJsonData
 		sitedbUpdateFoodIntakeParams.RawJsonData = &xstring7
 	}
+	sitedbUpdateFoodIntakeParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateFoodIntakeParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateFoodIntakeParams.ID = source.ID
 	return sitedbUpdateFoodIntakeParams
@@ -535,6 +543,7 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring7
 	}
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateGlucoseReadingParams
 }
 func GlucoseReadingUpdate(source sitedb.GlucoseReading, context ConverterContext) sitedb.UpdateGlucoseReadingParams {
@@ -553,6 +562,7 @@ func GlucoseReadingUpdate(source sitedb.GlucoseReading, context ConverterContext
 		xstring3 := *source.RawJsonData
 		sitedbUpdateGlucoseReadingParams.RawJsonData = &xstring3
 	}
+	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateGlucoseReadingParams.ID = source.ID
 	return sitedbUpdateGlucoseReadingParams
@@ -599,6 +609,7 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		sitedbCreateInsulinDoseParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateInsulinDoseParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateInsulinDoseParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateInsulinDoseParams
 }
 func InsulinDoseUpdate(source sitedb.InsulinDose, context ConverterContext) sitedb.UpdateInsulinDoseParams {
@@ -629,6 +640,7 @@ func InsulinDoseUpdate(source sitedb.InsulinDose, context ConverterContext) site
 		xstring4 := *source.RawJsonData
 		sitedbUpdateInsulinDoseParams.RawJsonData = &xstring4
 	}
+	sitedbUpdateInsulinDoseParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateInsulinDoseParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateInsulinDoseParams.ID = source.ID
 	return sitedbUpdateInsulinDoseParams
@@ -669,6 +681,7 @@ func NotificationEventCreate(source sitedb.NotificationEvent, context ConverterC
 		sitedbCreateNotificationEventParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateNotificationEventParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateNotificationEventParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateNotificationEventParams
 }
 func NotificationEventUpdate(source sitedb.NotificationEvent, context ConverterContext) sitedb.UpdateNotificationEventParams {
@@ -695,6 +708,7 @@ func NotificationEventUpdate(source sitedb.NotificationEvent, context ConverterC
 		xstring4 := *source.RawJsonData
 		sitedbUpdateNotificationEventParams.RawJsonData = &xstring4
 	}
+	sitedbUpdateNotificationEventParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateNotificationEventParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateNotificationEventParams.ID = source.ID
 	return sitedbUpdateNotificationEventParams
@@ -1173,6 +1187,7 @@ func ProfileSwitchCreate(source sitedb.ProfileSwitch, context ConverterContext) 
 		sitedbCreateProfileSwitchParams.CreatedByDeviceName = &xstring11
 	}
 	sitedbCreateProfileSwitchParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateProfileSwitchParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateProfileSwitchParams
 }
 func ProfileSwitchUpdate(source sitedb.ProfileSwitch, context ConverterContext) sitedb.UpdateProfileSwitchParams {
@@ -1197,6 +1212,7 @@ func ProfileSwitchUpdate(source sitedb.ProfileSwitch, context ConverterContext) 
 		xstring3 := *source.RawJsonData
 		sitedbUpdateProfileSwitchParams.RawJsonData = &xstring3
 	}
+	sitedbUpdateProfileSwitchParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateProfileSwitchParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateProfileSwitchParams.ID = source.ID
 	return sitedbUpdateProfileSwitchParams
@@ -1209,6 +1225,7 @@ func ProfileUpdate(source sitedb.ProfilePreset, context ConverterContext) sitedb
 		xstring := *source.RawJsonData
 		sitedbUpdateProfilePresetParams.RawJsonData = &xstring
 	}
+	sitedbUpdateProfilePresetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateProfilePresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateProfilePresetParams.ID = source.ID
 	return sitedbUpdateProfilePresetParams
@@ -1248,6 +1265,7 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 		sitedbCreateTempBasalParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateTempBasalParams
 }
 func TempBasalUpdate(source sitedb.TempBasal, context ConverterContext) sitedb.UpdateTempBasalParams {
@@ -1272,6 +1290,7 @@ func TempBasalUpdate(source sitedb.TempBasal, context ConverterContext) sitedb.U
 		xstring3 := *source.RawJsonData
 		sitedbUpdateTempBasalParams.RawJsonData = &xstring3
 	}
+	sitedbUpdateTempBasalParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateTempBasalParams.ID = source.ID
 	return sitedbUpdateTempBasalParams
@@ -1312,6 +1331,7 @@ func TempTargetCreate(source sitedb.TempTarget, context ConverterContext) sitedb
 		sitedbCreateTempTargetParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateTempTargetParams.CreatedByIdentityName = AssignCreatedByName(context)
+	sitedbCreateTempTargetParams.CreatedByIdentityID = AssignCreatedByID(context)
 	return sitedbCreateTempTargetParams
 }
 func TempTargetUpdate(source sitedb.TempTarget, context ConverterContext) sitedb.UpdateTempTargetParams {
@@ -1334,6 +1354,7 @@ func TempTargetUpdate(source sitedb.TempTarget, context ConverterContext) sitedb
 		xstring3 := *source.RawJsonData
 		sitedbUpdateTempTargetParams.RawJsonData = &xstring3
 	}
+	sitedbUpdateTempTargetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateTempTargetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	sitedbUpdateTempTargetParams.ID = source.ID
 	return sitedbUpdateTempTargetParams
@@ -1752,9 +1773,17 @@ func UpdateToActivity(source *sitedb.Activity, target *sitedb.Activity) {
 			xstring6 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring6
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint647 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint647
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring7 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring7
+		}
+		if source.CreatedByIdentityID != nil {
+			xint648 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint648
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -1805,6 +1834,10 @@ func UpdateToComponentEvent(source *sitedb.ComponentEvent, target *sitedb.Compon
 		target.OccurredAt = source.OccurredAt
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
+		if source.UpdatedByIdentityID != nil {
+			xint643 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint643
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring9 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring9
@@ -1816,6 +1849,10 @@ func UpdateToComponentEvent(source *sitedb.ComponentEvent, target *sitedb.Compon
 		if source.CreatedByDeviceName != nil {
 			xstring11 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring11
+		}
+		if source.CreatedByIdentityID != nil {
+			xint644 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint644
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -1893,9 +1930,17 @@ func UpdateToEventGroup(source sitedb.EventGroup, target *sitedb.EventGroup) {
 		xstring14 := *source.CreatedByDeviceName
 		target.CreatedByDeviceName = &xstring14
 	}
+	if source.UpdatedByIdentityID != nil {
+		xint644 := *source.UpdatedByIdentityID
+		target.UpdatedByIdentityID = &xint644
+	}
 	if source.UpdatedByIdentityName != nil {
 		xstring15 := *source.UpdatedByIdentityName
 		target.UpdatedByIdentityName = &xstring15
+	}
+	if source.CreatedByIdentityID != nil {
+		xint645 := *source.CreatedByIdentityID
+		target.CreatedByIdentityID = &xint645
 	}
 	target.CreatedByIdentityName = source.CreatedByIdentityName
 }
@@ -1980,9 +2025,17 @@ func UpdateToFoodIntake(source *sitedb.FoodIntake, target *sitedb.FoodIntake) {
 			xstring9 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring9
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint644 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint644
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring10 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring10
+		}
+		if source.CreatedByIdentityID != nil {
+			xint645 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint645
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2051,9 +2104,17 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 			xstring7 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring7
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint643 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint643
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring8 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring8
+		}
+		if source.CreatedByIdentityID != nil {
+			xint644 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint644
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2104,9 +2165,17 @@ func UpdateToInsulinDose(source *sitedb.InsulinDose, target *sitedb.InsulinDose)
 			xstring6 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring6
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint643 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint643
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring7 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring7
+		}
+		if source.CreatedByIdentityID != nil {
+			xint644 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint644
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2151,9 +2220,17 @@ func UpdateToNotificationEvent(source *sitedb.NotificationEvent, target *sitedb.
 			xstring6 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring6
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint643 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint643
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring7 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring7
+		}
+		if source.CreatedByIdentityID != nil {
+			xint644 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint644
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2238,9 +2315,17 @@ func UpdateToProfileSwitch(source *sitedb.ProfileSwitch, target *sitedb.ProfileS
 			xstring11 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring11
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint644 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint644
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring12 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring12
+		}
+		if source.CreatedByIdentityID != nil {
+			xint645 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint645
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2284,9 +2369,17 @@ func UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal) {
 			xstring5 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring5
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint643 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint643
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring6 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring6
+		}
+		if source.CreatedByIdentityID != nil {
+			xint644 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint644
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2331,9 +2424,17 @@ func UpdateToTempTarget(source *sitedb.TempTarget, target *sitedb.TempTarget) {
 			xstring5 := *source.CreatedByDeviceName
 			target.CreatedByDeviceName = &xstring5
 		}
+		if source.UpdatedByIdentityID != nil {
+			xint643 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint643
+		}
 		if source.UpdatedByIdentityName != nil {
 			xstring6 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring6
+		}
+		if source.CreatedByIdentityID != nil {
+			xint644 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint644
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}

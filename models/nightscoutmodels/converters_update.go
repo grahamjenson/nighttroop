@@ -22,6 +22,7 @@ type UpdateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
 	// goverter:ignore Reason
 	ActivityToUpdate(source Activity, ctx ConverterContext) sitedb.UpdateActivityParams
@@ -33,6 +34,7 @@ type UpdateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
 	// goverter:ignore Notes Reason
 	EntryToUpdate(source Entry, ctx ConverterContext) sitedb.UpdateGlucoseReadingParams
@@ -44,6 +46,7 @@ type UpdateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
 	// goverter:ignore
 	FoodToUpdate(source Food, ctx ConverterContext) sitedb.UpdateFoodPresetParams
@@ -59,6 +62,7 @@ type UpdateMapConverter interface {
 	// goverter:context ctx
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
+	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
 	// goverter:ignore
 	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.UpdateDeviceReportParams
@@ -71,4 +75,9 @@ type UpdateMapConverter interface {
 // goverter:context ctx
 func AssignUpdatedByName(ctx ConverterContext) *string {
 	return ptr(ctx.IdentityName)
+}
+
+// goverter:context ctx
+func AssignUpdatedByID(ctx ConverterContext) *int64 {
+	return AssignCreatedByID(ctx)
 }
