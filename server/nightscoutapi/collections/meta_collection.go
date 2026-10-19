@@ -337,6 +337,10 @@ func MetaReplace[NS interface {
 	// CREATE
 	dbCreateModel, err := m.CreateDBFunc(q, ctx, nsModel, cc, &identifier)
 	if err != nil {
+		// Bad data is the client's error, as it is for create
+		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
+			return nil, false, sqlTranslatedError
+		}
 		slog.Error("failed to create in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}
