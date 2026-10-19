@@ -126,7 +126,7 @@ func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		identifierOrType := chi.URLParam(r, "identifierOrType")
+		identifierOrType := chi.URLParam(r, "identifier_or_type")
 		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
 			if collection.IsTypeString(identifierOrType) {

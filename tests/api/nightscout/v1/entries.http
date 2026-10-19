@@ -115,6 +115,12 @@ NAME get_entries_echo_v1
 GET http://{{ .site }}/api/v1/echo/entries/sgv?token={{ token }}&find[sgv][$gte]=100
 ASSERT_STATUS 200
 ASSERT_EXISTS "@query"
+ASSERT_EQUALS "sgv" "@query.type_eq"
+
+NAME get_entries_echo_id_v1
+GET http://{{ .site }}/api/v1/echo/entries/abc123?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "abc123" "@query.id_eq"
 
 
 /////
