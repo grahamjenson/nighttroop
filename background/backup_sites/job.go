@@ -126,7 +126,7 @@ func (b *BackupSiteJobManager) BackupToS3() {
 		err := b.BackupSiteBatch(string(char))
 
 		if err != nil {
-			slog.Error("Error backing up site batch", "error", err, "char", char)
+			slog.Error("Error backing up site batch", "error", err, "char", string(char))
 			continue
 		}
 	}
