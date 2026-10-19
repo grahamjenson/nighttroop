@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -73,6 +74,8 @@ func FuzzRequestFiles(f *testing.F) {
 		f.Fatalf("failed walking embedded files: %v", err)
 	}
 
+	// The mangled bodies are meant to fail, so discard the logs they cause until this target ends
+	testutils.UseLogHandler(f, slog.DiscardHandler)
 	router := server.GetMainHandler(controlDB, config)
 
 	f.Add(int64(100), 0)

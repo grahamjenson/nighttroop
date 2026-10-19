@@ -214,7 +214,7 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 		return fmt.Errorf("cannot delete site: %w", err)
 	}
 
-	fmt.Println("TRYING TO DELETE", subdomains, "DELETED", deletedSubdomains)
+	slog.Info("Deleting sites", "requested", subdomains, "deleted", deletedSubdomains)
 
 	// Close the DB and remove from the map
 	for _, subdomain := range deletedSubdomains {

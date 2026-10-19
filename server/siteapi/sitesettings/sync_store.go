@@ -218,7 +218,7 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, id string, siteContext
 	})
 
 	if err != nil {
-		fmt.Println("Error fetching sync source:", err)
+		slog.Error("Error fetching sync source", "error", err)
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}

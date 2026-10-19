@@ -22,7 +22,7 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig) {
 		router.Use(sentryMiddleware.Handle)
 	}
 
-	router.Use(NewLogger(config.Logger))
+	router.Use(NewLogger(nil))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
 	router.Use(middleware.Timeout(30 * time.Second))
