@@ -138,6 +138,9 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			flush()
 
 			current = &ClearCookie{TestPath: path, TestLine: lineNumber, Name: second}
+		case "RUN_BACKGROUND_JOBS":
+			flush()
+			actions = append(actions, &RunBackgroundJobs{TestPath: path, TestLine: lineNumber})
 		// Adding screenshot action
 		case "SCREENSHOT":
 			if current == nil {

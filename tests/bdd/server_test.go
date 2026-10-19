@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
+	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/browser"
@@ -24,7 +25,7 @@ func NewRouter(t *testing.T) http.Handler {
 	return router
 }
 
-func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, siteInformation *db.SiteCreateResult, defaultJwt string) {
+func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, backgroundJobs *background.BackGroundManager, siteInformation *db.SiteCreateResult, defaultJwt string) {
 	page, err := context.NewPage()
 	if err != nil {
 		t.Fatalf("failed to create new page: %v", err)
@@ -70,6 +71,9 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			fmt.Println()
 			// default information
 
+			if _, ok := action.(*browser.RunBackgroundJobs); ok {
+				backgroundJobs.RunAllNow(t.Context())
+			}
 			page, err = action.Execute(t, page, actionContext)
 			if err != nil {
 				t.Fatalf("failed to execute action: %v, action: %s", err, action.ToFlatString())

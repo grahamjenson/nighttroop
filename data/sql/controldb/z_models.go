@@ -160,6 +160,7 @@ type SiteSyncSource struct {
 	CreatedAt                  int64
 	UpdatedAt                  int64
 	Enabled                    bool
+	FirstSuccessfulSyncTime    *int64
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
 	LastAttemptedSync          *int64

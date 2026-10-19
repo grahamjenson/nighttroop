@@ -40,3 +40,20 @@ INPUT #site--settings--nightscout-sync--password    not_a_token
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
+// Turn syncing on with details that do not work: saving no longer checks them,
+// the first sync does, and it turns syncing off and says why
+CLICK #site--settings--nightscout-sync--enable
+CLICK #site--settings--nightscout-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--sync-button
+
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--nightscout-sync--errors
+ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
+SCREENSHOT sync_first_sync_failed

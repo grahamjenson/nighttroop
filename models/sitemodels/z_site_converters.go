@@ -6,6 +6,7 @@ package sitemodels
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	consts "nighttroop.t1d.nz/utils/consts"
+	errors "nighttroop.t1d.nz/utils/errors"
 	security "nighttroop.t1d.nz/utils/security"
 )
 
@@ -26,6 +27,7 @@ func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.Securi
 		sitemodelsSyncSource.UrlOrUsername = pString
 		sitemodelsSyncSource.Password = SetPasswordGarbage()
 		sitemodelsSyncSource.Enabled = (*source).Enabled
+		sitemodelsSyncSource.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
 		pSitemodelsSyncSource = &sitemodelsSyncSource
 	}
 	return pSitemodelsSyncSource, nil
@@ -84,4 +86,14 @@ func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) co
 	default: // ignored
 	}
 	return constsSyncSourceType
+}
+func errorsErrorListToStringList(source errors.ErrorList) []string {
+	var stringList []string
+	if source != nil {
+		stringList = make([]string, len(source))
+		for i := 0; i < len(source); i++ {
+			stringList[i] = source[i]
+		}
+	}
+	return stringList
 }

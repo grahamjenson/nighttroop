@@ -467,3 +467,25 @@ func (r *ClearCookie) PrintAction() {
 func (r *ClearCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	return page, page.Context().ClearCookies(playwright.BrowserContextClearCookiesOptions{Name: r.Name})
 }
+
+// RunBackgroundJobs runs every background and cron job once. The test runner does the work, as it owns the jobs.
+type RunBackgroundJobs struct {
+	TestPath string
+	TestLine int
+}
+
+func (r *RunBackgroundJobs) ToFlatString() string {
+	return "RUN_BACKGROUND_JOBS"
+}
+
+func (r *RunBackgroundJobs) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *RunBackgroundJobs) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	return page, nil
+}

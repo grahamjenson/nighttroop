@@ -81,6 +81,11 @@ func parseFile(r io.Reader, path string) ([]*Request, error) {
 				Sets:    []Set{},
 			}
 
+		case "RUN_BACKGROUND_JOBS":
+			inBody = false
+			flush()
+			requests = append(requests, &Request{Name: first, RunBackgroundJobs: true})
+
 		case "GET", "POST", "PUT", "PATCH", "DELETE":
 			inBody = false
 			if current == nil {

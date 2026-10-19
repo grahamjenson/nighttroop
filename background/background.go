@@ -2,6 +2,7 @@ package background
 
 import (
 	"context"
+	"log/slog"
 
 	"nighttroop.t1d.nz/background/backup_control"
 	"nighttroop.t1d.nz/background/backup_sites"
@@ -73,6 +74,19 @@ func (b *BackGroundManager) Start() {
 	}
 
 	b.cron.Start()
+}
+
+// RunAllNow runs every cron job once, then every queued job, and returns when they are done.
+// Tests call it after each request so background work, like syncing, is visible straight away.
+func (b *BackGroundManager) RunAllNow(ctx context.Context) {
+	for _, entry := range b.cron.Entries() {
+		entry.Job.Run()
+	}
+	for _, consumer := range b.consumers {
+		if err := consumer.RunQueued(ctx); err != nil {
+			slog.Error("RunAllNow: running queued jobs failed", "error", err)
+		}
+	}
 }
 
 func (b *BackGroundManager) Stop() {

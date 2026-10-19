@@ -30,6 +30,7 @@ ASSERT_EQUALS "sgv" "@0.type"
 ASSERT_EXISTS "@0._id"
 ASSERT_EXISTS "@0.utcOffset"
 
+// Dated a minute ago: entries with the same date are duplicates, and create_entry_v1 is dated now
 NAME create_full_entry_v1
 POST http://{{ site }}/api/v1/entries?token={{ token}}
 B {
@@ -38,7 +39,7 @@ B {
     "app": "test-app",
     "direction": "Flat",
     "trend": 3,
-    "dateString": "{{ time 0 }}",
+    "dateString": "{{ time 1 }}",
     "filtered": 139.2,
     "unfiltered": 141.7, 
     "rssi": -62, 
