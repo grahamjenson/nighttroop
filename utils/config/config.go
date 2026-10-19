@@ -314,12 +314,11 @@ func configIntSelect(dotenv map[string]string, envVar string, defaultValue int) 
 	}
 
 	intVal, err := strconv.Atoi(returnval)
-	if err == nil {
-		return intVal
-	} else {
-		slog.Error("Error parsing %s for %s: %s", "returnval", returnval, "envVar", envVar, "error", err)
+	if err != nil {
+		// Atoi returns 0 on error, which would turn a limit off, so keep the default
+		slog.Error("Cannot parse config value, using the default", "envVar", envVar, "value", returnval, "default", defaultValue, "error", err)
+		return defaultValue
 	}
-
 	return intVal
 }
 
@@ -337,12 +336,10 @@ func configFloatSelect(dotenv map[string]string, envVar string, defaultValue flo
 	}
 
 	floatVal, err := strconv.ParseFloat(returnval, 64)
-	if err == nil {
-		return floatVal
-	} else {
-		slog.Error("Error parsing %s for %s: %s", "returnval", returnval, "envVar", envVar, "error", err)
+	if err != nil {
+		slog.Error("Cannot parse config value, using the default", "envVar", envVar, "value", returnval, "default", defaultValue, "error", err)
+		return defaultValue
 	}
-
 	return floatVal
 }
 
