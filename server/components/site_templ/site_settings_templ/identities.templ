@@ -12,74 +12,57 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+// roleLabels match the role names in the create forms
+var roleLabels = map[consts.IdentityRole]string{
+	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User",
+	consts.IdentityRoleDeviceRead: "Read", consts.IdentityRoleDeviceReadWrite: "Read+Write", consts.IdentityRoleDevicePWDPhone: "PWD Phone",
+}
+
+func roleLabel(role string) string {
+	if label, ok := roleLabels[consts.IdentityRole(role)]; ok {
+		return label
+	}
+	return role
+}
+
 templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
-	<div id="identities_table">
-		<div class="mb-4 border-b border-white/10 pb-3">
-			<div class="max-w-4xl mx-auto p-6 space-y-6">
-				<div class="text-center">
-					<h1 class="text-2xl font-bold">Users & Devices </h1>
-					<p class="text-gray-500 mt-2">
-						Nighttroop uses strict role separation to improve security and reduce credential risk.
-					</p>
-				</div>
-				<!-- Admin -->
-				<div class="border rounded-xl p-5 bg-red-50 border-red-200">
-					<h2 class="text-lg font-semibold text-red-700">Admin</h2>
-					<p class="mt-2 text-gray-700">
-						Admins manage the system: they can create and manage users, configure site settings, and maintain the platform.
-						For security reasons, admin accounts cannot access the Nightscout API.
-					</p>
-					<ul class="mt-3 list-disc list-inside text-gray-700 space-y-1">
-						<li>Protected with TOTP-based two-factor authentication</li>
-						<li>No direct Nightscout API access</li>
-						<li>Recovery only via initial backup key</li>
-					</ul>
-				</div>
-				<!-- User -->
-				<div class="border rounded-xl p-5 bg-blue-50 border-blue-200">
-					<h2 class="text-lg font-semibold text-blue-700">User</h2>
-					<p class="mt-2 text-gray-700">
-						A user represents a person using the system.
-						Users can log in, generate reports, interact with Nighttroop, and use Nightscout features.
-					</p>
-				</div>
-				<!-- Device -->
-				<div class="border rounded-xl p-5 bg-green-50 border-green-200">
-					<h2 class="text-lg font-semibold text-green-700">Device</h2>
-					<p class="mt-2 text-gray-700">
-						A device is a connected endpoint such as a phone, SugarPixel, or display.
-						It can communicate with the Nightscout API but cannot log into the websitemodels.
-						It can also have a status, like battery level, to alert on, and recieve notifications once registered.
-						The Person With Diabetes (PWD) phone is a special device whose credentials you put into the loop (AAPS, Trio...).
-					</p>
-				</div>
-				<!-- Footer note -->
-				<div class="text-sm text-gray-500 text-center pt-2">
-					These distinctions enforce strong security boundaries. Each user and device should use separate credentials.
-				</div>
-			</div>
+	<div id="identities_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Users & Devices</h1>
+			<p class="mt-1 text-gray-500">
+				Nighttroop uses strict role separation to improve security. Each user and device should have its own credentials.
+			</p>
 		</div>
-		<div id="usersTable" class="border border-gray-300 rounded-lg mb-6 p-4">
-			<div>Admins & Users</div>
+		<div class="grid gap-4 md:grid-cols-3">
+			@roleCard("Admin", "border-red-200 bg-red-50 text-red-700", "Manages users and site settings. Logs in with a password and TOTP, recovers only with the initial backup key, and cannot use the Nightscout API.")
+			@roleCard("User", "border-blue-200 bg-blue-50 text-blue-700", "A person using Nighttroop. Users can log in, view reports and use Nightscout features.")
+			@roleCard("Device", "border-green-200 bg-green-50 text-green-700", "A phone, SugarPixel or display. Devices use the Nightscout API but cannot log in. The PWD phone's credentials go into your loop (AAPS, Trio...).")
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			<h2 class="mb-3 text-lg font-semibold">Admins & Users</h2>
 			@buildIdentityTable("usersTable", users)
-			<div class="border border-black-900"></div>
 			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
-		</div>
-		<div id="devicesTable" class="border border-gray-300 rounded-lg mb-6 p-4">
-			<div>Devices</div>
+		</section>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			<h2 class="mb-3 text-lg font-semibold">Devices</h2>
 			@buildIdentityTable("devicesTable", devices)
-			<div class="border border-black-900"></div>
 			@formCreateIdentity("devicesTable", "Device", []sitemodels.RoleOption{{Label: "Read", Value: consts.IdentityRoleDeviceRead}, {Label: "Read+Write", Value: consts.IdentityRoleDeviceReadWrite}, {Label: "PWD Phone", Value: consts.IdentityRoleDevicePWDPhone}})
-		</div>
-		<!-- Error -->
+		</section>
 		<div id="modal-container"></div>
+	</div>
+}
+
+templ roleCard(title string, colors string, description string) {
+	<div class={ "rounded-xl border p-4", colors }>
+		<h2 class="font-semibold">{ title }</h2>
+		<p class="mt-1 text-sm text-gray-700">{ description }</p>
 	</div>
 }
 
 templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 	@table.Table(table.Props{
 		ID:    id,
-		Class: "border border-gray-300 rounded-lg mb-6",
+		Class: "rounded-lg border border-gray-200",
 	}) {
 		@table.Header() {
 			@table.Row() {
@@ -98,9 +81,6 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 				@table.Head() {
 					Last Write 
 				}
-				@table.Head() {
-					Actions
-				}
 			}
 		}
 		@table.Body() {
@@ -115,9 +95,12 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 	@table.Row() {
 		@table.Cell() {
 			{ identity.Name }
+			if identity.CurrentIdentity {
+				<span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">You</span>
+			}
 		}
 		@table.Cell() {
-			{ identity.Role }
+			{ roleLabel(identity.Role) }
 		}
 		@table.Cell() {
 			{ identity.Created }
@@ -127,9 +110,6 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 		}
 		@table.Cell() {
 			{ identity.LastWrite }
-		}
-		@table.Cell() {
-			<!-- actions go here -->
 		}
 	}
 }
