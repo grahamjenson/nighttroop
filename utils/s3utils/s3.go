@@ -150,7 +150,7 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 	info := ""
 	defer aslog.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, &info)
 	if len(paths) == 0 {
-		slog.Error("No files to sync for %s", "key", key)
+		slog.Error("No files to sync", "key", key)
 		return nil
 	}
 
