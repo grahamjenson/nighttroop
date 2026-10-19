@@ -17,24 +17,23 @@ func (e *HTTPError) Error() string {
 }
 
 func (e *HTTPError) Write(acceptType httputils.AcceptType, w http.ResponseWriter) string {
-	w.WriteHeader(e.Status)
-	// TODO: reply with appropriate content based HTMX and HTML
+	// Headers set after WriteHeader are dropped, so each case sets them first.
+	// HTMX forms choose where errors go with hx-status.
 	switch acceptType {
-	case httputils.AcceptTypeHTML:
+	case httputils.AcceptTypeHTML, httputils.AcceptTypeHTMX:
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(e.Message))
-	case httputils.AcceptTypeHTMX:
-		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("HX-Retarget", "#error-container")
-		w.Header().Set("HX-Reswap", "innerHTML")
+		w.WriteHeader(e.Status)
 		w.Write([]byte(e.Message))
 	case httputils.AcceptTypeJSON:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(e.Status)
 		writeJSON(w, map[string]any{
 			"status":  e.Status,
 			"message": e.Message,
 		})
 	default:
 		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(e.Status)
 		w.Write([]byte(e.Message))
 	}
 
