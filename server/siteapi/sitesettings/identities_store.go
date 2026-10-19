@@ -50,11 +50,11 @@ func (s *IdentitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 		return false, siteapiutils.ErrInternalServerError
 	}
 	// Counted inside the transaction, so two creates at once cannot both pass the limit
-	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
+	count, err := q.CountSiteIdentities(ctx, controldb.CountSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return false, siteapiutils.ErrInternalServerError
 	}
-	if maxIdentities := siteContext.Config.MaxIdentitiesPerSite; len(identities) >= maxIdentities {
+	if maxIdentities := siteContext.Config.MaxIdentitiesPerSite; count >= int64(maxIdentities) {
 		return false, siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d users and devices", maxIdentities))
 	}
 

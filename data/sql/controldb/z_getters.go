@@ -2608,6 +2608,16 @@ func (m *AllSiteIdentitiesParams) SetSiteID(v string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m CountSiteIdentitiesParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CountSiteIdentitiesParams.
+func (m *CountSiteIdentitiesParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m GetSiteIdentityParams) GetSiteID() string {
 	return m.SiteID
 }
