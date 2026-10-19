@@ -21,8 +21,15 @@ const errorHTMLXDivID = `#error`
 // CREATE
 ///////
 
+// VerifyModel checks and normalizes a request model before any transaction is opened, so it is
+// where network calls (e.g. testing credentials) belong. oldModel is nil when creating.
+type VerifyInterface[T any] interface {
+	VerifyModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+}
+
 type CreateHandlerInterface[T any] interface {
-	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	VerifyInterface[T]
+	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 	CreateHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -47,8 +54,13 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		created, herr := store.CreateModel(r.Context(), nil, siteContext, requestModel)
-		if herr != nil {
+		if herr := store.VerifyModel(r.Context(), nil, siteContext, nil, requestModel); herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
+		tx := NewStoreTx(r.Context(), siteContext)
+		created, herr := store.CreateModel(r.Context(), tx, nil, siteContext, requestModel)
+		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
@@ -75,7 +87,8 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 ///////
 
 type UpdateHandlerInterface[T any] interface {
-	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+	VerifyInterface[T]
+	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
 
@@ -110,8 +123,13 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
-		if herr != nil {
+		if herr := store.VerifyModel(r.Context(), &id, siteContext, oldModel, requestModel); herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
+		tx := NewStoreTx(r.Context(), siteContext)
+		herr = store.UpdateModel(r.Context(), tx, id, siteContext, oldModel, requestModel)
+		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
@@ -135,9 +153,10 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type UpsertInterface[T any] interface {
-	CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	VerifyInterface[T]
+	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
 
-	UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
 
@@ -172,19 +191,20 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		if oldModel == nil {
-			_, herr = store.CreateModel(r.Context(), &id, siteContext, requestModel)
-			if herr != nil {
-				herr.Write(siteContext.AcceptType, w)
-				return
-			}
-		} else {
+		if herr := store.VerifyModel(r.Context(), &id, siteContext, oldModel, requestModel); herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
 
-			herr = store.UpdateModel(r.Context(), id, siteContext, oldModel, requestModel)
-			if herr != nil {
-				herr.Write(siteContext.AcceptType, w)
-				return
-			}
+		tx := NewStoreTx(r.Context(), siteContext)
+		if oldModel == nil {
+			_, herr = store.CreateModel(r.Context(), tx, &id, siteContext, requestModel)
+		} else {
+			herr = store.UpdateModel(r.Context(), tx, id, siteContext, oldModel, requestModel)
+		}
+		if herr = tx.Finish(herr); herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
 		}
 
 		status := http.StatusOK
@@ -252,7 +272,7 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 type DeleteInterface[T any] interface {
 	GetModel(ctx context.Context, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
-	DeleteModel(ctx context.Context, model *T, siteContext *httputils.SiteContext) *HTTPError
+	DeleteModel(ctx context.Context, tx *StoreTx, model *T, siteContext *httputils.SiteContext) *HTTPError
 	DeleteHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -282,7 +302,8 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		herr := store.DeleteModel(r.Context(), model, siteContext)
+		tx := NewStoreTx(r.Context(), siteContext)
+		herr := tx.Finish(store.DeleteModel(r.Context(), tx, model, siteContext))
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return

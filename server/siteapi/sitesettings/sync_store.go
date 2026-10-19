@@ -37,54 +37,62 @@ func (s *SyncSettingsStore) GetName() string {
 }
 
 // ////
-// CREATE
+// VERIFY
 // ////
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapiutils.HTTPError) {
-	var err error
-	params := sitemodels.SyncSourceToCreate(model)
-	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
-	params.SiteID = siteContext.Subdomain
-	if id == nil {
-		return false, siteapiutils.ErrMissingRequiredFieldWithHint("id/type")
-	}
 
+// VerifyModel validates and normalizes the request and tests the credentials, before any transaction
+func (s *SyncSettingsStore) VerifyModel(ctx context.Context, id *string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
+	if oldModel != nil {
+		return verifyUpdate(ctx, siteContext, oldModel, model)
+	}
+	if id == nil {
+		return siteapiutils.ErrMissingRequiredFieldWithHint("id/type")
+	}
 	sstype, err := consts.NewSyncSourceTypeFromString(*id)
 	if err != nil {
-		return false, siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
+		return siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
 	}
-	params.Type = sstype
+	// DO NOT ALLOW THE CLIENT TO SET THE TYPE
+	model.Type = sstype
 
 	// The virtual source has no upstream; the sync job ignores these values.
-	if params.Type == consts.SyncSourceTypeVirtual {
-		params.UrlOrUsernameEnc, params.PasswordEnc = ptr("virtual"), ptr("virtual")
+	if sstype == consts.SyncSourceTypeVirtual {
+		model.UrlOrUsername, model.Password = ptr("virtual"), ptr("virtual")
 	}
 
-	if params.UrlOrUsernameEnc == nil || strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
-		return false, siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+	if model.UrlOrUsername == nil || strings.TrimSpace(*model.UrlOrUsername) == "" {
+		return siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
-	params.UrlOrUsernameEnc = ptr(strings.TrimSpace(*params.UrlOrUsernameEnc))
-
-	security := siteContext.Config.Security
+	model.UrlOrUsername = ptr(strings.TrimSpace(*model.UrlOrUsername))
 
 	// Nightscout specific validation and normalization
-	if params.Type == consts.SyncSourceTypeNightscout {
-		normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
+	if sstype == consts.SyncSourceTypeNightscout {
+		normalized, err := nsURLNormalizeValidate(model.UrlOrUsername, siteContext.Config)
 		if err != nil {
-			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
-			return false, siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
+			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *model.UrlOrUsername)
+			return siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *model.UrlOrUsername, err))
 		}
-		params.UrlOrUsernameEnc = normalized
+		model.UrlOrUsername = normalized
 	}
 
-	if params.PasswordEnc == nil || *params.PasswordEnc == "" {
-		return false, siteapiutils.ErrMissingRequiredFieldWithHint("password")
+	if model.Password == nil || *model.Password == "" {
+		return siteapiutils.ErrMissingRequiredFieldWithHint("password")
 	}
 
 	if model.Enabled {
-		if herr := verifySyncSource(ctx, params.Type, *params.UrlOrUsernameEnc, *params.PasswordEnc, params.Region); herr != nil {
-			return false, herr
-		}
+		return verifySyncSource(ctx, sstype, *model.UrlOrUsername, *model.Password, model.Region)
 	}
+	return nil
+}
+
+// ////
+// CREATE
+// ////
+func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *siteapiutils.HTTPError) {
+	params := sitemodels.SyncSourceToCreate(model)
+	// DO NOT ALLOW THE CLIENT TO SET SITEID
+	params.SiteID = siteContext.Subdomain
+	security := siteContext.Config.Security
 
 	encPassword, err := security.Encrypt(*params.PasswordEnc)
 	if err != nil {
@@ -98,7 +106,11 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 	}
 	params.UrlOrUsernameEnc = &encUrlOrUsername
 
-	err = siteContext.ControlDB.Queries.CreateSyncSource(ctx, params)
+	q, err := tx.Control()
+	if err != nil {
+		return false, siteapiutils.ErrInternalServerError
+	}
+	err = q.CreateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
 			return false, siteapiutils.ErrUniqueConstraintViolation
@@ -112,10 +124,9 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, id *string, siteCon
 		return false, siteapiutils.ErrBadBody
 	}
 
-	if sstype == consts.SyncSourceTypeVirtual && model.Enabled {
-		if err := seedVirtual(ctx, siteContext); err != nil {
-			return false, err
-		}
+	if model.Type == consts.SyncSourceTypeVirtual && model.Enabled {
+		// Seeding writes through its own queries, so it waits until this transaction commits
+		tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError { return seedVirtual(ctx, siteContext) })
 	}
 	return true, nil
 }
@@ -141,41 +152,41 @@ func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) tem
 // Update
 // ///
 
-func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
+func verifyUpdate(ctx context.Context, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
 		return siteapiutils.ErrRateLimitExceeded(seconds)
 	}
+	// DO NOT ALLOW THE CLIENT TO SET THE TYPE
+	model.Type = oldModel.Type
 
+	if model.UrlOrUsername != nil && strings.TrimSpace(*model.UrlOrUsername) == "" {
+		return siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+	}
+
+	// Nightscout specific validation and normalization
+	if oldModel.Type == consts.SyncSourceTypeNightscout && model.UrlOrUsername != nil {
+		normalized, err := nsURLNormalizeValidate(model.UrlOrUsername, siteContext.Config)
+		if err != nil {
+			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *model.UrlOrUsername)
+			return siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *model.UrlOrUsername, err))
+		}
+		model.UrlOrUsername = normalized
+	}
+
+	if model.Enabled {
+		return verifyUpdatedSyncSource(ctx, siteContext, oldModel.Type, sitemodels.SyncSourceToUpdate(model))
+	}
+	return nil
+}
+
+func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *siteapiutils.HTTPError {
 	params := sitemodels.SyncSourceToUpdate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
 	params.SiteID = siteContext.Subdomain
 	params.Type = oldModel.Type
 
 	var err error
-
-	if params.UrlOrUsernameEnc != nil && strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
-		return siteapiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
-	}
-
 	security := siteContext.Config.Security
-
-	// Nightscout specific validation and normalization
-	if oldModel.Type == consts.SyncSourceTypeNightscout {
-		if params.UrlOrUsernameEnc != nil {
-			normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
-			if err != nil {
-				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
-				return siteapiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
-			}
-			params.UrlOrUsernameEnc = normalized
-		}
-	}
-
-	if model.Enabled {
-		if herr := verifyUpdatedSyncSource(ctx, siteContext, oldModel.Type, params); herr != nil {
-			return herr
-		}
-	}
 
 	if params.PasswordEnc != nil {
 		if strings.TrimSpace(*params.PasswordEnc) == "" || *params.PasswordEnc == consts.PASSWORD_GARBAGE_VALUE {
@@ -196,7 +207,11 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 		}
 	}
 
-	err = siteContext.ControlDB.Queries.UpdateSyncSource(ctx, params)
+	q, err := tx.Control()
+	if err != nil {
+		return siteapiutils.ErrInternalServerError
+	}
+	err = q.UpdateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
 			return siteapiutils.ErrUniqueConstraintViolation
@@ -211,9 +226,8 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, id string, siteCont
 	}
 
 	if oldModel.Type == consts.SyncSourceTypeVirtual && model.Enabled {
-		if err := seedVirtual(ctx, siteContext); err != nil {
-			return err
-		}
+		// Seeding writes through its own queries, so it waits until this transaction commits
+		tx.AfterCommit(func(ctx context.Context) *siteapiutils.HTTPError { return seedVirtual(ctx, siteContext) })
 	}
 
 	return nil
@@ -288,8 +302,12 @@ func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource) 
 // Delete
 // ///
 
-func (s *SyncSettingsStore) DeleteModel(ctx context.Context, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
-	err := siteContext.ControlDB.Queries.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{
+func (s *SyncSettingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+	q, err := tx.Control()
+	if err != nil {
+		return siteapiutils.ErrInternalServerError
+	}
+	err = q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{
 		Type:   model.Type,
 		SiteID: model.SiteID,
 	})
