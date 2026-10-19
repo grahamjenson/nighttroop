@@ -26,6 +26,8 @@ type ControlDB struct {
 	sites map[string]*SiteDB
 
 	sitesRWLock sync.RWMutex
+	// createSiteLock serialises CreateSite so two calls never pick, open or delete the same subdomain's DB
+	createSiteLock sync.Mutex
 
 	Jobs *JobsDB
 }
@@ -134,6 +136,9 @@ type SiteCreateResult struct {
 }
 
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
+	db.createSiteLock.Lock()
+	defer db.createSiteLock.Unlock()
+
 	subdomain := utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
 	if db.SubdomainUsed(subdomain) {
 		// Try Again with an actual random ID
