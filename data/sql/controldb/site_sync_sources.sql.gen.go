@@ -143,7 +143,9 @@ WHERE us.enabled = 1
   AND u.last_seen_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (24 * 60 * 60 * 1000) -- site has been seen in the last day
   AND (
       us.last_attempted_sync IS NULL
-      OR us.first_successful_sync_time IS NULL -- just saved, so check the new settings straight away
+      -- Just saved, so check the new settings straight away, unless syncing has failed before:
+      -- then wait out the backoff, so re-enabling a failed source does not retry at once
+      OR (us.first_successful_sync_time IS NULL AND us.consecutive_failed_syncs = 0)
       OR us.last_attempted_sync <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (us.sync_interval_seconds * 1000)
   )
 `
