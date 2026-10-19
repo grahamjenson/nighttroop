@@ -24,8 +24,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 
 			if err == nil {
 				slog.Info("Control User Logged In", "user_name", controlIdentity.Name)
-				ctx := r.Context()
-				httputils.SetAdminControlContext(ctx, controlIdentity)
+				ctx := httputils.SetAdminControlContext(r.Context(), controlIdentity)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
