@@ -23,6 +23,8 @@ type RateLimiters struct {
 	identityPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
 	sitePOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
 
+	siteUpdateSyncRateLimiters *lru.Cache[string, *rate.Limiter]
+
 	SiteCreateLimiter   *rate.Limiter
 	siteCreateIpLimiter *lru.Cache[string, *rate.Limiter]
 
@@ -46,6 +48,8 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 
 		identityPOSTRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		sitePOSTRateLimiters:     lruMust(maxSites * wiggle),
+
+		siteUpdateSyncRateLimiters: lruMust(maxSites * wiggle),
 
 		SiteCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.SiteCreateGlobalPerMinuteLimit)/60.0), config.SiteCreateGlobalPerMinuteBurst),
 		siteCreateIpLimiter: lruMust(maxSites * wiggle),
@@ -106,7 +110,7 @@ func (r *RateLimiters) SitePOSTLimiter(subdomain string) *rate.Limiter {
 }
 
 func (r *RateLimiters) SiteUpdateSyncLimiter(subdomain string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, float64(r.serverConfig.SiteUpdateSyncPerMinuteLimit), r.serverConfig.SiteUpdateSyncPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteUpdateSyncRateLimiters, subdomain, float64(r.serverConfig.SiteUpdateSyncPerMinuteLimit), r.serverConfig.SiteUpdateSyncPerMinuteBurst)
 }
 
 func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {
