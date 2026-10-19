@@ -32,6 +32,11 @@ Do not change generated code. All generated files either:
 1. has a `.gen.go` suffix
 1. has a `_gen.sql` suffix
 
+## SQL
+
+- Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
+- Never run raw SQL strings (e.g. `ExecContext`, `QueryContext`), including in tests.
+
 ## Issue and PR Guidelines
 
 - Never create an Issue
