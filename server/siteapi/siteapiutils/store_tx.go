@@ -55,7 +55,7 @@ func (t *StoreTx) AfterCommit(fn func(ctx context.Context) *HTTPError) {
 // Finish commits on success, otherwise rolls back, then runs the AfterCommit hooks
 func (t *StoreTx) Finish(herr *HTTPError) *HTTPError {
 	if herr != nil {
-		t.rollback()
+		t.Rollback()
 		return herr
 	}
 	var err error
@@ -80,7 +80,8 @@ func (t *StoreTx) Finish(herr *HTTPError) *HTTPError {
 	return nil
 }
 
-func (t *StoreTx) rollback() {
+// Rollback undoes anything not yet committed. It is safe to defer: after Finish it does nothing.
+func (t *StoreTx) Rollback() {
 	for _, tx := range []*sql.Tx{t.siteTx, t.controlTx} {
 		if tx != nil {
 			_ = tx.Rollback()
