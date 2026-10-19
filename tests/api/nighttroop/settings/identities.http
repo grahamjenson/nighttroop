@@ -105,13 +105,13 @@ NAME deleted_device_token_rejected
 GET http://{{ .ns_site }}/api/v1/entries?token={{ .device_token }}
 ASSERT_STATUS 401
 
-// A deleted identity keeps its row, and its name, for the audit trail
+// Delete is a hard delete, so the name can be used again
 NAME create_device_reuse_name
 POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "kitchen", "role": "device_read"}
-ASSERT_STATUS 409
+ASSERT_STATUS 201
 
 // Deleting from a page goes back to that page
 NAME create_device_to_delete_from_page

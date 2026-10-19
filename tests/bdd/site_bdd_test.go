@@ -93,6 +93,8 @@ func TestSite(t *testing.T) {
 		require.NoError(t, err)
 
 		context.SetDefaultTimeout(1000) // 1 second
+		// Accept confirm dialogs, so tests can click buttons with hx-confirm
+		context.OnDialog(func(dialog playwright.Dialog) { _ = dialog.Accept() })
 
 		RunTheActionFileAsATest(t, "site", path, context, server.URL, backgroundJobs, siteInformation, defaultJwt)
 		context.Close()

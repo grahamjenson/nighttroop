@@ -187,6 +187,19 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 			})
+		case "ASSERT_NOT_VISIBLE":
+			if current == nil {
+				return nil, fmt.Errorf("assert_not_visible before action")
+			}
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+			assertable.AddAssert(&AssertNotVisible{
+				Locator:  second,
+				TestPath: path,
+				TestLine: lineNumber,
+			})
 		case "ASSERT_TEXT_VISIBLE":
 			if current == nil {
 				return nil, fmt.Errorf("assert_text_visible before action")

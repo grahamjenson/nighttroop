@@ -49,10 +49,19 @@ func (s *IdentitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return false, siteapiutils.ErrInternalServerError
 	}
+	// Counted inside the transaction, so two creates at once cannot both pass the limit
+	count, err := q.CountSiteIdentities(ctx, controldb.CountSiteIdentitiesParams{SiteID: siteContext.Subdomain})
+	if err != nil {
+		return false, siteapiutils.ErrInternalServerError
+	}
+	if maxIdentities := siteContext.Config.MaxIdentitiesPerSite; count >= int64(maxIdentities) {
+		return false, siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d users and devices", maxIdentities))
+	}
+
 	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.Subdomain, model.Name, role)
 	if err != nil {
 		slog.Error("Failed to create identity", "error", err)
-		// Names are unique per site, including deleted identities, which keep their row
+		// Names are unique per site
 		if errors.IsSQLUniqueViolationError(err) {
 			return false, siteapiutils.ErrUniqueConstraintViolation
 		}
@@ -113,7 +122,7 @@ func (s *IdentitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 }
 
 func (s *IdentitiesStore) UpdateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
-	return site_settings_templ.IdentityUpdated()
+	return site_settings_templ.IdentityUpdated(model)
 }
 
 // ////
@@ -185,7 +194,7 @@ func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity) 
 // Delete
 // ///
 
-// DeleteModel soft deletes the identity and wipes its credentials
+// DeleteModel removes the identity, so its password and tokens stop working
 func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.UserIdentity, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
 	q, err := tx.Control()
 	if err != nil {
@@ -197,10 +206,8 @@ func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 
 	identityID, _ := strconv.ParseInt(model.ID, 10, 64)
 	err = q.DeleteSiteIdentity(ctx, controldb.DeleteSiteIdentityParams{
-		UpdatedByIdentityID:   &siteContext.IdentityModel.ID,
-		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		SiteID:                siteContext.Subdomain,
-		ID:                    identityID,
+		SiteID: siteContext.Subdomain,
+		ID:     identityID,
 	})
 	if err != nil {
 		slog.Error("Error deleting identity", "error", err)

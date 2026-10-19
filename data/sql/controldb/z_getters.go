@@ -2608,6 +2608,16 @@ func (m *AllSiteIdentitiesParams) SetSiteID(v string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m CountSiteIdentitiesParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CountSiteIdentitiesParams.
+func (m *CountSiteIdentitiesParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m GetSiteIdentityParams) GetSiteID() string {
 	return m.SiteID
 }
@@ -2725,26 +2735,6 @@ func (m UpdateSiteIdentityEnabledParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateSiteIdentityEnabledParams.
 func (m *UpdateSiteIdentityEnabledParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
-func (m DeleteSiteIdentityParams) GetUpdatedByIdentityID() *int64 {
-	return m.UpdatedByIdentityID
-}
-
-// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated DeleteSiteIdentityParams.
-func (m *DeleteSiteIdentityParams) SetUpdatedByIdentityID(v *int64) {
-	m.UpdatedByIdentityID = v
-}
-
-// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
-func (m DeleteSiteIdentityParams) GetUpdatedByIdentityName() *string {
-	return m.UpdatedByIdentityName
-}
-
-// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated DeleteSiteIdentityParams.
-func (m *DeleteSiteIdentityParams) SetUpdatedByIdentityName(v *string) {
-	m.UpdatedByIdentityName = v
 }
 
 // GetSiteID returns the SiteID value.

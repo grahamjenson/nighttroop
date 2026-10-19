@@ -139,6 +139,33 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 	return nil
 }
 
+// //
+// ASSERT NOT VISIBLE
+// //
+type AssertNotVisible struct {
+	Locator string
+
+	TestPath string
+	TestLine int
+}
+
+// Execute waits for the element to be hidden or gone, as an HTMX swap can take a moment
+func (r *AssertNotVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
+	}
+	if err := locator.WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateHidden}); err != nil {
+		html, _ := page.Content()
+		t.Fatalf("\n\n%s\n assertNotVisible failed: %v\n\n%s\n\n", r.ToErrorLine(), err, PrettifyHTML(html))
+	}
+	return nil
+}
+
+func (r *AssertNotVisible) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected element not to be visible for locator %s", r.TestPath, r.TestLine, r.Locator)
+}
+
 func (r *AssertVisible) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected element to be visible for locator %s", r.TestPath, r.TestLine, r.Locator)
 }
