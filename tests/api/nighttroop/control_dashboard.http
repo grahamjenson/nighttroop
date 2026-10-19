@@ -1,0 +1,13 @@
+NAME control_login
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "password", "totp": "123123"}
+ASSERT_STATUS 200
+SET control_jwt {{ .control_login.token }}
+
+// A logged in control admin can load the dashboard
+NAME control_dashboard
+GET http://control.localhost/
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200

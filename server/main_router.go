@@ -55,7 +55,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 
 		switch routeTarget {
 		case RouteTargetControl:
-			controlRouter.ServeHTTP(w, r.WithContext(ctx))
+			controlRouter.ServeHTTP(w, r.WithContext(httputils.CreateControlContext(ctx, controlDB, ipAddress, httputils.GetHTTPAction(r))))
 		case RouteTargetPublic:
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case RouteTargetNightscout:
@@ -80,12 +80,6 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 	})
 
-}
-
-func CreateControlContext(controlDB *db.ControlDB, r *http.Request, ipAddress string) context.Context {
-
-	ctx := httputils.CreateControlContext(r.Context(), controlDB, ipAddress, httputils.GetHTTPAction(r))
-	return ctx
 }
 
 func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
