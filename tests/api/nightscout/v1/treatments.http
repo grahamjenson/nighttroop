@@ -1598,6 +1598,11 @@ DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 3 "@deletedCount"
 
+NAME get_soft_deleted_treatments_by_type_v1
+GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Insulin%20Change&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
 
 NAME delete_treatments_by_type_again_v1
 DELETE http://{{ site }}/api/v1/treatments/Insulin%20Change?token={{ token }}

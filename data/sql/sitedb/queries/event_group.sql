@@ -190,11 +190,11 @@ WHERE
 
 
     -- range values
-    AND (CAST(sqlc.narg('DurationEQ') AS INTEGER) IS NULL OR a.duration_minutes = sqlc.narg('DurationEQ')) OR tb.duration_minutes = sqlc.narg('DurationEQ') OR tt.duration_minutes = sqlc.narg('DurationEQ') OR ps.duration_minutes = sqlc.narg('DurationEQ')
-    AND (CAST(sqlc.narg('DurationGTE') AS INTEGER) IS NULL OR a.duration_minutes >= sqlc.narg('DurationGTE')) OR tb.duration_minutes >= sqlc.narg('DurationGTE') OR tt.duration_minutes >= sqlc.narg('DurationGTE') OR ps.duration_minutes >= sqlc.narg('DurationGTE')
-    AND (CAST(sqlc.narg('DurationGT') AS INTEGER) IS NULL OR a.duration_minutes > sqlc.narg('DurationGT')) OR tb.duration_minutes > sqlc.narg('DurationGT') OR tt.duration_minutes > sqlc.narg('DurationGT') OR ps.duration_minutes > sqlc.narg('DurationGT')
-    AND (CAST(sqlc.narg('DurationLTE') AS INTEGER) IS NULL OR a.duration_minutes <= sqlc.narg('DurationLTE')) OR tb.duration_minutes <= sqlc.narg('DurationLTE') OR tt.duration_minutes <= sqlc.narg('DurationLTE') OR ps.duration_minutes <= sqlc.narg('DurationLTE')
-    AND (CAST(sqlc.narg('DurationLT') AS INTEGER) IS NULL OR a.duration_minutes < sqlc.narg('DurationLT')) OR tb.duration_minutes < sqlc.narg('DurationLT') OR tt.duration_minutes < sqlc.narg('DurationLT') OR ps.duration_minutes < sqlc.narg('DurationLT')
+    AND (CAST(sqlc.narg('DurationEQ') AS INTEGER) IS NULL OR a.duration_minutes = sqlc.narg('DurationEQ') OR tb.duration_minutes = sqlc.narg('DurationEQ') OR tt.duration_minutes = sqlc.narg('DurationEQ') OR ps.duration_minutes = sqlc.narg('DurationEQ'))
+    AND (CAST(sqlc.narg('DurationGTE') AS INTEGER) IS NULL OR a.duration_minutes >= sqlc.narg('DurationGTE') OR tb.duration_minutes >= sqlc.narg('DurationGTE') OR tt.duration_minutes >= sqlc.narg('DurationGTE') OR ps.duration_minutes >= sqlc.narg('DurationGTE'))
+    AND (CAST(sqlc.narg('DurationGT') AS INTEGER) IS NULL OR a.duration_minutes > sqlc.narg('DurationGT') OR tb.duration_minutes > sqlc.narg('DurationGT') OR tt.duration_minutes > sqlc.narg('DurationGT') OR ps.duration_minutes > sqlc.narg('DurationGT'))
+    AND (CAST(sqlc.narg('DurationLTE') AS INTEGER) IS NULL OR a.duration_minutes <= sqlc.narg('DurationLTE') OR tb.duration_minutes <= sqlc.narg('DurationLTE') OR tt.duration_minutes <= sqlc.narg('DurationLTE') OR ps.duration_minutes <= sqlc.narg('DurationLTE'))
+    AND (CAST(sqlc.narg('DurationLT') AS INTEGER) IS NULL OR a.duration_minutes < sqlc.narg('DurationLT') OR tb.duration_minutes < sqlc.narg('DurationLT') OR tt.duration_minutes < sqlc.narg('DurationLT') OR ps.duration_minutes < sqlc.narg('DurationLT'))
 
 
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
