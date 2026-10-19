@@ -20,6 +20,8 @@ import (
 var embeddedFiles embed.FS
 
 func TestSite(t *testing.T) {
+	// Every scenario logs in from 127.0.0.1, so the per-IP login burst is shared across all files
+	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
 
 	config, controlDB, siteInformation, err := testutils.GetConfigControlDBAndSiteDBForTest()
 

@@ -122,6 +122,22 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				Key:      key,
 				Value:    value,
 			}
+		case "SAVE_COOKIE", "SET_COOKIE":
+			flush()
+
+			parts := strings.SplitN(second, " ", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("%s:%d: expected a cookie name and a value", path, lineNumber)
+			}
+			if first == "SAVE_COOKIE" {
+				current = &SaveCookie{TestPath: path, TestLine: lineNumber, Name: parts[0], Key: parts[1]}
+			} else {
+				current = &SetCookie{TestPath: path, TestLine: lineNumber, Name: parts[0], Value: parts[1]}
+			}
+		case "CLEAR_COOKIE":
+			flush()
+
+			current = &ClearCookie{TestPath: path, TestLine: lineNumber, Name: second}
 		// Adding screenshot action
 		case "SCREENSHOT":
 			if current == nil {
