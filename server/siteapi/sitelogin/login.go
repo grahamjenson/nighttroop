@@ -215,6 +215,10 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
+	// It may have been disabled since the password step
+	if !identity.Enabled {
+		return nil, fmt.Errorf("identity disabled")
+	}
 	return identity, nil
 }
 
@@ -233,6 +237,11 @@ func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.
 
 	if !securityConfig.VerifyPassword(formPassword, identity.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
+	}
+
+	// Checked after the password, so a failed login does not reveal which identities are disabled
+	if !identity.Enabled {
+		return nil, fmt.Errorf("identity disabled")
 	}
 
 	return identity, nil
