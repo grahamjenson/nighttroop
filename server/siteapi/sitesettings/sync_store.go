@@ -296,7 +296,8 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	if rawUrl == nil {
 		return nil, fmt.Errorf("URL is nil")
 	}
-	errMsg := ""
+	// Each problem is a sentence, joined with spaces
+	problems := []string{}
 	nsURL, err := url.Parse(*rawUrl)
 	if err != nil {
 		return rawUrl, fmt.Errorf("Invalid URL: %w", err)
@@ -313,22 +314,22 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	}
 
 	if scheme != "https" && !(config.IsDevOrTest() && scheme == "http") {
-		errMsg += "Nightscout URL must use HTTPS."
+		problems = append(problems, "Nightscout URL must use HTTPS.")
 	}
 	if path != "" && path != "/" {
-		errMsg += "Nightscout URL cannot have a path. "
+		problems = append(problems, "Nightscout URL cannot have a path.")
 	}
 	if params != "" {
-		errMsg += "Nightscout URL cannot have query parameters. "
+		problems = append(problems, "Nightscout URL cannot have query parameters.")
 	}
 
 	err = httputils.IsNightscoutURLBlocked(host, config)
 	if err != nil {
-		errMsg += "Nightscout URL is blocked." + err.Error()
+		problems = append(problems, "Nightscout URL is blocked: "+err.Error())
 	}
 
-	if errMsg != "" {
-		return rawUrl, fmt.Errorf("%s", errMsg)
+	if len(problems) > 0 {
+		return rawUrl, fmt.Errorf("%s", strings.Join(problems, " "))
 	}
 
 	// Normalize the URL by removing default Ports
