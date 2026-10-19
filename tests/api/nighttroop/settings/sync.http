@@ -53,6 +53,7 @@ H Accept: application/json
 B {"url_or_username": "not a url", "enabled": true}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "not a valid URL" "@message"
+ASSERT_CONTAINS "Nightscout URL must use HTTPS. Nightscout URL cannot have a path." "@message"
 
 NAME update_nightscout_sync_unreachable
 POST http://{{ site }}/settings/sync/nightscout
