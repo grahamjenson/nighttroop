@@ -38,8 +38,8 @@ ASSERT_EQUALS "http://valid.nightscout.test" "@result.url_or_username"
 
 RUN_BACKGROUND_JOBS
 
-// Saving working details clears the error and the first sync keeps syncing on
-NAME nightscout_first_sync_worked
+// Saving again clears the error and turns syncing back on
+NAME nightscout_reenabled
 GET http://{{ site }}/settings/sync
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
@@ -63,13 +63,13 @@ ASSERT_STATUS 200
 
 RUN_BACKGROUND_JOBS
 
-NAME nightscout_first_sync_after_update_failed
+// It failed before, so the retry waits out the backoff: the bad details are not tried yet
+NAME nightscout_retry_waits_for_backoff
 GET http://{{ site }}/settings/sync
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS false "@result.0.enabled"
-ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.0.previous_sync_errors.0"
+ASSERT_EQUALS true "@result.0.enabled"
 
 NAME update_nightscout_sync_keeps_stored_password
 POST http://{{ site }}/settings/sync/nightscout
