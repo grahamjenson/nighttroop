@@ -174,9 +174,11 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 		return context, fmt.Errorf("request %s response body is not valid JSON: %v", r.Name, err)
 	}
 
+	// Result has the headers that were sent; rr.Header() also has ones set too late to be sent
+	headers := rr.Result().Header
 	context[r.Name] = out
 	context[r.Name+"_status"] = rr.Code
-	context[r.Name+"_headers"] = rr.Header()
+	context[r.Name+"_headers"] = headers
 
 	// EXECUTE THE SETS
 	for _, setStruct := range r.Sets {
@@ -188,7 +190,7 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 
 	// EXECUTE THE ASSERTS
 	for _, assert := range r.Asserts {
-		assert.Execute(t, r.Name, rr.Code, out, rr.Header(), context)
+		assert.Execute(t, r.Name, rr.Code, out, headers, context)
 	}
 
 	return context, nil

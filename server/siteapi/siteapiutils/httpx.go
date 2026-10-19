@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func ReadJSON(r *http.Request, dst any) error {
@@ -16,6 +18,16 @@ func ReadJSON(r *http.Request, dst any) error {
 }
 
 // WriteJSON writes a JSON response with the provided HTTP status code.
+// writeStatus sets the Content-Type for the response, then the status: headers set after WriteHeader are dropped
+func writeStatus(w http.ResponseWriter, acceptType httputils.AcceptType, status int) {
+	if acceptType == httputils.AcceptTypeHTMX || acceptType == httputils.AcceptTypeHTML {
+		w.Header().Set("Content-Type", "text/html")
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+	}
+	w.WriteHeader(status)
+}
+
 func writeJSON(w http.ResponseWriter, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)

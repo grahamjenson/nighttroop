@@ -59,7 +59,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		if created {
 			status = http.StatusCreated
 		}
-		w.WriteHeader(status)
+		writeStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -124,7 +124,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		w.WriteHeader(status)
+		writeStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -192,7 +192,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		w.WriteHeader(status)
+		writeStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -239,7 +239,7 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		w.WriteHeader(status)
+		writeStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -285,7 +285,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		}
 
 		status := http.StatusOK
-		w.WriteHeader(status)
+		writeStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -342,15 +342,18 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
+		if siteContext.AcceptType == httputils.AcceptTypeHTML {
+			// return to the page they came from
+			http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
+			return
+		}
+
 		status := http.StatusOK
-		w.WriteHeader(status)
+		writeStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
 			store.DeleteHTMXResponse(model).Render(r.Context(), w)
-		case httputils.AcceptTypeHTML:
-			// return to the page they came from
-			http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
 		default:
 			w.Write([]byte(`{"status":"deleted"}`))
 		}

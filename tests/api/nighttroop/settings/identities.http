@@ -17,6 +17,7 @@ GET http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
+ASSERT_EQUALS "application/json" "#Content-Type.0"
 ASSERT_LENGTH 3 "@result"
 ASSERT_EQUALS "device_pwd_phone" "@result.1.role"
 ASSERT_EQUALS true "@result.1.current_identity"
@@ -50,6 +51,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "lounge", "role": "superuser"}
 ASSERT_STATUS 400
+ASSERT_EQUALS "application/json" "#Content-Type.0"
 ASSERT_CONTAINS "Unknown role" "@message"
 
 // Credentials are only shown when the identity is created
@@ -110,6 +112,23 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"name": "kitchen", "role": "device_read"}
 ASSERT_STATUS 409
+
+// Deleting from a page goes back to that page
+NAME create_device_to_delete_from_page
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "hallway", "role": "device_read"}
+ASSERT_STATUS 201
+SET page_device_id {{ .create_device_to_delete_from_page.result.id }}
+
+NAME delete_device_from_page
+DELETE http://{{ site }}/settings/identities/{{ .page_device_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: text/html
+H Referer: http://{{ site }}/settings/identities
+ASSERT_STATUS 303
+ASSERT_CONTAINS "/settings/identities" "#Location.0"
 
 NAME delete_unknown_identity
 DELETE http://{{ site }}/settings/identities/999999999
