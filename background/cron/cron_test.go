@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/cron"
@@ -36,6 +37,14 @@ func TestAddFunc(t *testing.T) {
 	// Run the entry
 	entry := cron.Entry(entryid)
 	entry.Job.Run()
+
+	// SecondsAgo is seconds: a job from a few milliseconds ago is not a second old yet
+	time.Sleep(10 * time.Millisecond)
+	jobsTBS, err = jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
+		SecondsAgo: 1,
+	})
+	require.NoError(t, err)
+	require.Len(t, jobsTBS, 0)
 
 	jobsTBS, err = jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
 		SecondsAgo: 0,

@@ -51,7 +51,7 @@ type DeleteJobsByIdsParams struct {
 	Ids []int64
 }
 
-// jobs created at more than 1 minute ago
+// created_at is in milliseconds
 // ----
 // DELETE
 // ----
@@ -143,7 +143,7 @@ SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_f
 WHERE
     job_status IN ('completed', 'failed')
     AND remaining_attempts = 0
-    AND created_at <= (CAST(unixepoch('subsec') * 1000 AS INTEGER) - CAST(?1 AS INTEGER))
+    AND created_at <= (CAST(unixepoch('subsec') * 1000 AS INTEGER) - CAST(?1 AS INTEGER) * 1000)
 `
 
 type GetJobsToBeSummarisedParams struct {
