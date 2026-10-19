@@ -176,17 +176,18 @@ var forwardLookupName = map[string][]string{
 	"limit": {"limit", "count"},
 }
 
-var reverseLookupName = map[string]string{}
-
-func ParseQueryValues(values url.Values) (QueryValues, error) {
-	if len(reverseLookupName) == 0 {
-		for k, v := range forwardLookupName {
-			for _, vv := range v {
-				reverseLookupName[vv] = k
-			}
+// Built once at startup; filling it lazily raced when the first requests arrived together
+var reverseLookupName = func() map[string]string {
+	reverse := map[string]string{}
+	for k, v := range forwardLookupName {
+		for _, vv := range v {
+			reverse[vv] = k
 		}
 	}
+	return reverse
+}()
 
+func ParseQueryValues(values url.Values) (QueryValues, error) {
 	qvMap := map[string]string{}
 	for key, vals := range values {
 		if len(vals) == 0 {
