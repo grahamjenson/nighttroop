@@ -34,11 +34,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 			}
 
 			if acceptType.API() {
-				allArgs := append([]any{
-					"error", err,
-					"stack", errors.LocalStack(),
-				}, fmt.Errorf("Unauthorized: Invalid JWT token"))
-				slog.Info("Identity Login Failed", allArgs...)
+				slog.Info("Identity Login Failed: invalid JWT token", "error", err, "stack", errors.LocalStack())
 				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 
 				return
