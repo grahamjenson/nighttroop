@@ -2,6 +2,7 @@ package browser
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -358,4 +359,111 @@ func (r *Set) PrintAction() {
 func (r *Set) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	// Implement the execution logic for the Set action here
 	return page, nil
+}
+
+// ///
+// COOKIES
+// ///
+
+// SaveCookie stores the value of a cookie for the current page in the context under Key
+type SaveCookie struct {
+	Name string
+	Key  string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *SaveCookie) ToFlatString() string {
+	return fmt.Sprintf("SAVE_COOKIE %s %s", r.Name, r.Key)
+}
+
+func (r *SaveCookie) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *SaveCookie) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *SaveCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	cookies, err := page.Context().Cookies(page.URL())
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range cookies {
+		if c.Name == r.Name {
+			ctx[r.Key] = c.Value
+			return page, nil
+		}
+	}
+	t.Fatalf("\n\n %s \n\n", r.ToErrorLine("cookie not found"))
+	return page, nil
+}
+
+// SetCookie replaces a cookie for the current page's host, e.g. to replay one taken from another site
+type SetCookie struct {
+	Name  string
+	Value string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *SetCookie) ToFlatString() string {
+	return fmt.Sprintf("SET_COOKIE %s %s", r.Name, r.Value)
+}
+
+func (r *SetCookie) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *SetCookie) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *SetCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	value, err := renderTemplate(r.Value, ctx)
+	if err != nil {
+		t.Fatalf("\n\n %s: %v \n\n", r.ToErrorLine("Error Rendering value"), err)
+	}
+	pageURL, err := url.Parse(page.URL())
+	if err != nil {
+		return nil, err
+	}
+	// Clear first so the new cookie replaces the server's rather than sitting beside it
+	if err := page.Context().ClearCookies(playwright.BrowserContextClearCookiesOptions{Name: r.Name}); err != nil {
+		return nil, err
+	}
+	err = page.Context().AddCookies([]playwright.OptionalCookie{{
+		Name:   r.Name,
+		Value:  value,
+		Domain: playwright.String(pageURL.Hostname()),
+		Path:   playwright.String("/"),
+	}})
+	return page, err
+}
+
+// ClearCookie removes a cookie from the browser
+type ClearCookie struct {
+	Name string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *ClearCookie) ToFlatString() string {
+	return fmt.Sprintf("CLEAR_COOKIE %s", r.Name)
+}
+
+func (r *ClearCookie) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *ClearCookie) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *ClearCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	return page, page.Context().ClearCookies(playwright.BrowserContextClearCookiesOptions{Name: r.Name})
 }

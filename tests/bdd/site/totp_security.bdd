@@ -1,0 +1,62 @@
+// The TOTP step trusts the pre_auth_token cookie set by the password step.
+// It must only accept a pre-auth token issued by this site, for this login.
+
+// ATTACKER passes the password step on their own site and keeps the pre-auth cookie
+GOTO {{ server_url}}/
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+ASSERT_PATH /login
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--login--otp-1
+SAVE_COOKIE pre_auth_token attacker_pre_auth
+
+// VICTIM: a different site with an identity also called admin
+GOTO {{ server_url}}/
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+ASSERT_PATH /login
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--login--otp-1
+SAVE_COOKIE pre_auth_token victim_pre_auth
+
+// A pre-auth cookie from another site is rejected, even with a valid TOTP
+// The valid TOTP is typed once and stays in the form for every attempt below
+INPUT #site--login--otp-1 123123
+
+SET_COOKIE pre_auth_token {{ .attacker_pre_auth }}
+CLICK #site--login-totp-button
+ASSERT_STATUS 401
+ASSERT_PATH /login
+
+// A forged pre-auth cookie is rejected
+SET_COOKIE pre_auth_token not-a-real-token
+CLICK #site--login-totp-button
+ASSERT_STATUS 401
+ASSERT_PATH /login
+
+// Skipping the password step is rejected
+CLEAR_COOKIE pre_auth_token
+CLICK #site--login-totp-button
+ASSERT_STATUS 401
+ASSERT_PATH /login
+
+// The victim's own pre-auth cookie with the right TOTP still logs in
+SET_COOKIE pre_auth_token {{ .victim_pre_auth }}
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+ASSERT_PATH /
