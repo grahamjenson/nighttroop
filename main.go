@@ -41,21 +41,7 @@ func run() error {
 		return fmt.Errorf("cannot create server config: %w", err)
 	}
 
-	if serverConfig.SentryDSN != "" {
-		err := sentry.Init(sentry.ClientOptions{
-			Dsn:           serverConfig.SentryDSN,
-			EnableTracing: false,
-			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-				if event.Request != nil {
-					event.Request.QueryString = httputils.RedactQuery(event.Request.QueryString)
-				}
-				return event
-			},
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	setupSentry(serverConfig)
 
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
@@ -144,6 +130,30 @@ func run() error {
 	controlDB.Close()
 	slog.Info("Server shutdown complete")
 	return nil
+}
+
+// setupSentry starts Sentry error reporting and records whether it is working in serverConfig.Status.
+// Sentry is optional: without it errors are still logged, just not reported.
+func setupSentry(serverConfig *config.ServerConfig) {
+	if serverConfig.SentryDSN == "" {
+		slog.Warn("Sentry is not set up, set SENTRY_DSN to report errors")
+		return
+	}
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:           serverConfig.SentryDSN,
+		EnableTracing: false,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			if event.Request != nil {
+				event.Request.QueryString = httputils.RedactQuery(event.Request.QueryString)
+			}
+			return event
+		},
+	})
+	if err != nil {
+		slog.Warn("Sentry is not working, running without error reporting", "error", err)
+		return
+	}
+	serverConfig.Status.SentryWorking = true
 }
 
 func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http.Server {

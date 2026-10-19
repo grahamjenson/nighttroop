@@ -21,7 +21,8 @@ import (
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
 type ServerStatus struct {
-	S3Working bool
+	S3Working     bool
+	SentryWorking bool
 }
 
 type ServerConfig struct {
