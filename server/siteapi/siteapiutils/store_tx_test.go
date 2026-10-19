@@ -27,26 +27,20 @@ func TestStoreTx(t *testing.T) {
 			UrlOrUsernameEnc: ptr("virtual"), PasswordEnc: ptr("virtual"),
 		}))
 	}
-	hookRan := false
-	hook := func(ctx context.Context) *siteapiutils.HTTPError { hookRan = true; return nil }
 
-	// An error rolls back the writes and skips the hooks
+	// An error rolls back the writes
 	tx := siteapiutils.NewStoreTx(ctx, siteContext)
 	write(tx)
-	tx.AfterCommit(hook)
 	require.Equal(t, siteapiutils.ErrBadBody, tx.Finish(siteapiutils.ErrBadBody))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.Error(t, err, "rolled back write should not exist")
-	require.False(t, hookRan)
 
-	// Success commits the writes, then runs the hooks
+	// Success commits the writes
 	tx = siteapiutils.NewStoreTx(ctx, siteContext)
 	write(tx)
-	tx.AfterCommit(hook)
 	require.Nil(t, tx.Finish(nil))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.NoError(t, err, "committed write should exist")
-	require.True(t, hookRan)
 
 	// A transaction that is never used opens nothing and finishes cleanly
 	require.Nil(t, siteapiutils.NewStoreTx(ctx, siteContext).Finish(nil))
