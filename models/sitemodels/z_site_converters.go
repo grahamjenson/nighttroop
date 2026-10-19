@@ -10,6 +10,46 @@ import (
 	security "nighttroop.t1d.nz/utils/security"
 )
 
+func IdentityFromDB(source *controldb.SiteIdentity, context string) *UserIdentity {
+	var pSitemodelsUserIdentity *UserIdentity
+	if source != nil {
+		var sitemodelsUserIdentity UserIdentity
+		sitemodelsUserIdentity.ID = IdentityIDToString((*source).ID)
+		sitemodelsUserIdentity.Name = (*source).Name
+		sitemodelsUserIdentity.Created = FormatIdentityDate((*source).CreatedAt)
+		sitemodelsUserIdentity.LastSeen = FormatOptionalIdentityDate((*source).LastSeenAt)
+		sitemodelsUserIdentity.LastWrite = FormatOptionalIdentityDate((*source).LastWriteAt)
+		sitemodelsUserIdentity.Role = string((*source).Role)
+		sitemodelsUserIdentity.CurrentIdentity = IsCurrentIdentity((*source).Name, context)
+		sitemodelsUserIdentity.HasTotpSecret = HasTotpSecret((*source).TotpSecretEnc)
+		sitemodelsUserIdentity.Enabled = (*source).Enabled
+		pSitemodelsUserIdentity = &sitemodelsUserIdentity
+	}
+	return pSitemodelsUserIdentity
+}
+func IdentityToDelete(source *UserIdentity) (controldb.DeleteSiteIdentityParams, error) {
+	var controldbDeleteSiteIdentityParams controldb.DeleteSiteIdentityParams
+	if source != nil {
+		xint64, err := IdentityIDFromString((*source).ID)
+		if err != nil {
+			return controldbDeleteSiteIdentityParams, err
+		}
+		controldbDeleteSiteIdentityParams.ID = xint64
+	}
+	return controldbDeleteSiteIdentityParams, nil
+}
+func IdentityToUpdate(source *UserIdentity) (controldb.UpdateSiteIdentityEnabledParams, error) {
+	var controldbUpdateSiteIdentityEnabledParams controldb.UpdateSiteIdentityEnabledParams
+	if source != nil {
+		controldbUpdateSiteIdentityEnabledParams.Enabled = (*source).Enabled
+		xint64, err := IdentityIDFromString((*source).ID)
+		if err != nil {
+			return controldbUpdateSiteIdentityEnabledParams, err
+		}
+		controldbUpdateSiteIdentityEnabledParams.ID = xint64
+	}
+	return controldbUpdateSiteIdentityEnabledParams, nil
+}
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {
