@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/utils"
 )
 
 // EGV represents a Dexcom glucose reading.
@@ -26,9 +25,11 @@ func (e EGV) UTCOffsetInMinutes() int {
 
 func EGVToCreate(e EGV, createdByIdentityName string) sitedb.CreateGlucoseReadingParams {
 	return sitedb.CreateGlucoseReadingParams{
-		ID:                    utils.NextID(),
+		// Derived from the reading time so readings fetched again by later syncs are duplicates
+		ID:                    fmt.Sprintf("dexcom-%d", e.SystemTime.Unix()),
 		OccurredAt:            e.SystemTime.UnixMilli(),
 		Mgdl:                  float64(e.Value),
+		ReadingType:           "sgv",
 		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
 		UtcOffsetMinutes:      ptr(int64(e.UTCOffsetInMinutes())),

@@ -27,8 +27,8 @@ func GetIPFromHTTPContext(ctx context.Context) string {
 
 func getIPAddressFromRequest(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err == nil {
-		return host
+	if err != nil {
+		host = r.RemoteAddr
 	}
 
 	// If we are deployed on Fly.io then use the Fly-Client-IP header
@@ -43,9 +43,9 @@ func getIPAddressFromRequest(r *http.Request) string {
 		// Check X-Forwarded-For header first (in case of reverse proxy)
 		xForwardedFor := r.Header.Get("X-Forwarded-For")
 		if xForwardedFor != "" {
-			// The X-Forwarded-For header can contain multiple IPs, the first one is the client's IP
+			// Use the last IP, the one our proxy appended; earlier ones can be set by the client
 			ips := strings.Split(xForwardedFor, ",")
-			return strings.TrimSpace(ips[0])
+			return strings.TrimSpace(ips[len(ips)-1])
 		}
 	}
 

@@ -19,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/security"
@@ -44,6 +45,12 @@ func run() error {
 		err := sentry.Init(sentry.ClientOptions{
 			Dsn:           serverConfig.SentryDSN,
 			EnableTracing: false,
+			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+				if event.Request != nil {
+					event.Request.QueryString = httputils.RedactQuery(event.Request.QueryString)
+				}
+				return event
+			},
 		})
 		if err != nil {
 			log.Fatal(err)

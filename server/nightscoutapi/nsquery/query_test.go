@@ -3,11 +3,29 @@ package nsquery
 import (
 	"fmt"
 	"net/url"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+// Kept first so it is the first parse in this package, like the first requests after a restart
+func Test_ConcurrentFirstParse(t *testing.T) {
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for range 100 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, err := ParseQueryValues(url.Values{"count": []string{"10"}})
+			assert.NoError(t, err)
+		}()
+	}
+	close(start)
+	wg.Wait()
+}
 
 // We are only going to support a limited set of query params
 

@@ -942,11 +942,11 @@ WHERE
 
 
     -- range values
-    AND (CAST(?38 AS INTEGER) IS NULL OR a.duration_minutes = ?38) OR tb.duration_minutes = ?38 OR tt.duration_minutes = ?38 OR ps.duration_minutes = ?38
-    AND (CAST(?39 AS INTEGER) IS NULL OR a.duration_minutes >= ?39) OR tb.duration_minutes >= ?39 OR tt.duration_minutes >= ?39 OR ps.duration_minutes >= ?39
-    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes > ?40) OR tb.duration_minutes > ?40 OR tt.duration_minutes > ?40 OR ps.duration_minutes > ?40
-    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes <= ?41) OR tb.duration_minutes <= ?41 OR tt.duration_minutes <= ?41 OR ps.duration_minutes <= ?41
-    AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes < ?42) OR tb.duration_minutes < ?42 OR tt.duration_minutes < ?42 OR ps.duration_minutes < ?42
+    AND (CAST(?38 AS INTEGER) IS NULL OR a.duration_minutes = ?38 OR tb.duration_minutes = ?38 OR tt.duration_minutes = ?38 OR ps.duration_minutes = ?38)
+    AND (CAST(?39 AS INTEGER) IS NULL OR a.duration_minutes >= ?39 OR tb.duration_minutes >= ?39 OR tt.duration_minutes >= ?39 OR ps.duration_minutes >= ?39)
+    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes > ?40 OR tb.duration_minutes > ?40 OR tt.duration_minutes > ?40 OR ps.duration_minutes > ?40)
+    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes <= ?41 OR tb.duration_minutes <= ?41 OR tt.duration_minutes <= ?41 OR ps.duration_minutes <= ?41)
+    AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes < ?42 OR tb.duration_minutes < ?42 OR tt.duration_minutes < ?42 OR ps.duration_minutes < ?42)
 
 
     AND (CAST(?43 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
