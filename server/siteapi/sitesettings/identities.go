@@ -2,7 +2,6 @@ package sitesettings
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -36,7 +35,6 @@ func GETIdentitiesHandler(controlDB *db.ControlDB, config *config.ServerConfig) 
 
 			err = site_settings_templ.Identities(siteContext, userIdentities, deviceIdentities).Render(r.Context(), w)
 			if err != nil {
-				fmt.Println("Error rendering identities template:", err)
 				errors.TemplateFailureError(w, r, err, "Failed to render identities HTML template", "subdomain", siteContext.Subdomain)
 				return
 			}

@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 )
@@ -60,7 +60,7 @@ func RelPathBetween(newBasePath string, targetPath string) string {
 
 	relPath, err := filepath.Rel(absBase, absFile)
 	if err != nil {
-		log.Printf("Error calculating relative path from %s to %s: %v", absBase, absFile, err)
+		slog.Error("Error calculating relative path", "base", absBase, "file", absFile, "error", err)
 		return absFile
 	}
 

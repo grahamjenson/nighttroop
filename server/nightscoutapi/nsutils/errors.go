@@ -2,6 +2,7 @@ package nsutils
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -118,11 +119,11 @@ func GetSQLTranslatedError(err error) *HTTPError {
 		return BadDataBodyErrorWithHint(concat)
 	}
 	if utilerrors.IsSQLConstraintForeignKey(err) {
-		fmt.Println("Foreign key constraint violation", err)
+		slog.Warn("Foreign key constraint violation", "error", err)
 		return BadDataBodyErrorWithHint(err.Error())
 	}
 	if utilerrors.IsSQLConstraintPrimaryKey(err) {
-		fmt.Println("Primary key constraint violation", err)
+		slog.Warn("Primary key constraint violation", "error", err)
 		return BadDataBodyErrorWithHint(err.Error())
 	}
 

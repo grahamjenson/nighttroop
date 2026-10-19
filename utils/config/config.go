@@ -105,9 +105,6 @@ type ServerConfig struct {
 	Security   *security.SecurityConfig
 	RawKeySets string
 
-	// Logging
-	Logger *slog.Logger
-
 	// Dexcom Client ID and Secret
 	DexcomClientID     string
 	DexcomClientSecret string
@@ -133,10 +130,11 @@ func NewServerConfig() (*ServerConfig, error) {
 
 	dotenv = MergeMaps(dotenv, flagsnev) // flags override .env
 
+	setupLogging(mode)
+
 	// DEFAULTS
 	serverConfig := ServerConfig{
-		Logger: setupLogging(mode),
-		Mode:   mode,
+		Mode: mode,
 
 		// Host config
 		HostName:     configStringSelect(dotenv, "HOST_NAME", "nt.local.t1d.nz"),

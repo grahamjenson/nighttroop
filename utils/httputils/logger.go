@@ -93,6 +93,7 @@ func RedactQuery(query string) string {
 //
 // Requests with errors are logged using slog.Error().
 // Requests without errors are logged using slog.Info().
+// A nil logger logs to slog.Default() as it is when each request is logged.
 func NewLogger(logger *slog.Logger) func(http.Handler) http.Handler {
 	return NewLoggerWithConfig(logger, DefaultConfig())
 }
@@ -287,7 +288,11 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 					msg = config.WithCustomMessage(ww, r)
 				}
 
-				logger.LogAttrs(r.Context(), level, msg, attributes...)
+				requestLogger := logger
+				if requestLogger == nil {
+					requestLogger = slog.Default()
+				}
+				requestLogger.LogAttrs(r.Context(), level, msg, attributes...)
 			}()
 
 			next.ServeHTTP(ww, r)

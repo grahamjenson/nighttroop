@@ -162,7 +162,7 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyn
 func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *controldb.SiteSyncSource) (*SyncUserInfo, error) {
 	userDb, userModel, err := b.controlDB.GetSite(syncSource.SiteID)
 	if err != nil {
-		fmt.Println("Cant findn the user for site ID:", syncSource.SiteID)
+		slog.Error("Cannot find the site for sync source", "site_id", syncSource.SiteID, "error", err)
 		return nil, err
 	}
 	if userModel == nil || userDb == nil {
