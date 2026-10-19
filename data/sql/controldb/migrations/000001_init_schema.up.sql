@@ -169,7 +169,6 @@ CREATE TABLE site_identities (
     created_by_identity_id INTEGER NOT NULL, -- id of identity that created this record
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
-    deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
     enabled INTEGER NOT NULL DEFAULT 1,
 
     ---------------
