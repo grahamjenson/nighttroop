@@ -12,7 +12,7 @@ import (
 
 const allFoodPresets = `-- name: AllFoodPresets :many
 
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
+SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
 ORDER BY created_at DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -53,7 +53,9 @@ func (q *Queries) AllFoodPresets(ctx context.Context, arg AllFoodPresetsParams) 
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
 			&i.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
@@ -90,10 +92,11 @@ INSERT INTO food_presets (
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
-    created_by_identity_name
+    created_by_identity_name,
+    created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateFoodPresetParams struct {
@@ -114,6 +117,7 @@ type CreateFoodPresetParams struct {
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
 	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
 }
 
 // -----
@@ -138,6 +142,7 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
 	)
 	var i FoodPreset
 	err := row.Scan(
@@ -159,14 +164,16 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
 }
 
 const getFoodPreset = `-- name: GetFoodPreset :one
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets WHERE id = ?
+SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id = ?
 `
 
 type GetFoodPresetParams struct {
@@ -195,7 +202,9 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
@@ -231,7 +240,7 @@ func (q *Queries) HardDeleteFoodPresetsByType(ctx context.Context, arg HardDelet
 }
 
 const searchFoodPresets = `-- name: SearchFoodPresets :many
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name FROM food_presets
+SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR created_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR created_at <= ?2)
@@ -361,7 +370,9 @@ func (q *Queries) SearchFoodPresets(ctx context.Context, arg SearchFoodPresetsPa
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
 			&i.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
@@ -399,9 +410,10 @@ UPDATE food_presets SET
         COALESCE(CAST(?13 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?14
-WHERE id = ?15
-RETURNING id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_name, created_by_identity_name
+    updated_by_identity_id = ?14,
+    updated_by_identity_name = ?15
+WHERE id = ?16
+RETURNING id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateFoodPresetParams struct {
@@ -418,6 +430,7 @@ type UpdateFoodPresetParams struct {
 	Fibre                 *float64
 	Energy                *float64
 	RawJsonData           *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -440,6 +453,7 @@ func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetPara
 		arg.Fibre,
 		arg.Energy,
 		arg.RawJsonData,
+		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
@@ -463,7 +477,9 @@ func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetPara
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err

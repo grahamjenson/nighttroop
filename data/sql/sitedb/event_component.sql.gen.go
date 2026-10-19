@@ -12,7 +12,7 @@ import (
 
 const allComponentEvents = `-- name: AllComponentEvents :many
 
-SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
@@ -52,9 +52,11 @@ func (q *Queries) AllComponentEvents(ctx context.Context, arg AllComponentEvents
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
+			&i.CreatedByIdentityID,
 			&i.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
@@ -85,10 +87,11 @@ INSERT INTO component_events (
     raw_json_data,
     created_by_app_name,
     created_by_device_name,
-    created_by_identity_name
+    created_by_identity_name,
+    created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateComponentEventParams struct {
@@ -105,6 +108,7 @@ type CreateComponentEventParams struct {
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
 	CreatedByIdentityName string
+	CreatedByIdentityID   *int64
 }
 
 // -----
@@ -125,6 +129,7 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
+		arg.CreatedByIdentityID,
 	)
 	var i ComponentEvent
 	err := row.Scan(
@@ -143,16 +148,18 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
 }
 
 const getComponentEvent = `-- name: GetComponentEvent :one
-SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events WHERE id = ?
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events WHERE id = ?
 `
 
 type GetComponentEventParams struct {
@@ -178,16 +185,18 @@ func (q *Queries) GetComponentEvent(ctx context.Context, arg GetComponentEventPa
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
 }
 
 const getComponentEventByType = `-- name: GetComponentEventByType :one
-SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE event_type = ? AND deleted_at IS NULL
 ORDER BY occurred_at DESC
 LIMIT 1
@@ -216,9 +225,11 @@ func (q *Queries) GetComponentEventByType(ctx context.Context, arg GetComponentE
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
@@ -237,7 +248,7 @@ func (q *Queries) HardDeleteComponentEvent(ctx context.Context, arg HardDeleteCo
 }
 
 const searchComponentEvents = `-- name: SearchComponentEvents :many
-SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name FROM component_events
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
@@ -350,9 +361,11 @@ func (q *Queries) SearchComponentEvents(ctx context.Context, arg SearchComponent
 			&i.OccurredAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
 			&i.UpdatedByIdentityName,
 			&i.CreatedByAppName,
 			&i.CreatedByDeviceName,
+			&i.CreatedByIdentityID,
 			&i.CreatedByIdentityName,
 		); err != nil {
 			return nil, err
@@ -399,15 +412,17 @@ UPDATE component_events SET
         COALESCE(CAST(?3 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_name = ?4
-WHERE id = ?5 AND deleted_at IS NULL
-RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_name
+    updated_by_identity_id = ?4,
+    updated_by_identity_name = ?5
+WHERE id = ?6 AND deleted_at IS NULL
+RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateComponentEventParams struct {
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
+	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
 }
@@ -420,6 +435,7 @@ func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentE
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,
+		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
 	)
@@ -440,9 +456,11 @@ func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentE
 		&i.OccurredAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UpdatedByIdentityID,
 		&i.UpdatedByIdentityName,
 		&i.CreatedByAppName,
 		&i.CreatedByDeviceName,
+		&i.CreatedByIdentityID,
 		&i.CreatedByIdentityName,
 	)
 	return &i, err

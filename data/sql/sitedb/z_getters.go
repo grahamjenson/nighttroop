@@ -176,6 +176,16 @@ func (m *Activity) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m Activity) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated Activity.
+func (m *Activity) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m Activity) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -184,6 +194,16 @@ func (m Activity) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated Activity.
 func (m *Activity) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m Activity) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated Activity.
+func (m *Activity) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -346,6 +366,16 @@ func (m *ComponentEvent) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ComponentEvent) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ComponentEvent) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -374,6 +404,16 @@ func (m ComponentEvent) GetCreatedByDeviceName() *string {
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ComponentEvent.
 func (m *ComponentEvent) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ComponentEvent) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -616,6 +656,16 @@ func (m *DeviceReport) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m DeviceReport) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated DeviceReport.
+func (m *DeviceReport) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m DeviceReport) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -644,6 +694,16 @@ func (m DeviceReport) GetCreatedByDeviceName() *string {
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated DeviceReport.
 func (m *DeviceReport) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m DeviceReport) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated DeviceReport.
+func (m *DeviceReport) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -876,6 +936,16 @@ func (m *EventGroup) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m EventGroup) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated EventGroup.
+func (m *EventGroup) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m EventGroup) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -884,6 +954,16 @@ func (m EventGroup) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated EventGroup.
 func (m *EventGroup) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m EventGroup) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated EventGroup.
+func (m *EventGroup) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -1126,6 +1206,16 @@ func (m *FoodIntake) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m FoodIntake) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated FoodIntake.
+func (m *FoodIntake) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m FoodIntake) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -1134,6 +1224,16 @@ func (m FoodIntake) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated FoodIntake.
 func (m *FoodIntake) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m FoodIntake) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -1326,6 +1426,16 @@ func (m *FoodPreset) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m FoodPreset) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated FoodPreset.
+func (m *FoodPreset) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m FoodPreset) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -1334,6 +1444,16 @@ func (m FoodPreset) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated FoodPreset.
 func (m *FoodPreset) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m FoodPreset) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -1556,6 +1676,16 @@ func (m *GlucoseReading) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m GlucoseReading) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m GlucoseReading) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -1564,6 +1694,16 @@ func (m GlucoseReading) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated GlucoseReading.
 func (m *GlucoseReading) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m GlucoseReading) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -1726,6 +1866,16 @@ func (m *InsulinDose) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m InsulinDose) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated InsulinDose.
+func (m *InsulinDose) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m InsulinDose) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -1734,6 +1884,16 @@ func (m InsulinDose) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated InsulinDose.
 func (m *InsulinDose) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m InsulinDose) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated InsulinDose.
+func (m *InsulinDose) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -1896,6 +2056,16 @@ func (m *NotificationEvent) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m NotificationEvent) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m NotificationEvent) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -1904,6 +2074,16 @@ func (m NotificationEvent) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated NotificationEvent.
 func (m *NotificationEvent) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m NotificationEvent) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated NotificationEvent.
+func (m *NotificationEvent) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2136,6 +2316,16 @@ func (m *ProfilePreset) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ProfilePreset) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ProfilePreset) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -2144,6 +2334,16 @@ func (m ProfilePreset) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ProfilePreset.
 func (m *ProfilePreset) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ProfilePreset) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2406,6 +2606,16 @@ func (m *ProfileSwitch) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ProfileSwitch) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ProfileSwitch) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -2414,6 +2624,16 @@ func (m ProfileSwitch) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ProfileSwitch.
 func (m *ProfileSwitch) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ProfileSwitch) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2566,6 +2786,16 @@ func (m *TempBasal) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m TempBasal) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated TempBasal.
+func (m *TempBasal) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m TempBasal) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -2574,6 +2804,16 @@ func (m TempBasal) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempBasal.
 func (m *TempBasal) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m TempBasal) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated TempBasal.
+func (m *TempBasal) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2736,6 +2976,16 @@ func (m *TempTarget) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m TempTarget) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated TempTarget.
+func (m *TempTarget) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m TempTarget) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -2744,6 +2994,16 @@ func (m TempTarget) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempTarget.
 func (m *TempTarget) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m TempTarget) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated TempTarget.
+func (m *TempTarget) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -2926,6 +3186,16 @@ func (m *ActivitiesVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ActivitiesVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ActivitiesVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -2934,6 +3204,16 @@ func (m ActivitiesVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ActivitiesVw.
 func (m *ActivitiesVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ActivitiesVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -3096,6 +3376,16 @@ func (m *ComponentEventsVw) SetUpdatedAt(v *int64) {
 	m.UpdatedAt = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ComponentEventsVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ComponentEventsVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -3124,6 +3414,16 @@ func (m ComponentEventsVw) GetCreatedByDeviceName() *string {
 // SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated ComponentEventsVw.
 func (m *ComponentEventsVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ComponentEventsVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -3366,6 +3666,16 @@ func (m *FoodIntakesVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m FoodIntakesVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m FoodIntakesVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -3374,6 +3684,16 @@ func (m FoodIntakesVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated FoodIntakesVw.
 func (m *FoodIntakesVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m FoodIntakesVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -3596,6 +3916,16 @@ func (m *GlucoseReadingsVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m GlucoseReadingsVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m GlucoseReadingsVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -3604,6 +3934,16 @@ func (m GlucoseReadingsVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated GlucoseReadingsVw.
 func (m *GlucoseReadingsVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m GlucoseReadingsVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -3766,6 +4106,16 @@ func (m *InsulinDosesVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m InsulinDosesVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m InsulinDosesVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -3774,6 +4124,16 @@ func (m InsulinDosesVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m InsulinDosesVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -3936,6 +4296,16 @@ func (m *NotificationEventsVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m NotificationEventsVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m NotificationEventsVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -3944,6 +4314,16 @@ func (m NotificationEventsVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated NotificationEventsVw.
 func (m *NotificationEventsVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m NotificationEventsVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated NotificationEventsVw.
+func (m *NotificationEventsVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -4206,6 +4586,16 @@ func (m *ProfileSwitchesVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m ProfileSwitchesVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m ProfileSwitchesVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -4214,6 +4604,16 @@ func (m ProfileSwitchesVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ProfileSwitchesVw.
 func (m *ProfileSwitchesVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m ProfileSwitchesVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -4366,6 +4766,16 @@ func (m *TempBasalsVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m TempBasalsVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m TempBasalsVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -4374,6 +4784,16 @@ func (m TempBasalsVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m TempBasalsVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -4536,6 +4956,16 @@ func (m *TempTargetsVw) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m TempTargetsVw) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m TempTargetsVw) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -4544,6 +4974,16 @@ func (m TempTargetsVw) GetUpdatedByIdentityName() *string {
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated TempTargetsVw.
 func (m *TempTargetsVw) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m TempTargetsVw) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetCreatedByIdentityName returns the CreatedByIdentityName value.
@@ -4784,6 +5224,16 @@ func (m CreateDeviceReportParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateDeviceReportParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -5046,6 +5496,16 @@ func (m *UpdateDeviceReportParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateDeviceReportParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateDeviceReportParams.
+func (m *UpdateDeviceReportParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateDeviceReportParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -5244,6 +5704,16 @@ func (m CreateActivityParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateActivityParams.
 func (m *CreateActivityParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateActivityParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateActivityParams.
+func (m *CreateActivityParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -5686,6 +6156,16 @@ func (m *UpdateActivityParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateActivityParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateActivityParams.
+func (m *UpdateActivityParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateActivityParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -5894,6 +6374,16 @@ func (m CreateComponentEventParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateComponentEventParams.
 func (m *CreateComponentEventParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateComponentEventParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -6216,6 +6706,16 @@ func (m *UpdateComponentEventParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateComponentEventParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateComponentEventParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -6474,6 +6974,16 @@ func (m CreateFoodIntakeParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateFoodIntakeParams.
 func (m *CreateFoodIntakeParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateFoodIntakeParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -6976,6 +7486,16 @@ func (m *UpdateFoodIntakeParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateFoodIntakeParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateFoodIntakeParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -7244,6 +7764,16 @@ func (m CreateGlucoseReadingParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateGlucoseReadingParams.
 func (m *CreateGlucoseReadingParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateGlucoseReadingParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -7626,6 +8156,16 @@ func (m *UpdateGlucoseReadingParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateGlucoseReadingParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateGlucoseReadingParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -7904,6 +8444,16 @@ func (m CreateEventGroupParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateEventGroupParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetID returns the ID value.
@@ -8566,6 +9116,16 @@ func (m *UpdateEventGroupParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateEventGroupParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateEventGroupParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -8774,6 +9334,16 @@ func (m CreateInsulinDoseParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateInsulinDoseParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -9186,6 +9756,16 @@ func (m *UpdateInsulinDoseParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateInsulinDoseParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateInsulinDoseParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -9364,6 +9944,16 @@ func (m CreateNotificationEventParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateNotificationEventParams.
 func (m *CreateNotificationEventParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateNotificationEventParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateNotificationEventParams.
+func (m *CreateNotificationEventParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -9686,6 +10276,16 @@ func (m *UpdateNotificationEventParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateNotificationEventParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateNotificationEventParams.
+func (m *UpdateNotificationEventParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateNotificationEventParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -9964,6 +10564,16 @@ func (m CreateProfileSwitchParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateProfileSwitchParams.
 func (m *CreateProfileSwitchParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateProfileSwitchParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -10326,6 +10936,16 @@ func (m *UpdateProfileSwitchParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateProfileSwitchParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateProfileSwitchParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -10494,6 +11114,16 @@ func (m CreateTempBasalParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateTempBasalParams.
 func (m *CreateTempBasalParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateTempBasalParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -10846,6 +11476,16 @@ func (m *UpdateTempBasalParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateTempBasalParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateTempBasalParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -11024,6 +11664,16 @@ func (m CreateTempTargetParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateTempTargetParams.
 func (m *CreateTempTargetParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateTempTargetParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateTempTargetParams.
+func (m *CreateTempTargetParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -11376,6 +12026,16 @@ func (m *UpdateTempTargetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateTempTargetParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateTempTargetParams.
+func (m *UpdateTempTargetParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateTempTargetParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -11594,6 +12254,16 @@ func (m CreateFoodPresetParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateFoodPresetParams.
 func (m *CreateFoodPresetParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateFoodPresetParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
 }
 
 // GetSkip returns the Skip value.
@@ -12046,6 +12716,16 @@ func (m *UpdateFoodPresetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
 }
 
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateFoodPresetParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
 func (m UpdateFoodPresetParams) GetUpdatedByIdentityName() *string {
 	return m.UpdatedByIdentityName
@@ -12296,6 +12976,16 @@ func (m *CreateProfilePresetParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
+// GetCreatedByIdentityID returns the CreatedByIdentityID value.
+func (m CreateProfilePresetParams) GetCreatedByIdentityID() *int64 {
+	return m.CreatedByIdentityID
+}
+
+// SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetCreatedByIdentityID(v *int64) {
+	m.CreatedByIdentityID = v
+}
+
 // GetSkip returns the Skip value.
 func (m AllProfilePresetsParams) GetSkip() int64 {
 	return m.Skip
@@ -12344,6 +13034,16 @@ func (m UpdateProfilePresetParams) GetRawJsonData() *string {
 // SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfilePresetParams.
 func (m *UpdateProfilePresetParams) SetRawJsonData(v *string) {
 	m.RawJsonData = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m UpdateProfilePresetParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated UpdateProfilePresetParams.
+func (m *UpdateProfilePresetParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
