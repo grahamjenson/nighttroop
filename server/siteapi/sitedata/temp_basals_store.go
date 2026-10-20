@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -46,7 +45,7 @@ func (s *TempBasalsStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 	}
 	created, err := q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
 	if err != nil {
-		return false, tempBasalWriteError(err)
+		return false, apiutils.WriteError(err, "temp basal")
 	}
 	*model = *sitemodels.TempBasalFromDB(created)
 	return true, nil
@@ -83,7 +82,7 @@ func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 		return apiutils.ErrNotFound
 	}
 	if err != nil {
-		return tempBasalWriteError(err)
+		return apiutils.WriteError(err, "temp basal")
 	}
 	*model = *sitemodels.TempBasalFromDB(updated)
 	return nil
@@ -180,12 +179,4 @@ func checkTempBasal(model *sitemodels.SiteTempBasal) *apiutils.HTTPError {
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempBasalMinutes))
 	}
 	return nil
-}
-
-func tempBasalWriteError(err error) *apiutils.HTTPError {
-	if errors.IsSQLConstraintCheck(err) {
-		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-	}
-	slog.Error("Error writing temp basal", "error", err)
-	return apiutils.ErrInternalServerError
 }
