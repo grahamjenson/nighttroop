@@ -140,6 +140,45 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 }
 
 // //
+// ASSERT IN VIEW
+// //
+
+// AssertInView checks the element is what a user would click at its centre, so one
+// clipped by a scrolling box, off screen or covered by another element fails
+type AssertInView struct {
+	Locator string
+
+	TestPath string
+	TestLine int
+}
+
+const inViewScript = `el => {
+	const r = el.getBoundingClientRect();
+	const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+	return hit !== null && (hit === el || el.contains(hit));
+}`
+
+func (r *AssertInView) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
+	}
+	inView, err := locator.First().Evaluate(inViewScript, nil)
+	if err != nil {
+		t.Fatalf("\n\n%s\n failed to check locator: %v, error: %v\n\n", r.ToErrorLine(), r.Locator, err)
+	}
+	if inView != true {
+		html, _ := page.Content()
+		t.Fatalf("\n\n%s\n assertInView failed: element is hidden, clipped or covered: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, PrettifyHTML(html))
+	}
+	return nil
+}
+
+func (r *AssertInView) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected element to be in view for locator %s", r.TestPath, r.TestLine, r.Locator)
+}
+
+// //
 // ASSERT NOT VISIBLE
 // //
 type AssertNotVisible struct {

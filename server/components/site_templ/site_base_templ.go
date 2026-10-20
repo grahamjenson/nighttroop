@@ -739,7 +739,7 @@ func Header() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = dropdown.Content(dropdown.ContentProps{
-				Class: "w-56",
+				Class: "w-56 max-h-[calc(100vh-5rem)]",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
