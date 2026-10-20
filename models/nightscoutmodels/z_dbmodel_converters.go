@@ -246,8 +246,8 @@ func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteConte
 			nightscoutmodelsProfile.Delay = &typesFlexibleFloat643
 		}
 		if (*source).Timezone != nil {
-			nightscoutmodelsTimezone := Timezone(*(*source).Timezone)
-			nightscoutmodelsProfile.Timezone = &nightscoutmodelsTimezone
+			typesTimezone := types.Timezone(*(*source).Timezone)
+			nightscoutmodelsProfile.Timezone = &typesTimezone
 		}
 		nightscoutmodelsProfile.Sens = JSONToScheduleValueSlice((*source).InsulinSensitivitiesJson)
 		nightscoutmodelsProfile.CarbRatio = JSONToScheduleValueSlice((*source).CarbRatiosJson)

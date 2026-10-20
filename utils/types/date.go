@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -109,4 +110,149 @@ func StringToTime(value string) (time.Time, error) {
 	}
 
 	return time.Time{}, fmt.Errorf("bad date string: %s", value)
+}
+
+// //////
+// DateString
+// ///////
+type DateString string
+
+func (d *DateString) UnmarshalJSON(data []byte) error {
+	var v any
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.UseNumber()
+	if err := dec.Decode(&v); err != nil {
+		return fmt.Errorf("expected date string, got %s", data)
+	}
+
+	var t time.Time
+	var err error
+	switch typed := v.(type) {
+	case nil:
+		return nil
+	case float64:
+		t = time.UnixMilli(int64(typed))
+	case json.Number:
+		if asInt, err := typed.Int64(); err == nil {
+			t = time.UnixMilli(asInt)
+		}
+		asFloat, err := typed.Float64()
+		if err != nil {
+			t = time.UnixMilli(int64(asFloat))
+		}
+
+	case string:
+		t, err = StringToTime(typed)
+		if err != nil {
+			return fmt.Errorf("invalid date string %q: %w", typed, err)
+		}
+	default:
+		return fmt.Errorf("expected string for date, got %T", v)
+	}
+
+	*d = DateString(t.Format(time.RFC3339Nano))
+	return nil
+}
+
+func (d *DateString) Time() time.Time {
+	if d == nil {
+		return time.Time{}
+	}
+	// This should have errored on unmarshal or assignment
+	t, _ := time.Parse(time.RFC3339Nano, string(*d))
+	return t
+}
+
+func (d *DateString) Timep() *time.Time {
+	if d == nil {
+		return nil
+	}
+	// This should have errored on unmarshal or assignment
+	t, _ := time.Parse(time.RFC3339Nano, string(*d))
+	return &t
+}
+
+func (d *DateString) UnixMillip() *int64 {
+	t := d.Time()
+	dateInt := t.UnixMilli()
+	return &dateInt
+}
+
+func (d *DateString) UnixMilli() int64 {
+	t := d.Time()
+	dateInt := t.UnixMilli()
+	return dateInt
+}
+
+func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
+	t := d.Time()
+	_, offsetSeconds := t.Zone()
+	dateInt := DateInt(t.UnixMilli())
+	offset := FlexibleInt64(int64(offsetSeconds) / 60)
+	return &dateInt, &offset
+}
+
+func (d *DateString) String() string {
+	return string(*d)
+}
+
+func DateStringNow() (*DateString, time.Time) {
+	now := time.Now().UTC()
+	dateString := DateStringFromTime(now)
+	return &dateString, now
+}
+
+func DateStringFromTime(t time.Time) DateString {
+	return DateString(t.Format(time.RFC3339Nano))
+}
+
+func DateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateString {
+	if offsetMinutes == nil {
+		t := time.UnixMilli(dateInt).UTC()
+		return DateStringFromTime(t)
+	}
+	t := time.UnixMilli(dateInt).In(LocationFromUTCOffsetMinutes(int(*offsetMinutes)))
+	return DateStringFromTime(t)
+}
+
+func DateStringFromDateIntAndUTCOffset(dateInt DateInt, offsetMinutes FlexibleInt64) DateString {
+	t := time.UnixMilli(dateInt.Int64()).In(LocationFromUTCOffsetMinutes(offsetMinutes.Int()))
+	return DateStringFromTime(t)
+}
+
+func LocationFromUTCOffsetMinutes(offsetMin int) *time.Location {
+	return time.FixedZone(
+		fmt.Sprintf("UTC%+d", offsetMin),
+		offsetMin*60,
+	)
+}
+
+// //////
+// Timezone
+// ///////
+
+type Timezone string
+
+func (t *Timezone) Stringp() *string {
+	if t == nil {
+		return nil
+	}
+	str := string(*t)
+	return &str
+}
+
+func (t *Timezone) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("timezone must be a string: %w", err)
+	}
+	*t = Timezone(s)
+	return nil
+}
+
+func (t Timezone) MarshalJSON() ([]byte, error) {
+	if t == "" {
+		return []byte(`"UTC"`), nil
+	}
+	return json.Marshal(string(t))
 }

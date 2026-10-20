@@ -112,7 +112,7 @@ type DBModelConverter interface {
 // Custom Converter Methods
 // //
 
-func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
+func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
 	if m == nil {
 		return nil
 	}
@@ -122,13 +122,13 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 		GetOccurredAt() int64
 		GetUtcOffsetMinutes() *int64
 	}:
-		ds := DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
+		ds := types.DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
 		return &ds
 	case interface {
 		GetStart() int64
 		GetUtcOffsetMinutes() *int64
 	}:
-		ds := DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
+		ds := types.DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
 		return &ds
 	}
 

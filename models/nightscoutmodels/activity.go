@@ -19,7 +19,7 @@ type Activity struct {
 	Reason          *types.SanitizedString `json:"reason,omitempty"`       // Reason
 
 	// Date fields
-	CreatedAt *DateString `json:"created_at,omitempty"` // ISO 8601 string
+	CreatedAt *types.DateString `json:"created_at,omitempty"` // ISO 8601 string
 
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity

@@ -24,8 +24,8 @@ type DeviceStatus struct {
 	ConfigurationRaw *json.RawMessage `json:"configuration,omitempty"`
 
 	// Date Fields
-	Date      *types.DateInt `json:"date,omitempty"` // Unix timestamp in milliseconds
-	CreatedAt *DateString    `json:"created_at,omitempty"`
+	Date      *types.DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
+	CreatedAt *types.DateString `json:"created_at,omitempty"`
 
 	// Default String Fields
 	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
@@ -127,7 +127,7 @@ func (t DeviceStatus) GetIdentifier() *string {
 // /////
 type LoopStatus struct {
 	Predicted                   *LoopPrediction        `json:"predicted,omitempty"`
-	Timestamp                   *DateString            `json:"timestamp,omitempty"`
+	Timestamp                   *types.DateString      `json:"timestamp,omitempty"`
 	AutomaticDoseRecommendation *DoseRecommendation    `json:"automaticDoseRecommendation,omitempty"`
 	IOB                         *LoopIOB               `json:"iob,omitempty"`
 	Name                        *types.ShortString     `json:"name,omitempty"`
@@ -138,27 +138,27 @@ type LoopStatus struct {
 }
 
 type LoopPrediction struct {
-	StartDate *DateString              `json:"startDate,omitempty"`
+	StartDate *types.DateString        `json:"startDate,omitempty"`
 	Values    []*types.FlexibleFloat64 `json:"values,omitempty"`
 }
 
 type DoseRecommendation struct {
 	BolusVolume *types.FlexibleFloat64 `json:"bolusVolume,omitempty"`
-	Timestamp   *DateString            `json:"timestamp,omitempty"`
+	Timestamp   *types.DateString      `json:"timestamp,omitempty"`
 }
 
 type LoopIOB struct {
 	IOB       *types.FlexibleFloat64 `json:"iob,omitempty"`
-	Timestamp *DateString            `json:"timestamp,omitempty"`
+	Timestamp *types.DateString      `json:"timestamp,omitempty"`
 }
 
 type LoopCOB struct {
 	COB       *types.FlexibleFloat64 `json:"cob,omitempty"`
-	Timestamp *DateString            `json:"timestamp,omitempty"`
+	Timestamp *types.DateString      `json:"timestamp,omitempty"`
 }
 
 type EnactedDose struct {
-	Timestamp   *DateString            `json:"timestamp,omitempty"`
+	Timestamp   *types.DateString      `json:"timestamp,omitempty"`
 	Rate        *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Received    *types.FlexibleBool    `json:"received,omitempty"`
 	Duration    *types.FlexibleFloat64 `json:"duration,omitempty"`
@@ -178,19 +178,19 @@ type OpenAPSIob struct {
 	IOB      *types.FlexibleFloat64 `json:"iob,omitempty"`
 	BasalIOB *types.FlexibleFloat64 `json:"basaliob,omitempty"`
 	Activity *types.FlexibleFloat64 `json:"activity,omitempty"`
-	Time     *DateString            `json:"time,omitempty"`
+	Time     *types.DateString      `json:"time,omitempty"`
 }
 
 type OpenAPSSuggested struct {
 	Algorithm         *types.ShortString     `json:"algorithm,omitempty"`
 	RunningDynamicISF *types.FlexibleBool    `json:"runningDynamicIsf,omitempty"`
-	Timestamp         *DateString            `json:"timestamp,omitempty"`
+	Timestamp         *types.DateString      `json:"timestamp,omitempty"`
 	BG                *types.FlexibleFloat64 `json:"bg,omitempty"`
 	Tick              *types.ShortString     `json:"tick,omitempty"`
 	EventualBG        *types.FlexibleFloat64 `json:"eventualBG,omitempty"`
 	TargetBG          *types.FlexibleFloat64 `json:"targetBG,omitempty"`
 	InsulinReq        *types.FlexibleFloat64 `json:"insulinReq,omitempty"`
-	DeliverAt         *DateString            `json:"deliverAt,omitempty"`
+	DeliverAt         *types.DateString      `json:"deliverAt,omitempty"`
 	SensitivityRatio  *types.FlexibleFloat64 `json:"sensitivityRatio,omitempty"`
 	Reason            *types.ShortString     `json:"reason,omitempty"`
 	Duration          *types.FlexibleInt64   `json:"duration,omitempty"`
@@ -215,7 +215,7 @@ type OpenAPSPredBGs struct {
 
 type PumpStatus struct {
 	Battery        *PumpBattery           `json:"battery,omitempty"`
-	Clock          *DateString            `json:"clock,omitempty"`
+	Clock          *types.DateString      `json:"clock,omitempty"`
 	Extended       *PumpExtended          `json:"extended,omitempty"`
 	Reservoir      *types.FlexibleFloat64 `json:"reservoir,omitempty"`
 	Status         *PumpStatusInfo        `json:"status,omitempty"`
@@ -245,7 +245,7 @@ type PumpExtended struct {
 
 type PumpStatusInfo struct {
 	Status    *types.ShortString `json:"status,omitempty"`
-	Timestamp *DateString        `json:"timestamp,omitempty"`
+	Timestamp *types.DateString  `json:"timestamp,omitempty"`
 }
 
 // ///
@@ -254,5 +254,5 @@ type PumpStatusInfo struct {
 type UploaderStatus struct {
 	Battery   *types.FlexibleInt64 `json:"battery,omitempty"`
 	Name      *types.ShortString   `json:"name,omitempty"`
-	Timestamp *DateString          `json:"timestamp,omitempty"`
+	Timestamp *types.DateString    `json:"timestamp,omitempty"`
 }

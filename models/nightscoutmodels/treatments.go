@@ -88,7 +88,7 @@ type Treatment struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Fields
-	CreatedAt        *DateString          `json:"created_at,omitempty"` // ISO8601 -> time.Time
+	CreatedAt        *types.DateString    `json:"created_at,omitempty"` // ISO8601 -> time.Time
 	Date             *types.DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
 
