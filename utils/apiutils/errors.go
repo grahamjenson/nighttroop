@@ -1,4 +1,4 @@
-package siteapiutils
+package apiutils
 
 import (
 	"net/http"

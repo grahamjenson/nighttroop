@@ -3,8 +3,19 @@
 
 package controlmodels
 
-import controldb "nighttroop.t1d.nz/data/sql/controldb"
+import (
+	controldb "nighttroop.t1d.nz/data/sql/controldb"
+	apiquery "nighttroop.t1d.nz/utils/apiutils/apiquery"
+)
 
+func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
+	var controldbSearchSitesParams controldb.SearchSitesParams
+	if source != nil {
+		controldbSearchSitesParams.Skip = (*source).Skip
+		controldbSearchSitesParams.Limit = (*source).Limit
+	}
+	return controldbSearchSitesParams
+}
 func SiteFromDB(source *controldb.Site) *Site {
 	var pControlmodelsSite *Site
 	if source != nil {

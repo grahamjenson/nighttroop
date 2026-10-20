@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
@@ -31,7 +33,7 @@ func TestStoreTx(t *testing.T) {
 	// An error rolls back the writes
 	tx := siteapiutils.NewStoreTx(ctx, siteContext)
 	write(tx)
-	require.Equal(t, siteapiutils.ErrBadBody, tx.Finish(siteapiutils.ErrBadBody))
+	require.Equal(t, apiutils.ErrBadBody, tx.Finish(apiutils.ErrBadBody))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.Error(t, err, "rolled back write should not exist")
 

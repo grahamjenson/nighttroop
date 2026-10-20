@@ -1,13 +1,15 @@
-package siteapiutils
+package apiutils
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -95,4 +97,34 @@ func WriteModelsJSON(w http.ResponseWriter, status int, models []Model) {
 
 func WriteModelJSON(w http.ResponseWriter, status int, model Model) {
 	writeJSON(w, map[string]any{"status": status, "result": model})
+}
+
+// ExtractModelFromRequest reads a JSON or form body into T
+func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.Request) (*T, *HTTPError) {
+	var doc map[string]any
+	switch contentType {
+	case httputils.ContentTypeJSON:
+		if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
+			slog.Error("failed to read JSON body", "error", err)
+			return nil, ErrBadBody
+
+		}
+	case httputils.ContentTypeForm:
+
+		if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
+			slog.Debug("failed to parse form data", "error", err)
+			return nil, ErrBadForm
+		}
+		doc = FormToMap[T](r.Form)
+	default:
+		return nil, ErrUnknownContent
+	}
+
+	model := new(T)
+	err := utils.FromMap(doc, model)
+	if err != nil {
+		slog.Error("failed to convert doc to model", "error", err)
+		return nil, ErrBadBody
+	}
+	return model, nil
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -44,9 +46,9 @@ func (s *SettingsStore) level(siteContext *httputils.SiteContext) *settings.Sett
 // ////
 // Get Model
 // /////
-func (s *SettingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, *siteapiutils.HTTPError) {
+func (s *SettingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, *apiutils.HTTPError) {
 	if s.Site && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
-		return nil, siteapiutils.ErrForbidden
+		return nil, apiutils.ErrForbidden
 	}
 	combined := siteContext.GetSettings()
 	model := sitemodels.SettingsFromMap(s.level(siteContext))
@@ -71,7 +73,7 @@ func (s *SettingsStore) GetHTMXResponse(model *sitemodels.Settings) templ.Compon
 // ///
 
 // UpdateModel sets the values sent. An empty value clears it, so the level above applies; one not sent is left as it is.
-func (s *SettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) *siteapiutils.HTTPError {
+func (s *SettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) *apiutils.HTTPError {
 	level, subject := s.level(siteContext), ptr("identity")
 	if s.Site {
 		subject = ptr("site")
@@ -89,13 +91,13 @@ func (s *SettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreT
 			value = *sent[name]
 		}
 		if err := level.SetSettingByName(name, value, nil, subject); err != nil {
-			return siteapiutils.ErrBadBodyWithHint(err.Error())
+			return apiutils.ErrBadBodyWithHint(err.Error())
 		}
 	}
 
 	q, err := tx.Control()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	// Every setting is written, so the ones not on the page keep their values
 	if s.Site {
@@ -109,7 +111,7 @@ func (s *SettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreT
 	}
 	if err != nil {
 		slog.Error("Error updating settings", "error", err, "site", s.Site)
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 
 	updated, herr := s.GetModel(ctx, tx, id, siteContext)

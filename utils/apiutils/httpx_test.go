@@ -1,10 +1,10 @@
-package siteapiutils_test
+package apiutils_test
 
 import (
 	"net/url"
 	"testing"
 
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 func TestFormToMap(t *testing.T) {
@@ -15,7 +15,7 @@ func TestFormToMap(t *testing.T) {
 		Name    *string  `json:"name"`
 		Rate    *float64 `json:"rate"`
 	}
-	doc := siteapiutils.FormToMap[model](url.Values{"enabled": {"on"}, "count": {"3"}, "name": {"true"}, "rate": {"0"}, "a.b": {"c"}})
+	doc := apiutils.FormToMap[model](url.Values{"enabled": {"on"}, "count": {"3"}, "name": {"true"}, "rate": {"0"}, "a.b": {"c"}})
 	if doc["enabled"] != true || doc["off"] != false || doc["count"] != 3.0 || doc["name"] != "true" || doc["rate"] != 0.0 {
 		t.Fatalf("unexpected conversion: %v", doc)
 	}

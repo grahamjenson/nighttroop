@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -47,7 +49,7 @@ func (t *StoreTx) Site() (*sitedb.Queries, error) {
 }
 
 // Finish commits on success, otherwise rolls back
-func (t *StoreTx) Finish(herr *HTTPError) *HTTPError {
+func (t *StoreTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	if herr != nil {
 		t.Rollback()
 		return herr
@@ -64,7 +66,7 @@ func (t *StoreTx) Finish(herr *HTTPError) *HTTPError {
 		}
 	}
 	if err != nil {
-		return ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	return nil
 }

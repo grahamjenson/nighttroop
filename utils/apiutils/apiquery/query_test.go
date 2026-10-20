@@ -1,11 +1,11 @@
-package sitequery_test
+package apiquery_test
 
 import (
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
 func TestQueryLimitAndSkip(t *testing.T) {
@@ -15,14 +15,14 @@ func TestQueryLimitAndSkip(t *testing.T) {
 		skip  int64
 		err   bool
 	}{
-		{query: "", limit: sitequery.MaxQueryLimit, skip: 0},
+		{query: "", limit: apiquery.MaxQueryLimit, skip: 0},
 		{query: "limit=20&skip=40", limit: 20, skip: 40},
 		{query: "limit=1000", limit: 1000, skip: 0},
-		{query: "limit=1001", limit: sitequery.MaxQueryLimit, skip: 0},
-		{query: "limit=0", limit: sitequery.MaxQueryLimit, skip: 0},
-		{query: "limit=-5&skip=-5", limit: sitequery.MaxQueryLimit, skip: 0},
+		{query: "limit=1001", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "limit=0", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "limit=-5&skip=-5", limit: apiquery.MaxQueryLimit, skip: 0},
 		{query: "limit=20.0&skip=10", limit: 20, skip: 10},
-		{query: "other=1", limit: sitequery.MaxQueryLimit, skip: 0},
+		{query: "other=1", limit: apiquery.MaxQueryLimit, skip: 0},
 		{query: "limit=lots", err: true},
 		{query: "skip=lots", err: true},
 	}
@@ -30,13 +30,13 @@ func TestQueryLimitAndSkip(t *testing.T) {
 		t.Run(test.query, func(t *testing.T) {
 			values, err := url.ParseQuery(test.query)
 			require.NoError(t, err)
-			queryValues, err := sitequery.ParseQueryValues(values)
+			queryValues, err := apiquery.ParseQueryValues(values)
 			if test.err {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			query := sitequery.QueryValuesToQuery(queryValues)
+			query := apiquery.QueryValuesToQuery(queryValues)
 			require.Equal(t, test.limit, query.Limit)
 			require.Equal(t, test.skip, query.Skip)
 		})

@@ -4,11 +4,11 @@
 package sitequery
 
 import (
-	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+	apiquery "nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
-func QueryToAllFoodIntakes(source *Query) sitedb.AllFoodIntakesParams {
+func QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
 	if source != nil {
 		sitedbAllFoodIntakesParams.Skip = (*source).Skip
@@ -16,7 +16,7 @@ func QueryToAllFoodIntakes(source *Query) sitedb.AllFoodIntakesParams {
 	}
 	return sitedbAllFoodIntakesParams
 }
-func QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams {
+func QueryToAllGlucoseReadings(source *apiquery.Query) sitedb.AllGlucoseReadingsParams {
 	var sitedbAllGlucoseReadingsParams sitedb.AllGlucoseReadingsParams
 	if source != nil {
 		sitedbAllGlucoseReadingsParams.Skip = (*source).Skip
@@ -24,7 +24,7 @@ func QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams {
 	}
 	return sitedbAllGlucoseReadingsParams
 }
-func QueryToAllInsulinDoses(source *Query) sitedb.AllInsulinDosesParams {
+func QueryToAllInsulinDoses(source *apiquery.Query) sitedb.AllInsulinDosesParams {
 	var sitedbAllInsulinDosesParams sitedb.AllInsulinDosesParams
 	if source != nil {
 		sitedbAllInsulinDosesParams.Skip = (*source).Skip
@@ -32,7 +32,7 @@ func QueryToAllInsulinDoses(source *Query) sitedb.AllInsulinDosesParams {
 	}
 	return sitedbAllInsulinDosesParams
 }
-func QueryToAllTempBasals(source *Query) sitedb.AllTempBasalsParams {
+func QueryToAllTempBasals(source *apiquery.Query) sitedb.AllTempBasalsParams {
 	var sitedbAllTempBasalsParams sitedb.AllTempBasalsParams
 	if source != nil {
 		sitedbAllTempBasalsParams.Skip = (*source).Skip
@@ -40,25 +40,11 @@ func QueryToAllTempBasals(source *Query) sitedb.AllTempBasalsParams {
 	}
 	return sitedbAllTempBasalsParams
 }
-func QueryToAllTempTargets(source *Query) sitedb.AllTempTargetsParams {
+func QueryToAllTempTargets(source *apiquery.Query) sitedb.AllTempTargetsParams {
 	var sitedbAllTempTargetsParams sitedb.AllTempTargetsParams
 	if source != nil {
 		sitedbAllTempTargetsParams.Skip = (*source).Skip
 		sitedbAllTempTargetsParams.Limit = (*source).Limit
 	}
 	return sitedbAllTempTargetsParams
-}
-func QueryToSearchSites(source *Query) controldb.SearchSitesParams {
-	var controldbSearchSitesParams controldb.SearchSitesParams
-	if source != nil {
-		controldbSearchSitesParams.Skip = (*source).Skip
-		controldbSearchSitesParams.Limit = (*source).Limit
-	}
-	return controldbSearchSitesParams
-}
-func QueryValuesToQuery(source QueryValues) Query {
-	var sitequeryQuery Query
-	sitequeryQuery.Limit = GetLimitInt64(source)
-	sitequeryQuery.Skip = GetSkipInt64(source)
-	return sitequeryQuery
 }

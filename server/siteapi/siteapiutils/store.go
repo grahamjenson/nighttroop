@@ -5,12 +5,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/site_templ"
 
-	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -22,7 +23,7 @@ const errorHTMLXDivID = `#error`
 ///////
 
 type CreateHandlerInterface[T any] interface {
-	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *apiutils.HTTPError)
 	CreateHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -33,15 +34,15 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
 			slog.Error("site context is nil")
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
-			ErrForbidden.Write(siteContext.AcceptType, w)
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		requestModel, herr := ExtractModelFromRequest[T](siteContext.ContentType, r)
+		requestModel, herr := apiutils.ExtractModelFromRequest[T](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -59,7 +60,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		if created {
 			status = http.StatusCreated
 		}
-		WriteStatus(w, siteContext.AcceptType, status)
+		apiutils.WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -67,7 +68,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		case httputils.AcceptTypeHTML:
 			store.CreateHTMXResponse(requestModel).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, requestModel)
+			apiutils.WriteModelJSON(w, status, requestModel)
 		}
 	}
 }
@@ -77,11 +78,11 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 ///////
 
 type UpdateHandlerInterface[T any] interface {
-	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *apiutils.HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
 
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
 	GetName() string
 }
 
@@ -91,16 +92,16 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
 			slog.Error("site context is nil")
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
-			ErrForbidden.Write(siteContext.AcceptType, w)
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return
 		}
 		id := chi.URLParam(r, "id")
 
-		requestModel, herr := ExtractModelFromRequest[T](siteContext.ContentType, r)
+		requestModel, herr := apiutils.ExtractModelFromRequest[T](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -110,7 +111,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		defer tx.Rollback()
 		oldModel, herr := store.GetModel(r.Context(), tx, id, siteContext)
 		if herr == nil && oldModel == nil {
-			herr = ErrNotFound
+			herr = apiutils.ErrNotFound
 		}
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
@@ -124,7 +125,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		WriteStatus(w, siteContext.AcceptType, status)
+		apiutils.WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -132,7 +133,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		case httputils.AcceptTypeHTML:
 			store.UpdateHTMXResponse(requestModel).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, requestModel)
+			apiutils.WriteModelJSON(w, status, requestModel)
 		}
 	}
 }
@@ -142,13 +143,13 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type UpsertInterface[T any] interface {
-	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *HTTPError)
+	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *apiutils.HTTPError)
 
-	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *HTTPError
+	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *apiutils.HTTPError
 
 	UpdateHTMXResponse(model *T) templ.Component
 
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
 	GetName() string
 }
 
@@ -158,16 +159,16 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
 			slog.Error("site context is nil")
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
-			ErrForbidden.Write(siteContext.AcceptType, w)
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return
 		}
 		id := chi.URLParam(r, "id")
 
-		requestModel, herr := ExtractModelFromRequest[T](siteContext.ContentType, r)
+		requestModel, herr := apiutils.ExtractModelFromRequest[T](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -192,7 +193,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		WriteStatus(w, siteContext.AcceptType, status)
+		apiutils.WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -200,7 +201,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		case httputils.AcceptTypeHTML:
 			store.UpdateHTMXResponse(requestModel).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, requestModel)
+			apiutils.WriteModelJSON(w, status, requestModel)
 		}
 	}
 }
@@ -210,8 +211,8 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 /////
 
 type SearchInterface[T any] interface {
-	SearchModels(ctx context.Context, tx *StoreTx, query *Query, siteContext *httputils.SiteContext) ([]*T, *HTTPError)
-	SearchHTMXResponse(models []*T, query *Query) templ.Component
+	SearchModels(ctx context.Context, tx *StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*T, *apiutils.HTTPError)
+	SearchHTMXResponse(models []*T, query *apiutils.Query) templ.Component
 	GetName() string
 }
 
@@ -221,15 +222,15 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
 			slog.Error("site context is nil")
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
-			ErrForbidden.Write(siteContext.AcceptType, w)
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		query, herr := QueryFromParams(r.URL.Query())
+		query, herr := apiutils.QueryFromParams(r.URL.Query())
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -243,7 +244,7 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		WriteStatus(w, siteContext.AcceptType, status)
+		apiutils.WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -251,13 +252,13 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		case httputils.AcceptTypeHTML:
 			site_templ.FullPage(store.SearchHTMXResponse(models, query)).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, models)
+			apiutils.WriteModelJSON(w, status, models)
 		}
 	}
 }
 
 type GetInterface[T any] interface {
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
 	GetHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -268,11 +269,11 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
 			slog.Error("site context is nil")
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
-			ErrForbidden.Write(siteContext.AcceptType, w)
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return
 		}
 
@@ -281,7 +282,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		defer tx.Rollback()
 		model, herr := store.GetModel(r.Context(), tx, id, siteContext)
 		if herr == nil && model == nil {
-			herr = ErrNotFound
+			herr = apiutils.ErrNotFound
 		}
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
@@ -289,7 +290,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		}
 
 		status := http.StatusOK
-		WriteStatus(w, siteContext.AcceptType, status)
+		apiutils.WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -297,7 +298,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		case httputils.AcceptTypeHTML:
 			site_templ.FullPage(store.GetHTMXResponse(model)).Render(r.Context(), w)
 		default:
-			WriteModelJSON(w, status, model)
+			apiutils.WriteModelJSON(w, status, model)
 		}
 	}
 }
@@ -307,8 +308,8 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 // ////
 
 type DeleteInterface[T any] interface {
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *HTTPError)
-	DeleteModel(ctx context.Context, tx *StoreTx, model *T, siteContext *httputils.SiteContext) *HTTPError
+	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
+	DeleteModel(ctx context.Context, tx *StoreTx, model *T, siteContext *httputils.SiteContext) *apiutils.HTTPError
 	DeleteHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -318,17 +319,17 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
 			slog.Error("site context is nil")
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 		if !HasPermission(store.GetName(), siteContext.IdentityModel) {
-			ErrForbidden.Write(siteContext.AcceptType, w)
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return
 		}
 
 		id := chi.URLParam(r, "id")
 		if id == "" {
-			ErrBadRequest.Write(siteContext.AcceptType, w)
+			apiutils.ErrBadRequest.Write(siteContext.AcceptType, w)
 			return
 		}
 
@@ -336,7 +337,7 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		defer tx.Rollback()
 		model, err := store.GetModel(r.Context(), tx, id, siteContext)
 		if err != nil || model == nil {
-			ErrNotFound.Write(siteContext.AcceptType, w)
+			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 
@@ -353,7 +354,7 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		WriteStatus(w, siteContext.AcceptType, status)
+		apiutils.WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -367,32 +368,3 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // ////
 // UTILS
 // ////
-// ExtractModelFromRequest reads a JSON or form body into T
-func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.Request) (*T, *HTTPError) {
-	var doc map[string]any
-	switch contentType {
-	case httputils.ContentTypeJSON:
-		if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-			slog.Error("failed to read JSON body", "error", err)
-			return nil, ErrBadBody
-
-		}
-	case httputils.ContentTypeForm:
-
-		if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
-			slog.Debug("failed to parse form data", "error", err)
-			return nil, ErrBadForm
-		}
-		doc = FormToMap[T](r.Form)
-	default:
-		return nil, ErrUnknownContent
-	}
-
-	model := new(T)
-	err := utils.FromMap(doc, model)
-	if err != nil {
-		slog.Error("failed to convert doc to model", "error", err)
-		return nil, ErrBadBody
-	}
-	return model, nil
-}
