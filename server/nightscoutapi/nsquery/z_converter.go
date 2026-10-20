@@ -5,7 +5,7 @@ package nsquery
 
 import (
 	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
-	nightscoutmodels "nighttroop.t1d.nz/models/nightscoutmodels"
+	types "nighttroop.t1d.nz/utils/types"
 )
 
 func ActivityAll(source Query) sitedb.AllActivitiesParams {
@@ -846,170 +846,170 @@ func ProfileStoreSearch(source Query) sitedb.SearchProfileStoresParams {
 func QueryValueToQuery(source QueryValues) Query {
 	var nsqueryQuery Query
 	if source.DateGTE != nil {
-		xint64 := nightscoutmodelsDateIntToInt64(*source.DateGTE)
+		xint64 := typesDateIntToInt64(*source.DateGTE)
 		nsqueryQuery.DateGTE = &xint64
 	}
 	if source.DateGT != nil {
-		xint642 := nightscoutmodelsDateIntToInt64(*source.DateGT)
+		xint642 := typesDateIntToInt64(*source.DateGT)
 		nsqueryQuery.DateGT = &xint642
 	}
 	if source.DateEQ != nil {
-		xint643 := nightscoutmodelsDateIntToInt64(*source.DateEQ)
+		xint643 := typesDateIntToInt64(*source.DateEQ)
 		nsqueryQuery.DateEQ = &xint643
 	}
 	if source.DateLTE != nil {
-		xint644 := nightscoutmodelsDateIntToInt64(*source.DateLTE)
+		xint644 := typesDateIntToInt64(*source.DateLTE)
 		nsqueryQuery.DateLTE = &xint644
 	}
 	if source.DateLT != nil {
-		xint645 := nightscoutmodelsDateIntToInt64(*source.DateLT)
+		xint645 := typesDateIntToInt64(*source.DateLT)
 		nsqueryQuery.DateLT = &xint645
 	}
 	if source.CreatedAtGTE != nil {
-		xint646 := nightscoutmodelsDateIntToInt64(*source.CreatedAtGTE)
+		xint646 := typesDateIntToInt64(*source.CreatedAtGTE)
 		nsqueryQuery.CreatedAtGTE = &xint646
 	}
 	if source.CreatedAtGT != nil {
-		xint647 := nightscoutmodelsDateIntToInt64(*source.CreatedAtGT)
+		xint647 := typesDateIntToInt64(*source.CreatedAtGT)
 		nsqueryQuery.CreatedAtGT = &xint647
 	}
 	if source.CreatedAtLTE != nil {
-		xint648 := nightscoutmodelsDateIntToInt64(*source.CreatedAtLTE)
+		xint648 := typesDateIntToInt64(*source.CreatedAtLTE)
 		nsqueryQuery.CreatedAtLTE = &xint648
 	}
 	if source.CreatedAtLT != nil {
-		xint649 := nightscoutmodelsDateIntToInt64(*source.CreatedAtLT)
+		xint649 := typesDateIntToInt64(*source.CreatedAtLT)
 		nsqueryQuery.CreatedAtLT = &xint649
 	}
 	if source.UpdatedGTE != nil {
-		xint6410 := nightscoutmodelsDateIntToInt64(*source.UpdatedGTE)
+		xint6410 := typesDateIntToInt64(*source.UpdatedGTE)
 		nsqueryQuery.UpdatedGTE = &xint6410
 	}
 	if source.UpdatedGT != nil {
-		xint6411 := nightscoutmodelsDateIntToInt64(*source.UpdatedGT)
+		xint6411 := typesDateIntToInt64(*source.UpdatedGT)
 		nsqueryQuery.UpdatedGT = &xint6411
 	}
 	if source.UpdatedLTE != nil {
-		xint6412 := nightscoutmodelsDateIntToInt64(*source.UpdatedLTE)
+		xint6412 := typesDateIntToInt64(*source.UpdatedLTE)
 		nsqueryQuery.UpdatedLTE = &xint6412
 	}
 	if source.UpdatedLT != nil {
-		xint6413 := nightscoutmodelsDateIntToInt64(*source.UpdatedLT)
+		xint6413 := typesDateIntToInt64(*source.UpdatedLT)
 		nsqueryQuery.UpdatedLT = &xint6413
 	}
 	if source.TypeEq != nil {
-		xstring := nightscoutmodelsShortStringToString(*source.TypeEq)
+		xstring := typesShortStringToString(*source.TypeEq)
 		nsqueryQuery.TypeEq = &xstring
 	}
 	if source.TypeNeq != nil {
-		xstring2 := nightscoutmodelsShortStringToString(*source.TypeNeq)
+		xstring2 := typesShortStringToString(*source.TypeNeq)
 		nsqueryQuery.TypeNeq = &xstring2
 	}
 	nsqueryQuery.TypeIn = QueryStringArrayToString(source.TypeIn)
 	nsqueryQuery.TypeNin = QueryStringArrayToString(source.TypeNin)
 	if source.IDEq != nil {
-		xstring3 := nightscoutmodelsShortStringToString(*source.IDEq)
+		xstring3 := typesShortStringToString(*source.IDEq)
 		nsqueryQuery.IDEq = &xstring3
 	}
 	nsqueryQuery.IDIn = QueryStringArrayToString(source.IDIn)
 	if source.DeviceEq != nil {
-		xstring4 := nightscoutmodelsShortStringToString(*source.DeviceEq)
+		xstring4 := typesShortStringToString(*source.DeviceEq)
 		nsqueryQuery.DeviceEq = &xstring4
 	}
 	if source.AppEq != nil {
-		xstring5 := nightscoutmodelsShortStringToString(*source.AppEq)
+		xstring5 := typesShortStringToString(*source.AppEq)
 		nsqueryQuery.AppEq = &xstring5
 	}
 	if source.IncludeDeleted != nil {
-		nsqueryQuery.IncludeDeleted = nightscoutmodelsFlexibleBoolToBool(*source.IncludeDeleted)
+		nsqueryQuery.IncludeDeleted = typesFlexibleBoolToBool(*source.IncludeDeleted)
 	}
 	if source.Raw != nil {
-		nsqueryQuery.Raw = nightscoutmodelsFlexibleBoolToBool(*source.Raw)
+		nsqueryQuery.Raw = typesFlexibleBoolToBool(*source.Raw)
 	}
 	nsqueryQuery.Limit = GetLimitInt64(source)
 	nsqueryQuery.Skip = GetSkipInt64(source)
 	if source.SgvEQ != nil {
-		xint6414 := nightscoutmodelsFlexibleInt64ToInt64(*source.SgvEQ)
+		xint6414 := typesFlexibleInt64ToInt64(*source.SgvEQ)
 		nsqueryQuery.SgvEQ = &xint6414
 	}
 	if source.SgvGTE != nil {
-		xint6415 := nightscoutmodelsFlexibleInt64ToInt64(*source.SgvGTE)
+		xint6415 := typesFlexibleInt64ToInt64(*source.SgvGTE)
 		nsqueryQuery.SgvGTE = &xint6415
 	}
 	if source.SgvGT != nil {
-		xint6416 := nightscoutmodelsFlexibleInt64ToInt64(*source.SgvGT)
+		xint6416 := typesFlexibleInt64ToInt64(*source.SgvGT)
 		nsqueryQuery.SgvGT = &xint6416
 	}
 	if source.SgvLTE != nil {
-		xint6417 := nightscoutmodelsFlexibleInt64ToInt64(*source.SgvLTE)
+		xint6417 := typesFlexibleInt64ToInt64(*source.SgvLTE)
 		nsqueryQuery.SgvLTE = &xint6417
 	}
 	if source.SgvLT != nil {
-		xint6418 := nightscoutmodelsFlexibleInt64ToInt64(*source.SgvLT)
+		xint6418 := typesFlexibleInt64ToInt64(*source.SgvLT)
 		nsqueryQuery.SgvLT = &xint6418
 	}
 	if source.CarbsEQ != nil {
-		xint6419 := nightscoutmodelsFlexibleInt64ToInt64(*source.CarbsEQ)
+		xint6419 := typesFlexibleInt64ToInt64(*source.CarbsEQ)
 		nsqueryQuery.CarbsEQ = &xint6419
 	}
 	if source.CarbsGTE != nil {
-		xint6420 := nightscoutmodelsFlexibleInt64ToInt64(*source.CarbsGTE)
+		xint6420 := typesFlexibleInt64ToInt64(*source.CarbsGTE)
 		nsqueryQuery.CarbsGTE = &xint6420
 	}
 	if source.CarbsGT != nil {
-		xint6421 := nightscoutmodelsFlexibleInt64ToInt64(*source.CarbsGT)
+		xint6421 := typesFlexibleInt64ToInt64(*source.CarbsGT)
 		nsqueryQuery.CarbsGT = &xint6421
 	}
 	if source.CarbsLTE != nil {
-		xint6422 := nightscoutmodelsFlexibleInt64ToInt64(*source.CarbsLTE)
+		xint6422 := typesFlexibleInt64ToInt64(*source.CarbsLTE)
 		nsqueryQuery.CarbsLTE = &xint6422
 	}
 	if source.CarbsLT != nil {
-		xint6423 := nightscoutmodelsFlexibleInt64ToInt64(*source.CarbsLT)
+		xint6423 := typesFlexibleInt64ToInt64(*source.CarbsLT)
 		nsqueryQuery.CarbsLT = &xint6423
 	}
 	if source.InsulinEQ != nil {
-		xint6424 := nightscoutmodelsFlexibleInt64ToInt64(*source.InsulinEQ)
+		xint6424 := typesFlexibleInt64ToInt64(*source.InsulinEQ)
 		nsqueryQuery.InsulinEQ = &xint6424
 	}
 	if source.InsulinGTE != nil {
-		xint6425 := nightscoutmodelsFlexibleInt64ToInt64(*source.InsulinGTE)
+		xint6425 := typesFlexibleInt64ToInt64(*source.InsulinGTE)
 		nsqueryQuery.InsulinGTE = &xint6425
 	}
 	if source.InsulinGT != nil {
-		xint6426 := nightscoutmodelsFlexibleInt64ToInt64(*source.InsulinGT)
+		xint6426 := typesFlexibleInt64ToInt64(*source.InsulinGT)
 		nsqueryQuery.InsulinGT = &xint6426
 	}
 	if source.InsulinLTE != nil {
-		xint6427 := nightscoutmodelsFlexibleInt64ToInt64(*source.InsulinLTE)
+		xint6427 := typesFlexibleInt64ToInt64(*source.InsulinLTE)
 		nsqueryQuery.InsulinLTE = &xint6427
 	}
 	if source.InsulinLT != nil {
-		xint6428 := nightscoutmodelsFlexibleInt64ToInt64(*source.InsulinLT)
+		xint6428 := typesFlexibleInt64ToInt64(*source.InsulinLT)
 		nsqueryQuery.InsulinLT = &xint6428
 	}
 	if source.DurationEQ != nil {
-		xint6429 := nightscoutmodelsFlexibleInt64ToInt64(*source.DurationEQ)
+		xint6429 := typesFlexibleInt64ToInt64(*source.DurationEQ)
 		nsqueryQuery.DurationEQ = &xint6429
 	}
 	if source.DurationGTE != nil {
-		xint6430 := nightscoutmodelsFlexibleInt64ToInt64(*source.DurationGTE)
+		xint6430 := typesFlexibleInt64ToInt64(*source.DurationGTE)
 		nsqueryQuery.DurationGTE = &xint6430
 	}
 	if source.DurationGT != nil {
-		xint6431 := nightscoutmodelsFlexibleInt64ToInt64(*source.DurationGT)
+		xint6431 := typesFlexibleInt64ToInt64(*source.DurationGT)
 		nsqueryQuery.DurationGT = &xint6431
 	}
 	if source.DurationLTE != nil {
-		xint6432 := nightscoutmodelsFlexibleInt64ToInt64(*source.DurationLTE)
+		xint6432 := typesFlexibleInt64ToInt64(*source.DurationLTE)
 		nsqueryQuery.DurationLTE = &xint6432
 	}
 	if source.DurationLT != nil {
-		xint6433 := nightscoutmodelsFlexibleInt64ToInt64(*source.DurationLT)
+		xint6433 := typesFlexibleInt64ToInt64(*source.DurationLT)
 		nsqueryQuery.DurationLT = &xint6433
 	}
 	if source.NameEq != nil {
-		xstring6 := nightscoutmodelsShortStringToString(*source.NameEq)
+		xstring6 := typesShortStringToString(*source.NameEq)
 		nsqueryQuery.NameEq = &xstring6
 	}
 	nsqueryQuery.HasFilters = GetHasFilters(source)
@@ -1019,20 +1019,20 @@ func QueryValueToQuery(source QueryValues) Query {
 	}
 	nsqueryQuery.Fields = QueryStringArrayToArray(source.Fields)
 	if source.Envelope != nil {
-		xbool := nightscoutmodelsFlexibleBoolToBool(*source.Envelope)
+		xbool := typesFlexibleBoolToBool(*source.Envelope)
 		nsqueryQuery.Envelope = &xbool
 	}
 	return nsqueryQuery
 }
-func nightscoutmodelsDateIntToInt64(source nightscoutmodels.DateInt) int64 {
+func typesDateIntToInt64(source types.DateInt) int64 {
 	return int64(source)
 }
-func nightscoutmodelsFlexibleBoolToBool(source nightscoutmodels.FlexibleBool) bool {
+func typesFlexibleBoolToBool(source types.FlexibleBool) bool {
 	return bool(source)
 }
-func nightscoutmodelsFlexibleInt64ToInt64(source nightscoutmodels.FlexibleInt64) int64 {
+func typesFlexibleInt64ToInt64(source types.FlexibleInt64) int64 {
 	return int64(source)
 }
-func nightscoutmodelsShortStringToString(source nightscoutmodels.ShortString) string {
+func typesShortStringToString(source types.ShortString) string {
 	return string(source)
 }

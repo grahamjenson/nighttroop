@@ -2,39 +2,40 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type Activity struct {
-	Identifier *IdentifierString `json:"identifier"`
+	Identifier *types.IdentifierString `json:"identifier"`
 
-	Name *ShortString `json:"name,omitempty"` // Name of the activity
+	Name *types.ShortString `json:"name,omitempty"` // Name of the activity
 
-	ActivityType    *ShortString     `json:"activityType,omitempty"` // Type of activity
-	DurationMinutes *FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
-	Steps           *FlexibleInt64   `json:"steps,omitempty"`        // Step count
-	Calories        *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
-	HeartRate       *FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
-	Notes           *SanitizedString `json:"notes,omitempty"`        // Notes
-	Reason          *SanitizedString `json:"reason,omitempty"`       // Reason
+	ActivityType    *types.ShortString     `json:"activityType,omitempty"` // Type of activity
+	DurationMinutes *types.FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
+	Steps           *types.FlexibleInt64   `json:"steps,omitempty"`        // Step count
+	Calories        *types.FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
+	HeartRate       *types.FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
+	Notes           *types.SanitizedString `json:"notes,omitempty"`        // Notes
+	Reason          *types.SanitizedString `json:"reason,omitempty"`       // Reason
 
 	// Date fields
-	CreatedAt *DateString `json:"created_at,omitempty"` // ISO 8601 string
+	CreatedAt *types.DateString `json:"created_at,omitempty"` // ISO 8601 string
 
 	// Default String Fields
-	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
-	App     *ShortString `json:"app,omitempty"`     // App used for the activity
-	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
+	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
-	RawJsonData      string         `json:"-"`
+	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
+	RawJsonData      string               `json:"-"`
 }
 
 func (t *Activity) UnmarshalJSON(data []byte) error {
 	type Alias Activity
 	aux := struct {
-		ID *IdentifierString `json:"_id"`
+		ID *types.IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

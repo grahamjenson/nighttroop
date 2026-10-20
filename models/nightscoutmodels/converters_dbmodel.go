@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // goverter:converter
@@ -111,7 +112,7 @@ type DBModelConverter interface {
 // Custom Converter Methods
 // //
 
-func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
+func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
 	if m == nil {
 		return nil
 	}
@@ -121,13 +122,13 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 		GetOccurredAt() int64
 		GetUtcOffsetMinutes() *int64
 	}:
-		ds := DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
+		ds := types.DateStringFromInt64AndUTCOffset(v.GetOccurredAt(), v.GetUtcOffsetMinutes())
 		return &ds
 	case interface {
 		GetStart() int64
 		GetUtcOffsetMinutes() *int64
 	}:
-		ds := DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
+		ds := types.DateStringFromInt64AndUTCOffset(v.GetStart(), v.GetUtcOffsetMinutes())
 		return &ds
 	}
 
@@ -135,7 +136,7 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *DateString {
 }
 
 // goverter:context siteContext
-func SGVGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *FlexibleFloat64 {
+func SGVGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
 	if true { // SGV is assumed for this function
 		_, value := GetUnitsAndValue(mgdl, siteContext)
 		return value
@@ -145,7 +146,7 @@ func SGVGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteConte
 }
 
 // goverter:context siteContext
-func MBGGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *FlexibleFloat64 {
+func MBGGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
 	if true { // MBG is assumed for this function
 		_, value := GetUnitsAndValue(mgdl, siteContext)
 		return value
@@ -155,7 +156,7 @@ func MBGGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteConte
 }
 
 // goverter:context siteContext
-func GlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *FlexibleFloat64 {
+func GlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
 	_, value := GetUnitsAndValue(mgdl, siteContext)
 	return value
 }
@@ -166,11 +167,11 @@ func UnitsToValue(mgdl float64, siteContext *httputils.SiteContext) *consts.Unit
 	return units
 }
 
-func GetUnitsAndValue(mgdl float64, siteContext *httputils.SiteContext) (*consts.Units, *FlexibleFloat64) {
+func GetUnitsAndValue(mgdl float64, siteContext *httputils.SiteContext) (*consts.Units, *types.FlexibleFloat64) {
 
 	units := siteContext.GetSettings().GetUnits()
 	value := units.FromMGDL(mgdl)
-	return units, ptr(FlexibleFloat64(value))
+	return units, ptr(types.FlexibleFloat64(value))
 }
 
 func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
@@ -211,7 +212,7 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 		}
 
 		if sv.Value != nil {
-			sv.Value = ptr(FlexibleFloat64(units.FromMGDL(sv.Value.Float64())))
+			sv.Value = ptr(types.FlexibleFloat64(units.FromMGDL(sv.Value.Float64())))
 		}
 
 		if sv.TimeAsSeconds == nil && sv.Time != nil {

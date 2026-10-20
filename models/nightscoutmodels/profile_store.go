@@ -5,35 +5,36 @@ import (
 	"encoding/json"
 
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type ProfileStore struct {
-	Identifier     *IdentifierString       `json:"identifier,omitempty"`
-	DefaultProfile *ShortString            `json:"defaultProfile,omitempty"`
-	Store          map[ShortString]Profile `json:"store,omitempty"`
-	Units          *consts.Units           `json:"units,omitempty"`
+	Identifier     *types.IdentifierString       `json:"identifier,omitempty"`
+	DefaultProfile *types.ShortString            `json:"defaultProfile,omitempty"`
+	Store          map[types.ShortString]Profile `json:"store,omitempty"`
+	Units          *consts.Units                 `json:"units,omitempty"`
 
 	LoopSettings *LoopSettings `json:"loopSettings,omitempty"`
 
 	// Default String Fields
-	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
-	App     *ShortString `json:"app,omitempty"`     // App used for the activity
-	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
+	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Feilds
-	StartDate *DateString `json:"startDate,omitempty"`
-	Mills     *DateInt    `json:"mills,omitempty"`
+	StartDate *types.DateString `json:"startDate,omitempty"`
+	Mills     *types.DateInt    `json:"mills,omitempty"`
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
-	RawJsonData      string         `json:"-"`
+	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
+	RawJsonData      string               `json:"-"`
 }
 
 func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 	type Alias ProfileStore
 	aux := struct {
-		ID *IdentifierString `json:"_id"`
+		ID *types.IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -61,11 +62,11 @@ func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 }
 
 type Profile struct {
-	Units    *consts.Units    `json:"units,omitempty"`
-	Dia      *FlexibleFloat64 `json:"dia,omitempty"`
-	CarbsHr  *FlexibleFloat64 `json:"carbs_hr,omitempty"`
-	Delay    *FlexibleFloat64 `json:"delay,omitempty"`
-	Timezone *Timezone        `json:"timezone,omitempty"`
+	Units    *consts.Units          `json:"units,omitempty"`
+	Dia      *types.FlexibleFloat64 `json:"dia,omitempty"`
+	CarbsHr  *types.FlexibleFloat64 `json:"carbs_hr,omitempty"`
+	Delay    *types.FlexibleFloat64 `json:"delay,omitempty"`
+	Timezone *types.Timezone        `json:"timezone,omitempty"`
 
 	Sens       []*ScheduleValue `json:"sens,omitempty"`
 	CarbRatio  []*ScheduleValue `json:"carbratio,omitempty"`
@@ -75,18 +76,18 @@ type Profile struct {
 }
 
 type ScheduleValue struct {
-	Time          *ScheduleTime    `json:"time,omitempty"`
-	TimeAsSeconds *FlexibleInt64   `json:"timeAsSeconds,omitempty"`
-	Value         *FlexibleFloat64 `json:"value,omitempty"`
+	Time          *ScheduleTime          `json:"time,omitempty"`
+	TimeAsSeconds *types.FlexibleInt64   `json:"timeAsSeconds,omitempty"`
+	Value         *types.FlexibleFloat64 `json:"value,omitempty"`
 }
 
 func (t *ScheduleValue) UnmarshalJSON(data []byte) error {
 	type Alias ScheduleValue
 
 	aux := struct {
-		Time          *ScheduleTime   `json:"time,omitempty"`
-		TimeAsSeconds *FlexibleInt64  `json:"timeAsSeconds,omitempty"`
-		Value         json.RawMessage `json:"value,omitempty"`
+		Time          *ScheduleTime        `json:"time,omitempty"`
+		TimeAsSeconds *types.FlexibleInt64 `json:"timeAsSeconds,omitempty"`
+		Value         json.RawMessage      `json:"value,omitempty"`
 	}{
 		Time:          t.Time,
 		TimeAsSeconds: t.TimeAsSeconds,
@@ -109,7 +110,7 @@ func (t *ScheduleValue) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	var value FlexibleFloat64
+	var value types.FlexibleFloat64
 	if err := json.Unmarshal(aux.Value, &value); err != nil {
 		return err
 	}
@@ -171,104 +172,104 @@ const (
 	T2330 ScheduleTime = "23:30"
 )
 
-func (s *ScheduleTime) ToSeconds() *FlexibleInt64 {
+func (s *ScheduleTime) ToSeconds() *types.FlexibleInt64 {
 	switch *s {
 	case T0000:
-		return ptr(FlexibleInt64(0))
+		return ptr(types.FlexibleInt64(0))
 	case T0030:
-		return ptr(FlexibleInt64(1800))
+		return ptr(types.FlexibleInt64(1800))
 	case T0100:
-		return ptr(FlexibleInt64(1800 * 2))
+		return ptr(types.FlexibleInt64(1800 * 2))
 	case T0130:
-		return ptr(FlexibleInt64(1800 * 3))
+		return ptr(types.FlexibleInt64(1800 * 3))
 	case T0200:
-		return ptr(FlexibleInt64(1800 * 4))
+		return ptr(types.FlexibleInt64(1800 * 4))
 	case T0230:
-		return ptr(FlexibleInt64(1800 * 5))
+		return ptr(types.FlexibleInt64(1800 * 5))
 	case T0300:
-		return ptr(FlexibleInt64(1800 * 6))
+		return ptr(types.FlexibleInt64(1800 * 6))
 	case T0330:
-		return ptr(FlexibleInt64(1800 * 7))
+		return ptr(types.FlexibleInt64(1800 * 7))
 	case T0400:
-		return ptr(FlexibleInt64(1800 * 8))
+		return ptr(types.FlexibleInt64(1800 * 8))
 	case T0430:
-		return ptr(FlexibleInt64(1800 * 9))
+		return ptr(types.FlexibleInt64(1800 * 9))
 	case T0500:
-		return ptr(FlexibleInt64(1800 * 10))
+		return ptr(types.FlexibleInt64(1800 * 10))
 	case T0530:
-		return ptr(FlexibleInt64(1800 * 11))
+		return ptr(types.FlexibleInt64(1800 * 11))
 	case T0600:
-		return ptr(FlexibleInt64(1800 * 12))
+		return ptr(types.FlexibleInt64(1800 * 12))
 	case T0630:
-		return ptr(FlexibleInt64(1800 * 13))
+		return ptr(types.FlexibleInt64(1800 * 13))
 	case T0700:
-		return ptr(FlexibleInt64(1800 * 14))
+		return ptr(types.FlexibleInt64(1800 * 14))
 	case T0730:
-		return ptr(FlexibleInt64(1800 * 15))
+		return ptr(types.FlexibleInt64(1800 * 15))
 	case T0800:
-		return ptr(FlexibleInt64(1800 * 16))
+		return ptr(types.FlexibleInt64(1800 * 16))
 	case T0830:
-		return ptr(FlexibleInt64(1800 * 17))
+		return ptr(types.FlexibleInt64(1800 * 17))
 	case T0900:
-		return ptr(FlexibleInt64(1800 * 18))
+		return ptr(types.FlexibleInt64(1800 * 18))
 	case T0930:
-		return ptr(FlexibleInt64(1800 * 19))
+		return ptr(types.FlexibleInt64(1800 * 19))
 	case T1000:
-		return ptr(FlexibleInt64(1800 * 20))
+		return ptr(types.FlexibleInt64(1800 * 20))
 	case T1030:
-		return ptr(FlexibleInt64(1800 * 21))
+		return ptr(types.FlexibleInt64(1800 * 21))
 	case T1100:
-		return ptr(FlexibleInt64(1800 * 22))
+		return ptr(types.FlexibleInt64(1800 * 22))
 	case T1130:
-		return ptr(FlexibleInt64(1800 * 23))
+		return ptr(types.FlexibleInt64(1800 * 23))
 	case T1200:
-		return ptr(FlexibleInt64(1800 * 24))
+		return ptr(types.FlexibleInt64(1800 * 24))
 	case T1230:
-		return ptr(FlexibleInt64(1800 * 25))
+		return ptr(types.FlexibleInt64(1800 * 25))
 	case T1300:
-		return ptr(FlexibleInt64(1800 * 26))
+		return ptr(types.FlexibleInt64(1800 * 26))
 	case T1330:
-		return ptr(FlexibleInt64(1800 * 27))
+		return ptr(types.FlexibleInt64(1800 * 27))
 	case T1400:
-		return ptr(FlexibleInt64(1800 * 28))
+		return ptr(types.FlexibleInt64(1800 * 28))
 	case T1430:
-		return ptr(FlexibleInt64(1800 * 29))
+		return ptr(types.FlexibleInt64(1800 * 29))
 	case T1500:
-		return ptr(FlexibleInt64(1800 * 30))
+		return ptr(types.FlexibleInt64(1800 * 30))
 	case T1530:
-		return ptr(FlexibleInt64(1800 * 31))
+		return ptr(types.FlexibleInt64(1800 * 31))
 	case T1600:
-		return ptr(FlexibleInt64(1800 * 32))
+		return ptr(types.FlexibleInt64(1800 * 32))
 	case T1630:
-		return ptr(FlexibleInt64(1800 * 33))
+		return ptr(types.FlexibleInt64(1800 * 33))
 	case T1700:
-		return ptr(FlexibleInt64(1800 * 34))
+		return ptr(types.FlexibleInt64(1800 * 34))
 	case T1730:
-		return ptr(FlexibleInt64(1800 * 35))
+		return ptr(types.FlexibleInt64(1800 * 35))
 	case T1800:
-		return ptr(FlexibleInt64(1800 * 36))
+		return ptr(types.FlexibleInt64(1800 * 36))
 	case T1830:
-		return ptr(FlexibleInt64(1800 * 37))
+		return ptr(types.FlexibleInt64(1800 * 37))
 	case T1900:
-		return ptr(FlexibleInt64(1800 * 38))
+		return ptr(types.FlexibleInt64(1800 * 38))
 	case T1930:
-		return ptr(FlexibleInt64(1800 * 39))
+		return ptr(types.FlexibleInt64(1800 * 39))
 	case T2000:
-		return ptr(FlexibleInt64(1800 * 40))
+		return ptr(types.FlexibleInt64(1800 * 40))
 	case T2030:
-		return ptr(FlexibleInt64(1800 * 41))
+		return ptr(types.FlexibleInt64(1800 * 41))
 	case T2100:
-		return ptr(FlexibleInt64(1800 * 42))
+		return ptr(types.FlexibleInt64(1800 * 42))
 	case T2130:
-		return ptr(FlexibleInt64(1800 * 43))
+		return ptr(types.FlexibleInt64(1800 * 43))
 	case T2200:
-		return ptr(FlexibleInt64(1800 * 44))
+		return ptr(types.FlexibleInt64(1800 * 44))
 	case T2230:
-		return ptr(FlexibleInt64(1800 * 45))
+		return ptr(types.FlexibleInt64(1800 * 45))
 	case T2300:
-		return ptr(FlexibleInt64(1800 * 46))
+		return ptr(types.FlexibleInt64(1800 * 46))
 	case T2330:
-		return ptr(FlexibleInt64(1800 * 47))
+		return ptr(types.FlexibleInt64(1800 * 47))
 	default:
 		return nil
 	}
@@ -285,23 +286,23 @@ func (s *ScheduleTime) UnmarshalJSON(data []byte) error {
 }
 
 type LoopSettings struct {
-	MaximumBasalRatePerHour *FlexibleFloat64   `json:"maximumBasalRatePerHour,omitempty"`
-	MaximumBolus            *FlexibleFloat64   `json:"maximumBolus,omitempty"`
-	DosingStrategy          *ShortString       `json:"dosingStrategy,omitempty"`
-	DosingEnabled           *FlexibleBool      `json:"dosingEnabled,omitempty"`
-	MinimumBGGuard          *FlexibleFloat64   `json:"minimumBGGuard,omitempty"`
-	DeviceToken             *ShortString       `json:"deviceToken,omitempty"`
-	BundleIdentifier        *ShortString       `json:"bundleIdentifier,omitempty"`
-	PreMealTargetRange      []*FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
-	OverridePresets         []*OverridePreset  `json:"overridePresets,omitempty"`
+	MaximumBasalRatePerHour *types.FlexibleFloat64   `json:"maximumBasalRatePerHour,omitempty"`
+	MaximumBolus            *types.FlexibleFloat64   `json:"maximumBolus,omitempty"`
+	DosingStrategy          *types.ShortString       `json:"dosingStrategy,omitempty"`
+	DosingEnabled           *types.FlexibleBool      `json:"dosingEnabled,omitempty"`
+	MinimumBGGuard          *types.FlexibleFloat64   `json:"minimumBGGuard,omitempty"`
+	DeviceToken             *types.ShortString       `json:"deviceToken,omitempty"`
+	BundleIdentifier        *types.ShortString       `json:"bundleIdentifier,omitempty"`
+	PreMealTargetRange      []*types.FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
+	OverridePresets         []*OverridePreset        `json:"overridePresets,omitempty"`
 }
 
 type OverridePreset struct {
-	Symbol                  *ShortString       `json:"symbol,omitempty"`
-	Name                    *ShortString       `json:"name,omitempty"`
-	TargetRange             []*FlexibleFloat64 `json:"targetRange,omitempty"`
-	Duration                *FlexibleInt64     `json:"duration,omitempty"`
-	InsulinNeedsScaleFactor *FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
+	Symbol                  *types.ShortString       `json:"symbol,omitempty"`
+	Name                    *types.ShortString       `json:"name,omitempty"`
+	TargetRange             []*types.FlexibleFloat64 `json:"targetRange,omitempty"`
+	Duration                *types.FlexibleInt64     `json:"duration,omitempty"`
+	InsulinNeedsScaleFactor *types.FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
 }
 
 func (t ProfileStore) GetDevice() *string {
@@ -340,7 +341,7 @@ func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*ScheduleValue, units *c
 
 	for _, sv := range svs {
 		if sv.Value != nil {
-			sv.Value = ptr(FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
+			sv.Value = ptr(types.FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
 		}
 	}
 	return svs

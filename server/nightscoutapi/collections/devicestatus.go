@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type DeviceStatusCollection struct {
@@ -152,10 +153,10 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	nsModel := nightscoutmodels.DBModelToDeviceStatus(source, siteContext)
 
 	if source.IsDeviceCharging != nil {
-		nsModel.IsCharging = ptr(nightscoutmodels.FlexibleBool(*source.IsDeviceCharging))
+		nsModel.IsCharging = ptr(types.FlexibleBool(*source.IsDeviceCharging))
 	}
 	if source.DeviceBatteryPercent != nil {
-		nsModel.UploaderBattery = ptr(nightscoutmodels.FlexibleFloat64(*source.DeviceBatteryPercent))
+		nsModel.UploaderBattery = ptr(types.FlexibleFloat64(*source.DeviceBatteryPercent))
 	}
 
 	/////
@@ -164,7 +165,7 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if source.PumpBatteryPercent != nil {
 		nsModel.Pump = &nightscoutmodels.PumpStatus{
 			Battery: &nightscoutmodels.PumpBattery{
-				Percent: ptr(nightscoutmodels.FlexibleFloat64(*source.PumpBatteryPercent)),
+				Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent)),
 			},
 		}
 	}
@@ -173,7 +174,7 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 		if nsModel.Pump == nil {
 			nsModel.Pump = &nightscoutmodels.PumpStatus{}
 		}
-		nsModel.Pump.Reservoir = ptr(nightscoutmodels.FlexibleFloat64(*source.PumpReservoir))
+		nsModel.Pump.Reservoir = ptr(types.FlexibleFloat64(*source.PumpReservoir))
 	}
 
 	///////

@@ -1,15 +1,18 @@
 package nightscoutmodels
 
-import "fmt"
+import (
+	"fmt"
+	"nighttroop.t1d.nz/utils/types"
+)
 
-func ValidateOffset(offsetMinutes FlexibleInt64) error {
+func ValidateOffset(offsetMinutes types.FlexibleInt64) error {
 	if offsetMinutes < -1440 || offsetMinutes > 1440 {
 		return fmt.Errorf("invalid offset: %d", offsetMinutes)
 	}
 	return nil
 }
 
-func ValidateDate(date DateInt) error {
+func ValidateDate(date types.DateInt) error {
 	if date == 0 {
 		return fmt.Errorf("invalid date: %d", date)
 	}
@@ -17,4 +20,12 @@ func ValidateDate(date DateInt) error {
 		return fmt.Errorf("invalid date: %d", date)
 	}
 	return nil
+}
+
+////
+// Utils
+////
+
+func ptr[T any](v T) *T {
+	return &v
 }
