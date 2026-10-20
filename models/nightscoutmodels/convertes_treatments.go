@@ -446,7 +446,7 @@ func ToProfileJSON(source interface {
 		profile.Dia = ptr(types.FlexibleFloat64(*source.GetDia()))
 	}
 	if source.GetTimezone() != nil {
-		profile.Timezone = ptr(Timezone(*source.GetTimezone()))
+		profile.Timezone = ptr(types.Timezone(*source.GetTimezone()))
 	}
 
 	profile.Units = siteContext.GetSettings().GetUnits()

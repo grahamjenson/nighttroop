@@ -22,8 +22,8 @@ type ProfileStore struct {
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Feilds
-	StartDate *DateString    `json:"startDate,omitempty"`
-	Mills     *types.DateInt `json:"mills,omitempty"`
+	StartDate *types.DateString `json:"startDate,omitempty"`
+	Mills     *types.DateInt    `json:"mills,omitempty"`
 
 	// Non-JSON values to make mapping easier
 	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
@@ -66,7 +66,7 @@ type Profile struct {
 	Dia      *types.FlexibleFloat64 `json:"dia,omitempty"`
 	CarbsHr  *types.FlexibleFloat64 `json:"carbs_hr,omitempty"`
 	Delay    *types.FlexibleFloat64 `json:"delay,omitempty"`
-	Timezone *Timezone              `json:"timezone,omitempty"`
+	Timezone *types.Timezone        `json:"timezone,omitempty"`
 
 	Sens       []*ScheduleValue `json:"sens,omitempty"`
 	CarbRatio  []*ScheduleValue `json:"carbratio,omitempty"`

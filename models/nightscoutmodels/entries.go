@@ -34,11 +34,11 @@ type Entry struct {
 	Unfiltered *types.FlexibleFloat64 `json:"unfiltered,omitempty"`
 	RSSI       *types.FlexibleFloat64 `json:"rssi,omitempty"`
 	Noise      *types.FlexibleFloat64 `json:"noise,omitempty"`
-	SysTime    *DateString            `json:"sysTime,omitempty"`
+	SysTime    *types.DateString      `json:"sysTime,omitempty"`
 
 	// Date fields
 	Date             *types.DateInt       `json:"date,omitempty"`
-	DateString       *DateString          `json:"dateString,omitempty"`
+	DateString       *types.DateString    `json:"dateString,omitempty"`
 	Mills            *types.DateInt       `json:"mills,omitempty"`
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`
 
@@ -108,7 +108,7 @@ func (t *Entry) MarshalJSON() ([]byte, error) {
 		t.UtcOffsetMinutes = &zero
 	}
 
-	ds := DateStringFromDateIntAndUTCOffset(*t.Date, *t.UtcOffsetMinutes)
+	ds := types.DateStringFromDateIntAndUTCOffset(*t.Date, *t.UtcOffsetMinutes)
 	t.DateString = &ds
 
 	return json.Marshal(&struct {
