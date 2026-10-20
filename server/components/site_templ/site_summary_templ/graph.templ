@@ -1,0 +1,67 @@
+package site_summary_templ
+
+import (
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+)
+
+// Graph draws the summary on one time axis, built on the server so it needs no script:
+// glucose dots over the target range with temp targets shaded, carbs above the glucose,
+// insulin as bars under it and temp basals as filled steps at the bottom
+templ Graph(summary *sitemodels.Summary) {
+	{{ g := newGraph(summary, time.Now().UnixMilli()) }}
+	<svg
+		id="site--summary--graph"
+		viewBox={ fmt.Sprintf("0 0 %d %d", int(graphWidth), int(graphHeight)) }
+		class="h-auto w-full text-xs"
+		role="img"
+		aria-label="Glucose, treatments and temp basals over time"
+	>
+		<rect x={ f(graphLeft) } width={ f(graphRight - graphLeft) } y={ f(g.glucoseY(g.rangeTop())) } height={ f(g.glucoseY(g.rangeLow()) - g.glucoseY(g.rangeTop())) } class="fill-gray-100"></rect>
+		for _, t := range summary.TempTargets {
+			<rect
+				id={ "site--summary--graph--temp-target-" + t.ID }
+				x={ f(g.x(t.OccurredAt)) }
+				width={ f(g.x(g.endOf(t.OccurredAt, t.DurationMinutes)) - g.x(t.OccurredAt)) }
+				y={ f(g.glucoseY(t.HighTarget)) }
+				height={ f(max(g.glucoseY(t.LowTarget)-g.glucoseY(t.HighTarget), 2)) }
+				class="fill-brand-gold/40"
+			></rect>
+		}
+		@axisLabel(graphLeft-6, g.glucoseY(g.rangeLow()), site_data_templ.FormatGlucose(g.rangeLow(), g.units))
+		@axisLabel(graphLeft-6, g.glucoseY(g.rangeTop()), site_data_templ.FormatGlucose(g.rangeTop(), g.units))
+		for _, r := range summary.GlucoseReadings {
+			<circle cx={ f(g.x(r.OccurredAt)) } cy={ f(g.glucoseY(r.Reading)) } r="3" class={ "site--summary--graph--reading", g.glucoseColour(r.Reading) }></circle>
+		}
+		for _, food := range summary.FoodIntakes {
+			if food.Carbs != nil {
+				<g class="site--summary--graph--carbs">
+					<circle cx={ f(g.x(food.OccurredAt)) } cy={ f(glucoseTop + 6) } r="5" class="fill-brand-gold"></circle>
+					<text x={ f(g.x(food.OccurredAt) + 8) } y={ f(glucoseTop + 10) } class="fill-gray-700">{ value(food.Carbs, "g") }</text>
+				</g>
+			}
+		}
+		<line x1={ f(graphLeft) } x2={ f(graphRight) } y1={ f(insulinBase) } y2={ f(insulinBase) } class="stroke-gray-200"></line>
+		@axisLabel(graphLeft-6, insulinBase, "Insulin")
+		for _, d := range summary.InsulinDoses {
+			<g class="site--summary--graph--insulin">
+				<rect x={ f(g.x(d.OccurredAt) - 3) } width="6" y={ f(g.insulinY(d.Dose)) } height={ f(insulinBase - g.insulinY(d.Dose)) } class="fill-primary"></rect>
+				<text x={ f(g.x(d.OccurredAt) + 6) } y={ f(g.insulinY(d.Dose) + 8) } class="fill-gray-700">{ value(&d.Dose, "U") }</text>
+			</g>
+		}
+		<line x1={ f(graphLeft) } x2={ f(graphRight) } y1={ f(basalBase) } y2={ f(basalBase) } class="stroke-gray-200"></line>
+		@axisLabel(graphLeft-6, basalBase, "Basal")
+		<path id="site--summary--graph--basal" d={ g.basalPath(summary.TempBasals) } class="fill-primary/20 stroke-primary" stroke-width="1.5"></path>
+		for _, t := range g.ticks() {
+			<line x1={ f(t.X) } x2={ f(t.X) } y1={ f(glucoseTop) } y2={ f(basalBase) } class="stroke-gray-200" stroke-dasharray="2 4"></line>
+			<text x={ f(t.X) } y={ f(graphHeight - 4) } text-anchor="middle" class="fill-gray-500">{ t.Label }</text>
+		}
+	</svg>
+}
+
+templ axisLabel(x, y float64, label string) {
+	<text x={ f(x) } y={ f(y + 4) } text-anchor="end" class="fill-gray-500">{ label }</text>
+}

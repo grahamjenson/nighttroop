@@ -28,10 +28,6 @@ var StaticCopybuttonJsETag = generateETag([]byte(StaticCopybuttonJs))
 var StaticCopybuttonMinJs []byte
 var StaticCopybuttonMinJsETag = generateETag([]byte(StaticCopybuttonMinJs))
 
-//go:embed d3.js
-var StaticD3Js []byte
-var StaticD3JsETag = generateETag([]byte(StaticD3Js))
-
 //go:embed dropdown.js
 var StaticDropdownJs []byte
 var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
@@ -195,22 +191,6 @@ func AddStaticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticCopybuttonMinJs))
 		if err != nil {
 			slog.Error("Failed to write response for copybutton.min.js", "error", err)
-		}
-	})
-	r.Get("/d3.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticD3JsETag)
-		if r.Header.Get("If-None-Match") == StaticD3JsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticD3Js))
-		if err != nil {
-			slog.Error("Failed to write response for d3.js", "error", err)
 		}
 	})
 	r.Get("/dropdown.js", func(w http.ResponseWriter, r *http.Request) {
