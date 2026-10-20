@@ -49,7 +49,7 @@ CLICK #site--settings-menu
 CLICK #site--settings--identity-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/identity
-ASSERT_TEXT_VISIBLE Change Settings
+ASSERT_TEXT_VISIBLE Change Your Settings
 ASSERT_VISIBLE #site--settings--identity--units:has(option[value=""][selected]:text-is("Site setting (mg/dL)"))
 
 INPUT #site--settings--identity--week_start_day sunday

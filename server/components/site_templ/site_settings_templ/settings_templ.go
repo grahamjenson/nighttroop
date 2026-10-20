@@ -22,7 +22,7 @@ func settingValue(value *string) string {
 	return *value
 }
 
-// SettingsPage is "Change Site Settings" for admins or "Change Settings" for the signed in identity.
+// SettingsPage is "Change Site Settings" for admins or "Change Your Settings" for the signed in identity.
 // A setting left empty follows the level above: the defaults for the site, the site's for an identity.
 func SettingsPage(model *sitemodels.Settings) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -45,7 +45,7 @@ func SettingsPage(model *sitemodels.Settings) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		title, path, inherited, idPrefix := "Change Settings", "/settings/identity", "Site setting", "site--settings--identity--"
+		title, path, inherited, idPrefix := "Change Your Settings", "/settings/identity", "Site setting", "site--settings--identity--"
 		description := "Your own settings. Anything left on the site setting follows the site."
 		if model.ForSite {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " ")

@@ -580,7 +580,7 @@ func Header() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = settingsMenuItem("site--settings--identity-button", "/settings/identity", "Change Settings").Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = settingsMenuItem("site--settings--identity-button", "/settings/identity", "Change Your Settings").Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
