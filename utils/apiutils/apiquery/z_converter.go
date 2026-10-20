@@ -7,5 +7,9 @@ func QueryValuesToQuery(source QueryValues) Query {
 	var apiqueryQuery Query
 	apiqueryQuery.Limit = GetLimitInt64(source)
 	apiqueryQuery.Skip = GetSkipInt64(source)
+	if source.Device != nil {
+		xstring := *source.Device
+		apiqueryQuery.Device = &xstring
+	}
 	return apiqueryQuery
 }

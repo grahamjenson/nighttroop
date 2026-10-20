@@ -13,6 +13,83 @@ import (
 	settings "nighttroop.t1d.nz/utils/settings"
 )
 
+func DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus {
+	var pSitemodelsSiteDeviceStatus *SiteDeviceStatus
+	if source != nil {
+		var sitemodelsSiteDeviceStatus SiteDeviceStatus
+		sitemodelsSiteDeviceStatus.ID = (*source).ID
+		if (*source).DeviceBatteryPercent != nil {
+			xfloat64 := *(*source).DeviceBatteryPercent
+			sitemodelsSiteDeviceStatus.DeviceBatteryPercent = &xfloat64
+		}
+		if (*source).IsDeviceCharging != nil {
+			xbool := *(*source).IsDeviceCharging
+			sitemodelsSiteDeviceStatus.IsDeviceCharging = &xbool
+		}
+		if (*source).PumpState != nil {
+			xstring := *(*source).PumpState
+			sitemodelsSiteDeviceStatus.PumpState = &xstring
+		}
+		if (*source).PumpReservoir != nil {
+			xfloat642 := *(*source).PumpReservoir
+			sitemodelsSiteDeviceStatus.PumpReservoir = &xfloat642
+		}
+		if (*source).PumpBatteryPercent != nil {
+			xfloat643 := *(*source).PumpBatteryPercent
+			sitemodelsSiteDeviceStatus.PumpBatteryPercent = &xfloat643
+		}
+		if (*source).PumpChargingState != nil {
+			xstring2 := *(*source).PumpChargingState
+			sitemodelsSiteDeviceStatus.PumpChargingState = &xstring2
+		}
+		if (*source).LoopName != nil {
+			xstring3 := *(*source).LoopName
+			sitemodelsSiteDeviceStatus.LoopName = &xstring3
+		}
+		if (*source).LoopIob != nil {
+			xfloat644 := *(*source).LoopIob
+			sitemodelsSiteDeviceStatus.LoopIob = &xfloat644
+		}
+		if (*source).LoopIobBasal != nil {
+			xfloat645 := *(*source).LoopIobBasal
+			sitemodelsSiteDeviceStatus.LoopIobBasal = &xfloat645
+		}
+		if (*source).LoopIobTreatment != nil {
+			xfloat646 := *(*source).LoopIobTreatment
+			sitemodelsSiteDeviceStatus.LoopIobTreatment = &xfloat646
+		}
+		if (*source).LoopCob != nil {
+			xfloat647 := *(*source).LoopCob
+			sitemodelsSiteDeviceStatus.LoopCob = &xfloat647
+		}
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitemodelsSiteDeviceStatus.RawJsonData = &xstring4
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteDeviceStatus.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteDeviceStatus.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteDeviceStatus.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteDeviceStatus.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitemodelsSiteDeviceStatus.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitemodelsSiteDeviceStatus.CreatedByDeviceName = &xstring6
+		}
+		sitemodelsSiteDeviceStatus.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring7 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteDeviceStatus.UpdatedByIdentityName = &xstring7
+		}
+		pSitemodelsSiteDeviceStatus = &sitemodelsSiteDeviceStatus
+	}
+	return pSitemodelsSiteDeviceStatus
+}
 func FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake {
 	var pSitemodelsSiteFoodIntake *SiteFoodIntake
 	if source != nil {

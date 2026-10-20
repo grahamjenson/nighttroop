@@ -207,6 +207,72 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 	return &i, err
 }
 
+const deviceReportsForDevice = `-- name: DeviceReportsForDevice :many
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
+WHERE deleted_at IS NULL AND created_by_device_name = ?1
+ORDER BY occurred_at DESC
+LIMIT ?3 OFFSET ?2
+`
+
+type DeviceReportsForDeviceParams struct {
+	Device *string
+	Skip   int64
+	Limit  int64
+}
+
+func (q *Queries) DeviceReportsForDevice(ctx context.Context, arg DeviceReportsForDeviceParams) ([]*DeviceReport, error) {
+	rows, err := q.query(ctx, q.deviceReportsForDeviceStmt, deviceReportsForDevice, arg.Device, arg.Skip, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*DeviceReport
+	for rows.Next() {
+		var i DeviceReport
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceBatteryPercent,
+			&i.IsDeviceCharging,
+			&i.PumpState,
+			&i.PumpReservoir,
+			&i.PumpBatteryPercent,
+			&i.PumpChargingState,
+			&i.LoopName,
+			&i.ConfigurationSettingsJson,
+			&i.LoopSettingsJson,
+			&i.LoopIob,
+			&i.LoopIobBasal,
+			&i.LoopIobTreatment,
+			&i.LoopCob,
+			&i.LoopPredictionsStartTime,
+			&i.LoopPredictionsDefault,
+			&i.LoopPredictionsZt,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDeviceReport = `-- name: GetDeviceReport :one
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
@@ -312,6 +378,42 @@ type HardDeleteDeviceReportParams struct {
 
 func (q *Queries) HardDeleteDeviceReport(ctx context.Context, arg HardDeleteDeviceReportParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteDeviceReportStmt, hardDeleteDeviceReport, arg.ID)
+}
+
+const recentDeviceNames = `-- name: RecentDeviceNames :many
+SELECT DISTINCT created_by_device_name FROM device_reports
+WHERE deleted_at IS NULL AND occurred_at >= ?1 AND created_by_device_name IS NOT NULL
+ORDER BY created_by_device_name
+LIMIT ?2
+`
+
+type RecentDeviceNamesParams struct {
+	Since int64
+	Limit int64
+}
+
+// The devices that reported since Since, for showing each device's latest reports
+func (q *Queries) RecentDeviceNames(ctx context.Context, arg RecentDeviceNamesParams) ([]*string, error) {
+	rows, err := q.query(ctx, q.recentDeviceNamesStmt, recentDeviceNames, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*string
+	for rows.Next() {
+		var created_by_device_name *string
+		if err := rows.Scan(&created_by_device_name); err != nil {
+			return nil, err
+		}
+		items = append(items, created_by_device_name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const searchDeviceReports = `-- name: SearchDeviceReports :many

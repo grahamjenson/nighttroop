@@ -1,0 +1,77 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no device statuses
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--data--device-status-button
+CLICK #site--data--device-status-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/device-status
+ASSERT_VISIBLE #site--device-status--empty
+SCREENSHOT device_statuses_empty
+
+// Virtual sync writes a device status every 5 minutes, 6 of them on its first run
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+// Each device shows its latest 3 statuses
+CLICK #site--settings-menu
+CLICK #site--data--device-status-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE virtual://nighttroop
+ASSERT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=2
+ASSERT_NOT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=3
+SCREENSHOT device_statuses
+
+// Clicking a status shows all its details
+CLICK #deviceStatusTable-0 tbody tr >> nth=0
+ASSERT_VISIBLE #site--device-status--details
+ASSERT_TEXT_VISIBLE Pump Reservoir
+SCREENSHOT device_status_details
+CLICK #site--device-status--details--close
+ASSERT_NOT_VISIBLE #site--device-status--details
+
+// Show all pages through every status the device sent
+CLICK #site--device-status--show-all-0
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+ASSERT_NOT_VISIBLE #site--device-status--next
+SCREENSHOT device_status_history
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Device Status Deleted
+ASSERT_NOT_VISIBLE #site--device-status--details
+SCREENSHOT device_status_deleted
+
+// The deleted status stays gone after a reload
+CLICK #site--device-status--all-devices
+ASSERT_STATUS 200
+CLICK #site--device-status--show-all-0
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 5
