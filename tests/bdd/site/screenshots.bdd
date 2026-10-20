@@ -31,6 +31,10 @@ ASSERT_TEXT_VISIBLE Signed in as
 ASSERT_VISIBLE #site--settings--identities-button
 ASSERT_VISIBLE #site--settings--sync-button
 ASSERT_VISIBLE #site--settings--logout-button
+// Every item fits in the menu, none hidden below where it scrolls
+ASSERT_IN_VIEW #site--data--temp-basals-button
+ASSERT_IN_VIEW #site--settings--sync-button
+ASSERT_IN_VIEW #site--settings--logout-button
 SCREENSHOT site_settings_menu
 
 CLICK #site--settings--sync-button

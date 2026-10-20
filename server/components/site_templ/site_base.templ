@@ -128,7 +128,7 @@ templ Header() {
 					</button>
 				}
 				@dropdown.Content(dropdown.ContentProps{
-					Class: "w-56",
+					Class: "w-56 max-h-[calc(100vh-5rem)]",
 				}) {
 					if name := identityName(ctx); name != "" {
 						<div class="px-2 py-1.5 text-sm text-gray-500">
