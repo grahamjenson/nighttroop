@@ -54,7 +54,6 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 		actionContext := map[string]any{
 			"server_url":    serverURL,
 			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
-			"default_url":   siteInformation.SiteDB.URL(),
 			"default_token": siteInformation.PwdNSToken,
 			"default_jwt":   defaultJwt,
 		}

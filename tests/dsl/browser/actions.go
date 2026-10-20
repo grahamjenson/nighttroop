@@ -68,6 +68,9 @@ func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (
 		)
 	}
 
+	// A path is relative to the current page, so a file can move around the site it logged in to
+	url = resolveAgainstPage(page, url)
+
 	resp, err := page.Goto(url)
 	if err != nil {
 		t.Fatalf(
@@ -488,4 +491,17 @@ func (r *RunBackgroundJobs) PrintAction() {
 
 func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 	return page, nil
+}
+
+// resolveAgainstPage turns a path like /data/glucose into a full URL on the current page's host
+func resolveAgainstPage(page playwright.Page, target string) string {
+	current, err := url.Parse(page.URL())
+	if err != nil || !strings.HasPrefix(target, "/") {
+		return target
+	}
+	resolved, err := current.Parse(target)
+	if err != nil {
+		return target
+	}
+	return resolved.String()
 }

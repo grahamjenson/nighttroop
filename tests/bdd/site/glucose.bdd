@@ -1,68 +1,81 @@
-// The default site is seeded with two glucose readings, so log in to it with its JWT
-GOTO {{ .default_url }}/login
+GOTO {{ server_url}}/
 ASSERT_STATUS 200
-SET_COOKIE user_token {{ .default_jwt }}
 
-GOTO {{ .default_url }}/
+CLICK "Create Site"
 ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
+
+// Virtual sync writes the last 30 minutes of glucose readings, 6 of them, on its first run
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
 ASSERT_VISIBLE #glucoseReadingsTable
-ASSERT_VISIBLE #site--glucose--bdd-glucose-1
-ASSERT_VISIBLE #site--glucose--bdd-glucose-2
-SCREENSHOT glucose_readings
+ASSERT_TEXT_VISIBLE Showing 1 to 6
 ASSERT_NOT_VISIBLE #site--glucose--next
 ASSERT_NOT_VISIBLE #site--glucose--previous
-
-// A page of one reading pages through both, newest first
-GOTO {{ .default_url }}/data/glucose?limit=1
-ASSERT_STATUS 200
-ASSERT_VISIBLE #site--glucose--bdd-glucose-2
-ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-1
-ASSERT_NOT_VISIBLE #site--glucose--previous
-ASSERT_TEXT_VISIBLE Showing 1 to 1
-
-CLICK #site--glucose--next
-ASSERT_STATUS 200
-ASSERT_VISIBLE #site--glucose--bdd-glucose-1
-ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-2
-ASSERT_TEXT_VISIBLE Showing 2 to 2
-SCREENSHOT glucose_readings_paged
-
-CLICK #site--glucose--previous
-ASSERT_STATUS 200
-ASSERT_VISIBLE #site--glucose--bdd-glucose-2
-ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-1
-
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
-ASSERT_STATUS 200
-ASSERT_VISIBLE #site--glucose--bdd-glucose-1
+SCREENSHOT glucose_readings
 
 // Clicking a reading shows all its details
-CLICK #site--glucose--bdd-glucose-1
+CLICK #glucoseReadingsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--glucose--details
-ASSERT_TEXT_VISIBLE After lunch
+ASSERT_TEXT_VISIBLE virtual_sync
 SCREENSHOT glucose_reading_details
 
 CLICK #site--glucose--details--close
 ASSERT_NOT_VISIBLE #site--glucose--details
 
+// A page of one reading pages through them, newest first
+GOTO /data/glucose?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--glucose--previous
+
+CLICK #site--glucose--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+SCREENSHOT glucose_readings_paged
+
+CLICK #site--glucose--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--glucose--bdd-glucose-2--delete
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Glucose Reading Deleted
-ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-2
 ASSERT_NOT_VISIBLE #site--glucose--details
-ASSERT_VISIBLE #site--glucose--bdd-glucose-1
 SCREENSHOT glucose_reading_deleted
 
 // The deleted reading stays gone after a reload
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--glucose--bdd-glucose-1
-ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-2
+ASSERT_TEXT_VISIBLE Showing 1 to 5
