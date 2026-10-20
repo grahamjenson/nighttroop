@@ -133,12 +133,13 @@ func (d *DateString) UnmarshalJSON(data []byte) error {
 	case float64:
 		t = time.UnixMilli(int64(typed))
 	case json.Number:
+		// A fractional or exponent number is not an int64, so fall back to reading it as a float
 		if asInt, err := typed.Int64(); err == nil {
 			t = time.UnixMilli(asInt)
-		}
-		asFloat, err := typed.Float64()
-		if err != nil {
+		} else if asFloat, err := typed.Float64(); err == nil {
 			t = time.UnixMilli(int64(asFloat))
+		} else {
+			return fmt.Errorf("invalid date number %q: %w", typed, err)
 		}
 
 	case string:
