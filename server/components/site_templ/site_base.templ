@@ -89,6 +89,24 @@ templ settingsMenuItem(id string, path string, label string) {
 	}
 }
 
+templ dataMenuItem(id string, path string, label string, itemIcon templ.Component) {
+	@dropdown.Item(dropdown.ItemProps{
+		ID:   id,
+		Href: "#",
+		Attributes: templ.Attributes{
+			"hx-get":      path,
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		<span class="flex items-center">
+			@itemIcon
+			{ label }
+		</span>
+	}
+}
+
 templ Header() {
 	<header class="sticky top-0 z-40 border-b border-white/10 bg-gray-900 text-white">
 		<div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -122,21 +140,8 @@ templ Header() {
 						Data
 					}
 					@dropdown.Group() {
-						@dropdown.Item(dropdown.ItemProps{
-							ID:   "site--data--glucose-button",
-							Href: "#",
-							Attributes: templ.Attributes{
-								"hx-get":      "/data/glucose",
-								"hx-target":   "#main-content",
-								"hx-push-url": "true",
-								"hx-swap":     "innerHTML",
-							},
-						}) {
-							<span class="flex items-center">
-								@icon.Droplet(icon.Props{Class: "size-4 mr-2"})
-								Glucose Readings
-							</span>
-						}
+						@dataMenuItem("site--data--glucose-button", "/data/glucose", "Glucose Readings", icon.Droplet(icon.Props{Class: "size-4 mr-2"}))
+						@dataMenuItem("site--data--temp-targets-button", "/data/temp-targets", "Temp Targets", icon.Target(icon.Props{Class: "size-4 mr-2"}))
 					}
 					@dropdown.Separator()
 					@dropdown.Label() {

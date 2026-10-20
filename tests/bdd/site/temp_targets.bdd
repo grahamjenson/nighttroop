@@ -1,0 +1,111 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual sync writes a temp target on its first run
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+CLICK #site--data--temp-targets-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/temp-targets
+ASSERT_VISIBLE #tempTargetsTable
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--temp-target--next
+ASSERT_NOT_VISIBLE #site--temp-target--previous
+SCREENSHOT temp_targets
+
+// Clicking a temp target shows all its details
+CLICK #tempTargetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-target--details
+ASSERT_TEXT_VISIBLE virtual_sync
+SCREENSHOT temp_target_details
+
+CLICK #site--temp-target--details--close
+ASSERT_NOT_VISIBLE #site--temp-target--details
+
+// A temp target typed in starts now, added to the top of the table
+INPUT #site--temp-target--create--low 140
+INPUT #site--temp-target--create--high 160
+INPUT #site--temp-target--create--duration 45
+INPUT #site--temp-target--create--notes Walk
+CLICK #site--temp-target--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE 160
+SCREENSHOT temp_target_created
+
+// Its details can be edited, which updates its row
+CLICK #tempTargetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-target--details
+ASSERT_TEXT_VISIBLE 140 to 160 mg/dL for 45 minutes
+SCREENSHOT temp_target_edit
+INPUT #site--temp-target--edit--high 175
+INPUT #site--temp-target--edit--notes Run
+CLICK #site--temp-target--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Temp Target Updated
+ASSERT_NOT_VISIBLE #site--temp-target--details
+ASSERT_TEXT_VISIBLE 175
+SCREENSHOT temp_target_updated
+
+// The edit is saved
+CLICK #tempTargetsTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 140 to 175 mg/dL for 45 minutes
+ASSERT_TEXT_VISIBLE Run
+CLICK #site--temp-target--details--close
+
+// A page of one temp target pages through them, newest first
+GOTO /data/temp-targets?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_NOT_VISIBLE #site--temp-target--previous
+
+CLICK #site--temp-target--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+SCREENSHOT temp_targets_paged
+
+CLICK #site--temp-target--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--settings-menu
+CLICK #site--data--temp-targets-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #tempTargetsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Temp Target Deleted
+ASSERT_NOT_VISIBLE #site--temp-target--details
+SCREENSHOT temp_target_deleted
+
+// The deleted temp target stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--temp-targets-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1

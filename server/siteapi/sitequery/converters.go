@@ -15,6 +15,10 @@ type QueryConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted
 	QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllTempTargets(source *Query) sitedb.AllTempTargetsParams
 }
 
 // GetLimitInt64 defaults a missing or bad limit to MaxQueryLimit, and caps it there

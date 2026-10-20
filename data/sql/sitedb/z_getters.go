@@ -11677,12 +11677,12 @@ func (m *CreateTempTargetParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllTempTargetsParams) GetIncludeDeleted() *bool {
+func (m AllTempTargetsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllTempTargetsParams.
-func (m *AllTempTargetsParams) SetIncludeDeleted(v *bool) {
+func (m *AllTempTargetsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
@@ -11714,6 +11714,16 @@ func (m GetTempTargetParams) GetID() string {
 // SetID sets the ID value and returns the updated GetTempTargetParams.
 func (m *GetTempTargetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetTempTargetParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetTempTargetParams.
+func (m *GetTempTargetParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
 }
 
 // GetDateGTE returns the DateGTE value.

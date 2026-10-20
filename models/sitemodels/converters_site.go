@@ -63,19 +63,41 @@ type SiteConverter interface {
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading
 
 	// goverter:context siteContext
-	// goverter:map ID | NewGlucoseReadingID
+	// goverter:map ID | NewSiteDataID
 	// goverter:map ReadingType | GlucoseReadingTypeOrMeter
-	// goverter:map OccurredAt | GlucoseOccurredAtOrNow
+	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
-	// goverter:map Mgdl | GlucoseMgdlOrNil
+	// goverter:map Mgdl | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
+
+	///////
+	// TEMP TARGETS
+	///////
+
+	TempTargetFromDB(source *sitedb.TempTarget) *SiteTempTarget
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	TempTargetToCreate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.CreateTempTargetParams
+
+	// goverter:context siteContext
+	// goverter:map DurationMinutes | Int64OrNil
+	// goverter:map HighTarget | Float64OrNil
+	// goverter:map LowTarget | Float64OrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	TempTargetToUpdate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.UpdateTempTargetParams
 
 	///////
 	// SETTINGS
@@ -143,8 +165,8 @@ func ContextIdentityNameValue(siteContext *httputils.SiteContext) string {
 	return siteContext.IdentityModel.Name
 }
 
-// NewGlucoseReadingID ignores any id sent, so a reading created on the site always gets a new one
-func NewGlucoseReadingID() string {
+// NewSiteDataID ignores any id sent, so data created on the site always gets a new id
+func NewSiteDataID() string {
 	return utils.NextID()
 }
 
@@ -156,17 +178,25 @@ func GlucoseReadingTypeOrMeter(readingType string) string {
 	return readingType
 }
 
-func GlucoseOccurredAtOrNow(occurredAt int64) int64 {
+func OccurredAtOrNow(occurredAt int64) int64 {
 	if occurredAt == 0 {
 		return time.Now().UnixMilli()
 	}
 	return occurredAt
 }
 
-// GlucoseMgdlOrNil leaves the reading's mg/dL as it is when an update does not send one
-func GlucoseMgdlOrNil(mgdl float64) *float64 {
-	if mgdl == 0 {
+// Float64OrNil leaves a value as it is when an update does not send one
+func Float64OrNil(value float64) *float64 {
+	if value == 0 {
 		return nil
 	}
-	return &mgdl
+	return &value
+}
+
+// Int64OrNil leaves a value as it is when an update does not send one
+func Int64OrNil(value int64) *int64 {
+	if value == 0 {
+		return nil
+	}
+	return &value
 }

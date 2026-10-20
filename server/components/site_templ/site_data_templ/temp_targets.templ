@@ -1,0 +1,277 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// TempTargetsTable shows one page of temp targets, newest first, with buttons to the pages either side
+templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limit int64) {
+	<div id="temp_targets_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Temp Targets</h1>
+			<p class="mt-1 text-gray-500">
+				Newest first. Click a temp target to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@tempTargetCreateForm()
+			@table.Table(table.Props{
+				ID:    "tempTargetsTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							Low mg/dL
+						}
+						@table.Head() {
+							High mg/dL
+						}
+						@table.Head() {
+							Minutes
+						}
+						@table.Head() {
+							Reason
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(tempTargets) == 0 {
+						<tr id="site--temp-target--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No temp targets here.</td></tr>
+					}
+					for _, tempTarget := range tempTargets {
+						@tempTargetRow(tempTarget)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(tempTargets) > 0 {
+					<span id="site--temp-target--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(tempTargets))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@tempTargetPageButton("site--temp-target--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(tempTargets)) == limit {
+						@tempTargetPageButton("site--temp-target--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ tempTargetPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/temp-targets?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// tempTargetCreateForm adds a temp target starting now, putting its row at the top of the table
+templ tempTargetCreateForm() {
+	<form
+		id="site--temp-target--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/temp-targets"
+		hx-target="#tempTargetsTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--temp-target--empty')?.remove() }"
+	>
+		@tempTargetInputs("site--temp-target--create", "", "", "", "")
+		@button.Button(button.Props{ID: "site--temp-target--create--submit", Type: button.TypeSubmit}) {
+			Add Temp Target
+		}
+	</form>
+}
+
+templ tempTargetInputs(id string, low string, high string, duration string, notes string) {
+	<div class="w-32">
+		@input.Input(input.Props{
+			ID:          id + "--low",
+			Type:        input.TypeNumber,
+			Name:        "low_target",
+			Placeholder: "Low mg/dL",
+			Value:       low,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "any", "min": "1", "max": "1000"},
+		})
+	</div>
+	<div class="w-32">
+		@input.Input(input.Props{
+			ID:          id + "--high",
+			Type:        input.TypeNumber,
+			Name:        "high_target",
+			Placeholder: "High mg/dL",
+			Value:       high,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "any", "min": "1", "max": "1000"},
+		})
+	</div>
+	<div class="w-28">
+		@input.Input(input.Props{
+			ID:          id + "--duration",
+			Type:        input.TypeNumber,
+			Name:        "duration_minutes",
+			Placeholder: "Minutes",
+			Value:       duration,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "10080"},
+		})
+	</div>
+	<div class="w-64">
+		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
+	</div>
+}
+
+// tempTargetRow opens the temp target's details when clicked. The delete button stops its click reaching the row.
+templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
+	{{ id := "site--temp-target--" + tempTarget.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/temp-targets/" + tempTarget.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(tempTarget.OccurredAt) }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(tempTarget.LowTarget) }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(tempTarget.HighTarget) }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(tempTarget.DurationMinutes) }
+		}
+		@table.Cell() {
+			{ orDash(tempTarget.Reason) }
+		}
+		@table.Cell() {
+			{ orDash(tempTarget.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/temp-targets/" + tempTarget.ID,
+						"hx-confirm":           "Delete this temp target?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
+	<div id="site--temp-target--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%v to %v mg/dL for %d minutes", tempTarget.LowTarget, tempTarget.HighTarget, tempTarget.DurationMinutes) }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(tempTarget.OccurredAt) }</p>
+			<form
+				id="site--temp-target--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/temp-targets/" + tempTarget.ID }
+				hx-target={ "#site--temp-target--" + tempTarget.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@tempTargetInputs("site--temp-target--edit", fmt.Sprint(tempTarget.LowTarget), fmt.Sprint(tempTarget.HighTarget), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
+				@button.Button(button.Props{ID: "site--temp-target--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", tempTarget.ID)
+				@readingDetail("Insulin Needs Scale Factor", orDash(tempTarget.InsulinNeedsScaleFactor))
+				@readingDetail("Notes", orDash(tempTarget.Notes))
+				@readingDetail("Reason", orDash(tempTarget.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(tempTarget.UtcOffsetMinutes))
+				@readingDetail("App", orDash(tempTarget.CreatedByAppName))
+				@readingDetail("Device", orDash(tempTarget.CreatedByDeviceName))
+				@readingDetail("Created By", tempTarget.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(tempTarget.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(tempTarget.UpdatedAt))
+				@readingDetail("Updated By", orDash(tempTarget.UpdatedByIdentityName))
+			</dl>
+			if tempTarget.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *tempTarget.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--temp-target--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ TempTargetCreated(tempTarget *sitemodels.SiteTempTarget) {
+	@tempTargetRow(tempTarget)
+}
+
+// TempTargetUpdated replaces the temp target's row, closes its details and shows a toast
+templ TempTargetUpdated(tempTarget *sitemodels.SiteTempTarget) {
+	@tempTargetRow(tempTarget)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Temp Target Updated")
+	</div>
+}
+
+templ TempTargetDeleted() {
+	@glucoseToast("Temp Target Deleted")
+}
