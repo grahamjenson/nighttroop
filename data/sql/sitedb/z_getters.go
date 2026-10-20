@@ -6987,12 +6987,12 @@ func (m *CreateFoodIntakeParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllFoodIntakesParams) GetIncludeDeleted() *bool {
+func (m AllFoodIntakesParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllFoodIntakesParams.
-func (m *AllFoodIntakesParams) SetIncludeDeleted(v *bool) {
+func (m *AllFoodIntakesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 

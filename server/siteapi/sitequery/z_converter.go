@@ -5,6 +5,14 @@ package sitequery
 
 import sitedb "nighttroop.t1d.nz/data/sql/sitedb"
 
+func QueryToAllFoodIntakes(source *Query) sitedb.AllFoodIntakesParams {
+	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
+	if source != nil {
+		sitedbAllFoodIntakesParams.Skip = (*source).Skip
+		sitedbAllFoodIntakesParams.Limit = (*source).Limit
+	}
+	return sitedbAllFoodIntakesParams
+}
 func QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams {
 	var sitedbAllGlucoseReadingsParams sitedb.AllGlucoseReadingsParams
 	if source != nil {

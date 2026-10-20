@@ -399,8 +399,7 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 }
 func FoodIntakeAll(source Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
-	pBool := source.IncludeDeleted
-	sitedbAllFoodIntakesParams.IncludeDeleted = &pBool
+	sitedbAllFoodIntakesParams.IncludeDeleted = source.IncludeDeleted
 	sitedbAllFoodIntakesParams.Skip = source.Skip
 	sitedbAllFoodIntakesParams.Limit = source.Limit
 	return sitedbAllFoodIntakesParams
