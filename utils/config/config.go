@@ -130,6 +130,8 @@ func NewServerConfig() (*ServerConfig, error) {
 	}
 
 	dotenv = MergeMaps(dotenv, flagsnev) // flags override .env
+	// MODE has already been read by findMode, so it is not left over as an unknown variable
+	delete(dotenv, "MODE")
 
 	setupLogging(mode)
 
