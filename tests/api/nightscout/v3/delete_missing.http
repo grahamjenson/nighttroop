@@ -1,0 +1,26 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+// Deleting something that is not there is a 404, however it is deleted
+NAME soft_delete_missing_treatment
+DELETE http://{{ site }}/api/v3/treatments/not-a-treatment
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME permanent_delete_missing_treatment
+DELETE http://{{ site }}/api/v3/treatments/not-a-treatment?permanent=true
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+NAME permanent_delete_missing_entry
+DELETE http://{{ site }}/api/v3/entries/not-an-entry?permanent=true
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
