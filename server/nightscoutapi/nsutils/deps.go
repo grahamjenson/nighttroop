@@ -2,10 +2,12 @@ package nsutils
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type Dependencies struct {
@@ -67,6 +69,28 @@ func ParseQuery(values url.Values) (nsquery.Query, *HTTPError) {
 	q := nsquery.QueryValueToQuery(qp)
 
 	return q, nil
+}
+
+// ReadCollectionAndQuery is the request's collection, which its identity must be able to read, and its query.
+// When either is bad it writes the error and ok is false.
+func ReadCollectionAndQuery(dep Dependencies, w http.ResponseWriter, r *http.Request) (collection Collection, query nsquery.Query, ok bool) {
+	collection, _, err := GetCollectionAndEnsurePermission(dep, r, CollectionActionRead)
+	if err == nil {
+		if query, err = ParseQuery(r.URL.Query()); err == nil {
+			return collection, query, true
+		}
+	}
+	WriteError(w, err)
+	return collection, query, false
+}
+
+// RawParam is the request's raw parameter, false when it is missing or not a bool
+func RawParam(r *http.Request) bool {
+	var raw types.FlexibleBool
+	if json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw) != nil {
+		return false
+	}
+	return raw.Bool()
 }
 
 func ptr[T any](v T) *T {
