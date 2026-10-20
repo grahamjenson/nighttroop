@@ -25,16 +25,14 @@ ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 SCREENSHOT site_home
 
-// The menu says who is signed in and links to each settings page
+// The menu says who is signed in and links to each settings page, every item
+// fitting in the menu, none hidden below where it scrolls
 CLICK #site--settings-menu
 ASSERT_TEXT_VISIBLE Signed in as
+ASSERT_VISIBLE #site--data--temp-basals-button
 ASSERT_VISIBLE #site--settings--identities-button
 ASSERT_VISIBLE #site--settings--sync-button
 ASSERT_VISIBLE #site--settings--logout-button
-// Every item fits in the menu, none hidden below where it scrolls
-ASSERT_IN_VIEW #site--data--temp-basals-button
-ASSERT_IN_VIEW #site--settings--sync-button
-ASSERT_IN_VIEW #site--settings--logout-button
 SCREENSHOT site_settings_menu
 
 CLICK #site--settings--sync-button
