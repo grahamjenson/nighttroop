@@ -28,7 +28,7 @@ type CreateHandlerInterface[T any] interface {
 
 func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store CreateHandlerInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName())
+		siteContext := siteContextFor(w, r, store.GetName(), ActionCreate)
 		if siteContext == nil {
 			return
 		}
@@ -70,7 +70,7 @@ type UpdateHandlerInterface[T any] interface {
 
 func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpdateHandlerInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName())
+		siteContext := siteContextFor(w, r, store.GetName(), ActionUpdate)
 		if siteContext == nil {
 			return
 		}
@@ -120,7 +120,7 @@ type UpsertInterface[T any] interface {
 
 func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpsertInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName())
+		siteContext := siteContextFor(w, r, store.GetName(), ActionCreate, ActionUpdate)
 		if siteContext == nil {
 			return
 		}
@@ -166,7 +166,7 @@ type SearchInterface[T any] interface {
 
 func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store SearchInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName())
+		siteContext := siteContextFor(w, r, store.GetName(), ActionSearch)
 		if siteContext == nil {
 			return
 		}
@@ -196,7 +196,7 @@ type GetInterface[T any] interface {
 
 func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store GetInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName())
+		siteContext := siteContextFor(w, r, store.GetName(), ActionGet)
 		if siteContext == nil {
 			return
 		}
@@ -230,7 +230,7 @@ type DeleteInterface[T any] interface {
 
 func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store DeleteInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName())
+		siteContext := siteContextFor(w, r, store.GetName(), ActionDelete)
 		if siteContext == nil {
 			return
 		}
@@ -277,17 +277,19 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // UTILS
 // ////
 
-// siteContextFor is the request's site context when its identity can use the store; otherwise it writes the error and is nil
-func siteContextFor(w http.ResponseWriter, r *http.Request, storeName string) *httputils.SiteContext {
+// siteContextFor is the request's site context when its identity can do every action on the store; otherwise it writes the error and is nil
+func siteContextFor(w http.ResponseWriter, r *http.Request, storeName string, actions ...Action) *httputils.SiteContext {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
 		slog.Error("site context is nil")
 		apiutils.ErrNotFound.Write(httputils.GetAcceptType(r), w)
 		return nil
 	}
-	if !HasPermission(storeName, siteContext.IdentityModel) {
-		apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
-		return nil
+	for _, action := range actions {
+		if !HasPermission(storeName, action, siteContext.IdentityModel) {
+			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
+			return nil
+		}
 	}
 	return siteContext
 }
