@@ -1,0 +1,266 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
+templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) {
+	<div id="temp_basals_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Temp Basals</h1>
+			<p class="mt-1 text-gray-500">
+				Newest first. Click a temp basal to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@tempBasalCreateForm()
+			@table.Table(table.Props{
+				ID:    "tempBasalsTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							U/hr
+						}
+						@table.Head() {
+							Percent
+						}
+						@table.Head() {
+							Minutes
+						}
+						@table.Head() {
+							Reason
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(tempBasals) == 0 {
+						<tr id="site--temp-basal--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No temp basals here.</td></tr>
+					}
+					for _, tempBasal := range tempBasals {
+						@tempBasalRow(tempBasal)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(tempBasals) > 0 {
+					<span id="site--temp-basal--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(tempBasals))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@tempBasalPageButton("site--temp-basal--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(tempBasals)) == limit {
+						@tempBasalPageButton("site--temp-basal--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ tempBasalPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/temp-basals?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// tempBasalCreateForm adds a temp basal starting now, putting its row at the top of the table
+templ tempBasalCreateForm() {
+	<form
+		id="site--temp-basal--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/temp-basals"
+		hx-target="#tempBasalsTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--temp-basal--empty')?.remove() }"
+	>
+		@tempBasalInputs("site--temp-basal--create", "", "", "")
+		@button.Button(button.Props{ID: "site--temp-basal--create--submit", Type: button.TypeSubmit}) {
+			Add Temp Basal
+		}
+	</form>
+}
+
+templ tempBasalInputs(id string, absolute string, duration string, notes string) {
+	<div class="w-28">
+		@input.Input(input.Props{
+			ID:          id + "--absolute",
+			Type:        input.TypeNumber,
+			Name:        "absolute",
+			Placeholder: "U/hr",
+			Value:       absolute,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "50"},
+		})
+	</div>
+	<div class="w-28">
+		@input.Input(input.Props{
+			ID:          id + "--duration",
+			Type:        input.TypeNumber,
+			Name:        "duration_minutes",
+			Placeholder: "Minutes",
+			Value:       duration,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "1440"},
+		})
+	</div>
+	<div class="w-64">
+		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
+	</div>
+}
+
+// tempBasalRow opens the temp basal's details when clicked. The delete button stops its click reaching the row.
+templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
+	{{ id := "site--temp-basal--" + tempBasal.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/temp-basals/" + tempBasal.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(tempBasal.OccurredAt) }
+		}
+		@table.Cell() {
+			{ orDash(tempBasal.Absolute) }
+		}
+		@table.Cell() {
+			{ orDash(tempBasal.Percent) }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(tempBasal.DurationMinutes) }
+		}
+		@table.Cell() {
+			{ orDash(tempBasal.Reason) }
+		}
+		@table.Cell() {
+			{ orDash(tempBasal.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/temp-basals/" + tempBasal.ID,
+						"hx-confirm":           "Delete this temp basal?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
+	<div id="site--temp-basal--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes) }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(tempBasal.OccurredAt) }</p>
+			<form
+				id="site--temp-basal--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/temp-basals/" + tempBasal.ID }
+				hx-target={ "#site--temp-basal--" + tempBasal.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Absolute), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes))
+				@button.Button(button.Props{ID: "site--temp-basal--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", tempBasal.ID)
+				@readingDetail("Percent", orDash(tempBasal.Percent))
+				@readingDetail("Notes", orDash(tempBasal.Notes))
+				@readingDetail("Reason", orDash(tempBasal.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(tempBasal.UtcOffsetMinutes))
+				@readingDetail("App", orDash(tempBasal.CreatedByAppName))
+				@readingDetail("Device", orDash(tempBasal.CreatedByDeviceName))
+				@readingDetail("Created By", tempBasal.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(tempBasal.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(tempBasal.UpdatedAt))
+				@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
+			</dl>
+			if tempBasal.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *tempBasal.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--temp-basal--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ TempBasalCreated(tempBasal *sitemodels.SiteTempBasal) {
+	@tempBasalRow(tempBasal)
+}
+
+// TempBasalUpdated replaces the temp basal's row, closes its details and shows a toast
+templ TempBasalUpdated(tempBasal *sitemodels.SiteTempBasal) {
+	@tempBasalRow(tempBasal)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Temp Basal Updated")
+	</div>
+}
+
+templ TempBasalDeleted() {
+	@glucoseToast("Temp Basal Deleted")
+}

@@ -312,6 +312,122 @@ func SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams {
 	}
 	return controldbUpdateSyncSourceParams
 }
+func TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal {
+	var pSitemodelsSiteTempBasal *SiteTempBasal
+	if source != nil {
+		var sitemodelsSiteTempBasal SiteTempBasal
+		sitemodelsSiteTempBasal.ID = (*source).ID
+		sitemodelsSiteTempBasal.DurationMinutes = (*source).DurationMinutes
+		pFloat64 := (*source).Absolute
+		sitemodelsSiteTempBasal.Absolute = &pFloat64
+		if (*source).Percent != nil {
+			xfloat64 := *(*source).Percent
+			sitemodelsSiteTempBasal.Percent = &xfloat64
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitemodelsSiteTempBasal.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitemodelsSiteTempBasal.Reason = &xstring2
+		}
+		if (*source).RawJsonData != nil {
+			xstring3 := *(*source).RawJsonData
+			sitemodelsSiteTempBasal.RawJsonData = &xstring3
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteTempBasal.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteTempBasal.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteTempBasal.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteTempBasal.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring4 := *(*source).CreatedByAppName
+			sitemodelsSiteTempBasal.CreatedByAppName = &xstring4
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring5 := *(*source).CreatedByDeviceName
+			sitemodelsSiteTempBasal.CreatedByDeviceName = &xstring5
+		}
+		sitemodelsSiteTempBasal.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring6 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteTempBasal.UpdatedByIdentityName = &xstring6
+		}
+		pSitemodelsSiteTempBasal = &sitemodelsSiteTempBasal
+	}
+	return pSitemodelsSiteTempBasal
+}
+func TempBasalToCreate(source *SiteTempBasal, context *httputils.SiteContext) sitedb.CreateTempBasalParams {
+	var sitedbCreateTempBasalParams sitedb.CreateTempBasalParams
+	if source != nil {
+		sitedbCreateTempBasalParams.ID = NewSiteDataID()
+		sitedbCreateTempBasalParams.DurationMinutes = (*source).DurationMinutes
+		if (*source).Absolute != nil {
+			sitedbCreateTempBasalParams.Absolute = *(*source).Absolute
+		}
+		if (*source).Percent != nil {
+			xfloat64 := *(*source).Percent
+			sitedbCreateTempBasalParams.Percent = &xfloat64
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbCreateTempBasalParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbCreateTempBasalParams.Reason = &xstring2
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitedbCreateTempBasalParams.UtcOffsetMinutes = &xint64
+		}
+		sitedbCreateTempBasalParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring3 := *(*source).RawJsonData
+			sitedbCreateTempBasalParams.RawJsonData = &xstring3
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring4 := *(*source).CreatedByAppName
+			sitedbCreateTempBasalParams.CreatedByAppName = &xstring4
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring5 := *(*source).CreatedByDeviceName
+			sitedbCreateTempBasalParams.CreatedByDeviceName = &xstring5
+		}
+		sitedbCreateTempBasalParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateTempBasalParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateTempBasalParams
+}
+func TempBasalToUpdate(source *SiteTempBasal, context *httputils.SiteContext) sitedb.UpdateTempBasalParams {
+	var sitedbUpdateTempBasalParams sitedb.UpdateTempBasalParams
+	if source != nil {
+		sitedbUpdateTempBasalParams.DurationMinutes = Int64OrNil((*source).DurationMinutes)
+		if (*source).Absolute != nil {
+			xfloat64 := *(*source).Absolute
+			sitedbUpdateTempBasalParams.Absolute = &xfloat64
+		}
+		if (*source).Percent != nil {
+			xfloat642 := *(*source).Percent
+			sitedbUpdateTempBasalParams.Percent = &xfloat642
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbUpdateTempBasalParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbUpdateTempBasalParams.Reason = &xstring2
+		}
+		sitedbUpdateTempBasalParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateTempBasalParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateTempBasalParams.ID = (*source).ID
+	}
+	return sitedbUpdateTempBasalParams
+}
 func TempTargetFromDB(source *sitedb.TempTarget) *SiteTempTarget {
 	var pSitemodelsSiteTempTarget *SiteTempTarget
 	if source != nil {

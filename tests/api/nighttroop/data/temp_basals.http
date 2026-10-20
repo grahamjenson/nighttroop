@@ -1,0 +1,170 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME no_temp_basals
+GET http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// A temp basal from the Nightscout API is listed
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Temp Basal", "created_at": "{{ time 5 }}", "absolute": 0.85, "rate": 0.85, "duration": 60, "reason": "Loop" }
+ASSERT_STATUS 200
+
+NAME list_temp_basals
+GET http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 0.85 "@result.0.absolute"
+ASSERT_EQUALS 60 "@result.0.duration_minutes"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A temp basal typed in starts now, by whoever is signed in
+NAME create_temp_basal
+POST http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"absolute": 1.2, "duration_minutes": 30, "notes": "Sick day", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 30 "@result.duration_minutes"
+ASSERT_EQUALS "Sick day" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_temp_basal.result.id }}
+
+NAME created_temp_basal_has_new_id
+GET http://{{ site }}/data/temp-basals/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_temp_basal
+GET http://{{ site }}/data/temp-basals/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.2 "@result.absolute"
+
+// Newest first, so the one starting now is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/data/temp-basals?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 1.2 "@result.0.absolute"
+
+NAME second_page
+GET http://{{ site }}/data/temp-basals?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 0.85 "@result.0.absolute"
+
+NAME create_temp_basal_without_absolute
+POST http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"duration_minutes": 30}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "absolute must be from 0" "@message"
+
+NAME create_temp_basal_too_high
+POST http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"absolute": 500, "duration_minutes": 30}
+ASSERT_STATUS 400
+
+NAME create_temp_basal_too_long
+POST http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"absolute": 1, "duration_minutes": 2000}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "duration must be more than 0" "@message"
+
+// Only the fields sent change
+NAME update_temp_basal_notes
+POST http://{{ site }}/data/temp-basals/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "Exercise"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 30 "@result.duration_minutes"
+ASSERT_EQUALS "Exercise" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+// A suspended basal is 0 U/hr
+NAME update_temp_basal_to_zero
+POST http://{{ site }}/data/temp-basals/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"absolute": 0, "duration_minutes": 45}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@result.absolute"
+ASSERT_EQUALS 45 "@result.duration_minutes"
+ASSERT_EQUALS "Exercise" "@result.notes"
+
+NAME update_temp_basal_too_high
+POST http://{{ site }}/data/temp-basals/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"absolute": 500}
+ASSERT_STATUS 400
+
+NAME update_unknown_temp_basal
+POST http://{{ site }}/data/temp-basals/not-a-temp-basal
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_temp_basal
+DELETE http://{{ site }}/data/temp-basals/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_temp_basal_not_found
+GET http://{{ site }}/data/temp-basals/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_temp_basal_not_listed
+GET http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME delete_unknown_temp_basal
+DELETE http://{{ site }}/data/temp-basals/not-a-temp-basal
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

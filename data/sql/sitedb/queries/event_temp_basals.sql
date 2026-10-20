@@ -27,13 +27,13 @@ RETURNING *;
 
 -- name: AllTempBasals :many
 SELECT * FROM temp_basals
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetTempBasal :one
-SELECT * FROM temp_basals WHERE id = ?;
+SELECT * FROM temp_basals WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 -- name: SearchTempBasals :many
 SELECT * FROM temp_basals
