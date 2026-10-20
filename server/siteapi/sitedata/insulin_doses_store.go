@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -43,7 +42,7 @@ func (s *InsulinDosesStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 	}
 	created, err := q.CreateInsulinDose(ctx, sitemodels.InsulinDoseToCreate(model, siteContext))
 	if err != nil {
-		return false, insulinDoseWriteError(err)
+		return false, apiutils.WriteError(err, "insulin dose")
 	}
 	*model = *sitemodels.InsulinDoseFromDB(created)
 	return true, nil
@@ -74,7 +73,7 @@ func (s *InsulinDosesStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 		return apiutils.ErrNotFound
 	}
 	if err != nil {
-		return insulinDoseWriteError(err)
+		return apiutils.WriteError(err, "insulin dose")
 	}
 	*model = *sitemodels.InsulinDoseFromDB(updated)
 	return nil
@@ -167,12 +166,4 @@ func checkInsulinDose(model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must be more than 0 and at most %d units", maxInsulinDoseUnits))
 	}
 	return nil
-}
-
-func insulinDoseWriteError(err error) *apiutils.HTTPError {
-	if errors.IsSQLConstraintCheck(err) {
-		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-	}
-	slog.Error("Error writing insulin dose", "error", err)
-	return apiutils.ErrInternalServerError
 }

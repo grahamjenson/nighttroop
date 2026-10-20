@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -46,7 +45,7 @@ func (s *FoodIntakesStore) CreateModel(ctx context.Context, tx *siteapiutils.Sto
 	}
 	created, err := q.CreateFoodIntake(ctx, sitemodels.FoodIntakeToCreate(model, siteContext))
 	if err != nil {
-		return false, foodIntakeWriteError(err)
+		return false, apiutils.WriteError(err, "food intake")
 	}
 	*model = *sitemodels.FoodIntakeFromDB(created)
 	return true, nil
@@ -75,7 +74,7 @@ func (s *FoodIntakesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 		return apiutils.ErrNotFound
 	}
 	if err != nil {
-		return foodIntakeWriteError(err)
+		return apiutils.WriteError(err, "food intake")
 	}
 	*model = *sitemodels.FoodIntakeFromDB(updated)
 	return nil
@@ -171,12 +170,4 @@ func checkFoodIntake(model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
 		}
 	}
 	return nil
-}
-
-func foodIntakeWriteError(err error) *apiutils.HTTPError {
-	if errors.IsSQLConstraintCheck(err) {
-		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-	}
-	slog.Error("Error writing food intake", "error", err)
-	return apiutils.ErrInternalServerError
 }
