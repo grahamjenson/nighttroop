@@ -13,6 +13,14 @@ func QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams {
 	}
 	return sitedbAllGlucoseReadingsParams
 }
+func QueryToAllInsulinDoses(source *Query) sitedb.AllInsulinDosesParams {
+	var sitedbAllInsulinDosesParams sitedb.AllInsulinDosesParams
+	if source != nil {
+		sitedbAllInsulinDosesParams.Skip = (*source).Skip
+		sitedbAllInsulinDosesParams.Limit = (*source).Limit
+	}
+	return sitedbAllInsulinDosesParams
+}
 func QueryToAllTempBasals(source *Query) sitedb.AllTempBasalsParams {
 	var sitedbAllTempBasalsParams sitedb.AllTempBasalsParams
 	if source != nil {

@@ -1,0 +1,157 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME no_insulin_doses
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// A bolus from the Nightscout API is listed
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "created_at": "{{ time 5 }}", "insulin": 2.5 }
+ASSERT_STATUS 200
+
+NAME list_insulin_doses
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 2.5 "@result.0.dose"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A dose typed in is given now, by whoever is signed in
+NAME create_insulin_dose
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 4, "notes": "Lunch", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 4 "@result.dose"
+ASSERT_EQUALS "Lunch" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_insulin_dose.result.id }}
+
+NAME created_insulin_dose_has_new_id
+GET http://{{ site }}/data/insulin/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_insulin_dose
+GET http://{{ site }}/data/insulin/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 4 "@result.dose"
+
+// Newest first, so the one given now is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/data/insulin?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 4 "@result.0.dose"
+
+NAME second_page
+GET http://{{ site }}/data/insulin?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 2.5 "@result.0.dose"
+
+NAME create_insulin_dose_without_dose
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "no dose"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "dose must be more than 0" "@message"
+
+NAME create_insulin_dose_too_high
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 500}
+ASSERT_STATUS 400
+
+// Only the fields sent change
+NAME update_insulin_dose_notes
+POST http://{{ site }}/data/insulin/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "Dinner"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 4 "@result.dose"
+ASSERT_EQUALS "Dinner" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_insulin_dose_dose
+POST http://{{ site }}/data/insulin/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 5.5}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.5 "@result.dose"
+ASSERT_EQUALS "Dinner" "@result.notes"
+
+NAME update_insulin_dose_too_high
+POST http://{{ site }}/data/insulin/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 500}
+ASSERT_STATUS 400
+
+NAME update_unknown_insulin_dose
+POST http://{{ site }}/data/insulin/not-a-dose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_insulin_dose
+DELETE http://{{ site }}/data/insulin/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_insulin_dose_not_found
+GET http://{{ site }}/data/insulin/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_insulin_dose_not_listed
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME delete_unknown_insulin_dose
+DELETE http://{{ site }}/data/insulin/not-a-dose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

@@ -216,6 +216,137 @@ func IdentityToUpdate(source *UserIdentity, context *httputils.SiteContext) cont
 	}
 	return controldbUpdateSiteIdentityEnabledParams
 }
+func InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose {
+	var pSitemodelsSiteInsulinDose *SiteInsulinDose
+	if source != nil {
+		var sitemodelsSiteInsulinDose SiteInsulinDose
+		sitemodelsSiteInsulinDose.ID = (*source).ID
+		sitemodelsSiteInsulinDose.Dose = (*source).Dose
+		if (*source).DoseType != nil {
+			xstring := *(*source).DoseType
+			sitemodelsSiteInsulinDose.DoseType = &xstring
+		}
+		if (*source).SplitNow != nil {
+			xfloat64 := *(*source).SplitNow
+			sitemodelsSiteInsulinDose.SplitNow = &xfloat64
+		}
+		if (*source).SplitExt != nil {
+			xfloat642 := *(*source).SplitExt
+			sitemodelsSiteInsulinDose.SplitExt = &xfloat642
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitemodelsSiteInsulinDose.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitemodelsSiteInsulinDose.Reason = &xstring3
+		}
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitemodelsSiteInsulinDose.RawJsonData = &xstring4
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteInsulinDose.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteInsulinDose.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteInsulinDose.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteInsulinDose.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitemodelsSiteInsulinDose.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitemodelsSiteInsulinDose.CreatedByDeviceName = &xstring6
+		}
+		sitemodelsSiteInsulinDose.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring7 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteInsulinDose.UpdatedByIdentityName = &xstring7
+		}
+		pSitemodelsSiteInsulinDose = &sitemodelsSiteInsulinDose
+	}
+	return pSitemodelsSiteInsulinDose
+}
+func InsulinDoseToCreate(source *SiteInsulinDose, context *httputils.SiteContext) sitedb.CreateInsulinDoseParams {
+	var sitedbCreateInsulinDoseParams sitedb.CreateInsulinDoseParams
+	if source != nil {
+		sitedbCreateInsulinDoseParams.ID = NewSiteDataID()
+		sitedbCreateInsulinDoseParams.Dose = (*source).Dose
+		if (*source).DoseType != nil {
+			xstring := *(*source).DoseType
+			sitedbCreateInsulinDoseParams.DoseType = &xstring
+		}
+		if (*source).SplitNow != nil {
+			xfloat64 := *(*source).SplitNow
+			sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
+		}
+		if (*source).SplitExt != nil {
+			xfloat642 := *(*source).SplitExt
+			sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitedbCreateInsulinDoseParams.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitedbCreateInsulinDoseParams.Reason = &xstring3
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitedbCreateInsulinDoseParams.UtcOffsetMinutes = &xint64
+		}
+		sitedbCreateInsulinDoseParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitedbCreateInsulinDoseParams.RawJsonData = &xstring4
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitedbCreateInsulinDoseParams.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitedbCreateInsulinDoseParams.CreatedByDeviceName = &xstring6
+		}
+		sitedbCreateInsulinDoseParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateInsulinDoseParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateInsulinDoseParams
+}
+func InsulinDoseToUpdate(source *SiteInsulinDose, context *httputils.SiteContext) sitedb.UpdateInsulinDoseParams {
+	var sitedbUpdateInsulinDoseParams sitedb.UpdateInsulinDoseParams
+	if source != nil {
+		if (*source).DoseType != nil {
+			xstring := *(*source).DoseType
+			sitedbUpdateInsulinDoseParams.DoseType = &xstring
+		}
+		sitedbUpdateInsulinDoseParams.Dose = Float64OrNil((*source).Dose)
+		if (*source).SplitNow != nil {
+			xfloat64 := *(*source).SplitNow
+			sitedbUpdateInsulinDoseParams.SplitNow = &xfloat64
+		}
+		if (*source).SplitExt != nil {
+			xfloat642 := *(*source).SplitExt
+			sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitedbUpdateInsulinDoseParams.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitedbUpdateInsulinDoseParams.Reason = &xstring3
+		}
+		sitedbUpdateInsulinDoseParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateInsulinDoseParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateInsulinDoseParams.ID = (*source).ID
+	}
+	return sitedbUpdateInsulinDoseParams
+}
 func SettingsFromMap(source *settings.SettingMap) *Settings {
 	var pSitemodelsSettings *Settings
 	if source != nil {
