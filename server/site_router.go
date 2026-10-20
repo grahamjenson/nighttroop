@@ -25,6 +25,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	tempTargetsStore := &sitedata.TempTargetsStore{}
 	tempBasalsStore := &sitedata.TempBasalsStore{}
 	insulinDosesStore := &sitedata.InsulinDosesStore{}
+	foodIntakesStore := &sitedata.FoodIntakesStore{}
 	siteSettingsStore := &sitesettings.SettingsStore{Site: true}
 	identitySettingsStore := &sitesettings.SettingsStore{}
 
@@ -80,6 +81,13 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/data/insulin", siteapiutils.CreateHandler(controlDB, config, insulinDosesStore))
 		r.Post("/data/insulin/{id}", siteapiutils.UpdateHandler(controlDB, config, insulinDosesStore))
 		r.Delete("/data/insulin/{id}", siteapiutils.DeleteHandler(controlDB, config, insulinDosesStore))
+
+		// Data Food Intakes
+		r.Get("/data/food", siteapiutils.SearchHandler(controlDB, config, foodIntakesStore))
+		r.Get("/data/food/{id}", siteapiutils.GetHandler(controlDB, config, foodIntakesStore))
+		r.Post("/data/food", siteapiutils.CreateHandler(controlDB, config, foodIntakesStore))
+		r.Post("/data/food/{id}", siteapiutils.UpdateHandler(controlDB, config, foodIntakesStore))
+		r.Delete("/data/food/{id}", siteapiutils.DeleteHandler(controlDB, config, foodIntakesStore))
 
 		// Settings Sync
 		r.Get("/settings/sync", siteapiutils.SearchHandler(controlDB, config, syncSettingsStore))

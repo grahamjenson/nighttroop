@@ -1,0 +1,262 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// FoodIntakesTable shows one page of food intakes, newest first, with buttons to the pages either side
+templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limit int64) {
+	<div id="food_intakes_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Food Intakes</h1>
+			<p class="mt-1 text-gray-500">
+				Newest first. Click a food intake to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@foodIntakeCreateForm()
+			@table.Table(table.Props{
+				ID:    "foodIntakesTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							Carbs g
+						}
+						@table.Head() {
+							Name
+						}
+						@table.Head() {
+							Notes
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(foodIntakes) == 0 {
+						<tr id="site--food--empty"><td colspan="5" class="p-4 text-sm text-gray-500">No food intakes here.</td></tr>
+					}
+					for _, foodIntake := range foodIntakes {
+						@foodIntakeRow(foodIntake)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(foodIntakes) > 0 {
+					<span id="site--food--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(foodIntakes))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@foodIntakePageButton("site--food--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(foodIntakes)) == limit {
+						@foodIntakePageButton("site--food--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ foodIntakePageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/food?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// foodIntakeCreateForm adds a food intake eaten now, putting its row at the top of the table
+templ foodIntakeCreateForm() {
+	<form
+		id="site--food--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/food"
+		hx-target="#foodIntakesTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--food--empty')?.remove() }"
+	>
+		@foodIntakeInputs("site--food--create", "", "", "")
+		@button.Button(button.Props{ID: "site--food--create--submit", Type: button.TypeSubmit}) {
+			Add Food Intake
+		}
+	</form>
+}
+
+templ foodIntakeInputs(id string, carbs string, name string, notes string) {
+	<div class="w-28">
+		@input.Input(input.Props{
+			ID:          id + "--carbs",
+			Type:        input.TypeNumber,
+			Name:        "carbs",
+			Placeholder: "Carbs g",
+			Value:       carbs,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
+		})
+	</div>
+	<div class="w-40">
+		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name})
+	</div>
+	<div class="w-64">
+		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
+	</div>
+}
+
+// foodIntakeRow opens the food intake's details when clicked. The delete button stops its click reaching the row.
+templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
+	{{ id := "site--food--" + foodIntake.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/food/" + foodIntake.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(foodIntake.OccurredAt) }
+		}
+		@table.Cell() {
+			{ orDash(foodIntake.Carbs) }
+		}
+		@table.Cell() {
+			{ orDash(foodIntake.Name) }
+		}
+		@table.Cell() {
+			{ orDash(foodIntake.Notes) }
+		}
+		@table.Cell() {
+			{ orDash(foodIntake.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/food/" + foodIntake.ID,
+						"hx-confirm":           "Delete this food intake?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
+	<div id="site--food--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)) }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(foodIntake.OccurredAt) }</p>
+			<form
+				id="site--food--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/food/" + foodIntake.ID }
+				hx-target={ "#site--food--" + foodIntake.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@foodIntakeInputs("site--food--edit", orDash(foodIntake.Carbs), orEmpty(foodIntake.Name), orEmpty(foodIntake.Notes))
+				@button.Button(button.Props{ID: "site--food--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", foodIntake.ID)
+				@readingDetail("Name", orDash(foodIntake.Name))
+				@readingDetail("Food Type", orDash(foodIntake.FoodType))
+				@readingDetail("Category", orDash(foodIntake.Category))
+				@readingDetail("Subcategory", orDash(foodIntake.Subcategory))
+				@readingDetail("Fat g", orDash(foodIntake.Fat))
+				@readingDetail("Protein g", orDash(foodIntake.Protein))
+				@readingDetail("Fibre g", orDash(foodIntake.Fibre))
+				@readingDetail("Energy", orDash(foodIntake.Energy))
+				@readingDetail("Portions", orDash(foodIntake.Portions))
+				@readingDetail("Absorption Time (minutes)", orDash(foodIntake.AbsorptionTimeMinutes))
+				@readingDetail("Pre Bolus (minutes)", orDash(foodIntake.PreBolus))
+				@readingDetail("Notes", orDash(foodIntake.Notes))
+				@readingDetail("Reason", orDash(foodIntake.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(foodIntake.UtcOffsetMinutes))
+				@readingDetail("App", orDash(foodIntake.CreatedByAppName))
+				@readingDetail("Device", orDash(foodIntake.CreatedByDeviceName))
+				@readingDetail("Created By", foodIntake.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(foodIntake.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(foodIntake.UpdatedAt))
+				@readingDetail("Updated By", orDash(foodIntake.UpdatedByIdentityName))
+			</dl>
+			if foodIntake.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *foodIntake.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--food--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ FoodIntakeCreated(foodIntake *sitemodels.SiteFoodIntake) {
+	@foodIntakeRow(foodIntake)
+}
+
+// FoodIntakeUpdated replaces the food intake's row, closes its details and shows a toast
+templ FoodIntakeUpdated(foodIntake *sitemodels.SiteFoodIntake) {
+	@foodIntakeRow(foodIntake)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Food Intake Updated")
+	</div>
+}
+
+templ FoodIntakeDeleted() {
+	@glucoseToast("Food Intake Deleted")
+}

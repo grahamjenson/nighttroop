@@ -1,0 +1,102 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no food intakes
+CLICK #site--settings-menu
+CLICK #site--data--food-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/food
+ASSERT_VISIBLE #foodIntakesTable
+ASSERT_TEXT_VISIBLE No food intakes here.
+ASSERT_NOT_VISIBLE #site--food--next
+SCREENSHOT food_intakes_empty
+
+// Food typed in is eaten now, added to the top of the table
+INPUT #site--food--create--carbs 15
+INPUT #site--food--create--name Juice
+INPUT #site--food--create--notes Correction
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Correction
+ASSERT_NOT_VISIBLE #site--food--empty
+
+INPUT #site--food--create--carbs 45
+INPUT #site--food--create--name Sandwich
+INPUT #site--food--create--notes Lunch
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Lunch
+SCREENSHOT food_intake_created
+
+// Clicking a food intake shows all its details, and they can be edited, which updates its row
+CLICK #foodIntakesTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--food--details
+ASSERT_TEXT_VISIBLE 45 g carbs
+ASSERT_TEXT_VISIBLE admin
+SCREENSHOT food_intake_edit
+INPUT #site--food--edit--carbs 50
+INPUT #site--food--edit--notes Big lunch
+CLICK #site--food--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Food Intake Updated
+ASSERT_NOT_VISIBLE #site--food--details
+ASSERT_TEXT_VISIBLE Big lunch
+SCREENSHOT food_intake_updated
+
+// The edit is saved
+CLICK #foodIntakesTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 50 g carbs
+CLICK #site--food--details--close
+ASSERT_NOT_VISIBLE #site--food--details
+
+// A page of one food intake pages through them, newest first
+GOTO /data/food?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Big lunch
+ASSERT_NOT_VISIBLE #site--food--previous
+
+CLICK #site--food--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Correction
+SCREENSHOT food_intakes_paged
+
+CLICK #site--food--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--settings-menu
+CLICK #site--data--food-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #foodIntakesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Food Intake Deleted
+ASSERT_NOT_VISIBLE #site--food--details
+SCREENSHOT food_intake_deleted
+
+// The deleted food intake stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--food-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
