@@ -146,6 +146,8 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 
 		query.UpdatedGTE = ptr(since)
+		// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
+		query.HasFilters = true
 
 		records, err := dep.Store.Search(r.Context(), collection, query)
 		if err != nil {
