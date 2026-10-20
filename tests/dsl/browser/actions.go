@@ -102,6 +102,8 @@ func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (
 
 type Click struct {
 	Locator string
+	// History is "back" or "forward" for CLICK_BACK and CLICK_FORWARD, the browser's buttons, instead of clicking Locator
+	History string
 
 	Asserts []Assert
 
@@ -110,6 +112,9 @@ type Click struct {
 }
 
 func (r *Click) ToFlatString() string {
+	if r.History != "" {
+		return "CLICK_" + strings.ToUpper(r.History)
+	}
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
 
@@ -162,9 +167,11 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	}
 	prettyOutput := PrettifyHTML(html)
 
-	locator := getLocator(r.Locator, page)
-	if locator == nil {
-		t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
+	var locator playwright.Locator
+	if r.History == "" {
+		if locator = getLocator(r.Locator, page); locator == nil {
+			t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
+		}
 	}
 
 	var responses []playwright.Response
@@ -184,7 +191,14 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	})
 
 	oldURL := page.URL()
-	err = locator.Click()
+	switch r.History {
+	case "back":
+		_, err = page.GoBack()
+	case "forward":
+		_, err = page.GoForward()
+	default:
+		err = locator.Click()
+	}
 	if err != nil {
 		t.Fatalf(
 			"\n\n CLICK FAILED \n %s: %v \n\n %s \n\n",

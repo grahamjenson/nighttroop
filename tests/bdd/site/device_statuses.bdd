@@ -63,6 +63,17 @@ ASSERT_TEXT_VISIBLE Showing 1 to 6
 ASSERT_NOT_VISIBLE #site--device-status--next
 SCREENSHOT device_status_history
 
+// The browser's back button returns to every device, inside the site's page, and forward to the history again
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_PATH /data/device-status
+ASSERT_VISIBLE #site--nav--logo
+ASSERT_VISIBLE #site--device-status--show-all-0
+CLICK_FORWARD
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--nav--logo
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+
 // Deleting asks first (the test accepts), then removes the row without opening its details
 CLICK #deviceStatusTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Device Status Deleted

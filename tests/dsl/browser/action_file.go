@@ -82,6 +82,15 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				Locator:  second,
 				Asserts:  []Assert{},
 			}
+		case "CLICK_BACK", "CLICK_FORWARD":
+			flush()
+
+			current = &Click{
+				TestPath: path,
+				TestLine: lineNumber,
+				History:  strings.ToLower(strings.TrimPrefix(first, "CLICK_")),
+				Asserts:  []Assert{},
+			}
 		case "INPUT":
 			flush()
 
