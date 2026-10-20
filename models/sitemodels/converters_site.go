@@ -120,6 +120,26 @@ type SiteConverter interface {
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
+	// INSULIN DOSES
+	///////
+
+	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
+
+	// goverter:context siteContext
+	// goverter:map Dose | Float64OrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
+
+	///////
 	// SETTINGS
 	///////
 

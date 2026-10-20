@@ -9347,12 +9347,12 @@ func (m *CreateInsulinDoseParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllInsulinDosesParams) GetIncludeDeleted() *bool {
+func (m AllInsulinDosesParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllInsulinDosesParams.
-func (m *AllInsulinDosesParams) SetIncludeDeleted(v *bool) {
+func (m *AllInsulinDosesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 

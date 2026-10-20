@@ -1,0 +1,100 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no insulin doses
+CLICK #site--settings-menu
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/insulin
+ASSERT_VISIBLE #insulinDosesTable
+ASSERT_TEXT_VISIBLE No insulin doses here.
+ASSERT_NOT_VISIBLE #site--insulin--next
+SCREENSHOT insulin_doses_empty
+
+// A dose typed in is given now, added to the top of the table
+INPUT #site--insulin--create--dose 2.5
+INPUT #site--insulin--create--notes Correction
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Correction
+ASSERT_NOT_VISIBLE #site--insulin--empty
+
+INPUT #site--insulin--create--dose 4
+INPUT #site--insulin--create--notes Lunch
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Lunch
+SCREENSHOT insulin_dose_created
+
+// Clicking a dose shows all its details, and they can be edited, which updates its row
+CLICK #insulinDosesTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--insulin--details
+ASSERT_TEXT_VISIBLE 4 units
+ASSERT_TEXT_VISIBLE admin
+SCREENSHOT insulin_dose_edit
+INPUT #site--insulin--edit--dose 4.5
+INPUT #site--insulin--edit--notes Big lunch
+CLICK #site--insulin--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Insulin Dose Updated
+ASSERT_NOT_VISIBLE #site--insulin--details
+ASSERT_TEXT_VISIBLE Big lunch
+SCREENSHOT insulin_dose_updated
+
+// The edit is saved
+CLICK #insulinDosesTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE 4.5 units
+CLICK #site--insulin--details--close
+ASSERT_NOT_VISIBLE #site--insulin--details
+
+// A page of one dose pages through them, newest first
+GOTO /data/insulin?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Big lunch
+ASSERT_NOT_VISIBLE #site--insulin--previous
+
+CLICK #site--insulin--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Correction
+SCREENSHOT insulin_doses_paged
+
+CLICK #site--insulin--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--settings-menu
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #insulinDosesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Insulin Dose Deleted
+ASSERT_NOT_VISIBLE #site--insulin--details
+SCREENSHOT insulin_dose_deleted
+
+// The deleted dose stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1

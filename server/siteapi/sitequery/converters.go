@@ -23,6 +23,10 @@ type QueryConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted
 	QueryToAllTempBasals(source *Query) sitedb.AllTempBasalsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllInsulinDoses(source *Query) sitedb.AllInsulinDosesParams
 }
 
 // GetLimitInt64 defaults a missing or bad limit to MaxQueryLimit, and caps it there
