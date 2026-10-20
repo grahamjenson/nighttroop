@@ -22,7 +22,7 @@ ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no device statuses
 CLICK #site--settings-menu
-ASSERT_IN_VIEW #site--data--device-status-button
+ASSERT_VISIBLE #site--data--device-status-button
 CLICK #site--data--device-status-button
 ASSERT_STATUS 200
 ASSERT_PATH /data/device-status
