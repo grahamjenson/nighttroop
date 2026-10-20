@@ -9,7 +9,7 @@ import (
 )
 
 type ProfileStore struct {
-	Identifier     *IdentifierString             `json:"identifier,omitempty"`
+	Identifier     *types.IdentifierString       `json:"identifier,omitempty"`
 	DefaultProfile *types.ShortString            `json:"defaultProfile,omitempty"`
 	Store          map[types.ShortString]Profile `json:"store,omitempty"`
 	Units          *consts.Units                 `json:"units,omitempty"`
@@ -34,7 +34,7 @@ type ProfileStore struct {
 func (t *ProfileStore) UnmarshalJSON(data []byte) error {
 	type Alias ProfileStore
 	aux := struct {
-		ID *IdentifierString `json:"_id"`
+		ID *types.IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

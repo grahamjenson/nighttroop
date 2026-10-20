@@ -21,3 +21,11 @@ func ValidateDate(date types.DateInt) error {
 	}
 	return nil
 }
+
+////
+// Utils
+////
+
+func ptr[T any](v T) *T {
+	return &v
+}

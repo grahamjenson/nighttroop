@@ -439,7 +439,7 @@ func ToProfileJSON(source interface {
 	GetBasalRatesJson() *string
 	GetTargetsLowJson() *string
 	GetTargetsHighJson() *string
-}, siteContext *httputils.SiteContext) *LongJSONString {
+}, siteContext *httputils.SiteContext) *types.LongJSONString {
 	profile := Profile{}
 
 	if source.GetDia() != nil {
@@ -471,7 +471,7 @@ func ToProfileJSON(source interface {
 	if err != nil {
 		return nil
 	}
-	profileJSON := LongJSONString(string(profileBytes))
+	profileJSON := types.LongJSONString(string(profileBytes))
 	return &profileJSON
 }
 

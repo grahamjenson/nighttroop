@@ -13,8 +13,8 @@ import (
 func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) Activity {
 	var nightscoutmodelsActivity Activity
 	if source != nil {
-		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
-		nightscoutmodelsActivity.Identifier = &pNightscoutmodelsIdentifierString
+		pTypesIdentifierString := types.IdentifierString((*source).ID)
+		nightscoutmodelsActivity.Identifier = &pTypesIdentifierString
 		if (*source).Name != nil {
 			typesShortString := types.ShortString(*(*source).Name)
 			nightscoutmodelsActivity.Name = &typesShortString
@@ -71,8 +71,8 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteContext) DeviceStatus {
 	var nightscoutmodelsDeviceStatus DeviceStatus
 	if source != nil {
-		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
-		nightscoutmodelsDeviceStatus.Identifier = &pNightscoutmodelsIdentifierString
+		pTypesIdentifierString := types.IdentifierString((*source).ID)
+		nightscoutmodelsDeviceStatus.Identifier = &pTypesIdentifierString
 		if (*source).CreatedByDeviceName != nil {
 			typesShortString := types.ShortString(*(*source).CreatedByDeviceName)
 			nightscoutmodelsDeviceStatus.Device = &typesShortString
@@ -99,8 +99,8 @@ func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteC
 func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContext) Entry {
 	var nightscoutmodelsEntry Entry
 	if source != nil {
-		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
-		nightscoutmodelsEntry.Identifier = &pNightscoutmodelsIdentifierString
+		pTypesIdentifierString := types.IdentifierString((*source).ID)
+		nightscoutmodelsEntry.Identifier = &pTypesIdentifierString
 		pNightscoutmodelsEntryType := EntryType((*source).ReadingType)
 		nightscoutmodelsEntry.Type = &pNightscoutmodelsEntryType
 		nightscoutmodelsEntry.SGV = SGVGlucoseReadingTypeToValue((*source).Mgdl, context)
@@ -160,8 +160,8 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Food {
 	var nightscoutmodelsFood Food
 	if source != nil {
-		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
-		nightscoutmodelsFood.Identifier = &pNightscoutmodelsIdentifierString
+		pTypesIdentifierString := types.IdentifierString((*source).ID)
+		nightscoutmodelsFood.Identifier = &pTypesIdentifierString
 		pTypesShortString := types.ShortString((*source).Name)
 		nightscoutmodelsFood.Name = &pTypesShortString
 		if (*source).FoodType != nil {
@@ -260,8 +260,8 @@ func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteConte
 func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.SiteContext) ProfileStore {
 	var nightscoutmodelsProfileStore ProfileStore
 	if source != nil {
-		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
-		nightscoutmodelsProfileStore.Identifier = &pNightscoutmodelsIdentifierString
+		pTypesIdentifierString := types.IdentifierString((*source).ID)
+		nightscoutmodelsProfileStore.Identifier = &pTypesIdentifierString
 		pTypesShortString := types.ShortString((*source).Name)
 		nightscoutmodelsProfileStore.DefaultProfile = &pTypesShortString
 		if (*source).Units != nil {

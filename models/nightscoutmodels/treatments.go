@@ -14,7 +14,7 @@ import (
 ////
 
 type Treatment struct {
-	Identifier *IdentifierString `json:"identifier,omitempty"`
+	Identifier *types.IdentifierString `json:"identifier,omitempty"`
 
 	EventType *TreatmentEventType `json:"eventType,omitempty"`
 
@@ -57,7 +57,7 @@ type Treatment struct {
 	// Treatment-specific fields
 	Profile             *types.ShortString     `json:"profile,omitempty"`
 	OriginalProfileName *types.ShortString     `json:"originalProfileName,omitempty"`
-	ProfileJSON         *LongJSONString        `json:"profileJson,omitempty"`
+	ProfileJSON         *types.LongJSONString  `json:"profileJson,omitempty"`
 	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
 
@@ -100,9 +100,9 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
 	// We here extract some fields used by other models as a unique identfier
 	aux := struct {
-		LegacyID       *IdentifierString `json:"_id"`
-		SyncIdentifier *IdentifierString `json:"syncIdentifier"`
-		UUID           *IdentifierString `json:"uuid"`
+		LegacyID       *types.IdentifierString `json:"_id"`
+		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
+		UUID           *types.IdentifierString `json:"uuid"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
