@@ -3,6 +3,7 @@ package sitemodels
 import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -29,6 +30,26 @@ type SiteConverter interface {
 	// goverter:map Password PasswordEnc
 	// goverter:map UrlOrUsername UrlOrUsernameEnc
 	SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams
+
+	///////
+	// SITE IDENTITY
+	///////
+
+	// goverter:context siteContext
+	// goverter:map ID CurrentIdentity | IsCurrentIdentity
+	// goverter:map TotpSecretEnc HasTotpSecret | HasTotpSecret
+	// goverter:ignore Type Password TotpSecret NSToken SiteURL
+	IdentityFromDB(source *controldb.SiteIdentity, siteContext *httputils.SiteContext) *UserIdentity
+
+	// goverter:context siteContext
+	// goverter:map SiteID | ContextSiteID
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	IdentityToUpdate(source *UserIdentity, siteContext *httputils.SiteContext) controldb.UpdateSiteIdentityEnabledParams
+
+	// goverter:context siteContext
+	// goverter:map SiteID | ContextSiteID
+	IdentityToDelete(source *UserIdentity, siteContext *httputils.SiteContext) controldb.DeleteSiteIdentityParams
 }
 
 func SetPasswordGarbage() *string {
@@ -48,6 +69,30 @@ func Decrypt(encString *string, security *security.SecurityConfig) (*string, err
 		return encString, nil
 	}
 	return nil, nil
+}
+
+// goverter:context siteContext
+func IsCurrentIdentity(id int64, siteContext *httputils.SiteContext) bool {
+	return id == siteContext.IdentityModel.ID
+}
+
+// goverter:context siteContext
+func ContextSiteID(siteContext *httputils.SiteContext) string {
+	return siteContext.Subdomain
+}
+
+// goverter:context siteContext
+func ContextIdentityID(siteContext *httputils.SiteContext) *int64 {
+	return &siteContext.IdentityModel.ID
+}
+
+// goverter:context siteContext
+func ContextIdentityName(siteContext *httputils.SiteContext) *string {
+	return &siteContext.IdentityModel.Name
+}
+
+func HasTotpSecret(totpSecretEnc string) bool {
+	return totpSecretEnc != ""
 }
 
 func ptr[T any](v T) *T {

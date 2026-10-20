@@ -7,9 +7,52 @@ import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	consts "nighttroop.t1d.nz/utils/consts"
 	errors "nighttroop.t1d.nz/utils/errors"
+	httputils "nighttroop.t1d.nz/utils/httputils"
 	security "nighttroop.t1d.nz/utils/security"
 )
 
+func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteContext) *UserIdentity {
+	var pSitemodelsUserIdentity *UserIdentity
+	if source != nil {
+		var sitemodelsUserIdentity UserIdentity
+		sitemodelsUserIdentity.ID = (*source).ID
+		sitemodelsUserIdentity.Name = (*source).Name
+		sitemodelsUserIdentity.CreatedAt = (*source).CreatedAt
+		if (*source).LastSeenAt != nil {
+			xint64 := *(*source).LastSeenAt
+			sitemodelsUserIdentity.LastSeenAt = &xint64
+		}
+		if (*source).LastWriteAt != nil {
+			xint642 := *(*source).LastWriteAt
+			sitemodelsUserIdentity.LastWriteAt = &xint642
+		}
+		sitemodelsUserIdentity.Role = string((*source).Role)
+		sitemodelsUserIdentity.CurrentIdentity = IsCurrentIdentity((*source).ID, context)
+		sitemodelsUserIdentity.HasTotpSecret = HasTotpSecret((*source).TotpSecretEnc)
+		sitemodelsUserIdentity.Enabled = (*source).Enabled
+		pSitemodelsUserIdentity = &sitemodelsUserIdentity
+	}
+	return pSitemodelsUserIdentity
+}
+func IdentityToDelete(source *UserIdentity, context *httputils.SiteContext) controldb.DeleteSiteIdentityParams {
+	var controldbDeleteSiteIdentityParams controldb.DeleteSiteIdentityParams
+	if source != nil {
+		controldbDeleteSiteIdentityParams.SiteID = ContextSiteID(context)
+		controldbDeleteSiteIdentityParams.ID = (*source).ID
+	}
+	return controldbDeleteSiteIdentityParams
+}
+func IdentityToUpdate(source *UserIdentity, context *httputils.SiteContext) controldb.UpdateSiteIdentityEnabledParams {
+	var controldbUpdateSiteIdentityEnabledParams controldb.UpdateSiteIdentityEnabledParams
+	if source != nil {
+		controldbUpdateSiteIdentityEnabledParams.Enabled = (*source).Enabled
+		controldbUpdateSiteIdentityEnabledParams.UpdatedByIdentityID = ContextIdentityID(context)
+		controldbUpdateSiteIdentityEnabledParams.UpdatedByIdentityName = ContextIdentityName(context)
+		controldbUpdateSiteIdentityEnabledParams.SiteID = ContextSiteID(context)
+		controldbUpdateSiteIdentityEnabledParams.ID = (*source).ID
+	}
+	return controldbUpdateSiteIdentityEnabledParams
+}
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {

@@ -101,23 +101,16 @@ func (s *IdentitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 		}
 	}
 
-	identityID, _ := strconv.ParseInt(oldModel.ID, 10, 64)
-	err = q.UpdateSiteIdentityEnabled(ctx, controldb.UpdateSiteIdentityEnabledParams{
-		Enabled:               model.Enabled,
-		UpdatedByIdentityID:   &siteContext.IdentityModel.ID,
-		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		SiteID:                siteContext.Subdomain,
-		ID:                    identityID,
-	})
-	if err != nil {
-		slog.Error("Error updating identity", "error", err)
-		return siteapiutils.ErrInternalServerError
-	}
-
 	// Respond with the whole identity, not just the fields that were sent
 	enabled := model.Enabled
 	*model = *oldModel
 	model.Enabled = enabled
+
+	err = q.UpdateSiteIdentityEnabled(ctx, sitemodels.IdentityToUpdate(model, siteContext))
+	if err != nil {
+		slog.Error("Error updating identity", "error", err)
+		return siteapiutils.ErrInternalServerError
+	}
 	return nil
 }
 
@@ -146,7 +139,7 @@ func (s *IdentitiesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx
 		slog.Error("Error fetching identity", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	return sitemodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name), nil
+	return sitemodels.IdentityFromDB(identity, siteContext), nil
 }
 
 func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -169,7 +162,7 @@ func (s *IdentitiesStore) SearchModels(ctx context.Context, tx *siteapiutils.Sto
 	}
 	models := []*sitemodels.UserIdentity{}
 	for _, identity := range identities {
-		models = append(models, sitemodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name))
+		models = append(models, sitemodels.IdentityFromDB(identity, siteContext))
 	}
 	return models, nil
 }
@@ -204,11 +197,7 @@ func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 		return herr
 	}
 
-	identityID, _ := strconv.ParseInt(model.ID, 10, 64)
-	err = q.DeleteSiteIdentity(ctx, controldb.DeleteSiteIdentityParams{
-		SiteID: siteContext.Subdomain,
-		ID:     identityID,
-	})
+	err = q.DeleteSiteIdentity(ctx, sitemodels.IdentityToDelete(model, siteContext))
 	if err != nil {
 		slog.Error("Error deleting identity", "error", err)
 		return siteapiutils.ErrInternalServerError
@@ -233,7 +222,7 @@ func getIdentityByName(ctx context.Context, q *controldb.Queries, siteContext *h
 		slog.Error("Error fetching identity", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	return sitemodels.IdentityModelToUserIdentity(identity, siteContext.IdentityModel.Name), nil
+	return sitemodels.IdentityFromDB(identity, siteContext), nil
 }
 
 // checkCanRemoveIdentity stops an identity disabling or deleting itself, or the site losing its last enabled admin

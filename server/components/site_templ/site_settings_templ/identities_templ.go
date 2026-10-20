@@ -8,6 +8,9 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"strconv"
+	"time"
+
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -31,6 +34,13 @@ func roleLabel(role string) string {
 		return label
 	}
 	return role
+}
+
+func formatIdentityDate(ms *int64) string {
+	if ms == nil || *ms == 0 {
+		return "Never"
+	}
+	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
 }
 
 func IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) templ.Component {
@@ -148,7 +158,7 @@ func roleCard(title string, colors string, description string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 58, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 68, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -161,7 +171,7 @@ func roleCard(title string, colors string, description string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 59, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 69, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -485,7 +495,7 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 101, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 111, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -526,7 +536,7 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(roleLabel(identity.Role))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 107, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 117, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -555,9 +565,9 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var25 string
-				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(identity.Created)
+				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(&identity.CreatedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 110, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 120, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -586,9 +596,9 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var27 string
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(identity.LastSeen)
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(identity.LastSeenAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 113, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 123, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -617,9 +627,9 @@ func IdentityRow(identity *sitemodels.UserIdentity) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var29 string
-				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(identity.LastWrite)
+				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(formatIdentityDate(identity.LastWriteAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 116, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 126, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -707,7 +717,7 @@ func identityActions(identity *sitemodels.UserIdentity) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(id + "--enabled")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 129, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 139, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -747,9 +757,9 @@ func identityActions(identity *sitemodels.UserIdentity) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("/settings/identities/" + identity.ID)
+		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("/settings/identities/" + strconv.FormatInt(identity.ID, 10))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 136, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 146, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
@@ -760,9 +770,9 @@ func identityActions(identity *sitemodels.UserIdentity) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var36 string
-		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(`{"id": "` + identity.ID + `"}`)
+		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(`{"id": ` + strconv.FormatInt(identity.ID, 10) + `}`)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 138, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 148, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -797,7 +807,7 @@ func identityActions(identity *sitemodels.UserIdentity) templ.Component {
 			Disabled: identity.CurrentIdentity,
 			Attributes: templ.Attributes{
 				"title":                "Delete",
-				"hx-delete":            "/settings/identities/" + identity.ID,
+				"hx-delete":            "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
 				"hx-confirm":           "Delete " + identity.Name + "? Its password and tokens will stop working.",
 				"hx-target":            "#toaster",
 				"hx-swap":              "beforeend",
@@ -846,7 +856,7 @@ func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpti
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(formID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 172, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 182, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 		if templ_7745c5c3_Err != nil {
@@ -859,7 +869,7 @@ func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpti
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue("#" + tableid + " tbody")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 174, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 184, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 		if templ_7745c5c3_Err != nil {
@@ -907,7 +917,7 @@ func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpti
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(string(roles[0].Value))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 192, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 202, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 			if templ_7745c5c3_Err != nil {
@@ -1014,7 +1024,7 @@ func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpti
 									var templ_7745c5c3_Var49 string
 									templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(role.Label)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 214, Col: 23}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 224, Col: 23}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 									if templ_7745c5c3_Err != nil {
@@ -1088,7 +1098,7 @@ func formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpti
 				var templ_7745c5c3_Var52 string
 				templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 228, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 238, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 				if templ_7745c5c3_Err != nil {
@@ -1259,7 +1269,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs("Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret + "\nNightscout Token: " + *nsToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 271, Col: 180}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 281, Col: 180}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1277,7 +1287,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs("Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 273, Col: 144}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 283, Col: 144}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
@@ -1295,7 +1305,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs("Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nNightscout Token: " + *nsToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 275, Col: 146}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 285, Col: 146}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1313,7 +1323,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs("Site: " + url + "\nUsername: " + username + "\nPassword: " + password)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 277, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 287, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1342,7 +1352,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(url)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 289, Col: 130}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 299, Col: 130}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 		if templ_7745c5c3_Err != nil {
@@ -1355,7 +1365,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(username)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 290, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 300, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1368,7 +1378,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(password)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 291, Col: 139}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 301, Col: 139}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 		if templ_7745c5c3_Err != nil {
@@ -1386,7 +1396,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(*nsToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 293, Col: 148}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 303, Col: 148}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1404,7 +1414,7 @@ func createdUserInfo(url string, username string, password string, totpSecret *s
 			}
 			templ_7745c5c3_Var65, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(totpSecret)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 312, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/identities.templ`, Line: 322, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
