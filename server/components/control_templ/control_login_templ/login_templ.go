@@ -48,7 +48,7 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><div class=\"text-center mb-6\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -375,7 +375,7 @@ func Login() templ.Component {
 			templ_7745c5c3_Err = button.Button(button.Props{
 				ID:    "control--login-button",
 				Type:  button.TypeSubmit,
-				Class: "w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
+				Class: "w-full py-3 px-4 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

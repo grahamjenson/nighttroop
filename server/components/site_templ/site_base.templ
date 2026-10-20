@@ -108,17 +108,18 @@ templ dataMenuItem(id string, path string, label string, itemIcon templ.Componen
 }
 
 templ Header() {
-	<header class="sticky top-0 z-40 border-b border-white/10 bg-gray-900 text-white">
+	<header class="sticky top-0 z-40 border-b border-white/10 bg-brand-night text-white">
 		<div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 			<a id="site--nav--home" href="/" class="flex items-center gap-2 font-semibold tracking-wide">
+				<img id="site--nav--logo" src="/logo.svg" alt="" class="size-8"/>
 				Nighttroop
-				<span class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">Alpha</span>
+				<span class="rounded-full bg-brand-gold px-2 py-0.5 text-xs font-semibold text-brand-night">Alpha</span>
 			</a>
 			@dropdown.Dropdown(dropdown.Props{
 				ID: "site--settings-menu",
 			}) {
 				@dropdown.Trigger() {
-					<button class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+					<button class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold">
 						<span class="flex size-7 items-center justify-center rounded-full bg-gray-700">
 							@icon.User(icon.Props{Class: "size-4"})
 						</span>

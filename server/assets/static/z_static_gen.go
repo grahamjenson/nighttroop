@@ -84,6 +84,14 @@ var StaticLabelJsETag = generateETag([]byte(StaticLabelJs))
 var StaticLabelMinJs []byte
 var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
 
+//go:embed logo.png
+var StaticLogoPng []byte
+var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
+
+//go:embed logo.svg
+var StaticLogoSvg []byte
+var StaticLogoSvgETag = generateETag([]byte(StaticLogoSvg))
+
 //go:embed popover.js
 var StaticPopoverJs []byte
 var StaticPopoverJsETag = generateETag([]byte(StaticPopoverJs))
@@ -411,6 +419,38 @@ func AddStaticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticLabelMinJs))
 		if err != nil {
 			slog.Error("Failed to write response for label.min.js", "error", err)
+		}
+	})
+	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("ETag", StaticLogoPngETag)
+		if r.Header.Get("If-None-Match") == StaticLogoPngETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+
+		_, err := w.Write([]byte(StaticLogoPng))
+		if err != nil {
+			slog.Error("Failed to write response for logo.png", "error", err)
+		}
+	})
+	r.Get("/logo.svg", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/svg+xml")
+
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("ETag", StaticLogoSvgETag)
+		if r.Header.Get("If-None-Match") == StaticLogoSvgETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+
+		_, err := w.Write([]byte(StaticLogoSvg))
+		if err != nil {
+			slog.Error("Failed to write response for logo.svg", "error", err)
 		}
 	})
 	r.Get("/popover.js", func(w http.ResponseWriter, r *http.Request) {
