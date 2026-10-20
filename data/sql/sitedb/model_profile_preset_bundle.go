@@ -75,12 +75,15 @@ func ManyPresetsToMayWrappers(source []*ProfilePreset) []*ProfilePresetBundle {
 		return nil
 	}
 	lookup := map[string][]*ProfilePreset{}
+	// Map order is random, so remember the order the stores came in, newest first
+	order := []string{}
 	for _, preset := range source {
 		if preset == nil {
 			continue
 		}
 		if _, ok := lookup[preset.ProfileStoreID]; !ok {
 			lookup[preset.ProfileStoreID] = []*ProfilePreset{}
+			order = append(order, preset.ProfileStoreID)
 		}
 		if preset.IsDefault {
 			// If this is the default profile, we want it to be first in the list
@@ -92,8 +95,8 @@ func ManyPresetsToMayWrappers(source []*ProfilePreset) []*ProfilePresetBundle {
 	}
 
 	wrappers := []*ProfilePresetBundle{}
-	for _, presets := range lookup {
-		wrapper := ProfilePresetBundle(presets)
+	for _, profileStoreID := range order {
+		wrapper := ProfilePresetBundle(lookup[profileStoreID])
 		wrappers = append(wrappers, &wrapper)
 	}
 	return wrappers
