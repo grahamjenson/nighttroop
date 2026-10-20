@@ -319,6 +319,12 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 	}
 
+	// A select can't be typed into, so pick the option with this value
+	if tag, err := locator.Evaluate("element => element.tagName", nil); err == nil && tag == "SELECT" {
+		_, err = locator.SelectOption(playwright.SelectOptionValues{Values: &[]string{r.Value}})
+		return page, err
+	}
+
 	err = locator.Clear()
 	if err != nil {
 		return nil, err

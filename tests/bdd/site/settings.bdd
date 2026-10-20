@@ -1,0 +1,65 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// An admin can change the site's settings, which start on the defaults
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--identity-button
+CLICK #site--settings--site-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/site
+ASSERT_TEXT_VISIBLE Change Site Settings
+SCREENSHOT site_settings
+
+INPUT #site--settings--site--units mg/dL
+INPUT #site--settings--site--date_format DD/MM/YYYY
+INPUT #site--settings--site--timezone Pacific/Auckland
+CLICK #site--settings--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+
+// The saved values are shown when the page is opened again
+CLICK #site--settings-menu
+CLICK #site--settings--site-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--site--units:has(option[value="mg/dL"][selected])
+ASSERT_VISIBLE #site--settings--site--date_format:has(option[value="DD/MM/YYYY"][selected])
+SCREENSHOT site_settings_saved
+
+// Their own settings follow the site's until they change them
+CLICK #site--settings-menu
+CLICK #site--settings--identity-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/identity
+ASSERT_TEXT_VISIBLE Change Settings
+ASSERT_VISIBLE #site--settings--identity--units:has(option[value=""][selected]:text-is("Site setting (mg/dL)"))
+
+INPUT #site--settings--identity--week_start_day sunday
+CLICK #site--settings--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+SCREENSHOT identity_settings_saved
+
+// A bad value is refused
+INPUT #site--settings--identity--timezone Mars/Olympus
+CLICK #site--settings--save
+ASSERT_STATUS 400
+ASSERT_TEXT_VISIBLE invalid timezone

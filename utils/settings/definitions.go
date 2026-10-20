@@ -37,6 +37,13 @@ func (s *SettingDefinition[T]) ParseValidate(value any) (*T, error) {
 	return &v, err
 }
 
+// The values the date, time and week start settings accept, in the order the settings pages offer them
+var (
+	DateFormats   = []string{"YYYY/MM/DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"}
+	TimeFormats   = []string{"HH:mm:ss", "hh:mm:ss a", "HH:mm", "hh:mm a"}
+	WeekStartDays = []string{"monday", "sunday"}
+)
+
 var Units = &SettingDefinition[consts.Units]{
 	Identifier: "units",
 	TypeString: "string",
@@ -94,9 +101,8 @@ var DateFormat = &SettingDefinition[string]{
 			return fmt.Errorf("date format cannot be empty")
 		}
 
-		allowed := []string{"YYYY/MM/DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"}
-		if !slices.Contains(allowed, value) {
-			return fmt.Errorf("invalid date format: %v -must be in %v", value, quoted(allowed))
+		if !slices.Contains(DateFormats, value) {
+			return fmt.Errorf("invalid date format: %v -must be in %v", value, quoted(DateFormats))
 		}
 		return nil
 	},
@@ -111,9 +117,8 @@ var TimeFormat = &SettingDefinition[string]{
 		if value == "" {
 			return fmt.Errorf("time format cannot be empty")
 		}
-		allowed := []string{"HH:mm:ss", "hh:mm:ss a", "HH:mm", "hh:mm a"}
-		if !slices.Contains(allowed, value) {
-			return fmt.Errorf("invalid time format: %v - must be in %v", value, quoted(allowed))
+		if !slices.Contains(TimeFormats, value) {
+			return fmt.Errorf("invalid time format: %v - must be in %v", value, quoted(TimeFormats))
 		}
 		return nil
 	},
@@ -129,9 +134,8 @@ var WeekStartDay = &SettingDefinition[string]{
 			return fmt.Errorf("week start day cannot be empty")
 		}
 
-		allowed := []string{"monday", "sunday"}
-		if !slices.Contains(allowed, value) {
-			return fmt.Errorf("invalid week start day: %v - must be one of %v", value, quoted(allowed))
+		if !slices.Contains(WeekStartDays, value) {
+			return fmt.Errorf("invalid week start day: %v - must be one of %v", value, quoted(WeekStartDays))
 		}
 		return nil
 	},
