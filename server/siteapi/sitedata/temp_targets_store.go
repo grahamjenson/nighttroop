@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -32,7 +33,7 @@ func (s *TempTargetsStore) GetName() string {
 // CREATE
 // ////
 func (s *TempTargetsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (bool, *siteapiutils.HTTPError) {
-	if herr := checkTempTarget(model); herr != nil {
+	if herr := checkTempTarget(model, siteContext); herr != nil {
 		return false, herr
 	}
 	q, err := tx.Site()
@@ -43,7 +44,7 @@ func (s *TempTargetsStore) CreateModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return false, tempTargetWriteError(err)
 	}
-	*model = *sitemodels.TempTargetFromDB(created)
+	*model = *sitemodels.TempTargetFromDB(created, siteContext)
 	return true, nil
 }
 
@@ -68,7 +69,7 @@ func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 	if model.HighTarget != 0 {
 		merged.HighTarget = model.HighTarget
 	}
-	if herr := checkTempTarget(&merged); herr != nil {
+	if herr := checkTempTarget(&merged, siteContext); herr != nil {
 		return herr
 	}
 	q, err := tx.Site()
@@ -83,7 +84,7 @@ func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return tempTargetWriteError(err)
 	}
-	*model = *sitemodels.TempTargetFromDB(updated)
+	*model = *sitemodels.TempTargetFromDB(updated, siteContext)
 	return nil
 }
 
@@ -107,7 +108,7 @@ func (s *TempTargetsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreT
 		slog.Error("Error fetching temp target", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	return sitemodels.TempTargetFromDB(tempTarget), nil
+	return sitemodels.TempTargetFromDB(tempTarget, siteContext), nil
 }
 
 // GetHTMXResponse is the temp target's details, shown in a modal
@@ -131,7 +132,7 @@ func (s *TempTargetsStore) SearchModels(ctx context.Context, tx *siteapiutils.St
 	}
 	models := []*sitemodels.SiteTempTarget{}
 	for _, tempTarget := range tempTargets {
-		models = append(models, sitemodels.TempTargetFromDB(tempTarget))
+		models = append(models, sitemodels.TempTargetFromDB(tempTarget, siteContext))
 	}
 	return models, nil
 }
@@ -169,10 +170,12 @@ func (s *TempTargetsStore) DeleteHTMXResponse(model *sitemodels.SiteTempTarget) 
 // UTIL METHODS
 ////////
 
-// checkTempTarget keeps targets within real glucose values, low at most high, and the duration to a week
-func checkTempTarget(model *sitemodels.SiteTempTarget) *siteapiutils.HTTPError {
-	if model.LowTarget <= 0 || model.HighTarget > maxGlucoseMgdl || model.LowTarget > model.HighTarget {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("targets must be more than 0, at most %d mg/dL, and low must be at most high", maxGlucoseMgdl))
+// checkTempTarget keeps targets within real glucose values, low at most high, and the duration to a week.
+// The targets are in the settings' units.
+func checkTempTarget(model *sitemodels.SiteTempTarget, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+	units := sitemodels.ContextUnits(siteContext)
+	if model.LowTarget <= 0 || units.ToMGDL(model.HighTarget) > maxGlucoseMgdl || model.LowTarget > model.HighTarget {
+		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("targets must be more than 0, at most %v %s, and low must be at most high", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
 	}
 	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempTargetMinutes {
 		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempTargetMinutes))

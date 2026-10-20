@@ -60,10 +60,16 @@ type SiteConverter interface {
 	// GLUCOSE READINGS
 	///////
 
-	GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading
+	// goverter:context siteContext
+	// goverter:map Mgdl Reading | MgdlToSettingsUnits
+	// goverter:map Units OriginalUnits
+	// goverter:map Units | ContextUnits
+	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
 	// goverter:map ID | NewSiteDataID
+	// goverter:map Reading Mgdl | SettingsUnitsToMgdl
+	// goverter:map Units | ContextUnits
 	// goverter:map ReadingType | GlucoseReadingTypeOrMeter
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
@@ -71,7 +77,7 @@ type SiteConverter interface {
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
-	// goverter:map Mgdl | Float64OrNil
+	// goverter:map Reading Mgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
@@ -81,10 +87,16 @@ type SiteConverter interface {
 	// TEMP TARGETS
 	///////
 
-	TempTargetFromDB(source *sitedb.TempTarget) *SiteTempTarget
+	// goverter:context siteContext
+	// goverter:map HighTarget HighTarget | MgdlToSettingsUnits
+	// goverter:map LowTarget LowTarget | MgdlToSettingsUnits
+	// goverter:map . Units | ContextUnits
+	TempTargetFromDB(source *sitedb.TempTarget, siteContext *httputils.SiteContext) *SiteTempTarget
 
 	// goverter:context siteContext
 	// goverter:map ID | NewSiteDataID
+	// goverter:map HighTarget HighTarget | SettingsUnitsToMgdl
+	// goverter:map LowTarget LowTarget | SettingsUnitsToMgdl
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
@@ -92,8 +104,8 @@ type SiteConverter interface {
 
 	// goverter:context siteContext
 	// goverter:map DurationMinutes | Int64OrNil
-	// goverter:map HighTarget | Float64OrNil
-	// goverter:map LowTarget | Float64OrNil
+	// goverter:map HighTarget HighTarget | SettingsUnitsToMgdlOrNil
+	// goverter:map LowTarget LowTarget | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
@@ -258,4 +270,26 @@ func Int64OrNil(value int64) *int64 {
 		return nil
 	}
 	return &value
+}
+
+// ContextUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
+// goverter:context siteContext
+func ContextUnits(siteContext *httputils.SiteContext) *consts.Units {
+	return siteContext.GetSettings().GetUnits()
+}
+
+// goverter:context siteContext
+func MgdlToSettingsUnits(mgdl float64, siteContext *httputils.SiteContext) float64 {
+	return ContextUnits(siteContext).FromMGDL(mgdl)
+}
+
+// goverter:context siteContext
+func SettingsUnitsToMgdl(value float64, siteContext *httputils.SiteContext) float64 {
+	return ContextUnits(siteContext).ToMGDL(value)
+}
+
+// SettingsUnitsToMgdlOrNil leaves a glucose value as it is when an update does not send one
+// goverter:context siteContext
+func SettingsUnitsToMgdlOrNil(value float64, siteContext *httputils.SiteContext) *float64 {
+	return Float64OrNil(SettingsUnitsToMgdl(value, siteContext))
 }

@@ -31,10 +31,10 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 							Time
 						}
 						@table.Head() {
-							Low mg/dL
+							Low { string(*glucoseUnits(ctx)) }
 						}
 						@table.Head() {
-							High mg/dL
+							High { string(*glucoseUnits(ctx)) }
 						}
 						@table.Head() {
 							Minutes
@@ -119,10 +119,10 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			ID:          id + "--low",
 			Type:        input.TypeNumber,
 			Name:        "low_target",
-			Placeholder: "Low mg/dL",
+			Placeholder: "Low " + string(*glucoseUnits(ctx)),
 			Value:       low,
 			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "1", "max": "1000"},
+			Attributes:  glucoseInputAttributes(ctx),
 		})
 	</div>
 	<div class="w-32">
@@ -130,10 +130,10 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			ID:          id + "--high",
 			Type:        input.TypeNumber,
 			Name:        "high_target",
-			Placeholder: "High mg/dL",
+			Placeholder: "High " + string(*glucoseUnits(ctx)),
 			Value:       high,
 			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "1", "max": "1000"},
+			Attributes:  glucoseInputAttributes(ctx),
 		})
 	</div>
 	<div class="w-28">
@@ -168,10 +168,10 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 			{ formatReadingDate(tempTarget.OccurredAt) }
 		}
 		@table.Cell() {
-			{ fmt.Sprint(tempTarget.LowTarget) }
+			{ formatGlucose(tempTarget.LowTarget, tempTarget.Units) }
 		}
 		@table.Cell() {
-			{ fmt.Sprint(tempTarget.HighTarget) }
+			{ formatGlucose(tempTarget.HighTarget, tempTarget.Units) }
 		}
 		@table.Cell() {
 			{ fmt.Sprint(tempTarget.DurationMinutes) }
@@ -210,7 +210,7 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 	<div id="site--temp-target--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%v to %v mg/dL for %d minutes", tempTarget.LowTarget, tempTarget.HighTarget, tempTarget.DurationMinutes) }</h2>
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes) }</h2>
 			<p class="text-sm text-gray-500">{ formatReadingDate(tempTarget.OccurredAt) }</p>
 			<form
 				id="site--temp-target--edit"

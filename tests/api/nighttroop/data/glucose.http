@@ -29,10 +29,27 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 123 "@result.0.mgdl"
+ASSERT_EQUALS 6.8265 "@result.0.reading"
+ASSERT_EQUALS "mmol/L" "@result.0.units"
 ASSERT_EQUALS "sgv" "@result.0.reading_type"
 ASSERT_EQUALS "Flat" "@result.0.direction"
 ASSERT_EXISTS "@result.0.occurred_at"
+
+// Readings are in the identity's units, mmol/L by default, until it chooses mg/dL
+NAME use_mgdl
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME list_readings_mgdl
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 123 "@result.0.reading"
+ASSERT_EQUALS "mg/dL" "@result.0.units"
 
 // Two older readings, so the list can be paged
 NAME create_older_entries
@@ -46,8 +63,8 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS 123 "@result.0.mgdl"
-ASSERT_EQUALS 110 "@result.1.mgdl"
+ASSERT_EQUALS 123 "@result.0.reading"
+ASSERT_EQUALS 110 "@result.1.reading"
 
 NAME second_page
 GET http://{{ site }}/data/glucose?limit=2&skip=2
@@ -55,7 +72,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 100 "@result.0.mgdl"
+ASSERT_EQUALS 100 "@result.0.reading"
 
 NAME past_the_end
 GET http://{{ site }}/data/glucose?limit=2&skip=4
@@ -75,7 +92,7 @@ GET http://{{ site }}/data/glucose/{{ .reading_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 123 "@result.mgdl"
+ASSERT_EQUALS 123 "@result.reading"
 ASSERT_EQUALS "Flat" "@result.direction"
 
 NAME get_unknown_reading
@@ -124,9 +141,9 @@ NAME create_reading
 POST http://{{ site }}/data/glucose
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"mgdl": 95, "notes": "Finger prick", "id": "chosen-id", "created_by_identity_name": "someone else"}
+B {"reading": 95, "notes": "Finger prick", "id": "chosen-id", "created_by_identity_name": "someone else"}
 ASSERT_STATUS 201
-ASSERT_EQUALS 95 "@result.mgdl"
+ASSERT_EQUALS 95 "@result.reading"
 ASSERT_EQUALS "mbg" "@result.reading_type"
 ASSERT_EQUALS "Finger prick" "@result.notes"
 ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
@@ -145,20 +162,20 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"notes": "no value"}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "mg/dL must be more than 0" "@message"
+ASSERT_CONTAINS "reading must be more than 0 and at most 1000 mg/dL" "@message"
 
 NAME create_reading_too_high
 POST http://{{ site }}/data/glucose
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"mgdl": 5000}
+B {"reading": 5000}
 ASSERT_STATUS 400
 
 NAME create_reading_unknown_type
 POST http://{{ site }}/data/glucose
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"mgdl": 100, "reading_type": "guess"}
+B {"reading": 100, "reading_type": "guess"}
 ASSERT_STATUS 400
 
 // Only the fields sent change
@@ -168,7 +185,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"notes": "Rechecked"}
 ASSERT_STATUS 200
-ASSERT_EQUALS 95 "@result.mgdl"
+ASSERT_EQUALS 95 "@result.reading"
 ASSERT_EQUALS "Rechecked" "@result.notes"
 ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
 
@@ -176,16 +193,16 @@ NAME update_reading_mgdl
 POST http://{{ site }}/data/glucose/{{ .created_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"mgdl": 99}
+B {"reading": 99}
 ASSERT_STATUS 200
-ASSERT_EQUALS 99 "@result.mgdl"
+ASSERT_EQUALS 99 "@result.reading"
 ASSERT_EQUALS "Rechecked" "@result.notes"
 
 NAME update_reading_too_high
 POST http://{{ site }}/data/glucose/{{ .created_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"mgdl": 5000}
+B {"reading": 5000}
 ASSERT_STATUS 400
 
 NAME update_unknown_reading
@@ -201,3 +218,41 @@ GET http://{{ .ns_site }}/api/v1/entries?find[_id]={{ .created_id }}&token={{ to
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "mbg" "@0.type"
+
+// Back in mmol/L, a reading is typed in and shown in mmol/L, and saved as mg/dL
+NAME use_mmol
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mmol/L"}
+ASSERT_STATUS 200
+
+NAME updated_reading_in_mmol
+GET http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.4945 "@result.reading"
+ASSERT_EQUALS "mmol/L" "@result.units"
+
+NAME create_reading_mmol
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 7.5}
+ASSERT_STATUS 201
+ASSERT_EQUALS 7.5 "@result.reading"
+ASSERT_EQUALS "mmol/L" "@result.original_units"
+
+NAME create_reading_mmol_too_high
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 60}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 55.5" "@message"
+
+NAME created_reading_mmol_in_nightscout_as_mgdl
+GET http://{{ .ns_site }}/api/v1/entries?find[_id]={{ .create_reading_mmol.result.id }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"

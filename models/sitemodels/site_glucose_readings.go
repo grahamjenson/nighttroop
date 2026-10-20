@@ -3,10 +3,12 @@ package sitemodels
 import "nighttroop.t1d.nz/utils/consts"
 
 type SiteGlucoseReading struct {
-	ID                    string        `json:"id"`
-	Mgdl                  float64       `json:"mgdl"`
-	ReadingType           string        `json:"reading_type"`
+	ID string `json:"id"`
+	// Reading is in Units, the identity's, site's or default units setting
+	Reading               float64       `json:"reading"`
 	Units                 *consts.Units `json:"units"`
+	ReadingType           string        `json:"reading_type"`
+	OriginalUnits         *consts.Units `json:"original_units"`
 	MeasurementMethod     *string       `json:"measurement_method"`
 	Delta                 *float64      `json:"delta"`
 	Direction             *string       `json:"direction"`
