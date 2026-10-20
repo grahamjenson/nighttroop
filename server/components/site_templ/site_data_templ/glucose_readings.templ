@@ -20,6 +20,9 @@ func formatReadingDate(ms int64) string {
 	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
 }
 
+// FormatGlucose and FormatDate show glucose and times the same way on other pages
+var FormatGlucose, FormatDate = formatGlucose, formatReadingDate
+
 // glucoseUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
 func glucoseUnits(ctx context.Context) *consts.Units {
 	return sitemodels.ContextUnits(httputils.GetSiteContext(ctx))

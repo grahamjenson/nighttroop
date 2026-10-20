@@ -11,5 +11,6 @@ func QueryValuesToQuery(source QueryValues) Query {
 		xstring := *source.Device
 		apiqueryQuery.Device = &xstring
 	}
+	apiqueryQuery.Hours = GetHoursInt64(source)
 	return apiqueryQuery
 }
