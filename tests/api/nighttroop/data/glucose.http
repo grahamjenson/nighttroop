@@ -34,6 +34,42 @@ ASSERT_EQUALS "sgv" "@result.0.reading_type"
 ASSERT_EQUALS "Flat" "@result.0.direction"
 ASSERT_EXISTS "@result.0.occurred_at"
 
+// Two older readings, so the list can be paged
+NAME create_older_entries
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{ "sgv": 110, "type": "sgv", "dateString": "{{ time 1 }}" }, { "sgv": 100, "type": "sgv", "dateString": "{{ time 2 }}" }]
+ASSERT_STATUS 200
+
+NAME first_page
+GET http://{{ site }}/data/glucose?limit=2
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 123 "@result.0.mgdl"
+ASSERT_EQUALS 110 "@result.1.mgdl"
+
+NAME second_page
+GET http://{{ site }}/data/glucose?limit=2&skip=2
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 100 "@result.0.mgdl"
+
+NAME past_the_end
+GET http://{{ site }}/data/glucose?limit=2&skip=4
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME bad_limit
+GET http://{{ site }}/data/glucose?limit=lots
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
 NAME get_reading
 GET http://{{ site }}/data/glucose/{{ .reading_id }}
 H Authorization: Bearer {{ jwt }}
@@ -65,13 +101,13 @@ GET http://{{ site }}/data/glucose
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 2 "@result"
 
 // Deleted readings are also gone from the Nightscout API
 NAME deleted_entry_not_in_nightscout
 GET http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@"
+ASSERT_LENGTH 2 "@"
 
 NAME delete_unknown_reading
 DELETE http://{{ site }}/data/glucose/not-a-reading

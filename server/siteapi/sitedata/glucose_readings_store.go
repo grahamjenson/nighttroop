@@ -10,11 +10,9 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// glucoseReadingsLimit is how many of the newest readings are listed, until the table pages
-const glucoseReadingsLimit = 1000
 
 type GlucoseReadingsStore struct{}
 
@@ -58,7 +56,7 @@ func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutil
 	if err != nil {
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	readings, err := q.AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: glucoseReadingsLimit})
+	readings, err := q.AllGlucoseReadings(ctx, sitequery.QueryToAllGlucoseReadings(query))
 	if err != nil {
 		slog.Error("Search glucose readings", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
@@ -70,8 +68,8 @@ func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutil
 	return models, nil
 }
 
-func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading) templ.Component {
-	return site_data_templ.GlucoseReadingsTable(models, glucoseReadingsLimit)
+func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *siteapiutils.Query) templ.Component {
+	return site_data_templ.GlucoseReadingsTable(models, query.Skip, query.Limit)
 }
 
 // ///

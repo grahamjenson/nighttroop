@@ -211,7 +211,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 type SearchInterface[T any] interface {
 	SearchModels(ctx context.Context, tx *StoreTx, query *Query, siteContext *httputils.SiteContext) ([]*T, *HTTPError)
-	SearchHTMXResponse(models []*T) templ.Component
+	SearchHTMXResponse(models []*T, query *Query) templ.Component
 	GetName() string
 }
 
@@ -229,7 +229,11 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		query := QueryFromParams(r.URL.Query())
+		query, herr := QueryFromParams(r.URL.Query())
+		if herr != nil {
+			herr.Write(siteContext.AcceptType, w)
+			return
+		}
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		models, herr := store.SearchModels(r.Context(), tx, query, siteContext)
@@ -243,9 +247,9 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
-			store.SearchHTMXResponse(models).Render(r.Context(), w)
+			store.SearchHTMXResponse(models, query).Render(r.Context(), w)
 		case httputils.AcceptTypeHTML:
-			site_templ.FullPage(store.SearchHTMXResponse(models)).Render(r.Context(), w)
+			site_templ.FullPage(store.SearchHTMXResponse(models, query)).Render(r.Context(), w)
 		default:
 			WriteModelJSON(w, status, models)
 		}
