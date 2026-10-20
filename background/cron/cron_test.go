@@ -68,7 +68,7 @@ func TestAddFuncPanic(t *testing.T) {
 	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
 
 	cron := cron.NewCron(jobsDB)
-	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { panic("test panic"); return nil })
+	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { panic("test panic") })
 	entry := cron.Entry(entryid)
 	// Should not panic and be caught by the jobs DB
 	entry.Job.Run()
