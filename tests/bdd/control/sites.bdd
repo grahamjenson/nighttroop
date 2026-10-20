@@ -1,0 +1,44 @@
+// A new site to look at and disable, so other tests keep their sites
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+
+// The control site sees every site, newest first
+CLICK #control--menu
+CLICK #control--sites-button
+ASSERT_STATUS 200
+ASSERT_PATH /sites
+ASSERT_VISIBLE #controlSitesTable
+ASSERT_TEXT_VISIBLE Showing 1 to
+SCREENSHOT sites
+
+// Clicking a site shows its details
+CLICK #controlSitesTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--site--details
+ASSERT_TEXT_VISIBLE Last Write
+SCREENSHOT site_details
+
+CLICK #control--site--details--close
+ASSERT_NOT_VISIBLE #control--site--details
+
+// Disabling asks first (the test accepts), then updates the site's row
+CLICK #controlSitesTable tbody tr >> nth=0
+CLICK #control--site--disable
+ASSERT_TEXT_VISIBLE Site Disabled
+ASSERT_NOT_VISIBLE #control--site--details
+ASSERT_TEXT_VISIBLE disabled
+SCREENSHOT site_disabled
+
+// A disabled site cannot be disabled again
+CLICK #controlSitesTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--site--details
+ASSERT_NOT_VISIBLE #control--site--disable

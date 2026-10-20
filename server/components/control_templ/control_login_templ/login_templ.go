@@ -237,7 +237,8 @@ func Login() templ.Component {
 						}
 						ctx = templ.InitializeContext(ctx)
 						templ_7745c5c3_Err = inputotp.Slot(inputotp.SlotProps{
-							Index: 0,
+							Index:   0,
+							InputID: "control--login--otp-1",
 						}).Render(ctx, templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err

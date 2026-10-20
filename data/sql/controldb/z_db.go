@@ -54,6 +54,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSyncSourceStmt, err = db.PrepareContext(ctx, deleteSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSyncSource: %w", err)
 	}
+	if q.disableSiteStmt, err = db.PrepareContext(ctx, disableSite); err != nil {
+		return nil, fmt.Errorf("error preparing query DisableSite: %w", err)
+	}
 	if q.disableSitesStmt, err = db.PrepareContext(ctx, disableSites); err != nil {
 		return nil, fmt.Errorf("error preparing query DisableSites: %w", err)
 	}
@@ -81,6 +84,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteIdentityByIDStmt, err = db.PrepareContext(ctx, getSiteIdentityByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteIdentityByID: %w", err)
 	}
+	if q.getSiteInAnyStateStmt, err = db.PrepareContext(ctx, getSiteInAnyState); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteInAnyState: %w", err)
+	}
 	if q.getSitesToArchiveStmt, err = db.PrepareContext(ctx, getSitesToArchive); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToArchive: %w", err)
 	}
@@ -95,6 +101,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSyncSourceStmt, err = db.PrepareContext(ctx, getSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSyncSource: %w", err)
+	}
+	if q.searchSitesStmt, err = db.PrepareContext(ctx, searchSites); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSites: %w", err)
 	}
 	if q.siteExistsStmt, err = db.PrepareContext(ctx, siteExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteExists: %w", err)
@@ -181,6 +190,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSyncSourceStmt: %w", cerr)
 		}
 	}
+	if q.disableSiteStmt != nil {
+		if cerr := q.disableSiteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing disableSiteStmt: %w", cerr)
+		}
+	}
 	if q.disableSitesStmt != nil {
 		if cerr := q.disableSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing disableSitesStmt: %w", cerr)
@@ -226,6 +240,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteIdentityByIDStmt: %w", cerr)
 		}
 	}
+	if q.getSiteInAnyStateStmt != nil {
+		if cerr := q.getSiteInAnyStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteInAnyStateStmt: %w", cerr)
+		}
+	}
 	if q.getSitesToArchiveStmt != nil {
 		if cerr := q.getSitesToArchiveStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSitesToArchiveStmt: %w", cerr)
@@ -249,6 +268,11 @@ func (q *Queries) Close() error {
 	if q.getSyncSourceStmt != nil {
 		if cerr := q.getSyncSourceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSyncSourceStmt: %w", cerr)
+		}
+	}
+	if q.searchSitesStmt != nil {
+		if cerr := q.searchSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSitesStmt: %w", cerr)
 		}
 	}
 	if q.siteExistsStmt != nil {
@@ -350,6 +374,7 @@ type Queries struct {
 	deleteSiteIdentityStmt             *sql.Stmt
 	deleteSitesStmt                    *sql.Stmt
 	deleteSyncSourceStmt               *sql.Stmt
+	disableSiteStmt                    *sql.Stmt
 	disableSitesStmt                   *sql.Stmt
 	getAllSitesStmt                    *sql.Stmt
 	getAllSyncSourcesForSiteStmt       *sql.Stmt
@@ -359,11 +384,13 @@ type Queries struct {
 	getSiteStmt                        *sql.Stmt
 	getSiteIdentityStmt                *sql.Stmt
 	getSiteIdentityByIDStmt            *sql.Stmt
+	getSiteInAnyStateStmt              *sql.Stmt
 	getSitesToArchiveStmt              *sql.Stmt
 	getSitesToDeleteInBatchStmt        *sql.Stmt
 	getSitesToDisableStmt              *sql.Stmt
 	getSyncReportsToRunStmt            *sql.Stmt
 	getSyncSourceStmt                  *sql.Stmt
+	searchSitesStmt                    *sql.Stmt
 	siteExistsStmt                     *sql.Stmt
 	updateSiteDateFlagsStmt            *sql.Stmt
 	updateSiteIdentityDateFlagsStmt    *sql.Stmt
@@ -390,6 +417,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteSiteIdentityStmt:             q.deleteSiteIdentityStmt,
 		deleteSitesStmt:                    q.deleteSitesStmt,
 		deleteSyncSourceStmt:               q.deleteSyncSourceStmt,
+		disableSiteStmt:                    q.disableSiteStmt,
 		disableSitesStmt:                   q.disableSitesStmt,
 		getAllSitesStmt:                    q.getAllSitesStmt,
 		getAllSyncSourcesForSiteStmt:       q.getAllSyncSourcesForSiteStmt,
@@ -399,11 +427,13 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteStmt:                        q.getSiteStmt,
 		getSiteIdentityStmt:                q.getSiteIdentityStmt,
 		getSiteIdentityByIDStmt:            q.getSiteIdentityByIDStmt,
+		getSiteInAnyStateStmt:              q.getSiteInAnyStateStmt,
 		getSitesToArchiveStmt:              q.getSitesToArchiveStmt,
 		getSitesToDeleteInBatchStmt:        q.getSitesToDeleteInBatchStmt,
 		getSitesToDisableStmt:              q.getSitesToDisableStmt,
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                  q.getSyncSourceStmt,
+		searchSitesStmt:                    q.searchSitesStmt,
 		siteExistsStmt:                     q.siteExistsStmt,
 		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:    q.updateSiteIdentityDateFlagsStmt,

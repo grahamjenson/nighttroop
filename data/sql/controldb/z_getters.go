@@ -3047,6 +3047,36 @@ func (m *GetSiteParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetSkip returns the Skip value.
+func (m SearchSitesParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSitesParams.
+func (m *SearchSitesParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSitesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSitesParams.
+func (m *SearchSitesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteInAnyStateParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteInAnyStateParams.
+func (m *GetSiteInAnyStateParams) SetID(v string) {
+	m.ID = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m GetSitesToDisableParams) GetLastSeenAt() float64 {
 	return m.LastSeenAt
@@ -3125,6 +3155,16 @@ func (m DisableSitesParams) GetJsonEach() interface{} {
 // SetJsonEach sets the JsonEach value and returns the updated DisableSitesParams.
 func (m *DisableSitesParams) SetJsonEach(v interface{}) {
 	m.JsonEach = v
+}
+
+// GetID returns the ID value.
+func (m DisableSiteParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DisableSiteParams.
+func (m *DisableSiteParams) SetID(v string) {
+	m.ID = v
 }
 
 // GetJsonEach returns the JsonEach value.

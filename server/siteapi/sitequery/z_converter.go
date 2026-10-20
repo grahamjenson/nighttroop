@@ -3,7 +3,10 @@
 
 package sitequery
 
-import sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+import (
+	controldb "nighttroop.t1d.nz/data/sql/controldb"
+	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+)
 
 func QueryToAllFoodIntakes(source *Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
@@ -44,6 +47,14 @@ func QueryToAllTempTargets(source *Query) sitedb.AllTempTargetsParams {
 		sitedbAllTempTargetsParams.Limit = (*source).Limit
 	}
 	return sitedbAllTempTargetsParams
+}
+func QueryToSearchSites(source *Query) controldb.SearchSitesParams {
+	var controldbSearchSitesParams controldb.SearchSitesParams
+	if source != nil {
+		controldbSearchSitesParams.Skip = (*source).Skip
+		controldbSearchSitesParams.Limit = (*source).Limit
+	}
+	return controldbSearchSitesParams
 }
 func QueryValuesToQuery(source QueryValues) Query {
 	var sitequeryQuery Query

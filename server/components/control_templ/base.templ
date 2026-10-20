@@ -36,6 +36,7 @@ templ ControlBase() {
 			<script src="/qrcode.js"></script>
 		</head>
 		<body class="min-h-screen flex flex-col">
+			<div id="toaster" class="mb-3"></div>
 			@Header()
 			<div
 				id="main-content"
@@ -49,6 +50,12 @@ templ ControlBase() {
 	</html>
 }
 
+templ FullPage(content templ.Component) {
+	@ControlBase() {
+		@content
+	}
+}
+
 templ Header() {
 	<nav class="bg-gray-900/80 backdrop-blur-md border-b border-white/10 shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -59,7 +66,7 @@ templ Header() {
 				</a>
 				<!-- Right side -->
 				<div class="flex items-center gap-4">
-					@dropdown.Dropdown() {
+					@dropdown.Dropdown(dropdown.Props{ID: "control--menu"}) {
 						@dropdown.Trigger() {
 							<button class="flex items-center justify-center size-9 rounded-full bg-gray-800 hover:bg-gray-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
 								<span class="sr-only">Open user menu</span>
@@ -88,6 +95,7 @@ templ Header() {
 							}
 							@dropdown.Group() {
 								@dropdown.Item(dropdown.ItemProps{
+									ID:   "control--sites-button",
 									Href: "#",
 									Attributes: templ.Attributes{
 										"hx-get":      "/sites",
@@ -98,7 +106,7 @@ templ Header() {
 								}) {
 									<span class="flex items-center">
 										@icon.Users(icon.Props{Class: "size-4 mr-2"})
-										Users
+										Sites
 									</span>
 								}
 								@dropdown.Separator()

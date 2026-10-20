@@ -1,0 +1,106 @@
+NAME control_login
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "password", "totp": "123123"}
+ASSERT_STATUS 200
+SET control_jwt {{ .control_login.token }}
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site_id {{ .create_new_site.site_subdomain }}
+SET token {{ .create_new_site.pwd_nstoken }}
+
+// The control API sees every site, newest first
+NAME list_sites
+GET http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.id"
+ASSERT_EXISTS "@result.0.state"
+ASSERT_EXISTS "@result.0.created_at"
+
+NAME list_sites_paged
+GET http://control.localhost/sites?limit=1&skip=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_sites_bad_limit
+GET http://control.localhost/sites?limit=lots
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+NAME get_site
+GET http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "live" "@result.state"
+ASSERT_EXISTS "@result.batch"
+
+NAME get_unknown_site
+GET http://control.localhost/sites/not-a-site
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only signed in control identities can see sites
+NAME list_sites_without_login
+GET http://control.localhost/sites
+H Accept: application/json
+ASSERT_STATUS 401
+
+//////
+// DISABLE
+//////
+
+NAME change_site_to_other_state
+POST http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "archived"}
+ASSERT_STATUS 400
+
+NAME site_served_before_disable
+GET http://{{ .site_id }}.ns.localhost/api/v1/status.json?token={{ token }}
+ASSERT_STATUS 200
+
+NAME disable_site
+POST http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "disabled"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "disabled" "@result.state"
+ASSERT_EXISTS "@result.disabled_at"
+
+// A disabled site is no longer served, but the control API still sees it
+NAME site_not_served_after_disable
+GET http://{{ .site_id }}.ns.localhost/api/v1/status.json?token={{ token }}
+ASSERT_STATUS 404
+
+NAME disabled_site_still_listed
+GET http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "disabled" "@result.state"
+
+NAME disable_site_again
+POST http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "disabled"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "only a live site can be disabled" "@message"
+
+NAME disable_unknown_site
+POST http://control.localhost/sites/not-a-site
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "disabled"}
+ASSERT_STATUS 404

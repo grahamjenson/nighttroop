@@ -21,6 +21,14 @@ SELECT * FROM sites;
 SELECT * FROM sites WHERE id = ? AND state = 'live';
 
 
+-- name: SearchSites :many
+SELECT * FROM sites
+ORDER BY created_at DESC, id
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
+-- name: GetSiteInAnyState :one
+SELECT * FROM sites WHERE id = ?;
+
 -- name: GetLiveAndDisabledSites :many
 SELECT * FROM sites WHERE state IN ('live', 'disabled');
 
@@ -62,6 +70,13 @@ SET
     state = 'disabled'
 WHERE id IN (SELECT value FROM json_each(?))
 RETURNING id;
+
+-- name: DisableSite :execresult
+UPDATE sites
+SET
+    disabled_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    state = 'disabled'
+WHERE id = ? AND state = 'live';
 
 -- name: ArchiveSites :many
 UPDATE sites

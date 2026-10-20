@@ -18,8 +18,8 @@ func ReadJSON(r *http.Request, dst any) error {
 }
 
 // WriteJSON writes a JSON response with the provided HTTP status code.
-// writeStatus sets the Content-Type for the response, then the status: headers set after WriteHeader are dropped
-func writeStatus(w http.ResponseWriter, acceptType httputils.AcceptType, status int) {
+// WriteStatus sets the Content-Type for the response, then the status: headers set after WriteHeader are dropped
+func WriteStatus(w http.ResponseWriter, acceptType httputils.AcceptType, status int) {
 	if acceptType == httputils.AcceptTypeHTMX || acceptType == httputils.AcceptTypeHTML {
 		w.Header().Set("Content-Type", "text/html")
 	} else {
