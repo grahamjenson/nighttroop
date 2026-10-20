@@ -32,6 +32,8 @@ Do not change generated code. All generated files either:
 1. has a `.gen.go` suffix
 1. has a `_gen.sql` suffix
 
+Use code generators where possible, especially for building models and params for the DB.
+
 ## SQL
 
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
@@ -67,3 +69,19 @@ A unit test is preferred if:
 1. Too many options: A user path has a combinatorial explosion making it is too large a space for integration tests to be practical, e.g. checking all possible constraints on a model. In this case we would prefer unit tests of test matrices, building test structs and a for loop, this will make those many tests easier to read and debug.
 1. Impractical: A function or user path is impractical to test, e.g. integration with other services, or testing side effects like logging or error handling. In these cases custom mocks, stubs, or dependency injection will need to be used to test those code pathways.
 1. Async Timing: We don't want to wait for background job, cron or some other async task to run to confirm a test works. Either: either we implement a feature in a way that avoids this by e.g. calling immediately if test, or we write unit tests with of the async task, but confirm it is scheduled in the bdd test.
+
+
+# Malicious users
+
+Malicious can cause havoc by:
+
+1. creating lots of tables rows
+1. running a lot of expensive queries
+1. creating sync operations against non-affiliated parties causing nighttroop to be a proxy
+
+We stop these by having sane limits that should never be hit by a user in normal operation, like:
+
+1. Rate limiting read and write operations against sites, identities, and ips
+1. Slowing down background job frequencies if not behaving
+
+When writing code, make sure to consider how an operation may be used by malicious users.
