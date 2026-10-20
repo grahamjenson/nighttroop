@@ -50,9 +50,6 @@ jobs:
           git add -N .
           git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
 
-      - name: Start minio
-        run: docker compose up -d
-
       - name: Cache playwright browser
         uses: actions/cache@v4
         with:
