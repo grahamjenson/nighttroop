@@ -5,6 +5,7 @@ package server
 import (
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitedata"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
 	"nighttroop.t1d.nz/server/siteapi/sitesettings"
 	"nighttroop.t1d.nz/server/siteapi/sitesummary"
@@ -20,6 +21,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	//STORES
 	syncSettingsStore := &sitesettings.SyncSettingsStore{}
 	identitiesStore := &sitesettings.IdentitiesStore{}
+	glucoseReadingsStore := &sitedata.GlucoseReadingsStore{}
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
@@ -45,6 +47,11 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Summary page
 		r.Get("/", sitesummary.GetSummaryHandler(controlDB, config))
 		r.Get("/summary", sitesummary.GetSummaryHandler(controlDB, config))
+
+		// Data Glucose Readings
+		r.Get("/data/glucose", siteapiutils.SearchHandler(controlDB, config, glucoseReadingsStore))
+		r.Get("/data/glucose/{id}", siteapiutils.GetHandler(controlDB, config, glucoseReadingsStore))
+		r.Delete("/data/glucose/{id}", siteapiutils.DeleteHandler(controlDB, config, glucoseReadingsStore))
 
 		// Settings Sync
 		r.Get("/settings/sync", siteapiutils.SearchHandler(controlDB, config, syncSettingsStore))

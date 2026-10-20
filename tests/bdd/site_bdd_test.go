@@ -9,10 +9,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/mxschmitt/playwright-go"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -75,6 +77,17 @@ func TestSite(t *testing.T) {
 
 	testutils.DumpOnFailure(t, controlDB, "test_site_bdd")
 
+	// The default site has glucose readings for glucose.bdd
+	now := time.Now().UnixMilli()
+	for _, reading := range []sitedb.CreateGlucoseReadingParams{
+		{ID: "bdd-glucose-1", Mgdl: 123, Direction: ptr("Flat"), CreatedByDeviceName: ptr("xDrip"), Notes: ptr("After lunch"), OccurredAt: now - 5*60*1000},
+		{ID: "bdd-glucose-2", Mgdl: 187, Direction: ptr("FortyFiveUp"), CreatedByDeviceName: ptr("xDrip"), OccurredAt: now},
+	} {
+		reading.ReadingType, reading.RawJsonData, reading.CreatedByIdentityName = "sgv", ptr("{}"), consts.FIRST_PWD_NAME
+		_, err := siteInformation.SiteDB.Queries.CreateGlucoseReading(context.Background(), reading)
+		require.NoError(t, err)
+	}
+
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -104,4 +117,8 @@ func TestSite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed walking embedded files: %v", err)
 	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

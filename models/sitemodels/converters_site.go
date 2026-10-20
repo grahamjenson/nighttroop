@@ -2,6 +2,7 @@ package sitemodels
 
 import (
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -50,6 +51,12 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:map SiteID | ContextSiteID
 	IdentityToDelete(source *UserIdentity, siteContext *httputils.SiteContext) controldb.DeleteSiteIdentityParams
+
+	///////
+	// GLUCOSE READINGS
+	///////
+
+	GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading
 }
 
 func SetPasswordGarbage() *string {

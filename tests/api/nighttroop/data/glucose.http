@@ -1,0 +1,80 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME no_readings
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME create_entry
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B { "sgv": 123, "type": "sgv", "direction": "Flat", "device": "xDrip" }
+ASSERT_STATUS 200
+SET reading_id {{ dig "create_entry.0._id" }}
+
+NAME list_readings
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 123 "@result.0.mgdl"
+ASSERT_EQUALS "sgv" "@result.0.reading_type"
+ASSERT_EQUALS "Flat" "@result.0.direction"
+ASSERT_EXISTS "@result.0.occurred_at"
+
+NAME get_reading
+GET http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 123 "@result.mgdl"
+ASSERT_EQUALS "Flat" "@result.direction"
+
+NAME get_unknown_reading
+GET http://{{ site }}/data/glucose/not-a-reading
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME delete_reading
+DELETE http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_reading_not_found
+GET http://{{ site }}/data/glucose/{{ .reading_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_reading_not_listed
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// Deleted readings are also gone from the Nightscout API
+NAME deleted_entry_not_in_nightscout
+GET http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME delete_unknown_reading
+DELETE http://{{ site }}/data/glucose/not-a-reading
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

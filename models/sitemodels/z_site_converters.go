@@ -5,12 +5,88 @@ package sitemodels
 
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
+	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
 	consts "nighttroop.t1d.nz/utils/consts"
 	errors "nighttroop.t1d.nz/utils/errors"
 	httputils "nighttroop.t1d.nz/utils/httputils"
 	security "nighttroop.t1d.nz/utils/security"
 )
 
+func GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading {
+	var pSitemodelsSiteGlucoseReading *SiteGlucoseReading
+	if source != nil {
+		var sitemodelsSiteGlucoseReading SiteGlucoseReading
+		sitemodelsSiteGlucoseReading.ID = (*source).ID
+		sitemodelsSiteGlucoseReading.Mgdl = (*source).Mgdl
+		sitemodelsSiteGlucoseReading.ReadingType = (*source).ReadingType
+		if (*source).Units != nil {
+			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
+			sitemodelsSiteGlucoseReading.Units = &constsUnits
+		}
+		if (*source).MeasurementMethod != nil {
+			xstring := *(*source).MeasurementMethod
+			sitemodelsSiteGlucoseReading.MeasurementMethod = &xstring
+		}
+		if (*source).Delta != nil {
+			xfloat64 := *(*source).Delta
+			sitemodelsSiteGlucoseReading.Delta = &xfloat64
+		}
+		if (*source).Direction != nil {
+			xstring2 := *(*source).Direction
+			sitemodelsSiteGlucoseReading.Direction = &xstring2
+		}
+		if (*source).Noise != nil {
+			xfloat642 := *(*source).Noise
+			sitemodelsSiteGlucoseReading.Noise = &xfloat642
+		}
+		if (*source).Filtered != nil {
+			xfloat643 := *(*source).Filtered
+			sitemodelsSiteGlucoseReading.Filtered = &xfloat643
+		}
+		if (*source).Unfiltered != nil {
+			xfloat644 := *(*source).Unfiltered
+			sitemodelsSiteGlucoseReading.Unfiltered = &xfloat644
+		}
+		if (*source).Rssi != nil {
+			xfloat645 := *(*source).Rssi
+			sitemodelsSiteGlucoseReading.Rssi = &xfloat645
+		}
+		if (*source).Notes != nil {
+			xstring3 := *(*source).Notes
+			sitemodelsSiteGlucoseReading.Notes = &xstring3
+		}
+		if (*source).Reason != nil {
+			xstring4 := *(*source).Reason
+			sitemodelsSiteGlucoseReading.Reason = &xstring4
+		}
+		if (*source).RawJsonData != nil {
+			xstring5 := *(*source).RawJsonData
+			sitemodelsSiteGlucoseReading.RawJsonData = &xstring5
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteGlucoseReading.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteGlucoseReading.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteGlucoseReading.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteGlucoseReading.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring6 := *(*source).CreatedByAppName
+			sitemodelsSiteGlucoseReading.CreatedByAppName = &xstring6
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring7 := *(*source).CreatedByDeviceName
+			sitemodelsSiteGlucoseReading.CreatedByDeviceName = &xstring7
+		}
+		sitemodelsSiteGlucoseReading.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring8 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteGlucoseReading.UpdatedByIdentityName = &xstring8
+		}
+		pSitemodelsSiteGlucoseReading = &sitemodelsSiteGlucoseReading
+	}
+	return pSitemodelsSiteGlucoseReading
+}
 func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteContext) *UserIdentity {
 	var pSitemodelsUserIdentity *UserIdentity
 	if source != nil {
@@ -129,6 +205,17 @@ func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) co
 	default: // ignored
 	}
 	return constsSyncSourceType
+}
+func constsUnitsToConstsUnits(source consts.Units) consts.Units {
+	var constsUnits consts.Units
+	switch source {
+	case consts.UnitsMGDL:
+		constsUnits = consts.UnitsMGDL
+	case consts.UnitsMMOLL:
+		constsUnits = consts.UnitsMMOLL
+	default: // ignored
+	}
+	return constsUnits
 }
 func errorsErrorListToStringList(source errors.ErrorList) []string {
 	var stringList []string

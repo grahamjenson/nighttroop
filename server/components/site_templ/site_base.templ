@@ -94,6 +94,27 @@ templ Header() {
 						@dropdown.Separator()
 					}
 					@dropdown.Label() {
+						Data
+					}
+					@dropdown.Group() {
+						@dropdown.Item(dropdown.ItemProps{
+							ID:   "site--data--glucose-button",
+							Href: "#",
+							Attributes: templ.Attributes{
+								"hx-get":      "/data/glucose",
+								"hx-target":   "#main-content",
+								"hx-push-url": "true",
+								"hx-swap":     "innerHTML",
+							},
+						}) {
+							<span class="flex items-center">
+								@icon.Droplet(icon.Props{Class: "size-4 mr-2"})
+								Glucose Readings
+							</span>
+						}
+					}
+					@dropdown.Separator()
+					@dropdown.Label() {
 						Settings
 					}
 					@dropdown.Group() {

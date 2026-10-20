@@ -1,0 +1,41 @@
+// The default site is seeded with two glucose readings, so log in to it with its JWT
+GOTO {{ .default_url }}/login
+ASSERT_STATUS 200
+SET_COOKIE user_token {{ .default_jwt }}
+
+GOTO {{ .default_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE "Nighttroop"
+
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_VISIBLE #site--glucose--bdd-glucose-1
+ASSERT_VISIBLE #site--glucose--bdd-glucose-2
+SCREENSHOT glucose_readings
+
+// Clicking a reading shows all its details
+CLICK #site--glucose--bdd-glucose-1
+ASSERT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE After lunch
+SCREENSHOT glucose_reading_details
+
+CLICK #site--glucose--details--close
+ASSERT_NOT_VISIBLE #site--glucose--details
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--glucose--bdd-glucose-2--delete
+ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-2
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_VISIBLE #site--glucose--bdd-glucose-1
+SCREENSHOT glucose_reading_deleted
+
+// The deleted reading stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--bdd-glucose-1
+ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-2
