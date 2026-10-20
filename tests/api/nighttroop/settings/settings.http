@@ -42,6 +42,14 @@ ASSERT_EQUALS "mmol/L" "@result.inherited.units"
 ASSERT_EQUALS "UTC" "@result.inherited.timezone"
 ASSERT_EQUALS "YYYY-MM-DD" "@result.inherited.date_format"
 
+// The settings page is the identity's settings; only an admin's page also shows the site's
+NAME get_settings_page_not_admin
+GET http://{{ site }}/settings
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol/L" "@result.inherited.units"
+
 // A setting that is not on the page, which must survive the page's updates
 NAME set_bolus_dia_through_nightscout
 PATCH http://{{ .ns_site }}/api/v3/settings/bolus_dia_hours

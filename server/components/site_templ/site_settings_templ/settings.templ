@@ -15,72 +15,121 @@ func settingValue(value *string) string {
 	return *value
 }
 
-// SettingsPage is "Change Site Settings" for admins or "Change Your Settings" for the signed in identity.
-// A setting left empty follows the level above: the defaults for the site, the site's for an identity.
-templ SettingsPage(model *sitemodels.Settings) {
-	{{ title, path, inherited, idPrefix := "Change Your Settings", "/settings/identity", "Site setting", "site--settings--identity--" }}
-	{{ description := "Your own settings. Anything left on the site setting follows the site." }}
-	if model.ForSite {
-		// Each page has its own ids, so moving between them does not carry a typed value across
-		{{ title, path, inherited, idPrefix = "Change Site Settings", "/settings/site", "Default", "site--settings--site--" }}
-		{{ description = "The settings for everyone on this site. Each user can still change their own." }}
+// settingsColumn is one level of settings on the page, saved by its own form
+type settingsColumn struct {
+	Title     string
+	Save      string
+	Model     *sitemodels.Settings
+	IDPrefix  string
+	FormID    string
+	Path      string
+	Inherited string
+}
+
+type settingField struct {
+	Name    string
+	Label   string
+	Options []string
+}
+
+// settingFields are the settings the page shows, in order; one without options is typed in
+var settingFields = []settingField{
+	{Name: "units", Label: "Units", Options: []string{"mmol/L", "mg/dL"}},
+	{Name: "timezone", Label: "Timezone"},
+	{Name: "language", Label: "Language"},
+	{Name: "date_format", Label: "Date Format", Options: settings.DateFormats},
+	{Name: "time_format", Label: "Time Format", Options: settings.TimeFormats},
+	{Name: "week_start_day", Label: "Week Starts On", Options: settings.WeekStartDays},
+}
+
+func (c settingsColumn) value(name string) *string {
+	return map[string]*string{
+		"units": c.Model.Units, "timezone": c.Model.Timezone, "language": c.Model.Language,
+		"date_format": c.Model.DateFormat, "time_format": c.Model.TimeFormat, "week_start_day": c.Model.WeekStartDay,
+	}[name]
+}
+
+// settingsColumns are the site's settings for an admin, then the signed in identity's own
+func settingsColumns(site *sitemodels.Settings, yours *sitemodels.Settings) []settingsColumn {
+	columns := []settingsColumn{}
+	if site != nil {
+		columns = append(columns, settingsColumn{"Site", "Save Site Settings", site, "site--settings--site--", "site--settings--site-form", "/settings/site", "Default"})
 	}
-	<div id="settings_page" class="mx-auto max-w-3xl space-y-6">
+	if yours != nil {
+		columns = append(columns, settingsColumn{"Yours", "Save Your Settings", yours, "site--settings--identity--", "site--settings--identity-form", "/settings/identity", "Site setting"})
+	}
+	return columns
+}
+
+// SettingsPage shows the site's settings beside an admin's own, or just the signed in identity's.
+// Each column saves with its own form. A setting left empty follows the level above:
+// the defaults for the site, the site's for an identity.
+templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
+	{{ columns := settingsColumns(site, yours) }}
+	<div id="settings_page" class="mx-auto max-w-4xl space-y-6">
 		<div>
-			<h1 class="text-2xl font-bold">{ title }</h1>
-			<p class="mt-1 text-gray-500">{ description }</p>
+			<h1 class="text-2xl font-bold">Settings</h1>
+			if site != nil {
+				<p class="mt-1 text-gray-500">The site's settings are for everyone on this site. Yours change it just for you; anything left on the site setting follows the site.</p>
+			} else {
+				<p class="mt-1 text-gray-500">Your own settings. Anything left on the site setting follows the site.</p>
+			}
 		</div>
-		<form
-			id="site--settings--form"
-			class="space-y-4 rounded-xl border border-gray-200 p-4 shadow-sm"
-			hx-post={ path }
-			hx-target="#toaster"
-			hx-swap="beforeend"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@settingSelect(idPrefix, "units", "Units", inherited, model, model.Units, []string{"mmol/L", "mg/dL"})
-			@settingInput(idPrefix, "timezone", "Timezone", inherited, model, model.Timezone)
-			@settingInput(idPrefix, "language", "Language", inherited, model, model.Language)
-			@settingSelect(idPrefix, "date_format", "Date Format", inherited, model, model.DateFormat, settings.DateFormats)
-			@settingSelect(idPrefix, "time_format", "Time Format", inherited, model, model.TimeFormat, settings.TimeFormats)
-			@settingSelect(idPrefix, "week_start_day", "Week Starts On", inherited, model, model.WeekStartDay, settings.WeekStartDays)
-			<div class="flex justify-end">
-				@button.Button(button.Props{ID: "site--settings--save", Type: button.TypeSubmit}) {
-					Save
+		for _, column := range columns {
+			<form
+				id={ column.FormID }
+				hx-post={ column.Path }
+				hx-target="#toaster"
+				hx-swap="beforeend"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			></form>
+		}
+		<div class={ "grid items-center gap-4 rounded-xl border border-gray-200 p-4 shadow-sm", templ.KV("grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
+			<span></span>
+			for _, column := range columns {
+				<span class="text-sm font-semibold">{ column.Title }</span>
+			}
+			for _, field := range settingFields {
+				<span class="text-sm font-medium">{ field.Label }</span>
+				for _, column := range columns {
+					@settingControl(column, field)
 				}
-			</div>
-		</form>
-	</div>
-}
-
-templ settingRow(id string, label string) {
-	<div class="grid grid-cols-3 items-center gap-4">
-		<label for={ id } class="text-sm font-medium">{ label }</label>
-		<div class="col-span-2">
-			{ children... }
+			}
+			<span></span>
+			for _, column := range columns {
+				<div class="flex justify-end">
+					@button.Button(button.Props{
+						ID:         column.IDPrefix + "save",
+						Type:       button.TypeSubmit,
+						Attributes: templ.Attributes{"form": column.FormID},
+					}) {
+						{ column.Save }
+					}
+				</div>
+			}
 		</div>
 	</div>
 }
 
-templ settingSelect(idPrefix string, name string, label string, inherited string, model *sitemodels.Settings, value *string, options []string) {
-	@settingRow(idPrefix+name, label) {
-		<select id={ idPrefix + name } name={ name } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
-			<option value="" selected?={ value == nil }>{ inherited + " (" + model.Inherited[name] + ")" }</option>
-			for _, option := range options {
+// settingControl is one setting in one column, a select or a text input, belonging to the column's form
+templ settingControl(column settingsColumn, field settingField) {
+	{{ value, placeholder := column.value(field.Name), column.Inherited + " (" + column.Model.Inherited[field.Name] + ")" }}
+	{{ label := field.Label + " (" + column.Title + ")" }}
+	if field.Options != nil {
+		<select id={ column.IDPrefix + field.Name } name={ field.Name } form={ column.FormID } aria-label={ label } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
+			<option value="" selected?={ value == nil }>{ placeholder }</option>
+			for _, option := range field.Options {
 				<option value={ option } selected?={ value != nil && *value == option }>{ option }</option>
 			}
 		</select>
-	}
-}
-
-templ settingInput(idPrefix string, name string, label string, inherited string, model *sitemodels.Settings, value *string) {
-	@settingRow(idPrefix+name, label) {
+	} else {
 		@input.Input(input.Props{
-			ID:          idPrefix + name,
-			Name:        name,
+			ID:          column.IDPrefix + field.Name,
+			Name:        field.Name,
 			Value:       settingValue(value),
-			Placeholder: inherited + " (" + model.Inherited[name] + ")",
+			Placeholder: placeholder,
+			Attributes:  templ.Attributes{"form": column.FormID, "aria-label": label},
 		})
 	}
 }

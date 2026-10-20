@@ -13,5 +13,6 @@ type Settings struct {
 
 	// Inherited are the values from the level above, by setting name
 	Inherited map[string]string `json:"inherited,omitempty"`
-	ForSite   bool              `json:"-"`
+	// Site is the site's settings, shown beside an admin's own on the settings page
+	Site *Settings `json:"-"`
 }
