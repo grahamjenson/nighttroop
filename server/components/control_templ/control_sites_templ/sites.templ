@@ -1,0 +1,196 @@
+package control_sites_templ
+
+import (
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+)
+
+// formatDate shows an optional time in ms, or a dash when it is not set
+func formatDate(ms *int64) string {
+	if ms == nil {
+		return "-"
+	}
+	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
+}
+
+// SitesTable shows one page of sites, newest first, with buttons to the pages either side
+templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
+	<div id="sites_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Sites</h1>
+			<p class="mt-1 text-gray-500">Every site, newest first. Click a site to see its details.</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{ID: "controlSitesTable", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Site
+						}
+						@table.Head() {
+							State
+						}
+						@table.Head() {
+							Created
+						}
+						@table.Head() {
+							Last Seen
+						}
+						@table.Head() {
+							Last Write
+						}
+					}
+				}
+				@table.Body() {
+					if len(sites) == 0 {
+						<tr><td colspan="5" class="p-4 text-sm text-gray-500">No sites here.</td></tr>
+					}
+					for _, site := range sites {
+						@siteRow(site)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(sites) > 0 {
+					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(sites))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@sitesPageButton("control--sites--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(sites)) == limit {
+						@sitesPageButton("control--sites--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ sitesPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/sites?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+templ siteRow(site *controlmodels.Site) {
+	@table.Row(table.RowProps{
+		ID:    "control--site--" + site.ID,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/sites/" + site.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ site.ID }
+		}
+		@table.Cell() {
+			{ site.State }
+		}
+		@table.Cell() {
+			{ formatDate(&site.CreatedAt) }
+		}
+		@table.Cell() {
+			{ formatDate(site.LastSeenAt) }
+		}
+		@table.Cell() {
+			{ formatDate(site.LastWriteAt) }
+		}
+	}
+}
+
+// SiteModal shows a site's details, and lets an admin disable it while it is live
+templ SiteModal(site *controlmodels.Site) {
+	<div id="control--site--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ site.ID }</h2>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@siteDetail("State", site.State)
+				@siteDetail("Batch", site.Batch)
+				@siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit))
+				@siteDetail("Created", formatDate(&site.CreatedAt))
+				@siteDetail("Last Seen", formatDate(site.LastSeenAt))
+				@siteDetail("Last Write", formatDate(site.LastWriteAt))
+				@siteDetail("Disabled", formatDate(site.DisabledAt))
+				@siteDetail("Archived", formatDate(site.ArchivedAt))
+				@siteDetail("Deleted", formatDate(site.DeletedAt))
+			</dl>
+			<div class="mt-4 flex justify-end gap-2">
+				if site.State == "live" {
+					<form
+						hx-post={ "/sites/" + site.ID }
+						hx-target={ "#control--site--" + site.ID }
+						hx-swap="outerHTML"
+						hx-confirm="Disable this site? It will stop being served."
+						hx-status:4xx="target:#toaster swap:beforeend"
+						hx-status:5xx="target:#toaster swap:beforeend"
+					>
+						<input type="hidden" name="state" value="disabled"/>
+						@button.Button(button.Props{ID: "control--site--disable", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+							Disable
+						}
+					</form>
+				}
+				@button.Button(button.Props{
+					ID:      "control--site--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ siteDetail(label string, value string) {
+	<dt class="text-gray-500">{ label }</dt>
+	<dd class="break-all">{ value }</dd>
+}
+
+func orDash(value *int64) string {
+	if value == nil {
+		return "-"
+	}
+	return fmt.Sprint(*value)
+}
+
+// SiteDisabled replaces the site's row, closes its details and shows a toast
+templ SiteDisabled(site *controlmodels.Site) {
+	@siteRow(site)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@toast.Toast(toast.Props{
+			Title:       "Success",
+			Description: "Site Disabled",
+			Variant:     toast.VariantSuccess,
+			Position:    toast.PositionTopCenter,
+			Duration:    5000,
+			Dismissible: true,
+			Icon:        true,
+		})
+	</div>
+}

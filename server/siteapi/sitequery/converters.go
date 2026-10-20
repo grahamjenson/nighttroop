@@ -1,6 +1,9 @@
 package sitequery
 
-import "nighttroop.t1d.nz/data/sql/sitedb"
+import (
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
+)
 
 //go:generate goverter gen .
 
@@ -15,6 +18,9 @@ type QueryConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted
 	QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchSites(source *Query) controldb.SearchSitesParams
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted

@@ -6,12 +6,14 @@ import (
 	"nighttroop.t1d.nz/server/assets/static"
 
 	"nighttroop.t1d.nz/server/controlapi"
+	"nighttroop.t1d.nz/server/controlapi/controlapiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
+	sitesStore := &controlapi.SitesStore{}
 	httputils.AddStandardMiddleware(r, config)
 
 	static.AddStaticRoutes(r)
@@ -25,8 +27,12 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/", controlapi.GetDashboardHandler(controlDB, config))
 		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
+		// Sites
+		r.Get("/sites", controlapiutils.SearchHandler(controlDB, config, sitesStore))
+		r.Get("/sites/{id}", controlapiutils.GetHandler(controlDB, config, sitesStore))
+		r.Post("/sites/{id}", controlapiutils.UpdateHandler(controlDB, config, sitesStore))
+
 		//// TODO
-		// Get Users probably with pagination returns htmx
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes
 		// Get Admin Users
 		// Reset Admin User Password (cannot do currently logged in user)

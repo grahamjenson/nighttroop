@@ -41,7 +41,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		requestModel, herr := extractModelFromRequest[T](siteContext, r)
+		requestModel, herr := ExtractModelFromRequest[T](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -59,7 +59,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		if created {
 			status = http.StatusCreated
 		}
-		writeStatus(w, siteContext.AcceptType, status)
+		WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -100,7 +100,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		id := chi.URLParam(r, "id")
 
-		requestModel, herr := extractModelFromRequest[T](siteContext, r)
+		requestModel, herr := ExtractModelFromRequest[T](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -124,7 +124,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		writeStatus(w, siteContext.AcceptType, status)
+		WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -167,7 +167,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		id := chi.URLParam(r, "id")
 
-		requestModel, herr := extractModelFromRequest[T](siteContext, r)
+		requestModel, herr := ExtractModelFromRequest[T](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -192,7 +192,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		writeStatus(w, siteContext.AcceptType, status)
+		WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -243,7 +243,7 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		writeStatus(w, siteContext.AcceptType, status)
+		WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -289,7 +289,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		}
 
 		status := http.StatusOK
-		writeStatus(w, siteContext.AcceptType, status)
+		WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -353,7 +353,7 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 
 		status := http.StatusOK
-		writeStatus(w, siteContext.AcceptType, status)
+		WriteStatus(w, siteContext.AcceptType, status)
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
@@ -367,9 +367,10 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // ////
 // UTILS
 // ////
-func extractModelFromRequest[T any](siteContext *httputils.SiteContext, r *http.Request) (*T, *HTTPError) {
+// ExtractModelFromRequest reads a JSON or form body into T
+func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.Request) (*T, *HTTPError) {
 	var doc map[string]any
-	switch siteContext.ContentType {
+	switch contentType {
 	case httputils.ContentTypeJSON:
 		if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
 			slog.Error("failed to read JSON body", "error", err)

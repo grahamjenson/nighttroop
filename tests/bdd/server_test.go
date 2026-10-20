@@ -53,6 +53,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 
 		actionContext := map[string]any{
 			"server_url":    serverURL,
+			"control_url":   strings.Replace(serverURL, "127.0.0.1", "control.localhost", 1),
 			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
 			"default_token": siteInformation.PwdNSToken,
 			"default_jwt":   defaultJwt,

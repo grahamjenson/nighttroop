@@ -19,7 +19,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed site/**
+//go:embed site/** control/**
 var embeddedFiles embed.FS
 
 func TestSite(t *testing.T) {
