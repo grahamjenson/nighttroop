@@ -2,6 +2,7 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type Food struct {
@@ -15,20 +16,20 @@ type Food struct {
 
 	Unit *FoodUnit `json:"unit,omitempty"`
 
-	AbsorptionTimeMinutes *FlexibleInt64   `json:"absorptionTime,omitempty"`
-	PreBolus              *FlexibleFloat64 `json:"preBolus,omitempty"`
-	Carbs                 *FlexibleFloat64 `json:"carbs,omitempty"`
-	Fat                   *FlexibleFloat64 `json:"fat,omitempty"`
-	Protein               *FlexibleFloat64 `json:"protein,omitempty"`
-	Fibre                 *FlexibleFloat64 `json:"fibre,omitempty"`
-	Energy                *FlexibleFloat64 `json:"energy,omitempty"`
-	GI                    *FlexibleFloat64 `json:"gi,omitempty"`
-	Portions              *FlexibleFloat64 `json:"portions,omitempty"`
+	AbsorptionTimeMinutes *types.FlexibleInt64   `json:"absorptionTime,omitempty"`
+	PreBolus              *types.FlexibleFloat64 `json:"preBolus,omitempty"`
+	Carbs                 *types.FlexibleFloat64 `json:"carbs,omitempty"`
+	Fat                   *types.FlexibleFloat64 `json:"fat,omitempty"`
+	Protein               *types.FlexibleFloat64 `json:"protein,omitempty"`
+	Fibre                 *types.FlexibleFloat64 `json:"fibre,omitempty"`
+	Energy                *types.FlexibleFloat64 `json:"energy,omitempty"`
+	GI                    *types.FlexibleFloat64 `json:"gi,omitempty"`
+	Portions              *types.FlexibleFloat64 `json:"portions,omitempty"`
 
 	// QuickPick
-	HideAfterUse *FlexibleBool  `json:"hideafteruse,omitempty"`
-	Hidden       *FlexibleBool  `json:"hidden,omitempty"`
-	Position     *FlexibleInt64 `json:"position,omitempty"`
+	HideAfterUse *types.FlexibleBool  `json:"hideafteruse,omitempty"`
+	Hidden       *types.FlexibleBool  `json:"hidden,omitempty"`
+	Position     *types.FlexibleInt64 `json:"position,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity

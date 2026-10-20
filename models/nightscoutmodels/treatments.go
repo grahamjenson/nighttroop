@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 ////
@@ -20,53 +21,53 @@ type Treatment struct {
 	Name *ShortString `json:"name,omitempty"` // Name of the activity
 
 	// Glucose
-	Glucose     *FlexibleFloat64 `json:"glucose,omitempty"`
-	GlucoseType *GlucoseType     `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
+	Glucose     *types.FlexibleFloat64 `json:"glucose,omitempty"`
+	GlucoseType *GlucoseType           `json:"glucoseType,omitempty"` // "Sensor" or "Finger"
 
 	// Nutrition
-	Carbs                 *FlexibleFloat64 `json:"carbs,omitempty"`
-	Protein               *FlexibleFloat64 `json:"protein,omitempty"`
-	Fat                   *FlexibleFloat64 `json:"fat,omitempty"`
-	FoodType              *ShortString     `json:"foodType,omitempty"` // Type of food
-	AbsorptionTimeMinutes *FlexibleInt64   `json:"absorptionTime,omitempty"`
-	Category              *ShortString     `json:"category,omitempty"`
-	Subcategory           *ShortString     `json:"subcategory,omitempty"`
-	PreBolus              *FlexibleFloat64 `json:"preBolus,omitempty"`
+	Carbs                 *types.FlexibleFloat64 `json:"carbs,omitempty"`
+	Protein               *types.FlexibleFloat64 `json:"protein,omitempty"`
+	Fat                   *types.FlexibleFloat64 `json:"fat,omitempty"`
+	FoodType              *ShortString           `json:"foodType,omitempty"` // Type of food
+	AbsorptionTimeMinutes *types.FlexibleInt64   `json:"absorptionTime,omitempty"`
+	Category              *ShortString           `json:"category,omitempty"`
+	Subcategory           *ShortString           `json:"subcategory,omitempty"`
+	PreBolus              *types.FlexibleFloat64 `json:"preBolus,omitempty"`
 	// additional
-	Fibre    *FlexibleFloat64 `json:"fibre,omitempty"`
-	Energy   *FlexibleFloat64 `json:"energy,omitempty"`
-	Portions *FlexibleFloat64 `json:"portions,omitempty"`
+	Fibre    *types.FlexibleFloat64 `json:"fibre,omitempty"`
+	Energy   *types.FlexibleFloat64 `json:"energy,omitempty"`
+	Portions *types.FlexibleFloat64 `json:"portions,omitempty"`
 
 	// Insulin
-	Insulin  *FlexibleFloat64 `json:"insulin,omitempty"`
-	SplitNow *FlexibleFloat64 `json:"splitNow,omitempty"`
-	SplitExt *FlexibleFloat64 `json:"splitExt,omitempty"`
+	Insulin  *types.FlexibleFloat64 `json:"insulin,omitempty"`
+	SplitNow *types.FlexibleFloat64 `json:"splitNow,omitempty"`
+	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
 	// additional
 	Type *ShortString `json:"type,omitempty"`
 
 	// Exercise
-	ActivityType *ShortString   `json:"activityType,omitempty"` // Type of activity
-	Steps        *FlexibleInt64 `json:"steps,omitempty"`        // Step count
-	Calories     *FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
-	HeartRate    *FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
+	ActivityType *ShortString         `json:"activityType,omitempty"` // Type of activity
+	Steps        *types.FlexibleInt64 `json:"steps,omitempty"`        // Step count
+	Calories     *types.FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
+	HeartRate    *types.FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
 
-	DurationMinutes        *FlexibleInt64 `json:"duration,omitempty"`               // minutes
-	DurationInMilliseconds *FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
+	DurationMinutes        *types.FlexibleInt64 `json:"duration,omitempty"`               // minutes
+	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
 
 	// Treatment-specific fields
-	Profile             *ShortString     `json:"profile,omitempty"`
-	OriginalProfileName *ShortString     `json:"originalProfileName,omitempty"`
-	ProfileJSON         *LongJSONString  `json:"profileJson,omitempty"`
-	Percent             *FlexibleFloat64 `json:"percentage,omitempty"`
-	Timeshift           *FlexibleInt64   `json:"timeshift,omitempty"`
+	Profile             *ShortString           `json:"profile,omitempty"`
+	OriginalProfileName *ShortString           `json:"originalProfileName,omitempty"`
+	ProfileJSON         *LongJSONString        `json:"profileJson,omitempty"`
+	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
+	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
 
-	Rate     *FlexibleFloat64 `json:"rate,omitempty"`
-	Absolute *FlexibleFloat64 `json:"absolute,omitempty"`
+	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
+	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`
 
-	HighTarget              *FlexibleFloat64   `json:"targetTop,omitempty"`
-	LowTarget               *FlexibleFloat64   `json:"targetBottom,omitempty"`
-	CorrectionRange         []*FlexibleFloat64 `json:"correctionRange,omitempty"` // [low, high]
-	InsulinNeedsScaleFactor *FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
+	HighTarget              *types.FlexibleFloat64   `json:"targetTop,omitempty"`
+	LowTarget               *types.FlexibleFloat64   `json:"targetBottom,omitempty"`
+	CorrectionRange         []*types.FlexibleFloat64 `json:"correctionRange,omitempty"` // [low, high]
+	InsulinNeedsScaleFactor *types.FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
 
 	Units *consts.Units `json:"units,omitempty"`
 
@@ -87,9 +88,9 @@ type Treatment struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Fields
-	CreatedAt        *DateString    `json:"created_at,omitempty"` // ISO8601 -> time.Time
-	Date             *DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
+	CreatedAt        *DateString          `json:"created_at,omitempty"` // ISO8601 -> time.Time
+	Date             *DateInt             `json:"date,omitempty"`       // Unix timestamp in milliseconds
+	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
 
 	// Non-JSON values to make mapping easier
 	RawJsonData string `json:"-"`

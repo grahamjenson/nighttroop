@@ -2,6 +2,7 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type Activity struct {
@@ -9,13 +10,13 @@ type Activity struct {
 
 	Name *ShortString `json:"name,omitempty"` // Name of the activity
 
-	ActivityType    *ShortString     `json:"activityType,omitempty"` // Type of activity
-	DurationMinutes *FlexibleInt64   `json:"duration,omitempty"`     // Duration in minutes
-	Steps           *FlexibleInt64   `json:"steps,omitempty"`        // Step count
-	Calories        *FlexibleInt64   `json:"calories,omitempty"`     // Calories burned
-	HeartRate       *FlexibleInt64   `json:"heartRate,omitempty"`    // Heart rate
-	Notes           *SanitizedString `json:"notes,omitempty"`        // Notes
-	Reason          *SanitizedString `json:"reason,omitempty"`       // Reason
+	ActivityType    *ShortString         `json:"activityType,omitempty"` // Type of activity
+	DurationMinutes *types.FlexibleInt64 `json:"duration,omitempty"`     // Duration in minutes
+	Steps           *types.FlexibleInt64 `json:"steps,omitempty"`        // Step count
+	Calories        *types.FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
+	HeartRate       *types.FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
+	Notes           *SanitizedString     `json:"notes,omitempty"`        // Notes
+	Reason          *SanitizedString     `json:"reason,omitempty"`       // Reason
 
 	// Date fields
 	CreatedAt *DateString `json:"created_at,omitempty"` // ISO 8601 string
@@ -26,9 +27,9 @@ type Activity struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
-	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
-	RawJsonData      string         `json:"-"`
+	Date             *DateInt             `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
+	RawJsonData      string               `json:"-"`
 }
 
 func (t *Activity) UnmarshalJSON(data []byte) error {

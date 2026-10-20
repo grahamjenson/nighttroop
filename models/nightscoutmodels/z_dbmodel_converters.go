@@ -7,6 +7,7 @@ import (
 	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
 	consts "nighttroop.t1d.nz/utils/consts"
 	httputils "nighttroop.t1d.nz/utils/httputils"
+	types "nighttroop.t1d.nz/utils/types"
 )
 
 func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) Activity {
@@ -21,20 +22,20 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 		pNightscoutmodelsShortString := ShortString((*source).ActivityType)
 		nightscoutmodelsActivity.ActivityType = &pNightscoutmodelsShortString
 		if (*source).DurationMinutes != nil {
-			nightscoutmodelsFlexibleInt64 := FlexibleInt64(*(*source).DurationMinutes)
-			nightscoutmodelsActivity.DurationMinutes = &nightscoutmodelsFlexibleInt64
+			typesFlexibleInt64 := types.FlexibleInt64(*(*source).DurationMinutes)
+			nightscoutmodelsActivity.DurationMinutes = &typesFlexibleInt64
 		}
 		if (*source).Steps != nil {
-			nightscoutmodelsFlexibleInt642 := FlexibleInt64(*(*source).Steps)
-			nightscoutmodelsActivity.Steps = &nightscoutmodelsFlexibleInt642
+			typesFlexibleInt642 := types.FlexibleInt64(*(*source).Steps)
+			nightscoutmodelsActivity.Steps = &typesFlexibleInt642
 		}
 		if (*source).Calories != nil {
-			nightscoutmodelsFlexibleInt643 := FlexibleInt64(*(*source).Calories)
-			nightscoutmodelsActivity.Calories = &nightscoutmodelsFlexibleInt643
+			typesFlexibleInt643 := types.FlexibleInt64(*(*source).Calories)
+			nightscoutmodelsActivity.Calories = &typesFlexibleInt643
 		}
 		if (*source).HeartRate != nil {
-			nightscoutmodelsFlexibleInt644 := FlexibleInt64(*(*source).HeartRate)
-			nightscoutmodelsActivity.HeartRate = &nightscoutmodelsFlexibleInt644
+			typesFlexibleInt644 := types.FlexibleInt64(*(*source).HeartRate)
+			nightscoutmodelsActivity.HeartRate = &typesFlexibleInt644
 		}
 		if (*source).Notes != nil {
 			nightscoutmodelsSanitizedString := SanitizedString(*(*source).Notes)
@@ -58,8 +59,8 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 		pNightscoutmodelsDateInt := DateInt((*source).OccurredAt)
 		nightscoutmodelsActivity.Date = &pNightscoutmodelsDateInt
 		if (*source).UtcOffsetMinutes != nil {
-			nightscoutmodelsFlexibleInt645 := FlexibleInt64(*(*source).UtcOffsetMinutes)
-			nightscoutmodelsActivity.UtcOffsetMinutes = &nightscoutmodelsFlexibleInt645
+			typesFlexibleInt645 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutmodelsActivity.UtcOffsetMinutes = &typesFlexibleInt645
 		}
 		if (*source).RawJsonData != nil {
 			nightscoutmodelsActivity.RawJsonData = *(*source).RawJsonData
@@ -86,8 +87,8 @@ func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteC
 		pNightscoutmodelsShortString := ShortString((*source).CreatedByIdentityName)
 		nightscoutmodelsDeviceStatus.Subject = &pNightscoutmodelsShortString
 		if (*source).UtcOffsetMinutes != nil {
-			nightscoutmodelsFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
-			nightscoutmodelsDeviceStatus.UtcOffsetMinutes = &nightscoutmodelsFlexibleInt64
+			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutmodelsDeviceStatus.UtcOffsetMinutes = &typesFlexibleInt64
 		}
 		if (*source).RawJsonData != nil {
 			nightscoutmodelsDeviceStatus.RawJsonData = *(*source).RawJsonData
@@ -109,25 +110,25 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			nightscoutmodelsEntry.Direction = &xstring
 		}
 		if (*source).Delta != nil {
-			nightscoutmodelsFlexibleFloat64 := FlexibleFloat64(*(*source).Delta)
-			nightscoutmodelsEntry.Trend = &nightscoutmodelsFlexibleFloat64
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Delta)
+			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
 		if (*source).Filtered != nil {
-			nightscoutmodelsFlexibleFloat642 := FlexibleFloat64(*(*source).Filtered)
-			nightscoutmodelsEntry.Filtered = &nightscoutmodelsFlexibleFloat642
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Filtered)
+			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat642
 		}
 		if (*source).Unfiltered != nil {
-			nightscoutmodelsFlexibleFloat643 := FlexibleFloat64(*(*source).Unfiltered)
-			nightscoutmodelsEntry.Unfiltered = &nightscoutmodelsFlexibleFloat643
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Unfiltered)
+			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat643
 		}
 		if (*source).Rssi != nil {
-			nightscoutmodelsFlexibleFloat644 := FlexibleFloat64(*(*source).Rssi)
-			nightscoutmodelsEntry.RSSI = &nightscoutmodelsFlexibleFloat644
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Rssi)
+			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat644
 		}
 		if (*source).Noise != nil {
-			nightscoutmodelsFlexibleFloat645 := FlexibleFloat64(*(*source).Noise)
-			nightscoutmodelsEntry.Noise = &nightscoutmodelsFlexibleFloat645
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Noise)
+			nightscoutmodelsEntry.Noise = &typesFlexibleFloat645
 		}
 		pNightscoutmodelsDateInt := DateInt((*source).OccurredAt)
 		nightscoutmodelsEntry.Date = &pNightscoutmodelsDateInt
@@ -135,8 +136,8 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		pNightscoutmodelsDateInt2 := DateInt((*source).OccurredAt)
 		nightscoutmodelsEntry.Mills = &pNightscoutmodelsDateInt2
 		if (*source).UtcOffsetMinutes != nil {
-			nightscoutmodelsFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
-			nightscoutmodelsEntry.UtcOffsetMinutes = &nightscoutmodelsFlexibleInt64
+			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutmodelsEntry.UtcOffsetMinutes = &typesFlexibleInt64
 		}
 		if (*source).CreatedByDeviceName != nil {
 			nightscoutmodelsShortString := ShortString(*(*source).CreatedByDeviceName)
@@ -148,8 +149,8 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		}
 		pNightscoutmodelsShortString := ShortString((*source).CreatedByIdentityName)
 		nightscoutmodelsEntry.Subject = &pNightscoutmodelsShortString
-		pNightscoutmodelsFlexibleFloat64 := FlexibleFloat64((*source).Mgdl)
-		nightscoutmodelsEntry.Mgdl = &pNightscoutmodelsFlexibleFloat64
+		pTypesFlexibleFloat64 := types.FlexibleFloat64((*source).Mgdl)
+		nightscoutmodelsEntry.Mgdl = &pTypesFlexibleFloat64
 		if (*source).RawJsonData != nil {
 			nightscoutmodelsEntry.RawJsonData = *(*source).RawJsonData
 		}
@@ -176,36 +177,36 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 			nightscoutmodelsFood.Subcategory = &nightscoutmodelsShortString3
 		}
 		if (*source).AbsorptionTimeMinutes != nil {
-			nightscoutmodelsFlexibleInt64 := FlexibleInt64(*(*source).AbsorptionTimeMinutes)
-			nightscoutmodelsFood.AbsorptionTimeMinutes = &nightscoutmodelsFlexibleInt64
+			typesFlexibleInt64 := types.FlexibleInt64(*(*source).AbsorptionTimeMinutes)
+			nightscoutmodelsFood.AbsorptionTimeMinutes = &typesFlexibleInt64
 		}
 		if (*source).PreBolus != nil {
-			nightscoutmodelsFlexibleFloat64 := FlexibleFloat64(*(*source).PreBolus)
-			nightscoutmodelsFood.PreBolus = &nightscoutmodelsFlexibleFloat64
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).PreBolus)
+			nightscoutmodelsFood.PreBolus = &typesFlexibleFloat64
 		}
 		if (*source).Carbs != nil {
-			nightscoutmodelsFlexibleFloat642 := FlexibleFloat64(*(*source).Carbs)
-			nightscoutmodelsFood.Carbs = &nightscoutmodelsFlexibleFloat642
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Carbs)
+			nightscoutmodelsFood.Carbs = &typesFlexibleFloat642
 		}
 		if (*source).Fat != nil {
-			nightscoutmodelsFlexibleFloat643 := FlexibleFloat64(*(*source).Fat)
-			nightscoutmodelsFood.Fat = &nightscoutmodelsFlexibleFloat643
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Fat)
+			nightscoutmodelsFood.Fat = &typesFlexibleFloat643
 		}
 		if (*source).Protein != nil {
-			nightscoutmodelsFlexibleFloat644 := FlexibleFloat64(*(*source).Protein)
-			nightscoutmodelsFood.Protein = &nightscoutmodelsFlexibleFloat644
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Protein)
+			nightscoutmodelsFood.Protein = &typesFlexibleFloat644
 		}
 		if (*source).Fibre != nil {
-			nightscoutmodelsFlexibleFloat645 := FlexibleFloat64(*(*source).Fibre)
-			nightscoutmodelsFood.Fibre = &nightscoutmodelsFlexibleFloat645
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Fibre)
+			nightscoutmodelsFood.Fibre = &typesFlexibleFloat645
 		}
 		if (*source).Energy != nil {
-			nightscoutmodelsFlexibleFloat646 := FlexibleFloat64(*(*source).Energy)
-			nightscoutmodelsFood.Energy = &nightscoutmodelsFlexibleFloat646
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).Energy)
+			nightscoutmodelsFood.Energy = &typesFlexibleFloat646
 		}
 		if (*source).Portions != nil {
-			nightscoutmodelsFlexibleFloat647 := FlexibleFloat64(*(*source).Portions)
-			nightscoutmodelsFood.Portions = &nightscoutmodelsFlexibleFloat647
+			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).Portions)
+			nightscoutmodelsFood.Portions = &typesFlexibleFloat647
 		}
 		if (*source).CreatedByDeviceName != nil {
 			nightscoutmodelsShortString4 := ShortString(*(*source).CreatedByDeviceName)
@@ -233,16 +234,16 @@ func DBModelToProfile(source *sitedb.ProfilePreset, context *httputils.SiteConte
 			nightscoutmodelsProfile.Units = &constsUnits
 		}
 		if (*source).Dia != nil {
-			nightscoutmodelsFlexibleFloat64 := FlexibleFloat64(*(*source).Dia)
-			nightscoutmodelsProfile.Dia = &nightscoutmodelsFlexibleFloat64
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).Dia)
+			nightscoutmodelsProfile.Dia = &typesFlexibleFloat64
 		}
 		if (*source).CarbsHr != nil {
-			nightscoutmodelsFlexibleFloat642 := FlexibleFloat64(*(*source).CarbsHr)
-			nightscoutmodelsProfile.CarbsHr = &nightscoutmodelsFlexibleFloat642
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).CarbsHr)
+			nightscoutmodelsProfile.CarbsHr = &typesFlexibleFloat642
 		}
 		if (*source).Delay != nil {
-			nightscoutmodelsFlexibleFloat643 := FlexibleFloat64(*(*source).Delay)
-			nightscoutmodelsProfile.Delay = &nightscoutmodelsFlexibleFloat643
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Delay)
+			nightscoutmodelsProfile.Delay = &typesFlexibleFloat643
 		}
 		if (*source).Timezone != nil {
 			nightscoutmodelsTimezone := Timezone(*(*source).Timezone)
@@ -284,8 +285,8 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		pNightscoutmodelsDateInt2 := DateInt((*source).OccurredAt)
 		nightscoutmodelsProfileStore.Date = &pNightscoutmodelsDateInt2
 		if (*source).UtcOffsetMinutes != nil {
-			nightscoutmodelsFlexibleInt64 := FlexibleInt64(*(*source).UtcOffsetMinutes)
-			nightscoutmodelsProfileStore.UtcOffsetMinutes = &nightscoutmodelsFlexibleInt64
+			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
+			nightscoutmodelsProfileStore.UtcOffsetMinutes = &typesFlexibleInt64
 		}
 		if (*source).RawJsonData != nil {
 			nightscoutmodelsProfileStore.RawJsonData = *(*source).RawJsonData

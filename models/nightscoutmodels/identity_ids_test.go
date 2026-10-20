@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/utils/testutils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // Records keep the writer's identity id, as its name can be reused after the identity is deleted
@@ -15,7 +16,7 @@ func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	_, _, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
 	require.NoError(t, err)
 	q, ctx := site.SiteDB.Queries, context.Background()
-	sgv := nightscoutmodels.FlexibleFloat64(120)
+	sgv := types.FlexibleFloat64(120)
 	entry := nightscoutmodels.Entry{SGV: &sgv}
 	rawJSON := "{}"
 	// The API stores the raw JSON after converting, so the tests do too

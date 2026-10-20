@@ -1,8 +1,11 @@
 package nightscoutmodels
 
-import "fmt"
+import (
+	"fmt"
+	"nighttroop.t1d.nz/utils/types"
+)
 
-func ValidateOffset(offsetMinutes FlexibleInt64) error {
+func ValidateOffset(offsetMinutes types.FlexibleInt64) error {
 	if offsetMinutes < -1440 || offsetMinutes > 1440 {
 		return fmt.Errorf("invalid offset: %d", offsetMinutes)
 	}

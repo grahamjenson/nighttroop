@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // goverter:converter
@@ -412,16 +413,16 @@ type TreatmentsEvenetConverter interface {
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 
-func MinutesToMilliseconds(durationMinutes any) *FlexibleInt64 {
+func MinutesToMilliseconds(durationMinutes any) *types.FlexibleInt64 {
 	switch v := durationMinutes.(type) {
 	case int64:
-		value := FlexibleInt64(v * 60 * 1000)
+		value := types.FlexibleInt64(v * 60 * 1000)
 		return &value
 	case *int64:
 		if v == nil {
 			return nil
 		}
-		value := FlexibleInt64(*v * 60 * 1000)
+		value := types.FlexibleInt64(*v * 60 * 1000)
 		return &value
 	}
 
@@ -442,7 +443,7 @@ func ToProfileJSON(source interface {
 	profile := Profile{}
 
 	if source.GetDia() != nil {
-		profile.Dia = ptr(FlexibleFloat64(*source.GetDia()))
+		profile.Dia = ptr(types.FlexibleFloat64(*source.GetDia()))
 	}
 	if source.GetTimezone() != nil {
 		profile.Timezone = ptr(Timezone(*source.GetTimezone()))
@@ -477,11 +478,11 @@ func ToProfileJSON(source interface {
 func ToCorrectionRange(source interface {
 	GetLowTarget() float64
 	GetHighTarget() float64
-}) []*FlexibleFloat64 {
+}) []*types.FlexibleFloat64 {
 
-	correctionRange := []*FlexibleFloat64{
-		ptr(FlexibleFloat64(source.GetLowTarget())),
-		ptr(FlexibleFloat64(source.GetHighTarget())),
+	correctionRange := []*types.FlexibleFloat64{
+		ptr(types.FlexibleFloat64(source.GetLowTarget())),
+		ptr(types.FlexibleFloat64(source.GetHighTarget())),
 	}
 	return correctionRange
 }

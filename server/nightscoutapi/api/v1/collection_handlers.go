@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 func Search(dep nsutils.Dependencies) http.HandlerFunc {
@@ -81,10 +81,10 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw nightscoutmodels.FlexibleBool
+		var raw types.FlexibleBool
 		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
 		if rawError != nil {
-			raw = nightscoutmodels.FlexibleBool(false)
+			raw = types.FlexibleBool(false)
 		}
 
 		// Loop over the array of models sent
@@ -217,10 +217,10 @@ func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
-		var raw nightscoutmodels.FlexibleBool
+		var raw types.FlexibleBool
 		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
 		if rawError != nil {
-			raw = nightscoutmodels.FlexibleBool(false)
+			raw = types.FlexibleBool(false)
 		}
 
 		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate, raw.Bool())

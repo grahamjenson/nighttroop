@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 ////
@@ -23,23 +24,23 @@ type Entry struct {
 	Identifier *IdentifierString `json:"identifier,omitempty"`
 	Type       *EntryType        `json:"type,omitempty"`
 
-	SGV       *FlexibleFloat64 `json:"sgv,omitempty"`
-	MBG       *FlexibleFloat64 `json:"mbg,omitempty"`
-	Direction *string          `json:"direction,omitempty"`
-	Trend     *FlexibleFloat64 `json:"trend,omitempty"`
-	Units     *consts.Units    `json:"units,omitempty"`
+	SGV       *types.FlexibleFloat64 `json:"sgv,omitempty"`
+	MBG       *types.FlexibleFloat64 `json:"mbg,omitempty"`
+	Direction *string                `json:"direction,omitempty"`
+	Trend     *types.FlexibleFloat64 `json:"trend,omitempty"`
+	Units     *consts.Units          `json:"units,omitempty"`
 
-	Filtered   *FlexibleFloat64 `json:"filtered,omitempty"`
-	Unfiltered *FlexibleFloat64 `json:"unfiltered,omitempty"`
-	RSSI       *FlexibleFloat64 `json:"rssi,omitempty"`
-	Noise      *FlexibleFloat64 `json:"noise,omitempty"`
-	SysTime    *DateString      `json:"sysTime,omitempty"`
+	Filtered   *types.FlexibleFloat64 `json:"filtered,omitempty"`
+	Unfiltered *types.FlexibleFloat64 `json:"unfiltered,omitempty"`
+	RSSI       *types.FlexibleFloat64 `json:"rssi,omitempty"`
+	Noise      *types.FlexibleFloat64 `json:"noise,omitempty"`
+	SysTime    *DateString            `json:"sysTime,omitempty"`
 
 	// Date fields
-	Date             *DateInt       `json:"date,omitempty"`
-	DateString       *DateString    `json:"dateString,omitempty"`
-	Mills            *DateInt       `json:"mills,omitempty"`
-	UtcOffsetMinutes *FlexibleInt64 `json:"utcOffset,omitempty"`
+	Date             *DateInt             `json:"date,omitempty"`
+	DateString       *DateString          `json:"dateString,omitempty"`
+	Mills            *DateInt             `json:"mills,omitempty"`
+	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`
 
 	// Default String Fields
 	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -47,8 +48,8 @@ type Entry struct {
 	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
-	Mgdl        *FlexibleFloat64 `json:"-"`
-	RawJsonData string           `json:"-"`
+	Mgdl        *types.FlexibleFloat64 `json:"-"`
+	RawJsonData string                 `json:"-"`
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
@@ -74,14 +75,14 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 
 	// Setting the value
 	if t.Mgdl == nil {
-		var res FlexibleFloat64
+		var res types.FlexibleFloat64
 		if t.SGV != nil {
 			res = *t.SGV
 		} else if t.MBG != nil {
 			res = *t.MBG
 		}
 
-		res = FlexibleFloat64(t.Units.ToMGDL(res.Float64()))
+		res = types.FlexibleFloat64(t.Units.ToMGDL(res.Float64()))
 		t.Mgdl = &res
 	}
 
@@ -103,7 +104,7 @@ func (t *Entry) MarshalJSON() ([]byte, error) {
 	type Alias Entry
 	// Clean Up and Populate Date Fields
 	if t.UtcOffsetMinutes == nil {
-		zero := FlexibleInt64(0)
+		zero := types.FlexibleInt64(0)
 		t.UtcOffsetMinutes = &zero
 	}
 
