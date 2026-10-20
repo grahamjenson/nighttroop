@@ -16,11 +16,11 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
 		nightscoutmodelsActivity.Identifier = &pNightscoutmodelsIdentifierString
 		if (*source).Name != nil {
-			nightscoutmodelsShortString := ShortString(*(*source).Name)
-			nightscoutmodelsActivity.Name = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*(*source).Name)
+			nightscoutmodelsActivity.Name = &typesShortString
 		}
-		pNightscoutmodelsShortString := ShortString((*source).ActivityType)
-		nightscoutmodelsActivity.ActivityType = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString((*source).ActivityType)
+		nightscoutmodelsActivity.ActivityType = &pTypesShortString
 		if (*source).DurationMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).DurationMinutes)
 			nightscoutmodelsActivity.DurationMinutes = &typesFlexibleInt64
@@ -38,26 +38,26 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 			nightscoutmodelsActivity.HeartRate = &typesFlexibleInt644
 		}
 		if (*source).Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*(*source).Notes)
-			nightscoutmodelsActivity.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*(*source).Notes)
+			nightscoutmodelsActivity.Notes = &typesSanitizedString
 		}
 		if (*source).Reason != nil {
-			nightscoutmodelsSanitizedString2 := SanitizedString(*(*source).Reason)
-			nightscoutmodelsActivity.Reason = &nightscoutmodelsSanitizedString2
+			typesSanitizedString2 := types.SanitizedString(*(*source).Reason)
+			nightscoutmodelsActivity.Reason = &typesSanitizedString2
 		}
 		nightscoutmodelsActivity.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutmodelsShortString2 := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutmodelsActivity.Device = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*(*source).CreatedByDeviceName)
+			nightscoutmodelsActivity.Device = &typesShortString2
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutmodelsShortString3 := ShortString(*(*source).CreatedByAppName)
-			nightscoutmodelsActivity.App = &nightscoutmodelsShortString3
+			typesShortString3 := types.ShortString(*(*source).CreatedByAppName)
+			nightscoutmodelsActivity.App = &typesShortString3
 		}
-		pNightscoutmodelsShortString2 := ShortString((*source).CreatedByIdentityName)
-		nightscoutmodelsActivity.Subject = &pNightscoutmodelsShortString2
-		pNightscoutmodelsDateInt := DateInt((*source).OccurredAt)
-		nightscoutmodelsActivity.Date = &pNightscoutmodelsDateInt
+		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
+		nightscoutmodelsActivity.Subject = &pTypesShortString2
+		pTypesDateInt := types.DateInt((*source).OccurredAt)
+		nightscoutmodelsActivity.Date = &pTypesDateInt
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt645 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsActivity.UtcOffsetMinutes = &typesFlexibleInt645
@@ -74,18 +74,18 @@ func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteC
 		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
 		nightscoutmodelsDeviceStatus.Identifier = &pNightscoutmodelsIdentifierString
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutmodelsShortString := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutmodelsDeviceStatus.Device = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*(*source).CreatedByDeviceName)
+			nightscoutmodelsDeviceStatus.Device = &typesShortString
 		}
-		pNightscoutmodelsDateInt := DateInt((*source).OccurredAt)
-		nightscoutmodelsDeviceStatus.Date = &pNightscoutmodelsDateInt
+		pTypesDateInt := types.DateInt((*source).OccurredAt)
+		nightscoutmodelsDeviceStatus.Date = &pTypesDateInt
 		nightscoutmodelsDeviceStatus.CreatedAt = ModelDateStringFromDateIntAndUTCOffset((*source))
 		if (*source).CreatedByAppName != nil {
-			nightscoutmodelsShortString2 := ShortString(*(*source).CreatedByAppName)
-			nightscoutmodelsDeviceStatus.App = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*(*source).CreatedByAppName)
+			nightscoutmodelsDeviceStatus.App = &typesShortString2
 		}
-		pNightscoutmodelsShortString := ShortString((*source).CreatedByIdentityName)
-		nightscoutmodelsDeviceStatus.Subject = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString((*source).CreatedByIdentityName)
+		nightscoutmodelsDeviceStatus.Subject = &pTypesShortString
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsDeviceStatus.UtcOffsetMinutes = &typesFlexibleInt64
@@ -130,25 +130,25 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Noise)
 			nightscoutmodelsEntry.Noise = &typesFlexibleFloat645
 		}
-		pNightscoutmodelsDateInt := DateInt((*source).OccurredAt)
-		nightscoutmodelsEntry.Date = &pNightscoutmodelsDateInt
+		pTypesDateInt := types.DateInt((*source).OccurredAt)
+		nightscoutmodelsEntry.Date = &pTypesDateInt
 		nightscoutmodelsEntry.DateString = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutmodelsDateInt2 := DateInt((*source).OccurredAt)
-		nightscoutmodelsEntry.Mills = &pNightscoutmodelsDateInt2
+		pTypesDateInt2 := types.DateInt((*source).OccurredAt)
+		nightscoutmodelsEntry.Mills = &pTypesDateInt2
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsEntry.UtcOffsetMinutes = &typesFlexibleInt64
 		}
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutmodelsShortString := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutmodelsEntry.Device = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*(*source).CreatedByDeviceName)
+			nightscoutmodelsEntry.Device = &typesShortString
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutmodelsShortString2 := ShortString(*(*source).CreatedByAppName)
-			nightscoutmodelsEntry.App = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*(*source).CreatedByAppName)
+			nightscoutmodelsEntry.App = &typesShortString2
 		}
-		pNightscoutmodelsShortString := ShortString((*source).CreatedByIdentityName)
-		nightscoutmodelsEntry.Subject = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString((*source).CreatedByIdentityName)
+		nightscoutmodelsEntry.Subject = &pTypesShortString
 		pTypesFlexibleFloat64 := types.FlexibleFloat64((*source).Mgdl)
 		nightscoutmodelsEntry.Mgdl = &pTypesFlexibleFloat64
 		if (*source).RawJsonData != nil {
@@ -162,19 +162,19 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 	if source != nil {
 		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
 		nightscoutmodelsFood.Identifier = &pNightscoutmodelsIdentifierString
-		pNightscoutmodelsShortString := ShortString((*source).Name)
-		nightscoutmodelsFood.Name = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString((*source).Name)
+		nightscoutmodelsFood.Name = &pTypesShortString
 		if (*source).FoodType != nil {
-			nightscoutmodelsShortString := ShortString(*(*source).FoodType)
-			nightscoutmodelsFood.FoodType = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*(*source).FoodType)
+			nightscoutmodelsFood.FoodType = &typesShortString
 		}
 		if (*source).Category != nil {
-			nightscoutmodelsShortString2 := ShortString(*(*source).Category)
-			nightscoutmodelsFood.Category = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*(*source).Category)
+			nightscoutmodelsFood.Category = &typesShortString2
 		}
 		if (*source).Subcategory != nil {
-			nightscoutmodelsShortString3 := ShortString(*(*source).Subcategory)
-			nightscoutmodelsFood.Subcategory = &nightscoutmodelsShortString3
+			typesShortString3 := types.ShortString(*(*source).Subcategory)
+			nightscoutmodelsFood.Subcategory = &typesShortString3
 		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).AbsorptionTimeMinutes)
@@ -209,17 +209,17 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 			nightscoutmodelsFood.Portions = &typesFlexibleFloat647
 		}
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutmodelsShortString4 := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutmodelsFood.Device = &nightscoutmodelsShortString4
+			typesShortString4 := types.ShortString(*(*source).CreatedByDeviceName)
+			nightscoutmodelsFood.Device = &typesShortString4
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutmodelsShortString5 := ShortString(*(*source).CreatedByAppName)
-			nightscoutmodelsFood.App = &nightscoutmodelsShortString5
+			typesShortString5 := types.ShortString(*(*source).CreatedByAppName)
+			nightscoutmodelsFood.App = &typesShortString5
 		}
-		pNightscoutmodelsShortString2 := ShortString((*source).CreatedByIdentityName)
-		nightscoutmodelsFood.Subject = &pNightscoutmodelsShortString2
-		pNightscoutmodelsDateInt := DateInt((*source).CreatedAt)
-		nightscoutmodelsFood.Date = &pNightscoutmodelsDateInt
+		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
+		nightscoutmodelsFood.Subject = &pTypesShortString2
+		pTypesDateInt := types.DateInt((*source).CreatedAt)
+		nightscoutmodelsFood.Date = &pTypesDateInt
 		if (*source).RawJsonData != nil {
 			nightscoutmodelsFood.RawJsonData = *(*source).RawJsonData
 		}
@@ -262,28 +262,28 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 	if source != nil {
 		pNightscoutmodelsIdentifierString := IdentifierString((*source).ID)
 		nightscoutmodelsProfileStore.Identifier = &pNightscoutmodelsIdentifierString
-		pNightscoutmodelsShortString := ShortString((*source).Name)
-		nightscoutmodelsProfileStore.DefaultProfile = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString((*source).Name)
+		nightscoutmodelsProfileStore.DefaultProfile = &pTypesShortString
 		if (*source).Units != nil {
 			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
 			nightscoutmodelsProfileStore.Units = &constsUnits
 		}
 		nightscoutmodelsProfileStore.LoopSettings = JSONToLoopSettings((*source).LoopSettingsJson)
 		if (*source).CreatedByDeviceName != nil {
-			nightscoutmodelsShortString := ShortString(*(*source).CreatedByDeviceName)
-			nightscoutmodelsProfileStore.Device = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*(*source).CreatedByDeviceName)
+			nightscoutmodelsProfileStore.Device = &typesShortString
 		}
 		if (*source).CreatedByAppName != nil {
-			nightscoutmodelsShortString2 := ShortString(*(*source).CreatedByAppName)
-			nightscoutmodelsProfileStore.App = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*(*source).CreatedByAppName)
+			nightscoutmodelsProfileStore.App = &typesShortString2
 		}
-		pNightscoutmodelsShortString2 := ShortString((*source).CreatedByIdentityName)
-		nightscoutmodelsProfileStore.Subject = &pNightscoutmodelsShortString2
+		pTypesShortString2 := types.ShortString((*source).CreatedByIdentityName)
+		nightscoutmodelsProfileStore.Subject = &pTypesShortString2
 		nightscoutmodelsProfileStore.StartDate = ModelDateStringFromDateIntAndUTCOffset((*source))
-		pNightscoutmodelsDateInt := DateInt((*source).OccurredAt)
-		nightscoutmodelsProfileStore.Mills = &pNightscoutmodelsDateInt
-		pNightscoutmodelsDateInt2 := DateInt((*source).OccurredAt)
-		nightscoutmodelsProfileStore.Date = &pNightscoutmodelsDateInt2
+		pTypesDateInt := types.DateInt((*source).OccurredAt)
+		nightscoutmodelsProfileStore.Mills = &pTypesDateInt
+		pTypesDateInt2 := types.DateInt((*source).OccurredAt)
+		nightscoutmodelsProfileStore.Date = &pTypesDateInt2
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsProfileStore.UtcOffsetMinutes = &typesFlexibleInt64

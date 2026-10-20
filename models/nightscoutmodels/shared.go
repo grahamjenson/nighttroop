@@ -12,7 +12,7 @@ func ValidateOffset(offsetMinutes types.FlexibleInt64) error {
 	return nil
 }
 
-func ValidateDate(date DateInt) error {
+func ValidateDate(date types.DateInt) error {
 	if date == 0 {
 		return fmt.Errorf("invalid date: %d", date)
 	}

@@ -3,12 +3,13 @@ package nightscoutmodels
 import (
 	"encoding/json"
 	"fmt"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type Setting struct {
-	Identifier *IdentifierString `json:"identifier,omitempty"`
-	Type       *ShortString      `json:"type,omitempty"`
-	Value      any               `json:"value,omitempty"`
+	Identifier *IdentifierString  `json:"identifier,omitempty"`
+	Type       *types.ShortString `json:"type,omitempty"`
+	Value      any                `json:"value,omitempty"`
 }
 
 func (t *Setting) UnmarshalJSON(data []byte) error {

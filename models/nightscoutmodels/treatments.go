@@ -18,7 +18,7 @@ type Treatment struct {
 
 	EventType *TreatmentEventType `json:"eventType,omitempty"`
 
-	Name *ShortString `json:"name,omitempty"` // Name of the activity
+	Name *types.ShortString `json:"name,omitempty"` // Name of the activity
 
 	// Glucose
 	Glucose     *types.FlexibleFloat64 `json:"glucose,omitempty"`
@@ -28,10 +28,10 @@ type Treatment struct {
 	Carbs                 *types.FlexibleFloat64 `json:"carbs,omitempty"`
 	Protein               *types.FlexibleFloat64 `json:"protein,omitempty"`
 	Fat                   *types.FlexibleFloat64 `json:"fat,omitempty"`
-	FoodType              *ShortString           `json:"foodType,omitempty"` // Type of food
+	FoodType              *types.ShortString     `json:"foodType,omitempty"` // Type of food
 	AbsorptionTimeMinutes *types.FlexibleInt64   `json:"absorptionTime,omitempty"`
-	Category              *ShortString           `json:"category,omitempty"`
-	Subcategory           *ShortString           `json:"subcategory,omitempty"`
+	Category              *types.ShortString     `json:"category,omitempty"`
+	Subcategory           *types.ShortString     `json:"subcategory,omitempty"`
 	PreBolus              *types.FlexibleFloat64 `json:"preBolus,omitempty"`
 	// additional
 	Fibre    *types.FlexibleFloat64 `json:"fibre,omitempty"`
@@ -43,10 +43,10 @@ type Treatment struct {
 	SplitNow *types.FlexibleFloat64 `json:"splitNow,omitempty"`
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
 	// additional
-	Type *ShortString `json:"type,omitempty"`
+	Type *types.ShortString `json:"type,omitempty"`
 
 	// Exercise
-	ActivityType *ShortString         `json:"activityType,omitempty"` // Type of activity
+	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity
 	Steps        *types.FlexibleInt64 `json:"steps,omitempty"`        // Step count
 	Calories     *types.FlexibleInt64 `json:"calories,omitempty"`     // Calories burned
 	HeartRate    *types.FlexibleInt64 `json:"heartRate,omitempty"`    // Heart rate
@@ -55,8 +55,8 @@ type Treatment struct {
 	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
 
 	// Treatment-specific fields
-	Profile             *ShortString           `json:"profile,omitempty"`
-	OriginalProfileName *ShortString           `json:"originalProfileName,omitempty"`
+	Profile             *types.ShortString     `json:"profile,omitempty"`
+	OriginalProfileName *types.ShortString     `json:"originalProfileName,omitempty"`
 	ProfileJSON         *LongJSONString        `json:"profileJson,omitempty"`
 	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
@@ -71,25 +71,25 @@ type Treatment struct {
 
 	Units *consts.Units `json:"units,omitempty"`
 
-	SensorCode    *ShortString `json:"sensorCode,omitempty"`
-	TransmitterID *ShortString `json:"transmitterId,omitempty"`
+	SensorCode    *types.ShortString `json:"sensorCode,omitempty"`
+	TransmitterID *types.ShortString `json:"transmitterId,omitempty"`
 
-	PumpID     *ShortString `json:"pumpId,omitempty"`
-	PumpSerial *ShortString `json:"pumpSerial,omitempty"`
-	PumpType   *ShortString `json:"pumpType,omitempty"`
+	PumpID     *types.ShortString `json:"pumpId,omitempty"`
+	PumpSerial *types.ShortString `json:"pumpSerial,omitempty"`
+	PumpType   *types.ShortString `json:"pumpType,omitempty"`
 
-	Notes     *SanitizedString `json:"notes,omitempty"`
-	EnteredBy *ShortString     `json:"enteredBy,omitempty"`
-	Reason    *ShortString     `json:"reason,omitempty"`
+	Notes     *types.SanitizedString `json:"notes,omitempty"`
+	EnteredBy *types.ShortString     `json:"enteredBy,omitempty"`
+	Reason    *types.ShortString     `json:"reason,omitempty"`
 
 	// Default String Fields
-	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
-	App     *ShortString `json:"app,omitempty"`     // App used for the activity
-	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
+	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Fields
 	CreatedAt        *DateString          `json:"created_at,omitempty"` // ISO8601 -> time.Time
-	Date             *DateInt             `json:"date,omitempty"`       // Unix timestamp in milliseconds
+	Date             *types.DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
 
 	// Non-JSON values to make mapping easier

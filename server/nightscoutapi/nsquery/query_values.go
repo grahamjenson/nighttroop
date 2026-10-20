@@ -8,44 +8,43 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/utils/types"
 )
 
 type QueryValues struct {
 	// Dates
 	// lte and gte both
-	DateGTE *nightscoutmodels.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
-	DateGT  *nightscoutmodels.DateInt `mapstructure:"dategt,omitempty" json:"dategt,omitempty"`
+	DateGTE *types.DateInt `mapstructure:"dategte,omitempty" json:"dategte,omitempty"`
+	DateGT  *types.DateInt `mapstructure:"dategt,omitempty" json:"dategt,omitempty"`
 
-	DateEQ *nightscoutmodels.DateInt `mapstructure:"dateeq,omitempty" json:"dateeq,omitempty"`
+	DateEQ *types.DateInt `mapstructure:"dateeq,omitempty" json:"dateeq,omitempty"`
 
-	DateLTE *nightscoutmodels.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
-	DateLT  *nightscoutmodels.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
+	DateLTE *types.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
+	DateLT  *types.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
 
-	CreatedAtGTE *nightscoutmodels.DateInt `mapstructure:"createdatgte,omitempty" json:"createdatgte,omitempty"`
-	CreatedAtGT  *nightscoutmodels.DateInt `mapstructure:"createdatgt,omitempty" json:"createdatgt,omitempty"`
+	CreatedAtGTE *types.DateInt `mapstructure:"createdatgte,omitempty" json:"createdatgte,omitempty"`
+	CreatedAtGT  *types.DateInt `mapstructure:"createdatgt,omitempty" json:"createdatgt,omitempty"`
 
-	CreatedAtLTE *nightscoutmodels.DateInt `mapstructure:"createdatlte,omitempty" json:"createdatlte,omitempty"`
-	CreatedAtLT  *nightscoutmodels.DateInt `mapstructure:"createdatlt,omitempty" json:"createdatlt,omitempty"`
+	CreatedAtLTE *types.DateInt `mapstructure:"createdatlte,omitempty" json:"createdatlte,omitempty"`
+	CreatedAtLT  *types.DateInt `mapstructure:"createdatlt,omitempty" json:"createdatlt,omitempty"`
 
-	UpdatedGTE *nightscoutmodels.DateInt `mapstructure:"updatedgte,omitempty" json:"updatedgte,omitempty"`
-	UpdatedGT  *nightscoutmodels.DateInt `mapstructure:"updatedgt,omitempty" json:"updatedgt,omitempty"`
-	UpdatedLTE *nightscoutmodels.DateInt `mapstructure:"updatedlte,omitempty" json:"updatedlte,omitempty"`
-	UpdatedLT  *nightscoutmodels.DateInt `mapstructure:"updatedlt,omitempty" json:"updatedlt,omitempty"`
+	UpdatedGTE *types.DateInt `mapstructure:"updatedgte,omitempty" json:"updatedgte,omitempty"`
+	UpdatedGT  *types.DateInt `mapstructure:"updatedgt,omitempty" json:"updatedgt,omitempty"`
+	UpdatedLTE *types.DateInt `mapstructure:"updatedlte,omitempty" json:"updatedlte,omitempty"`
+	UpdatedLT  *types.DateInt `mapstructure:"updatedlt,omitempty" json:"updatedlt,omitempty"`
 
 	// Type
-	TypeEq  *nightscoutmodels.ShortString `mapstructure:"typeeq,omitempty" json:"typeeq,omitempty"`
-	TypeNeq *nightscoutmodels.ShortString `mapstructure:"typeneq,omitempty" json:"typeneq,omitempty"`
-	TypeIn  *QueryStringArray             `mapstructure:"typein,omitempty" json:"typein,omitempty"`
-	TypeNin *QueryStringArray             `mapstructure:"typenin,omitempty" json:"typenin,omitempty"`
+	TypeEq  *types.ShortString `mapstructure:"typeeq,omitempty" json:"typeeq,omitempty"`
+	TypeNeq *types.ShortString `mapstructure:"typeneq,omitempty" json:"typeneq,omitempty"`
+	TypeIn  *QueryStringArray  `mapstructure:"typein,omitempty" json:"typein,omitempty"`
+	TypeNin *QueryStringArray  `mapstructure:"typenin,omitempty" json:"typenin,omitempty"`
 
 	// Identity
-	IDEq *nightscoutmodels.ShortString `mapstructure:"ideq,omitempty" json:"ideq,omitempty"`
-	IDIn *QueryStringArray             `mapstructure:"idin,omitempty" json:"idin,omitempty"`
+	IDEq *types.ShortString `mapstructure:"ideq,omitempty" json:"ideq,omitempty"`
+	IDIn *QueryStringArray  `mapstructure:"idin,omitempty" json:"idin,omitempty"`
 
-	DeviceEq *nightscoutmodels.ShortString `mapstructure:"deviceeq,omitempty" json:"deviceeq,omitempty"`
-	AppEq    *nightscoutmodels.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
+	DeviceEq *types.ShortString `mapstructure:"deviceeq,omitempty" json:"deviceeq,omitempty"`
+	AppEq    *types.ShortString `mapstructure:"appeq,omitempty" json:"appeq,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
@@ -77,7 +76,7 @@ type QueryValues struct {
 	DurationLTE *types.FlexibleInt64 `mapstructure:"durationlte,omitempty" json:"durationlte,omitempty"`
 	DurationLT  *types.FlexibleInt64 `mapstructure:"durationlt,omitempty" json:"durationlt,omitempty"`
 
-	NameEq *nightscoutmodels.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
+	NameEq *types.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
 
 	// Altering Return values or structure
 	// Limits
@@ -85,8 +84,8 @@ type QueryValues struct {
 	Skip  *types.FlexibleInt64 `mapstructure:"skip,omitempty" json:"skip,omitempty"`
 
 	// Sort
-	Sort     *nightscoutmodels.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
-	SortDesc *nightscoutmodels.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
+	Sort     *types.ShortString `mapstructure:"sort,omitempty" json:"sort,omitempty"`
+	SortDesc *types.ShortString `mapstructure:"sort$desc,omitempty" json:"sort$desc,omitempty"`
 
 	Envelope *types.FlexibleBool `mapstructure:"envelope,omitempty" json:"envelope,omitempty"`
 	Fields   *QueryStringArray   `mapstructure:"fields,omitempty" json:"fields,omitempty"`

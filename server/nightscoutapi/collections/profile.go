@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils/types"
 
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
@@ -157,15 +158,15 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	settingsUnits := siteContext.GetSettings().GetUnits()
 
 	profileStore := nightscoutmodels.DBModelToProfileStore(defaultProfile, siteContext)
-	profileStore.Store = make(map[nightscoutmodels.ShortString]nightscoutmodels.Profile)
-	profileStore.DefaultProfile = ptr(nightscoutmodels.ShortString(defaultProfile.Name))
+	profileStore.Store = make(map[types.ShortString]nightscoutmodels.Profile)
+	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
 
 	for _, p := range realSource {
 		profile := nightscoutmodels.DBModelToProfile(p, siteContext)
 		profile.Units = settingsUnits
 
-		profileStore.Store[nightscoutmodels.ShortString(p.Name)] = profile
+		profileStore.Store[types.ShortString(p.Name)] = profile
 	}
 
 	return profileStore

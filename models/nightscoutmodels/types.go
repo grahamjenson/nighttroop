@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
-	"golang.org/x/net/html"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -43,7 +40,7 @@ func (d *DateString) UnmarshalJSON(data []byte) error {
 		}
 
 	case string:
-		t, err = stringToTime(typed)
+		t, err = types.StringToTime(typed)
 		if err != nil {
 			return fmt.Errorf("invalid date string %q: %w", typed, err)
 		}
@@ -85,10 +82,10 @@ func (d *DateString) UnixMilli() int64 {
 	return dateInt
 }
 
-func (d *DateString) MillisUTCOffset() (*DateInt, *types.FlexibleInt64) {
+func (d *DateString) MillisUTCOffset() (*types.DateInt, *types.FlexibleInt64) {
 	t := d.Time()
 	_, offsetSeconds := t.Zone()
-	dateInt := DateInt(t.UnixMilli())
+	dateInt := types.DateInt(t.UnixMilli())
 	offset := types.FlexibleInt64(int64(offsetSeconds) / 60)
 	return &dateInt, &offset
 }
@@ -115,7 +112,7 @@ func DateStringFromInt64AndUTCOffset(dateInt int64, offsetMinutes *int64) DateSt
 	return DateStringFromTime(t)
 }
 
-func DateStringFromDateIntAndUTCOffset(dateInt DateInt, offsetMinutes types.FlexibleInt64) DateString {
+func DateStringFromDateIntAndUTCOffset(dateInt types.DateInt, offsetMinutes types.FlexibleInt64) DateString {
 	t := time.UnixMilli(dateInt.Int64()).In(LocationFromUTCOffsetMinutes(offsetMinutes.Int()))
 	return DateStringFromTime(t)
 }
@@ -125,84 +122,6 @@ func LocationFromUTCOffsetMinutes(offsetMin int) *time.Location {
 		fmt.Sprintf("UTC%+d", offsetMin),
 		offsetMin*60,
 	)
-}
-
-// //////
-// DateInt
-// ///////
-
-type DateInt int64
-
-func (d *DateInt) UnmarshalJSON(data []byte) error {
-	var v any
-	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected date int, got %s", data)
-	}
-
-	var mills int64
-	switch val := v.(type) {
-	case float64:
-		mills = int64(val)
-
-	case json.Number:
-		if asInt, err := val.Int64(); err == nil {
-			mills = asInt
-		} else {
-			asFloat, err := val.Float64()
-			if err != nil {
-				return fmt.Errorf("invalid date int value %q: %w", val, err)
-			}
-			mills = int64(asFloat)
-		}
-	case string:
-		var err error
-		mills, err = strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			// Try Parsing as a DateString and then converting to DateInt
-
-			t, err := stringToTime(val)
-			if err != nil {
-				return fmt.Errorf("invalid date int %q: %w", val, err)
-			}
-			mills = t.UnixMilli()
-		}
-	default:
-		return fmt.Errorf("expected number or string for date int, got %T", v)
-	}
-
-	// We are going to assume anything over a trillion is a second so convert to mills
-	if mills < 1_000_000_000_000 {
-		mills = mills * 1000
-	}
-
-	*d = DateInt(mills)
-	return nil
-}
-
-func DateIntFromTime(t time.Time) DateInt {
-	return DateInt(t.UnixMilli())
-}
-func (d DateInt) Time() time.Time {
-	return time.UnixMilli(int64(d))
-}
-
-func (d DateInt) TimeString() string {
-	return time.UnixMilli(int64(d)).UTC().Format(time.RFC3339Nano)
-}
-
-func (d *DateInt) Int64() int64 {
-	if d == nil {
-		return 0
-	}
-	return int64(*d)
-}
-
-func (d *DateInt) Int64p() *int64 {
-	if d == nil {
-		return nil
-	}
-	v := int64(*d)
-	return &v
 }
 
 // //////
@@ -259,45 +178,6 @@ func (s *JSONString) String() string {
 	return string(*s)
 }
 
-type ShortString string
-
-func (s *ShortString) UnmarshalJSON(data []byte) error {
-	var v any
-	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected notes string, got %s", data)
-	}
-	var str string
-	switch v := v.(type) {
-	case string:
-		str = v
-	case float64:
-		str = strconv.FormatFloat(v, 'f', -1, 64)
-	case bool:
-		str = strconv.FormatBool(v)
-	default:
-		str = fmt.Sprintf("%v", v)
-	}
-
-	if len(str) > 64 {
-		str = str[:64]
-	}
-
-	*s = ShortString(str)
-	return nil
-}
-
-func (s *ShortString) String() string {
-	return string(*s)
-}
-
-func (s *ShortString) Stringp() *string {
-	if s == nil {
-		return nil
-	}
-	str := string(*s)
-	return &str
-}
-
 type LongJSONString string
 
 func (s *LongJSONString) String() string {
@@ -332,79 +212,6 @@ func (n *LongJSONString) UnmarshalJSON(data []byte) error {
 	}
 
 	*n = LongJSONString(v)
-	return nil
-}
-
-type SanitizedString string
-
-func (s *SanitizedString) String() string {
-	return string(*s)
-}
-
-func (s *SanitizedString) Stringp() *string {
-	if s == nil {
-		return nil
-	}
-	str := string(*s)
-	return &str
-}
-
-var tagRe = regexp.MustCompile(`<[^>]*>`)
-
-func StripAllTags(input string) string {
-	doc, err := html.Parse(strings.NewReader(input))
-	if err != nil {
-		return input
-	}
-
-	var buf bytes.Buffer
-	var f func(*html.Node)
-
-	f = func(n *html.Node) {
-		// Only keep text nodes, skip script and style contents
-		if n.Type == html.TextNode {
-			if n.Parent != nil && (n.Parent.Data == "script" || n.Parent.Data == "style") {
-				return
-			}
-			buf.WriteString(n.Data)
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
-
-	return buf.String()
-}
-
-func (n *SanitizedString) UnmarshalJSON(data []byte) error {
-	// We are going to sanitize notes here, no html allowed, trim white space, convert to string
-	var v any
-	if err := json.Unmarshal(data, &v); err != nil {
-		return fmt.Errorf("expected notes string, got %s", data)
-	}
-	var str string
-	switch v := v.(type) {
-	case string:
-		str = v
-	case float64:
-		str = strconv.FormatFloat(v, 'f', -1, 64)
-	case bool:
-		str = strconv.FormatBool(v)
-	default:
-		str = fmt.Sprintf("%v", v)
-	}
-
-	// Trim white space
-	str = strings.TrimSpace(str)
-	// Concat to 1024 characters
-	if len(str) > 1024 {
-		str = str[:1024]
-	}
-	// Strip all tags
-	str = StripAllTags(str)
-
-	*n = SanitizedString(str)
 	return nil
 }
 
@@ -463,30 +270,4 @@ func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 
 func ptr[T any](v T) *T {
 	return &v
-}
-
-// We are trying to find a time in the time
-func stringToTime(value string) (time.Time, error) {
-	layouts := []string{
-		time.RFC3339Nano,
-		time.RFC3339,
-		time.Layout,
-		time.DateTime,
-		time.DateOnly,
-		"2006-01-02T15:04:05,000Z07:00",
-		"2006-01-02T15:04:05,000-0700",
-		"2006-01-02T15:04:05.000-0700",
-		"2006-01-02T15:04:05-0700",
-		"2006-01-02T15:04:05.000Z07:00",
-		"2006-01-02T15:04:05Z07:00",
-		"2006-01-02 15:04:05.000Z",
-	}
-	for _, layout := range layouts {
-		parsed, err := time.Parse(layout, value)
-		if err == nil {
-			return parsed, nil
-		}
-	}
-
-	return time.Time{}, fmt.Errorf("bad date string: %s", value)
 }
