@@ -30,4 +30,7 @@ type QueryConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted
 	QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToDeviceReportsForDevice(source *apiquery.Query) sitedb.DeviceReportsForDeviceParams
 }

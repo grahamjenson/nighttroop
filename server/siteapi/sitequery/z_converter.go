@@ -48,3 +48,15 @@ func QueryToAllTempTargets(source *apiquery.Query) sitedb.AllTempTargetsParams {
 	}
 	return sitedbAllTempTargetsParams
 }
+func QueryToDeviceReportsForDevice(source *apiquery.Query) sitedb.DeviceReportsForDeviceParams {
+	var sitedbDeviceReportsForDeviceParams sitedb.DeviceReportsForDeviceParams
+	if source != nil {
+		if (*source).Device != nil {
+			xstring := *(*source).Device
+			sitedbDeviceReportsForDeviceParams.Device = &xstring
+		}
+		sitedbDeviceReportsForDeviceParams.Skip = (*source).Skip
+		sitedbDeviceReportsForDeviceParams.Limit = (*source).Limit
+	}
+	return sitedbDeviceReportsForDeviceParams
+}

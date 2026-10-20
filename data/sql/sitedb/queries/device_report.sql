@@ -46,6 +46,19 @@ ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
+-- The devices that reported since Since, for showing each device's latest reports
+-- name: RecentDeviceNames :many
+SELECT DISTINCT created_by_device_name FROM device_reports
+WHERE deleted_at IS NULL AND occurred_at >= sqlc.arg('Since') AND created_by_device_name IS NOT NULL
+ORDER BY created_by_device_name
+LIMIT sqlc.arg('Limit');
+
+-- name: DeviceReportsForDevice :many
+SELECT * FROM device_reports
+WHERE deleted_at IS NULL AND created_by_device_name = sqlc.arg('Device')
+ORDER BY occurred_at DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 -- name: GetDeviceReport :one
 SELECT * FROM device_reports WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 

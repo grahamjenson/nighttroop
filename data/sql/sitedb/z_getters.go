@@ -5266,6 +5266,56 @@ func (m *AllDeviceReportsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetSince returns the Since value.
+func (m RecentDeviceNamesParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated RecentDeviceNamesParams.
+func (m *RecentDeviceNamesParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m RecentDeviceNamesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated RecentDeviceNamesParams.
+func (m *RecentDeviceNamesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetDevice returns the Device value.
+func (m DeviceReportsForDeviceParams) GetDevice() *string {
+	return m.Device
+}
+
+// SetDevice sets the Device value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetDevice(v *string) {
+	m.Device = v
+}
+
+// GetSkip returns the Skip value.
+func (m DeviceReportsForDeviceParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m DeviceReportsForDeviceParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated DeviceReportsForDeviceParams.
+func (m *DeviceReportsForDeviceParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetDeviceReportParams) GetID() string {
 	return m.ID

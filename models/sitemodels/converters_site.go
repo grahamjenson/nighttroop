@@ -171,6 +171,12 @@ type SiteConverter interface {
 	FoodIntakeToUpdate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.UpdateFoodIntakeParams
 
 	///////
+	// DEVICE STATUSES
+	///////
+
+	DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus
+
+	///////
 	// SETTINGS
 	///////
 

@@ -1,0 +1,287 @@
+package site_data_templ
+
+import (
+	"fmt"
+	"net/url"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// deviceHistoryPage is how many statuses one page of a device's history shows
+const deviceHistoryPage = 20
+
+type deviceStatusGroup struct {
+	Device   string
+	Statuses []*sitemodels.SiteDeviceStatus
+}
+
+// groupByDevice splits statuses, already ordered by device, into one group per device
+func groupByDevice(statuses []*sitemodels.SiteDeviceStatus) []deviceStatusGroup {
+	groups := []deviceStatusGroup{}
+	for _, status := range statuses {
+		device := orEmpty(status.CreatedByDeviceName)
+		if len(groups) == 0 || groups[len(groups)-1].Device != device {
+			groups = append(groups, deviceStatusGroup{Device: device})
+		}
+		groups[len(groups)-1].Statuses = append(groups[len(groups)-1].Statuses, status)
+	}
+	return groups
+}
+
+func deviceHistoryURL(device string, skip int64, limit int64) string {
+	return fmt.Sprintf("/data/device-status?device=%s&skip=%d&limit=%d", url.QueryEscape(device), skip, limit)
+}
+
+// withUnit shows an optional value with its unit, or a dash when it is not set
+func withUnit(value *float64, unit string) string {
+	if value == nil {
+		return "-"
+	}
+	return fmt.Sprintf("%g%s", *value, unit)
+}
+
+// DeviceStatusGroups shows the latest few statuses of each device, one section per device
+templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
+	<div id="device_statuses" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Device Status</h1>
+			<p class="mt-1 text-gray-500">
+				The latest statuses from each device that reported in the last week. Click a status to see all its details.
+			</p>
+		</div>
+		if len(statuses) == 0 {
+			<section id="site--device-status--empty" class="rounded-xl border border-gray-200 p-4 text-sm text-gray-500 shadow-sm">
+				No device has reported in the last week.
+			</section>
+		}
+		for i, group := range groupByDevice(statuses) {
+			<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+				<div class="mb-4 flex items-center justify-between gap-2">
+					<h2 class="flex items-center gap-2 font-semibold">
+						@icon.Smartphone(icon.Props{Class: "size-4"})
+						{ group.Device }
+					</h2>
+					@button.Button(button.Props{
+						ID:      fmt.Sprintf("site--device-status--show-all-%d", i),
+						Variant: button.VariantOutline,
+						Attributes: templ.Attributes{
+							"hx-get":      deviceHistoryURL(group.Device, 0, deviceHistoryPage),
+							"hx-target":   "#main-content",
+							"hx-push-url": "true",
+							"hx-swap":     "innerHTML",
+						},
+					}) {
+						Show all
+					}
+				</div>
+				@deviceStatusTable(fmt.Sprintf("deviceStatusTable-%d", i), group.Statuses)
+			</section>
+		}
+		<div id="modal-container"></div>
+	</div>
+}
+
+// DeviceStatusHistory pages through one device's statuses, newest first
+templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus, skip int64, limit int64) {
+	<div id="device_status_history" class="mx-auto max-w-5xl space-y-6">
+		<div class="flex items-start justify-between gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Device Status</h1>
+				<p class="mt-1 text-gray-500">Every status from <span class="font-semibold">{ device }</span>, newest first.</p>
+			</div>
+			@button.Button(button.Props{
+				ID:      "site--device-status--all-devices",
+				Variant: button.VariantOutline,
+				Attributes: templ.Attributes{
+					"hx-get":      "/data/device-status",
+					"hx-target":   "#main-content",
+					"hx-push-url": "true",
+					"hx-swap":     "innerHTML",
+				},
+			}) {
+				All devices
+			}
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@deviceStatusTable("deviceStatusTable", statuses)
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(statuses) > 0 {
+					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(statuses))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@deviceStatusPageButton("site--device-status--previous", "Previous", deviceHistoryURL(device, max(skip-limit, 0), limit))
+					}
+					if int64(len(statuses)) == limit {
+						@deviceStatusPageButton("site--device-status--next", "Next", deviceHistoryURL(device, skip+limit, limit))
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ deviceStatusPageButton(id string, label string, path string) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      path,
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
+	@table.Table(table.Props{
+		ID:    id,
+		Class: "rounded-lg border border-gray-200",
+	}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					Time
+				}
+				@table.Head() {
+					Phone
+				}
+				@table.Head() {
+					Reservoir
+				}
+				@table.Head() {
+					Pump
+				}
+				@table.Head() {
+					IOB
+				}
+				@table.Head() {
+					COB
+				}
+				@table.Head() {
+					<span class="sr-only">Actions</span>
+				}
+			}
+		}
+		@table.Body() {
+			if len(statuses) == 0 {
+				<tr><td colspan="7" class="p-4 text-sm text-gray-500">No statuses here.</td></tr>
+			}
+			for _, status := range statuses {
+				@deviceStatusRow(status)
+			}
+		}
+	}
+}
+
+// deviceStatusRow opens the status's details when clicked. The delete button stops its click reaching the row.
+templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
+	{{ id := "site--device-status--" + status.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/device-status/" + status.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(status.OccurredAt) }
+		}
+		@table.Cell() {
+			{ withUnit(status.DeviceBatteryPercent, "%") }
+		}
+		@table.Cell() {
+			{ withUnit(status.PumpReservoir, " U") }
+		}
+		@table.Cell() {
+			{ withUnit(status.PumpBatteryPercent, "%") }
+		}
+		@table.Cell() {
+			{ withUnit(status.LoopIob, " U") }
+		}
+		@table.Cell() {
+			{ withUnit(status.LoopCob, " g") }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/device-status/" + status.ID,
+						"hx-confirm":           "Delete this device status?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
+	<div id="site--device-status--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ orDash(status.CreatedByDeviceName) }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(status.OccurredAt) }</p>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", status.ID)
+				@readingDetail("Phone Battery", withUnit(status.DeviceBatteryPercent, "%"))
+				@readingDetail("Phone Charging", orDash(status.IsDeviceCharging))
+				@readingDetail("Pump State", orDash(status.PumpState))
+				@readingDetail("Pump Reservoir", withUnit(status.PumpReservoir, " U"))
+				@readingDetail("Pump Battery", withUnit(status.PumpBatteryPercent, "%"))
+				@readingDetail("Pump Charging", orDash(status.PumpChargingState))
+				@readingDetail("Loop", orDash(status.LoopName))
+				@readingDetail("IOB", withUnit(status.LoopIob, " U"))
+				@readingDetail("Basal IOB", withUnit(status.LoopIobBasal, " U"))
+				@readingDetail("Bolus IOB", withUnit(status.LoopIobTreatment, " U"))
+				@readingDetail("COB", withUnit(status.LoopCob, " g"))
+				@readingDetail("UTC Offset (minutes)", orDash(status.UtcOffsetMinutes))
+				@readingDetail("App", orDash(status.CreatedByAppName))
+				@readingDetail("Created By", status.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(status.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(status.UpdatedAt))
+			</dl>
+			if status.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *status.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--device-status--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ DeviceStatusDeleted() {
+	@glucoseToast("Device Status Deleted")
+}

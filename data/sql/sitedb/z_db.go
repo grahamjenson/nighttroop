@@ -102,6 +102,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
+	if q.deviceReportsForDeviceStmt, err = db.PrepareContext(ctx, deviceReportsForDevice); err != nil {
+		return nil, fmt.Errorf("error preparing query DeviceReportsForDevice: %w", err)
+	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
@@ -218,6 +221,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.lastModifiedCollectionsStmt, err = db.PrepareContext(ctx, lastModifiedCollections); err != nil {
 		return nil, fmt.Errorf("error preparing query LastModifiedCollections: %w", err)
+	}
+	if q.recentDeviceNamesStmt, err = db.PrepareContext(ctx, recentDeviceNames); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentDeviceNames: %w", err)
 	}
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
@@ -477,6 +483,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.deviceReportsForDeviceStmt != nil {
+		if cerr := q.deviceReportsForDeviceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deviceReportsForDeviceStmt: %w", cerr)
+		}
+	}
 	if q.getActivityStmt != nil {
 		if cerr := q.getActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
@@ -670,6 +681,11 @@ func (q *Queries) Close() error {
 	if q.lastModifiedCollectionsStmt != nil {
 		if cerr := q.lastModifiedCollectionsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing lastModifiedCollectionsStmt: %w", cerr)
+		}
+	}
+	if q.recentDeviceNamesStmt != nil {
+		if cerr := q.recentDeviceNamesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentDeviceNamesStmt: %w", cerr)
 		}
 	}
 	if q.searchActivitiesStmt != nil {
@@ -942,6 +958,7 @@ type Queries struct {
 	createProfileSwitchStmt                     *sql.Stmt
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
+	deviceReportsForDeviceStmt                  *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getComponentEventStmt                       *sql.Stmt
 	getComponentEventByTypeStmt                 *sql.Stmt
@@ -981,6 +998,7 @@ type Queries struct {
 	hardDeleteTempBasalStmt                     *sql.Stmt
 	hardDeleteTempTargetStmt                    *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
+	recentDeviceNamesStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchComponentEventsStmt                   *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
@@ -1054,6 +1072,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileSwitchStmt:                     q.createProfileSwitchStmt,
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
+		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getComponentEventStmt:                       q.getComponentEventStmt,
 		getComponentEventByTypeStmt:                 q.getComponentEventByTypeStmt,
@@ -1093,6 +1112,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
+		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchComponentEventsStmt:                   q.searchComponentEventsStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,
