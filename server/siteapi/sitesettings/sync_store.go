@@ -260,7 +260,7 @@ func (s *SyncSettingsStore) SearchModels(ctx context.Context, tx *siteapiutils.S
 	return models, nil
 }
 
-func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource) templ.Component {
+func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource, query *siteapiutils.Query) templ.Component {
 	return site_settings_templ.SyncSettingsPartial(models)
 }
 

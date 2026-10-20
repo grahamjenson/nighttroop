@@ -15,6 +15,33 @@ ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_VISIBLE #site--glucose--bdd-glucose-1
 ASSERT_VISIBLE #site--glucose--bdd-glucose-2
 SCREENSHOT glucose_readings
+ASSERT_NOT_VISIBLE #site--glucose--next
+ASSERT_NOT_VISIBLE #site--glucose--previous
+
+// A page of one reading pages through both, newest first
+GOTO {{ .default_url }}/data/glucose?limit=1
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--bdd-glucose-2
+ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-1
+ASSERT_NOT_VISIBLE #site--glucose--previous
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+CLICK #site--glucose--next
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--bdd-glucose-1
+ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-2
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+SCREENSHOT glucose_readings_paged
+
+CLICK #site--glucose--previous
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--bdd-glucose-2
+ASSERT_NOT_VISIBLE #site--glucose--bdd-glucose-1
+
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--bdd-glucose-1
 
 // Clicking a reading shows all its details
 CLICK #site--glucose--bdd-glucose-1

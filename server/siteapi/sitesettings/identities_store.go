@@ -167,7 +167,7 @@ func (s *IdentitiesStore) SearchModels(ctx context.Context, tx *siteapiutils.Sto
 	return models, nil
 }
 
-func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity) templ.Component {
+func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, query *siteapiutils.Query) templ.Component {
 	users, devices := []*sitemodels.UserIdentity{}, []*sitemodels.UserIdentity{}
 	for _, model := range models {
 		switch consts.IdentityRole(model.Role).GetType() {
