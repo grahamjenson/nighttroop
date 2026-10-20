@@ -49,6 +49,34 @@ SCREENSHOT glucose_reading_details
 CLICK #site--glucose--details--close
 ASSERT_NOT_VISIBLE #site--glucose--details
 
+// A reading typed in is a meter reading, added to the top of the table
+INPUT #site--glucose--create--mgdl 142
+INPUT #site--glucose--create--notes Finger prick
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE mbg
+SCREENSHOT glucose_reading_created
+
+// Its details can be edited, which updates its row
+CLICK "mbg"
+ASSERT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE Finger prick
+SCREENSHOT glucose_reading_edit
+INPUT #site--glucose--edit--mgdl 155
+INPUT #site--glucose--edit--notes Rechecked
+CLICK #site--glucose--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Glucose Reading Updated
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE 155
+SCREENSHOT glucose_reading_updated
+
+// The edit is saved
+CLICK "mbg"
+ASSERT_TEXT_VISIBLE 155 mg/dL
+ASSERT_TEXT_VISIBLE Rechecked
+CLICK #site--glucose--details--close
+
 // A page of one reading pages through them, newest first
 GOTO /data/glucose?limit=1
 ASSERT_STATUS 200
@@ -68,7 +96,7 @@ ASSERT_TEXT_VISIBLE Showing 1 to 1
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 1 to 6
+ASSERT_TEXT_VISIBLE Showing 1 to 7
 CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Glucose Reading Deleted
 ASSERT_NOT_VISIBLE #site--glucose--details
@@ -78,4 +106,4 @@ SCREENSHOT glucose_reading_deleted
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Showing 1 to 5
+ASSERT_TEXT_VISIBLE Showing 1 to 6

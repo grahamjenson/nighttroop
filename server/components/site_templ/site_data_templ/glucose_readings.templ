@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 )
@@ -33,9 +34,7 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 			</p>
 		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			if len(readings) == 0 {
-				<p class="text-sm text-gray-500">No glucose readings here.</p>
-			} else {
+			@glucoseCreateForm()
 				@table.Table(table.Props{
 					ID:    "glucoseReadingsTable",
 					Class: "rounded-lg border border-gray-200",
@@ -63,12 +62,14 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 						}
 					}
 					@table.Body() {
+						if len(readings) == 0 {
+							<tr id="site--glucose--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No glucose readings here.</td></tr>
+						}
 						for _, reading := range readings {
 							@glucoseReadingRow(reading)
 						}
 					}
 				}
-			}
 			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
 				if len(readings) > 0 {
 					<span id="site--glucose--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(readings))) }</span>
@@ -102,6 +103,42 @@ templ glucosePageButton(id string, label string, skip int64, limit int64) {
 	}) {
 		{ label }
 	}
+}
+
+// glucoseCreateForm adds a reading typed in from a meter, putting its row at the top of the table
+templ glucoseCreateForm() {
+	<form
+		id="site--glucose--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/glucose"
+		hx-target="#glucoseReadingsTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--glucose--empty')?.remove() }"
+	>
+		@glucoseInputs("site--glucose--create", "", "")
+		@button.Button(button.Props{ID: "site--glucose--create--submit", Type: button.TypeSubmit}) {
+			Add Reading
+		}
+	</form>
+}
+
+templ glucoseInputs(id string, mgdl string, notes string) {
+	<div class="w-28">
+		@input.Input(input.Props{
+			ID:          id + "--mgdl",
+			Type:        input.TypeNumber,
+			Name:        "mgdl",
+			Placeholder: "mg/dL",
+			Value:       mgdl,
+			Required:    true,
+			Attributes:  templ.Attributes{"step": "any", "min": "1", "max": "1000"},
+		})
+	</div>
+	<div class="w-64">
+		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
+	</div>
 }
 
 // glucoseReadingRow opens the reading's details when clicked. The delete button stops its click reaching the row.
@@ -161,6 +198,20 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
 			<h2 class="text-lg font-semibold">{ fmt.Sprint(reading.Mgdl) } mg/dL</h2>
 			<p class="text-sm text-gray-500">{ formatReadingDate(reading.OccurredAt) }</p>
+			<form
+				id="site--glucose--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/glucose/" + reading.ID }
+				hx-target={ "#site--glucose--" + reading.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Mgdl), orEmpty(reading.Notes))
+				@button.Button(button.Props{ID: "site--glucose--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
 			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 				@readingDetail("ID", reading.ID)
 				@readingDetail("Type", reading.ReadingType)
@@ -207,10 +258,34 @@ templ readingDetail(label string, value string) {
 	<dd class="break-all">{ value }</dd>
 }
 
+func orEmpty(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+templ GlucoseReadingCreated(reading *sitemodels.SiteGlucoseReading) {
+	@glucoseReadingRow(reading)
+}
+
+// GlucoseReadingUpdated replaces the reading's row, closes its details and shows a toast
+templ GlucoseReadingUpdated(reading *sitemodels.SiteGlucoseReading) {
+	@glucoseReadingRow(reading)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Glucose Reading Updated")
+	</div>
+}
+
 templ GlucoseReadingDeleted() {
+	@glucoseToast("Glucose Reading Deleted")
+}
+
+templ glucoseToast(description string) {
 	@toast.Toast(toast.Props{
 		Title:         "Success",
-		Description:   "Glucose Reading Deleted",
+		Description:   description,
 		Variant:       toast.VariantSuccess,
 		Position:      toast.PositionTopCenter,
 		Duration:      5000,

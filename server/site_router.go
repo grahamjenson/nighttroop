@@ -51,6 +51,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Data Glucose Readings
 		r.Get("/data/glucose", siteapiutils.SearchHandler(controlDB, config, glucoseReadingsStore))
 		r.Get("/data/glucose/{id}", siteapiutils.GetHandler(controlDB, config, glucoseReadingsStore))
+		r.Post("/data/glucose", siteapiutils.CreateHandler(controlDB, config, glucoseReadingsStore))
+		r.Post("/data/glucose/{id}", siteapiutils.UpdateHandler(controlDB, config, glucoseReadingsStore))
 		r.Delete("/data/glucose/{id}", siteapiutils.DeleteHandler(controlDB, config, glucoseReadingsStore))
 
 		// Settings Sync
