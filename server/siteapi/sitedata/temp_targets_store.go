@@ -15,7 +15,6 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -44,7 +43,7 @@ func (s *TempTargetsStore) CreateModel(ctx context.Context, tx *siteapiutils.Sto
 	}
 	created, err := q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
 	if err != nil {
-		return false, tempTargetWriteError(err)
+		return false, apiutils.WriteError(err, "temp target")
 	}
 	*model = *sitemodels.TempTargetFromDB(created, siteContext)
 	return true, nil
@@ -84,7 +83,7 @@ func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 		return apiutils.ErrNotFound
 	}
 	if err != nil {
-		return tempTargetWriteError(err)
+		return apiutils.WriteError(err, "temp target")
 	}
 	*model = *sitemodels.TempTargetFromDB(updated, siteContext)
 	return nil
@@ -183,12 +182,4 @@ func checkTempTarget(model *sitemodels.SiteTempTarget, siteContext *httputils.Si
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempTargetMinutes))
 	}
 	return nil
-}
-
-func tempTargetWriteError(err error) *apiutils.HTTPError {
-	if errors.IsSQLConstraintCheck(err) {
-		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-	}
-	slog.Error("Error writing temp target", "error", err)
-	return apiutils.ErrInternalServerError
 }

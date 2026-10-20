@@ -1,9 +1,11 @@
 package apiutils
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
+	utilerrors "nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -86,3 +88,16 @@ var (
 		return &HTTPError{Status: http.StatusTooManyRequests, Message: "Too Many Requests wait " + strconv.Itoa(seconds) + " seconds"}
 	}
 )
+
+// WriteError is the error for a failed create or update of what, e.g. "glucose reading":
+// the database refusing a value says why, anything else is logged
+func WriteError(err error, what string) *HTTPError {
+	if utilerrors.IsSQLUniqueViolationError(err) {
+		return ErrUniqueConstraintViolation
+	}
+	if utilerrors.IsSQLConstraintCheck(err) {
+		return ErrConstraintCheckFailedWithHint(err.Error())
+	}
+	slog.Error("Error writing "+what, "error", err)
+	return ErrInternalServerError
+}

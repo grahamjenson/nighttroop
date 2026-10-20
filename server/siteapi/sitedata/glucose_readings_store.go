@@ -15,7 +15,6 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -45,7 +44,7 @@ func (s *GlucoseReadingsStore) CreateModel(ctx context.Context, tx *siteapiutils
 	}
 	created, err := q.CreateGlucoseReading(ctx, params)
 	if err != nil {
-		return false, glucoseWriteError(err)
+		return false, apiutils.WriteError(err, "glucose reading")
 	}
 	*model = *sitemodels.GlucoseReadingFromDB(created, siteContext)
 	return true, nil
@@ -77,7 +76,7 @@ func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils
 		return apiutils.ErrNotFound
 	}
 	if err != nil {
-		return glucoseWriteError(err)
+		return apiutils.WriteError(err, "glucose reading")
 	}
 	*model = *sitemodels.GlucoseReadingFromDB(updated, siteContext)
 	return nil
@@ -171,12 +170,4 @@ func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *apiutil
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
 	}
 	return nil
-}
-
-func glucoseWriteError(err error) *apiutils.HTTPError {
-	if errors.IsSQLConstraintCheck(err) {
-		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-	}
-	slog.Error("Error writing glucose reading", "error", err)
-	return apiutils.ErrInternalServerError
 }

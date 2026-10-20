@@ -17,7 +17,6 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -62,15 +61,8 @@ func (s *IdentitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 
 	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.Subdomain, model.Name, role)
 	if err != nil {
-		slog.Error("Failed to create identity", "error", err)
 		// Names are unique per site
-		if errors.IsSQLUniqueViolationError(err) {
-			return false, apiutils.ErrUniqueConstraintViolation
-		}
-		if errors.IsSQLConstraintCheck(err) {
-			return false, apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-		}
-		return false, apiutils.ErrInternalServerError
+		return false, apiutils.WriteError(err, "identity")
 	}
 
 	created, herr := getIdentityByName(ctx, q, siteContext, model.Name)
