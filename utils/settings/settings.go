@@ -56,10 +56,11 @@ func (m *CombinedSettingsMap) GetAllSettingAnyTypes() []*SettingAnyType {
 	return allSettings
 }
 
+// GetUnits checks the identity first, like every other setting, so a user's own units win over the site's
 func (m *CombinedSettingsMap) GetUnits() *consts.Units {
 	return first(
-		m.SiteSettingsMap.GetUnits(),
 		m.IdentitySettingsMap.GetUnits(),
+		m.SiteSettingsMap.GetUnits(),
 		m.DefaultSettingsMap.GetUnits(),
 	)
 }
