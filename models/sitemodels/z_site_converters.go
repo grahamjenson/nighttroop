@@ -91,7 +91,7 @@ func GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading {
 func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteContext) sitedb.CreateGlucoseReadingParams {
 	var sitedbCreateGlucoseReadingParams sitedb.CreateGlucoseReadingParams
 	if source != nil {
-		sitedbCreateGlucoseReadingParams.ID = NewGlucoseReadingID()
+		sitedbCreateGlucoseReadingParams.ID = NewSiteDataID()
 		sitedbCreateGlucoseReadingParams.Mgdl = (*source).Mgdl
 		sitedbCreateGlucoseReadingParams.ReadingType = GlucoseReadingTypeOrMeter((*source).ReadingType)
 		if (*source).Units != nil {
@@ -138,7 +138,7 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 			xint64 := *(*source).UtcOffsetMinutes
 			sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 		}
-		sitedbCreateGlucoseReadingParams.OccurredAt = GlucoseOccurredAtOrNow((*source).OccurredAt)
+		sitedbCreateGlucoseReadingParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
 		if (*source).RawJsonData != nil {
 			xstring5 := *(*source).RawJsonData
 			sitedbCreateGlucoseReadingParams.RawJsonData = &xstring5
@@ -159,7 +159,7 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 func GlucoseReadingToUpdate(source *SiteGlucoseReading, context *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams {
 	var sitedbUpdateGlucoseReadingParams sitedb.UpdateGlucoseReadingParams
 	if source != nil {
-		sitedbUpdateGlucoseReadingParams.Mgdl = GlucoseMgdlOrNil((*source).Mgdl)
+		sitedbUpdateGlucoseReadingParams.Mgdl = Float64OrNil((*source).Mgdl)
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
 			sitedbUpdateGlucoseReadingParams.Notes = &xstring
@@ -311,6 +311,115 @@ func SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams {
 		controldbUpdateSyncSourceParams.SiteID = (*source).SiteID
 	}
 	return controldbUpdateSyncSourceParams
+}
+func TempTargetFromDB(source *sitedb.TempTarget) *SiteTempTarget {
+	var pSitemodelsSiteTempTarget *SiteTempTarget
+	if source != nil {
+		var sitemodelsSiteTempTarget SiteTempTarget
+		sitemodelsSiteTempTarget.ID = (*source).ID
+		sitemodelsSiteTempTarget.DurationMinutes = (*source).DurationMinutes
+		sitemodelsSiteTempTarget.HighTarget = (*source).HighTarget
+		sitemodelsSiteTempTarget.LowTarget = (*source).LowTarget
+		if (*source).InsulinNeedsScaleFactor != nil {
+			xfloat64 := *(*source).InsulinNeedsScaleFactor
+			sitemodelsSiteTempTarget.InsulinNeedsScaleFactor = &xfloat64
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitemodelsSiteTempTarget.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitemodelsSiteTempTarget.Reason = &xstring2
+		}
+		if (*source).RawJsonData != nil {
+			xstring3 := *(*source).RawJsonData
+			sitemodelsSiteTempTarget.RawJsonData = &xstring3
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteTempTarget.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteTempTarget.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteTempTarget.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteTempTarget.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring4 := *(*source).CreatedByAppName
+			sitemodelsSiteTempTarget.CreatedByAppName = &xstring4
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring5 := *(*source).CreatedByDeviceName
+			sitemodelsSiteTempTarget.CreatedByDeviceName = &xstring5
+		}
+		sitemodelsSiteTempTarget.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring6 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteTempTarget.UpdatedByIdentityName = &xstring6
+		}
+		pSitemodelsSiteTempTarget = &sitemodelsSiteTempTarget
+	}
+	return pSitemodelsSiteTempTarget
+}
+func TempTargetToCreate(source *SiteTempTarget, context *httputils.SiteContext) sitedb.CreateTempTargetParams {
+	var sitedbCreateTempTargetParams sitedb.CreateTempTargetParams
+	if source != nil {
+		sitedbCreateTempTargetParams.ID = NewSiteDataID()
+		sitedbCreateTempTargetParams.DurationMinutes = (*source).DurationMinutes
+		sitedbCreateTempTargetParams.HighTarget = (*source).HighTarget
+		sitedbCreateTempTargetParams.LowTarget = (*source).LowTarget
+		if (*source).InsulinNeedsScaleFactor != nil {
+			xfloat64 := *(*source).InsulinNeedsScaleFactor
+			sitedbCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbCreateTempTargetParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbCreateTempTargetParams.Reason = &xstring2
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitedbCreateTempTargetParams.UtcOffsetMinutes = &xint64
+		}
+		sitedbCreateTempTargetParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring3 := *(*source).RawJsonData
+			sitedbCreateTempTargetParams.RawJsonData = &xstring3
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring4 := *(*source).CreatedByAppName
+			sitedbCreateTempTargetParams.CreatedByAppName = &xstring4
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring5 := *(*source).CreatedByDeviceName
+			sitedbCreateTempTargetParams.CreatedByDeviceName = &xstring5
+		}
+		sitedbCreateTempTargetParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateTempTargetParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateTempTargetParams
+}
+func TempTargetToUpdate(source *SiteTempTarget, context *httputils.SiteContext) sitedb.UpdateTempTargetParams {
+	var sitedbUpdateTempTargetParams sitedb.UpdateTempTargetParams
+	if source != nil {
+		sitedbUpdateTempTargetParams.DurationMinutes = Int64OrNil((*source).DurationMinutes)
+		sitedbUpdateTempTargetParams.HighTarget = Float64OrNil((*source).HighTarget)
+		sitedbUpdateTempTargetParams.LowTarget = Float64OrNil((*source).LowTarget)
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbUpdateTempTargetParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbUpdateTempTargetParams.Reason = &xstring2
+		}
+		sitedbUpdateTempTargetParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateTempTargetParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateTempTargetParams.ID = (*source).ID
+	}
+	return sitedbUpdateTempTargetParams
 }
 func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) consts.SyncSourceType {
 	var constsSyncSourceType consts.SyncSourceType

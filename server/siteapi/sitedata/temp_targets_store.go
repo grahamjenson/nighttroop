@@ -1,0 +1,189 @@
+package sitedata
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"log/slog"
+
+	"github.com/a-h/templ"
+	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// maxTempTargetMinutes is a week, far longer than any temp target is set for
+const maxTempTargetMinutes = 7 * 24 * 60
+
+type TempTargetsStore struct{}
+
+// ////
+// Shared
+// ////
+func (s *TempTargetsStore) GetName() string {
+	return "temp_targets"
+}
+
+// ////
+// CREATE
+// ////
+func (s *TempTargetsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (bool, *siteapiutils.HTTPError) {
+	if herr := checkTempTarget(model); herr != nil {
+		return false, herr
+	}
+	q, err := tx.Site()
+	if err != nil {
+		return false, siteapiutils.ErrInternalServerError
+	}
+	created, err := q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
+	if err != nil {
+		return false, tempTargetWriteError(err)
+	}
+	*model = *sitemodels.TempTargetFromDB(created)
+	return true, nil
+}
+
+func (s *TempTargetsStore) CreateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+	return site_data_templ.TempTargetCreated(model)
+}
+
+// ////
+// UPDATE
+// ////
+
+// UpdateModel changes a temp target's targets, duration, notes or reason; anything not sent stays as it is
+func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) *siteapiutils.HTTPError {
+	// Check the temp target as it will be once the fields sent are changed
+	merged := *oldModel
+	if model.DurationMinutes != 0 {
+		merged.DurationMinutes = model.DurationMinutes
+	}
+	if model.LowTarget != 0 {
+		merged.LowTarget = model.LowTarget
+	}
+	if model.HighTarget != 0 {
+		merged.HighTarget = model.HighTarget
+	}
+	if herr := checkTempTarget(&merged); herr != nil {
+		return herr
+	}
+	q, err := tx.Site()
+	if err != nil {
+		return siteapiutils.ErrInternalServerError
+	}
+	model.ID = oldModel.ID
+	updated, err := q.UpdateTempTarget(ctx, sitemodels.TempTargetToUpdate(model, siteContext))
+	if err == sql.ErrNoRows {
+		return siteapiutils.ErrNotFound
+	}
+	if err != nil {
+		return tempTargetWriteError(err)
+	}
+	*model = *sitemodels.TempTargetFromDB(updated)
+	return nil
+}
+
+func (s *TempTargetsStore) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+	return site_data_templ.TempTargetUpdated(model)
+}
+
+// ////
+// Get Model
+// /////
+func (s *TempTargetsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempTarget, *siteapiutils.HTTPError) {
+	q, err := tx.Site()
+	if err != nil {
+		return nil, siteapiutils.ErrInternalServerError
+	}
+	tempTarget, err := q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
+	if err == sql.ErrNoRows || (err == nil && tempTarget == nil) {
+		return nil, nil
+	}
+	if err != nil {
+		slog.Error("Error fetching temp target", "error", err)
+		return nil, siteapiutils.ErrInternalServerError
+	}
+	return sitemodels.TempTargetFromDB(tempTarget), nil
+}
+
+// GetHTMXResponse is the temp target's details, shown in a modal
+func (s *TempTargetsStore) GetHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+	return site_data_templ.TempTargetModal(model)
+}
+
+// ///
+// Search Models
+// ///
+
+func (s *TempTargetsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteTempTarget, *siteapiutils.HTTPError) {
+	q, err := tx.Site()
+	if err != nil {
+		return nil, siteapiutils.ErrInternalServerError
+	}
+	tempTargets, err := q.AllTempTargets(ctx, sitequery.QueryToAllTempTargets(query))
+	if err != nil {
+		slog.Error("Search temp targets", "error", err)
+		return nil, siteapiutils.ErrInternalServerError
+	}
+	models := []*sitemodels.SiteTempTarget{}
+	for _, tempTarget := range tempTargets {
+		models = append(models, sitemodels.TempTargetFromDB(tempTarget))
+	}
+	return models, nil
+}
+
+func (s *TempTargetsStore) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *siteapiutils.Query) templ.Component {
+	return site_data_templ.TempTargetsTable(models, query.Skip, query.Limit)
+}
+
+// ///
+// Delete
+// ///
+
+// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *TempTargetsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteTempTarget, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+	q, err := tx.Site()
+	if err != nil {
+		return siteapiutils.ErrInternalServerError
+	}
+	_, err = q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
+		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
+		ID:                    model.ID,
+	})
+	if err != nil {
+		slog.Error("Error deleting temp target", "error", err)
+		return siteapiutils.ErrInternalServerError
+	}
+	return nil
+}
+
+func (s *TempTargetsStore) DeleteHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+	return site_data_templ.TempTargetDeleted()
+}
+
+///////
+// UTIL METHODS
+////////
+
+// checkTempTarget keeps targets within real glucose values, low at most high, and the duration to a week
+func checkTempTarget(model *sitemodels.SiteTempTarget) *siteapiutils.HTTPError {
+	if model.LowTarget <= 0 || model.HighTarget > maxGlucoseMgdl || model.LowTarget > model.HighTarget {
+		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("targets must be more than 0, at most %d mg/dL, and low must be at most high", maxGlucoseMgdl))
+	}
+	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempTargetMinutes {
+		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempTargetMinutes))
+	}
+	return nil
+}
+
+func tempTargetWriteError(err error) *siteapiutils.HTTPError {
+	if errors.IsSQLConstraintCheck(err) {
+		return siteapiutils.ErrConstraintCheckFailedWithHint(err.Error())
+	}
+	slog.Error("Error writing temp target", "error", err)
+	return siteapiutils.ErrInternalServerError
+}

@@ -1,0 +1,174 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME no_temp_targets
+GET http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// A temp target from the Nightscout API is listed
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Temporary Target", "created_at": "{{ time 5 }}", "targetBottom": 100, "targetTop": 120, "units": "mg/dL", "duration": 60, "reason": "Exercise" }
+ASSERT_STATUS 200
+
+NAME list_temp_targets
+GET http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 100 "@result.0.low_target"
+ASSERT_EQUALS 120 "@result.0.high_target"
+ASSERT_EQUALS 60 "@result.0.duration_minutes"
+ASSERT_EQUALS "Exercise" "@result.0.reason"
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A temp target typed in starts now, by whoever is signed in
+NAME create_temp_target
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 140, "high_target": 160, "duration_minutes": 30, "notes": "Walk", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 140 "@result.low_target"
+ASSERT_EQUALS 160 "@result.high_target"
+ASSERT_EQUALS 30 "@result.duration_minutes"
+ASSERT_EQUALS "Walk" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_temp_target.result.id }}
+
+NAME created_temp_target_has_new_id
+GET http://{{ site }}/data/temp-targets/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_temp_target
+GET http://{{ site }}/data/temp-targets/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 140 "@result.low_target"
+
+// Newest first, so the one starting now is before the one from the Nightscout API
+NAME first_page
+GET http://{{ site }}/data/temp-targets?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 140 "@result.0.low_target"
+
+NAME second_page
+GET http://{{ site }}/data/temp-targets?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 100 "@result.0.low_target"
+
+NAME create_temp_target_without_targets
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"duration_minutes": 30}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "targets must be more than 0" "@message"
+
+NAME create_temp_target_low_above_high
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 180, "high_target": 120, "duration_minutes": 30}
+ASSERT_STATUS 400
+
+NAME create_temp_target_too_long
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 100, "high_target": 120, "duration_minutes": 20000}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "duration must be more than 0" "@message"
+
+// Only the fields sent change
+NAME update_temp_target_notes
+POST http://{{ site }}/data/temp-targets/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "Run"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 140 "@result.low_target"
+ASSERT_EQUALS 30 "@result.duration_minutes"
+ASSERT_EQUALS "Run" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_temp_target_targets
+POST http://{{ site }}/data/temp-targets/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 150, "high_target": 170, "duration_minutes": 45}
+ASSERT_STATUS 200
+ASSERT_EQUALS 150 "@result.low_target"
+ASSERT_EQUALS 170 "@result.high_target"
+ASSERT_EQUALS 45 "@result.duration_minutes"
+ASSERT_EQUALS "Run" "@result.notes"
+
+// The low target checked against the high target already saved
+NAME update_temp_target_low_above_high
+POST http://{{ site }}/data/temp-targets/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 200}
+ASSERT_STATUS 400
+
+NAME update_unknown_temp_target
+POST http://{{ site }}/data/temp-targets/not-a-temp-target
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+NAME delete_temp_target
+DELETE http://{{ site }}/data/temp-targets/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_temp_target_not_found
+GET http://{{ site }}/data/temp-targets/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_temp_target_not_listed
+GET http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME delete_unknown_temp_target
+DELETE http://{{ site }}/data/temp-targets/not-a-temp-target
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

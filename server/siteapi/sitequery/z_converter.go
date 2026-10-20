@@ -13,6 +13,14 @@ func QueryToAllGlucoseReadings(source *Query) sitedb.AllGlucoseReadingsParams {
 	}
 	return sitedbAllGlucoseReadingsParams
 }
+func QueryToAllTempTargets(source *Query) sitedb.AllTempTargetsParams {
+	var sitedbAllTempTargetsParams sitedb.AllTempTargetsParams
+	if source != nil {
+		sitedbAllTempTargetsParams.Skip = (*source).Skip
+		sitedbAllTempTargetsParams.Limit = (*source).Limit
+	}
+	return sitedbAllTempTargetsParams
+}
 func QueryValuesToQuery(source QueryValues) Query {
 	var sitequeryQuery Query
 	sitequeryQuery.Limit = GetLimitInt64(source)
