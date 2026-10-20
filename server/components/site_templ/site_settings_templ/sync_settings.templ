@@ -168,8 +168,8 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 							"hx-include": "none",
 							"hx-delete":  "/settings/sync/dexcom",
 							"hx-confirm": "Are you sure you want to delete this Dexcom sync source?",
-							"hx-target":  "#mainForm",
-							"hx-swap":    "innerHTML",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
 						},
 					}) {
 						Delete
@@ -287,8 +287,8 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 							"hx-include": "none",
 							"hx-delete":  "/settings/sync/nightscout",
 							"hx-confirm": "Are you sure you want to delete this Nightscout sync source?",
-							"hx-target":  "#mainForm",
-							"hx-swap":    "innerHTML",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
 						},
 					}) {
 						Delete
@@ -354,8 +354,8 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 							"hx-include": "none",
 							"hx-delete":  "/settings/sync/virtual",
 							"hx-confirm": "Are you sure you want to delete this Virtual sync source?",
-							"hx-target":  "#mainForm",
-							"hx-swap":    "innerHTML",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
 						},
 					}) {
 						Delete
@@ -383,6 +383,21 @@ templ SuccessfulUpdate(model *sitemodels.SyncSource) {
 		Icon:          true,
 		ShowIndicator: true,
 	})
+}
+
+// SyncDeleted replaces the deleted source's form with an empty one and shows a toast
+templ SyncDeleted(sourceType consts.SyncSourceType) {
+	switch sourceType {
+		case consts.SyncSourceTypeNightscout:
+			@NightscoutSyncForm(nil)
+		case consts.SyncSourceTypeDexcom:
+			@DexcomSyncForm(nil)
+		case consts.SyncSourceTypeVirtual:
+			@VirtualSyncForm(nil)
+	}
+	<div hx-swap-oob="beforeend:#toaster">
+		@SuccessfulDelete()
+	</div>
 }
 
 templ SuccessfulDelete() {

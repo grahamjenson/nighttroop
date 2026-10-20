@@ -484,8 +484,8 @@ func DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) templ.Component {
 				"hx-include": "none",
 				"hx-delete":  "/settings/sync/dexcom",
 				"hx-confirm": "Are you sure you want to delete this Dexcom sync source?",
-				"hx-target":  "#mainForm",
-				"hx-swap":    "innerHTML",
+				"hx-target":  "closest form",
+				"hx-swap":    "outerHTML",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -803,8 +803,8 @@ func NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) templ.Com
 				"hx-include": "none",
 				"hx-delete":  "/settings/sync/nightscout",
 				"hx-confirm": "Are you sure you want to delete this Nightscout sync source?",
-				"hx-target":  "#mainForm",
-				"hx-swap":    "innerHTML",
+				"hx-target":  "closest form",
+				"hx-swap":    "outerHTML",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -964,8 +964,8 @@ func VirtualSyncForm(synSource *sitemodels.SyncSource) templ.Component {
 				"hx-include": "none",
 				"hx-delete":  "/settings/sync/virtual",
 				"hx-confirm": "Are you sure you want to delete this Virtual sync source?",
-				"hx-target":  "#mainForm",
-				"hx-swap":    "innerHTML",
+				"hx-target":  "closest form",
+				"hx-swap":    "outerHTML",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -1042,7 +1042,8 @@ func SuccessfulUpdate(model *sitemodels.SyncSource) templ.Component {
 	})
 }
 
-func SuccessfulDelete() templ.Component {
+// SyncDeleted replaces the deleted source's form with an empty one and shows a toast
+func SyncDeleted(sourceType consts.SyncSourceType) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1061,6 +1062,60 @@ func SuccessfulDelete() templ.Component {
 		templ_7745c5c3_Var33 := templ.GetChildren(ctx)
 		if templ_7745c5c3_Var33 == nil {
 			templ_7745c5c3_Var33 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		switch sourceType {
+		case consts.SyncSourceTypeNightscout:
+			templ_7745c5c3_Err = NightscoutSyncForm(nil).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case consts.SyncSourceTypeDexcom:
+			templ_7745c5c3_Err = DexcomSyncForm(nil).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case consts.SyncSourceTypeVirtual:
+			templ_7745c5c3_Err = VirtualSyncForm(nil).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<div hx-swap-oob=\"beforeend:#toaster\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = SuccessfulDelete().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func SuccessfulDelete() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var34 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var34 == nil {
+			templ_7745c5c3_Var34 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = toast.Toast(toast.Props{
