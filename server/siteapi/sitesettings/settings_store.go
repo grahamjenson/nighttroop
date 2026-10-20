@@ -17,7 +17,7 @@ import (
 	"nighttroop.t1d.nz/utils/settings"
 )
 
-// SettingsStore is a settings page: the site's settings, which only admins can change,
+// SettingsStore is a level of settings: the site's, which only admins can change,
 // or the signed in identity's own, which override the site's
 type SettingsStore struct {
 	Site bool
@@ -52,7 +52,6 @@ func (s *SettingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, 
 	}
 	combined := siteContext.GetSettings()
 	model := sitemodels.SettingsFromMap(s.level(siteContext))
-	model.ForSite = s.Site
 	model.Inherited = map[string]string{}
 	for _, name := range settingNames {
 		inherited := combined.DefaultSettingsMap.GetSettingAnyTypeByName(name)
@@ -61,11 +60,22 @@ func (s *SettingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, 
 		}
 		model.Inherited[name] = fmt.Sprint(inherited.Value)
 	}
+	// An admin's settings page shows the site's settings beside their own
+	if !s.Site && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
+		site, herr := (&SettingsStore{Site: true}).GetModel(ctx, tx, id, siteContext)
+		if herr != nil {
+			return nil, herr
+		}
+		model.Site = site
+	}
 	return model, nil
 }
 
 func (s *SettingsStore) GetHTMXResponse(model *sitemodels.Settings) templ.Component {
-	return site_settings_templ.SettingsPage(model)
+	if s.Site {
+		return site_settings_templ.SettingsPage(model, nil)
+	}
+	return site_settings_templ.SettingsPage(model.Site, model)
 }
 
 // ///

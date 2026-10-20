@@ -108,6 +108,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Delete("/settings/identities/{id}", siteapiutils.DeleteHandler(controlDB, config, identitiesStore))
 
 		// Settings for the site (admins only) and the signed in identity
+		// One page shows the site's settings beside an admin's own, or just the identity's
+		r.Get("/settings", siteapiutils.GetHandler(controlDB, config, identitySettingsStore))
 		r.Get("/settings/site", siteapiutils.GetHandler(controlDB, config, siteSettingsStore))
 		r.Post("/settings/site", siteapiutils.UpdateHandler(controlDB, config, siteSettingsStore))
 		r.Get("/settings/identity", siteapiutils.GetHandler(controlDB, config, identitySettingsStore))

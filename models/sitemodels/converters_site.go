@@ -186,7 +186,7 @@ type SiteConverter interface {
 	// goverter:map GetDateFormat DateFormat
 	// goverter:map GetTimeFormat TimeFormat
 	// goverter:map GetWeekStartDay WeekStartDay
-	// goverter:ignore Inherited ForSite
+	// goverter:ignore Inherited Site
 	SettingsFromMap(source *settings.SettingMap) *Settings
 }
 

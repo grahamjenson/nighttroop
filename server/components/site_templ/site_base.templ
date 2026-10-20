@@ -12,7 +12,6 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/toast"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -55,12 +54,6 @@ templ SiteBase() {
 			</main>
 		</div>
 	}
-}
-
-// isAdmin is whether the signed in identity can change the site's settings
-func isAdmin(ctx context.Context) bool {
-	siteContext := httputils.GetSiteContext(ctx)
-	return siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
 }
 
 // identityName is who is signed in, or "" before login
@@ -153,10 +146,7 @@ templ Header() {
 						Settings
 					}
 					@dropdown.Group() {
-						@settingsMenuItem("site--settings--identity-button", "/settings/identity", "Change Your Settings")
-						if isAdmin(ctx) {
-							@settingsMenuItem("site--settings--site-button", "/settings/site", "Change Site Settings")
-						}
+						@settingsMenuItem("site--settings--settings-button", "/settings", "Settings")
 						@dropdown.Item(dropdown.ItemProps{
 							ID:   "site--settings--identities-button",
 							Href: "#",
