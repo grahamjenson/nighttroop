@@ -121,15 +121,29 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 6 "@"
 ASSERT_EQUALS "virtual://nighttroop" "@0.device"
 
+// Two devices report every 5 minutes
 NAME virtual_devicestatus_seeded
 GET http://{{ .ns_site }}/api/v1/devicestatus?count=50&token={{ token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 6 "@"
+ASSERT_LENGTH 12 "@"
 
-NAME virtual_treatments_seeded
-GET http://{{ .ns_site }}/api/v1/treatments?count=50&token={{ token }}
+// The window always starts with a temp basal, temp target and profile switch. Meals and
+// corrections land on set slots of the glucose wave, so whether they fall in this window
+// depends on the clock; background/sync/virtual_test.go checks them with a fixed clock.
+NAME virtual_temp_basal_seeded
+GET http://{{ .ns_site }}/api/v1/treatments?find[eventType]=Temp%20Basal&token={{ token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 3 "@"
+ASSERT_LENGTH 1 "@"
+
+NAME virtual_temp_target_seeded
+GET http://{{ .ns_site }}/api/v1/treatments?find[eventType]=Temporary%20Target&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME virtual_profile_switch_seeded
+GET http://{{ .ns_site }}/api/v1/treatments?find[eventType]=Profile%20Switch&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
 
 NAME virtual_profile_seeded
 GET http://{{ .ns_site }}/api/v1/profile?token={{ token }}
