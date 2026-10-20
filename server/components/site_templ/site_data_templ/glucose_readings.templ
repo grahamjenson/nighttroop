@@ -1,7 +1,9 @@
 package site_data_templ
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -10,10 +12,30 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func formatReadingDate(ms int64) string {
 	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+}
+
+// glucoseUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
+func glucoseUnits(ctx context.Context) *consts.Units {
+	return sitemodels.ContextUnits(httputils.GetSiteContext(ctx))
+}
+
+// formatGlucose shows mmol/L to one decimal place, and mg/dL as a whole number
+func formatGlucose(value float64, units *consts.Units) string {
+	if units != nil && *units == consts.UnitsMMOLL {
+		return strconv.FormatFloat(value, 'f', 1, 64)
+	}
+	return strconv.FormatFloat(value, 'f', 0, 64)
+}
+
+// glucoseInputAttributes keeps a typed in glucose value within what the store accepts, in the settings' units
+func glucoseInputAttributes(ctx context.Context) templ.Attributes {
+	return templ.Attributes{"step": "any", "min": "0.1", "max": fmt.Sprint(consts.Round(glucoseUnits(ctx).FromMGDL(1000), 1))}
 }
 
 // orDash shows an optional value, or a dash when it is not set
@@ -45,7 +67,7 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 								Time
 							}
 							@table.Head() {
-								mg/dL
+								{ string(*glucoseUnits(ctx)) }
 							}
 							@table.Head() {
 								Type
@@ -124,16 +146,16 @@ templ glucoseCreateForm() {
 	</form>
 }
 
-templ glucoseInputs(id string, mgdl string, notes string) {
+templ glucoseInputs(id string, value string, notes string) {
 	<div class="w-28">
 		@input.Input(input.Props{
-			ID:          id + "--mgdl",
+			ID:          id + "--reading",
 			Type:        input.TypeNumber,
-			Name:        "mgdl",
-			Placeholder: "mg/dL",
-			Value:       mgdl,
+			Name:        "reading",
+			Placeholder: string(*glucoseUnits(ctx)),
+			Value:       value,
 			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "1", "max": "1000"},
+			Attributes:  glucoseInputAttributes(ctx),
 		})
 	</div>
 	<div class="w-64">
@@ -157,7 +179,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 			{ formatReadingDate(reading.OccurredAt) }
 		}
 		@table.Cell() {
-			{ fmt.Sprint(reading.Mgdl) }
+			{ formatGlucose(reading.Reading, reading.Units) }
 		}
 		@table.Cell() {
 			{ reading.ReadingType }
@@ -196,7 +218,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 	<div id="site--glucose--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprint(reading.Mgdl) } mg/dL</h2>
+			<h2 class="text-lg font-semibold">{ formatGlucose(reading.Reading, reading.Units) } { orDash(reading.Units) }</h2>
 			<p class="text-sm text-gray-500">{ formatReadingDate(reading.OccurredAt) }</p>
 			<form
 				id="site--glucose--edit"
@@ -207,7 +229,7 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 				hx-status:4xx="target:#toaster swap:beforeend"
 				hx-status:5xx="target:#toaster swap:beforeend"
 			>
-				@glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Mgdl), orEmpty(reading.Notes))
+				@glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Reading), orEmpty(reading.Notes))
 				@button.Button(button.Props{ID: "site--glucose--edit--submit", Type: button.TypeSubmit}) {
 					Save
 				}
@@ -215,7 +237,7 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 				@readingDetail("ID", reading.ID)
 				@readingDetail("Type", reading.ReadingType)
-				@readingDetail("Original Units", orDash(reading.Units))
+				@readingDetail("Original Units", orDash(reading.OriginalUnits))
 				@readingDetail("Measurement Method", orDash(reading.MeasurementMethod))
 				@readingDetail("Direction", orDash(reading.Direction))
 				@readingDetail("Delta", orDash(reading.Delta))

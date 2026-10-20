@@ -38,6 +38,9 @@ ASSERT_VISIBLE #tempTargetsTable
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_NOT_VISIBLE #site--temp-target--next
 ASSERT_NOT_VISIBLE #site--temp-target--previous
+// Targets are in the settings' units, mmol/L by default
+ASSERT_TEXT_VISIBLE Low mmol/L
+ASSERT_TEXT_VISIBLE 6.7
 SCREENSHOT temp_targets
 
 // Clicking a temp target shows all its details
@@ -49,33 +52,33 @@ SCREENSHOT temp_target_details
 CLICK #site--temp-target--details--close
 ASSERT_NOT_VISIBLE #site--temp-target--details
 
-// A temp target typed in starts now, added to the top of the table
-INPUT #site--temp-target--create--low 140
-INPUT #site--temp-target--create--high 160
+// A temp target typed in mmol/L starts now, added to the top of the table
+INPUT #site--temp-target--create--low 7.5
+INPUT #site--temp-target--create--high 9
 INPUT #site--temp-target--create--duration 45
 INPUT #site--temp-target--create--notes Walk
 CLICK #site--temp-target--create--submit
 ASSERT_STATUS 201
-ASSERT_TEXT_VISIBLE 160
+ASSERT_TEXT_VISIBLE 9.0
 SCREENSHOT temp_target_created
 
 // Its details can be edited, which updates its row
 CLICK #tempTargetsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-target--details
-ASSERT_TEXT_VISIBLE 140 to 160 mg/dL for 45 minutes
+ASSERT_TEXT_VISIBLE 7.5 to 9.0 mmol/L for 45 minutes
 SCREENSHOT temp_target_edit
-INPUT #site--temp-target--edit--high 175
+INPUT #site--temp-target--edit--high 9.5
 INPUT #site--temp-target--edit--notes Run
 CLICK #site--temp-target--edit--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Temp Target Updated
 ASSERT_NOT_VISIBLE #site--temp-target--details
-ASSERT_TEXT_VISIBLE 175
+ASSERT_TEXT_VISIBLE 9.5
 SCREENSHOT temp_target_updated
 
 // The edit is saved
 CLICK #tempTargetsTable tbody tr >> nth=0
-ASSERT_TEXT_VISIBLE 140 to 175 mg/dL for 45 minutes
+ASSERT_TEXT_VISIBLE 7.5 to 9.5 mmol/L for 45 minutes
 ASSERT_TEXT_VISIBLE Run
 CLICK #site--temp-target--details--close
 

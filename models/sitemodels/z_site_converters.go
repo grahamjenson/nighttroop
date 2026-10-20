@@ -249,16 +249,17 @@ func FoodIntakeToUpdate(source *SiteFoodIntake, context *httputils.SiteContext) 
 	}
 	return sitedbUpdateFoodIntakeParams
 }
-func GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading {
+func GlucoseReadingFromDB(source *sitedb.GlucoseReading, context *httputils.SiteContext) *SiteGlucoseReading {
 	var pSitemodelsSiteGlucoseReading *SiteGlucoseReading
 	if source != nil {
 		var sitemodelsSiteGlucoseReading SiteGlucoseReading
 		sitemodelsSiteGlucoseReading.ID = (*source).ID
-		sitemodelsSiteGlucoseReading.Mgdl = (*source).Mgdl
+		sitemodelsSiteGlucoseReading.Reading = MgdlToSettingsUnits((*source).Mgdl, context)
+		sitemodelsSiteGlucoseReading.Units = ContextUnits(context)
 		sitemodelsSiteGlucoseReading.ReadingType = (*source).ReadingType
 		if (*source).Units != nil {
 			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
-			sitemodelsSiteGlucoseReading.Units = &constsUnits
+			sitemodelsSiteGlucoseReading.OriginalUnits = &constsUnits
 		}
 		if (*source).MeasurementMethod != nil {
 			xstring := *(*source).MeasurementMethod
@@ -328,12 +329,9 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 	var sitedbCreateGlucoseReadingParams sitedb.CreateGlucoseReadingParams
 	if source != nil {
 		sitedbCreateGlucoseReadingParams.ID = NewSiteDataID()
-		sitedbCreateGlucoseReadingParams.Mgdl = (*source).Mgdl
+		sitedbCreateGlucoseReadingParams.Mgdl = SettingsUnitsToMgdl((*source).Reading, context)
 		sitedbCreateGlucoseReadingParams.ReadingType = GlucoseReadingTypeOrMeter((*source).ReadingType)
-		if (*source).Units != nil {
-			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
-			sitedbCreateGlucoseReadingParams.Units = &constsUnits
-		}
+		sitedbCreateGlucoseReadingParams.Units = ContextUnits(context)
 		if (*source).MeasurementMethod != nil {
 			xstring := *(*source).MeasurementMethod
 			sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring
@@ -395,7 +393,7 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 func GlucoseReadingToUpdate(source *SiteGlucoseReading, context *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams {
 	var sitedbUpdateGlucoseReadingParams sitedb.UpdateGlucoseReadingParams
 	if source != nil {
-		sitedbUpdateGlucoseReadingParams.Mgdl = Float64OrNil((*source).Mgdl)
+		sitedbUpdateGlucoseReadingParams.Mgdl = SettingsUnitsToMgdlOrNil((*source).Reading, context)
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
 			sitedbUpdateGlucoseReadingParams.Notes = &xstring
@@ -795,14 +793,15 @@ func TempBasalToUpdate(source *SiteTempBasal, context *httputils.SiteContext) si
 	}
 	return sitedbUpdateTempBasalParams
 }
-func TempTargetFromDB(source *sitedb.TempTarget) *SiteTempTarget {
+func TempTargetFromDB(source *sitedb.TempTarget, context *httputils.SiteContext) *SiteTempTarget {
 	var pSitemodelsSiteTempTarget *SiteTempTarget
 	if source != nil {
 		var sitemodelsSiteTempTarget SiteTempTarget
 		sitemodelsSiteTempTarget.ID = (*source).ID
 		sitemodelsSiteTempTarget.DurationMinutes = (*source).DurationMinutes
-		sitemodelsSiteTempTarget.HighTarget = (*source).HighTarget
-		sitemodelsSiteTempTarget.LowTarget = (*source).LowTarget
+		sitemodelsSiteTempTarget.HighTarget = MgdlToSettingsUnits((*source).HighTarget, context)
+		sitemodelsSiteTempTarget.LowTarget = MgdlToSettingsUnits((*source).LowTarget, context)
+		sitemodelsSiteTempTarget.Units = ContextUnits(context)
 		if (*source).InsulinNeedsScaleFactor != nil {
 			xfloat64 := *(*source).InsulinNeedsScaleFactor
 			sitemodelsSiteTempTarget.InsulinNeedsScaleFactor = &xfloat64
@@ -848,8 +847,8 @@ func TempTargetToCreate(source *SiteTempTarget, context *httputils.SiteContext) 
 	if source != nil {
 		sitedbCreateTempTargetParams.ID = NewSiteDataID()
 		sitedbCreateTempTargetParams.DurationMinutes = (*source).DurationMinutes
-		sitedbCreateTempTargetParams.HighTarget = (*source).HighTarget
-		sitedbCreateTempTargetParams.LowTarget = (*source).LowTarget
+		sitedbCreateTempTargetParams.HighTarget = SettingsUnitsToMgdl((*source).HighTarget, context)
+		sitedbCreateTempTargetParams.LowTarget = SettingsUnitsToMgdl((*source).LowTarget, context)
 		if (*source).InsulinNeedsScaleFactor != nil {
 			xfloat64 := *(*source).InsulinNeedsScaleFactor
 			sitedbCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
@@ -888,8 +887,8 @@ func TempTargetToUpdate(source *SiteTempTarget, context *httputils.SiteContext) 
 	var sitedbUpdateTempTargetParams sitedb.UpdateTempTargetParams
 	if source != nil {
 		sitedbUpdateTempTargetParams.DurationMinutes = Int64OrNil((*source).DurationMinutes)
-		sitedbUpdateTempTargetParams.HighTarget = Float64OrNil((*source).HighTarget)
-		sitedbUpdateTempTargetParams.LowTarget = Float64OrNil((*source).LowTarget)
+		sitedbUpdateTempTargetParams.HighTarget = SettingsUnitsToMgdlOrNil((*source).HighTarget, context)
+		sitedbUpdateTempTargetParams.LowTarget = SettingsUnitsToMgdlOrNil((*source).LowTarget, context)
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
 			sitedbUpdateTempTargetParams.Notes = &xstring

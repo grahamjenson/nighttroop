@@ -10,6 +10,14 @@ GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
 ASSERT_STATUS 200
 SET jwt {{ .jwtauth.token }}
 
+// Targets are in the identity's units, mmol/L by default, mg/dL until the end of this file
+NAME use_mgdl
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
 NAME no_temp_targets
 GET http://{{ site }}/data/temp-targets
 H Authorization: Bearer {{ jwt }}
@@ -31,6 +39,7 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
 ASSERT_EQUALS 100 "@result.0.low_target"
 ASSERT_EQUALS 120 "@result.0.high_target"
+ASSERT_EQUALS "mg/dL" "@result.0.units"
 ASSERT_EQUALS 60 "@result.0.duration_minutes"
 ASSERT_EQUALS "Exercise" "@result.0.reason"
 
@@ -172,3 +181,41 @@ DELETE http://{{ site }}/data/temp-targets/not-a-temp-target
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+//////
+// MMOL/L
+//////
+
+NAME use_mmol
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mmol/L"}
+ASSERT_STATUS 200
+
+NAME list_temp_targets_mmol
+GET http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.55 "@result.0.low_target"
+ASSERT_EQUALS 6.66 "@result.0.high_target"
+ASSERT_EQUALS "mmol/L" "@result.0.units"
+
+NAME create_temp_target_mmol
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 5, "high_target": 6.5, "duration_minutes": 30}
+ASSERT_STATUS 201
+ASSERT_EQUALS 5 "@result.low_target"
+ASSERT_EQUALS 6.5 "@result.high_target"
+ASSERT_EQUALS "mmol/L" "@result.units"
+
+NAME create_temp_target_mmol_too_high
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 5, "high_target": 60, "duration_minutes": 30}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 55.5 mmol/L" "@message"

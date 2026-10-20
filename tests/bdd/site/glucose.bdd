@@ -36,6 +36,8 @@ ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
 ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_TEXT_VISIBLE Showing 1 to 6
+// Readings are in the settings' units, mmol/L by default
+ASSERT_TEXT_VISIBLE mmol/L
 ASSERT_NOT_VISIBLE #site--glucose--next
 ASSERT_NOT_VISIBLE #site--glucose--previous
 SCREENSHOT glucose_readings
@@ -49,8 +51,8 @@ SCREENSHOT glucose_reading_details
 CLICK #site--glucose--details--close
 ASSERT_NOT_VISIBLE #site--glucose--details
 
-// A reading typed in is a meter reading, added to the top of the table
-INPUT #site--glucose--create--mgdl 142
+// A reading typed in is a meter reading in mmol/L, added to the top of the table
+INPUT #site--glucose--create--reading 7.9
 INPUT #site--glucose--create--notes Finger prick
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
@@ -62,20 +64,35 @@ CLICK "mbg"
 ASSERT_VISIBLE #site--glucose--details
 ASSERT_TEXT_VISIBLE Finger prick
 SCREENSHOT glucose_reading_edit
-INPUT #site--glucose--edit--mgdl 155
+INPUT #site--glucose--edit--reading 8.6
 INPUT #site--glucose--edit--notes Rechecked
 CLICK #site--glucose--edit--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Glucose Reading Updated
 ASSERT_NOT_VISIBLE #site--glucose--details
-ASSERT_TEXT_VISIBLE 155
+ASSERT_TEXT_VISIBLE 8.6
 SCREENSHOT glucose_reading_updated
 
 // The edit is saved
 CLICK "mbg"
-ASSERT_TEXT_VISIBLE 155 mg/dL
+ASSERT_TEXT_VISIBLE 8.6 mmol/L
 ASSERT_TEXT_VISIBLE Rechecked
 CLICK #site--glucose--details--close
+
+// Choosing mg/dL shows the same reading in mg/dL
+CLICK #site--settings-menu
+CLICK #site--settings--identity-button
+ASSERT_STATUS 200
+INPUT #site--settings--identity--units mg/dL
+CLICK #site--settings--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE mg/dL
+ASSERT_TEXT_VISIBLE 155
+SCREENSHOT glucose_readings_mgdl
 
 // A page of one reading pages through them, newest first
 GOTO /data/glucose?limit=1

@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -32,18 +33,19 @@ func (s *GlucoseReadingsStore) GetName() string {
 // CREATE
 // ////
 func (s *GlucoseReadingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (bool, *siteapiutils.HTTPError) {
-	if herr := checkGlucoseMgdl(model.Mgdl); herr != nil {
+	params := sitemodels.GlucoseReadingToCreate(model, siteContext)
+	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
 		return false, herr
 	}
 	q, err := tx.Site()
 	if err != nil {
 		return false, siteapiutils.ErrInternalServerError
 	}
-	created, err := q.CreateGlucoseReading(ctx, sitemodels.GlucoseReadingToCreate(model, siteContext))
+	created, err := q.CreateGlucoseReading(ctx, params)
 	if err != nil {
 		return false, glucoseWriteError(err)
 	}
-	*model = *sitemodels.GlucoseReadingFromDB(created)
+	*model = *sitemodels.GlucoseReadingFromDB(created, siteContext)
 	return true, nil
 }
 
@@ -55,10 +57,12 @@ func (s *GlucoseReadingsStore) CreateHTMXResponse(model *sitemodels.SiteGlucoseR
 // UPDATE
 // ////
 
-// UpdateModel changes a reading's mg/dL, notes or reason; anything not sent stays as it is
+// UpdateModel changes a reading's value, notes or reason; anything not sent stays as it is
 func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) *siteapiutils.HTTPError {
-	if model.Mgdl != 0 {
-		if herr := checkGlucoseMgdl(model.Mgdl); herr != nil {
+	model.ID = oldModel.ID
+	params := sitemodels.GlucoseReadingToUpdate(model, siteContext)
+	if params.Mgdl != nil {
+		if herr := checkGlucoseMgdl(*params.Mgdl, siteContext); herr != nil {
 			return herr
 		}
 	}
@@ -66,15 +70,14 @@ func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return siteapiutils.ErrInternalServerError
 	}
-	model.ID = oldModel.ID
-	updated, err := q.UpdateGlucoseReading(ctx, sitemodels.GlucoseReadingToUpdate(model, siteContext))
+	updated, err := q.UpdateGlucoseReading(ctx, params)
 	if err == sql.ErrNoRows {
 		return siteapiutils.ErrNotFound
 	}
 	if err != nil {
 		return glucoseWriteError(err)
 	}
-	*model = *sitemodels.GlucoseReadingFromDB(updated)
+	*model = *sitemodels.GlucoseReadingFromDB(updated, siteContext)
 	return nil
 }
 
@@ -98,7 +101,7 @@ func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.St
 		slog.Error("Error fetching glucose reading", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	return sitemodels.GlucoseReadingFromDB(reading), nil
+	return sitemodels.GlucoseReadingFromDB(reading, siteContext), nil
 }
 
 // GetHTMXResponse is the reading's details, shown in a modal
@@ -122,7 +125,7 @@ func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutil
 	}
 	models := []*sitemodels.SiteGlucoseReading{}
 	for _, reading := range readings {
-		models = append(models, sitemodels.GlucoseReadingFromDB(reading))
+		models = append(models, sitemodels.GlucoseReadingFromDB(reading, siteContext))
 	}
 	return models, nil
 }
@@ -160,9 +163,10 @@ func (s *GlucoseReadingsStore) DeleteHTMXResponse(model *sitemodels.SiteGlucoseR
 // UTIL METHODS
 ////////
 
-func checkGlucoseMgdl(mgdl float64) *siteapiutils.HTTPError {
+func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
 	if mgdl <= 0 || mgdl > maxGlucoseMgdl {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("mg/dL must be more than 0 and at most %d", maxGlucoseMgdl))
+		units := sitemodels.ContextUnits(siteContext)
+		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
 	}
 	return nil
 }
