@@ -43,7 +43,7 @@ func Base() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>NightTroop </title><link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico\"><link rel=\"apple-touch-icon\" href=\"/logo.png\"><!-- Tailwind CSS --><link href=\"/style_gen.css\" rel=\"stylesheet\"><script src=\"/d3.js\"></script><script src=\"/htmx.js\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>NightTroop </title><link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico\"><link rel=\"apple-touch-icon\" href=\"/logo.png\"><!-- Tailwind CSS --><link href=\"/style_gen.css\" rel=\"stylesheet\"><script src=\"/htmx.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -210,7 +210,7 @@ func settingsMenuItem(id string, path string, label string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 80, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 79, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -283,7 +283,7 @@ func dataMenuItem(id string, path string, label string, itemIcon templ.Component
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 98, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 97, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -376,7 +376,7 @@ func Header() templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(identityName(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 119, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 118, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -424,7 +424,7 @@ func Header() templ.Component {
 					var templ_7745c5c3_Var15 string
 					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 129, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 128, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {
