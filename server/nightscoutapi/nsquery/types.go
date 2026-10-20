@@ -12,7 +12,12 @@ func (qsa *QueryStringArray) Stringp() *string {
 	if qsa == nil {
 		return nil
 	}
-	res := "[\"" + strings.Join(*qsa, "\",\"") + "\"]"
+	// Marshalled, not joined, so a quote or backslash in a value is escaped
+	b, err := json.Marshal([]string(*qsa))
+	if err != nil {
+		return nil
+	}
+	res := string(b)
 	return &res
 }
 
