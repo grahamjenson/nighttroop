@@ -24,6 +24,9 @@ func GetAcceptType(r *http.Request) AcceptType {
 	switch {
 	case strings.Contains(accept, "application/json"):
 		return AcceptTypeJSON
+	// The browser's back and forward buttons swap the whole body, so they need the full page
+	case r.Header.Get("HX-History-Restore-Request") == "true":
+		return AcceptTypeHTML
 	case strings.Contains(accept, "text/htmx") || hxRequest == "true":
 		return AcceptTypeHTMX
 	case strings.Contains(accept, "text/html"):
