@@ -55,6 +55,26 @@ type MetaReplaceCollection[NS, DM any] interface {
 	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscoutmodels.ConverterContext, *string) (*DM, error)
 }
 
+// SharedNSFields are the fields every Nightscout model has, which a replace or patch must not change
+type SharedNSFields interface {
+	GetDevice() *string
+	GetApp() *string
+	GetSubject() *string
+	GetDate() *int64
+	GetUtcOffsetMinutes() *int64
+	GetIdentifier() *string
+}
+
+// SharedDBFields are the same fields on the database model
+type SharedDBFields interface {
+	GetOccurredAt() int64
+	GetCreatedByAppName() *string
+	GetCreatedByDeviceName() *string
+	GetCreatedByIdentityName() string
+	GetUtcOffsetMinutes() *int64
+	GetID() string
+}
+
 // //
 // Fns
 // //
@@ -164,46 +184,28 @@ func MetaDelete(
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
+	deleteFunc, label := m.SoftDeleteDBFunc, "Soft"
 	if permanent {
-		res, err := m.HardDeleteDBFunc(q, ctx, identifier)
-		// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
-		if err == sql.ErrNoRows {
-			return nsutils.ErrNotFound
-		}
-		if err != nil {
-			slog.Error("failed to permanently delete by ID", "error", err, "collection", m.Name())
-			return nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for delete", "error", err, "collection", m.Name())
-			return nsutils.ErrInternal
-		}
-		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
-		}
-		slog.Info("Hard Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
-
-	} else {
-		res, err := m.SoftDeleteDBFunc(q, ctx, identifier)
-		if err == sql.ErrNoRows {
-			return nsutils.ErrNotFound
-		}
-		if err != nil {
-			slog.Error("failed to soft delete by ID", "error", err, "collection", m.Name())
-			return nsutils.ErrInternal
-		}
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for delete", "error", err, "collection", m.Name())
-			return nsutils.ErrInternal
-		}
-		if rowsAffected == 0 {
-			return nsutils.ErrNotFound
-		}
-		slog.Info("Soft Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
-
+		deleteFunc, label = m.HardDeleteDBFunc, "Hard"
 	}
+	res, err := deleteFunc(q, ctx, identifier)
+	// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
+	if err == sql.ErrNoRows {
+		return nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to delete by ID", "error", err, "collection", m.Name(), "permanent", permanent)
+		return nsutils.ErrInternal
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		slog.Error("failed to get rows affected for delete", "error", err, "collection", m.Name())
+		return nsutils.ErrInternal
+	}
+	if rowsAffected == 0 {
+		return nsutils.ErrNotFound
+	}
+	slog.Info(label+" Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
 
 	if err := tx.Commit(); err != nil {
 		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
@@ -219,7 +221,6 @@ func MetaDeleteType(
 	typeString string,
 	permanent bool,
 ) (int, *nsutils.HTTPError) {
-	rowsAffected := int64(0)
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, nsutils.ErrInternal
@@ -227,33 +228,22 @@ func MetaDeleteType(
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
+	deleteFunc := m.SoftDeleteTypeDBFunc
 	if permanent {
-		res, err := m.HardDeleteTypeDBFunc(q, ctx, typeString)
-		if err != nil {
-			slog.Error("failed to permanently delete  by type", "error", err, "collection", m.Name())
-			return 0, nsutils.ErrInternal
-		}
-		rowsAffected, err = res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for  delete", "error", err, "collection", m.Name())
-			return 0, nsutils.ErrInternal
-		}
-
-	} else {
-		res, err := m.SoftDeleteTypeDBFunc(q, ctx, typeString)
-		if err == sql.ErrNoRows {
-			return 0, nsutils.ErrNotFound
-		}
-		if err != nil {
-			slog.Error("failed to soft delete  by IDs", "error", err, "collection", m.Name())
-			return 0, nsutils.ErrInternal
-		}
-		rowsAffected, err = res.RowsAffected()
-		if err != nil {
-			slog.Error("failed to get rows affected for  delete", "error", err, "collection", m.Name())
-			return 0, nsutils.ErrInternal
-		}
-
+		deleteFunc = m.HardDeleteTypeDBFunc
+	}
+	res, err := deleteFunc(q, ctx, typeString)
+	if err == sql.ErrNoRows {
+		return 0, nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to delete by type", "error", err, "collection", m.Name(), "permanent", permanent)
+		return 0, nsutils.ErrInternal
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		slog.Error("failed to get rows affected for delete", "error", err, "collection", m.Name())
+		return 0, nsutils.ErrInternal
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -264,21 +254,7 @@ func MetaDeleteType(
 	return int(rowsAffected), nil
 }
 
-func MetaReplace[NS interface {
-	GetDevice() *string
-	GetApp() *string
-	GetSubject() *string
-	GetDate() *int64
-	GetUtcOffsetMinutes() *int64
-	GetIdentifier() *string
-}, DM interface {
-	GetOccurredAt() int64
-	GetCreatedByAppName() *string
-	GetCreatedByDeviceName() *string
-	GetCreatedByIdentityName() string
-	GetUtcOffsetMinutes() *int64
-	GetID() string
-}](
+func MetaReplace[NS SharedNSFields, DM SharedDBFields](
 	m MetaReplaceCollection[NS, DM],
 	ctx context.Context,
 	siteContext *httputils.SiteContext,
@@ -363,21 +339,7 @@ func MetaReplace[NS interface {
 
 }
 
-func MetaPatch[NS interface {
-	GetDevice() *string
-	GetApp() *string
-	GetSubject() *string
-	GetDate() *int64
-	GetUtcOffsetMinutes() *int64
-	GetIdentifier() *string
-}, DM interface {
-	GetOccurredAt() int64
-	GetCreatedByAppName() *string
-	GetCreatedByDeviceName() *string
-	GetCreatedByIdentityName() string
-	GetUtcOffsetMinutes() *int64
-	GetID() string
-}](
+func MetaPatch[NS SharedNSFields, DM SharedDBFields](
 	m MetaPatchCollection[NS, DM],
 	ctx context.Context,
 	siteContext *httputils.SiteContext,
@@ -461,21 +423,7 @@ func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {
 	return nil
 }
 
-func ValidateNotChangingSharedFields[NS interface {
-	GetDevice() *string
-	GetApp() *string
-	GetSubject() *string
-	GetDate() *int64
-	GetUtcOffsetMinutes() *int64
-	GetIdentifier() *string
-}, DM interface {
-	GetOccurredAt() int64
-	GetCreatedByAppName() *string
-	GetCreatedByDeviceName() *string
-	GetCreatedByIdentityName() string
-	GetUtcOffsetMinutes() *int64
-	GetID() string
-}](replacingModelPtr *DM, nsModel NS, nsModelMap map[string]any, identifier string) *nsutils.HTTPError {
+func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](replacingModelPtr *DM, nsModel NS, nsModelMap map[string]any, identifier string) *nsutils.HTTPError {
 	if err := ValidateInputData(nsModelMap); err != nil {
 		return err
 	}
