@@ -1,6 +1,9 @@
 package site_settings_templ
 
 import (
+	"strconv"
+	"time"
+
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -24,6 +27,13 @@ func roleLabel(role string) string {
 		return label
 	}
 	return role
+}
+
+func formatIdentityDate(ms *int64) string {
+	if ms == nil || *ms == 0 {
+		return "Never"
+	}
+	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
 }
 
 templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
@@ -107,13 +117,13 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ roleLabel(identity.Role) }
 		}
 		@table.Cell() {
-			{ identity.Created }
+			{ formatIdentityDate(&identity.CreatedAt) }
 		}
 		@table.Cell() {
-			{ identity.LastSeen }
+			{ formatIdentityDate(identity.LastSeenAt) }
 		}
 		@table.Cell() {
-			{ identity.LastWrite }
+			{ formatIdentityDate(identity.LastWriteAt) }
 		}
 		@table.Cell() {
 			@identityActions(identity)
@@ -133,9 +143,9 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 				class="peer sr-only"
 				checked?={ identity.Enabled }
 				disabled?={ identity.CurrentIdentity }
-				hx-post={ "/settings/identities/" + identity.ID }
+				hx-post={ "/settings/identities/" + strconv.FormatInt(identity.ID, 10) }
 				hx-trigger="change"
-				hx-vals={ `{"id": "` + identity.ID + `"}` }
+				hx-vals={ `{"id": ` + strconv.FormatInt(identity.ID, 10) + `}` }
 				hx-target="#toaster"
 				hx-swap="beforeend"
 				hx-status:4xx="target:#toaster swap:beforeend"
@@ -151,7 +161,7 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 			Disabled: identity.CurrentIdentity,
 			Attributes: templ.Attributes{
 				"title":         "Delete",
-				"hx-delete":     "/settings/identities/" + identity.ID,
+				"hx-delete":     "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
 				"hx-confirm":    "Delete " + identity.Name + "? Its password and tokens will stop working.",
 				"hx-target":     "#toaster",
 				"hx-swap":       "beforeend",

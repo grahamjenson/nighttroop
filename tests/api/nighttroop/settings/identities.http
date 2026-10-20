@@ -63,6 +63,7 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "kitchen" "@result.name"
 ASSERT_EQUALS "device_read" "@result.role"
 ASSERT_EQUALS false "@result.current_identity"
+ASSERT_EXISTS "@result.created_at"
 
 NAME device_token_works
 GET http://{{ .ns_site }}/api/v1/entries?token={{ .device_token }}

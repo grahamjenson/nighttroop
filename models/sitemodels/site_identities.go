@@ -5,11 +5,11 @@ import (
 )
 
 type UserIdentity struct {
-	ID              string `json:"id"`
+	ID              int64  `json:"id"`
 	Name            string `json:"name"`
-	Created         string `json:"created"`
-	LastSeen        string `json:"last_seen"`
-	LastWrite       string `json:"last_write"`
+	CreatedAt       int64  `json:"created_at"`
+	LastSeenAt      *int64 `json:"last_seen_at"`
+	LastWriteAt     *int64 `json:"last_write_at"`
 	Role            string `json:"role"`
 	Type            string `json:"type"`
 	CurrentIdentity bool   `json:"current_identity"`

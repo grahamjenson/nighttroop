@@ -15,11 +15,17 @@ func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteConte
 	var pSitemodelsUserIdentity *UserIdentity
 	if source != nil {
 		var sitemodelsUserIdentity UserIdentity
-		sitemodelsUserIdentity.ID = IdentityIDToString((*source).ID)
+		sitemodelsUserIdentity.ID = (*source).ID
 		sitemodelsUserIdentity.Name = (*source).Name
-		sitemodelsUserIdentity.Created = FormatIdentityDate((*source).CreatedAt)
-		sitemodelsUserIdentity.LastSeen = FormatOptionalIdentityDate((*source).LastSeenAt)
-		sitemodelsUserIdentity.LastWrite = FormatOptionalIdentityDate((*source).LastWriteAt)
+		sitemodelsUserIdentity.CreatedAt = (*source).CreatedAt
+		if (*source).LastSeenAt != nil {
+			xint64 := *(*source).LastSeenAt
+			sitemodelsUserIdentity.LastSeenAt = &xint64
+		}
+		if (*source).LastWriteAt != nil {
+			xint642 := *(*source).LastWriteAt
+			sitemodelsUserIdentity.LastWriteAt = &xint642
+		}
 		sitemodelsUserIdentity.Role = string((*source).Role)
 		sitemodelsUserIdentity.CurrentIdentity = IsCurrentIdentity((*source).Name, context)
 		sitemodelsUserIdentity.HasTotpSecret = HasTotpSecret((*source).TotpSecretEnc)
@@ -28,32 +34,24 @@ func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteConte
 	}
 	return pSitemodelsUserIdentity
 }
-func IdentityToDelete(source *UserIdentity, context *httputils.SiteContext) (controldb.DeleteSiteIdentityParams, error) {
+func IdentityToDelete(source *UserIdentity, context *httputils.SiteContext) controldb.DeleteSiteIdentityParams {
 	var controldbDeleteSiteIdentityParams controldb.DeleteSiteIdentityParams
 	if source != nil {
 		controldbDeleteSiteIdentityParams.SiteID = ContextSiteID(context)
-		xint64, err := IdentityIDFromString((*source).ID)
-		if err != nil {
-			return controldbDeleteSiteIdentityParams, err
-		}
-		controldbDeleteSiteIdentityParams.ID = xint64
+		controldbDeleteSiteIdentityParams.ID = (*source).ID
 	}
-	return controldbDeleteSiteIdentityParams, nil
+	return controldbDeleteSiteIdentityParams
 }
-func IdentityToUpdate(source *UserIdentity, context *httputils.SiteContext) (controldb.UpdateSiteIdentityEnabledParams, error) {
+func IdentityToUpdate(source *UserIdentity, context *httputils.SiteContext) controldb.UpdateSiteIdentityEnabledParams {
 	var controldbUpdateSiteIdentityEnabledParams controldb.UpdateSiteIdentityEnabledParams
 	if source != nil {
 		controldbUpdateSiteIdentityEnabledParams.Enabled = (*source).Enabled
 		controldbUpdateSiteIdentityEnabledParams.UpdatedByIdentityID = ContextIdentityID(context)
 		controldbUpdateSiteIdentityEnabledParams.UpdatedByIdentityName = ContextIdentityName(context)
 		controldbUpdateSiteIdentityEnabledParams.SiteID = ContextSiteID(context)
-		xint64, err := IdentityIDFromString((*source).ID)
-		if err != nil {
-			return controldbUpdateSiteIdentityEnabledParams, err
-		}
-		controldbUpdateSiteIdentityEnabledParams.ID = xint64
+		controldbUpdateSiteIdentityEnabledParams.ID = (*source).ID
 	}
-	return controldbUpdateSiteIdentityEnabledParams, nil
+	return controldbUpdateSiteIdentityEnabledParams
 }
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource

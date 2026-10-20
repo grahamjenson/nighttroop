@@ -106,11 +106,7 @@ func (s *IdentitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 	*model = *oldModel
 	model.Enabled = enabled
 
-	params, err := sitemodels.IdentityToUpdate(model, siteContext)
-	if err != nil {
-		return siteapiutils.ErrBadBody
-	}
-	err = q.UpdateSiteIdentityEnabled(ctx, params)
+	err = q.UpdateSiteIdentityEnabled(ctx, sitemodels.IdentityToUpdate(model, siteContext))
 	if err != nil {
 		slog.Error("Error updating identity", "error", err)
 		return siteapiutils.ErrInternalServerError
@@ -201,11 +197,7 @@ func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 		return herr
 	}
 
-	params, err := sitemodels.IdentityToDelete(model, siteContext)
-	if err != nil {
-		return siteapiutils.ErrBadBody
-	}
-	err = q.DeleteSiteIdentity(ctx, params)
+	err = q.DeleteSiteIdentity(ctx, sitemodels.IdentityToDelete(model, siteContext))
 	if err != nil {
 		slog.Error("Error deleting identity", "error", err)
 		return siteapiutils.ErrInternalServerError
