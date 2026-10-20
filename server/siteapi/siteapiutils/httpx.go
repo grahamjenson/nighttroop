@@ -37,7 +37,7 @@ func writeJSON(w http.ResponseWriter, body any) {
 
 // FormToMap turns a form submission into the document a JSON client would
 // send for T. Dotted names nest, and because form values are only strings,
-// bool and number fields of T (matched by json tag) are converted; an absent
+// bool and number fields of T, or pointers to them, (matched by json tag) are converted; an absent
 // checkbox becomes false.
 func FormToMap[T any](form url.Values) map[string]any {
 	doc := make(map[string]any)
@@ -57,7 +57,11 @@ func FormToMap[T any](form url.Values) map[string]any {
 			name = f.Name
 		}
 		str, present := doc[name].(string)
-		switch f.Type.Kind() {
+		kind := f.Type.Kind()
+		if kind == reflect.Pointer {
+			kind = f.Type.Elem().Kind()
+		}
+		switch kind {
 		case reflect.Bool:
 			doc[name] = present && (str == "on" || str == "true" || str == "1")
 		case reflect.Int, reflect.Int64, reflect.Float64:

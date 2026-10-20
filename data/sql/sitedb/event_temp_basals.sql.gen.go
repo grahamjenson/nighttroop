@@ -13,13 +13,13 @@ import (
 const allTempBasals = `-- name: AllTempBasals :many
 
 SELECT id, duration_minutes, absolute, percent, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
-WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
 `
 
 type AllTempBasalsParams struct {
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }
@@ -150,15 +150,16 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasal = `-- name: GetTempBasal :one
-SELECT id, duration_minutes, absolute, percent, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals WHERE id = ?
+SELECT id, duration_minutes, absolute, percent, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetTempBasalParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetTempBasal(ctx context.Context, arg GetTempBasalParams) (*TempBasal, error) {
-	row := q.queryRow(ctx, q.getTempBasalStmt, getTempBasal, arg.ID)
+	row := q.queryRow(ctx, q.getTempBasalStmt, getTempBasal, arg.ID, arg.IncludeDeleted)
 	var i TempBasal
 	err := row.Scan(
 		&i.ID,
