@@ -57,3 +57,11 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--nightscout-sync--errors
 ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
 SCREENSHOT sync_first_sync_failed
+
+// Deleting a source leaves the page in place, with the source's form rendered unset again
+CLICK #site--settings--nightscout-sync--delete
+ASSERT_TEXT_VISIBLE Sync Deleted
+ASSERT_PATH /settings/sync
+ASSERT_TEXT_VISIBLE Sync Settings
+ASSERT_NOT_VISIBLE #site--settings--nightscout-sync--errors
+ASSERT_VISIBLE #site--settings--nightscout-sync--url:not([value*="will_not_pass"])

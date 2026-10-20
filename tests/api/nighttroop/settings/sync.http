@@ -149,3 +149,18 @@ NAME virtual_entries_not_duplicated
 GET http://{{ .ns_site }}/api/v1/entries?count=50&token={{ token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 6 "@"
+
+// Deleting a source turns it off and clears its details, leaving the others
+NAME delete_nightscout_sync
+DELETE http://{{ site }}/settings/sync/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME nightscout_sync_deleted
+GET http://{{ site }}/settings/sync
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "nightscout" "@result.1.type"
+ASSERT_EQUALS false "@result.1.enabled"

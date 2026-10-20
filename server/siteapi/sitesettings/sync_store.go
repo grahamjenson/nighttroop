@@ -285,7 +285,7 @@ func (s *SyncSettingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.St
 }
 
 func (s *SyncSettingsStore) DeleteHTMXResponse(model *sitemodels.SyncSource) templ.Component {
-	return site_settings_templ.SuccessfulDelete()
+	return site_settings_templ.SyncDeleted(model.Type)
 }
 
 ///////
