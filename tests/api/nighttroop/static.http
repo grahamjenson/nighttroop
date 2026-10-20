@@ -12,3 +12,19 @@ GET http://localhost/style_gen.css
 H If-None-Match: {{ .etag }}
 ASSERT_STATUS 304
 ASSERT_EQUALS "no-cache" "#Cache-Control.0"
+
+// The owl mark is served for the headers, the browser tab and home screens
+NAME get_logo_svg
+GET http://localhost/logo.svg
+ASSERT_STATUS 200
+ASSERT_EQUALS "image/svg+xml" "#Content-Type.0"
+
+NAME get_logo_png
+GET http://localhost/logo.png
+ASSERT_STATUS 200
+ASSERT_EQUALS "image/png" "#Content-Type.0"
+
+NAME get_favicon
+GET http://localhost/favicon.ico
+ASSERT_STATUS 200
+ASSERT_EQUALS "image/x-icon" "#Content-Type.0"

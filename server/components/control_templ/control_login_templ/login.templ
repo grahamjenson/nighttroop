@@ -21,6 +21,7 @@ templ Login() {
 					hx-status:5xx="target:#error-container"
 				>
 					<div class="text-center mb-6">
+						<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
 						<h2 class="font-bold text-2xl">NightTroop Login</h2>
 					</div>
 					<!-- Username -->
@@ -99,7 +100,7 @@ templ Login() {
 					@button.Button(button.Props{
 						ID:    "control--login-button",
 						Type:  button.TypeSubmit,
-						Class: "w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
+						Class: "w-full py-3 px-4 bg-brand-night hover:bg-brand-night/90 text-white text-lg font-bold rounded-lg shadow-sm transition-colors cursor-pointer",
 					}) {
 						Log In
 					}
