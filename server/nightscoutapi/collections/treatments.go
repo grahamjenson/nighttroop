@@ -99,6 +99,10 @@ func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context
 }
 
 func (c TreatmentCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
+	// Without a date every filter below is empty and would match the newest row
+	if nsModel.Date == nil {
+		return nil, nil
+	}
 	eventGroups, rerr := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),

@@ -63,6 +63,10 @@ func (c EntriesCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, 
 }
 
 func (c EntriesCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
+	// Without a date every filter below is empty and would match the newest row
+	if nsModel.Date == nil {
+		return nil, nil
+	}
 	glucoseReadings, rerr := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),

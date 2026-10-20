@@ -61,6 +61,10 @@ func (c FoodCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsM
 }
 
 func (c FoodCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food) (*sitedb.FoodPreset, error) {
+	// Without a date every filter below is empty and would match the newest row
+	if nsModel.Date == nil {
+		return nil, nil
+	}
 	foodPresets, rerr := q.SearchFoodPresets(ctx, sitedb.SearchFoodPresetsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),

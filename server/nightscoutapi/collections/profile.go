@@ -55,6 +55,10 @@ func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, 
 }
 
 func (c ProfileCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
+	// Without a date every filter below is empty and would match the newest row
+	if nsModel.Date == nil {
+		return nil, nil
+	}
 	profilePresets, rerr := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
