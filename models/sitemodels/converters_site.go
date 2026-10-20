@@ -36,7 +36,7 @@ type SiteConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:map Name CurrentIdentity | IsCurrentIdentity
+	// goverter:map ID CurrentIdentity | IsCurrentIdentity
 	// goverter:map TotpSecretEnc HasTotpSecret | HasTotpSecret
 	// goverter:ignore Type Password TotpSecret NSToken SiteURL
 	IdentityFromDB(source *controldb.SiteIdentity, siteContext *httputils.SiteContext) *UserIdentity
@@ -72,8 +72,8 @@ func Decrypt(encString *string, security *security.SecurityConfig) (*string, err
 }
 
 // goverter:context siteContext
-func IsCurrentIdentity(name string, siteContext *httputils.SiteContext) bool {
-	return name == siteContext.IdentityModel.Name
+func IsCurrentIdentity(id int64, siteContext *httputils.SiteContext) bool {
+	return id == siteContext.IdentityModel.ID
 }
 
 // goverter:context siteContext

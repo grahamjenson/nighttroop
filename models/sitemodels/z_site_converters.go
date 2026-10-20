@@ -27,7 +27,7 @@ func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteConte
 			sitemodelsUserIdentity.LastWriteAt = &xint642
 		}
 		sitemodelsUserIdentity.Role = string((*source).Role)
-		sitemodelsUserIdentity.CurrentIdentity = IsCurrentIdentity((*source).Name, context)
+		sitemodelsUserIdentity.CurrentIdentity = IsCurrentIdentity((*source).ID, context)
 		sitemodelsUserIdentity.HasTotpSecret = HasTotpSecret((*source).TotpSecretEnc)
 		sitemodelsUserIdentity.Enabled = (*source).Enabled
 		pSitemodelsUserIdentity = &sitemodelsUserIdentity
