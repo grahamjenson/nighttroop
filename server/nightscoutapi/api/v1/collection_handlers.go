@@ -1,26 +1,17 @@
 package v1
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
-	"nighttroop.t1d.nz/utils/types"
 )
 
 func Search(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		query, err := nsutils.ParseQuery(r.URL.Query())
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		if !ok {
 			return
 		}
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
@@ -43,6 +34,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			}
 			records = append(records, record)
 		} else {
+			var err *nsutils.HTTPError
 			records, err = dep.Store.Search(r.Context(), collection, query)
 			if err != nil {
 				nsutils.WriteError(w, err)
@@ -83,12 +75,6 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw types.FlexibleBool
-		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
-		if rawError != nil {
-			raw = types.FlexibleBool(false)
-		}
-
 		// Loop over the array of models sent
 		for _, item := range arrayOfModels {
 			doc, ok := item.(map[string]any)
@@ -98,7 +84,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 				return
 			}
 
-			record, _, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
+			record, _, err := dep.Store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -112,15 +98,8 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 
 func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		query, err := nsutils.ParseQuery(r.URL.Query())
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		if !ok {
 			return
 		}
 		// Force limit 1 and sort decending by date
@@ -148,40 +127,20 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
 		if identifierOrType != "" {
+			// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT
+			deleted := 0
 			if collection.IsTypeString(identifierOrType) {
-				amount, err := dep.Store.DeleteType(r.Context(), collection, identifierOrType, permanent)
-				if err != nil {
-					// IGNORE THE ERROR AND JUST RETURN 0 DELETED COUNT
-					nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-						"acknowledged": true,
-						"deletedCount": 0,
-					})
-					return
+				if amount, err := dep.Store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
+					deleted = amount
 				}
-				nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-					"acknowledged": true,
-					"deletedCount": amount,
-				})
-				return
-			} else {
-				err = dep.Store.Delete(r.Context(), collection, identifierOrType, permanent)
-				if err != nil {
-					// IGNORE THE ERROR AND JUST RETURN 0 DELETED COUNT
-					nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-						"acknowledged": true,
-						"deletedCount": 0,
-					})
-					return
-				}
-
-				nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-					"acknowledged": true,
-					"deletedCount": 1,
-				})
-				return
+			} else if err := dep.Store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
+				deleted = 1
 			}
+			nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+				"acknowledged": true,
+				"deletedCount": deleted,
+			})
 		}
-
 	}
 }
 
@@ -219,13 +178,7 @@ func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
-		var raw types.FlexibleBool
-		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
-		if rawError != nil {
-			raw = types.FlexibleBool(false)
-		}
-
-		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate, raw.Bool())
+		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate, nsutils.RawParam(r))
 		if herr != nil {
 			nsutils.WriteError(w, herr)
 			return

@@ -1,14 +1,12 @@
 package v3
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
-	"nighttroop.t1d.nz/utils/types"
 )
 
 // Read returns a single document from an API v3 collection.
@@ -40,15 +38,8 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 // Search implements collection search for API v3.
 func Search(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		query, err := nsutils.ParseQuery(r.URL.Query())
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		if !ok {
 			return
 		}
 
@@ -70,12 +61,6 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw types.FlexibleBool
-		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
-		if rawError != nil {
-			raw = types.FlexibleBool(false)
-		}
-
 		// The Actual Create
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil || len(doc) == 0 {
@@ -83,7 +68,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		record, duplicate, err := dep.Store.Create(r.Context(), collection, doc, raw.Bool())
+		record, duplicate, err := dep.Store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
@@ -127,15 +112,8 @@ func Remove(dep nsutils.Dependencies) http.HandlerFunc {
 // History returns document revisions modified since the supplied timestamp.
 func History(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		query, err := nsutils.ParseQuery(r.URL.Query())
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		if !ok {
 			return
 		}
 
@@ -175,19 +153,13 @@ func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw types.FlexibleBool
-		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
-		if rawError != nil {
-			raw = types.FlexibleBool(false)
-		}
-
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
-		record, created, err := dep.Store.Replace(r.Context(), collection, identifier, doc, canCreate, raw.Bool())
+		record, created, err := dep.Store.Replace(r.Context(), collection, identifier, doc, canCreate, nsutils.RawParam(r))
 
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -217,12 +189,6 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		var raw types.FlexibleBool
-		rawError := json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw)
-		if rawError != nil {
-			raw = types.FlexibleBool(false)
-		}
-
 		var doc map[string]any
 		if err := nsutils.ReadJSON(r, &doc); err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
@@ -230,7 +196,7 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
 
-		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc, raw.Bool())
+		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc, nsutils.RawParam(r))
 
 		if err != nil {
 			nsutils.WriteError(w, err)

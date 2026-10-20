@@ -14,14 +14,8 @@ func ptr[T any](v T) *T {
 
 func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		query, err := nsutils.ParseQuery(r.URL.Query())
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		if !ok {
 			return
 		}
 		records, err := dep.Store.Search(r.Context(), collection, query)
@@ -37,15 +31,8 @@ func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collection/field/type/prefix
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		q, err := nsutils.ParseQuery(r.URL.Query())
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, q, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		if !ok {
 			return
 		}
 
