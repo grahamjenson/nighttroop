@@ -28,7 +28,7 @@ type CreateHandlerInterface[T any] interface {
 
 func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store CreateHandlerInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName(), ActionCreate)
+		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate)
 		if siteContext == nil {
 			return
 		}
@@ -51,7 +51,7 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		if created {
 			status = http.StatusCreated
 		}
-		writeResponse(w, r, siteContext, status, requestModel, store.CreateHTMXResponse(requestModel), false)
+		WriteResponse(w, r, siteContext, status, requestModel, store.CreateHTMXResponse(requestModel), false)
 	}
 }
 
@@ -70,7 +70,7 @@ type UpdateHandlerInterface[T any] interface {
 
 func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpdateHandlerInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName(), ActionUpdate)
+		siteContext := SiteContextFor(w, r, store.GetName(), ActionUpdate)
 		if siteContext == nil {
 			return
 		}
@@ -99,7 +99,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		writeResponse(w, r, siteContext, http.StatusOK, requestModel, store.UpdateHTMXResponse(requestModel), false)
+		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, store.UpdateHTMXResponse(requestModel), false)
 	}
 }
 
@@ -120,7 +120,7 @@ type UpsertInterface[T any] interface {
 
 func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpsertInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName(), ActionCreate, ActionUpdate)
+		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate, ActionUpdate)
 		if siteContext == nil {
 			return
 		}
@@ -150,7 +150,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		writeResponse(w, r, siteContext, http.StatusOK, requestModel, store.UpdateHTMXResponse(requestModel), false)
+		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, store.UpdateHTMXResponse(requestModel), false)
 	}
 }
 
@@ -166,7 +166,7 @@ type SearchInterface[T any] interface {
 
 func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store SearchInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName(), ActionSearch)
+		siteContext := SiteContextFor(w, r, store.GetName(), ActionSearch)
 		if siteContext == nil {
 			return
 		}
@@ -184,7 +184,7 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		writeResponse(w, r, siteContext, http.StatusOK, models, store.SearchHTMXResponse(models, query), true)
+		WriteResponse(w, r, siteContext, http.StatusOK, models, store.SearchHTMXResponse(models, query), true)
 	}
 }
 
@@ -196,7 +196,7 @@ type GetInterface[T any] interface {
 
 func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store GetInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName(), ActionGet)
+		siteContext := SiteContextFor(w, r, store.GetName(), ActionGet)
 		if siteContext == nil {
 			return
 		}
@@ -213,7 +213,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 			return
 		}
 
-		writeResponse(w, r, siteContext, http.StatusOK, model, store.GetHTMXResponse(model), true)
+		WriteResponse(w, r, siteContext, http.StatusOK, model, store.GetHTMXResponse(model), true)
 	}
 }
 
@@ -230,7 +230,7 @@ type DeleteInterface[T any] interface {
 
 func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store DeleteInterface[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteContextFor(w, r, store.GetName(), ActionDelete)
+		siteContext := SiteContextFor(w, r, store.GetName(), ActionDelete)
 		if siteContext == nil {
 			return
 		}
@@ -277,8 +277,8 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // UTILS
 // ////
 
-// siteContextFor is the request's site context when its identity can do every action on the store; otherwise it writes the error and is nil
-func siteContextFor(w http.ResponseWriter, r *http.Request, storeName string, actions ...Action) *httputils.SiteContext {
+// SiteContextFor is the request's site context when its identity can do every action on the store; otherwise it writes the error and is nil
+func SiteContextFor(w http.ResponseWriter, r *http.Request, storeName string, actions ...Action) *httputils.SiteContext {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
 		slog.Error("site context is nil")
@@ -294,8 +294,8 @@ func siteContextFor(w http.ResponseWriter, r *http.Request, storeName string, ac
 	return siteContext
 }
 
-// writeResponse sends HTMX the component, a browser the component (in the site's page when fullPage), and anything else the model as JSON
-func writeResponse(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext, status int, model any, component templ.Component, fullPage bool) {
+// WriteResponse sends HTMX the component, a browser the component (in the site's page when fullPage), and anything else the model as JSON
+func WriteResponse(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext, status int, model any, component templ.Component, fullPage bool) {
 	apiutils.WriteStatus(w, siteContext.AcceptType, status)
 	switch siteContext.AcceptType {
 	case httputils.AcceptTypeHTMX:

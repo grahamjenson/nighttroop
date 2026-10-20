@@ -1,0 +1,58 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_PATH /
+
+// A new site's summary has nothing in it yet
+ASSERT_VISIBLE #site--summary
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
+ASSERT_TEXT_VISIBLE No glucose readings in this time
+ASSERT_TEXT_VISIBLE No treatments in this time
+ASSERT_TEXT_EQUALS #site--summary--iob –
+SCREENSHOT summary_empty
+
+// Virtual sync fills the last 30 minutes with readings, treatments and device statuses
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+// The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary--glucose--reading
+SCREENSHOT summary
+ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
+ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
+ASSERT_VISIBLE #site--summary--treatments >> text=Temp Basal
+ASSERT_VISIBLE #site--summary--treatments >> text=Temp Target
+ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
+ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
+ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
+
+// A device opens its latest status's details
+CLICK #site--summary--devices >> text=virtual://nighttroop
+ASSERT_VISIBLE #site--device-status--details
+ASSERT_TEXT_VISIBLE Pump Reservoir

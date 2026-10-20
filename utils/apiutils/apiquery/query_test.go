@@ -42,3 +42,26 @@ func TestQueryLimitAndSkip(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryHours(t *testing.T) {
+	week := int64(apiquery.MaxQueryHours)
+	tests := []struct {
+		query string
+		hours *int64
+	}{
+		{query: "", hours: nil},
+		{query: "hours=6", hours: func() *int64 { h := int64(6); return &h }()},
+		{query: "hours=1000", hours: &week},
+		{query: "hours=0", hours: nil},
+		{query: "hours=-1", hours: nil},
+	}
+	for _, test := range tests {
+		t.Run(test.query, func(t *testing.T) {
+			values, err := url.ParseQuery(test.query)
+			require.NoError(t, err)
+			queryValues, err := apiquery.ParseQueryValues(values)
+			require.NoError(t, err)
+			require.Equal(t, test.hours, apiquery.QueryValuesToQuery(queryValues).Hours)
+		})
+	}
+}

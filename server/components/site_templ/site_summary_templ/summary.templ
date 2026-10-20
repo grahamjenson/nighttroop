@@ -2,116 +2,237 @@ package site_summary_templ
 
 import (
 	"fmt"
+	"sort"
+	"time"
+
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
-func fmtPtr(v *int64, suffix string) string {
+// directionArrows are the Nightscout trend directions as arrows
+var directionArrows = map[string]string{
+	"DoubleUp": "⇈", "SingleUp": "↑", "FortyFiveUp": "↗", "Flat": "→",
+	"FortyFiveDown": "↘", "SingleDown": "↓", "DoubleDown": "⇊",
+}
+
+func arrow(direction *string) string {
+	if direction == nil {
+		return ""
+	}
+	return directionArrows[*direction]
+}
+
+func minutesAgo(ms int64) string {
+	return fmt.Sprintf("%d min ago", int(time.Since(time.UnixMilli(ms)).Minutes()))
+}
+
+// value shows an optional number with its unit, or a dash when it is not set
+func value(v *float64, unit string) string {
 	if v == nil {
 		return "–"
 	}
-	return fmt.Sprintf("%d%s", *v, suffix)
+	return fmt.Sprintf("%g%s", consts.Round(*v, 2), unit)
 }
 
-templ Summary(summary sitemodels.Summary) {
-	@site_templ.SiteBase() {
-		<div class="w-full py-4 space-y-4">
-			@glucoseHero(summary)
-			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-				@tile("Insulin on board", fmtPtr(summary.IOB, " U"), icon.Syringe)
-				@tile("Carbs on board", fmtPtr(summary.COB, " g"), icon.Utensils)
-				@tile("Profile", fmtPtr(summary.ProfilePercent, "%"), icon.Activity)
-			</div>
-			<!-- GRAPH -->
-			<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Last 24 hours</h2>
-				if len(summary.Last24Hours) == 0 {
-					<div class="flex h-48 items-center justify-center text-sm text-gray-400">No readings in the last 24 hours</div>
-				} else {
-					<div id="glucoseGraph" class="mt-2"></div>
-					@templ.JSONScript("glucose-data", summary.Last24Hours)
-				}
-			</div>
-			if len(summary.Alerts)+len(summary.Notifications) > 0 {
-				<div class="flex flex-wrap gap-2">
-					for _, a := range summary.Alerts {
-						@pill(a, "bg-amber-100 text-amber-900")
-					}
-					for _, n := range summary.Notifications {
-						@pill(n, "bg-gray-100 text-gray-700")
-					}
-				</div>
+func unitsText(units *consts.Units) string {
+	if units == nil {
+		return ""
+	}
+	return string(*units)
+}
+
+// loopValue is a value from the loop's latest status, or a dash when there is none
+func loopValue(loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDeviceStatus) *float64, unit string) string {
+	if loop == nil {
+		return "–"
+	}
+	return value(get(loop), unit)
+}
+
+type treatment struct {
+	At     int64
+	Kind   string
+	Detail string
+	Device *string
+}
+
+// treatments are the summary's insulin, food, temp targets and temp basals in one list, newest first
+func treatments(s *sitemodels.Summary) []treatment {
+	list := []treatment{}
+	for _, d := range s.InsulinDoses {
+		list = append(list, treatment{d.OccurredAt, "Insulin", value(&d.Dose, " U"), d.CreatedByDeviceName})
+	}
+	for _, f := range s.FoodIntakes {
+		list = append(list, treatment{f.OccurredAt, "Food", value(f.Carbs, " g carbs"), f.CreatedByDeviceName})
+	}
+	for _, t := range s.TempTargets {
+		detail := fmt.Sprintf("%s–%s %s for %d min", site_data_templ.FormatGlucose(t.LowTarget, t.Units), site_data_templ.FormatGlucose(t.HighTarget, t.Units), unitsText(t.Units), t.DurationMinutes)
+		list = append(list, treatment{t.OccurredAt, "Temp Target", detail, t.CreatedByDeviceName})
+	}
+	for _, b := range s.TempBasals {
+		list = append(list, treatment{b.OccurredAt, "Temp Basal", fmt.Sprintf("%s for %d min", value(b.Absolute, " U/hr"), b.DurationMinutes), b.CreatedByDeviceName})
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
+	return list
+}
+
+func orDash(v *string) string {
+	if v == nil {
+		return "–"
+	}
+	return *v
+}
+
+// Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts
+templ Summary(summary *sitemodels.Summary) {
+	<div id="site--summary" class="w-full space-y-4 py-4">
+		<div class="flex items-baseline justify-between">
+			<h1 class="text-2xl font-bold">Summary</h1>
+			<span id="site--summary--hours" class="text-sm text-gray-500">{ fmt.Sprintf("Last %d hours", summary.Hours) }</span>
+		</div>
+		@glucoseHero(summary)
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			@tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
+			@tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
+			@tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
+			@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
+		</div>
+		<div class="grid gap-4 lg:grid-cols-2">
+			@section("Treatments") {
+				@treatmentsTable(treatments(summary))
+			}
+			@section("Glucose Readings") {
+				@readingsTable(summary.GlucoseReadings)
 			}
 		</div>
-		<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const el = document.getElementById("glucose-data");
-        if (!el) return;
-        const points = JSON.parse(el.textContent).filter(p => p.GlucoseReading != null);
-        const low = points[0].LowTarget ?? 70, high = points[0].HighTarget ?? 180;
-        const width = 1000, height = 260, m = {top: 10, right: 16, bottom: 24, left: 36};
-        const svg = d3.select("#glucoseGraph").append("svg")
-            .attr("viewBox", `0 0 ${width} ${height}`).attr("class", "w-full h-auto");
-        const now = Date.now();
-        const x = d3.scaleTime().domain([now - 24 * 3600 * 1000, now]).range([m.left, width - m.right]);
-        const y = d3.scaleLinear()
-            .domain([Math.min(40, d3.min(points, p => p.GlucoseReading)), Math.max(250, d3.max(points, p => p.GlucoseReading))])
-            .nice().range([height - m.bottom, m.top]);
-        // target band, then axes, then the trace and readings
-        svg.append("rect").attr("x", m.left).attr("width", width - m.left - m.right)
-            .attr("y", y(high)).attr("height", y(low) - y(high)).attr("fill", "#dcfce7");
-        svg.append("g").attr("transform", `translate(0,${height - m.bottom})`)
-            .call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%H:%M"))).attr("color", "#9ca3af");
-        svg.append("g").attr("transform", `translate(${m.left},0)`)
-            .call(d3.axisLeft(y).ticks(5).tickSize(-(width - m.left - m.right))).attr("color", "#9ca3af")
-            .call(g => g.selectAll(".tick line").attr("stroke", "#e5e7eb"));
-        svg.append("path").datum(points).attr("fill", "none").attr("stroke", "#6b7280").attr("stroke-width", 1.5)
-            .attr("d", d3.line().x(p => x(p.Timestamp)).y(p => y(p.GlucoseReading)));
-        svg.selectAll("circle").data(points).join("circle")
-            .attr("cx", p => x(p.Timestamp)).attr("cy", p => y(p.GlucoseReading)).attr("r", 3)
-            .attr("fill", p => p.GlucoseReading > high ? "#f59e0b" : p.GlucoseReading < low ? "#e11d48" : "#16a34a");
-    });
-</script>
-	}
+		<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			for _, status := range summary.DeviceStatuses {
+				@deviceCard(status)
+			}
+		</section>
+		<div id="modal-container"></div>
+	</div>
 }
 
-templ glucoseHero(summary sitemodels.Summary) {
-	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-wrap items-end justify-between gap-4">
-		if summary.Glucose != nil {
+templ glucoseHero(summary *sitemodels.Summary) {
+	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+		if len(summary.GlucoseReadings) > 0 {
+			{{ latest := summary.GlucoseReadings[0] }}
 			<div>
 				<div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</div>
 				<div class="flex items-baseline gap-2">
-					<span class="text-6xl font-extrabold tracking-tight text-gray-900">{ summary.Glucose.ValueStr }</span>
-					if summary.Units != nil {
-						<span class="text-lg text-gray-500">{ string(*summary.Units) }</span>
-					}
-					<span class="ml-2 text-2xl font-semibold text-gray-700">{ summary.Glucose.Diff }</span>
+					<span id="site--summary--glucose--reading" class="text-6xl font-extrabold tracking-tight text-brand-night">{ site_data_templ.FormatGlucose(latest.Reading, latest.Units) }</span>
+					<span class="text-lg text-gray-500">{ unitsText(latest.Units) }</span>
+					<span class="ml-2 text-4xl text-gray-700">{ arrow(latest.Direction) }</span>
 				</div>
-				<div class="mt-1 text-sm text-gray-500">{ summary.Glucose.TimeAgo }</div>
+				<div class="mt-1 text-sm text-gray-500">{ minutesAgo(latest.OccurredAt) }</div>
 			</div>
 		} else {
 			<div>
-				<div class="text-2xl font-bold text-gray-900">No glucose data yet</div>
+				<div class="text-2xl font-bold text-gray-900">No glucose readings in this time</div>
 				<div class="mt-1 text-sm text-gray-500">Upload from your phone, or connect a source under Settings → Sync.</div>
 			</div>
-		}
-		if summary.Alarm != nil {
-			<span class="rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-800">{ summary.Alarm.Name }</span>
 		}
 	</div>
 }
 
-templ tile(label, value string, ic func(...icon.Props) templ.Component) {
+templ tile(id, label, text string, ic func(...icon.Props) templ.Component) {
 	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
 			@ic(icon.Props{Class: "size-4"})
 			{ label }
 		</div>
-		<div class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ value }</div>
+		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ text }</div>
 	</div>
 }
 
-templ pill(n sitemodels.Notification, color string) {
-	<span class={ "rounded-full px-3 py-1 text-sm font-medium", color } title={ n.Tooltip }>{ n.Icon } { n.Value }</span>
+// deviceCard is a device's latest status; clicking it opens all its details
+templ deviceCard(status *sitemodels.SiteDeviceStatus) {
+	<button
+		id={ "site--summary--device--" + status.ID }
+		class="rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm hover:bg-gray-50"
+		hx-get={ "/data/device-status/" + status.ID }
+		hx-target="#modal-container"
+		hx-swap="innerHTML"
+	>
+		<div class="flex items-baseline justify-between gap-2">
+			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
+			<span class="whitespace-nowrap text-xs text-gray-500">{ minutesAgo(status.OccurredAt) }</span>
+		</div>
+		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
+			@detail("Phone", value(status.DeviceBatteryPercent, "%"))
+			@detail("Reservoir", value(status.PumpReservoir, " U"))
+			@detail("Pump", value(status.PumpBatteryPercent, "%"))
+			@detail("IOB", value(status.LoopIob, " U"))
+			@detail("COB", value(status.LoopCob, " g"))
+		</dl>
+	</button>
+}
+
+templ detail(label, text string) {
+	<div>
+		<dt class="text-xs text-gray-500">{ label }</dt>
+		<dd class="font-medium tabular-nums">{ text }</dd>
+	</div>
+}
+
+templ section(title string) {
+	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+		<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
+		<div class="max-h-96 overflow-y-auto">
+			{ children... }
+		</div>
+	</section>
+}
+
+templ treatmentsTable(list []treatment) {
+	@table.Table(table.Props{ID: "site--summary--treatments"}) {
+		@table.Body() {
+			if len(list) == 0 {
+				<tr><td class="p-4 text-sm text-gray-500">No treatments in this time.</td></tr>
+			}
+			for _, t := range list {
+				@table.Row() {
+					@table.Cell() {
+						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(t.At) }</span>
+					}
+					@table.Cell() {
+						<span class="whitespace-nowrap font-medium">{ t.Kind }</span>
+					}
+					@table.Cell() {
+						{ t.Detail }
+					}
+					@table.Cell() {
+						<span class="text-gray-500">{ orDash(t.Device) }</span>
+					}
+				}
+			}
+		}
+	}
+}
+
+templ readingsTable(readings []*sitemodels.SiteGlucoseReading) {
+	@table.Table(table.Props{ID: "site--summary--readings"}) {
+		@table.Body() {
+			if len(readings) == 0 {
+				<tr><td class="p-4 text-sm text-gray-500">No glucose readings in this time.</td></tr>
+			}
+			for _, r := range readings {
+				@table.Row() {
+					@table.Cell() {
+						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(r.OccurredAt) }</span>
+					}
+					@table.Cell() {
+						<span class="font-medium tabular-nums">{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }
+					}
+					@table.Cell() {
+						<span class="text-gray-500">{ orDash(r.CreatedByDeviceName) }</span>
+					}
+				}
+			}
+		}
+	}
 }
