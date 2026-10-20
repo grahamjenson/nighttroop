@@ -94,14 +94,7 @@ func (s *FoodIntakesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreT
 		return nil, apiutils.ErrInternalServerError
 	}
 	foodIntake, err := q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && foodIntake == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching food intake", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.FoodIntakeFromDB(foodIntake), nil
+	return apiutils.Found(foodIntake, err, "food intake", sitemodels.FoodIntakeFromDB)
 }
 
 // GetHTMXResponse is the food intake's details, shown in a modal
@@ -119,15 +112,7 @@ func (s *FoodIntakesStore) SearchModels(ctx context.Context, tx *siteapiutils.St
 		return nil, apiutils.ErrInternalServerError
 	}
 	foodIntakes, err := q.AllFoodIntakes(ctx, sitequery.QueryToAllFoodIntakes(query))
-	if err != nil {
-		slog.Error("Search food intakes", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.SiteFoodIntake{}
-	for _, foodIntake := range foodIntakes {
-		models = append(models, sitemodels.FoodIntakeFromDB(foodIntake))
-	}
-	return models, nil
+	return apiutils.Searched(foodIntakes, err, "food intakes", sitemodels.FoodIntakeFromDB)
 }
 
 func (s *FoodIntakesStore) SearchHTMXResponse(models []*sitemodels.SiteFoodIntake, query *apiutils.Query) templ.Component {

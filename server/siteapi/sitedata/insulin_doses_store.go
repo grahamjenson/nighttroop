@@ -93,14 +93,7 @@ func (s *InsulinDosesStore) GetModel(ctx context.Context, tx *siteapiutils.Store
 		return nil, apiutils.ErrInternalServerError
 	}
 	insulinDose, err := q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && insulinDose == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching insulin dose", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.InsulinDoseFromDB(insulinDose), nil
+	return apiutils.Found(insulinDose, err, "insulin dose", sitemodels.InsulinDoseFromDB)
 }
 
 // GetHTMXResponse is the insulin dose's details, shown in a modal
@@ -118,15 +111,7 @@ func (s *InsulinDosesStore) SearchModels(ctx context.Context, tx *siteapiutils.S
 		return nil, apiutils.ErrInternalServerError
 	}
 	insulinDoses, err := q.AllInsulinDoses(ctx, sitequery.QueryToAllInsulinDoses(query))
-	if err != nil {
-		slog.Error("Search insulin doses", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.SiteInsulinDose{}
-	for _, insulinDose := range insulinDoses {
-		models = append(models, sitemodels.InsulinDoseFromDB(insulinDose))
-	}
-	return models, nil
+	return apiutils.Searched(insulinDoses, err, "insulin doses", sitemodels.InsulinDoseFromDB)
 }
 
 func (s *InsulinDosesStore) SearchHTMXResponse(models []*sitemodels.SiteInsulinDose, query *apiutils.Query) templ.Component {

@@ -103,14 +103,7 @@ func (s *TempTargetsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreT
 		return nil, apiutils.ErrInternalServerError
 	}
 	tempTarget, err := q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && tempTarget == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching temp target", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.TempTargetFromDB(tempTarget, siteContext), nil
+	return apiutils.Found(tempTarget, err, "temp target", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
 }
 
 // GetHTMXResponse is the temp target's details, shown in a modal
@@ -128,15 +121,7 @@ func (s *TempTargetsStore) SearchModels(ctx context.Context, tx *siteapiutils.St
 		return nil, apiutils.ErrInternalServerError
 	}
 	tempTargets, err := q.AllTempTargets(ctx, sitequery.QueryToAllTempTargets(query))
-	if err != nil {
-		slog.Error("Search temp targets", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.SiteTempTarget{}
-	for _, tempTarget := range tempTargets {
-		models = append(models, sitemodels.TempTargetFromDB(tempTarget, siteContext))
-	}
-	return models, nil
+	return apiutils.Searched(tempTargets, err, "temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
 }
 
 func (s *TempTargetsStore) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *apiutils.Query) templ.Component {

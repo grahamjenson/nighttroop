@@ -102,14 +102,7 @@ func (s *TempBasalsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx
 		return nil, apiutils.ErrInternalServerError
 	}
 	tempBasal, err := q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && tempBasal == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching temp basal", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.TempBasalFromDB(tempBasal), nil
+	return apiutils.Found(tempBasal, err, "temp basal", sitemodels.TempBasalFromDB)
 }
 
 // GetHTMXResponse is the temp basal's details, shown in a modal
@@ -127,15 +120,7 @@ func (s *TempBasalsStore) SearchModels(ctx context.Context, tx *siteapiutils.Sto
 		return nil, apiutils.ErrInternalServerError
 	}
 	tempBasals, err := q.AllTempBasals(ctx, sitequery.QueryToAllTempBasals(query))
-	if err != nil {
-		slog.Error("Search temp basals", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.SiteTempBasal{}
-	for _, tempBasal := range tempBasals {
-		models = append(models, sitemodels.TempBasalFromDB(tempBasal))
-	}
-	return models, nil
+	return apiutils.Searched(tempBasals, err, "temp basals", sitemodels.TempBasalFromDB)
 }
 
 func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {

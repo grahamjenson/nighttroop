@@ -96,14 +96,7 @@ func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.St
 		return nil, apiutils.ErrInternalServerError
 	}
 	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && reading == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching glucose reading", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.GlucoseReadingFromDB(reading, siteContext), nil
+	return apiutils.Found(reading, err, "glucose reading", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext))
 }
 
 // GetHTMXResponse is the reading's details, shown in a modal
@@ -121,15 +114,7 @@ func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutil
 		return nil, apiutils.ErrInternalServerError
 	}
 	readings, err := q.AllGlucoseReadings(ctx, sitequery.QueryToAllGlucoseReadings(query))
-	if err != nil {
-		slog.Error("Search glucose readings", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.SiteGlucoseReading{}
-	for _, reading := range readings {
-		models = append(models, sitemodels.GlucoseReadingFromDB(reading, siteContext))
-	}
-	return models, nil
+	return apiutils.Searched(readings, err, "glucose readings", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext))
 }
 
 func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *apiutils.Query) templ.Component {

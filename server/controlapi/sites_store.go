@@ -2,7 +2,6 @@ package controlapi
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -20,15 +19,7 @@ type SitesStore struct{}
 
 func (s *SitesStore) SearchModels(ctx context.Context, query *apiutils.Query, controlContext *httputils.ControlContext) ([]*controlmodels.Site, *apiutils.HTTPError) {
 	sites, err := controlContext.ControlDB.Queries.SearchSites(ctx, controlmodels.QueryToSearchSites(query))
-	if err != nil {
-		slog.Error("Search sites", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*controlmodels.Site{}
-	for _, site := range sites {
-		models = append(models, controlmodels.SiteFromDB(site))
-	}
-	return models, nil
+	return apiutils.Searched(sites, err, "sites", controlmodels.SiteFromDB)
 }
 
 func (s *SitesStore) SearchHTMXResponse(models []*controlmodels.Site, query *apiutils.Query) templ.Component {
@@ -37,14 +28,7 @@ func (s *SitesStore) SearchHTMXResponse(models []*controlmodels.Site, query *api
 
 func (s *SitesStore) GetModel(ctx context.Context, id string, controlContext *httputils.ControlContext) (*controlmodels.Site, *apiutils.HTTPError) {
 	site, err := controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && site == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching site", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return controlmodels.SiteFromDB(site), nil
+	return apiutils.Found(site, err, "site", controlmodels.SiteFromDB)
 }
 
 // GetHTMXResponse is the site's details, shown in a modal
