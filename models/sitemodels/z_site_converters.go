@@ -7,10 +7,11 @@ import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	consts "nighttroop.t1d.nz/utils/consts"
 	errors "nighttroop.t1d.nz/utils/errors"
+	httputils "nighttroop.t1d.nz/utils/httputils"
 	security "nighttroop.t1d.nz/utils/security"
 )
 
-func IdentityFromDB(source *controldb.SiteIdentity, context string) *UserIdentity {
+func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteContext) *UserIdentity {
 	var pSitemodelsUserIdentity *UserIdentity
 	if source != nil {
 		var sitemodelsUserIdentity UserIdentity
@@ -27,9 +28,10 @@ func IdentityFromDB(source *controldb.SiteIdentity, context string) *UserIdentit
 	}
 	return pSitemodelsUserIdentity
 }
-func IdentityToDelete(source *UserIdentity) (controldb.DeleteSiteIdentityParams, error) {
+func IdentityToDelete(source *UserIdentity, context *httputils.SiteContext) (controldb.DeleteSiteIdentityParams, error) {
 	var controldbDeleteSiteIdentityParams controldb.DeleteSiteIdentityParams
 	if source != nil {
+		controldbDeleteSiteIdentityParams.SiteID = ContextSiteID(context)
 		xint64, err := IdentityIDFromString((*source).ID)
 		if err != nil {
 			return controldbDeleteSiteIdentityParams, err
@@ -38,10 +40,13 @@ func IdentityToDelete(source *UserIdentity) (controldb.DeleteSiteIdentityParams,
 	}
 	return controldbDeleteSiteIdentityParams, nil
 }
-func IdentityToUpdate(source *UserIdentity) (controldb.UpdateSiteIdentityEnabledParams, error) {
+func IdentityToUpdate(source *UserIdentity, context *httputils.SiteContext) (controldb.UpdateSiteIdentityEnabledParams, error) {
 	var controldbUpdateSiteIdentityEnabledParams controldb.UpdateSiteIdentityEnabledParams
 	if source != nil {
 		controldbUpdateSiteIdentityEnabledParams.Enabled = (*source).Enabled
+		controldbUpdateSiteIdentityEnabledParams.UpdatedByIdentityID = ContextIdentityID(context)
+		controldbUpdateSiteIdentityEnabledParams.UpdatedByIdentityName = ContextIdentityName(context)
+		controldbUpdateSiteIdentityEnabledParams.SiteID = ContextSiteID(context)
 		xint64, err := IdentityIDFromString((*source).ID)
 		if err != nil {
 			return controldbUpdateSiteIdentityEnabledParams, err

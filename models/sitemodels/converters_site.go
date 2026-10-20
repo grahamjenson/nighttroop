@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -37,7 +38,7 @@ type SiteConverter interface {
 	// SITE IDENTITY
 	///////
 
-	// goverter:context currentIdentityName
+	// goverter:context siteContext
 	// goverter:map ID | IdentityIDToString
 	// goverter:map CreatedAt Created | FormatIdentityDate
 	// goverter:map LastSeenAt LastSeen | FormatOptionalIdentityDate
@@ -45,15 +46,19 @@ type SiteConverter interface {
 	// goverter:map Name CurrentIdentity | IsCurrentIdentity
 	// goverter:map TotpSecretEnc HasTotpSecret | HasTotpSecret
 	// goverter:ignore Type Password TotpSecret NSToken SiteURL
-	IdentityFromDB(source *controldb.SiteIdentity, currentIdentityName string) *UserIdentity
+	IdentityFromDB(source *controldb.SiteIdentity, siteContext *httputils.SiteContext) *UserIdentity
 
+	// goverter:context siteContext
 	// goverter:map ID | IdentityIDFromString
-	// goverter:ignore SiteID UpdatedByIdentityID UpdatedByIdentityName
-	IdentityToUpdate(source *UserIdentity) (controldb.UpdateSiteIdentityEnabledParams, error)
+	// goverter:map SiteID | ContextSiteID
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	IdentityToUpdate(source *UserIdentity, siteContext *httputils.SiteContext) (controldb.UpdateSiteIdentityEnabledParams, error)
 
+	// goverter:context siteContext
 	// goverter:map ID | IdentityIDFromString
-	// goverter:ignore SiteID
-	IdentityToDelete(source *UserIdentity) (controldb.DeleteSiteIdentityParams, error)
+	// goverter:map SiteID | ContextSiteID
+	IdentityToDelete(source *UserIdentity, siteContext *httputils.SiteContext) (controldb.DeleteSiteIdentityParams, error)
 }
 
 func SetPasswordGarbage() *string {
@@ -94,9 +99,24 @@ func FormatOptionalIdentityDate(ms *int64) string {
 	return FormatIdentityDate(*ms)
 }
 
-// goverter:context currentIdentityName
-func IsCurrentIdentity(name string, currentIdentityName string) bool {
-	return name == currentIdentityName
+// goverter:context siteContext
+func IsCurrentIdentity(name string, siteContext *httputils.SiteContext) bool {
+	return name == siteContext.IdentityModel.Name
+}
+
+// goverter:context siteContext
+func ContextSiteID(siteContext *httputils.SiteContext) string {
+	return siteContext.Subdomain
+}
+
+// goverter:context siteContext
+func ContextIdentityID(siteContext *httputils.SiteContext) *int64 {
+	return &siteContext.IdentityModel.ID
+}
+
+// goverter:context siteContext
+func ContextIdentityName(siteContext *httputils.SiteContext) *string {
+	return &siteContext.IdentityModel.Name
 }
 
 func HasTotpSecret(totpSecretEnc string) bool {

@@ -106,13 +106,10 @@ func (s *IdentitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 	*model = *oldModel
 	model.Enabled = enabled
 
-	params, err := sitemodels.IdentityToUpdate(model)
+	params, err := sitemodels.IdentityToUpdate(model, siteContext)
 	if err != nil {
 		return siteapiutils.ErrBadBody
 	}
-	params.SiteID = siteContext.Subdomain
-	params.UpdatedByIdentityID = &siteContext.IdentityModel.ID
-	params.UpdatedByIdentityName = &siteContext.IdentityModel.Name
 	err = q.UpdateSiteIdentityEnabled(ctx, params)
 	if err != nil {
 		slog.Error("Error updating identity", "error", err)
@@ -146,7 +143,7 @@ func (s *IdentitiesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx
 		slog.Error("Error fetching identity", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	return sitemodels.IdentityFromDB(identity, siteContext.IdentityModel.Name), nil
+	return sitemodels.IdentityFromDB(identity, siteContext), nil
 }
 
 func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -169,7 +166,7 @@ func (s *IdentitiesStore) SearchModels(ctx context.Context, tx *siteapiutils.Sto
 	}
 	models := []*sitemodels.UserIdentity{}
 	for _, identity := range identities {
-		models = append(models, sitemodels.IdentityFromDB(identity, siteContext.IdentityModel.Name))
+		models = append(models, sitemodels.IdentityFromDB(identity, siteContext))
 	}
 	return models, nil
 }
@@ -204,11 +201,10 @@ func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 		return herr
 	}
 
-	params, err := sitemodels.IdentityToDelete(model)
+	params, err := sitemodels.IdentityToDelete(model, siteContext)
 	if err != nil {
 		return siteapiutils.ErrBadBody
 	}
-	params.SiteID = siteContext.Subdomain
 	err = q.DeleteSiteIdentity(ctx, params)
 	if err != nil {
 		slog.Error("Error deleting identity", "error", err)
@@ -234,7 +230,7 @@ func getIdentityByName(ctx context.Context, q *controldb.Queries, siteContext *h
 		slog.Error("Error fetching identity", "error", err)
 		return nil, siteapiutils.ErrInternalServerError
 	}
-	return sitemodels.IdentityFromDB(identity, siteContext.IdentityModel.Name), nil
+	return sitemodels.IdentityFromDB(identity, siteContext), nil
 }
 
 // checkCanRemoveIdentity stops an identity disabling or deleting itself, or the site losing its last enabled admin
