@@ -52,6 +52,8 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 		typeEq := chi.URLParam(r, "type")
 		if typeEq != "" {
 			q.TypeEq = ptr(typeEq)
+			// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
+			q.HasFilters = true
 		}
 
 		prefix := chi.URLParam(r, "prefix")

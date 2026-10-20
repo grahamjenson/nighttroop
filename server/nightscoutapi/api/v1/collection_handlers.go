@@ -28,6 +28,8 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
 			if collection.IsTypeString(identifierOrType) {
 				query.TypeEq = ptr(identifierOrType)
+				// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
+				query.HasFilters = true
 			} else {
 				query.IDEq = ptr(identifierOrType)
 			}
