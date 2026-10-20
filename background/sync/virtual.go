@@ -21,6 +21,15 @@ import (
 const VirtualDevice = "virtual://nighttroop"
 const virtualSlot = 5 * time.Minute
 
+// VirtualCarerDevice is a second uploader, a carer's phone, so device statuses come from more than one device
+const VirtualCarerDevice = "virtual://carer-phone"
+
+// The slots of the glucose wave with a meal (as glucose starts to rise) and a correction (at its peak)
+const (
+	virtualMealSlot       = 0
+	virtualCorrectionSlot = 7
+)
+
 // A 2 hour glucose wave in mg/dL, one value per 5 minute slot.
 var virtualGlucose = []float64{118, 122, 127, 133, 139, 144, 148, 150, 149, 146, 141, 135, 129, 123, 117, 112, 108, 105, 104, 105, 108, 112, 115, 117}
 
@@ -29,9 +38,10 @@ type virtualDoc struct {
 	data       map[string]any
 }
 
-// VirtualDocuments returns the glucose readings, device statuses and, at the
-// start of the window, the temp basal, temp target, profile switch and
-// profile for every 5 minute slot in the span ending at end.
+// VirtualDocuments returns the glucose readings and device statuses (from both
+// devices) for every 5 minute slot in the span ending at end, a meal and a
+// correction bolus once per wave, and, at the start of the window, the temp
+// basal, temp target, profile switch and profile.
 func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 	end = end.UTC().Truncate(virtualSlot)
 	start := end.Add(-span + virtualSlot)
@@ -68,7 +78,14 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 					"iob": map[string]any{"iob": 0.5 + float64(idx)*0.05, "timestamp": iso},
 					"cob": map[string]any{"cob": 12 - idx%12, "timestamp": iso}},
 			}},
+			virtualDoc{nsutils.Devicestatus, map[string]any{"device": VirtualCarerDevice, "date": t.UnixMilli(), "uploaderBattery": 80 - idx}},
 		)
+		switch idx {
+		case virtualMealSlot:
+			docs = append(docs, virtualDoc{nsutils.Treatments, map[string]any{"eventType": "Meal Bolus", "carbs": 40, "insulin": 4, "date": t.UnixMilli(), "device": VirtualDevice}})
+		case virtualCorrectionSlot:
+			docs = append(docs, virtualDoc{nsutils.Treatments, map[string]any{"eventType": "Correction Bolus", "insulin": 1, "date": t.UnixMilli(), "device": VirtualDevice}})
+		}
 	}
 	return docs
 }
