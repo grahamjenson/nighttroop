@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -31,13 +33,13 @@ func (s *InsulinDosesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *InsulinDosesStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (bool, *siteapiutils.HTTPError) {
+func (s *InsulinDosesStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (bool, *apiutils.HTTPError) {
 	if herr := checkInsulinDose(model); herr != nil {
 		return false, herr
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return false, siteapiutils.ErrInternalServerError
+		return false, apiutils.ErrInternalServerError
 	}
 	created, err := q.CreateInsulinDose(ctx, sitemodels.InsulinDoseToCreate(model, siteContext))
 	if err != nil {
@@ -56,7 +58,7 @@ func (s *InsulinDosesStore) CreateHTMXResponse(model *sitemodels.SiteInsulinDose
 // ////
 
 // UpdateModel changes a dose's units, type, notes or reason; anything not sent stays as it is
-func (s *InsulinDosesStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteInsulinDose, model *sitemodels.SiteInsulinDose) *siteapiutils.HTTPError {
+func (s *InsulinDosesStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteInsulinDose, model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
 	if model.Dose != 0 {
 		if herr := checkInsulinDose(model); herr != nil {
 			return herr
@@ -64,12 +66,12 @@ func (s *InsulinDosesStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	model.ID = oldModel.ID
 	updated, err := q.UpdateInsulinDose(ctx, sitemodels.InsulinDoseToUpdate(model, siteContext))
 	if err == sql.ErrNoRows {
-		return siteapiutils.ErrNotFound
+		return apiutils.ErrNotFound
 	}
 	if err != nil {
 		return insulinDoseWriteError(err)
@@ -85,10 +87,10 @@ func (s *InsulinDosesStore) UpdateHTMXResponse(model *sitemodels.SiteInsulinDose
 // ////
 // Get Model
 // /////
-func (s *InsulinDosesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteInsulinDose, *siteapiutils.HTTPError) {
+func (s *InsulinDosesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteInsulinDose, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	insulinDose, err := q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
 	if err == sql.ErrNoRows || (err == nil && insulinDose == nil) {
@@ -96,7 +98,7 @@ func (s *InsulinDosesStore) GetModel(ctx context.Context, tx *siteapiutils.Store
 	}
 	if err != nil {
 		slog.Error("Error fetching insulin dose", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	return sitemodels.InsulinDoseFromDB(insulinDose), nil
 }
@@ -110,15 +112,15 @@ func (s *InsulinDosesStore) GetHTMXResponse(model *sitemodels.SiteInsulinDose) t
 // Search Models
 // ///
 
-func (s *InsulinDosesStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteInsulinDose, *siteapiutils.HTTPError) {
+func (s *InsulinDosesStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteInsulinDose, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	insulinDoses, err := q.AllInsulinDoses(ctx, sitequery.QueryToAllInsulinDoses(query))
 	if err != nil {
 		slog.Error("Search insulin doses", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	models := []*sitemodels.SiteInsulinDose{}
 	for _, insulinDose := range insulinDoses {
@@ -127,7 +129,7 @@ func (s *InsulinDosesStore) SearchModels(ctx context.Context, tx *siteapiutils.S
 	return models, nil
 }
 
-func (s *InsulinDosesStore) SearchHTMXResponse(models []*sitemodels.SiteInsulinDose, query *siteapiutils.Query) templ.Component {
+func (s *InsulinDosesStore) SearchHTMXResponse(models []*sitemodels.SiteInsulinDose, query *apiutils.Query) templ.Component {
 	return site_data_templ.InsulinDosesTable(models, query.Skip, query.Limit)
 }
 
@@ -136,10 +138,10 @@ func (s *InsulinDosesStore) SearchHTMXResponse(models []*sitemodels.SiteInsulinD
 // ///
 
 // DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *InsulinDosesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteInsulinDose, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+func (s *InsulinDosesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteInsulinDose, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	_, err = q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
@@ -147,7 +149,7 @@ func (s *InsulinDosesStore) DeleteModel(ctx context.Context, tx *siteapiutils.St
 	})
 	if err != nil {
 		slog.Error("Error deleting insulin dose", "error", err)
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	return nil
 }
@@ -160,17 +162,17 @@ func (s *InsulinDosesStore) DeleteHTMXResponse(model *sitemodels.SiteInsulinDose
 // UTIL METHODS
 ////////
 
-func checkInsulinDose(model *sitemodels.SiteInsulinDose) *siteapiutils.HTTPError {
+func checkInsulinDose(model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
 	if model.Dose <= 0 || model.Dose > maxInsulinDoseUnits {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must be more than 0 and at most %d units", maxInsulinDoseUnits))
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must be more than 0 and at most %d units", maxInsulinDoseUnits))
 	}
 	return nil
 }
 
-func insulinDoseWriteError(err error) *siteapiutils.HTTPError {
+func insulinDoseWriteError(err error) *apiutils.HTTPError {
 	if errors.IsSQLConstraintCheck(err) {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(err.Error())
+		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
 	}
 	slog.Error("Error writing insulin dose", "error", err)
-	return siteapiutils.ErrInternalServerError
+	return apiutils.ErrInternalServerError
 }

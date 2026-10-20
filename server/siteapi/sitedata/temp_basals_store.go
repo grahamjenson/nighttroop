@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -34,13 +36,13 @@ func (s *TempBasalsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *TempBasalsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (bool, *siteapiutils.HTTPError) {
+func (s *TempBasalsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (bool, *apiutils.HTTPError) {
 	if herr := checkTempBasal(model); herr != nil {
 		return false, herr
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return false, siteapiutils.ErrInternalServerError
+		return false, apiutils.ErrInternalServerError
 	}
 	created, err := q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
 	if err != nil {
@@ -59,7 +61,7 @@ func (s *TempBasalsStore) CreateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // ////
 
 // UpdateModel changes a temp basal's rate, duration, notes or reason; anything not sent stays as it is
-func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) *siteapiutils.HTTPError {
+func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) *apiutils.HTTPError {
 	// Check the temp basal as it will be once the fields sent are changed
 	merged := *oldModel
 	if model.DurationMinutes != 0 {
@@ -73,12 +75,12 @@ func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	model.ID = oldModel.ID
 	updated, err := q.UpdateTempBasal(ctx, sitemodels.TempBasalToUpdate(model, siteContext))
 	if err == sql.ErrNoRows {
-		return siteapiutils.ErrNotFound
+		return apiutils.ErrNotFound
 	}
 	if err != nil {
 		return tempBasalWriteError(err)
@@ -94,10 +96,10 @@ func (s *TempBasalsStore) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // ////
 // Get Model
 // /////
-func (s *TempBasalsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempBasal, *siteapiutils.HTTPError) {
+func (s *TempBasalsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempBasal, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	tempBasal, err := q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
 	if err == sql.ErrNoRows || (err == nil && tempBasal == nil) {
@@ -105,7 +107,7 @@ func (s *TempBasalsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx
 	}
 	if err != nil {
 		slog.Error("Error fetching temp basal", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	return sitemodels.TempBasalFromDB(tempBasal), nil
 }
@@ -119,15 +121,15 @@ func (s *TempBasalsStore) GetHTMXResponse(model *sitemodels.SiteTempBasal) templ
 // Search Models
 // ///
 
-func (s *TempBasalsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteTempBasal, *siteapiutils.HTTPError) {
+func (s *TempBasalsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteTempBasal, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	tempBasals, err := q.AllTempBasals(ctx, sitequery.QueryToAllTempBasals(query))
 	if err != nil {
 		slog.Error("Search temp basals", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	models := []*sitemodels.SiteTempBasal{}
 	for _, tempBasal := range tempBasals {
@@ -136,7 +138,7 @@ func (s *TempBasalsStore) SearchModels(ctx context.Context, tx *siteapiutils.Sto
 	return models, nil
 }
 
-func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *siteapiutils.Query) templ.Component {
+func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {
 	return site_data_templ.TempBasalsTable(models, query.Skip, query.Limit)
 }
 
@@ -145,10 +147,10 @@ func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal,
 // ///
 
 // DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *TempBasalsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteTempBasal, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+func (s *TempBasalsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteTempBasal, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	_, err = q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
@@ -156,7 +158,7 @@ func (s *TempBasalsStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 	})
 	if err != nil {
 		slog.Error("Error deleting temp basal", "error", err)
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	return nil
 }
@@ -170,20 +172,20 @@ func (s *TempBasalsStore) DeleteHTMXResponse(model *sitemodels.SiteTempBasal) te
 ////////
 
 // checkTempBasal keeps the rate to what a pump can deliver, and the duration to a day
-func checkTempBasal(model *sitemodels.SiteTempBasal) *siteapiutils.HTTPError {
+func checkTempBasal(model *sitemodels.SiteTempBasal) *apiutils.HTTPError {
 	if model.Absolute == nil || *model.Absolute < 0 || *model.Absolute > maxTempBasalUnitsPerHour {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("absolute must be from 0 to %d U/hr", maxTempBasalUnitsPerHour))
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("absolute must be from 0 to %d U/hr", maxTempBasalUnitsPerHour))
 	}
 	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempBasalMinutes {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempBasalMinutes))
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempBasalMinutes))
 	}
 	return nil
 }
 
-func tempBasalWriteError(err error) *siteapiutils.HTTPError {
+func tempBasalWriteError(err error) *apiutils.HTTPError {
 	if errors.IsSQLConstraintCheck(err) {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(err.Error())
+		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
 	}
 	slog.Error("Error writing temp basal", "error", err)
-	return siteapiutils.ErrInternalServerError
+	return apiutils.ErrInternalServerError
 }

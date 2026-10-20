@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"log/slog"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -18,11 +18,11 @@ import (
 // SitesStore lets control identities see every site, whatever its state, and admins disable live ones
 type SitesStore struct{}
 
-func (s *SitesStore) SearchModels(ctx context.Context, query *siteapiutils.Query, controlContext *httputils.ControlContext) ([]*controlmodels.Site, *siteapiutils.HTTPError) {
-	sites, err := controlContext.ControlDB.Queries.SearchSites(ctx, sitequery.QueryToSearchSites(query))
+func (s *SitesStore) SearchModels(ctx context.Context, query *apiutils.Query, controlContext *httputils.ControlContext) ([]*controlmodels.Site, *apiutils.HTTPError) {
+	sites, err := controlContext.ControlDB.Queries.SearchSites(ctx, controlmodels.QueryToSearchSites(query))
 	if err != nil {
 		slog.Error("Search sites", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	models := []*controlmodels.Site{}
 	for _, site := range sites {
@@ -31,18 +31,18 @@ func (s *SitesStore) SearchModels(ctx context.Context, query *siteapiutils.Query
 	return models, nil
 }
 
-func (s *SitesStore) SearchHTMXResponse(models []*controlmodels.Site, query *siteapiutils.Query) templ.Component {
+func (s *SitesStore) SearchHTMXResponse(models []*controlmodels.Site, query *apiutils.Query) templ.Component {
 	return control_sites_templ.SitesTable(models, query.Skip, query.Limit)
 }
 
-func (s *SitesStore) GetModel(ctx context.Context, id string, controlContext *httputils.ControlContext) (*controlmodels.Site, *siteapiutils.HTTPError) {
+func (s *SitesStore) GetModel(ctx context.Context, id string, controlContext *httputils.ControlContext) (*controlmodels.Site, *apiutils.HTTPError) {
 	site, err := controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
 	if err == sql.ErrNoRows || (err == nil && site == nil) {
 		return nil, nil
 	}
 	if err != nil {
 		slog.Error("Error fetching site", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	return controlmodels.SiteFromDB(site), nil
 }
@@ -53,24 +53,24 @@ func (s *SitesStore) GetHTMXResponse(model *controlmodels.Site) templ.Component 
 }
 
 // UpdateModel can only disable a live site, which stops it being served until it is archived. Only admins can.
-func (s *SitesStore) UpdateModel(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) *siteapiutils.HTTPError {
+func (s *SitesStore) UpdateModel(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) *apiutils.HTTPError {
 	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		return siteapiutils.ErrForbidden
+		return apiutils.ErrForbidden
 	}
 	if model.State != "disabled" {
-		return siteapiutils.ErrBadBodyWithHint("a site's state can only be changed to disabled")
+		return apiutils.ErrBadBodyWithHint("a site's state can only be changed to disabled")
 	}
 	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
 	if err != nil {
 		slog.Error("Error disabling site", "error", err)
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
-		return siteapiutils.ErrConstraintCheckFailedWithHint("only a live site can be disabled")
+		return apiutils.ErrConstraintCheckFailedWithHint("only a live site can be disabled")
 	}
 	updated, herr := s.GetModel(ctx, oldModel.ID, controlContext)
 	if herr != nil || updated == nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	*model = *updated
 	return nil

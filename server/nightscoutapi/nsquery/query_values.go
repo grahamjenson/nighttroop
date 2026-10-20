@@ -227,7 +227,7 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 			return ret
 		},
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
-			JSONUnmarshalerHook,
+			types.JSONUnmarshalerHook,
 		),
 	}
 

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -32,14 +34,14 @@ func (s *GlucoseReadingsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *GlucoseReadingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (bool, *siteapiutils.HTTPError) {
+func (s *GlucoseReadingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (bool, *apiutils.HTTPError) {
 	params := sitemodels.GlucoseReadingToCreate(model, siteContext)
 	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
 		return false, herr
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return false, siteapiutils.ErrInternalServerError
+		return false, apiutils.ErrInternalServerError
 	}
 	created, err := q.CreateGlucoseReading(ctx, params)
 	if err != nil {
@@ -58,7 +60,7 @@ func (s *GlucoseReadingsStore) CreateHTMXResponse(model *sitemodels.SiteGlucoseR
 // ////
 
 // UpdateModel changes a reading's value, notes or reason; anything not sent stays as it is
-func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) *siteapiutils.HTTPError {
+func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) *apiutils.HTTPError {
 	model.ID = oldModel.ID
 	params := sitemodels.GlucoseReadingToUpdate(model, siteContext)
 	if params.Mgdl != nil {
@@ -68,11 +70,11 @@ func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	updated, err := q.UpdateGlucoseReading(ctx, params)
 	if err == sql.ErrNoRows {
-		return siteapiutils.ErrNotFound
+		return apiutils.ErrNotFound
 	}
 	if err != nil {
 		return glucoseWriteError(err)
@@ -88,10 +90,10 @@ func (s *GlucoseReadingsStore) UpdateHTMXResponse(model *sitemodels.SiteGlucoseR
 // ////
 // Get Model
 // /////
-func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteGlucoseReading, *siteapiutils.HTTPError) {
+func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteGlucoseReading, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
 	if err == sql.ErrNoRows || (err == nil && reading == nil) {
@@ -99,7 +101,7 @@ func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.St
 	}
 	if err != nil {
 		slog.Error("Error fetching glucose reading", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	return sitemodels.GlucoseReadingFromDB(reading, siteContext), nil
 }
@@ -113,15 +115,15 @@ func (s *GlucoseReadingsStore) GetHTMXResponse(model *sitemodels.SiteGlucoseRead
 // Search Models
 // ///
 
-func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteGlucoseReading, *siteapiutils.HTTPError) {
+func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteGlucoseReading, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	readings, err := q.AllGlucoseReadings(ctx, sitequery.QueryToAllGlucoseReadings(query))
 	if err != nil {
 		slog.Error("Search glucose readings", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	models := []*sitemodels.SiteGlucoseReading{}
 	for _, reading := range readings {
@@ -130,7 +132,7 @@ func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutil
 	return models, nil
 }
 
-func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *siteapiutils.Query) templ.Component {
+func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *apiutils.Query) templ.Component {
 	return site_data_templ.GlucoseReadingsTable(models, query.Skip, query.Limit)
 }
 
@@ -139,10 +141,10 @@ func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGluco
 // ///
 
 // DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *GlucoseReadingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteGlucoseReading, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+func (s *GlucoseReadingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteGlucoseReading, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
@@ -150,7 +152,7 @@ func (s *GlucoseReadingsStore) DeleteModel(ctx context.Context, tx *siteapiutils
 	})
 	if err != nil {
 		slog.Error("Error deleting glucose reading", "error", err)
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	return nil
 }
@@ -163,18 +165,18 @@ func (s *GlucoseReadingsStore) DeleteHTMXResponse(model *sitemodels.SiteGlucoseR
 // UTIL METHODS
 ////////
 
-func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	if mgdl <= 0 || mgdl > maxGlucoseMgdl {
 		units := sitemodels.ContextUnits(siteContext)
-		return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
 	}
 	return nil
 }
 
-func glucoseWriteError(err error) *siteapiutils.HTTPError {
+func glucoseWriteError(err error) *apiutils.HTTPError {
 	if errors.IsSQLConstraintCheck(err) {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(err.Error())
+		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
 	}
 	slog.Error("Error writing glucose reading", "error", err)
-	return siteapiutils.ErrInternalServerError
+	return apiutils.ErrInternalServerError
 }

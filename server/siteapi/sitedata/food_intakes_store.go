@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/utils/apiutils"
+
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -31,16 +33,16 @@ func (s *FoodIntakesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *FoodIntakesStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (bool, *siteapiutils.HTTPError) {
+func (s *FoodIntakesStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (bool, *apiutils.HTTPError) {
 	if model.Carbs == nil {
-		return false, siteapiutils.ErrMissingRequiredFieldWithHint("carbs")
+		return false, apiutils.ErrMissingRequiredFieldWithHint("carbs")
 	}
 	if herr := checkFoodIntake(model); herr != nil {
 		return false, herr
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return false, siteapiutils.ErrInternalServerError
+		return false, apiutils.ErrInternalServerError
 	}
 	created, err := q.CreateFoodIntake(ctx, sitemodels.FoodIntakeToCreate(model, siteContext))
 	if err != nil {
@@ -59,18 +61,18 @@ func (s *FoodIntakesStore) CreateHTMXResponse(model *sitemodels.SiteFoodIntake) 
 // ////
 
 // UpdateModel changes a food intake's name, nutrients, notes or reason; anything not sent stays as it is
-func (s *FoodIntakesStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodIntake, model *sitemodels.SiteFoodIntake) *siteapiutils.HTTPError {
+func (s *FoodIntakesStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodIntake, model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
 	if herr := checkFoodIntake(model); herr != nil {
 		return herr
 	}
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	model.ID = oldModel.ID
 	updated, err := q.UpdateFoodIntake(ctx, sitemodels.FoodIntakeToUpdate(model, siteContext))
 	if err == sql.ErrNoRows {
-		return siteapiutils.ErrNotFound
+		return apiutils.ErrNotFound
 	}
 	if err != nil {
 		return foodIntakeWriteError(err)
@@ -86,10 +88,10 @@ func (s *FoodIntakesStore) UpdateHTMXResponse(model *sitemodels.SiteFoodIntake) 
 // ////
 // Get Model
 // /////
-func (s *FoodIntakesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteFoodIntake, *siteapiutils.HTTPError) {
+func (s *FoodIntakesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteFoodIntake, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	foodIntake, err := q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
 	if err == sql.ErrNoRows || (err == nil && foodIntake == nil) {
@@ -97,7 +99,7 @@ func (s *FoodIntakesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreT
 	}
 	if err != nil {
 		slog.Error("Error fetching food intake", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	return sitemodels.FoodIntakeFromDB(foodIntake), nil
 }
@@ -111,15 +113,15 @@ func (s *FoodIntakesStore) GetHTMXResponse(model *sitemodels.SiteFoodIntake) tem
 // Search Models
 // ///
 
-func (s *FoodIntakesStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *siteapiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteFoodIntake, *siteapiutils.HTTPError) {
+func (s *FoodIntakesStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteFoodIntake, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	foodIntakes, err := q.AllFoodIntakes(ctx, sitequery.QueryToAllFoodIntakes(query))
 	if err != nil {
 		slog.Error("Search food intakes", "error", err)
-		return nil, siteapiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	models := []*sitemodels.SiteFoodIntake{}
 	for _, foodIntake := range foodIntakes {
@@ -128,7 +130,7 @@ func (s *FoodIntakesStore) SearchModels(ctx context.Context, tx *siteapiutils.St
 	return models, nil
 }
 
-func (s *FoodIntakesStore) SearchHTMXResponse(models []*sitemodels.SiteFoodIntake, query *siteapiutils.Query) templ.Component {
+func (s *FoodIntakesStore) SearchHTMXResponse(models []*sitemodels.SiteFoodIntake, query *apiutils.Query) templ.Component {
 	return site_data_templ.FoodIntakesTable(models, query.Skip, query.Limit)
 }
 
@@ -137,10 +139,10 @@ func (s *FoodIntakesStore) SearchHTMXResponse(models []*sitemodels.SiteFoodIntak
 // ///
 
 // DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *FoodIntakesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteFoodIntake, siteContext *httputils.SiteContext) *siteapiutils.HTTPError {
+func (s *FoodIntakesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteFoodIntake, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := tx.Site()
 	if err != nil {
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	_, err = q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
@@ -148,7 +150,7 @@ func (s *FoodIntakesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Sto
 	})
 	if err != nil {
 		slog.Error("Error deleting food intake", "error", err)
-		return siteapiutils.ErrInternalServerError
+		return apiutils.ErrInternalServerError
 	}
 	return nil
 }
@@ -162,19 +164,19 @@ func (s *FoodIntakesStore) DeleteHTMXResponse(model *sitemodels.SiteFoodIntake) 
 ////////
 
 // checkFoodIntake keeps any carbs, fat, protein or fibre sent within what a meal could have
-func checkFoodIntake(model *sitemodels.SiteFoodIntake) *siteapiutils.HTTPError {
+func checkFoodIntake(model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
 	for _, grams := range []*float64{model.Carbs, model.Fat, model.Protein, model.Fibre} {
 		if grams != nil && (*grams < 0 || *grams > maxFoodGrams) {
-			return siteapiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("carbs, fat, protein and fibre must be from 0 to %d g", maxFoodGrams))
+			return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("carbs, fat, protein and fibre must be from 0 to %d g", maxFoodGrams))
 		}
 	}
 	return nil
 }
 
-func foodIntakeWriteError(err error) *siteapiutils.HTTPError {
+func foodIntakeWriteError(err error) *apiutils.HTTPError {
 	if errors.IsSQLConstraintCheck(err) {
-		return siteapiutils.ErrConstraintCheckFailedWithHint(err.Error())
+		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
 	}
 	slog.Error("Error writing food intake", "error", err)
-	return siteapiutils.ErrInternalServerError
+	return apiutils.ErrInternalServerError
 }

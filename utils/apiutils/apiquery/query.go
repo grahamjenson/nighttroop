@@ -1,10 +1,9 @@
-package sitequery
+package apiquery
 
 import (
 	"net/url"
 
 	"github.com/mitchellh/mapstructure"
-	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -31,7 +30,7 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 	var queryValues QueryValues
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result:     &queryValues,
-		DecodeHook: nsquery.JSONUnmarshalerHook,
+		DecodeHook: types.JSONUnmarshalerHook,
 	})
 	if err != nil {
 		return QueryValues{}, err
