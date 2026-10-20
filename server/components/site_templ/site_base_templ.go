@@ -340,7 +340,7 @@ func Header() templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<header class=\"sticky top-0 z-40 border-b border-white/10 bg-gray-900 text-white\"><div class=\"mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8\"><a id=\"site--nav--home\" href=\"/\" class=\"flex items-center gap-2 font-semibold tracking-wide\">Nighttroop <span class=\"rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900\">Alpha</span></a>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<header class=\"sticky top-0 z-40 border-b border-white/10 bg-brand-night text-white\"><div class=\"mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8\"><a id=\"site--nav--home\" href=\"/\" class=\"flex items-center gap-2 font-semibold tracking-wide\"><img id=\"site--nav--logo\" src=\"/logo.svg\" alt=\"\" class=\"size-8\"> Nighttroop <span class=\"rounded-full bg-brand-gold px-2 py-0.5 text-xs font-semibold text-brand-night\">Alpha</span></a>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -368,7 +368,7 @@ func Header() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<button class=\"flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400\"><span class=\"flex size-7 items-center justify-center rounded-full bg-gray-700\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<button class=\"flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold\"><span class=\"flex size-7 items-center justify-center rounded-full bg-gray-700\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -383,7 +383,7 @@ func Header() templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(identityName(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 125, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 126, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func Header() templ.Component {
 					var templ_7745c5c3_Var15 string
 					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 135, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 136, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {

@@ -57,11 +57,12 @@ templ FullPage(content templ.Component) {
 }
 
 templ Header() {
-	<nav class="bg-gray-900/80 backdrop-blur-md border-b border-white/10 shadow-sm">
+	<nav class="bg-brand-night border-b border-white/10 shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 items-center justify-between">
 				<!-- Brand -->
-				<a href="/" class="text-white font-bold tracking-wide uppercase">
+				<a href="/" class="flex items-center gap-2 text-white font-bold tracking-wide uppercase">
+					<img id="control--nav--logo" src="/logo.svg" alt="" class="size-8"/>
 					NightTroop Control
 				</a>
 				<!-- Right side -->
@@ -134,7 +135,7 @@ templ Header() {
 }
 
 templ Footer() {
-	<footer class="mt-16 border-t border-white/10 bg-gray-900/80 backdrop-blur-md">
+	<footer class="mt-16 border-t border-white/10 bg-brand-night">
 		<div class="flex w-full flex-col gap-3 py-4 flex-row items-center justify-between">
 			<!-- Middle links -->
 			<div class="flex  items-center justify-center gap-6 text-sm w-full">

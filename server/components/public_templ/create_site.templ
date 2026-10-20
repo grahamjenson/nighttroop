@@ -12,11 +12,12 @@ templ CreateSite() {
 		<main class="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-slate-100 via-slate-50 to-white">
 			<div class="w-full max-w-3xl text-center">
 				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
-					@icon.Rocket(icon.Props{Class: "size-3.5 text-amber-500"})
+					@icon.Rocket(icon.Props{Class: "size-3.5 text-brand-gold"})
 					Free hosting, Nightscout compatible
-					<span class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800">Alpha</span>
+					<span class="rounded-full bg-brand-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-night">Alpha</span>
 				</p>
-				<h1 class="mt-6 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900">NightTroop</h1>
+				<img id="public--logo" src="/logo.svg" alt="" class="mx-auto mt-8 size-24"/>
+				<h1 class="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900">NightTroop</h1>
 				<p class="mt-4 text-lg text-slate-600 max-w-xl mx-auto">
 					Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.
 				</p>
@@ -24,7 +25,7 @@ templ CreateSite() {
 					@button.Button(button.Props{
 						ID:    "public--create-site-button",
 						Size:  button.SizeLg,
-						Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all duration-200",
+						Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
 						Attributes: templ.Attributes{
 							"hx-post":       "/site",
 							"hx-target":     "#panel-content",
@@ -50,7 +51,7 @@ templ CreateSite() {
 templ feature(ic func(...icon.Props) templ.Component, title, body string) {
 	<div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
 		<dt class="flex items-center gap-2 font-semibold text-slate-900">
-			@ic(icon.Props{Class: "size-5 text-blue-600"})
+			@ic(icon.Props{Class: "size-5 text-brand-night"})
 			{ title }
 		</dt>
 		<dd class="mt-2 text-sm text-slate-600">{ body }</dd>
@@ -133,7 +134,7 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				@button.Button(button.Props{
 					ID:     "public--login-button",
 					Size:   button.SizeLg,
-					Class:  "h-14 px-10 rounded-full text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all duration-200",
+					Class:  "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 transition-all duration-200",
 					Href:   newsite.URL,
 					Target: "_blank",
 				}) {
@@ -148,7 +149,7 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 templ step(n, title, hint string) {
 	<section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
 		<header class="flex items-start gap-3 px-5 py-4">
-			<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">{ n }</span>
+			<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-night text-sm font-bold text-white">{ n }</span>
 			<div>
 				<h2 class="font-semibold text-slate-900">{ title }</h2>
 				<p class="text-sm text-slate-500">{ hint }</p>

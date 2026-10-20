@@ -11,6 +11,7 @@ INPUT #password password
 INPUT #control--login--otp-1 123123
 CLICK #control--login-button
 ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+ASSERT_VISIBLE #control--nav--logo
 
 // The control site sees every site, newest first
 CLICK #control--menu
