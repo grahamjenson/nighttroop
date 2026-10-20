@@ -166,6 +166,10 @@ func MetaDelete(
 
 	if permanent {
 		res, err := m.HardDeleteDBFunc(q, ctx, identifier)
+		// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
+		if err == sql.ErrNoRows {
+			return nsutils.ErrNotFound
+		}
 		if err != nil {
 			slog.Error("failed to permanently delete by ID", "error", err, "collection", m.Name())
 			return nsutils.ErrInternal
