@@ -9,24 +9,24 @@ import (
 )
 
 type ProfileStore struct {
-	Identifier     *IdentifierString       `json:"identifier,omitempty"`
-	DefaultProfile *ShortString            `json:"defaultProfile,omitempty"`
-	Store          map[ShortString]Profile `json:"store,omitempty"`
-	Units          *consts.Units           `json:"units,omitempty"`
+	Identifier     *IdentifierString             `json:"identifier,omitempty"`
+	DefaultProfile *types.ShortString            `json:"defaultProfile,omitempty"`
+	Store          map[types.ShortString]Profile `json:"store,omitempty"`
+	Units          *consts.Units                 `json:"units,omitempty"`
 
 	LoopSettings *LoopSettings `json:"loopSettings,omitempty"`
 
 	// Default String Fields
-	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
-	App     *ShortString `json:"app,omitempty"`     // App used for the activity
-	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
+	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Date Feilds
-	StartDate *DateString `json:"startDate,omitempty"`
-	Mills     *DateInt    `json:"mills,omitempty"`
+	StartDate *DateString    `json:"startDate,omitempty"`
+	Mills     *types.DateInt `json:"mills,omitempty"`
 
 	// Non-JSON values to make mapping easier
-	Date             *DateInt             `json:"date,omitempty"`      // Unix timestamp in milliseconds
+	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
 	RawJsonData      string               `json:"-"`
 }
@@ -288,18 +288,18 @@ func (s *ScheduleTime) UnmarshalJSON(data []byte) error {
 type LoopSettings struct {
 	MaximumBasalRatePerHour *types.FlexibleFloat64   `json:"maximumBasalRatePerHour,omitempty"`
 	MaximumBolus            *types.FlexibleFloat64   `json:"maximumBolus,omitempty"`
-	DosingStrategy          *ShortString             `json:"dosingStrategy,omitempty"`
+	DosingStrategy          *types.ShortString       `json:"dosingStrategy,omitempty"`
 	DosingEnabled           *types.FlexibleBool      `json:"dosingEnabled,omitempty"`
 	MinimumBGGuard          *types.FlexibleFloat64   `json:"minimumBGGuard,omitempty"`
-	DeviceToken             *ShortString             `json:"deviceToken,omitempty"`
-	BundleIdentifier        *ShortString             `json:"bundleIdentifier,omitempty"`
+	DeviceToken             *types.ShortString       `json:"deviceToken,omitempty"`
+	BundleIdentifier        *types.ShortString       `json:"bundleIdentifier,omitempty"`
 	PreMealTargetRange      []*types.FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
 	OverridePresets         []*OverridePreset        `json:"overridePresets,omitempty"`
 }
 
 type OverridePreset struct {
-	Symbol                  *ShortString             `json:"symbol,omitempty"`
-	Name                    *ShortString             `json:"name,omitempty"`
+	Symbol                  *types.ShortString       `json:"symbol,omitempty"`
+	Name                    *types.ShortString       `json:"name,omitempty"`
 	TargetRange             []*types.FlexibleFloat64 `json:"targetRange,omitempty"`
 	Duration                *types.FlexibleInt64     `json:"duration,omitempty"`
 	InsulinNeedsScaleFactor *types.FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`

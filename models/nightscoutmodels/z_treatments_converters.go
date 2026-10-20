@@ -251,28 +251,28 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		nightscoutmodelsTreatment.DurationMinutes = &typesFlexibleInt64
 	}
 	if source.Notes != nil {
-		nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-		nightscoutmodelsTreatment.Notes = &nightscoutmodelsSanitizedString
+		typesSanitizedString := types.SanitizedString(*source.Notes)
+		nightscoutmodelsTreatment.Notes = &typesSanitizedString
 	}
-	pNightscoutmodelsShortString := ShortString(source.CreatedByIdentityName)
-	nightscoutmodelsTreatment.EnteredBy = &pNightscoutmodelsShortString
+	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
+	nightscoutmodelsTreatment.EnteredBy = &pTypesShortString
 	if source.Reason != nil {
-		nightscoutmodelsShortString := ShortString(*source.Reason)
-		nightscoutmodelsTreatment.Reason = &nightscoutmodelsShortString
+		typesShortString := types.ShortString(*source.Reason)
+		nightscoutmodelsTreatment.Reason = &typesShortString
 	}
 	if source.CreatedByDeviceName != nil {
-		nightscoutmodelsShortString2 := ShortString(*source.CreatedByDeviceName)
-		nightscoutmodelsTreatment.Device = &nightscoutmodelsShortString2
+		typesShortString2 := types.ShortString(*source.CreatedByDeviceName)
+		nightscoutmodelsTreatment.Device = &typesShortString2
 	}
 	if source.CreatedByAppName != nil {
-		nightscoutmodelsShortString3 := ShortString(*source.CreatedByAppName)
-		nightscoutmodelsTreatment.App = &nightscoutmodelsShortString3
+		typesShortString3 := types.ShortString(*source.CreatedByAppName)
+		nightscoutmodelsTreatment.App = &typesShortString3
 	}
-	pNightscoutmodelsShortString2 := ShortString(source.CreatedByIdentityName)
-	nightscoutmodelsTreatment.Subject = &pNightscoutmodelsShortString2
+	pTypesShortString2 := types.ShortString(source.CreatedByIdentityName)
+	nightscoutmodelsTreatment.Subject = &pTypesShortString2
 	nightscoutmodelsTreatment.CreatedAt = ModelDateStringFromDateIntAndUTCOffset(source)
-	pNightscoutmodelsDateInt := DateInt(source.OccurredAt)
-	nightscoutmodelsTreatment.Date = &pNightscoutmodelsDateInt
+	pTypesDateInt := types.DateInt(source.OccurredAt)
+	nightscoutmodelsTreatment.Date = &pTypesDateInt
 	if source.UtcOffsetMinutes != nil {
 		typesFlexibleInt642 := types.FlexibleInt64(*source.UtcOffsetMinutes)
 		nightscoutmodelsTreatment.UtcOffsetMinutes = &typesFlexibleInt642
@@ -1397,11 +1397,11 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 func UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment) {
 	if source != nil {
 		if source.Name != nil {
-			nightscoutmodelsShortString := ShortString(*source.Name)
-			target.Name = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Name)
+			target.Name = &typesShortString
 		}
-		pNightscoutmodelsShortString := ShortString(source.ActivityType)
-		target.ActivityType = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString(source.ActivityType)
+		target.ActivityType = &pTypesShortString
 		if source.Steps != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.Steps)
 			target.Steps = &typesFlexibleInt64
@@ -1420,12 +1420,12 @@ func UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment) {
 		}
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString2 := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString2
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt645 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1441,32 +1441,32 @@ func UpdateComponentEventToTreatment(source *sitedb.ComponentEvent, target *Trea
 		pNightscoutmodelsTreatmentEventType := TreatmentEventType(source.EventType)
 		target.EventType = &pNightscoutmodelsTreatmentEventType
 		if source.SensorCode != nil {
-			nightscoutmodelsShortString := ShortString(*source.SensorCode)
-			target.SensorCode = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.SensorCode)
+			target.SensorCode = &typesShortString
 		}
 		if source.TransmitterID != nil {
-			nightscoutmodelsShortString2 := ShortString(*source.TransmitterID)
-			target.TransmitterID = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*source.TransmitterID)
+			target.TransmitterID = &typesShortString2
 		}
 		if source.PumpID != nil {
-			nightscoutmodelsShortString3 := ShortString(*source.PumpID)
-			target.PumpID = &nightscoutmodelsShortString3
+			typesShortString3 := types.ShortString(*source.PumpID)
+			target.PumpID = &typesShortString3
 		}
 		if source.PumpSerial != nil {
-			nightscoutmodelsShortString4 := ShortString(*source.PumpSerial)
-			target.PumpSerial = &nightscoutmodelsShortString4
+			typesShortString4 := types.ShortString(*source.PumpSerial)
+			target.PumpSerial = &typesShortString4
 		}
 		if source.PumpType != nil {
-			nightscoutmodelsShortString5 := ShortString(*source.PumpType)
-			target.PumpType = &nightscoutmodelsShortString5
+			typesShortString5 := types.ShortString(*source.PumpType)
+			target.PumpType = &typesShortString5
 		}
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString6 := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString6
+			typesShortString6 := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString6
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1480,8 +1480,8 @@ func UpdateComponentEventToTreatment(source *sitedb.ComponentEvent, target *Trea
 func UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment) {
 	if source != nil {
 		if source.Name != nil {
-			nightscoutmodelsShortString := ShortString(*source.Name)
-			target.Name = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Name)
+			target.Name = &typesShortString
 		}
 		if source.Carbs != nil {
 			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Carbs)
@@ -1496,20 +1496,20 @@ func UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment) {
 			target.Fat = &typesFlexibleFloat643
 		}
 		if source.FoodType != nil {
-			nightscoutmodelsShortString2 := ShortString(*source.FoodType)
-			target.FoodType = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*source.FoodType)
+			target.FoodType = &typesShortString2
 		}
 		if source.AbsorptionTimeMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.AbsorptionTimeMinutes)
 			target.AbsorptionTimeMinutes = &typesFlexibleInt64
 		}
 		if source.Category != nil {
-			nightscoutmodelsShortString3 := ShortString(*source.Category)
-			target.Category = &nightscoutmodelsShortString3
+			typesShortString3 := types.ShortString(*source.Category)
+			target.Category = &typesShortString3
 		}
 		if source.Subcategory != nil {
-			nightscoutmodelsShortString4 := ShortString(*source.Subcategory)
-			target.Subcategory = &nightscoutmodelsShortString4
+			typesShortString4 := types.ShortString(*source.Subcategory)
+			target.Subcategory = &typesShortString4
 		}
 		if source.PreBolus != nil {
 			typesFlexibleFloat644 := types.FlexibleFloat64(*source.PreBolus)
@@ -1528,12 +1528,12 @@ func UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment) {
 			target.Portions = &typesFlexibleFloat647
 		}
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString5 := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString5
+			typesShortString5 := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString5
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt642 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1553,12 +1553,12 @@ func UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, context *htt
 		}
 		target.Units = UnitsToValue(source.Mgdl, context)
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1582,16 +1582,16 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 			target.SplitExt = &typesFlexibleFloat642
 		}
 		if source.DoseType != nil {
-			nightscoutmodelsShortString := ShortString(*source.DoseType)
-			target.Type = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.DoseType)
+			target.Type = &typesShortString
 		}
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString2 := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString2
+			typesShortString2 := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString2
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1604,15 +1604,15 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 }
 func UpdateNotificationEventToTreatment(source *sitedb.NotificationEvent, target *Treatment) {
 	if source != nil {
-		pNightscoutmodelsShortString := ShortString(source.Title)
-		target.Name = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString(source.Title)
+		target.Name = &pTypesShortString
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1625,13 +1625,13 @@ func UpdateNotificationEventToTreatment(source *sitedb.NotificationEvent, target
 }
 func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httputils.SiteContext, target *Treatment) {
 	if source != nil {
-		pNightscoutmodelsShortString := ShortString(source.Name)
-		target.Name = &pNightscoutmodelsShortString
+		pTypesShortString := types.ShortString(source.Name)
+		target.Name = &pTypesShortString
 		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
 		target.DurationMinutes = &pTypesFlexibleInt64
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
-		pNightscoutmodelsShortString2 := ShortString(source.Name)
-		target.Profile = &pNightscoutmodelsShortString2
+		pTypesShortString2 := types.ShortString(source.Name)
+		target.Profile = &pTypesShortString2
 		target.ProfileJSON = ToProfileJSON(source, context)
 		if source.Percent != nil {
 			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Percent)
@@ -1643,12 +1643,12 @@ func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httpu
 		}
 		target.Units = UnitsToUnits(source.Units)
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt642 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1673,12 +1673,12 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.Absolute)
 		target.Absolute = &pTypesFlexibleFloat642
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -1704,12 +1704,12 @@ func UpdateTempTargetToTreatment(source *sitedb.TempTarget, target *Treatment) {
 			target.InsulinNeedsScaleFactor = &typesFlexibleFloat64
 		}
 		if source.Notes != nil {
-			nightscoutmodelsSanitizedString := SanitizedString(*source.Notes)
-			target.Notes = &nightscoutmodelsSanitizedString
+			typesSanitizedString := types.SanitizedString(*source.Notes)
+			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			nightscoutmodelsShortString := ShortString(*source.Reason)
-			target.Reason = &nightscoutmodelsShortString
+			typesShortString := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)

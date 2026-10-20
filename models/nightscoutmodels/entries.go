@@ -37,15 +37,15 @@ type Entry struct {
 	SysTime    *DateString            `json:"sysTime,omitempty"`
 
 	// Date fields
-	Date             *DateInt             `json:"date,omitempty"`
+	Date             *types.DateInt       `json:"date,omitempty"`
 	DateString       *DateString          `json:"dateString,omitempty"`
-	Mills            *DateInt             `json:"mills,omitempty"`
+	Mills            *types.DateInt       `json:"mills,omitempty"`
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`
 
 	// Default String Fields
-	Device  *ShortString `json:"device,omitempty"`  // Device used for the activity
-	App     *ShortString `json:"app,omitempty"`     // App used for the activity
-	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
+	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
+	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
 	Mgdl        *types.FlexibleFloat64 `json:"-"`

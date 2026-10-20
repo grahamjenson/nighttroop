@@ -7,8 +7,8 @@ import (
 )
 
 type DeviceStatus struct {
-	Identifier *IdentifierString `json:"identifier,omitempty"`
-	Device     *ShortString      `json:"device,omitempty"`
+	Identifier *IdentifierString  `json:"identifier,omitempty"`
+	Device     *types.ShortString `json:"device,omitempty"`
 
 	// Uploader status
 	IsCharging      *types.FlexibleBool    `json:"isCharging,omitempty"`
@@ -24,12 +24,12 @@ type DeviceStatus struct {
 	ConfigurationRaw *json.RawMessage `json:"configuration,omitempty"`
 
 	// Date Fields
-	Date      *DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
-	CreatedAt *DateString `json:"created_at,omitempty"`
+	Date      *types.DateInt `json:"date,omitempty"` // Unix timestamp in milliseconds
+	CreatedAt *DateString    `json:"created_at,omitempty"`
 
 	// Default String Fields
-	App     *ShortString `json:"app,omitempty"`     // App used for the activity
-	Subject *ShortString `json:"subject,omitempty"` // Subject of the activity
+	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
+	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
 
 	// Non-JSON values to make mapping easier
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
@@ -130,11 +130,11 @@ type LoopStatus struct {
 	Timestamp                   *DateString            `json:"timestamp,omitempty"`
 	AutomaticDoseRecommendation *DoseRecommendation    `json:"automaticDoseRecommendation,omitempty"`
 	IOB                         *LoopIOB               `json:"iob,omitempty"`
-	Name                        *ShortString           `json:"name,omitempty"`
+	Name                        *types.ShortString     `json:"name,omitempty"`
 	COB                         *LoopCOB               `json:"cob,omitempty"`
 	RecommendedBolus            *types.FlexibleFloat64 `json:"recommendedBolus,omitempty"`
 	Enacted                     *EnactedDose           `json:"enacted,omitempty"`
-	Version                     *ShortString           `json:"version,omitempty"`
+	Version                     *types.ShortString     `json:"version,omitempty"`
 }
 
 type LoopPrediction struct {
@@ -182,25 +182,25 @@ type OpenAPSIob struct {
 }
 
 type OpenAPSSuggested struct {
-	Algorithm         *ShortString           `json:"algorithm,omitempty"`
+	Algorithm         *types.ShortString     `json:"algorithm,omitempty"`
 	RunningDynamicISF *types.FlexibleBool    `json:"runningDynamicIsf,omitempty"`
 	Timestamp         *DateString            `json:"timestamp,omitempty"`
 	BG                *types.FlexibleFloat64 `json:"bg,omitempty"`
-	Tick              *ShortString           `json:"tick,omitempty"`
+	Tick              *types.ShortString     `json:"tick,omitempty"`
 	EventualBG        *types.FlexibleFloat64 `json:"eventualBG,omitempty"`
 	TargetBG          *types.FlexibleFloat64 `json:"targetBG,omitempty"`
 	InsulinReq        *types.FlexibleFloat64 `json:"insulinReq,omitempty"`
 	DeliverAt         *DateString            `json:"deliverAt,omitempty"`
 	SensitivityRatio  *types.FlexibleFloat64 `json:"sensitivityRatio,omitempty"`
-	Reason            *ShortString           `json:"reason,omitempty"`
+	Reason            *types.ShortString     `json:"reason,omitempty"`
 	Duration          *types.FlexibleInt64   `json:"duration,omitempty"`
 	Rate              *types.FlexibleFloat64 `json:"rate,omitempty"`
 	PredBGs           *OpenAPSPredBGs        `json:"predBGs,omitempty"`
 	COB               *types.FlexibleFloat64 `json:"COB,omitempty"`
 	IOB               *types.FlexibleFloat64 `json:"IOB,omitempty"`
 	VariableSens      *types.FlexibleFloat64 `json:"variable_sens,omitempty"`
-	ConsoleLog        []*ShortString         `json:"consoleLog,omitempty"`
-	ConsoleError      []*ShortString         `json:"consoleError,omitempty"`
+	ConsoleLog        []*types.ShortString   `json:"consoleLog,omitempty"`
+	ConsoleError      []*types.ShortString   `json:"consoleError,omitempty"`
 	IsfMgdlForCarbs   *types.FlexibleFloat64 `json:"isfMgdlForCarbs,omitempty"`
 }
 
@@ -221,9 +221,9 @@ type PumpStatus struct {
 	Status         *PumpStatusInfo        `json:"status,omitempty"`
 	Bolusing       *types.FlexibleBool    `json:"bolusing,omitempty"`
 	SecondsFromGMT *types.FlexibleInt64   `json:"secondsFromGMT,omitempty"`
-	Manufacturer   *ShortString           `json:"manufacturer,omitempty"`
-	PumpID         *ShortString           `json:"pumpID,omitempty"`
-	Model          *ShortString           `json:"model,omitempty"`
+	Manufacturer   *types.ShortString     `json:"manufacturer,omitempty"`
+	PumpID         *types.ShortString     `json:"pumpID,omitempty"`
+	Model          *types.ShortString     `json:"model,omitempty"`
 	Suspended      *types.FlexibleBool    `json:"suspended,omitempty"`
 }
 
@@ -233,19 +233,19 @@ type PumpBattery struct {
 }
 
 type PumpExtended struct {
-	Version               *ShortString           `json:"Version,omitempty"`
-	ActiveProfile         *ShortString           `json:"ActiveProfile,omitempty"`
+	Version               *types.ShortString     `json:"Version,omitempty"`
+	ActiveProfile         *types.ShortString     `json:"ActiveProfile,omitempty"`
 	TempBasalAbsoluteRate *types.FlexibleFloat64 `json:"TempBasalAbsoluteRate,omitempty"`
-	TempBasalStart        *ShortString           `json:"TempBasalStart,omitempty"`
+	TempBasalStart        *types.ShortString     `json:"TempBasalStart,omitempty"`
 	TempBasalRemaining    *types.FlexibleInt64   `json:"TempBasalRemaining,omitempty"`
-	LastBolus             *ShortString           `json:"LastBolus,omitempty"`
+	LastBolus             *types.ShortString     `json:"LastBolus,omitempty"`
 	LastBolusAmount       *types.FlexibleFloat64 `json:"LastBolusAmount,omitempty"`
 	BaseBasalRate         *types.FlexibleFloat64 `json:"BaseBasalRate,omitempty"`
 }
 
 type PumpStatusInfo struct {
-	Status    *ShortString `json:"status,omitempty"`
-	Timestamp *DateString  `json:"timestamp,omitempty"`
+	Status    *types.ShortString `json:"status,omitempty"`
+	Timestamp *DateString        `json:"timestamp,omitempty"`
 }
 
 // ///
@@ -253,6 +253,6 @@ type PumpStatusInfo struct {
 // ///
 type UploaderStatus struct {
 	Battery   *types.FlexibleInt64 `json:"battery,omitempty"`
-	Name      *ShortString         `json:"name,omitempty"`
+	Name      *types.ShortString   `json:"name,omitempty"`
 	Timestamp *DateString          `json:"timestamp,omitempty"`
 }

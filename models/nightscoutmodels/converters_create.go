@@ -125,12 +125,12 @@ func AssignCreatedByID(ctx ConverterContext) *int64 {
 	return &ctx.IdentityID
 }
 
-func ToDateInt(createdAt int64) *DateInt {
-	x := DateInt(createdAt)
+func ToDateInt(createdAt int64) *types.DateInt {
+	x := types.DateInt(createdAt)
 	return &x
 }
 
-func OrNow(d *DateInt) int64 {
+func OrNow(d *types.DateInt) int64 {
 	if d != nil {
 		return int64(*d)
 	}
@@ -171,10 +171,10 @@ func FlexibleFloat64ToFloat64(source types.FlexibleFloat64) float64 {
 func FlexibleInt64ToInt64(source types.FlexibleInt64) int64 {
 	return int64(source)
 }
-func ShortStringToString(source ShortString) string {
+func ShortStringToString(source types.ShortString) string {
 	return string(source)
 }
-func SanitizedStringToString(source SanitizedString) string {
+func SanitizedStringToString(source types.SanitizedString) string {
 	return string(source)
 }
 func SetReadingType(source Entry) string {
