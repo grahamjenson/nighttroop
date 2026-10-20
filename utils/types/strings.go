@@ -217,8 +217,9 @@ func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 		str = fmt.Sprintf("%v", v)
 	}
 
-	if len(str) > 32 {
-		str = str[:32]
+	// 36 fits a UUID, the same limit as identifiers in the URL and the id columns
+	if len(str) > 36 {
+		str = str[:36]
 	}
 
 	if len(str) == 0 {
