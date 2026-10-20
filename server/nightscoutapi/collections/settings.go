@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type SettingsCollection struct {
@@ -89,7 +90,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	if nsModel.Identifier.String() == "" {
-		nsModel.Identifier = ptr(nightscoutmodels.IdentifierString(identifier))
+		nsModel.Identifier = ptr(types.IdentifierString(identifier))
 	}
 
 	if nsModel.Identifier.String() != identifier {

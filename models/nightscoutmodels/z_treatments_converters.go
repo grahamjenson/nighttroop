@@ -242,8 +242,8 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 }
 func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 	var nightscoutmodelsTreatment Treatment
-	pNightscoutmodelsIdentifierString := IdentifierString(source.ID)
-	nightscoutmodelsTreatment.Identifier = &pNightscoutmodelsIdentifierString
+	pTypesIdentifierString := types.IdentifierString(source.ID)
+	nightscoutmodelsTreatment.Identifier = &pTypesIdentifierString
 	pNightscoutmodelsTreatmentEventType := TreatmentEventType(source.GroupType)
 	nightscoutmodelsTreatment.EventType = &pNightscoutmodelsTreatmentEventType
 	if source.DurationMinutes != nil {

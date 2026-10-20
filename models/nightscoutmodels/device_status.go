@@ -7,8 +7,8 @@ import (
 )
 
 type DeviceStatus struct {
-	Identifier *IdentifierString  `json:"identifier,omitempty"`
-	Device     *types.ShortString `json:"device,omitempty"`
+	Identifier *types.IdentifierString `json:"identifier,omitempty"`
+	Device     *types.ShortString      `json:"device,omitempty"`
 
 	// Uploader status
 	IsCharging      *types.FlexibleBool    `json:"isCharging,omitempty"`
@@ -43,7 +43,7 @@ type DeviceStatus struct {
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 	type Alias DeviceStatus
 	aux := struct {
-		ID *IdentifierString `json:"_id"`
+		ID *types.IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

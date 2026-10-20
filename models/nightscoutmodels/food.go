@@ -6,7 +6,7 @@ import (
 )
 
 type Food struct {
-	Identifier *IdentifierString `json:"identifier,omitempty"`
+	Identifier *types.IdentifierString `json:"identifier,omitempty"`
 
 	Name *types.ShortString `json:"name,omitempty"`
 
@@ -44,7 +44,7 @@ type Food struct {
 func (t *Food) UnmarshalJSON(data []byte) error {
 	type Alias Food
 	aux := struct {
-		ID *IdentifierString `json:"_id"`
+		ID *types.IdentifierString `json:"_id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
