@@ -2,7 +2,6 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 	"time"
 
@@ -43,14 +42,7 @@ func (s *DeviceStatusesStore) GetModel(ctx context.Context, tx *siteapiutils.Sto
 		return nil, apiutils.ErrInternalServerError
 	}
 	report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
-	if err == sql.ErrNoRows || (err == nil && report == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching device status", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.DeviceStatusFromDB(report), nil
+	return apiutils.Found(report, err, "device status", sitemodels.DeviceStatusFromDB)
 }
 
 // GetHTMXResponse is the status's details, shown in a modal
@@ -130,13 +122,5 @@ func (s *DeviceStatusesStore) DeleteHTMXResponse(model *sitemodels.SiteDeviceSta
 
 func deviceStatuses(ctx context.Context, q *sitedb.Queries, params sitedb.DeviceReportsForDeviceParams) ([]*sitemodels.SiteDeviceStatus, *apiutils.HTTPError) {
 	reports, err := q.DeviceReportsForDevice(ctx, params)
-	if err != nil {
-		slog.Error("Search device statuses", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.SiteDeviceStatus{}
-	for _, report := range reports {
-		models = append(models, sitemodels.DeviceStatusFromDB(report))
-	}
-	return models, nil
+	return apiutils.Searched(reports, err, "device statuses", sitemodels.DeviceStatusFromDB)
 }

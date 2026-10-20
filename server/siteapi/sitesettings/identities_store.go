@@ -126,14 +126,7 @@ func (s *IdentitiesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx
 		return nil, apiutils.ErrInternalServerError
 	}
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.Subdomain, ID: identityID})
-	if err == sql.ErrNoRows || (err == nil && identity == nil) {
-		return nil, nil
-	}
-	if err != nil {
-		slog.Error("Error fetching identity", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	return sitemodels.IdentityFromDB(identity, siteContext), nil
+	return apiutils.Found(identity, err, "identity", apiutils.WithContext(sitemodels.IdentityFromDB, siteContext))
 }
 
 func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -150,15 +143,7 @@ func (s *IdentitiesStore) SearchModels(ctx context.Context, tx *siteapiutils.Sto
 		return nil, apiutils.ErrInternalServerError
 	}
 	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
-	if err != nil {
-		slog.Error("Search identities", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	models := []*sitemodels.UserIdentity{}
-	for _, identity := range identities {
-		models = append(models, sitemodels.IdentityFromDB(identity, siteContext))
-	}
-	return models, nil
+	return apiutils.Searched(identities, err, "identities", apiutils.WithContext(sitemodels.IdentityFromDB, siteContext))
 }
 
 func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, query *apiutils.Query) templ.Component {
