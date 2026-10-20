@@ -1,8 +1,11 @@
 package sitemodels
 
 import (
+	"time"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -57,6 +60,21 @@ type SiteConverter interface {
 	///////
 
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading
+
+	// goverter:context siteContext
+	// goverter:map ID | NewGlucoseReadingID
+	// goverter:map ReadingType | GlucoseReadingTypeOrMeter
+	// goverter:map OccurredAt | GlucoseOccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
+
+	// goverter:context siteContext
+	// goverter:map Mgdl | GlucoseMgdlOrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 }
 
 func SetPasswordGarbage() *string {
@@ -104,4 +122,37 @@ func HasTotpSecret(totpSecretEnc string) bool {
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+// goverter:context siteContext
+func ContextIdentityNameValue(siteContext *httputils.SiteContext) string {
+	return siteContext.IdentityModel.Name
+}
+
+// NewGlucoseReadingID ignores any id sent, so a reading created on the site always gets a new one
+func NewGlucoseReadingID() string {
+	return utils.NextID()
+}
+
+// GlucoseReadingTypeOrMeter defaults to mbg, as a reading typed in is from a meter
+func GlucoseReadingTypeOrMeter(readingType string) string {
+	if readingType == "" {
+		return "mbg"
+	}
+	return readingType
+}
+
+func GlucoseOccurredAtOrNow(occurredAt int64) int64 {
+	if occurredAt == 0 {
+		return time.Now().UnixMilli()
+	}
+	return occurredAt
+}
+
+// GlucoseMgdlOrNil leaves the reading's mg/dL as it is when an update does not send one
+func GlucoseMgdlOrNil(mgdl float64) *float64 {
+	if mgdl == 0 {
+		return nil
+	}
+	return &mgdl
 }

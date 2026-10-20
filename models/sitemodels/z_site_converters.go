@@ -87,6 +87,92 @@ func GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading {
 	}
 	return pSitemodelsSiteGlucoseReading
 }
+func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteContext) sitedb.CreateGlucoseReadingParams {
+	var sitedbCreateGlucoseReadingParams sitedb.CreateGlucoseReadingParams
+	if source != nil {
+		sitedbCreateGlucoseReadingParams.ID = NewGlucoseReadingID()
+		sitedbCreateGlucoseReadingParams.Mgdl = (*source).Mgdl
+		sitedbCreateGlucoseReadingParams.ReadingType = GlucoseReadingTypeOrMeter((*source).ReadingType)
+		if (*source).Units != nil {
+			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
+			sitedbCreateGlucoseReadingParams.Units = &constsUnits
+		}
+		if (*source).MeasurementMethod != nil {
+			xstring := *(*source).MeasurementMethod
+			sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring
+		}
+		if (*source).Delta != nil {
+			xfloat64 := *(*source).Delta
+			sitedbCreateGlucoseReadingParams.Delta = &xfloat64
+		}
+		if (*source).Direction != nil {
+			xstring2 := *(*source).Direction
+			sitedbCreateGlucoseReadingParams.Direction = &xstring2
+		}
+		if (*source).Noise != nil {
+			xfloat642 := *(*source).Noise
+			sitedbCreateGlucoseReadingParams.Noise = &xfloat642
+		}
+		if (*source).Filtered != nil {
+			xfloat643 := *(*source).Filtered
+			sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
+		}
+		if (*source).Unfiltered != nil {
+			xfloat644 := *(*source).Unfiltered
+			sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
+		}
+		if (*source).Rssi != nil {
+			xfloat645 := *(*source).Rssi
+			sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
+		}
+		if (*source).Notes != nil {
+			xstring3 := *(*source).Notes
+			sitedbCreateGlucoseReadingParams.Notes = &xstring3
+		}
+		if (*source).Reason != nil {
+			xstring4 := *(*source).Reason
+			sitedbCreateGlucoseReadingParams.Reason = &xstring4
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
+		}
+		sitedbCreateGlucoseReadingParams.OccurredAt = GlucoseOccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring5 := *(*source).RawJsonData
+			sitedbCreateGlucoseReadingParams.RawJsonData = &xstring5
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring6 := *(*source).CreatedByAppName
+			sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring6
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring7 := *(*source).CreatedByDeviceName
+			sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring7
+		}
+		sitedbCreateGlucoseReadingParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateGlucoseReadingParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateGlucoseReadingParams
+}
+func GlucoseReadingToUpdate(source *SiteGlucoseReading, context *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams {
+	var sitedbUpdateGlucoseReadingParams sitedb.UpdateGlucoseReadingParams
+	if source != nil {
+		sitedbUpdateGlucoseReadingParams.Mgdl = GlucoseMgdlOrNil((*source).Mgdl)
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbUpdateGlucoseReadingParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbUpdateGlucoseReadingParams.Reason = &xstring2
+		}
+		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateGlucoseReadingParams.ID = (*source).ID
+	}
+	return sitedbUpdateGlucoseReadingParams
+}
 func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteContext) *UserIdentity {
 	var pSitemodelsUserIdentity *UserIdentity
 	if source != nil {

@@ -114,3 +114,90 @@ DELETE http://{{ site }}/data/glucose/not-a-reading
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+//////
+// CREATE AND UPDATE
+//////
+
+// A typed in reading defaults to a meter reading, taken now, by whoever is signed in
+NAME create_reading
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"mgdl": 95, "notes": "Finger prick", "id": "chosen-id", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS 95 "@result.mgdl"
+ASSERT_EQUALS "mbg" "@result.reading_type"
+ASSERT_EQUALS "Finger prick" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.occurred_at"
+SET created_id {{ .create_reading.result.id }}
+
+NAME created_reading_has_new_id
+GET http://{{ site }}/data/glucose/chosen-id
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME create_reading_without_mgdl
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "no value"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "mg/dL must be more than 0" "@message"
+
+NAME create_reading_too_high
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"mgdl": 5000}
+ASSERT_STATUS 400
+
+NAME create_reading_unknown_type
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"mgdl": 100, "reading_type": "guess"}
+ASSERT_STATUS 400
+
+// Only the fields sent change
+NAME update_reading_notes
+POST http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "Rechecked"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 95 "@result.mgdl"
+ASSERT_EQUALS "Rechecked" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
+
+NAME update_reading_mgdl
+POST http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"mgdl": 99}
+ASSERT_STATUS 200
+ASSERT_EQUALS 99 "@result.mgdl"
+ASSERT_EQUALS "Rechecked" "@result.notes"
+
+NAME update_reading_too_high
+POST http://{{ site }}/data/glucose/{{ .created_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"mgdl": 5000}
+ASSERT_STATUS 400
+
+NAME update_unknown_reading
+POST http://{{ site }}/data/glucose/not-a-reading
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"notes": "nothing here"}
+ASSERT_STATUS 404
+
+// The site's reading is in the Nightscout API too
+NAME created_reading_in_nightscout
+GET http://{{ .ns_site }}/api/v1/entries?find[_id]={{ .created_id }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "mbg" "@0.type"
