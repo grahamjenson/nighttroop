@@ -10,6 +10,7 @@ import (
 	errors "nighttroop.t1d.nz/utils/errors"
 	httputils "nighttroop.t1d.nz/utils/httputils"
 	security "nighttroop.t1d.nz/utils/security"
+	settings "nighttroop.t1d.nz/utils/settings"
 )
 
 func GlucoseReadingFromDB(source *sitedb.GlucoseReading) *SiteGlucoseReading {
@@ -214,6 +215,38 @@ func IdentityToUpdate(source *UserIdentity, context *httputils.SiteContext) cont
 		controldbUpdateSiteIdentityEnabledParams.ID = (*source).ID
 	}
 	return controldbUpdateSiteIdentityEnabledParams
+}
+func SettingsFromMap(source *settings.SettingMap) *Settings {
+	var pSitemodelsSettings *Settings
+	if source != nil {
+		var sitemodelsSettings Settings
+		if (*source).GetUnits() != nil {
+			xstring := string(*(*source).GetUnits())
+			sitemodelsSettings.Units = &xstring
+		}
+		if (*source).GetTimezone() != nil {
+			xstring2 := *(*source).GetTimezone()
+			sitemodelsSettings.Timezone = &xstring2
+		}
+		if (*source).GetLanguage() != nil {
+			xstring3 := *(*source).GetLanguage()
+			sitemodelsSettings.Language = &xstring3
+		}
+		if (*source).GetDateFormat() != nil {
+			xstring4 := *(*source).GetDateFormat()
+			sitemodelsSettings.DateFormat = &xstring4
+		}
+		if (*source).GetTimeFormat() != nil {
+			xstring5 := *(*source).GetTimeFormat()
+			sitemodelsSettings.TimeFormat = &xstring5
+		}
+		if (*source).GetWeekStartDay() != nil {
+			xstring6 := *(*source).GetWeekStartDay()
+			sitemodelsSettings.WeekStartDay = &xstring6
+		}
+		pSitemodelsSettings = &sitemodelsSettings
+	}
+	return pSitemodelsSettings
 }
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource

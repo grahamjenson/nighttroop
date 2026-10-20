@@ -22,6 +22,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	syncSettingsStore := &sitesettings.SyncSettingsStore{}
 	identitiesStore := &sitesettings.IdentitiesStore{}
 	glucoseReadingsStore := &sitedata.GlucoseReadingsStore{}
+	siteSettingsStore := &sitesettings.SettingsStore{Site: true}
+	identitySettingsStore := &sitesettings.SettingsStore{}
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
@@ -66,6 +68,12 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/identities", siteapiutils.CreateHandler(controlDB, config, identitiesStore))
 		r.Post("/settings/identities/{id}", siteapiutils.UpdateHandler(controlDB, config, identitiesStore))
 		r.Delete("/settings/identities/{id}", siteapiutils.DeleteHandler(controlDB, config, identitiesStore))
+
+		// Settings for the site (admins only) and the signed in identity
+		r.Get("/settings/site", siteapiutils.GetHandler(controlDB, config, siteSettingsStore))
+		r.Post("/settings/site", siteapiutils.UpdateHandler(controlDB, config, siteSettingsStore))
+		r.Get("/settings/identity", siteapiutils.GetHandler(controlDB, config, identitySettingsStore))
+		r.Post("/settings/identity", siteapiutils.UpdateHandler(controlDB, config, identitySettingsStore))
 
 		// Settings Settings
 		r.Get("/settings/config", sitesettings.GETConfigSettingsHandler(controlDB, config))
