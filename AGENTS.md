@@ -34,6 +34,27 @@ Do not change generated code. All generated files either:
 
 Use code generators where possible, especially for building models and params for the DB.
 
+- Run `go generate ./...` and commit what it changes; CI fails if generating changes any file.
+- Build models and DB params with goverter in a `converters*.go` file, not by hand in stores.
+- Pass `siteContext` to a converter as goverter context (`// goverter:context siteContext`) and map fields from it (IDs, the identity's name, units) instead of setting them in the store.
+- A package cannot call its own goverter generated functions (goverter builds it without them), so the caller goes in another package, e.g. `apiutils.QueryFromParams` calls `apiquery.QueryValuesToQuery`.
+
+## Packages
+
+- Code both APIs use (`HTTPError` and the `Err*` values, request and response helpers, `Query`) lives in `utils/apiutils`.
+- `server/controlapi` and `server/siteapi` never import each other, and nothing under `utils` imports a `server` package.
+- Site stores implement the generic handlers in `siteapiutils`; control stores implement those in `controlapiutils`.
+
+## Models and the JSON API
+
+- Model fields have their real names and types, which are also the JSON API: times are `int64` milliseconds, nullable fields are pointers, and JSON tags are snake_case.
+- Glucose is stored in mg/dL. The site API returns and accepts it in the units from the settings (identity, then site, then default), with unit-neutral names (`reading`, `low_target`) and a `units` field.
+- Searches page with `limit` and `skip` (at most 1000), newest first, and leave out soft-deleted rows. Deletes from the site are soft deletes.
+
+## Data Pages
+
+A new type of site data follows the glucose readings page: a store in `server/siteapi/sitedata`, routes under `/data/<type>`, a paged table, a details modal with an edit form, a create form, a delete that asks first, and a `dataMenuItem` in the header's Data group.
+
 ## SQL
 
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
@@ -43,6 +64,9 @@ Use code generators where possible, especially for building models and params fo
 
 - Never create an Issue
 - If you create a PR always start PR description with bold letters saying "I AM A LITTLE AI HERE TO HELP"
+- One PR per feature or fix. When asked for several things, make separate PRs; stack a PR on the branch it depends on and say so in its description.
+- A PR description says what changed and why, notes any approved size over the limit, and lists the tests.
+- Remove code a change makes dead in the same PR.
 
 ## Change Size
 
@@ -58,6 +82,11 @@ Keep every change as small as possible.
 ## UI Changes
 
 - During go test tests/bdd we store screenshots in tests/screenshots. Any UI test must commit these screenshots folder to show the changes
+- Only commit screenshots a `.bdd` file takes with `SCREENSHOT`.
+- Use the theme colours (`primary`, `brand-night`, `brand-gold`) for branding, not raw Tailwind colours. Amber, blue and red stay for warnings, info and errors.
+- Give every input an ID unique to its page (e.g. `site--glucose--create--reading`), so typed values do not carry between pages; BDD tests use these IDs.
+- With htmx: errors go to `#toaster` with `hx-status:4xx`, success toasts go out-of-band with `<div hx-swap-oob="beforeend:#toaster">`, and a table row is updated by targeting it with `outerHTML`, never sent out-of-band.
+- Check items in a menu or scrolling box with `ASSERT_IN_VIEW`; `ASSERT_VISIBLE` passes for clipped elements.
 
 ## Tests
 
@@ -69,6 +98,11 @@ A unit test is preferred if:
 1. Too many options: A user path has a combinatorial explosion making it is too large a space for integration tests to be practical, e.g. checking all possible constraints on a model. In this case we would prefer unit tests of test matrices, building test structs and a for loop, this will make those many tests easier to read and debug.
 1. Impractical: A function or user path is impractical to test, e.g. integration with other services, or testing side effects like logging or error handling. In these cases custom mocks, stubs, or dependency injection will need to be used to test those code pathways.
 1. Async Timing: We don't want to wait for background job, cron or some other async task to run to confirm a test works. Either: either we implement a feature in a way that avoids this by e.g. calling immediately if test, or we write unit tests with of the async task, but confirm it is scheduled in the bdd test.
+
+- API `.http` tests create their own site (`POST http://localhost/site`) so they do not depend on other tests' data.
+- BDD tests get realistic data by enabling virtual sync and running `RUN_BACKGROUND_JOBS`.
+- For a bug fix, show the new test fails without the fix.
+- Run the full `go test ./...` before opening a PR.
 
 
 # Malicious users
@@ -83,5 +117,7 @@ We stop these by having sane limits that should never be hit by a user in normal
 
 1. Rate limiting read and write operations against sites, identities, and ips
 1. Slowing down background job frequencies if not behaving
+1. Refusing values far outside real use, e.g. glucose above 1000 mg/dL or a temp target longer than a week
+1. Capping how many rows one query returns
 
 When writing code, make sure to consider how an operation may be used by malicious users.
