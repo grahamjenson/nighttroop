@@ -724,70 +724,26 @@ func TreatmentEventGroupBundle(ctx context.Context, treatment nightscoutmodels.T
 func MergeUpdateBundle(dbModel *sitedb.EventGroupsBundle, updateBundle sitedb.EventGroupsBundle) {
 	nightscoutmodels.UpdateToEventGroup(updateBundle.EventGroup, &dbModel.EventGroup)
 
-	if updateBundle.InsulinDose != nil {
-		if dbModel.InsulinDose == nil {
-			dbModel.InsulinDose = updateBundle.InsulinDose
-		} else {
-			nightscoutmodels.UpdateToInsulinDose(updateBundle.InsulinDose, dbModel.InsulinDose)
-		}
-	}
+	mergeEvent(&dbModel.InsulinDose, updateBundle.InsulinDose, nightscoutmodels.UpdateToInsulinDose)
+	mergeEvent(&dbModel.GlucoseReading, updateBundle.GlucoseReading, nightscoutmodels.UpdateToGlucoseReading)
+	mergeEvent(&dbModel.FoodIntake, updateBundle.FoodIntake, nightscoutmodels.UpdateToFoodIntake)
+	mergeEvent(&dbModel.TempBasal, updateBundle.TempBasal, nightscoutmodels.UpdateToTempBasal)
+	mergeEvent(&dbModel.TempTarget, updateBundle.TempTarget, nightscoutmodels.UpdateToTempTarget)
+	mergeEvent(&dbModel.ProfileSwitch, updateBundle.ProfileSwitch, nightscoutmodels.UpdateToProfileSwitch)
+	mergeEvent(&dbModel.ComponentEvent, updateBundle.ComponentEvent, nightscoutmodels.UpdateToComponentEvent)
+	mergeEvent(&dbModel.Activity, updateBundle.Activity, nightscoutmodels.UpdateToActivity)
+	mergeEvent(&dbModel.NotificationEvent, updateBundle.NotificationEvent, nightscoutmodels.UpdateToNotificationEvent)
+}
 
-	if updateBundle.GlucoseReading != nil {
-		if dbModel.GlucoseReading == nil {
-			dbModel.GlucoseReading = updateBundle.GlucoseReading
-		} else {
-			nightscoutmodels.UpdateToGlucoseReading(updateBundle.GlucoseReading, dbModel.GlucoseReading)
-		}
+// mergeEvent sets db to update when db is nil, otherwise merges update into db
+func mergeEvent[T any](db **T, update *T, merge func(source, target *T)) {
+	if update == nil {
+		return
 	}
-
-	if updateBundle.FoodIntake != nil {
-		if dbModel.FoodIntake == nil {
-			dbModel.FoodIntake = updateBundle.FoodIntake
-		} else {
-			nightscoutmodels.UpdateToFoodIntake(updateBundle.FoodIntake, dbModel.FoodIntake)
-		}
-	}
-	if updateBundle.TempBasal != nil {
-		if dbModel.TempBasal == nil {
-			dbModel.TempBasal = updateBundle.TempBasal
-		} else {
-			nightscoutmodels.UpdateToTempBasal(updateBundle.TempBasal, dbModel.TempBasal)
-		}
-	}
-	if updateBundle.TempTarget != nil {
-		if dbModel.TempTarget == nil {
-			dbModel.TempTarget = updateBundle.TempTarget
-		} else {
-			nightscoutmodels.UpdateToTempTarget(updateBundle.TempTarget, dbModel.TempTarget)
-		}
-	}
-	if updateBundle.ProfileSwitch != nil {
-		if dbModel.ProfileSwitch == nil {
-			dbModel.ProfileSwitch = updateBundle.ProfileSwitch
-		} else {
-			nightscoutmodels.UpdateToProfileSwitch(updateBundle.ProfileSwitch, dbModel.ProfileSwitch)
-		}
-	}
-	if updateBundle.ComponentEvent != nil {
-		if dbModel.ComponentEvent == nil {
-			dbModel.ComponentEvent = updateBundle.ComponentEvent
-		} else {
-			nightscoutmodels.UpdateToComponentEvent(updateBundle.ComponentEvent, dbModel.ComponentEvent)
-		}
-	}
-	if updateBundle.Activity != nil {
-		if dbModel.Activity == nil {
-			dbModel.Activity = updateBundle.Activity
-		} else {
-			nightscoutmodels.UpdateToActivity(updateBundle.Activity, dbModel.Activity)
-		}
-	}
-	if updateBundle.NotificationEvent != nil {
-		if dbModel.NotificationEvent == nil {
-			dbModel.NotificationEvent = updateBundle.NotificationEvent
-		} else {
-			nightscoutmodels.UpdateToNotificationEvent(updateBundle.NotificationEvent, dbModel.NotificationEvent)
-		}
+	if *db == nil {
+		*db = update
+	} else {
+		merge(update, *db)
 	}
 }
 
