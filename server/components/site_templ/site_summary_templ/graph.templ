@@ -21,6 +21,11 @@ templ Graph(summary *sitemodels.Summary) {
 		aria-label="Glucose, treatments and temp basals over time"
 	>
 		<rect x={ f(graphLeft) } width={ f(graphRight - graphLeft) } y={ f(g.glucoseY(g.rangeTop())) } height={ f(g.glucoseY(g.rangeLow()) - g.glucoseY(g.rangeTop())) } class="fill-gray-100"></rect>
+		// The time grid is drawn first, so it stays behind the readings and treatments
+		for _, t := range g.ticks() {
+			<line x1={ f(t.X) } x2={ f(t.X) } y1={ f(glucoseTop) } y2={ f(basalBase) } class="stroke-gray-200" stroke-dasharray="2 4"></line>
+			<text x={ f(t.X) } y={ f(graphHeight - 4) } text-anchor="middle" class="fill-gray-500">{ t.Label }</text>
+		}
 		for _, t := range summary.TempTargets {
 			<rect
 				id={ "site--summary--graph--temp-target-" + t.ID }
@@ -55,10 +60,6 @@ templ Graph(summary *sitemodels.Summary) {
 		<line x1={ f(graphLeft) } x2={ f(graphRight) } y1={ f(basalBase) } y2={ f(basalBase) } class="stroke-gray-200"></line>
 		@axisLabel(graphLeft-6, basalBase, "Basal")
 		<path id="site--summary--graph--basal" d={ g.basalPath(summary.TempBasals) } class="fill-primary/20 stroke-primary" stroke-width="1.5"></path>
-		for _, t := range g.ticks() {
-			<line x1={ f(t.X) } x2={ f(t.X) } y1={ f(glucoseTop) } y2={ f(basalBase) } class="stroke-gray-200" stroke-dasharray="2 4"></line>
-			<text x={ f(t.X) } y={ f(graphHeight - 4) } text-anchor="middle" class="fill-gray-500">{ t.Label }</text>
-		}
 	</svg>
 }
 
