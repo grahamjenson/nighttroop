@@ -15,13 +15,13 @@ import (
 const allProfileSwitches = `-- name: AllProfileSwitches :many
 
 SELECT id, name, duration_minutes, percent, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
-WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
 `
 
 type AllProfileSwitchesParams struct {
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }
@@ -210,15 +210,16 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 }
 
 const getProfileSwitch = `-- name: GetProfileSwitch :one
-SELECT id, name, duration_minutes, percent, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches WHERE id = ?
+SELECT id, name, duration_minutes, percent, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetProfileSwitchParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetProfileSwitch(ctx context.Context, arg GetProfileSwitchParams) (*ProfileSwitch, error) {
-	row := q.queryRow(ctx, q.getProfileSwitchStmt, getProfileSwitch, arg.ID)
+	row := q.queryRow(ctx, q.getProfileSwitchStmt, getProfileSwitch, arg.ID, arg.IncludeDeleted)
 	var i ProfileSwitch
 	err := row.Scan(
 		&i.ID,
@@ -439,17 +440,18 @@ UPDATE profile_switches SET
     name = COALESCE(?1, name),
     duration_minutes = COALESCE(?2, duration_minutes),
     percent = COALESCE(?3, percent),
-    notes = COALESCE(?4, notes),
-    reason = COALESCE(?5, reason),
+    timeshift = COALESCE(?4, timeshift),
+    notes = COALESCE(?5, notes),
+    reason = COALESCE(?6, reason),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?6 AS TEXT), '{}')
+        COALESCE(CAST(?7 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?7,
-    updated_by_identity_name = ?8
-WHERE id = ?9 AND deleted_at IS NULL
+    updated_by_identity_id = ?8,
+    updated_by_identity_name = ?9
+WHERE id = ?10 AND deleted_at IS NULL
 RETURNING id, name, duration_minutes, percent, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
@@ -457,6 +459,7 @@ type UpdateProfileSwitchParams struct {
 	Name                  *string
 	DurationMinutes       *int64
 	Percent               *float64
+	Timeshift             *int64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -473,6 +476,7 @@ func (q *Queries) UpdateProfileSwitch(ctx context.Context, arg UpdateProfileSwit
 		arg.Name,
 		arg.DurationMinutes,
 		arg.Percent,
+		arg.Timeshift,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,
