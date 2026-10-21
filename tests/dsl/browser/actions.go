@@ -197,7 +197,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	case "forward":
 		_, err = page.GoForward()
 	default:
-		err = locator.Click()
+		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait)})
 	}
 	if err != nil {
 		t.Fatalf(
@@ -335,11 +335,11 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 
 	// A select can't be typed into, so pick the option with this value
 	if tag, err := locator.Evaluate("element => element.tagName", nil); err == nil && tag == "SELECT" {
-		_, err = locator.SelectOption(playwright.SelectOptionValues{Values: &[]string{r.Value}})
+		_, err = locator.SelectOption(playwright.SelectOptionValues{Values: &[]string{r.Value}}, playwright.LocatorSelectOptionOptions{Timeout: playwright.Float(actionWait)})
 		return page, err
 	}
 
-	err = locator.Clear()
+	err = locator.Clear(playwright.LocatorClearOptions{Timeout: playwright.Float(actionWait)})
 	if err != nil {
 		return nil, err
 	}
