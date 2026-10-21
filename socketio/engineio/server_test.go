@@ -158,6 +158,19 @@ func TestPollWaitsThenSendsNoop(t *testing.T) {
 	require.GreaterOrEqual(t, time.Since(start), 100*time.Millisecond)
 }
 
+func TestPollOutlastsTheWriteTimeout(t *testing.T) {
+	server, _, _ := echoServer(t, Config{PingInterval: 300 * time.Millisecond, PingTimeout: time.Second})
+	ts := httptest.NewUnstartedServer(server)
+	ts.Config.WriteTimeout = 100 * time.Millisecond
+	ts.Start()
+	defer ts.Close()
+	// v3, so no server ping can end the poll before its noop
+	sid := handshake(t, ts.URL, "3")
+	status, body := get(t, ts.URL+"/?EIO=3&transport=polling&sid="+sid)
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, "1:6", body)
+}
+
 func TestRequestErrors(t *testing.T) {
 	_, ts, _ := echoServer(t, testConfig)
 	sid := handshake(t, ts.URL, "4")

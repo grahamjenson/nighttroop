@@ -102,6 +102,19 @@ func TestEventsAndAcks(t *testing.T) {
 	})
 }
 
+func TestEventsOnConnectionArriveWithHandlersSetBeforeOpen(t *testing.T) {
+	server, url := newTestServer(t)
+	// A Socket.IO v2 server connects the default namespace itself, so it can emit before Dial returns
+	server.Of("/").OnConnection(func(s *Socket) { s.Emit("clients", 1) })
+
+	client := NewClient(engineio.V3)
+	got := make(chan string, 1)
+	client.On("/", "clients", func(args []json.RawMessage) { got <- string(args[0]) })
+	require.NoError(t, client.Open(context.Background(), url, nil))
+	t.Cleanup(func() { client.Close() })
+	require.Equal(t, "1", receive(t, got))
+}
+
 func TestNamespaceAuthorization(t *testing.T) {
 	server, url := newTestServer(t)
 	admin := server.Of("/admin")

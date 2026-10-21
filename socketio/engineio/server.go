@@ -279,7 +279,7 @@ func newSession(server *Server, r *http.Request, version int) *Session {
 		id:      base64.RawURLEncoding.EncodeToString(id),
 		version: version,
 		server:  server,
-		request: r.Clone(context.Background()),
+		request: r.Clone(context.WithoutCancel(r.Context())),
 		notify:  make(chan struct{}, 1),
 		upgrade: make(chan struct{}),
 		alive:   make(chan struct{}, 1),
@@ -292,7 +292,7 @@ func (s *Session) ID() string { return s.id }
 // Version is the Engine.IO protocol version the client speaks
 func (s *Session) Version() int { return s.version }
 
-// Request is the handshake request, for its headers, query and remote address
+// Request is the handshake request, for its headers, query, remote address and context values (without its cancel)
 func (s *Session) Request() *http.Request { return s.request }
 
 // OnMessage sets the handler for the client's messages; it runs in order, one at a time, so must not block
@@ -425,6 +425,8 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 		s.mu.Unlock()
 	}()
 
+	// The wait can outlast the HTTP server's write timeout
+	http.NewResponseController(w).SetWriteDeadline(time.Now().Add(s.server.config.PingInterval + writeTimeout))
 	timer := time.NewTimer(s.server.config.PingInterval)
 	defer timer.Stop()
 	for {
