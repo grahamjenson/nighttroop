@@ -8,6 +8,14 @@ import (
 	apiquery "nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
+func QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams {
+	var sitedbAllActivitiesParams sitedb.AllActivitiesParams
+	if source != nil {
+		sitedbAllActivitiesParams.Skip = (*source).Skip
+		sitedbAllActivitiesParams.Limit = (*source).Limit
+	}
+	return sitedbAllActivitiesParams
+}
 func QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
 	if source != nil {

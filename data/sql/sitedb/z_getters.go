@@ -5767,12 +5767,12 @@ func (m *CreateActivityParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllActivitiesParams) GetIncludeDeleted() *bool {
+func (m AllActivitiesParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllActivitiesParams.
-func (m *AllActivitiesParams) SetIncludeDeleted(v *bool) {
+func (m *AllActivitiesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
