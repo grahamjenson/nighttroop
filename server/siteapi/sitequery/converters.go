@@ -40,5 +40,9 @@ type QueryConverter interface {
 	QueryToAllComponentEvents(source *apiquery.Query) sitedb.AllComponentEventsParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllNotificationEvents(source *apiquery.Query) sitedb.AllNotificationEventsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
 	QueryToDeviceReportsForDevice(source *apiquery.Query) sitedb.DeviceReportsForDeviceParams
 }

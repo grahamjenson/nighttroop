@@ -26,6 +26,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	tempBasalsStore := &sitedata.TempBasalsStore{}
 	activitiesStore := &sitedata.ActivitiesStore{}
 	componentEventsStore := &sitedata.ComponentEventsStore{}
+	notificationEventsStore := &sitedata.NotificationEventsStore{}
 	insulinDosesStore := &sitedata.InsulinDosesStore{}
 	foodIntakesStore := &sitedata.FoodIntakesStore{}
 	deviceStatusesStore := &sitedata.DeviceStatusesStore{}
@@ -84,12 +85,20 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/data/activities", siteapiutils.CreateHandler(controlDB, config, activitiesStore))
 		r.Post("/data/activities/{id}", siteapiutils.UpdateHandler(controlDB, config, activitiesStore))
 		r.Delete("/data/activities/{id}", siteapiutils.DeleteHandler(controlDB, config, activitiesStore))
+
 		// Data Component Events
 		r.Get("/data/component-events", siteapiutils.SearchHandler(controlDB, config, componentEventsStore))
 		r.Get("/data/component-events/{id}", siteapiutils.GetHandler(controlDB, config, componentEventsStore))
 		r.Post("/data/component-events", siteapiutils.CreateHandler(controlDB, config, componentEventsStore))
 		r.Post("/data/component-events/{id}", siteapiutils.UpdateHandler(controlDB, config, componentEventsStore))
 		r.Delete("/data/component-events/{id}", siteapiutils.DeleteHandler(controlDB, config, componentEventsStore))
+
+		// Data Notifications
+		r.Get("/data/notifications", siteapiutils.SearchHandler(controlDB, config, notificationEventsStore))
+		r.Get("/data/notifications/{id}", siteapiutils.GetHandler(controlDB, config, notificationEventsStore))
+		r.Post("/data/notifications", siteapiutils.CreateHandler(controlDB, config, notificationEventsStore))
+		r.Post("/data/notifications/{id}", siteapiutils.UpdateHandler(controlDB, config, notificationEventsStore))
+		r.Delete("/data/notifications/{id}", siteapiutils.DeleteHandler(controlDB, config, notificationEventsStore))
 
 		// Data Insulin Doses
 		r.Get("/data/insulin", siteapiutils.SearchHandler(controlDB, config, insulinDosesStore))
