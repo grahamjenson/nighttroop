@@ -130,6 +130,10 @@ const visibleWait = 5000
 // screenshotWait is how long a screenshot may take, in ms
 const screenshotWait = 10000
 
+// actionWait is how long a click or input waits for its element to be visible, enabled and stable, in ms:
+// longer than the 1s default, which a busy CI runner can take for a transition to settle
+const actionWait = visibleWait
+
 // waitForVisible waits until the first element the locator finds is visible, or visibleWait passes.
 // It never fails: the assert after it checks, and fails with the page it found.
 func waitForVisible(locator playwright.Locator) {
