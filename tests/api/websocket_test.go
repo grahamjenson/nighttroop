@@ -29,10 +29,7 @@ func dialWebsocket(t *testing.T, ts *httptest.Server, subdomain string, version 
 	httpClient := &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, network, addr)
 	}}}
-	client, err := socketio.Dial(context.Background(), "http://"+subdomain+".ns.localhost/socket.io/", version, httpClient)
-	require.NoError(t, err)
-	t.Cleanup(func() { client.Close() })
-
+	client := socketio.NewClient(version)
 	c := &websocketClient{Client: client, events: map[string]chan json.RawMessage{}}
 	for _, event := range []string{"connected", "dataUpdate", "clients"} {
 		events := make(chan json.RawMessage, 10)
@@ -45,6 +42,8 @@ func dialWebsocket(t *testing.T, ts *httptest.Server, subdomain string, version 
 			events <- arg
 		})
 	}
+	require.NoError(t, client.Open(context.Background(), "http://"+subdomain+".ns.localhost/socket.io/", httpClient))
+	t.Cleanup(func() { client.Close() })
 	require.NoError(t, client.Connect(wsTimeout(t), socketio.DefaultNamespace, nil))
 	return c
 }

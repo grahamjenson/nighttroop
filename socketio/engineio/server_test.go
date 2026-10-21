@@ -164,10 +164,11 @@ func TestPollOutlastsTheWriteTimeout(t *testing.T) {
 	ts.Config.WriteTimeout = 100 * time.Millisecond
 	ts.Start()
 	defer ts.Close()
-	sid := handshake(t, ts.URL, "4")
-	status, body := get(t, ts.URL+"/?EIO=4&transport=polling&sid="+sid)
+	// v3, so no server ping can end the poll before its noop
+	sid := handshake(t, ts.URL, "3")
+	status, body := get(t, ts.URL+"/?EIO=3&transport=polling&sid="+sid)
 	require.Equal(t, http.StatusOK, status)
-	require.Equal(t, "6", body)
+	require.Equal(t, "1:6", body)
 }
 
 func TestRequestErrors(t *testing.T) {

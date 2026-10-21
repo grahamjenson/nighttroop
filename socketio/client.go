@@ -26,18 +26,27 @@ type Client struct {
 // Dial opens a connection to the server at rawURL (e.g. http://host/socket.io/); call Connect before emitting.
 // version is the Engine.IO version: engineio.V4 for Socket.IO v5, engineio.V3 for Socket.IO v2 clients.
 func Dial(ctx context.Context, rawURL string, version int, httpClient *http.Client) (*Client, error) {
-	c := newClient(version)
-	engine, err := engineio.Dial(ctx, rawURL, version, httpClient, c.onMessage)
-	if err != nil {
+	c := NewClient(version)
+	if err := c.Open(ctx, rawURL, httpClient); err != nil {
 		return nil, err
 	}
-	c.engine = engine
 	return c, nil
+}
+
+// Open is Dial for a client from NewClient, so On can be set before anything arrives:
+// a Socket.IO v2 server connects the default namespace, and can emit, before Dial returns
+func (c *Client) Open(ctx context.Context, rawURL string, httpClient *http.Client) error {
+	engine, err := engineio.Dial(ctx, rawURL, c.version, httpClient, c.onMessage)
+	if err != nil {
+		return err
+	}
+	c.engine = engine
+	return nil
 }
 
 // DialOverWebSocket is Dial over a websocket from the start
 func DialOverWebSocket(ctx context.Context, rawURL string, version int) (*Client, error) {
-	c := newClient(version)
+	c := NewClient(version)
 	engine, err := engineio.DialOverWebSocket(ctx, rawURL, version, c.onMessage)
 	if err != nil {
 		return nil, err
@@ -46,7 +55,8 @@ func DialOverWebSocket(ctx context.Context, rawURL string, version int) (*Client
 	return c, nil
 }
 
-func newClient(version int) *Client {
+// NewClient is a client that is not yet connected; set its handlers with On, then Open it
+func NewClient(version int) *Client {
 	return &Client{
 		version:   version,
 		handlers:  map[string]map[string]func([]json.RawMessage){},
