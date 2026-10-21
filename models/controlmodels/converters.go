@@ -21,4 +21,9 @@ type ControlConverter interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
 	QueryToSearchJobStatsDaily(source *apiquery.Query) jobsdb.SearchJobStatsDailyParams
+
+	JobFromDB(source *jobsdb.Job) *Job
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams
 }

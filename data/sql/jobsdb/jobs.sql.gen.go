@@ -473,3 +473,50 @@ func (q *Queries) ResetJobs(ctx context.Context, arg ResetJobsParams) (int64, er
 	}
 	return result.RowsAffected()
 }
+
+const searchJobs = `-- name: SearchJobs :many
+SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at FROM jobs
+ORDER BY id DESC
+LIMIT ?2 OFFSET ?1
+`
+
+type SearchJobsParams struct {
+	Skip  int64
+	Limit int64
+}
+
+func (q *Queries) SearchJobs(ctx context.Context, arg SearchJobsParams) ([]*Job, error) {
+	rows, err := q.query(ctx, q.searchJobsStmt, searchJobs, arg.Skip, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Job
+	for rows.Next() {
+		var i Job
+		if err := rows.Scan(
+			&i.ID,
+			&i.Queue,
+			&i.Job,
+			&i.JobStatus,
+			&i.ExecuteAfter,
+			&i.RemainingAttempts,
+			&i.ConsumerFetchedAt,
+			&i.FinishedAt,
+			&i.DedupingKey,
+			&i.Errors,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

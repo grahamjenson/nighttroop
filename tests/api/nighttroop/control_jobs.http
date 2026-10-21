@@ -1,0 +1,60 @@
+NAME control_login
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "password", "totp": "123123"}
+ASSERT_STATUS 200
+SET control_jwt {{ .control_login.token }}
+
+// Running the jobs leaves the ones not yet summarised
+RUN_BACKGROUND_JOBS
+
+// The control API sees the jobs, newest first
+NAME list_jobs
+GET http://control.localhost/jobs
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.id"
+ASSERT_EXISTS "@result.0.queue"
+ASSERT_EXISTS "@result.0.job_status"
+ASSERT_EXISTS "@result.0.errors"
+SET job_id {{ dig "list_jobs.result.0.id" }}
+
+NAME list_jobs_paged
+GET http://control.localhost/jobs?limit=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_jobs_bad_limit
+GET http://control.localhost/jobs?limit=lots
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+NAME get_job
+GET http://control.localhost/jobs/{{ .job_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.created_at"
+ASSERT_EXISTS "@result.remaining_attempts"
+
+NAME get_unknown_job
+GET http://control.localhost/jobs/999999999
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_job_not_a_number
+GET http://control.localhost/jobs/not-a-job
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only signed in control identities can see jobs
+NAME list_jobs_without_login
+GET http://control.localhost/jobs
+H Accept: application/json
+ASSERT_STATUS 401
