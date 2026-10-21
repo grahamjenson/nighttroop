@@ -109,6 +109,21 @@ templ Header() {
 										Sites
 									</span>
 								}
+								@dropdown.Item(dropdown.ItemProps{
+									ID:   "control--sync-sources-button",
+									Href: "#",
+									Attributes: templ.Attributes{
+										"hx-get":      "/sync-sources",
+										"hx-target":   "#main-content",
+										"hx-push-url": "true",
+										"hx-swap":     "innerHTML",
+									},
+								}) {
+									<span class="flex items-center">
+										@icon.RefreshCw(icon.Props{Class: "size-4 mr-2"})
+										Sync Sources
+									</span>
+								}
 								@dropdown.Separator()
 								@dropdown.Item(dropdown.ItemProps{
 									Href: "#",

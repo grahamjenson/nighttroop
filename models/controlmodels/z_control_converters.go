@@ -6,6 +6,8 @@ package controlmodels
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	apiquery "nighttroop.t1d.nz/utils/apiutils/apiquery"
+	consts "nighttroop.t1d.nz/utils/consts"
+	errors "nighttroop.t1d.nz/utils/errors"
 )
 
 func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
@@ -15,6 +17,14 @@ func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
 		controldbSearchSitesParams.Limit = (*source).Limit
 	}
 	return controldbSearchSitesParams
+}
+func QueryToSearchSyncSources(source *apiquery.Query) controldb.SearchSyncSourcesParams {
+	var controldbSearchSyncSourcesParams controldb.SearchSyncSourcesParams
+	if source != nil {
+		controldbSearchSyncSourcesParams.Skip = (*source).Skip
+		controldbSearchSyncSourcesParams.Limit = (*source).Limit
+	}
+	return controldbSearchSyncSourcesParams
 }
 func SiteFromDB(source *controldb.Site) *Site {
 	var pControlmodelsSite *Site
@@ -51,4 +61,86 @@ func SiteFromDB(source *controldb.Site) *Site {
 		pControlmodelsSite = &controlmodelsSite
 	}
 	return pControlmodelsSite
+}
+func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
+	var pControlmodelsSyncSource *SyncSource
+	if source != nil {
+		var controlmodelsSyncSource SyncSource
+		controlmodelsSyncSource.SiteID = (*source).SiteID
+		controlmodelsSyncSource.Type = consts.SyncSourceType((*source).Type)
+		if (*source).Region != nil {
+			xstring := *(*source).Region
+			controlmodelsSyncSource.Region = &xstring
+		}
+		controlmodelsSyncSource.Enabled = (*source).Enabled
+		controlmodelsSyncSource.CreatedAt = (*source).CreatedAt
+		controlmodelsSyncSource.UpdatedAt = (*source).UpdatedAt
+		if (*source).FirstSuccessfulSyncTime != nil {
+			xint64 := *(*source).FirstSuccessfulSyncTime
+			controlmodelsSyncSource.FirstSuccessfulSyncTime = &xint64
+		}
+		controlmodelsSyncSource.SyncIntervalSecondsReason = (*source).SyncIntervalSecondsReason
+		controlmodelsSyncSource.SyncIntervalSeconds = (*source).SyncIntervalSeconds
+		if (*source).LastAttemptedSync != nil {
+			xint642 := *(*source).LastAttemptedSync
+			controlmodelsSyncSource.LastAttemptedSync = &xint642
+		}
+		if (*source).LastSuccessfulSync != nil {
+			xint643 := *(*source).LastSuccessfulSync
+			controlmodelsSyncSource.LastSuccessfulSync = &xint643
+		}
+		if (*source).LastFailedSync != nil {
+			xint644 := *(*source).LastFailedSync
+			controlmodelsSyncSource.LastFailedSync = &xint644
+		}
+		if (*source).TotalSyncs != nil {
+			xint645 := *(*source).TotalSyncs
+			controlmodelsSyncSource.TotalSyncs = &xint645
+		}
+		if (*source).TotalSuccessfulSyncs != nil {
+			xint646 := *(*source).TotalSuccessfulSyncs
+			controlmodelsSyncSource.TotalSuccessfulSyncs = &xint646
+		}
+		if (*source).TotalFailedSyncs != nil {
+			xint647 := *(*source).TotalFailedSyncs
+			controlmodelsSyncSource.TotalFailedSyncs = &xint647
+		}
+		if (*source).ConsecutiveSuccessfulSyncs != nil {
+			xint648 := *(*source).ConsecutiveSuccessfulSyncs
+			controlmodelsSyncSource.ConsecutiveSuccessfulSyncs = &xint648
+		}
+		if (*source).ConsecutiveFailedSyncs != nil {
+			xint649 := *(*source).ConsecutiveFailedSyncs
+			controlmodelsSyncSource.ConsecutiveFailedSyncs = &xint649
+		}
+		controlmodelsSyncSource.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
+		if (*source).TotalEma != nil {
+			xfloat64 := *(*source).TotalEma
+			controlmodelsSyncSource.TotalEma = &xfloat64
+		}
+		if (*source).SuccessEma != nil {
+			xfloat642 := *(*source).SuccessEma
+			controlmodelsSyncSource.SuccessEma = &xfloat642
+		}
+		if (*source).FailureEma != nil {
+			xfloat643 := *(*source).FailureEma
+			controlmodelsSyncSource.FailureEma = &xfloat643
+		}
+		if (*source).LastSyncDuration != nil {
+			xint6410 := *(*source).LastSyncDuration
+			controlmodelsSyncSource.LastSyncDuration = &xint6410
+		}
+		pControlmodelsSyncSource = &controlmodelsSyncSource
+	}
+	return pControlmodelsSyncSource
+}
+func errorsErrorListToStringList(source errors.ErrorList) []string {
+	var stringList []string
+	if source != nil {
+		stringList = make([]string, len(source))
+		for i := 0; i < len(source); i++ {
+			stringList[i] = source[i]
+		}
+	}
+	return stringList
 }

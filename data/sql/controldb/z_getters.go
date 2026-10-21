@@ -2767,6 +2767,26 @@ func (m *GetSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
+// GetSkip returns the Skip value.
+func (m SearchSyncSourcesParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSyncSourcesParams.
+func (m *SearchSyncSourcesParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSyncSourcesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSyncSourcesParams.
+func (m *SearchSyncSourcesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m GetAllSyncSourcesForSiteParams) GetSiteID() string {
 	return m.SiteID

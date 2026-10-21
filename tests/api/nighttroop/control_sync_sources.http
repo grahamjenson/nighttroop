@@ -1,0 +1,81 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site_id {{ .create_new_site.site_subdomain }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME create_virtual_sync
+POST http://{{ site }}/settings/sync/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME control_login
+POST http://control.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "password", "totp": "123123"}
+ASSERT_STATUS 200
+SET control_jwt {{ .control_login.token }}
+
+// The control API sees every site's sync sources, most recently attempted first
+NAME list_sync_sources
+GET http://control.localhost/sync-sources
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.site_id"
+ASSERT_EXISTS "@result.0.type"
+ASSERT_EXISTS "@result.0.last_attempted_sync"
+
+NAME list_sync_sources_paged
+GET http://control.localhost/sync-sources?limit=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_sync_sources_bad_limit
+GET http://control.localhost/sync-sources?limit=lots
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+// One source, by its site::type, with the reports from its first sync
+NAME get_sync_source
+GET http://control.localhost/sync-sources/{{ .site_id }}::virtual
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "virtual" "@result.type"
+ASSERT_EQUALS true "@result.enabled"
+ASSERT_EQUALS 1 "@result.total_syncs"
+ASSERT_EQUALS 1 "@result.total_successful_syncs"
+ASSERT_EXISTS "@result.last_successful_sync"
+
+NAME get_unknown_sync_source
+GET http://control.localhost/sync-sources/{{ .site_id }}::dexcom
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_sync_source_without_type
+GET http://control.localhost/sync-sources/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only signed in control identities can see sync sources
+NAME list_sync_sources_without_login
+GET http://control.localhost/sync-sources
+H Accept: application/json
+ASSERT_STATUS 401
