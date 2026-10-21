@@ -15,17 +15,22 @@ jobs:
           go-version-file: go.mod
           cache: false
 
-      # Saved on every run (key includes the commit) so the build cache stays fresh.
-      - name: Cache Go modules and build cache
+      # Only the downloaded module zips: a few hundred files restore far faster than the
+      # unpacked modules, and Go unpacks the ones it needs in seconds.
+      - name: Cache Go modules
         uses: actions/cache@v4
         with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
-          restore-keys: |
-            go-${{ runner.os }}-${{ hashFiles('go.sum') }}-
-            go-${{ runner.os }}-
+          path: ~/go/pkg/mod/cache/download
+          key: gomod-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: gomod-${{ runner.os }}-
+
+      # Restores main's last build cache; only pushes to main save one (see the end).
+      - name: Restore Go build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/go-build
+          key: gobuild-${{ runner.os }}-${{ github.sha }}
+          restore-keys: gobuild-${{ runner.os }}-
 
       - name: Cache code generator binaries
         id: tools
@@ -81,3 +86,16 @@ jobs:
         with:
           name: screenshots
           path: tests/screenshots
+
+      # Go refreshes the mtime of an entry it uses that is over an hour old, so entries
+      # older than 90 minutes went unused by this run. Dropping them stops the cache growing.
+      - name: Trim Go build cache
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: find ~/.cache/go-build -type f -mmin +90 -delete
+
+      - name: Save Go build cache
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/go-build
+          key: gobuild-${{ runner.os }}-${{ github.sha }}
