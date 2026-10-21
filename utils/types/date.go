@@ -151,6 +151,10 @@ func (d *DateString) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("expected string for date, got %T", v)
 	}
 
+	// A number has no time zone, so it is UTC rather than whatever zone the server runs in
+	if _, isString := v.(string); !isString {
+		t = t.UTC()
+	}
 	*d = DateString(t.Format(time.RFC3339Nano))
 	return nil
 }
