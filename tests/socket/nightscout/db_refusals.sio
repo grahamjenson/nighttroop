@@ -1,0 +1,96 @@
+# Socket writes are answered with why they are refused, as Nightscout does
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=3
+
+NAME add_before_authorize
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Note"}}
+ACK
+ASSERT_EQUALS "Not authorized" "@result"
+
+NAME wrong_collection
+EMIT dbAdd
+B {"collection":"settings","data":{}}
+ACK
+ASSERT_EQUALS "Wrong collection" "@result"
+
+NAME not_an_object
+EMIT dbRemove
+B "treatments"
+ACK
+ASSERT_EQUALS "Invalid request" "@result"
+
+NAME authorize_read_only
+EMIT authorize
+B {"secret":"{{ read_token }}"}
+ACK
+ASSERT_EQUALS false "@write"
+
+NAME read_only_add
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Note"}}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME read_only_remove
+EMIT dbRemove
+B {"collection":"entries","_id":"anything"}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME authorize
+EMIT authorize
+B {"secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@write"
+
+NAME update_without_id
+EMIT dbUpdate
+B {"collection":"treatments","data":{"insulin":1}}
+ACK
+ASSERT_EQUALS "Missing or invalid _id" "@result"
+
+NAME remove_with_number_id
+EMIT dbRemove
+B {"collection":"treatments","_id":12}
+ACK
+ASSERT_EQUALS "Missing or invalid _id" "@result"
+
+NAME update_without_data
+EMIT dbUpdate
+B {"collection":"treatments","_id":"abc"}
+ACK
+ASSERT_EQUALS "Invalid data" "@result"
+
+NAME add_without_data
+EMIT dbAdd
+B {"collection":"treatments","data":"a note"}
+ACK
+ASSERT_EQUALS "Invalid data" "@result"
+
+NAME update_unknown
+EMIT dbUpdate
+B {"collection":"treatments","_id":"not_a_record","data":{"insulin":1}}
+ACK
+ASSERT_EQUALS "Unable to process update" "@result"
+
+NAME remove_unknown
+EMIT dbRemove
+B {"collection":"treatments","_id":"not_a_record"}
+ACK
+ASSERT_EQUALS "Unable to process removal" "@result"
+
+# A record the collection refuses is left out of dbAdd's answer, as Nightscout does
+NAME add_invalid_entry
+EMIT dbAdd
+B {"collection":"entries","data":{"type":"bad","date":{{ itime 0 }}}}
+ACK
+ASSERT_LENGTH 0 "@"
