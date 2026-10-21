@@ -42,6 +42,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.findJobStmt, err = db.PrepareContext(ctx, findJob); err != nil {
 		return nil, fmt.Errorf("error preparing query FindJob: %w", err)
 	}
+	if q.getJobStatsDailyStmt, err = db.PrepareContext(ctx, getJobStatsDaily); err != nil {
+		return nil, fmt.Errorf("error preparing query GetJobStatsDaily: %w", err)
+	}
 	if q.getJobsToBeSummarisedStmt, err = db.PrepareContext(ctx, getJobsToBeSummarised); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobsToBeSummarised: %w", err)
 	}
@@ -62,6 +65,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.resetJobsStmt, err = db.PrepareContext(ctx, resetJobs); err != nil {
 		return nil, fmt.Errorf("error preparing query ResetJobs: %w", err)
+	}
+	if q.searchJobStatsDailyStmt, err = db.PrepareContext(ctx, searchJobStatsDaily); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchJobStatsDaily: %w", err)
+	}
+	if q.searchJobsStmt, err = db.PrepareContext(ctx, searchJobs); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchJobs: %w", err)
 	}
 	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
@@ -101,6 +110,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing findJobStmt: %w", cerr)
 		}
 	}
+	if q.getJobStatsDailyStmt != nil {
+		if cerr := q.getJobStatsDailyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getJobStatsDailyStmt: %w", cerr)
+		}
+	}
 	if q.getJobsToBeSummarisedStmt != nil {
 		if cerr := q.getJobsToBeSummarisedStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getJobsToBeSummarisedStmt: %w", cerr)
@@ -134,6 +148,16 @@ func (q *Queries) Close() error {
 	if q.resetJobsStmt != nil {
 		if cerr := q.resetJobsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing resetJobsStmt: %w", cerr)
+		}
+	}
+	if q.searchJobStatsDailyStmt != nil {
+		if cerr := q.searchJobStatsDailyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchJobStatsDailyStmt: %w", cerr)
+		}
+	}
+	if q.searchJobsStmt != nil {
+		if cerr := q.searchJobsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchJobsStmt: %w", cerr)
 		}
 	}
 	if q.updateJobStatsDailyStmt != nil {
@@ -186,6 +210,7 @@ type Queries struct {
 	ensureJobStatsDailyForGroupStmt *sql.Stmt
 	failJobStmt                     *sql.Stmt
 	findJobStmt                     *sql.Stmt
+	getJobStatsDailyStmt            *sql.Stmt
 	getJobsToBeSummarisedStmt       *sql.Stmt
 	insertFailedCronJobStmt         *sql.Stmt
 	insertSuccessfulCronJobStmt     *sql.Stmt
@@ -193,6 +218,8 @@ type Queries struct {
 	queueJobIgnoreDupeStmt          *sql.Stmt
 	queueJobReplaceDupeStmt         *sql.Stmt
 	resetJobsStmt                   *sql.Stmt
+	searchJobStatsDailyStmt         *sql.Stmt
+	searchJobsStmt                  *sql.Stmt
 	updateJobStatsDailyStmt         *sql.Stmt
 }
 
@@ -206,6 +233,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		ensureJobStatsDailyForGroupStmt: q.ensureJobStatsDailyForGroupStmt,
 		failJobStmt:                     q.failJobStmt,
 		findJobStmt:                     q.findJobStmt,
+		getJobStatsDailyStmt:            q.getJobStatsDailyStmt,
 		getJobsToBeSummarisedStmt:       q.getJobsToBeSummarisedStmt,
 		insertFailedCronJobStmt:         q.insertFailedCronJobStmt,
 		insertSuccessfulCronJobStmt:     q.insertSuccessfulCronJobStmt,
@@ -213,6 +241,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		queueJobIgnoreDupeStmt:          q.queueJobIgnoreDupeStmt,
 		queueJobReplaceDupeStmt:         q.queueJobReplaceDupeStmt,
 		resetJobsStmt:                   q.resetJobsStmt,
+		searchJobStatsDailyStmt:         q.searchJobStatsDailyStmt,
+		searchJobsStmt:                  q.searchJobsStmt,
 		updateJobStatsDailyStmt:         q.updateJobStatsDailyStmt,
 	}
 }

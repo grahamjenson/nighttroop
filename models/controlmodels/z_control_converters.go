@@ -5,9 +5,64 @@ package controlmodels
 
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
+	jobsdb "nighttroop.t1d.nz/data/sql/jobsdb"
 	apiquery "nighttroop.t1d.nz/utils/apiutils/apiquery"
+	errors "nighttroop.t1d.nz/utils/errors"
 )
 
+func JobFromDB(source *jobsdb.Job) *Job {
+	var pControlmodelsJob *Job
+	if source != nil {
+		var controlmodelsJob Job
+		controlmodelsJob.ID = (*source).ID
+		controlmodelsJob.Queue = (*source).Queue
+		controlmodelsJob.Job = (*source).Job
+		controlmodelsJob.JobStatus = (*source).JobStatus
+		controlmodelsJob.ExecuteAfter = (*source).ExecuteAfter
+		controlmodelsJob.RemainingAttempts = (*source).RemainingAttempts
+		controlmodelsJob.ConsumerFetchedAt = (*source).ConsumerFetchedAt
+		controlmodelsJob.FinishedAt = (*source).FinishedAt
+		controlmodelsJob.DedupingKey = (*source).DedupingKey
+		controlmodelsJob.Errors = errorsErrorListToStringList((*source).Errors)
+		controlmodelsJob.CreatedAt = (*source).CreatedAt
+		controlmodelsJob.UpdatedAt = (*source).UpdatedAt
+		pControlmodelsJob = &controlmodelsJob
+	}
+	return pControlmodelsJob
+}
+func JobStatsDailyFromDB(source *jobsdb.JobStatsDaily) *JobStatsDaily {
+	var pControlmodelsJobStatsDaily *JobStatsDaily
+	if source != nil {
+		var controlmodelsJobStatsDaily JobStatsDaily
+		controlmodelsJobStatsDaily.DayQueueJob = (*source).DayQueueJob
+		controlmodelsJobStatsDaily.TotalJobs = (*source).TotalJobs
+		controlmodelsJobStatsDaily.TotalSuccess = (*source).TotalSuccess
+		controlmodelsJobStatsDaily.TotalFailed = (*source).TotalFailed
+		controlmodelsJobStatsDaily.DurationSum = (*source).DurationSum
+		controlmodelsJobStatsDaily.DurationSquaredSum = (*source).DurationSquaredSum
+		controlmodelsJobStatsDaily.Errors = errorsErrorListToStringList((*source).Errors)
+		controlmodelsJobStatsDaily.CreatedAt = (*source).CreatedAt
+		controlmodelsJobStatsDaily.UpdatedAt = (*source).UpdatedAt
+		pControlmodelsJobStatsDaily = &controlmodelsJobStatsDaily
+	}
+	return pControlmodelsJobStatsDaily
+}
+func QueryToSearchJobStatsDaily(source *apiquery.Query) jobsdb.SearchJobStatsDailyParams {
+	var jobsdbSearchJobStatsDailyParams jobsdb.SearchJobStatsDailyParams
+	if source != nil {
+		jobsdbSearchJobStatsDailyParams.Skip = (*source).Skip
+		jobsdbSearchJobStatsDailyParams.Limit = (*source).Limit
+	}
+	return jobsdbSearchJobStatsDailyParams
+}
+func QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams {
+	var jobsdbSearchJobsParams jobsdb.SearchJobsParams
+	if source != nil {
+		jobsdbSearchJobsParams.Skip = (*source).Skip
+		jobsdbSearchJobsParams.Limit = (*source).Limit
+	}
+	return jobsdbSearchJobsParams
+}
 func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
 	var controldbSearchSitesParams controldb.SearchSitesParams
 	if source != nil {
@@ -51,4 +106,14 @@ func SiteFromDB(source *controldb.Site) *Site {
 		pControlmodelsSite = &controlmodelsSite
 	}
 	return pControlmodelsSite
+}
+func errorsErrorListToStringList(source errors.ErrorList) []string {
+	var stringList []string
+	if source != nil {
+		stringList = make([]string, len(source))
+		for i := 0; i < len(source); i++ {
+			stringList[i] = source[i]
+		}
+	}
+	return stringList
 }

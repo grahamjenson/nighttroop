@@ -1,0 +1,29 @@
+// Running the jobs leaves the ones not yet summarised
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+
+// The control site shows the jobs, newest first
+CLICK #control--menu
+CLICK #control--jobs-button
+ASSERT_STATUS 200
+ASSERT_PATH /jobs
+ASSERT_VISIBLE #controlJobsTable
+ASSERT_TEXT_VISIBLE Showing 1 to
+ASSERT_TEXT_VISIBLE completed
+SCREENSHOT jobs
+
+// Clicking a job shows its details and errors
+CLICK #controlJobsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--job--details
+ASSERT_TEXT_VISIBLE Remaining Attempts
+SCREENSHOT job_details
+
+CLICK #control--job--details--close
+ASSERT_NOT_VISIBLE #control--job--details

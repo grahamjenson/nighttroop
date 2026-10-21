@@ -10,7 +10,7 @@ GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
 ASSERT_STATUS 200
 SET jwt {{ .jwtauth.token }}
 
-// A new site has 3 identities and the limit is 10, so 7 more can be made
+// A new site has 3 identities and the limit in these tests is 8, so 5 more can be made
 
 NAME create_device_1
 POST http://{{ site }}/settings/identities
@@ -47,24 +47,10 @@ H Accept: application/json
 B {"name": "device5", "role": "device_read"}
 ASSERT_STATUS 201
 
-NAME create_device_6
-POST http://{{ site }}/settings/identities
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"name": "device6", "role": "device_read"}
-ASSERT_STATUS 201
-
-NAME create_device_7
-POST http://{{ site }}/settings/identities
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"name": "device7", "role": "device_read"}
-ASSERT_STATUS 201
-
 NAME create_device_over_limit
 POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"name": "device8", "role": "device_read"}
+B {"name": "device6", "role": "device_read"}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "at most 10 users and devices" "@message"
+ASSERT_CONTAINS "at most 8 users and devices" "@message"
