@@ -99,6 +99,7 @@ Malicious can cause havoc by:
 1. creating lots of tables rows
 1. running a lot of expensive queries
 1. creating sync operations against non-affiliated parties causing nighttroop to be a proxy
+1. forcing expensive CPU calls, e.g. auth or create identity via bcrypt
 
 We stop these by having sane limits that should never be hit by a user in normal operation, like:
 
