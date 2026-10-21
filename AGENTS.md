@@ -89,6 +89,7 @@ A unit test is preferred if:
 1. Async Timing: We don't want to wait for background job, cron or some other async task to run to confirm a test works. Either: either we implement a feature in a way that avoids this by e.g. calling immediately if test, or we write unit tests with of the async task, but confirm it is scheduled in the bdd test.
 
 - API `.http` tests create their own site (`POST http://localhost/site`) so they do not depend on other tests' data.
+- Socket.IO `.sio` tests in `tests/socket` use the `.http` lines plus `CONNECT`, `EMIT` (with `ACK`), `WAIT`, `COLLECT` and `DISCONNECT`, with `B` for a body and `T` for a time; see `tests/dsl/socketio`. They create their own site too.
 - BDD tests get realistic data by enabling virtual sync and running `RUN_BACKGROUND_JOBS`.
 - For a bug fix, show the new test fails without the fix.
 - Run the full `go test ./...` before opening a PR.

@@ -1,0 +1,75 @@
+# The Nightscout web app connects with Socket.IO v5 (EIO=4), authorizes with its token and asks for an hour
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+# Older than the hour of history, so not in the first dataUpdate
+NAME old_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":90,"date":{{ itime 180 }}}]
+ASSERT_STATUS 200
+
+NAME recent_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":110,"date":{{ itime 10 }}}]
+ASSERT_STATUS 200
+SET recent_date {{ dig "recent_entry.0.date" }}
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+T 5s
+
+NAME authorize
+EMIT authorize
+B {"client":"web","token":"{{ token }}","history":1}
+ACK
+T 5s
+ASSERT_EQUALS true "@read"
+
+NAME first_data
+WAIT dataUpdate
+T 5s
+ASSERT_LENGTH 1 "@sgvs"
+ASSERT_EQUALS 110 "@sgvs.0.mgdl"
+ASSERT_EXISTS "@sgvs.0.mills"
+
+NAME post_treatment
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "insulin": 1.5 }
+ASSERT_STATUS 200
+
+NAME treatment_update
+WAIT dataUpdate
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@treatments"
+ASSERT_EQUALS "Correction Bolus" "@treatments.0.eventType"
+ASSERT_EQUALS 1.5 "@treatments.0.insulin"
+ASSERT_EXISTS "@treatments.0.mills"
+
+NAME post_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"device":"openaps://phone","uploaderBattery":80}
+ASSERT_STATUS 200
+
+NAME devicestatus_update
+WAIT dataUpdate
+ASSERT_LENGTH 1 "@devicestatus"
+ASSERT_EQUALS "openaps://phone" "@devicestatus.0.device"
+
+# Posting the same entry again is a duplicate, which sends nothing
+NAME post_duplicate
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":110,"date":{{ .recent_date }}}]
+ASSERT_STATUS 200
+ASSERT_EQUALS ".recent_entry.0._id" "@0._id"
+
+NAME no_update
+COLLECT dataUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME bye
+DISCONNECT

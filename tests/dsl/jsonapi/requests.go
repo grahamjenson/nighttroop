@@ -23,7 +23,7 @@ type Set struct {
 }
 
 func (r *Set) Set(ctx map[string]any) error {
-	renderedValue, err := renderTemplate(r.Value, ctx)
+	renderedValue, err := RenderTemplate(r.Value, ctx)
 	if err != nil {
 		return fmt.Errorf("failed to render template for set %s: %v", r.Key, err)
 	}
@@ -83,7 +83,7 @@ func (r *Request) AddSet(set Set) {
 }
 
 func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
-	url, err := renderTemplate(r.URL, ctx)
+	url, err := RenderTemplate(r.URL, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("request %s url render failed: %w", r.Name, err)
 	}
@@ -91,7 +91,7 @@ func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
 	// ---- render body ----
 	bodyStr := ""
 	if r.Body != nil {
-		bodyStr, err = renderTemplate(string(*r.Body), ctx)
+		bodyStr, err = RenderTemplate(string(*r.Body), ctx)
 		if err != nil {
 			return nil, fmt.Errorf("request %s body render failed: %w", r.Name, err)
 		}
@@ -109,7 +109,7 @@ func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
 	renderedHeaders := make(http.Header)
 	for k, vv := range r.Headers {
 		for _, v := range vv {
-			renderedValue, err := renderTemplate(v, ctx)
+			renderedValue, err := RenderTemplate(v, ctx)
 			if err != nil {
 				return nil, fmt.Errorf("request %s header %s render failed: %w", r.Name, k, err)
 			}
@@ -196,7 +196,8 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 	return context, nil
 }
 
-func renderTemplate(input string, ctx map[string]any) (string, error) {
+// RenderTemplate fills in a step's {{ }} values from the context, with helpers like site, token and dig
+func RenderTemplate(input string, ctx map[string]any) (string, error) {
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
