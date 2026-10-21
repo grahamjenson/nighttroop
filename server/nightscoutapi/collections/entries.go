@@ -16,15 +16,11 @@ type EntriesCollection struct {
 	converter func(c *sitedb.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
-func NewEntriesCollection() EntriesCollection {
-	return EntriesCollection{
+func NewEntriesCollection() CollectionStore {
+	return NewCollection[nightscoutmodels.Entry, sitedb.GlucoseReading](EntriesCollection{
 		converter: nsutils.DBModelToRecord(nsutils.Entries, nightscoutmodels.DBModelToEntry),
-	}
+	})
 }
-
-// ///
-// FUNCTIONS USED BY META COLLECTIONS
-// ///
 
 func (c EntriesCollection) Name() string {
 	return "entries"
@@ -54,7 +50,7 @@ func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel
 	return c.Validate(nsModel, dbModel)
 }
 
-func (c EntriesCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.GlucoseReading, error) {
+func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.GlucoseReading, error) {
 	createParams := nightscoutmodels.EntryToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
@@ -62,7 +58,7 @@ func (c EntriesCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, 
 	return q.CreateGlucoseReading(ctx, createParams)
 }
 
-func (c EntriesCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
+func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
 	// Without a date every filter below is empty and would match the newest row
 	if nsModel.Date == nil {
 		return nil, nil
@@ -81,77 +77,36 @@ func (c EntriesCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Con
 	return nil, nil
 }
 
-func (c EntriesCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
+func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c EntriesCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c EntriesCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c EntriesCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) HardDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c EntriesCollection) HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
 	return q.HardDeleteGlucoseReadingsByType(ctx, sitedb.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c EntriesCollection) SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
 	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 
-func (c EntriesCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
+func (c EntriesCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, identifier string, dbModel *sitedb.GlucoseReading, uc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, error) {
 	updateParams := nightscoutmodels.EntryToUpdate(nsModel, uc)
 	updateParams.ID = identifier
 
 	return q.UpdateGlucoseReading(ctx, updateParams)
 }
 
-/////
-// END OF FUNCTIONS USED BY META COLLECTIONS
-/////
-
-func (c EntriesCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data, raw)
-}
-
-func (c EntriesCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
-}
-
-func (c EntriesCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return MetaDelete(c, ctx, siteContext, identifier, permanent)
-}
-
-func (c EntriesCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
-}
-
-func (c EntriesCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
-}
-
-func (c EntriesCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	var entries []*sitedb.GlucoseReading
-	var rerr error
-
-	// There are three options,
+func (c EntriesCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.GlucoseReading, error) {
 	if !query.HasFilters {
-		entries, rerr = siteContext.SiteDB.Queries.AllGlucoseReadings(ctx, nsquery.GlucoseAll(query))
-	} else {
-		entries, rerr = siteContext.SiteDB.Queries.SearchGlucoseReadings(ctx, nsquery.GlucoseSearch(query))
+		return q.AllGlucoseReadings(ctx, nsquery.GlucoseAll(query))
 	}
-
-	if rerr != nil {
-		slog.Error("failed to query glucose readings from database", "error", rerr)
-		return nil, nsutils.ErrInternal
-	}
-
-	return nsutils.CreateRecordSlice(entries, c.Convert, siteContext, query.Raw), nil
-}
-
-// Replace will delete then create the record again, BUT it will not
-func (c EntriesCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
+	return q.SearchGlucoseReadings(ctx, nsquery.GlucoseSearch(query))
 }

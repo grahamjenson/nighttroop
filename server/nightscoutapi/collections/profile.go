@@ -19,8 +19,8 @@ type ProfileCollection struct {
 	converter func(c *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
-func NewProfileCollection() ProfileCollection {
-	return ProfileCollection{converter: nsutils.DBModelToRecord(nsutils.Profile, DBToNightscoutProfileStore)}
+func NewProfileCollection() CollectionStore {
+	return NewCollection[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](ProfileCollection{converter: nsutils.DBModelToRecord(nsutils.Profile, DBToNightscoutProfileStore)})
 }
 
 func (c ProfileCollection) Name() string {
@@ -39,7 +39,7 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 	return nil
 }
 
-func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
+func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
 	manyCreateParams := NightscoutToDBCreateProfilePreset(nsModel, cc)
 
 	ret := sitedb.ProfilePresetBundle([]*sitedb.ProfilePreset{})
@@ -54,7 +54,7 @@ func (c ProfileCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, 
 	return &ret, nil
 }
 
-func (c ProfileCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
+func (c ProfileCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
 	// Without a date every filter below is empty and would match the newest row
 	if nsModel.Date == nil {
 		return nil, nil
@@ -69,12 +69,12 @@ func (c ProfileCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Con
 	}
 	if len(profilePresets) > 0 {
 		identifier := profilePresets[0].ProfileStoreID
-		return c.GetDBFunc(q, ctx, identifier, true)
+		return c.GetModel(q, ctx, identifier, true)
 	}
 	return nil, nil
 }
 
-func (c ProfileCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.ProfilePresetBundle, error) {
+func (c ProfileCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.ProfilePresetBundle, error) {
 	ret, err := q.GetProfileStore(ctx, sitedb.GetProfileStoreParams{ProfileStoreID: identifier})
 	if err != nil {
 		return nil, err
@@ -86,58 +86,23 @@ func (c ProfileCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, ide
 	return &wrapper, nil
 }
 
-func (c ProfileCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c ProfileCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
 }
 
-func (c ProfileCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c ProfileCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
 }
 
-// ////
-// HTTP METHODS
-// ////
-func (c ProfileCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data, raw)
-}
-
-func (c ProfileCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
-}
-
-func (c ProfileCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c ProfileCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.ProfilePresetBundle, error) {
 	var profilePresets []*sitedb.ProfilePreset
-	var rerr error
-
-	// There are three options,
+	var err error
 	if !query.HasFilters {
-		profilePresets, rerr = siteContext.SiteDB.Queries.GetMostRecentProfileStore(ctx)
+		profilePresets, err = q.GetMostRecentProfileStore(ctx)
 	} else {
-		profilePresets, rerr = siteContext.SiteDB.Queries.SearchProfileStores(ctx, nsquery.ProfileStoreSearch(query))
+		profilePresets, err = q.SearchProfileStores(ctx, nsquery.ProfileStoreSearch(query))
 	}
-
-	if rerr != nil {
-		slog.Error("failed to query profile presets from database", "error", rerr)
-		return nil, nsutils.ErrInternal
-	}
-	wrappers := sitedb.ManyPresetsToMayWrappers(profilePresets)
-	return nsutils.CreateRecordSlice[*sitedb.ProfilePresetBundle](wrappers, c.converter, siteContext, query.Raw), nil
-}
-
-func (c ProfileCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return MetaDelete(c, ctx, siteContext, identifier, permanent)
-}
-
-func (c ProfileCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
-}
-
-func (c ProfileCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
-}
-
-func (c ProfileCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
-	return nil, nsutils.ErrNotImplemented
+	return sitedb.ManyPresetsToMayWrappers(profilePresets), err
 }
 
 ///////
