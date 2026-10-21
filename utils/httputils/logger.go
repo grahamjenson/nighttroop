@@ -4,25 +4,17 @@ package httputils
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"regexp"
-	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
-
-type customAttributesCtxKeyType struct{}
-
-var customAttributesCtxKey = customAttributesCtxKeyType{}
 
 var (
 	TraceIDKey   = "trace_id"
@@ -60,8 +52,6 @@ type Config struct {
 	WithTraceID        bool
 	WithClientIP       bool
 	WithCustomMessage  func(w http.ResponseWriter, r *http.Request) string
-
-	Filters []Filter
 }
 
 // credentialParams are query and route params that carry tokens
@@ -98,16 +88,6 @@ func NewLogger(logger *slog.Logger) func(http.Handler) http.Handler {
 	return NewLoggerWithConfig(logger, DefaultConfig())
 }
 
-// NewWithFilters returns a `func(http.Handler) http.Handler` (middleware) that logs requests using slog.
-//
-// Requests with errors are logged using slog.Error().
-// Requests without errors are logged using slog.Info().
-func NewLoggerWithFilters(logger *slog.Logger, filters ...Filter) func(http.Handler) http.Handler {
-	config := DefaultConfig()
-	config.Filters = filters
-	return NewLoggerWithConfig(logger, config)
-}
-
 // DefaultConfig returns the default configuration for the request logger.
 func DefaultConfig() Config {
 	return Config{
@@ -125,8 +105,6 @@ func DefaultConfig() Config {
 		WithTraceID:        false,
 		WithClientIP:       true,
 		WithCustomMessage:  nil,
-
-		Filters: []Filter{},
 	}
 }
 
@@ -150,19 +128,7 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 				ww.Tee(bw)
 			}
 
-			// Make sure we create a map only once per request (in case we have multiple middleware instances)
-			if v := r.Context().Value(customAttributesCtxKey); v == nil {
-				r = r.WithContext(context.WithValue(r.Context(), customAttributesCtxKey, &sync.Map{}))
-			}
-
 			defer func() {
-				// Pass thru filters and skip early the code below, to prevent unnecessary processing.
-				for _, filter := range config.Filters {
-					if !filter(ww, r) {
-						return
-					}
-				}
-
 				params := map[string]string{}
 				for i, k := range chi.RouteContext(r.Context()).URLParams.Keys {
 					params[k] = chi.RouteContext(r.Context()).URLParams.Values[i]
@@ -266,16 +232,6 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 					baseAttributes...,
 				)
 
-				// custom context values
-				if v := r.Context().Value(customAttributesCtxKey); v != nil {
-					if m, ok := v.(*sync.Map); ok {
-						m.Range(func(key, value any) bool {
-							attributes = append(attributes, slog.Attr{Key: key.(string), Value: value.(slog.Value)})
-							return true
-						})
-					}
-				}
-
 				level := config.DefaultLevel
 				if status >= http.StatusInternalServerError {
 					level = config.ServerErrorLevel
@@ -297,334 +253,6 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 
 			next.ServeHTTP(ww, r)
 		})
-	}
-}
-
-// AddCustomAttributes adds custom attributes to the request context. This func can be called from any handler or middleware, as long as the slog-chi middleware is already mounted.
-func AddCustomAttributes(r *http.Request, attrs ...slog.Attr) {
-	AddContextAttributes(r.Context(), attrs...)
-}
-
-// AddContextAttributes is the same as AddCustomAttributes, but it doesn't need access to the request struct.
-func AddContextAttributes(ctx context.Context, attrs ...slog.Attr) {
-	if v := ctx.Value(customAttributesCtxKey); v != nil {
-		if m, ok := v.(*sync.Map); ok {
-			for _, attr := range attrs {
-				m.Store(attr.Key, attr.Value)
-			}
-		}
-	}
-}
-
-/////
-// filter.go
-////
-
-type Filter func(ww middleware.WrapResponseWriter, r *http.Request) bool
-
-// Basic
-func Accept(filter Filter) Filter { return filter }
-func Ignore(filter Filter) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool { return !filter(ww, r) }
-}
-
-// Method
-func AcceptMethod(methods ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		reqMethod := strings.ToLower(r.Method)
-
-		for _, method := range methods {
-			if strings.ToLower(method) == reqMethod {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnoreMethod(methods ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		reqMethod := strings.ToLower(r.Method)
-
-		for _, method := range methods {
-			if strings.ToLower(method) == reqMethod {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-// Status
-func AcceptStatus(statuses ...int) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return slices.Contains(statuses, ww.Status())
-	}
-}
-
-func IgnoreStatus(statuses ...int) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return !slices.Contains(statuses, ww.Status())
-	}
-}
-
-func AcceptStatusGreaterThan(status int) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return ww.Status() > status
-	}
-}
-
-func AcceptStatusGreaterThanOrEqual(status int) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return ww.Status() >= status
-	}
-}
-
-func AcceptStatusLessThan(status int) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return ww.Status() < status
-	}
-}
-
-func AcceptStatusLessThanOrEqual(status int) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return ww.Status() <= status
-	}
-}
-
-func IgnoreStatusGreaterThan(status int) Filter {
-	return AcceptStatusLessThanOrEqual(status)
-}
-
-func IgnoreStatusGreaterThanOrEqual(status int) Filter {
-	return AcceptStatusLessThan(status)
-}
-
-func IgnoreStatusLessThan(status int) Filter {
-	return AcceptStatusGreaterThanOrEqual(status)
-}
-
-func IgnoreStatusLessThanOrEqual(status int) Filter {
-	return AcceptStatusGreaterThan(status)
-}
-
-// Path
-func AcceptPath(urls ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return slices.Contains(urls, r.URL.Path)
-	}
-}
-
-func IgnorePath(urls ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return !slices.Contains(urls, r.URL.Path)
-	}
-}
-
-func AcceptPathContains(parts ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, part := range parts {
-			if strings.Contains(r.URL.Path, part) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnorePathContains(parts ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, part := range parts {
-			if strings.Contains(r.URL.Path, part) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-func AcceptPathPrefix(prefixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, prefix := range prefixs {
-			if strings.HasPrefix(r.URL.Path, prefix) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnorePathPrefix(prefixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, prefix := range prefixs {
-			if strings.HasPrefix(r.URL.Path, prefix) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-func AcceptPathSuffix(prefixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, prefix := range prefixs {
-			if strings.HasPrefix(r.URL.Path, prefix) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnorePathSuffix(suffixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, suffix := range suffixs {
-			if strings.HasSuffix(r.URL.Path, suffix) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-func AcceptPathMatch(regs ...regexp.Regexp) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, reg := range regs {
-			if reg.Match([]byte(r.URL.Path)) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnorePathMatch(regs ...regexp.Regexp) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, reg := range regs {
-			if reg.Match([]byte(r.URL.Path)) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-// Host
-func AcceptHost(hosts ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return slices.Contains(hosts, r.URL.Host)
-	}
-}
-
-func IgnoreHost(hosts ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		return !slices.Contains(hosts, r.URL.Host)
-	}
-}
-
-func AcceptHostContains(parts ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, part := range parts {
-			if strings.Contains(r.URL.Host, part) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnoreHostContains(parts ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, part := range parts {
-			if strings.Contains(r.URL.Host, part) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-func AcceptHostPrefix(prefixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, prefix := range prefixs {
-			if strings.HasPrefix(r.URL.Host, prefix) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnoreHostPrefix(prefixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, prefix := range prefixs {
-			if strings.HasPrefix(r.URL.Host, prefix) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-func AcceptHostSuffix(prefixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, prefix := range prefixs {
-			if strings.HasPrefix(r.URL.Host, prefix) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnoreHostSuffix(suffixs ...string) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, suffix := range suffixs {
-			if strings.HasSuffix(r.URL.Host, suffix) {
-				return false
-			}
-		}
-
-		return true
-	}
-}
-
-func AcceptHostMatch(regs ...regexp.Regexp) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, reg := range regs {
-			if reg.Match([]byte(r.URL.Host)) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-func IgnoreHostMatch(regs ...regexp.Regexp) Filter {
-	return func(ww middleware.WrapResponseWriter, r *http.Request) bool {
-		for _, reg := range regs {
-			if reg.Match([]byte(r.URL.Host)) {
-				return false
-			}
-		}
-
-		return true
 	}
 }
 
