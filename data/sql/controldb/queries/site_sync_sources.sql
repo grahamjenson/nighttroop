@@ -2,6 +2,11 @@
 -- name: GetSyncSource :one
 SELECT * FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1;
 
+-- name: SearchSyncSources :many
+SELECT * FROM site_sync_sources
+ORDER BY last_attempted_sync DESC, site_id, type
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 -- name: GetAllSyncSourcesForSite :many
 SELECT * FROM site_sync_sources where site_id = ?;
 

@@ -1,0 +1,51 @@
+// A new site with virtual sync, so there is a sync source with reports to see
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+
+// The control site shows every site's sync sources, most recently attempted first
+CLICK #control--menu
+CLICK #control--sync-sources-button
+ASSERT_STATUS 200
+ASSERT_PATH /sync-sources
+ASSERT_VISIBLE #controlSyncSourcesTable
+ASSERT_TEXT_VISIBLE Showing 1 to
+ASSERT_TEXT_VISIBLE virtual
+SCREENSHOT sync_sources
+
+// Clicking a source shows its reports
+CLICK #controlSyncSourcesTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--sync-source--details
+ASSERT_TEXT_VISIBLE Successes In A Row
+ASSERT_TEXT_VISIBLE Success EMA
+SCREENSHOT sync_source_details
+
+CLICK #control--sync-source--details--close
+ASSERT_NOT_VISIBLE #control--sync-source--details

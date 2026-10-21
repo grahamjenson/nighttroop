@@ -26,4 +26,10 @@ type ControlConverter interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
 	QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams
+
+	// goverter:enum no
+	SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchSyncSources(source *apiquery.Query) controldb.SearchSyncSourcesParams
 }

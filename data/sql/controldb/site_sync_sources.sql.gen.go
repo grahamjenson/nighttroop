@@ -247,6 +247,65 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 	return &i, err
 }
 
+const searchSyncSources = `-- name: SearchSyncSources :many
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources
+ORDER BY last_attempted_sync DESC, site_id, type
+LIMIT ?2 OFFSET ?1
+`
+
+type SearchSyncSourcesParams struct {
+	Skip  int64
+	Limit int64
+}
+
+func (q *Queries) SearchSyncSources(ctx context.Context, arg SearchSyncSourcesParams) ([]*SiteSyncSource, error) {
+	rows, err := q.query(ctx, q.searchSyncSourcesStmt, searchSyncSources, arg.Skip, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*SiteSyncSource
+	for rows.Next() {
+		var i SiteSyncSource
+		if err := rows.Scan(
+			&i.SiteID,
+			&i.Type,
+			&i.UrlOrUsernameEnc,
+			&i.PasswordEnc,
+			&i.Region,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Enabled,
+			&i.FirstSuccessfulSyncTime,
+			&i.SyncIntervalSecondsReason,
+			&i.SyncIntervalSeconds,
+			&i.LastAttemptedSync,
+			&i.LastSuccessfulSync,
+			&i.LastFailedSync,
+			&i.TotalSyncs,
+			&i.TotalSuccessfulSyncs,
+			&i.TotalFailedSyncs,
+			&i.ConsecutiveSuccessfulSyncs,
+			&i.ConsecutiveFailedSyncs,
+			&i.PreviousSyncErrors,
+			&i.TotalEma,
+			&i.SuccessEma,
+			&i.FailureEma,
+			&i.LastSyncDuration,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateSyncReportAttempt = `-- name: UpdateSyncReportAttempt :exec
 
 UPDATE site_sync_sources

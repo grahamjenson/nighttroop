@@ -105,6 +105,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSitesStmt, err = db.PrepareContext(ctx, searchSites); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSites: %w", err)
 	}
+	if q.searchSyncSourcesStmt, err = db.PrepareContext(ctx, searchSyncSources); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSyncSources: %w", err)
+	}
 	if q.siteExistsStmt, err = db.PrepareContext(ctx, siteExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteExists: %w", err)
 	}
@@ -275,6 +278,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSitesStmt: %w", cerr)
 		}
 	}
+	if q.searchSyncSourcesStmt != nil {
+		if cerr := q.searchSyncSourcesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSyncSourcesStmt: %w", cerr)
+		}
+	}
 	if q.siteExistsStmt != nil {
 		if cerr := q.siteExistsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing siteExistsStmt: %w", cerr)
@@ -391,6 +399,7 @@ type Queries struct {
 	getSyncReportsToRunStmt            *sql.Stmt
 	getSyncSourceStmt                  *sql.Stmt
 	searchSitesStmt                    *sql.Stmt
+	searchSyncSourcesStmt              *sql.Stmt
 	siteExistsStmt                     *sql.Stmt
 	updateSiteDateFlagsStmt            *sql.Stmt
 	updateSiteIdentityDateFlagsStmt    *sql.Stmt
@@ -434,6 +443,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                  q.getSyncSourceStmt,
 		searchSitesStmt:                    q.searchSitesStmt,
+		searchSyncSourcesStmt:              q.searchSyncSourcesStmt,
 		siteExistsStmt:                     q.siteExistsStmt,
 		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:    q.updateSiteIdentityDateFlagsStmt,

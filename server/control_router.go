@@ -16,6 +16,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	sitesStore := &controlapi.SitesStore{}
 	jobStatsStore := &controlapi.JobStatsStore{}
 	jobsStore := &controlapi.JobsStore{}
+	syncSourcesStore := &controlapi.SyncSourcesStore{}
 	httputils.AddStandardMiddleware(r, config)
 
 	static.AddStaticRoutes(r)
@@ -39,6 +40,10 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/job-stats/{id}", controlapiutils.GetHandler(controlDB, config, jobStatsStore))
 		r.Get("/jobs", controlapiutils.SearchHandler(controlDB, config, jobsStore))
 		r.Get("/jobs/{id}", controlapiutils.GetHandler(controlDB, config, jobsStore))
+
+		// Sync Sources
+		r.Get("/sync-sources", controlapiutils.SearchHandler(controlDB, config, syncSourcesStore))
+		r.Get("/sync-sources/{id}", controlapiutils.GetHandler(controlDB, config, syncSourcesStore))
 
 		//// TODO
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes
