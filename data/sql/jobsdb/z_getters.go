@@ -296,6 +296,36 @@ func (m *UpdateJobStatsDailyParams) SetDayQueueJob(v string) {
 	m.DayQueueJob = v
 }
 
+// GetSkip returns the Skip value.
+func (m SearchJobStatsDailyParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchJobStatsDailyParams.
+func (m *SearchJobStatsDailyParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchJobStatsDailyParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchJobStatsDailyParams.
+func (m *SearchJobStatsDailyParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetDayQueueJob returns the DayQueueJob value.
+func (m GetJobStatsDailyParams) GetDayQueueJob() string {
+	return m.DayQueueJob
+}
+
+// SetDayQueueJob sets the DayQueueJob value and returns the updated GetJobStatsDailyParams.
+func (m *GetJobStatsDailyParams) SetDayQueueJob(v string) {
+	m.DayQueueJob = v
+}
+
 // GetQueue returns the Queue value.
 func (m QueueJobIgnoreDupeParams) GetQueue() string {
 	return m.Queue
