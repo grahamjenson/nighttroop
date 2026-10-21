@@ -272,6 +272,49 @@ func TestSlowClientIsClosedWhenItsBufferFills(t *testing.T) {
 	require.Equal(t, 0, server.Count())
 }
 
+func TestSlowClientIsClosedWhenItsBufferHoldsTooManyBytes(t *testing.T) {
+	var session *Session
+	server := NewServer(Config{MaxBufferedBytes: 10}, func(s *Session) { session = s })
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+	handshake(t, ts.URL, "4")
+
+	require.NoError(t, session.Send("12345"))
+	require.NoError(t, session.Send("12345"))
+	require.ErrorIs(t, session.Send("x"), ErrClosed)
+	<-session.Done()
+	require.Equal(t, 0, server.Count())
+}
+
+// A client sending packets faster than the rate, in one POST or down a websocket, is closed before they are all handled
+func TestClientSpammingPacketsIsClosed(t *testing.T) {
+	config := Config{MaxPacketRate: 2} // a burst of 10
+	t.Run("polling", func(t *testing.T) {
+		server, ts, closed := echoServer(t, config)
+		sid := handshake(t, ts.URL, "4")
+		packets := make([]Packet, 20)
+		for i := range packets {
+			packets[i] = Packet{Type: Message, Data: "x"}
+		}
+		post(t, ts.URL+"/?EIO=4&transport=polling&sid="+sid, EncodePayload(packets, V4))
+		require.Equal(t, "too many packets", <-closed)
+		require.Equal(t, 0, server.Count())
+	})
+	t.Run("websocket", func(t *testing.T) {
+		server, ts, closed := echoServer(t, config)
+		ws, err := DialWebSocket(context.Background(), ts.URL, V4, "")
+		require.NoError(t, err)
+		defer ws.Close()
+		_, err = ws.ReadPacket() // open
+		require.NoError(t, err)
+		// The server may close the connection before they are all written
+		for i := 0; i < 20 && ws.WritePacket(Packet{Type: Message, Data: "x"}) == nil; i++ {
+		}
+		require.Equal(t, "too many packets", <-closed)
+		require.Equal(t, 0, server.Count())
+	})
+}
+
 func TestServerCloseEndsClients(t *testing.T) {
 	for _, transport := range transports {
 		t.Run(transport, func(t *testing.T) {

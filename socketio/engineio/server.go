@@ -11,15 +11,19 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"golang.org/x/time/rate"
 )
 
 // Config is how a Server runs its sessions; zero values take the defaults
 type Config struct {
-	PingInterval time.Duration // how often the server (v4) or client (v3) pings, 25s by default
-	PingTimeout  time.Duration // how long to wait for the answer, 20s by default
-	MaxPayload   int           // the largest POST body in bytes, 100KB by default
-	MaxSessions  int           // how many sessions can be open at once, 10,000 by default
-	MaxBuffered  int           // how many packets can wait for a session's next poll before it is closed, 1,000 by default
+	PingInterval     time.Duration // how often the server (v4) or client (v3) pings, 25s by default
+	PingTimeout      time.Duration // how long to wait for the answer, 20s by default
+	MaxPayload       int           // the largest POST body in bytes, 100KB by default
+	MaxSessions      int           // how many sessions can be open at once, 10,000 by default
+	MaxBuffered      int           // how many packets can wait for a session's next poll before it is closed, 1,000 by default
+	MaxBufferedBytes int           // how many bytes of them can wait before it is closed, 2MB by default
+	MaxPacketRate    float64       // how many packets a second a client may send, averaged, 20 by default; it may burst 5 seconds' worth
 	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin, and clients that send none
 	CheckOrigin func(*http.Request) bool
 }
@@ -39,6 +43,12 @@ func (c Config) withDefaults() Config {
 	}
 	if c.MaxBuffered <= 0 {
 		c.MaxBuffered = 1_000
+	}
+	if c.MaxBufferedBytes <= 0 {
+		c.MaxBufferedBytes = 2_000_000
+	}
+	if c.MaxPacketRate <= 0 {
+		c.MaxPacketRate = 20
 	}
 	return c
 }
@@ -258,9 +268,12 @@ type Session struct {
 	server  *Server
 	request *http.Request
 
+	limiter *rate.Limiter // paces the client's packets
+
 	mu        sync.Mutex
 	ws        *WebSocket // set once the session is on a websocket
 	queue     []Packet
+	queued    int // bytes in queue
 	polling   bool
 	posting   bool
 	closed    bool
@@ -280,6 +293,7 @@ func newSession(server *Server, r *http.Request, version int) *Session {
 		version: version,
 		server:  server,
 		request: r.Clone(context.WithoutCancel(r.Context())),
+		limiter: rate.NewLimiter(rate.Limit(server.config.MaxPacketRate), max(1, int(5*server.config.MaxPacketRate))),
 		notify:  make(chan struct{}, 1),
 		upgrade: make(chan struct{}),
 		alive:   make(chan struct{}, 1),
@@ -312,7 +326,7 @@ func (s *Session) OnClose(handler func(reason string)) {
 // Done is closed when the session closes
 func (s *Session) Done() <-chan struct{} { return s.done }
 
-// Send queues a message for the client; a client too slow to collect them is closed
+// Send queues a message for the client; a client too slow to collect them, in packets or bytes, is closed
 func (s *Session) Send(data string) error {
 	return s.enqueue(Packet{Type: Message, Data: data})
 }
@@ -326,6 +340,11 @@ func (s *Session) enqueue(p Packet) error {
 	if len(s.queue) >= s.server.config.MaxBuffered {
 		s.mu.Unlock()
 		s.Close("too many packets buffered")
+		return ErrClosed
+	}
+	if s.queued += len(p.Data) + len(p.Binary); s.queued > s.server.config.MaxBufferedBytes {
+		s.mu.Unlock()
+		s.Close("too many bytes buffered")
 		return ErrClosed
 	}
 	s.queue = append(s.queue, p)
@@ -434,7 +453,7 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 		upgraded := s.ws != nil
 		var packets []Packet
 		if !upgraded {
-			packets, s.queue = s.queue, nil
+			packets, s.queue, s.queued = s.queue, nil, 0
 		}
 		closed := s.closed
 		s.mu.Unlock()
@@ -505,7 +524,12 @@ func (s *Session) receive(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "ok")
 }
 
+// handle acts on one of the client's packets; a client sending them faster than MaxPacketRate is closed
 func (s *Session) handle(p Packet) {
+	if !s.limiter.Allow() {
+		s.Close("too many packets")
+		return
+	}
 	switch p.Type {
 	case Message:
 		s.mu.Lock()
@@ -577,7 +601,7 @@ func (s *Session) writeWebSocket(ws *WebSocket) {
 	for {
 		s.mu.Lock()
 		packets := s.queue
-		s.queue = nil
+		s.queue, s.queued = nil, 0
 		s.mu.Unlock()
 		for _, p := range packets {
 			if ws.WritePacket(p) != nil {

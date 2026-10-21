@@ -85,7 +85,7 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 	var authCtx context.Context
 	socket.On("authorize", func(args []json.RawMessage, ack func(...any)) {
 		attempts++
-		if attempts > maxAuthorizeAttempts {
+		if attempts > maxAuthorizeAttempts || !ws.withinReadLimit(socket.Request().Context()) {
 			socket.Disconnect()
 			return
 		}
@@ -122,6 +122,13 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 			}
 		})
 	}
+}
+
+// withinReadLimit counts an authorize against the site's GET limit, as a request would: it checks a token
+// then reads the recent data, which a client reconnecting in a loop could otherwise ask for without end
+func (ws *Websocket) withinReadLimit(ctx context.Context) bool {
+	allowed, _ := httputils.WithinRateLimitAll(ws.config.RateLimiters.SiteGETLimiter(httputils.GetSiteContext(ctx).Subdomain))
+	return allowed
 }
 
 // dbMessage is a dbAdd, dbUpdate or dbRemove: the collection, the record's _id and the data to write
