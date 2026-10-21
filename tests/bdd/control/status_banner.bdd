@@ -1,0 +1,23 @@
+// The login page does not show the service status
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #control--status-banner
+
+// Signed in, the test server has no S3 or Sentry, so the banner names both
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+ASSERT_VISIBLE #control--status-banner
+ASSERT_VISIBLE #control--status-banner--s3
+ASSERT_TEXT_VISIBLE backups are not being stored
+ASSERT_VISIBLE #control--status-banner--sentry
+ASSERT_TEXT_VISIBLE errors are not being reported
+SCREENSHOT dashboard
+
+// The banner stays when moving to another control page
+CLICK #control--menu
+CLICK #control--sites-button
+ASSERT_PATH /sites
+ASSERT_VISIBLE #control--status-banner

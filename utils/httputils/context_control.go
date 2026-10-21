@@ -5,6 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/config"
 )
 
 const controlContextKey = "control_context"
@@ -18,6 +19,9 @@ type ControlContext struct {
 	IPAddress string
 
 	HTTPAction HTTPAction
+
+	// ServerStatus is set for signed-in identities, so control pages can warn about missing services
+	ServerStatus config.ServerStatus
 }
 
 func GetControlContext(ctx context.Context) *ControlContext {
@@ -39,8 +43,9 @@ func CreateControlContext(ctx context.Context, controlDB *db.ControlDB, ipAddres
 	return context.WithValue(ctx, controlContextKey, controlContext)
 }
 
-func SetAdminControlContext(ctx context.Context, identity *controldb.ControlIdentity) context.Context {
+func SetAdminControlContext(ctx context.Context, identity *controldb.ControlIdentity, status config.ServerStatus) context.Context {
 	controlContext := GetControlContext(ctx)
 	controlContext.IdentityModel = identity
+	controlContext.ServerStatus = status
 	return context.WithValue(ctx, controlContextKey, controlContext)
 }
