@@ -24,6 +24,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	glucoseReadingsStore := &sitedata.GlucoseReadingsStore{}
 	tempTargetsStore := &sitedata.TempTargetsStore{}
 	tempBasalsStore := &sitedata.TempBasalsStore{}
+	componentEventsStore := &sitedata.ComponentEventsStore{}
 	insulinDosesStore := &sitedata.InsulinDosesStore{}
 	foodIntakesStore := &sitedata.FoodIntakesStore{}
 	deviceStatusesStore := &sitedata.DeviceStatusesStore{}
@@ -75,6 +76,13 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/data/temp-basals", siteapiutils.CreateHandler(controlDB, config, tempBasalsStore))
 		r.Post("/data/temp-basals/{id}", siteapiutils.UpdateHandler(controlDB, config, tempBasalsStore))
 		r.Delete("/data/temp-basals/{id}", siteapiutils.DeleteHandler(controlDB, config, tempBasalsStore))
+
+		// Data Component Events
+		r.Get("/data/component-events", siteapiutils.SearchHandler(controlDB, config, componentEventsStore))
+		r.Get("/data/component-events/{id}", siteapiutils.GetHandler(controlDB, config, componentEventsStore))
+		r.Post("/data/component-events", siteapiutils.CreateHandler(controlDB, config, componentEventsStore))
+		r.Post("/data/component-events/{id}", siteapiutils.UpdateHandler(controlDB, config, componentEventsStore))
+		r.Delete("/data/component-events/{id}", siteapiutils.DeleteHandler(controlDB, config, componentEventsStore))
 
 		// Data Insulin Doses
 		r.Get("/data/insulin", siteapiutils.SearchHandler(controlDB, config, insulinDosesStore))

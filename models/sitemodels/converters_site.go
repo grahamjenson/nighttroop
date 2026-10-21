@@ -132,6 +132,26 @@ type SiteConverter interface {
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
+	// COMPONENT EVENTS
+	///////
+
+	ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	ComponentEventToCreate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.CreateComponentEventParams
+
+	// goverter:context siteContext
+	// goverter:map EventType | StringOrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	ComponentEventToUpdate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.UpdateComponentEventParams
+
+	///////
 	// INSULIN DOSES
 	///////
 
@@ -273,6 +293,14 @@ func Float64OrNil(value float64) *float64 {
 // Int64OrNil leaves a value as it is when an update does not send one
 func Int64OrNil(value int64) *int64 {
 	if value == 0 {
+		return nil
+	}
+	return &value
+}
+
+// StringOrNil leaves a value as it is when an update does not send one
+func StringOrNil(value string) *string {
+	if value == "" {
 		return nil
 	}
 	return &value
