@@ -168,6 +168,149 @@ func ActivityToUpdate(source *SiteActivity, context *httputils.SiteContext) site
 	}
 	return sitedbUpdateActivityParams
 }
+func ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent {
+	var pSitemodelsSiteComponentEvent *SiteComponentEvent
+	if source != nil {
+		var sitemodelsSiteComponentEvent SiteComponentEvent
+		sitemodelsSiteComponentEvent.ID = (*source).ID
+		sitemodelsSiteComponentEvent.EventType = (*source).EventType
+		if (*source).SensorCode != nil {
+			xstring := *(*source).SensorCode
+			sitemodelsSiteComponentEvent.SensorCode = &xstring
+		}
+		if (*source).TransmitterID != nil {
+			xstring2 := *(*source).TransmitterID
+			sitemodelsSiteComponentEvent.TransmitterID = &xstring2
+		}
+		if (*source).PumpID != nil {
+			xstring3 := *(*source).PumpID
+			sitemodelsSiteComponentEvent.PumpID = &xstring3
+		}
+		if (*source).PumpSerial != nil {
+			xstring4 := *(*source).PumpSerial
+			sitemodelsSiteComponentEvent.PumpSerial = &xstring4
+		}
+		if (*source).PumpType != nil {
+			xstring5 := *(*source).PumpType
+			sitemodelsSiteComponentEvent.PumpType = &xstring5
+		}
+		if (*source).Notes != nil {
+			xstring6 := *(*source).Notes
+			sitemodelsSiteComponentEvent.Notes = &xstring6
+		}
+		if (*source).Reason != nil {
+			xstring7 := *(*source).Reason
+			sitemodelsSiteComponentEvent.Reason = &xstring7
+		}
+		if (*source).RawJsonData != nil {
+			xstring8 := *(*source).RawJsonData
+			sitemodelsSiteComponentEvent.RawJsonData = &xstring8
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteComponentEvent.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteComponentEvent.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteComponentEvent.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteComponentEvent.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring9 := *(*source).CreatedByAppName
+			sitemodelsSiteComponentEvent.CreatedByAppName = &xstring9
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring10 := *(*source).CreatedByDeviceName
+			sitemodelsSiteComponentEvent.CreatedByDeviceName = &xstring10
+		}
+		sitemodelsSiteComponentEvent.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring11 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteComponentEvent.UpdatedByIdentityName = &xstring11
+		}
+		pSitemodelsSiteComponentEvent = &sitemodelsSiteComponentEvent
+	}
+	return pSitemodelsSiteComponentEvent
+}
+func ComponentEventToCreate(source *SiteComponentEvent, context *httputils.SiteContext) sitedb.CreateComponentEventParams {
+	var sitedbCreateComponentEventParams sitedb.CreateComponentEventParams
+	if source != nil {
+		sitedbCreateComponentEventParams.ID = NewSiteDataID()
+		sitedbCreateComponentEventParams.EventType = (*source).EventType
+		if (*source).SensorCode != nil {
+			xstring := *(*source).SensorCode
+			sitedbCreateComponentEventParams.SensorCode = &xstring
+		}
+		if (*source).TransmitterID != nil {
+			xstring2 := *(*source).TransmitterID
+			sitedbCreateComponentEventParams.TransmitterID = &xstring2
+		}
+		if (*source).PumpID != nil {
+			xstring3 := *(*source).PumpID
+			sitedbCreateComponentEventParams.PumpID = &xstring3
+		}
+		if (*source).PumpSerial != nil {
+			xstring4 := *(*source).PumpSerial
+			sitedbCreateComponentEventParams.PumpSerial = &xstring4
+		}
+		if (*source).PumpType != nil {
+			xstring5 := *(*source).PumpType
+			sitedbCreateComponentEventParams.PumpType = &xstring5
+		}
+		if (*source).Notes != nil {
+			xstring6 := *(*source).Notes
+			sitedbCreateComponentEventParams.Notes = &xstring6
+		}
+		if (*source).Reason != nil {
+			xstring7 := *(*source).Reason
+			sitedbCreateComponentEventParams.Reason = &xstring7
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitedbCreateComponentEventParams.UtcOffsetMinutes = &xint64
+		}
+		sitedbCreateComponentEventParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring8 := *(*source).RawJsonData
+			sitedbCreateComponentEventParams.RawJsonData = &xstring8
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring9 := *(*source).CreatedByAppName
+			sitedbCreateComponentEventParams.CreatedByAppName = &xstring9
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring10 := *(*source).CreatedByDeviceName
+			sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring10
+		}
+		sitedbCreateComponentEventParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateComponentEventParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateComponentEventParams
+}
+func ComponentEventToUpdate(source *SiteComponentEvent, context *httputils.SiteContext) sitedb.UpdateComponentEventParams {
+	var sitedbUpdateComponentEventParams sitedb.UpdateComponentEventParams
+	if source != nil {
+		sitedbUpdateComponentEventParams.EventType = StringOrNil((*source).EventType)
+		if (*source).SensorCode != nil {
+			xstring := *(*source).SensorCode
+			sitedbUpdateComponentEventParams.SensorCode = &xstring
+		}
+		if (*source).TransmitterID != nil {
+			xstring2 := *(*source).TransmitterID
+			sitedbUpdateComponentEventParams.TransmitterID = &xstring2
+		}
+		if (*source).Notes != nil {
+			xstring3 := *(*source).Notes
+			sitedbUpdateComponentEventParams.Notes = &xstring3
+		}
+		if (*source).Reason != nil {
+			xstring4 := *(*source).Reason
+			sitedbUpdateComponentEventParams.Reason = &xstring4
+		}
+		sitedbUpdateComponentEventParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateComponentEventParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateComponentEventParams.ID = (*source).ID
+	}
+	return sitedbUpdateComponentEventParams
+}
 func DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus {
 	var pSitemodelsSiteDeviceStatus *SiteDeviceStatus
 	if source != nil {

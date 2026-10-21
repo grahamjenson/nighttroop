@@ -1,0 +1,264 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// componentDetail is the sensor code, else the transmitter, else the pump type
+func componentDetail(event *sitemodels.SiteComponentEvent) string {
+	for _, value := range []*string{event.SensorCode, event.TransmitterID, event.PumpType} {
+		if value != nil && *value != "" {
+			return *value
+		}
+	}
+	return "-"
+}
+
+// ComponentEventsTable shows one page of sensor, site and pump changes, newest first, with buttons to the pages either side
+templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, limit int64) {
+	<div id="component_events_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Site &amp; Sensor Changes</h1>
+			<p class="mt-1 text-gray-500">
+				Newest first. Click a change to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@componentEventCreateForm()
+			@table.Table(table.Props{
+				ID:    "componentEventsTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							Type
+						}
+						@table.Head() {
+							Sensor/Pump
+						}
+						@table.Head() {
+							Notes
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(events) == 0 {
+						<tr id="site--component-event--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No site or sensor changes here.</td></tr>
+					}
+					for _, event := range events {
+						@componentEventRow(event)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(events) > 0 {
+					<span id="site--component-event--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(events))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@componentEventPageButton("site--component-event--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(events)) == limit {
+						@componentEventPageButton("site--component-event--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ componentEventPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/component-events?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// componentEventCreateForm adds a change happening now, putting its row at the top of the table
+templ componentEventCreateForm() {
+	<form
+		id="site--component-event--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/component-events"
+		hx-target="#componentEventsTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--component-event--empty')?.remove() }"
+	>
+		<select id="site--component-event--create--event-type" name="event_type" aria-label="Type" class="h-9 w-48 rounded-md border border-gray-200 bg-white px-3 text-sm">
+			for _, eventType := range sitemodels.ComponentEventTypes {
+				<option value={ eventType }>{ eventType }</option>
+			}
+		</select>
+		<div class="w-40">
+			@input.Input(input.Props{ID: "site--component-event--create--sensor-code", Name: "sensor_code", Placeholder: "Sensor Code", Attributes: templ.Attributes{"maxlength": "64"}})
+		</div>
+		<div class="w-64">
+			@input.Input(input.Props{ID: "site--component-event--create--notes", Name: "notes", Placeholder: "Notes"})
+		</div>
+		@button.Button(button.Props{ID: "site--component-event--create--submit", Type: button.TypeSubmit}) {
+			Add Change
+		}
+	</form>
+}
+
+// componentEventRow opens the change's details when clicked. The delete button stops its click reaching the row.
+templ componentEventRow(event *sitemodels.SiteComponentEvent) {
+	{{ id := "site--component-event--" + event.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/component-events/" + event.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(event.OccurredAt) }
+		}
+		@table.Cell() {
+			{ event.EventType }
+		}
+		@table.Cell() {
+			{ componentDetail(event) }
+		}
+		@table.Cell() {
+			{ orDash(event.Notes) }
+		}
+		@table.Cell() {
+			{ orDash(event.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/component-events/" + event.ID,
+						"hx-confirm":           "Delete this change?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
+	<div id="site--component-event--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ event.EventType }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(event.OccurredAt) }</p>
+			<form
+				id="site--component-event--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/component-events/" + event.ID }
+				hx-target={ "#site--component-event--" + event.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				<div class="w-40">
+					@input.Input(input.Props{ID: "site--component-event--edit--sensor-code", Name: "sensor_code", Placeholder: "Sensor Code", Value: orEmpty(event.SensorCode), Attributes: templ.Attributes{"maxlength": "64"}})
+				</div>
+				<div class="w-40">
+					@input.Input(input.Props{ID: "site--component-event--edit--transmitter-id", Name: "transmitter_id", Placeholder: "Transmitter ID", Value: orEmpty(event.TransmitterID), Attributes: templ.Attributes{"maxlength": "64"}})
+				</div>
+				<div class="w-64">
+					@input.Input(input.Props{ID: "site--component-event--edit--notes", Name: "notes", Placeholder: "Notes", Value: orEmpty(event.Notes)})
+				</div>
+				@button.Button(button.Props{ID: "site--component-event--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", event.ID)
+				@readingDetail("Sensor Code", orDash(event.SensorCode))
+				@readingDetail("Transmitter ID", orDash(event.TransmitterID))
+				@readingDetail("Pump ID", orDash(event.PumpID))
+				@readingDetail("Pump Serial", orDash(event.PumpSerial))
+				@readingDetail("Pump Type", orDash(event.PumpType))
+				@readingDetail("Notes", orDash(event.Notes))
+				@readingDetail("Reason", orDash(event.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
+				@readingDetail("App", orDash(event.CreatedByAppName))
+				@readingDetail("Device", orDash(event.CreatedByDeviceName))
+				@readingDetail("Created By", event.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(event.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
+				@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
+			</dl>
+			if event.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *event.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--component-event--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ ComponentEventCreated(event *sitemodels.SiteComponentEvent) {
+	@componentEventRow(event)
+}
+
+// ComponentEventUpdated replaces the change's row, closes its details and shows a toast
+templ ComponentEventUpdated(event *sitemodels.SiteComponentEvent) {
+	@componentEventRow(event)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Change Updated")
+	</div>
+}
+
+templ ComponentEventDeleted() {
+	@glucoseToast("Change Deleted")
+}
